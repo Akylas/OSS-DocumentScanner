@@ -61,7 +61,6 @@ module.exports = (env, params = {}) => {
         sentry, // --env.sentry
         devlog, // --env.devlog
         adhoc, // --env.adhoc
-        es5, // --env.es5
     } = env;
 
     if (adhoc) {
@@ -73,13 +72,7 @@ module.exports = (env, params = {}) => {
         });
     }
 
-    let tsconfig = params.tsconfig;
-    if (!tsconfig) {
-        tsconfig = 'tsconfig.json';
-        if (es5) {
-            tsconfig = 'tsconfig.es5.json';
-        }
-    }
+    const tsconfig = 'tsconfig.json';
     console.log('tsconfig', tsconfig);
 
     const useLibs = compileSnapshot;
@@ -213,8 +206,8 @@ $mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Mat
             hashSalt,
         },
         resolve: {
-            mainFields: es5 ? ['main'] : ['module', 'main'],
-            extensions: es5 ? ['.vue', '.ts', '.js', '.scss', '.css'] : ['.vue', '.mjs', '.ts', '.js', '.scss', '.css'],
+            mainFields: ['module', 'main'],
+            extensions: ['.svelte', '.mjs', '.ts', '.js', '.scss', '.css'],
             // Resolve {N} system modules from tns-core-modules
             modules: [resolve(projectRoot, `node_modules/${coreModulesPackageName}`), resolve(projectRoot, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'],
             // mainFields: ['main'],

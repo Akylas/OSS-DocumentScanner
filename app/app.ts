@@ -35,7 +35,7 @@ startSentry();
 
 import { prefs } from '~/services/preferences';
 import { getString } from '@nativescript/core/application-settings';
-import Theme from '@nativescript/theme';
+// import Theme from '@nativescript/theme';
 import { android as androidApp, ios as iosApp, on as onApp, systemAppearance } from '@nativescript/core/application';
 
 type Themes = 'auto' | 'light' | 'dark' | 'black';
@@ -46,7 +46,7 @@ function applyTheme(theme: Themes) {
     console.log('applyTheme', theme);
     switch (theme) {
         case 'auto':
-            Theme.setMode(Theme.Auto);
+            // Theme.setMode(Theme.Auto);
             if (gVars.isAndroid) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
             } else {
@@ -54,7 +54,7 @@ function applyTheme(theme: Themes) {
             }
             break;
         case 'light':
-            Theme.setMode(Theme.Light);
+            // Theme.setMode(Theme.Light);
             if (gVars.isAndroid) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             } else {
@@ -62,7 +62,7 @@ function applyTheme(theme: Themes) {
             }
             break;
         case 'dark':
-            Theme.setMode(Theme.Dark);
+            // Theme.setMode(Theme.Dark);
             if (gVars.isAndroid) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
@@ -70,7 +70,7 @@ function applyTheme(theme: Themes) {
             }
             break;
         case 'black':
-            Theme.setMode(ThemeBlack);
+            // Theme.setMode(ThemeBlack);
             if (gVars.isAndroid) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
