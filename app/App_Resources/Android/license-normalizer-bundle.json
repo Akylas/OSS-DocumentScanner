@@ -1,0 +1,15 @@
+
+{
+    "bundles" : [
+      { "bundleName" : "apache1", "licenseName" : "Apache Software License, Version 1.1", "licenseUrl" : "http://www.apache.org/licenses/LICENSE-1.1" },
+      { "bundleName" : "apache2", "licenseName" : "Apache License, Version 2.0", "licenseUrl" : "http://www.apache.org/licenses/LICENSE-2.0" },
+      { "bundleName" : "cddl1", "licenseName" : "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE Version 1.0 (CDDL-1.0)", "licenseUrl" : "http://opensource.org/licenses/CDDL-1.0" }
+    ],
+    "transformationRules" : [
+      { "bundleName" : "apache2", "licenseNamePattern" : ".*The Apache Software License, Version 2.0.*" },
+      { "bundleName" : "apache2", "licenseNamePattern" : "Apache 2" },
+      { "bundleName" : "apache2", "licenseUrlPattern" : "http://www.apache.org/licenses/LICENSE-2.0.txt" },
+      { "bundleName" : "apache2", "licenseNamePattern" : "Special Apache", "transformUrl" : false },
+      { "bundleName" : "apache2", "licenseNamePattern" : "Keep this name", "transformName" : false }
+    ]
+  }

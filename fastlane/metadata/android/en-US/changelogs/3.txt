@@ -1,0 +1,2 @@
+*Bug fixes*
+- default to dark theme

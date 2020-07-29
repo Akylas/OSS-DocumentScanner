@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="themes">
+        <item name="auto">@string/theme.auto</item>
+        <item name="light">@string/theme.light</item>
+        <item name="dark">@string/theme.dark</item>
+        <item name="black">@string/theme.black</item>
+    </string-array>
+    <string-array name="themesValues">
+        <item name="auto">auto</item>
+        <item name="light">light</item>
+        <item name="dark">dark</item>
+        <item name="black">black</item>
+    </string-array>
+    <string-array name="langs">
+        <item name="fr">@string/french</item>
+        <item name="en">@string/english</item>
+    </string-array>
+    <string-array name="langsValues">
+        <item name="french">fr</item>
+        <item name="en">en</item>
+    </string-array>
+</resources>

@@ -1,0 +1,68 @@
+{
+  "ios": {
+    "info": {
+      "plist": {
+      }
+    }
+  },
+  "app": {
+    "name": "NS scanneur de documents"
+  },
+  "theme": {
+    "title": "theme",
+    "auto": "auto",
+    "light": "light",
+    "dark": "dark",
+    "black": "black"
+  },
+  "cancel": "annuler",
+  "close": "fermer",
+  "settings": {
+    "title": "réglages"
+  },
+  "send_bug_report": "envoyer le rapport de bug",
+  "please_describe_error": "veuillez décrire l'erreur",
+  "bug_report_sent": "rapport de bug envoyé",
+  "name": "nom",
+  "send_bug_report_desc": "entrez un mail et une description du bug rencontré",
+  "send": "envoyer",
+  "email_required": "un email valide est requis",
+  "email": "email",
+  "description": "description",
+  "non_valid_email": "email non valide",
+  "description_required": "une description est requise",
+  "ok": "OK",
+  "error": "erreur",
+  "loading": "chargement",
+  "authorize": "autoriser",
+  "no_network": "pas de réseau",
+  "select": "sélectionner",
+  "refresh": "rafraîchir",
+  "animations": "animations",
+  "english": "anglais",
+  "french": "français",
+  "language": "langue",
+  "moon": "lune",
+  "last_updated": "dernière mise à jour",
+  "search_city": "rechercher",
+  "expires": "expire",
+  "file": "fichier",
+  "open_website": "site web ouvert",
+  "preferences": "préférences",
+  "quit": "quitter",
+  "select_on_map": "sélectionner sur une carte",
+  "api_key": "clé API",
+  "search": "chercher",
+  "no_location_set": "aucun emplacement défini",
+  "my_location": "ma position",
+  "search_location": "rechercher",
+  "missing_location_perm": "l'autorisation de localisation est manquante",
+  "no_location_setup": "aucun emplacement configuré",
+  "gps_location": "trouver votre position GPS",
+  "version": "version",
+  "source_code": "code source",
+  "third_parties": "bibliothèques tierces",
+  "share_application": "partager l'application",
+  "review_application": "noter l'application",
+  "about": "à propos"
+}

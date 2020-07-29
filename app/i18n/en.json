@@ -1,0 +1,76 @@
+﻿{
+  "ios": {
+    "info": {
+      "plist": {
+      }
+    }
+  },
+  "app": {
+    "name": "NS Document Scanner"
+  },
+  "settings": {
+    "title": "settings"
+  },
+  "english": "english",
+  "french": "french",
+  "language": "language",
+  "theme": {
+    "title": "theme",
+    "auto": "auto",
+    "light": "light",
+    "dark": "dark",
+    "black": "black"
+  },
+  "gps_not_enabled": "please enable GPS to allow NS Forecastie to determine your location",
+  "gps_not_authorized": "please enable GPS and authorize NS Forecastie to use it to determine your location",
+  "send_bug_report": "send bug report",
+  "please_describe_error": "please describe error",
+  "bug_report_sent": "bug report sent",
+  "name": "name",
+  "cancel": "cancel",
+  "close": "close",
+  "file": "file",
+  "send": "send",
+  "send_bug_report_desc": "enter a mail and a description for the encountered error",
+  "email_required": "a valid email is required",
+  "email": "email",
+  "non_valid_email": "non valid email",
+  "ok": "OK",
+  "authorize": "authorize",
+  "error": "error",
+  "no_network": "no network",
+  "select": "select",
+  "refresh": "refresh",
+  "animations": "animations",
+  "api_key_required": "API key required",
+  "open_website": "open website",
+  "quit": "quit",
+  "cc_api_key":"ClimaCell API Key",
+  "owm_api_key":"OpenWeatherMap API Key",
+  "api_key_required_description": "to get weather data from OpenWeatherMap a free API key is required. To remain under the free plan each user should create its own API key. You can do that by creating an account on their website",
+  "climal_cell_api_key_optional_description": "to get minutely weather data(optional) a free ClimaCell API key is required. To remain under the free plan each user should create its own API key. You can do that by creating an account on their website",
+  "select_on_map": "select on a map",
+  "preferences": "preferences"  ,
+  "moon": "moon",
+  "last_updated": "last updated",
+  "search_city": "search",
+  "expires": "expires",
+  "loading": "loading",
+  "description": "description",
+  "description_required": "a description is required",
+  "about_to_quit": "the app is about to close because it does not have an API Key",
+  "api_key": "api key",
+  "search": "search",
+  "no_location_set": "no location set",
+  "my_location": "my location",
+  "search_location": "search location",
+  "missing_location_perm": "location permission is missing",
+  "no_location_setup": "no location set up",
+  "gps_location": "find GPS location",
+  "version": "version",
+  "source_code": "source code",
+  "third_parties": "third party libraries",
+  "share_application": "share application",
+  "review_application": "review application",
+  "about": "about"
+}

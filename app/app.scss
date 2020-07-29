@@ -1,0 +1,163 @@
+﻿@import './variables';
+@use "sass:color";
+
+.lato {
+    font-family: $lato-fontFamily;
+}
+.mdi {
+    font-family: $mdi-fontFamily;
+}
+
+htmllabel,
+canvaslabel,
+label,
+mdbutton {
+    // background-color: rgba(255, 0,0,0.2);
+    // .ns-light & {
+    color: black;
+    // }
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
+    // white-space: normal;
+}
+mdbutton[variant="text"] {
+    color: $accent-color;
+}
+
+.dailyViewBorder {
+    height: 1;
+   background-color: #ccc;
+    .ns-dark &,
+    .ns-black & {
+        background-color: #333;
+    }
+}
+
+.alertView {
+    margin: 10;
+    padding-top: 10;
+    padding-bottom: 10;
+    border-radius: 4;
+    background-color: #eee;
+    .ns-dark & {
+        background-color: #444;
+    }
+    .ns-black & {
+        background-color: #222;
+    }
+}
+
+mdtextfield {
+    color: black;
+    backgroundcolor-color: white;
+    placeholder-color: black;
+    .ns-dark & {
+        color: white;
+        backgroundcolor-color: black;
+        placeholder-color: white;
+    }
+}
+
+// .ns-ios {
+// for now we set the font on both platform.
+// but on android it should be possible to do it through style, though not working yet
+label,
+htmllabel,
+canvaslabel {
+    @extend .lato;
+}
+// }
+
+page {
+    // .ns-light & {
+    status-bar-style: light;
+    // navigation-bar-color: #ddd;
+    navigation-bar-color: black;
+    status-bar-color: #ddd;
+    background-color: white;
+    // }
+
+    .ns-dark & {
+        status-bar-style: dark;
+        // navigation-bar-color: black;
+        status-bar-color: black;
+        background-color: #1c1c1e;
+    }
+    .ns-black & {
+        status-bar-style: dark;
+        // navigation-bar-color: black;
+        status-bar-color: black;
+        background-color: black;
+    }
+}
+
+.bottomsheet {
+    // background-color: white;
+    .ns-dark &,
+    .ns-black & {
+        background-color: #1c1c1e;
+    }
+}
+.actionBar {
+    z-index: 0;
+    border-radius: 0;
+    background-color: scale-color(white, $alpha: -30%);
+    .ns-black & {
+        background-color: scale-color(black, $alpha: -30%);
+    }
+    .ns-dark & {
+        background-color: scale-color(#1c1c1e, $alpha: -30%);
+    }
+    height: $actionbar-height;
+}
+
+.actionBarButton {
+    @extend .mdi;
+    width: $actionbar-height;
+    height: $actionbar-height;
+    color: black;
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
+    margin: 0;
+    padding: 0;
+    font-size: 32;
+    border-radius: $actionbar-height/2;
+}
+
+.actionBarTitle {
+    // @extend .lato;
+    font-size: 20;
+    font-weight: 500;
+    color: black;
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
+}
+
+.actionBarSubtitle {
+    font-size: 13;
+    color: rgba(255, 255, 255, 0.533);
+}
+
+.icon-btn {
+    @extend .mdi;
+    background-color: transparent;
+    ripple-color: gray;
+    color: black;
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+        ripple-color: white;
+    }
+    width: 44;
+    height: 44;
+    border-radius: 22;
+    font-size: 24;
+    margin: 0;
+    padding: 0;
+}

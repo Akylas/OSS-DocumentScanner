@@ -1,0 +1,12 @@
+*Bug fixes*
+- weather icons are not parsed correctly
+- ForkTsCheckerWebpackPlugin fails when more than one worker is used
+- TypeScript compilation fails
+- CleanWebpackPlugin is unable to delete some dirs
+- default to dark theme
+- typo fix
+- crash fix when trying to JSON.parse undefined ….
+- try catch for locale loading
+- *android:* crash about missing BottomSheetBehavior class
+- crashing because of null object
+- *android:* no more hickup on first...ayout

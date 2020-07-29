@@ -1,0 +1,354 @@
+{
+    "dependencies": [
+        {
+            "moduleName": "com.airbnb.android:lottie",
+            "moduleUrl": "https://github.com/airbnb/lottie-android",
+            "moduleVersion": "3.4.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.carto:carto-mobile-sdk",
+            "moduleUrl": "https://github.com/CartoDB/mobile-sdk",
+            "moduleVersion": "4.3.0",
+            "moduleLicense": "The 3-Clause BSD License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "com.google.android.material:material",
+            "moduleUrl": "http://developer.android.com/tools/extras/support-library.html",
+            "moduleVersion": "1.2.0-alpha02",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.code.findbugs:jsr305",
+            "moduleUrl": "http://findbugs.sourceforge.net/",
+            "moduleVersion": "3.0.2",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.code.gson:gson",
+            "moduleVersion": "2.8.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.errorprone:error_prone_annotations",
+            "moduleVersion": "2.2.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.guava:failureaccess",
+            "moduleUrl": "https://github.com/google/guava/",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.guava:guava",
+            "moduleUrl": "https://github.com/google/guava/",
+            "moduleVersion": "27.0.1-jre",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.guava:listenablefuture",
+            "moduleVersion": "9999.0-empty-to-avoid-conflict-with-guava",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.j2objc:j2objc-annotations",
+            "moduleUrl": "https://github.com/google/j2objc/",
+            "moduleVersion": "1.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.jimfs:jimfs",
+            "moduleUrl": "http://www.google.com/",
+            "moduleVersion": "1.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.google.protobuf:protobuf-java",
+            "moduleUrl": "https://developers.google.com/protocol-buffers/",
+            "moduleVersion": "3.4.0",
+            "moduleLicense": "The 3-Clause BSD License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "com.googlecode.json-simple:json-simple",
+            "moduleUrl": "http://code.google.com/p/json-simple/",
+            "moduleVersion": "1.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.h6ah4i.android.widget.advrecyclerview:advrecyclerview",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.squareup.okhttp3:okhttp",
+            "moduleVersion": "3.12.10",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.squareup.okio:okio",
+            "moduleVersion": "1.17.4",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.squareup:javawriter",
+            "moduleUrl": "http://github.com/square/javawriter/",
+            "moduleVersion": "2.5.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "com.sun.activation:javax.activation",
+            "moduleUrl": "http://www.oracle.com",
+            "moduleVersion": "1.2.0",
+            "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+            "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL"
+        },
+        {
+            "moduleName": "com.sun.istack:istack-commons-runtime",
+            "moduleUrl": "http://www.oracle.com/",
+            "moduleVersion": "2.21",
+            "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception",
+            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
+        },
+        {
+            "moduleName": "com.sun.xml.fastinfoset:FastInfoset",
+            "moduleUrl": "http://www.oracle.com",
+            "moduleVersion": "1.2.13",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "commons-codec:commons-codec",
+            "moduleUrl": "http://commons.apache.org/proper/commons-codec/",
+            "moduleVersion": "1.10",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "commons-logging:commons-logging",
+            "moduleUrl": "http://commons.apache.org/proper/commons-logging/",
+            "moduleVersion": "1.2",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.sentry:sentry-android",
+            "moduleUrl": "https://github.com/getsentry/sentry-android",
+            "moduleVersion": "2.2.1",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "io.sentry:sentry-android-core",
+            "moduleUrl": "https://github.com/getsentry/sentry-android",
+            "moduleVersion": "2.2.1",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "io.sentry:sentry-android-ndk",
+            "moduleUrl": "https://github.com/getsentry/sentry-android",
+            "moduleVersion": "2.2.1",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "io.sentry:sentry-core",
+            "moduleUrl": "https://github.com/getsentry/sentry-android",
+            "moduleVersion": "2.2.1",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "it.unimi.dsi:fastutil",
+            "moduleUrl": "http://fasutil.di.unimi.it/",
+            "moduleVersion": "7.2.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "javax.inject:javax.inject",
+            "moduleUrl": "http://code.google.com/p/atinject/",
+            "moduleVersion": "1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "javax.xml.bind:jaxb-api",
+            "moduleUrl": "http://www.oracle.com/",
+            "moduleVersion": "2.2.12-b140109.1041",
+            "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception",
+            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
+        },
+        {
+            "moduleName": "net.sf.jopt-simple:jopt-simple",
+            "moduleUrl": "http://pholser.github.com/jopt-simple",
+            "moduleVersion": "4.9",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "net.sf.kxml:kxml2",
+            "moduleUrl": "http://kxml.sourceforge.net/",
+            "moduleVersion": "2.3.0",
+            "moduleLicense": "PUBLIC DOMAIN",
+            "moduleLicenseUrl": "http://creativecommons.org/licenses/publicdomain"
+        },
+        {
+            "moduleName": "org.apache.commons:commons-compress",
+            "moduleUrl": "http://commons.apache.org/proper/commons-compress/",
+            "moduleVersion": "1.12",
+            "moduleLicense": "PUBLIC DOMAIN"
+        },
+        {
+            "moduleName": "org.apache.httpcomponents:httpclient",
+            "moduleUrl": "http://hc.apache.org/httpcomponents-client",
+            "moduleVersion": "4.5.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.apache.httpcomponents:httpcore",
+            "moduleUrl": "http://hc.apache.org/httpcomponents-core-ga",
+            "moduleVersion": "4.4.10",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.apache.httpcomponents:httpmime",
+            "moduleUrl": "http://hc.apache.org/httpcomponents-client",
+            "moduleVersion": "4.5.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.bouncycastle:bcpkix-jdk15on",
+            "moduleUrl": "http://www.bouncycastle.org/java.html",
+            "moduleVersion": "1.56",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "http://www.bouncycastle.org/licence.html"
+        },
+        {
+            "moduleName": "org.bouncycastle:bcprov-jdk15on",
+            "moduleUrl": "http://www.bouncycastle.org/java.html",
+            "moduleVersion": "1.56",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "http://www.bouncycastle.org/licence.html"
+        },
+        {
+            "moduleName": "org.checkerframework:checker-qual",
+            "moduleUrl": "https://checkerframework.org",
+            "moduleVersion": "2.5.2",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "org.codehaus.groovy:groovy-all",
+            "moduleUrl": "http://groovy-lang.org",
+            "moduleVersion": "2.4.15",
+            "moduleLicense": "PUBLIC DOMAIN",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.codehaus.mojo:animal-sniffer-annotations",
+            "moduleVersion": "1.17",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "org.conscrypt:conscrypt-android",
+            "moduleUrl": "https://conscrypt.org/",
+            "moduleVersion": "2.4.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.glassfish.jaxb:jaxb-core",
+            "moduleVersion": "2.2.11",
+            "moduleLicense": "CDDL+GPL License",
+            "moduleLicenseUrl": "http://glassfish.java.net/public/CDDL+GPL_1_1.html"
+        },
+        {
+            "moduleName": "org.glassfish.jaxb:jaxb-runtime",
+            "moduleVersion": "2.2.11",
+            "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+            "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL"
+        },
+        {
+            "moduleName": "org.glassfish.jaxb:txw2",
+            "moduleVersion": "2.2.11",
+            "moduleLicense": "CDDL+GPL License",
+            "moduleLicenseUrl": "http://glassfish.java.net/public/CDDL+GPL_1_1.html"
+        },
+        {
+            "moduleName": "org.jetbrains.trove4j:trove4j",
+            "moduleVersion": "20160824"
+        },
+        {
+            "moduleName": "org.jetbrains:annotations",
+            "moduleUrl": "http://www.jetbrains.org",
+            "moduleVersion": "13.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.jvnet.staxex:stax-ex",
+            "moduleUrl": "http://stax-ex.java.net/",
+            "moduleVersion": "1.7.7",
+            "moduleLicense": "Dual license consisting of the CDDL v1.1 and GPL v2",
+            "moduleLicenseUrl": "https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm",
+            "moduleUrl": "http://asm.objectweb.org",
+            "moduleVersion": "6.0",
+            "moduleLicense": "BSD Zero Clause License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/0BSD"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm-analysis",
+            "moduleUrl": "http://asm.objectweb.org",
+            "moduleVersion": "6.0",
+            "moduleLicense": "BSD Zero Clause License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/0BSD"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm-commons",
+            "moduleUrl": "http://asm.objectweb.org",
+            "moduleVersion": "6.0",
+            "moduleLicense": "BSD Zero Clause License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/0BSD"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm-tree",
+            "moduleUrl": "http://asm.objectweb.org",
+            "moduleVersion": "6.0",
+            "moduleLicense": "BSD Zero Clause License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/0BSD"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm-util",
+            "moduleUrl": "http://asm.objectweb.org",
+            "moduleVersion": "6.0",
+            "moduleLicense": "BSD Zero Clause License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/0BSD"
+        }
+    ]
+}

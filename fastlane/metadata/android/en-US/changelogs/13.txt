@@ -1,0 +1,3 @@
+*Bug fixes*
+- quick on cancel api key
+- fixed broken search

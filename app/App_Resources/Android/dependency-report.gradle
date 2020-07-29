@@ -1,0 +1,26 @@
+import com.github.jk1.license.LicenseReportPlugin
+import com.github.jk1.license.render.ReportRenderer
+import com.github.jk1.license.render.JsonReportRenderer
+import com.github.jk1.license.render.InventoryHtmlReportRenderer
+import com.github.jk1.license.filter.DependencyFilter
+import com.github.jk1.license.filter.LicenseBundleNormalizer
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+        classpath 'com.github.jk1:gradle-license-report:1.13'
+  }
+}
+
+apply plugin: LicenseReportPlugin
+
+licenseReport {
+    renderers = [new JsonReportRenderer('../../../../../../app/android/licenses.json')]
+    configurations = ALL
+      excludeOwnGroup = true
+      excludeGroups = ['', 'androidx.*', 'com.android.tools.*', 'org.jetbrains.kotlin']
+      filters = [new LicenseBundleNormalizer(bundlePath: "$projectDir/../../../app/App_Resources/Android/license-normalizer-bundle.json")]
+}

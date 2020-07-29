@@ -1,0 +1,272 @@
+class String
+  def titlecase
+    split(/([[:alpha:]]+)/).map(&:capitalize).join
+  end
+end
+
+def truncate(string, length = 20)
+  !string.nil? && string.size > length+5 ? [string[0,length],string[-5,5]].join("...") : string
+end
+
+fastlane_version '2.135.2'
+
+desc 'test lane'
+lane :test do
+    Dir.chdir("..") do
+        print "TEST SUCCESSFUL!"
+    end
+end
+desc 'Check Git Status'
+lane :checkGitStatus do
+    Dir.chdir("..") do
+        repo_status = Actions.sh("git status --porcelain -uno")
+        repo_clean = repo_status.empty?
+        if repo_clean
+          UI.success('Git status is clean, all good! 💪')
+        else
+          error_message = "Git repository is dirty! Please ensure the repo is in a clean state by committing/stashing/discarding all changes first."
+          UI.user_error!(error_message)
+        end
+    end
+end
+
+desc 'Ensure deps are installed'
+lane :tns_install do |params| 
+  sh("tns", "install")
+
+end
+desc 'Prepare the application.'
+lane :prepare do |params| 
+  platform = params[:platform]
+  sh("rm", "-fr", "platforms/" + platform)
+  sh("tns", "prepare", platform, "--release", "--clean", "--env.production", "--env.uglify", "--env.adhoc", "--env.snapshot", "--env.compileSnapshot")
+
+end
+
+lane :build_flavor do |params| 
+  platform = params[:platform]
+  flavor = params[:flavor]
+  version = ""
+  versionCode = ""
+
+  
+  Dir.chdir("..") do
+    version  =  sh("./node_modules/.bin/get-version", platform, "version").gsub(/\n/,'')
+    versionCode  =  sh("./node_modules/.bin/get-version", platform, "code").gsub(/\n/,'')
+  end
+  
+  puts "platform:"  + platform
+  puts "flavor:"  + flavor
+  puts "version:"  + version
+  puts "versionCode:"  + versionCode
+
+  sentry_create_release(
+    version: version, # release version to create
+  )
+
+  # build will use adhoc env option which also activate sentry which will upload sourcemaps.
+  build
+
+  # sentry_upload_sourcemaps(platform:platform, version: version, versionCode: versionCode);
+  
+  sentry_upload
+
+  changelog = get_changelog(platform:platform, flavor:flavor)
+
+  upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor)
+  add_git_tag(tag: "#{platform}/#{flavor}/#{version}/#{versionCode}")
+
+  push_git_tags
+end
+
+lane :sentry_upload_sourcemaps do |params|
+  # there we add the platform to the dist paramater. The idea is to have different dist for ios android
+  # this is because we generate different sources for android and ios so we have different sourceMaps
+  # and so to map errors correctly we use different dist for ios and android
+  version = params[:version]
+  versionCode = params[:versionCode]
+  platform = params[:platform]
+  sentry_prefix = ENV['SENTRY_PREFIX']
+  sentryDist =  versionCode + '.' + platform # optional distribution of the release usually the buildnumber
+  sourceDist = ""
+  Dir.chdir("..") do
+    sourceDist  =  sh("node", "./fastlane/getDist.js", platform).gsub(/\n/,'')
+  end
+  sourceMapeDirPath = "#{sourceDist}/#{ENV['SOURCEMAP_REL_DIR']}"
+  Dir.chdir(sourceDist) do
+    Dir.glob('*.js').each do|f|
+      filePath = sourceDist + '/' + f
+      puts "uploading source file:"  + filePath
+      sentry_upload_file(
+        version: version,
+        dist: sentryDist, # optional distribution of the release usually the buildnumber
+        file:filePath,
+        file_url: sentry_prefix + f
+      )
+      # in our webpack config we put sourcemaps there for them not to be packaged with the app
+      sourceMapFilePath = "#{sourceMapeDirPath}/#{f}.map"
+      if(File.exist?(sourceMapFilePath)) 
+        puts "uploading sourcemap file:" + sourceMapFilePath
+        sentry_upload_sourcemap(
+          rewrite:true,
+          version: version,
+          dist: sentryDist, # optional distribution of the release usually the buildnumber
+          url_prefix:sentry_prefix,
+          sourcemap: sourceMapFilePath
+        )
+      end
+      
+    end
+  end
+end
+
+
+lane :get_changelog  do |params| 
+  platform = params[:platform]
+  flavor = params[:flavor]
+  puts "get_changelog "+  platform
+  ignorePlatform = 'ios'
+  if(platform == "ios") 
+    ignorePlatform = "android"
+  end
+  isReleasable = analyze_commits(match: "#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
+  logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:false, order:["feat", "fix", "refactor", "perf"])
+  puts logs
+  truncate(logs, 450)
+end
+
+platform :ios do
+
+  desc 'Register device'
+  lane :registerDevice do
+    register_devices(
+      devices: {
+        "Martin Guillon's iPhone" => "f911ed373b7926e57111c8e5b1352d3c1c4f9667"
+      }
+    ) 
+  end
+
+  desc 'Upload Dsyms to Sentry'
+  lane :sentry_upload do 
+    sentry_upload_dsym
+  end
+  lane :upload_store  do |params| 
+    upload_to_testflight(
+        changelog:params[:changelog],
+        beta_app_feedback_email: "martin.guillon@akylas.fr",
+        beta_app_description: "Application to get the Weather from ClimaCell",
+        demo_account_required: false,
+        distribute_external: true,
+        groups: [params[:flavor]],
+        team_name:"Akylas",
+        notify_external_testers: true,
+        beta_app_review_info: {
+          contact_email: "martin.guillon@akylas.fr",
+          contact_first_name: "Martin",
+          contact_last_name: "Guillon",
+          contact_phone: "+33 679134385",
+          demo_account_name: "",
+          demo_account_password: "",
+          notes: "Thank you for reviewing!"
+        },
+      )
+  end
+
+  desc 'Fetch certificates and provisioning profiles'
+  lane :certificates do
+      match(type: 'development')
+      match(type: "appstore")
+  end
+
+  desc 'Build the iOS application.'
+  lane :build do
+      match(type: "appstore")
+      prepare(platform:'ios')
+      build_ios_app(
+        output_directory:"dist",
+        scheme: "nsforecastie",
+        workspace: './platforms/ios/nsforecastie.xcworkspace'
+      )
+  end
+
+
+  desc 'Ship iOS build to Testflight.'
+  lane :beta do
+    checkGitStatus
+    tns_install(platform:'ios')
+    build_flavor(platform:'ios', flavor:'beta')
+  end
+  desc 'Ship iOS build to Testflight.'
+  lane :alpha do
+    # checkGitStatus
+    # tns_install(platform:'ios')
+    build_flavor(platform:'ios', flavor:'alpha')
+  end
+end
+
+platform :android do
+
+  desc 'Upload  to Sentry'
+  lane :sentry_upload do 
+  end
+
+lane :write_changelog do |params| 
+  version = params[:version]
+  changelog = params[:changelog]
+
+  metadata_dir="metadata/android/en-US/changelogs"
+  require 'fileutils'
+  system 'mkdir', '-p', metadata_dir
+  File.write("#{metadata_dir}/#{version}.txt", changelog)
+  # Create a new branch and upload a PR for it.
+  sh("git add #{metadata_dir}")
+  repo_status = Actions.sh("git status --porcelain -uno")
+  repo_clean = repo_status.empty?
+  if repo_clean
+  else
+    sh("git commit -m '#{version} release notes'")
+  end
+end
+  lane :upload_store   do |params| 
+    track = params[:flavor]
+    # if (track == 'beta') 
+    #   track = 'internal'
+    # end
+    write_changelog(version:params[:versionCode], changelog:params[:changelog]);
+    upload_to_play_store(
+      track: track,
+      package_name:'com.akylas.documentscanner',
+      track_promote_to: track,
+      json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
+      aab: './platforms/android/app/build/outputs/bundle/release/app-release.aab'
+    )
+  end
+
+  desc 'Build the Android application.'
+    lane :build do
+      sh("rm", "-fr", "platforms/android")
+      sh("tns", "build", "android", "--release", "--clean", "--env.production",
+          "--env.uglify", "--env.adhoc", "--env.snapshot", "--env.compileSnapshot", "--aab",
+          "--key-store-path", "../" + ENV["KEYSTORE_PATH"],
+          "--key-store-password", ENV["KEYSTORE_PASSWORD"],
+          "--key-store-alias", ENV["KEYSTORE_ALIAS"],
+          "--key-store-alias-password", ENV["KEYSTORE_ALIAS_PASSWORD"]
+        )
+  end
+
+
+  desc 'Ship to Android Playstore Beta.'
+  lane :beta do
+    checkGitStatus
+    tns_install(platform:'android')
+    build_flavor(platform:'android', flavor:'beta')
+  end
+  desc 'Ship to Android Playstore Alpha.'
+  lane :alpha do
+    # checkGitStatus
+    tns_install(platform:'android')
+    build_flavor(platform:'android', flavor:'alpha')
+  end
+end
+
+

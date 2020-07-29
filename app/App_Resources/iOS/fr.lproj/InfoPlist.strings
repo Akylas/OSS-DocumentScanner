@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "NS Météo";
+"CFBundleName" = "NS Météo";
+"NSLocationWhenInUseUsageDescription" = "'NS Météo' utilise le GPS pour afficher votre météo";

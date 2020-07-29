@@ -1,0 +1,2 @@
+*Bug fixes*
+- crashing because of null object

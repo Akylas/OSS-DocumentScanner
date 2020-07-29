@@ -1,0 +1,101 @@
+{
+    "nativescript": {
+        "id": "com.akylas.documentscanner",
+        "tns-android": {
+            "version": "6.5.3"
+        },
+        "tns-ios": {
+            "version": "7.0.0-beta.3-v8-2020-07-01-222820-05"
+        }
+    },
+    "scripts": {
+        "run.android.production": "cross-var tns run android --release --clean --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.production --env.uglify --env.adhoc  --env.snapshot --env.compileSnapshot",
+        "run.ios.production": "tns run ios --release --env.adhoc --env.snapshot --env.compileSnapshot --for-device --provision 'match AppStore com.akylas.documentscanner'",
+        "pandroid": "cross-var tns build android --release --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.adhoc --env.snapshot --env.compileSnapshot",
+        "pios": "tns run ios --release --env.adhoc --env.snapshot --env.compileSnapshot --for-device --provision 'match AppStore com.akylas.documentscanner'",
+        "ios.generate_licences": "node generate_ios_licences.js",
+        "android.generate_licences": "cd platforms/android && ./gradlew  generateLicenseReport"
+    },
+    "description": "NativeScript Application",
+    "license": "SEE LICENSE IN <your-license-filename>",
+    "repository": "<fill-your-repository-here>",
+    "dependencies": {
+        "@mdi/font": "4.9.95",
+        "@nativescript-community/sentry": "2.0.0",
+        "@nativescript/core": "rc-esm",
+        "@nativescript/theme": "2.3.3",
+        "date-fns": "2.15.0",
+        "dayjs": "1.8.30",
+        "make-error": "1.3.6",
+        "nativescript-akylas-https": "2.2.5",
+        "nativescript-akylas-preferences": "1.1.11",
+        "nativescript-akylas-pulltorefresh": "2.3.2",
+        "nativescript-akylas-sentry": "0.0.9",
+        "nativescript-canvas": "3.0.10",
+        "nativescript-canvaslabel": "1.0.10",
+        "nativescript-dev-webpack": "1.5.1",
+        "nativescript-extendedinfo": "1.0.11",
+        "nativescript-htmllabel": "1.0.41",
+        "nativescript-inappbrowser": "^2.3.0",
+        "nativescript-iqkeyboardmanager": "1.5.1",
+        "nativescript-l": "4.2.3",
+        "@nativescript-community/ui-collectionview": "rc-esm",
+        "@nativescript-community/ui-image": "rc-esm",
+        "@nativescript-community/ui-material-activityindicator": "rc-esm",
+        "@nativescript-community/ui-material-bottomsheet": "rc-esm",
+        "@nativescript-community/ui-material-button": "rc-esm",
+        "@nativescript-community/ui-material-dialogs": "rc-esm",
+        "@nativescript-community/ui-material-snackbar": "rc-esm",
+        "@nativescript-community/ui-material-textfield": "rc-esm",
+        "nativescript-opencv": "0.0.5",
+        "nativescript-perms": "2.0.11",
+        "nativescript-systemui": "1.0.14",
+        "nativescript-tween": "0.0.10",
+        "svelte-native": "0.8.4",
+        "tinycolor2": "1.4.1",
+        "ts-node": "^8.10.2",
+        "weather-icons": "1.3.2"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^9.1.1",
+        "@commitlint/config-conventional": "^9.1.1",
+        "@nativescript/types": "rc",
+        "@nativescript/webpack": "rc-esm",
+        "@pyoner/svelte-ts-preprocess": "^1.3.0",
+        "@sentry/webpack-plugin": "^1.12.0",
+        "@types/node": "^14.0.27",
+        "@types/tinycolor2": "^1.4.2",
+        "@typescript-eslint/eslint-plugin": "3.7.1",
+        "@typescript-eslint/parser": "3.7.1",
+        "ansi-styles": "^4.2.1",
+        "clean-webpack-plugin": "3.0.0",
+        "copy-webpack-plugin": "^6.0.3",
+        "cross-var": "^1.1.0",
+        "del": "5.1.0",
+        "eslint": "7.5.0",
+        "eslint-plugin-svelte3": "2.7.3",
+        "fsevents": "2.1.3",
+        "husky": "^4.2.5",
+        "merge-options": "^2.0.0",
+        "nativescript-dev-appium": "6.1.3",
+        "nativescript-set-version": "0.2.1",
+        "node-sass": "^4.14.1",
+        "plist": "^3.0.1",
+        "prettier-plugin-svelte": "1.1.0",
+        "scss-symbols-parser": "^2.0.1",
+        "string-replace-loader": "^2.3.0",
+        "svelte": "~3.24.0",
+        "svelte-loader": "2.13.6",
+        "svelte-loader-hot": "0.3.1-0",
+        "svelte-native-preprocessor": "~0.2.0",
+        "svelte-preprocess": "^4.0.8",
+        "typescript": "3.9.7",
+        "webpack": "4.44.0",
+        "webpack-cli": "3.3.12"
+    },
+    "commitlint": {
+        "extends": [
+            "@commitlint/config-conventional"
+        ]
+    }
+}
