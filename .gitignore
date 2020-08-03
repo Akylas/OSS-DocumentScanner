@@ -1,0 +1,26 @@
+# JetBrains project files
+.idea
+
+# NPM
+node_modules
+
+# NativeScript application
+hooks
+platforms
+
+certs
+/.vscode/settings.json
+/package-lock.json
+/report
+/times.html
+pnpm-lock.yaml
+*.js.map
+e2e/**/*.js
+/mochawesome-report
+/fastlane/report.xml
+/gpx
+/dist
+/Gemfile.lock
+/app/services/test.json
+*.html
+/webpack.config.js

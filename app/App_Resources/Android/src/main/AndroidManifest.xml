@@ -1,47 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
 	package="__PACKAGE__">
-
-	<supports-screens
+    <supports-screens
 		android:smallScreens="true"
 		android:normalScreens="true"
 		android:largeScreens="true"
 		android:xlargeScreens="true"/>
-
-	<uses-sdk android:targetSdkVersion="__APILEVEL__"/>
-
-	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-	<uses-permission android:name="android.permission.INTERNET"/>
+    <uses-sdk android:targetSdkVersion="__APILEVEL__"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.location.gps" />
-	<application
-		android:name="com.akylas.documentscanner.NightModeApplication"
+    <application
+		android:name="__PACKAGE__.NightModeApplication"
 		android:allowBackup="true"
 		android:hardwareAccelerated="true"
 		android:networkSecurityConfig="@xml/network_security_config"
 		android:icon="@mipmap/icon"
 		android:label="@string/app_name"
 		android:theme="@style/AppTheme">
-
-		<activity
+        <activity
 			android:name="com.tns.NativeScriptActivity"
 			android:label="@string/title_activity_kimera"
 			android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
 			android:theme="@style/LaunchScreenTheme">
-
-			<meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
-
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-		<activity android:name="com.tns.ErrorReportActivity"/>
-		<activity android:name="com.nativescript.preferences.NativescriptSettingsActivity" android:theme="@style/SettingsTheme"/>
-		<meta-data android:name="io.sentry.anr.enable" android:value="false" />
-	</application>
+            <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.tns.ErrorReportActivity"/>
+        <activity android:name="com.nativescript.preferences.NativescriptSettingsActivity" android:theme="@style/SettingsTheme"/>
+        <meta-data android:name="io.sentry.anr.enable" android:value="false" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="__PACKAGE__.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+    </application>
 </manifest>

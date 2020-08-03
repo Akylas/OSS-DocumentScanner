@@ -1,5 +1,8 @@
+import { ImageSource } from '@nativescript/core';
+
 export function share(
     content: {
+        image?: ImageSource;
         title?: string;
         message?: string;
         url?: string;

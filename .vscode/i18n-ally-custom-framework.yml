@@ -1,0 +1,25 @@
+# An array of string which contains Language Ids defined by vscode
+# You can check avaliable language ids here: https://code.visualstudio.com/docs/languages/overview#_language-id
+languageIds:
+  - svelte
+  - typescript
+  - javascript
+
+# An Array of regex to find the keys usage. **The key should captured in the first match group**.
+# You should unescape regex string in order to fit in YAML file
+# for that, you can use https://www.freeformatter.com/json-escape.html
+keyMatchReg:
+  # The following examples show how to detect `t("your.i18n.keys")`
+  - "[^\\w\\d](?:localize|l)\\(['\"`]([[\\w\\d\\. \\-\\[\\]]*?)['\"`]"
+
+
+# An Array of string contains refactor templates.
+# The "$1" will be replaced by the keypath specified.
+# Optional, uncomment the following two lines to use
+
+# refactorTemplates:
+#  - i18n.get("$1")
+
+
+# If set to true, only enables custom framework (will disable all built-in frameworks)
+monopoly: true

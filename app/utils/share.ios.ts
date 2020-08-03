@@ -1,9 +1,11 @@
 import { ios as iosApp } from '@nativescript/core/application';
 import { View } from '@nativescript/core/ui/core/view';
 import { Color } from '@nativescript/core/color';
+import { ImageSource } from '@nativescript/core';
 
 export async function share(
     content: {
+        image?: ImageSource;
         title?: string;
         message?: string;
         url?: string;
@@ -25,6 +27,9 @@ export async function share(
         const items = [];
         if (content.message) {
             items.push(content.message);
+        }
+        if (content.image) {
+            items.push(content.image.ios);
         }
         if (content.url) {
             const url = NSURL.URLWithString(content.url);
