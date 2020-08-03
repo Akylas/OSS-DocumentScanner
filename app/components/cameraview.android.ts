@@ -175,7 +175,6 @@ export class CameraView extends CameraViewBase {
     // }
 
     [torchProperty.setNative](value: string) {
-        console.log('torchProperty', value);
         switch (value) {
             case 'off':
                 this.nativeViewProtected.setFlash(com.otaliastudios.cameraview.controls.Flash.OFF);

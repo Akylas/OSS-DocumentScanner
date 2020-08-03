@@ -15,7 +15,6 @@
 
     onMount(() => (canGoBack = Frame.topmost() && Frame.topmost().canGoBack()));
     function onMenuIcon() {
-        console.log('onMenuIcon', modalWindow, onClose);
         if (modalWindow) {
             onClose ? onClose() : closeModal(undefined);
         } else {
@@ -26,7 +25,7 @@
         if (modalWindow) {
             menuIcon = 'mdi-close';
         } else {
-            menuIcon = canGoBack ? (gVars.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
+            menuIcon = canGoBack ? (global.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
         }
     }
     $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
@@ -34,7 +33,7 @@
 </script>
 
 <gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5">
-    <htmllabel col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalAlignment="center" />
+    <htmllabel col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <!-- {#if showLogo && !title}
         <label col="1" class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
     {/if} -->

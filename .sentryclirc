@@ -1,0 +1,7 @@
+[defaults]
+project=nsforecastie
+org=akylas
+url=https://bugs.akylas.fr
+
+[auth]
+token=52e7dca57168469b979fc2affc7244a1f3f8f0ca435d476197bee0e72208e6ac

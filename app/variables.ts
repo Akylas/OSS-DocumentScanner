@@ -19,7 +19,7 @@ export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const screenScale = Screen.mainScreen.scale;
 export let navigationBarHeight: number = parseFloat(locals.navigationBarHeight);
 
-if (gVars.isAndroid) {
+if (global.isAndroid) {
     const context: android.content.Context = ad.getApplicationContext();
     const hasPermanentMenuKey = android.view.ViewConfiguration.get(context).hasPermanentMenuKey();
     if (hasPermanentMenuKey) {
