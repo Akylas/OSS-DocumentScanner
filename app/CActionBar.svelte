@@ -4,16 +4,18 @@
     import { Frame } from '@nativescript/core/ui/frame';
     export let title: string;
     // export let showLogo = false;
-    export let showMenuIcon:boolean = false;
-    export let canGoBack:boolean = false;
-    export let modalWindow:boolean = false;
-    export let disableBackButton :boolean = false;
+    export let showMenuIcon: boolean = false;
+    export let canGoBack: boolean = false;
+    export let modalWindow: boolean = false;
+    export let disableBackButton: boolean = false;
     export let onClose: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
     let menuIconVisibility: string;
 
-    onMount(() => (canGoBack = Frame.topmost() && Frame.topmost().canGoBack()));
+    onMount(() => {
+        canGoBack = Frame.topmost() && (Frame.topmost().canGoBack() || !!Frame.topmost().currentEntry);
+    });
     function onMenuIcon() {
         if (modalWindow) {
             onClose ? onClose() : closeModal(undefined);
@@ -32,8 +34,8 @@
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
 </script>
 
-<gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5">
-    <htmllabel col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+<gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="10" paddingRight="10">
+    <htmllabel col="1" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <!-- {#if showLogo && !title}
         <label col="1" class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
     {/if} -->

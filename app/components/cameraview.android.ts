@@ -71,6 +71,7 @@ export class CameraView extends CameraViewBase {
         super.initNativeView();
         initCameraListener();
         const nativeView = this.nativeViewProtected;
+        nativeView.setUseDeviceOrientation(false);
         nativeView.setPlaySounds(false);
         if (!isSimulator()) {
             nativeView.setExperimental(true);
@@ -90,9 +91,11 @@ export class CameraView extends CameraViewBase {
             }
         }));
         nativeView.addFrameProcessor(processor);
+        nativeView.open();
     }
     disposeNativeView() {
         const nativeView = this.nativeViewProtected;
+        nativeView.close();
         if (this.listener) {
             nativeView.removeCameraListener(this.listener);
             (nativeView as any).listener = this.listener = null;
@@ -102,6 +105,18 @@ export class CameraView extends CameraViewBase {
             (nativeView as any).processor = this.processor = null;
         }
         super.disposeNativeView();
+    }
+    startCamera() {
+        const nativeView = this.nativeViewProtected;
+        if (nativeView) {
+            nativeView.open();
+        }
+    }
+    stopCamera() {
+        const nativeView = this.nativeViewProtected;
+        if (nativeView) {
+            nativeView.close();
+        }
     }
     photoListeners: {
         onCameraError(param0: com.otaliastudios.cameraview.CameraException);

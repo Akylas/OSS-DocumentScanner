@@ -103,13 +103,14 @@ page {
 .actionBar {
     z-index: 0;
     border-radius: 0;
-    background-color: scale-color(white, $alpha: -30%);
-    .ns-black & {
-        background-color: scale-color(black, $alpha: -30%);
-    }
-    .ns-dark & {
-        background-color: scale-color(#1c1c1e, $alpha: -30%);
-    }
+    // background-color: scale-color(white, $alpha: -30%);
+    // .ns-black & {
+    //     background-color: scale-color(black, $alpha: -30%);
+    // }
+    // .ns-dark & {
+    //     background-color: scale-color(#1c1c1e, $alpha: -30%);
+    // }
+    background-color: $accent-color;
     height: $actionbar-height;
 }
 
@@ -133,10 +134,10 @@ page {
     font-size: 20;
     font-weight: 500;
     color: black;
-    .ns-dark &,
-    .ns-black & {
-        color: white;
-    }
+    // .ns-dark &,
+    // .ns-black & {
+    //     color: white;
+    // }
 }
 
 .actionBarSubtitle {
