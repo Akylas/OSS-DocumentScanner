@@ -50,4 +50,5 @@ apply from: "$rootDir/../../app/App_Resources/Android/dependency-report.gradle"
 
 dependencies {
   api 'com.otaliastudios:cameraview:2.6.3'
+  api 'cz.adaptech.android:tesseract4android:2.1.0'
 }

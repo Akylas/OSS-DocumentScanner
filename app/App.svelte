@@ -1,34 +1,41 @@
 <script lang="ts">
-    import { Page } from '@nativescript/core';
+    import { Page, ObservableArray } from '@nativescript/core';
     import { android as androidApp } from '@nativescript/core/application';
+    import { getString, setString } from '@nativescript/core/application-settings';
     import { ImageSource } from '@nativescript/core/image-source';
-    import { Canvas, CanvasView, Matrix, Paint, Path, Style } from 'nativescript-canvas';
+    import { Canvas, CanvasView, Matrix, Paint, Path, Style } from '@nativescript-community/ui-canvas';
+    import * as imagepicker from 'nativescript-imagepicker';
     import * as cv2 from 'nativescript-opencv';
+    import { request } from 'nativescript-perms';
     import * as Worker from 'nativescript-worker-loader!~/workers/ImageWorker';
     import { onMount } from 'svelte';
     import { showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { showBottomSheet } from '~/bottomsheet';
-    import { accentColor } from '~/variables';
     import { l, onLanguageChanged } from '~/helpers/locale';
-    import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/api';
+    import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
+    import { showError } from '~/utils/error';
+    import { CustomTransition } from '~/transitions/custom-transition';
+    import { share } from '~/utils/share';
+    import { hideLoading, showLoading } from '~/utils/ui';
+    import { accentColor } from '~/variables';
     import { WorkerEventType, WorkerResult } from '~/workers/BaseWorker';
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
-    import { CameraView } from './components/cameraview.android';
-    import { showError } from '~/utils/error';
-    import { ImageWorkerOptions, ImageComputeOptions } from './workers/options';
-    import { getString, setString } from '@nativescript/core/application-settings';
-    import { share } from '~/utils/share';
-    import { showLoading } from '~/utils/ui';
-    import { hideLoading } from '~/utils/ui';
+    import { CameraView } from './components/cameraview';
+    import OCRDocument from './models/OCRDocument';
+    import PDFView from './PDFView.svelte';
+    import { ImageComputeOptions, ImageWorkerOptions } from './workers/options';
+    import DocumentsList from './DocumentsList.svelte';
+    import { throttle } from 'helpful-decorators';
+
     // import { ImageWorkerOptions, ImageComputeOptions } from './workers/index';
 
     cv2.init();
 
-    let networkConnected = false;
+    // let networkConnected = false;
     const worker = new Worker();
     worker.onmessage = onWorkerMessage;
     let page: NativeViewElementNode<Page>;
@@ -44,10 +51,11 @@
 
     let contours: [number, number][][] = null;
     let matrix = new Matrix();
-    let images: ImageSource[] = [];
+    let images: ObservableArray<ImageSource> = [] as any;
     let pausePreview = false;
     let currentImage: ImageSource = null;
-    let debugImage: ImageSource = null;
+    let debugEdgesImage: ImageSource = null;
+    let debugResizedImage: ImageSource = null;
     let contourWidth = 0;
     let contourHeight = 0;
     let contourRotation = 0;
@@ -58,24 +66,24 @@
         getString(
             'compute_options',
             `{
-        "algo": 4,
+        "algo": 2,
         "boundType": 3,
         "pageContourType": 3,
         "colorType": 0,
         "approxValue": 0.01,
         "computeTextOrientation": false,
-        "debug": true,
+        "debug": false,
         "sizeFactor": 1
     }`
         )
     );
     console.log('computeOptions', computeOptions);
-    onMount(async () => {
-        networkService.on(NetworkConnectionStateEvent, (event: NetworkConnectionStateEventData) => {
-            networkConnected = event.data.connected;
-        });
-        networkService.start(); // should send connection event and then refresh
-    });
+    // onMount(async () => {
+    //     networkService.on(NetworkConnectionStateEvent, (event: NetworkConnectionStateEventData) => {
+    //         networkConnected = event.data.connected;
+    //     });
+    //     networkService.start(); // should send connection event and then refresh
+    // });
     onLanguageChanged((lang) => {
         console.log('refresh triggered by lang change');
     });
@@ -85,8 +93,12 @@
     //     id: string;
     //     text: string;
     // }
-    function showOptions() {
-        showBottomSheet({
+    async function showDocumentsList() {
+        navigate({ page: DocumentsList });
+    }
+
+    async function showOptions() {
+        const result: { icon: string; id: string; text: string } = await showBottomSheet({
             parent: page,
             view: ActionSheet,
             props: {
@@ -106,22 +118,63 @@
                         id: 'about',
                         text: l('about'),
                     },
+                    {
+                        icon: 'mdi-image-plus',
+                        id: 'image_import',
+                        text: l('image_import'),
+                    },
                 ],
             },
-        }).then((result: { icon: string; id: string; text: string }) => {
-            if (result) {
-                switch (result.id) {
-                    case 'preferences':
-                        prefs.openSettings();
-                        break;
-                    case 'about':
-                        console.log('showing about');
-                        const About = require('./About.svelte').default;
-                        showModal({ page: About, animated: true, fullscreen: true });
-                        break;
-                }
-            }
         });
+        if (result) {
+            switch (result.id) {
+                case 'preferences':
+                    prefs.openSettings();
+                    break;
+                case 'image_import':
+                    try {
+                        const permRes = await request('storage');
+                        console.log('permRes', permRes);
+                        const selection = await imagepicker
+                            .create({
+                                mode: 'single', // use "multiple" for multiple selection
+                            })
+                            // on android pressing the back button will trigger an error which we dont want
+                            .present();
+                        console.log('selection', selection);
+                        if (selection.length > 0) {
+                            return new Promise((resolve, reject) => {
+                                selection[0].getImageAsync((image, error) => {
+                                    console.log('selection', image, error);
+                                    if (error) {
+                                        reject(error);
+                                    } else {
+                                        resolve(image);
+                                    }
+                                });
+                            })
+                                .then((image) => {
+                                    pausePreview = true;
+                                    const mat = cv2.matFromImage(image);
+                                    const size = mat.size();
+                                    console.log('importing image', image, mat, size);
+                                    return sendMessageToWorker({ image: mat }, { full: true, width: size.width, height: size.height, rotation: 0, ...computeOptions });
+                                })
+                                .then(handleFullResult)
+                                .catch(showError);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+
+                    break;
+                case 'about':
+                    console.log('showing about');
+                    const About = require('./About.svelte').default;
+                    showModal({ page: About, animated: true, fullscreen: true });
+                    break;
+            }
+        }
     }
 
     function quitApp() {
@@ -182,8 +235,6 @@
     }
 
     function onImageTap(item) {
-        console.log('onImageTap', item);
-        pausePreview = false;
         currentImage = item;
     }
 
@@ -237,23 +288,34 @@
         showContour(contours, rotation, w, h);
     }
 
-    function showMat(mat, rotation = 0) {
+    function showEdgesMat(mat, rotation = 0) {
         if (!mat) {
-            debugImage = null;
+            debugEdgesImage = null;
             return;
         }
         const size = mat.size();
-        if (!mat) {
-            debugImage = null;
-            return;
-        }
         if (rotation !== 0) {
             const M = cv2.Imgproc.getRotationMatrix2D(new cv2.Point(size.width / 2, size.height / 2), rotation, 1);
             cv2.Imgproc.warpAffine(mat, mat, M, new cv2.Size(size.width, size.height));
         }
         let image = cv2.imageFromMat(mat);
 
-        debugImage = new ImageSource(image);
+        debugEdgesImage = new ImageSource(image);
+    }
+
+    function showResizedMat(mat, rotation = 0) {
+        if (!mat) {
+            debugResizedImage = null;
+            return;
+        }
+        const size = mat.size();
+        if (rotation !== 0) {
+            const M = cv2.Imgproc.getRotationMatrix2D(new cv2.Point(size.width / 2, size.height / 2), rotation, 1);
+            cv2.Imgproc.warpAffine(mat, mat, M, new cv2.Size(size.width, size.height));
+        }
+        let image = cv2.imageFromMat(mat);
+
+        debugResizedImage = new ImageSource(image);
     }
 
     function setOptionsKey(key: keyof ImageWorkerOptions, value: any) {
@@ -304,14 +366,15 @@
             .then((data) => {
                 handleContours(data.contours, data.rotation, data.width, data.height);
                 if (computeOptions.debug) {
-                    showMat(showEdges ? data.nativeDatas.edgesImage : data.nativeDatas.resizedImage, data.rotation);
+                    showEdgesMat(data.nativeDatas.edgesImage, data.rotation);
+                    showResizedMat(data.nativeDatas.resizedImage, data.rotation);
                 }
             })
             .catch(showError);
     }
 
     function getColor(index) {
-        switch (index) {
+        switch (index % 6) {
             case 0:
                 return '#ff0000';
             case 1:
@@ -371,11 +434,44 @@
         pausePreview = false;
     }
 
+    async function handleFullResult(data: { id: number; nativeDatas?: { [k: string]: any }; [k: string]: any }) {
+        const nativeImages = data.nativeDatas.images;
+        console.log('handleFullResult', nativeImages, data.nativeDatas.mats);
+        try {
+            // doc.mats = data.nativeDatas.mats;
+            // doc.rawmats = data.nativeDatas.mats;
+            if (nativeImages) {
+                const document = await OCRDocument.createDocument(new Date().toString(), data.nativeDatas.mats);
+                console.log('document created', nativeImages, data.nativeDatas.mats);
+                
+                images = null;
+                const newImages = [];
+                if (computeOptions.debug) {
+                    images = new ObservableArray(await Promise.all((await document.pages).map((p) => p.imageSource)));
+                    // images = new ObservableArray(document.pages.map(p=>p.image));
+                    showEdgesMat(data.nativeDatas.edgesImage, data.rotation);
+                    showResizedMat(data.nativeDatas.resizedImage, data.rotation);
+                } else {
+                    // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
+                    navigate({
+                        page: PDFView,
+                        transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
+                        props: {
+                            document,
+                        },
+                    });
+                }
+            }
+        } catch (err) {
+            showError(err);
+        }
+    }
+
     async function takePicture() {
         pausePreview = true;
         try {
             showLoading(l('computing'));
-            const res: { data: any; rotation: number } = await cameraPreview.nativeView.takePicture();
+            const res: { data: any; rotation: number } = (await cameraPreview.nativeView.takePicture()) as any;
             console.log('got takePicture  image', res.data, res.rotation);
             // let mat = cv2.matFromImage(res.image);
             let mat = cv2.Imgcodecs.imdecode(new cv2.MatOfByte(res.data), cv2.Imgcodecs.IMREAD_COLOR);
@@ -386,22 +482,9 @@
             // showMat(mat, res.data.rotation);
 
             console.log('got takePicture2  image', size);
-            const data = await sendMessageToWorker({ image: mat }, { full: true, width: size.width, height: size.height, rotation: res.rotation, ...computeOptions, algo: 4 });
-            console.log('got takePicture  worker result', data);
-            const newImages = [];
+            const data = await sendMessageToWorker({ image: mat }, { full: true, width: size.width, height: size.height, rotation: res.rotation, ...computeOptions });
+            handleFullResult(data);
             mat.release();
-            if (data.nativeDatas.images) {
-                for (let index = 0; index < data.nativeDatas.images.length; index++) {
-                    const imageSource = new ImageSource();
-                    imageSource.setNativeSource(data.nativeDatas.images[index]);
-                    newImages[index] = imageSource;
-                }
-            }
-
-            images = newImages;
-            if (computeOptions.debug) {
-                showMat(showEdges ? data.nativeDatas.edgesImage : data.nativeDatas.resizedImage, data.rotation);
-            }
         } catch (err) {
             showError(err);
         } finally {
@@ -410,21 +493,33 @@
     }
     function switchTorch() {
         const current = cameraPreview.nativeView.torch;
-        torchEnabled = current === 'torch';
-        cameraPreview.nativeView.torch = torchEnabled ? 'off' : 'torch';
+        torchEnabled = !(current === 'torch');
+        cameraPreview.nativeView.torch = torchEnabled ? 'torch' : 'off';
     }
 
-    onMount(() => {
-        // switchTorch();
-    });
+    // onMount(() => {
+    //     documentsService.start().catch(showError);
+    //     // switchTorch();
+    // });
+    function onNavigatedFrom() {
+        console.log('onNavigatedFrom', torchEnabled);
+        if (torchEnabled) {
+            switchTorch();
+        }
+        // cameraPreview.nativeView.stopCamera();
+    }
+    function onNavigatedTo() {
+        // cameraPreview.nativeView.startCamera();
+    }
 </script>
 
-<page bind:this={page} actionBarHidden="true" id="home">
+<page bind:this={page} actionBarHidden="true" id="home" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
 
         <cameraView rowSpan="2" bind:this={cameraPreview} on:frame={processFrame} />
         <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} />
         <CActionBar title={l('document_scanner')}>
+            <mdbutton variant="flat" class="icon-btn" text="mdi-file-document" on:tap={showDocumentsList} />
             <mdbutton variant="flat" class="icon-btn" text="mdi-dots-vertical" on:tap={showOptions} />
         </CActionBar>
         <gridLayout row="1" rows="auto,*,auto" padding="10">
@@ -432,7 +527,7 @@
                 <mdbutton color={torchEnabled ? accentColor : 'white'} variant="flat" class="icon-btn" text="mdi-flashlight" on:tap={switchTorch} />
                 <mdbutton color={computeOptions.debug ? accentColor : 'white'} variant="flat" class="icon-btn" text="mdi-bug" on:tap={() => setOptionsKey('debug', !computeOptions.debug)} />
                 <mdbutton color={showEdges ? accentColor : 'white'} variant="flat" class="icon-btn" text="mdi-border-outside" on:tap={() => (showEdges = !showEdges)} />
-                <mdbutton variant="flat" class="icon-btn" text="mdi-invert-colors" on:tap={() => setOptionsKey('colorType', (computeOptions.colorType + 1) % 3)} />
+                <!-- <mdbutton variant="flat" class="icon-btn" text="mdi-invert-colors" on:tap={() => setOptionsKey('colorType', (computeOptions.colorType + 1) % 3)} /> -->
                 <gridLayout rows="auto" columns="auto">
                     <mdbutton variant="flat" class="icon-btn" text="mdi-blur" on:tap={() => setOptionsKey('algo', (computeOptions.algo + 1) % 5)} />
                     <htmllabel text={computeOptions.algo} fontSize="11" verticalAlignment="bottom" horizontalAlignment="right" paddingRight="10" />
@@ -453,17 +548,23 @@
                     on:tap={() => setOptionsKey('computeTextOrientation', !computeOptions.computeTextOrientation)} />
 
             </stackLayout>
-            <mdslider row="1" height="30" verticalAlignment="top" maxValue="200" value={computeOptions.sizeFactor * 100} on:valueChange={(event) => setOptionsKey('sizeFactor', event.value / 100)} />
-            <mdslider
-                row="1"
-                marginTop="30"
-                height="30"
-                verticalAlignment="top"
-                maxValue="20"
-                value={computeOptions.approxValue * 100}
-                on:valueChange={(event) => setOptionsKey('approxValue', event.value / 100)} />
             {#if computeOptions.debug}
-                <nsimg row="1" stretch="aspectFit" src={debugImage} width="50%" height="30%" horizontalAlignment="right" verticalAlignment="center" />
+                <mdslider
+                    row="1"
+                    height="30"
+                    verticalAlignment="top"
+                    maxValue="200"
+                    value={computeOptions.sizeFactor * 100}
+                    on:valueChange={(event) => setOptionsKey('sizeFactor', event.value / 100)} />
+                <mdslider
+                    row="1"
+                    marginTop="30"
+                    height="30"
+                    verticalAlignment="top"
+                    maxValue="20"
+                    value={computeOptions.approxValue * 100}
+                    on:valueChange={(event) => setOptionsKey('approxValue', event.value / 100)} />
+                <nsimg row="1" stretch="aspectFit" src={showEdges ? debugEdgesImage : debugResizedImage} width="50%" height="30%" horizontalAlignment="right" verticalAlignment="center" />
             {/if}
 
             <mdbutton row="1" visibility={contours && contours.length > 0 ? 'visible' : 'hidden'} text="takePicture" on:tap={takePicture} verticalAlignment="bottom" horizontalAlignment="center" />

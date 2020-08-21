@@ -3,6 +3,7 @@ import { l } from '~/helpers/locale';
 import { confirm, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { hideLoading } from './ui';
 
 function evalTemplateString(resource: string, obj: {}) {
     if (!obj) {
@@ -93,6 +94,7 @@ export async function showError(err: Error | string) {
     if (!err) {
         return;
     }
+    hideLoading();
 
     if (err['customErrorConstructorName'] === 'NoNetworkError') {
         showSnack({ message: l('no_network') });

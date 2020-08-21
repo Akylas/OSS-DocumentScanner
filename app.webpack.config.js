@@ -42,6 +42,34 @@ module.exports = (env, params = {}) => {
     const dist = resolve(projectRoot, nsWebpack.getAppPath(platform, projectRoot));
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
 
+    Object.assign(config.resolve.alias, {
+        '../driver/oracle/OracleDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './oracle/OracleDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/cockroachdb/CockroachDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './cockroachdb/CockroachDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './cordova/CordovaDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './react-native/ReactNativeDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/react-native/ReactNativeDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './nativescript/NativescriptDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/nativescript/NativescriptDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './mysql/MysqlDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/mysql/MysqlDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './postgres/PostgresDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/postgres/PostgresDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './expo/ExpoDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './aurora-data-api/AuroraDataApiDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/aurora-data-api/AuroraDataApiDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './sqlite/SqliteDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/sqljs/SqljsDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './sqljs/SqljsDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/sqlserver/SqlServerDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './sqlserver/SqlServerDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './mongodb/MongoDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/mongodb/MongoDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        './cordova/CordovaDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+        '../driver/cordova/CordovaDriver': '@akylas/nativescript-sqlite/typeorm/NativescriptDriver',
+    });
+
     const package = require('./package.json');
     const isIOS = platform === 'ios';
     const isAndroid = platform === 'android';
@@ -72,7 +100,7 @@ module.exports = (env, params = {}) => {
 
     const itemsToClean = [`${dist}/**/*`];
     if (platform === 'android') {
-        itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'src', 'main', 'assets', 'snapshots')}`);
+        itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'src', 'main', 'assets', 'snapshots/**/*')}`);
         itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'build', 'configurations', 'nativescript-android-snapshot')}`);
         console.log('itemsToClean', itemsToClean);
     }
@@ -99,7 +127,7 @@ module.exports = (env, params = {}) => {
             exclude: /\.module\.scss$/,
             use: [
                 {
-                    loader: '@nativescript/webpack/css2json-loader',
+                    loader: '@nativescript/webpack/helpers/css2json-loader',
                     options: { useForImports: true },
                 },
                 {
@@ -135,6 +163,24 @@ module.exports = (env, params = {}) => {
         test: /\.mjs$/,
         type: 'javascript/auto',
     };
+    // const mjsRule = {
+    //     test: /\.m?js$/,
+    //     use: {
+    //         loader: 'babel-loader',
+    //         options: {
+    //             presets: [
+    //                 [
+    //                     '@babel/preset-env',
+    //                     {
+    //                         useBuiltIns: 'entry',
+    //                         exclude: ['@babel/plugin-transform-regenerator'],
+    //                         modules:'commonjs',
+    //                     },
+    //                 ],
+    //             ],
+    //         },
+    //     },
+    // };
     config.module.rules.splice(indexOfTsLoaderRule + 1, 0, {
         test: /\.svelte$/,
         exclude: /node_modules/,
@@ -202,7 +248,7 @@ module.exports = (env, params = {}) => {
         new CleanWebpackPlugin({
             dangerouslyAllowCleanPatternsOutsideProject: true,
             dry: false,
-            verbose: !!verbose,
+            verbose: true,
             cleanOnceBeforeBuildPatterns: itemsToClean,
         })
     );

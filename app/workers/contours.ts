@@ -1,6 +1,5 @@
 import * as cv2 from 'nativescript-opencv';
 cv2.init();
-import { isAndroid } from '@nativescript/core';
 import { ImageWorkerOptions } from './options';
 const SMALL_HEIGHT = 300;
 const FULL_HEIGHT = 400;
@@ -92,7 +91,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
 
     const MIN_COUNTOUR_AREA = height * width * 0.1 * 0.1;
     const MAX_COUNTOUR_AREA = height * width * 0.99 * 0.99;
-    const sorted = contours.filter(a=> MIN_COUNTOUR_AREA < a.area && a.area < MAX_COUNTOUR_AREA).sort((a, b) => b.area - a.area);
+    const sorted = contours.filter((a) => MIN_COUNTOUR_AREA < a.area && a.area < MAX_COUNTOUR_AREA).sort((a, b) => b.area - a.area);
     const foundContoursLength = sorted.length;
     // console.log('sorted', nContours.size(), foundContoursLength);
     cv2.Imgproc.drawContours(img, nContours, -1, new cv2.Scalar(255, 255, 0), 2);
@@ -102,7 +101,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
         const c = sorted[index];
 
         const cnt = c.contour;
-        if (isAndroid) {
+        if (global.isAndroid) {
             const floatPoint = new org.opencv.core.MatOfPoint2f();
             cnt.convertTo(floatPoint, cv2.CvType.CV_32F);
             const perimeter = cv2.Imgproc.arcLength(floatPoint, true);
@@ -219,13 +218,14 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                         points.forEach((p, i) => (npoints[i] = points[i]));
                         const newArrayPoints = new org.opencv.core.MatOfPoint2f(npoints);
                         cv2.Imgproc.minEnclosingCircle(newArrayPoints, circleCenter, radius);
-                        let Ds = points.map((p, i) => Math.abs(cvnorm(circleCenter, p) - radius[0]) * (360 -(cvangle(p, circleCenter) - cvangle(points[(i+1)%nbPoints], circleCenter))));
+                        let Ds = points.map((p, i) => Math.abs(cvnorm(circleCenter, p) - radius[0]) * (360 - (cvangle(p, circleCenter) - cvangle(points[(i + 1) % nbPoints], circleCenter))));
                         let sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[a] - Ds[b]);
                         // const test = points.map((p) => Math.abs(cvnorm(circleCenter, p) - radius[0]));
                         points = sortedIndexes.slice(0, 4).map((i) => points[i]);
                         Ds = points.map((p) => cvangle(p, circleCenter));
-                        sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[a] - Ds[b]);
+                        sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[b] - Ds[a]);
                         points = sortedIndexes.map((i) => points[i]);
+                        // points = order_cv_points(points);
                     }
                     // points = order_cv_points(points);
                     if (data.boundType === 3) {
@@ -263,7 +263,7 @@ function cvnorm(p1: cv2.Point, p2: cv2.Point) {
 
 function cvangle(p1: cv2.Point, p2: cv2.Point) {
     const radian = Math.atan2(p1.y - p2.y, p1.x - p2.x);
-    let angle = radian * (180 / Math.PI);
+    let angle = radian * (180 / Math.PI) - 90;
     if (angle < 0.0) angle += 360.0;
     return angle;
 }
@@ -386,6 +386,7 @@ export function persp_transform(img: cv2.Mat, s_points: [number, number][], rati
     const M = cv2.Imgproc.getPerspectiveTransform(sMat, tMat);
     const out = new cv2.Mat();
     cv2.Imgproc.warpPerspective(img, out, M, new cv2.Size(maxWidth, maxHeight));
+    cv2.Imgproc.cvtColor(out, out, cv2.Imgproc.COLOR_RGBA2RGB);
     return out;
 }
 
@@ -488,7 +489,7 @@ export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
     const w = size.width;
     const h = size.height;
     const wantedHeight = data.full ? FULL_HEIGHT : SMALL_HEIGHT * data.sizeFactor;
-    // console.log('findDocuments', wantedHeight);
+
     if (h > wantedHeight) {
         if (!resizedImage) {
             resizedImage = new cv2.Mat();
@@ -535,11 +536,11 @@ export function calculateTextRotation(img: cv2.Mat, dst?: cv2.Mat) {
     // cv2.Imgproc.GaussianBlur(midImage, sharpen, new cv2.Size(0, 0), 3);
     // cv2.Core.addWeighted(midImage, 1.5, sharpen, -0.5, 0, midImage);
     // cv2.Imgproc.GaussianBlur(midImage, dst, new cv2.Size(5, 5), 0);
-    cv2.Imgproc.GaussianBlur(midImage, midImage, new cv2.Size(9,9), 0);
+    cv2.Imgproc.GaussianBlur(midImage, midImage, new cv2.Size(9, 9), 0);
     // cv2.Imgproc.medianBlur(midImage, midImage, 11);
     // cv2.Imgproc.Canny(midImage, dst, 0, 20);
     cv2.Imgproc.Canny(midImage, midImage, 75, 200);
-    const kernel9 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_ELLIPSE, new cv2.Size(9,9));
+    const kernel9 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_ELLIPSE, new cv2.Size(9, 9));
     // cv2.Imgproc.morphologyEx(midImage, dst, cv2.Imgproc.MORPH_CLOSE, kernel9);
     cv2.Imgproc.morphologyEx(midImage, midImage, cv2.Imgproc.MORPH_CLOSE, kernel9);
     // kernel9 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_ERODE, new cv2.Size(9,9));
@@ -580,4 +581,16 @@ export function calculateTextRotation(img: cv2.Mat, dst?: cv2.Mat) {
     }
 
     return 0;
+}
+
+export function toBlackAndWhite(img: cv2.Mat, dest: cv2.Mat)
+{
+    if (img.channels() === 4) {
+        cv2.Imgproc.cvtColor(img, dest, cv2.Imgproc.COLOR_RGBA2GRAY);
+    } else if (img.channels() === 3) {
+        cv2.Imgproc.cvtColor(img, dest, cv2.Imgproc.COLOR_RGB2GRAY);
+    }
+    // apply adaptive threshold to get black and white effect
+    cv2.Imgproc.threshold(dest, dest, 127, 255, cv2.Imgproc.THRESH_BINARY);
+    cv2.Imgproc.adaptiveThreshold(dest, dest, 255, cv2.Imgproc.ADAPTIVE_THRESH_MEAN_C, cv2.Imgproc.THRESH_BINARY, 11, 12);
 }

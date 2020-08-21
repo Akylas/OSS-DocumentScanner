@@ -1,7 +1,7 @@
 // import InAppBrowser from 'nativescript-inappbrowser';
 import { primaryColor } from '~/variables';
 import { openUrl } from '@nativescript/core/utils/utils';
-import { Label } from 'nativescript-htmllabel';
+import { Label } from '@nativescript-community/ui-label';
 import { AlertDialog } from '@nativescript-community/ui-material-dialogs';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
 import { StackLayout } from '@nativescript/core';
