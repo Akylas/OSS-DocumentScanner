@@ -1,0 +1,27 @@
+{
+    "name": "nativescript-cameraview",
+    "version": "1.0.0",
+    "description": "CameraView plugin.",
+    "main": "./index",
+    "sideEffects": false,
+    "typings": "./index.d.ts",
+    "nativescript": {
+        "platforms": {
+            "android": "3.0.0",
+            "ios": "3.0.0"
+        }
+    },
+    "keywords": [
+        "NativeScript",
+        "JavaScript",
+        "Android",
+        "iOS",
+        "Vue"
+    ],
+    "author": {
+        "name": "Theophile Batoz",
+        "email": "theophile.batoz@kanso.ink"
+    },
+    "license": "Apache-2.0",
+    "readmeFilename": "README.md"
+}

@@ -35,6 +35,9 @@ export default class ImageWorker extends BaseWorker {
             //     cv2.Core.flip(mat, mat, 0);
             // }
             result = findDocuments(mat, data);
+            if (!result) {
+                return;
+            }
             // try {
             //     const time = Date.now();
             //     if (!net) {
@@ -175,7 +178,7 @@ export default class ImageWorker extends BaseWorker {
                         height: result.resizedImage.size().height,
                         originalWidth: data.width,
                         originalHeight: data.height,
-                        nativeDataKeys: ['edgesImage', 'images', 'mats', 'resizedImage'],
+                        nativeDataKeys: ['edgesImage', 'images', 'mats', 'resizedImage']
                     })
                 );
                 result.edgesImage.release();
@@ -194,7 +197,7 @@ export default class ImageWorker extends BaseWorker {
                         height: result.resizedImage.size().height,
                         originalWidth: data.width,
                         originalHeight: data.height,
-                        nativeDataKeys: ['edgesImage', 'resizedImage'],
+                        nativeDataKeys: ['edgesImage', 'resizedImage']
                     })
                 );
                 result.edgesImage.release();
@@ -207,7 +210,7 @@ export default class ImageWorker extends BaseWorker {
                 Object.assign(data, {
                     type: 'error',
                     id,
-                    error,
+                    error
                 })
             );
         } finally {

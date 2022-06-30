@@ -1,0 +1,34 @@
+{
+    "compilerOptions": {
+        "target": "es2017",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "removeComments": false,
+        "noLib": false,
+        "emitDecoratorMetadata": false,
+        "experimentalDecorators": true,
+        "lib": ["es6", "dom"],
+        "sourceMap": true,
+        "pretty": true,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "noEmitHelpers": true,
+        "noEmitOnError": false,
+        "noImplicitAny": false,
+        "noImplicitReturns": true,
+        "noImplicitUseStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "sourceRoot": "../src",
+        "baseUrl": ".",
+        "outDir": "./plugin",
+        "paths": {
+            "@corefortech/cancontrols": ["src/index"],
+            "@corefortech/cancontrols/*": ["src/*"],
+            "*": ["node_modules/*"]
+        },
+        "plugins": [{ "transform": "@nativescript/webpack/dist/transformers/NativeClass", "type": "raw" }]
+    },
+    "include": ["src/**/*", "./references.d.ts"],
+    "exclude": ["node_modules", "platforms", "src/angular/**/*"],
+    "compileOnSave": false,
+}

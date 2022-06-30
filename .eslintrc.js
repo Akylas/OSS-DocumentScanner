@@ -1,28 +1,39 @@
+const ignoreWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control']);
 module.exports = {
+    extends: ['plugin:prettier/recommended'],
     env: {
         es6: true,
         node: true
     },
+    ignorePatterns: ['**/node_modules/**/*', 'app/assets/**', 'platforms/**'],
     parser: '@typescript-eslint/parser',
+
     parserOptions: {
         ecmaVersion: 2019,
-        createDefaultProgram: true,
-        project: 'tsconfig.json',
-        sourceType: 'module'
+        sourceType: 'module',
+        project: ['tsconfig.eslint.json'],
+        // extraFileExtensions: ['.svelte'],
+        warnOnUnsupportedTypeScriptVersion: false,
+        tsconfigRootDir: __dirname
     },
     globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true },
-    plugins: ['svelte3', '@typescript-eslint'],
+    plugins: ['prettier', 'svelte3', '@typescript-eslint'],
     overrides: [
-        { files: '*.svelte', processor: 'svelte3/svelte3' },
+        { files: ['*.svelte'], processor: 'svelte3/svelte3' },
         {
             files: '*.ts',
             rules: {
                 'eslint-plugin-svelte3/parse-error': 'off',
-                'no-undef': 'off',
+                'no-undef': 'off'
             }
         }
     ],
+    settings: {
+        'svelte3/ignore-warnings': (w) => ignoreWarnings.has(w && w.code),
+        'svelte3/typescript': true // load TypeScript as peer dependency
+    },
     rules: {
+        'prettier/prettier': 'warn',
         'eslint-plugin-svelte3/invalid-binding': 'off',
         '@typescript-eslint/adjacent-overload-signatures': 'off',
         '@typescript-eslint/array-type': 'error',
@@ -37,19 +48,7 @@ module.exports = {
                 accessibility: 'explicit'
             }
         ],
-        '@typescript-eslint/indent': [
-            'error',
-            4,
-            {
-                FunctionDeclaration: {
-                    parameters: 'first'
-                },
-                FunctionExpression: {
-                    parameters: 'first'
-                },
-                SwitchCase: 1
-            }
-        ],
+        '@typescript-eslint/indent': 'off',
         '@typescript-eslint/interface-name-prefix': 'off',
         '@typescript-eslint/member-delimiter-style': 'error',
         '@typescript-eslint/member-ordering': 'off',
@@ -188,7 +187,7 @@ module.exports = {
         'quote-props': 'off',
         radix: 'error',
         'space-before-function-paren': 'off',
-        'spaced-comment': 'error',
+        'spaced-comment': 'off',
         'use-isnan': 'error',
         'valid-typeof': 'off'
     }

@@ -1,0 +1,130 @@
+
+project.ext.abiCodes = ['armeabi':1, 'armeabi-v7a':2, 'arm64-v8a':3, 'x86':4, 'x86_64':5]
+def BUILD_TOOLS_PATH = "$rootDir/build-tools"
+
+android { 
+  // we only enable split if specified as an arg or if in debug and abiFilters is used(through cli)
+  def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
+  defaultConfig {  
+    multiDexEnabled false
+    minSdkVersion 21
+    versionCode 1
+    versionName "1.0.0"
+
+    if (project.hasProperty('resConfigs')) {
+      def resConfigs = project.findProperty('resConfigs')
+      reset()
+      include resConfigs.split(',')
+    } else {
+      resConfigs "en", "fr", "es"
+    }
+    ndk {
+      if (splitEnabled || project.hasProperty('abiFilters')) {
+        abiFilters.clear()
+        if (!splitEnabled && project.hasProperty('abiFilters')) {
+          abiFilters.addAll(project.findProperty('abiFilters').split(',').collect{it as String})
+        }
+      }
+
+    }
+  }
+  lintOptions {
+      checkReleaseBuilds false
+      // Or, if you prefer, you can continue to check for errors in release builds,
+      // but continue the build even when errors are found:
+      abortOnError false
+  }
+  splits {
+      abi {
+          enable splitEnabled
+          if (project.hasProperty('abiFilters')) {
+            def abis = project.findProperty('abiFilters')
+            reset()
+            include abis.split(',')
+          }
+          universalApk project.hasProperty('universalApk')
+      }
+  }
+  // aaptOptions {
+  //   additionalParameters "--no-version-vectors"  
+  // }  
+  buildTypes { // THIS CAUSES RELEASE MODE ERROR ON APP LAUNCH
+    release {
+      // Enables code shrinking, obfuscation, and optimization for only
+      // your project's release build type.
+      minifyEnabled true
+
+      // Enables resource shrinking, which is performed by the
+      // Android Gradle plugin.
+      shrinkResources true
+
+      // Disables PNG crunching for the release build type.
+      crunchPngs false
+
+
+      // Includes the default ProGuard rules files that are packaged with
+      // the Android Gradle plugin. To learn more, go to the section about
+      // R8 configuration files.
+      def absolutePathToAppResources = getAppResourcesPath()
+      proguardFiles getDefaultProguardFile(
+        'proguard-android-optimize.txt'),
+        "$BUILD_TOOLS_PATH/proguard-rules.pro"
+
+      debuggable false
+      jniDebuggable false
+      renderscriptDebuggable false
+    }
+    debug {
+      multiDexEnabled true;
+    }
+  }  
+  // flavorDimensions "stage"
+  // productFlavors {
+  //   dev {
+  //     dimension "stage"
+  //     versionNameSuffix "-dev"
+  //     resConfigs "en", "xxhdpi"
+  //   }
+  //   prod {
+  //     dimension "stage"
+  //     resConfigs "en", "fr", "es"
+  //   }
+  // }
+}
+
+// task createProguard {
+//     dependsOn 'buildMetadata'
+//     doLast {
+//         exec {
+//             workingDir "$USER_PROJECT_ROOT"
+//             commandLine 'node', 'scripts/createProguard.js'
+//         }
+//     }
+// }
+tasks.whenTaskAdded({ DefaultTask currentTask ->
+    // if (currentTask =~ /buildMetadata/) {
+    //     currentTask.finalizedBy(createProguard)
+    // }
+    // if (currentTask =~ /minify.*WithR8/) {
+    //     currentTask.dependsOn(createProguard)
+    // }
+})
+
+android.applicationVariants.all { variant ->
+    if (project.hasProperty('splitEnabled')) {
+        if (variant.buildType.name == "debug") {
+            variant.outputs.each { output ->
+                output.versionNameOverride = android.defaultConfig.versionName + "." + variant.versionCode + "-dev";
+            }
+        } else {
+            variant.outputs.each { output ->
+                output.versionNameOverride = android.defaultConfig.versionName + "." + variant.versionCode;
+            }
+        }
+    }
+}
+dependencies {
+  implementation 'com.otaliastudios:cameraview:2.7.2'
+  // implementation 'cz.adaptech.android:tesseract4android:4.1.1'
+  implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
+}

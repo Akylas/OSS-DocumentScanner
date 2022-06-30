@@ -1,31 +1,23 @@
 import { Folder, ObservableArray, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 // import { createPDF } from '~/utils/pdf';
-import { jsPDF as jsPDFType } from 'jspdf';
-import { installMixins } from '@akylas/nativescript-sqlite/typeorm';
+import { installMixins } from '@nativescript-community/sqlite/typeorm';
 import { Imgcodecs, Mat } from 'nativescript-opencv';
-import { Connection, createConnection } from '@akylas/typeorm/browser';
+import { Connection, createConnection } from '@nativescript-community/typeorm/browser';
+import { OCRDocument, OCRImage, OCRPage, OCRRawImage } from '~/models/OCRDocument';
 // import OCRDocument, { ImageConfig } from '~/models/Document';
-import OCRDocument from '~/models/OCRDocument';
-import OCRImage from '~/models/OCRImage';
-import OCRPage from '~/models/OCRPage';
-import { DEV_LOG, clog } from '~/utils/logging';
-import OCRRawImage from '~/models/OCRRawImage';
-global['window'] = {
-    saveAs: () => {},
-    document: {
-        createElementNS: () => ({} as any),
-    },
-} as any;
-const jsPDF: typeof jsPDFType = require('jspdf').jsPDF;
 
 export class DocumentsService extends Observable {
-    log(...args) {
-        clog('[' + this.constructor.name + ']', ...args);
-    }
     dataFolder: Folder;
     connection: Connection;
+    started = false;
     async start() {
+        if (this.started) {
+            return;
+        }
+        if (DEV_LOG) {
+            console.log('DocumentsService start');
+        }
         this.dataFolder = knownFolders.documents().getFolder('data');
         const filePath = path.join(knownFolders.documents().path, 'db.sqlite');
         // this.log('DBHandler', 'start', filePath);
@@ -34,14 +26,26 @@ export class DocumentsService extends Observable {
 
         this.connection = await createConnection({
             database: filePath,
-            type: 'nativescript' as any,
-            entities: [OCRDocument, OCRPage, OCRImage, OCRRawImage],
+            type: '@nativescript-community/sqlite' as any,
+            entities: [OCRPage, OCRImage, OCRRawImage, OCRDocument],
             logging: DEV_LOG,
+            extra: {
+                threading: false,
+                transformBlobs: false
+            }
         });
-        await this.connection.synchronize(DEV_LOG);
+        if (DEV_LOG) {
+            console.log('Connection Created');
+        }
 
+        await this.connection.synchronize(false);
+        this.started = true;
     }
     stop() {
+        if (!this.started) {
+            return;
+        }
+        this.started = false;
         if (this.connection) {
             this.connection.close();
             this.connection = null;
@@ -95,72 +99,41 @@ export class DocumentsService extends Observable {
     // }
 
     async exportPDF(document: OCRDocument) {
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-        });
         const start = Date.now();
-        console.log('exportPDF', document);
-        const pages =  document.pages;
-        let page: OCRPage;
-        // let page: { image: ImageSource; config: ImageConfig };
-        let image: OCRImage;
-        for (let index = 0; index < pages.length; index++) {
-            page = pages[index];
-            image =  await page.image;
-            // if (!image || (global.isAndroid && !image.android) || (global.isIOS && !image.ios)) {
-            //     continue;
-            // }
-            // const options = page.config || {
-            //     rotation: 0,
-            // };
-
-            if (index > 0) {
-                pdf.addPage();
+        if (global.isAndroid) {
+            const pdfDocument = new android.graphics.pdf.PdfDocument();
+            // const paint = new android.graphics.Paint();
+            const pages = document.pages;
+            let page: OCRPage;
+            let image: OCRImage;
+            for (let index = 0; index < pages.length; index++) {
+                page = pages[index];
+                image = await page.image;
+                let width = image.width;
+                let height = image.height;
+                if (page.rotation % 180 === 90) {
+                    width = image.height;
+                    height = image.width;
+                }
+                const matrix = new android.graphics.Matrix();
+                matrix.setRotate(page.rotation, image.width / 2, image.height / 2);
+                matrix.postTranslate(width / 2 - image.width / 2, height / 2 - image.height / 2);
+                const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width, height, index + 1).create();
+                const pdfpage = pdfDocument.startPage(pageInfo);
+                const pageCanvas = pdfpage.getCanvas();
+                // pageCanvas.save();
+                // pageCanvas.rotate(page.rotation);
+                pageCanvas.drawBitmap(image.imageSource.android, matrix, null);
+                pdfDocument.finishPage(pdfpage);
             }
-            const width = pdf.internal.pageSize.getWidth();
-            const left = 15,
-                top = 40;
-            const maxWidth = width - left * 2;
-            const newWidth = image.width < maxWidth ? image.width : maxWidth;
-            const newHeight = (image.height * newWidth) / image.width;
-            // if (global.isAndroid) {
-            //     const bmp = image.android as android.graphics.Bitmap;
-            //     const stream = new java.io.ByteArrayOutputStream();
-            //     bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, stream);
-            //     const inputAs8 = Uint8Array.from(stream.toByteArray());
-            //     pdf.addImage(inputAs8, 'JPEG', left, top, newWidth, newHeight, null, 'NONE' as any, options.rotation);
-            // } else {
-            const data = new Uint8Array(image.data);
-            pdf.addImage(data, 'JPEG', left, top, newWidth, newHeight, null, 'NONE' as any, page.rotation);
-            // }
+            const pdfFile = this.dataFolder.getFile(document.id + '.pdf');
+            const newFile = new java.io.File(pdfFile.path);
+            const fos = new java.io.FileOutputStream(newFile);
+            pdfDocument.writeTo(fos);
+            pdfDocument.close();
+            console.log('pdfFile', Date.now() - start, 'ms');
+            return pdfFile;
         }
-        const pdfFile = this.dataFolder.getFile(document.id + '.pdf');
-        const fileData = pdf.output('arraybuffer');
-        console.log('fileData', fileData.byteLength, Date.now() - start, 'ms');
-        // init the file and path to it
-        // Cut out the data piece .. remove 'data:...;base64,'
-        if (global.isIOS) {
-            // decode the base64 piece
-            // const data = android.util.Base64.decode(tempData, android.util.Base64.DEFAULT);
-            // const data = NSData.alloc().initWithBase64EncodedStringOptions(tempData, 1);
-            // write to the file
-            // write to the file
-            const data = NSData.dataWithData(fileData as any);
-            await pdfFile.write(data);
-        } else {
-            // write to the file
-            const u8 = new Uint8Array(fileData);
-            const length = u8.length;
-            const result = Array.create('byte', length);
-            for (let i = 0; i < length; i++) {
-                result[i] = u8[i];
-            }
-            await pdfFile.write(result);
-        }
-        console.log('pdfFile', Date.now() - start, 'ms');
-        return pdfFile;
     }
 }
 

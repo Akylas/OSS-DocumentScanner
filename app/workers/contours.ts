@@ -66,6 +66,9 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
             nContours = cv2.Imgproc.findContours(edges, null, hierarchyMat, cv2.Imgproc.RETR_CCOMP, cv2.Imgproc.CHAIN_APPROX_SIMPLE);
             break;
     }
+    if (!nContours) {
+        return;
+    }
     // Finding biggest rectangle otherwise return original corners
     const height = img.size().height;
     const width = img.size().width;
@@ -85,7 +88,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
         contours[index] = {
             contour,
             index,
-            area: cv2.Imgproc.contourArea(contour),
+            area: cv2.Imgproc.contourArea(contour)
         };
     }
 
@@ -162,7 +165,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                             [rect.x, rect.y],
                             [rect.x + rect.width - 1, rect.y],
                             [rect.x + rect.width - 1, rect.y + rect.height - 1],
-                            [rect.x, rect.y + rect.height - 1],
+                            [rect.x, rect.y + rect.height - 1]
                         ];
                     }
                     if (data.debug) {
@@ -180,7 +183,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                             [points[0].x, points[0].y],
                             [points[1].x, points[1].y],
                             [points[2].x, points[2].y],
-                            [points[3].x, points[3].y],
+                            [points[3].x, points[3].y]
                         ];
                     }
                     if (data.debug) {
@@ -378,7 +381,7 @@ export function persp_transform(img: cv2.Mat, s_points: [number, number][], rati
         [0, 0],
         [maxWidth - 1, 0],
         [maxWidth - 1, maxHeight - 1],
-        [0, maxHeight - 1],
+        [0, maxHeight - 1]
     ];
     // console.log('persp_transform', t_points, s_points);
     const tMat = matFromArray(t_points.length, 2, cv2.CvType.CV_32F, t_points.reverse());
@@ -506,6 +509,9 @@ export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
     }
     edges_det(resizedImage, edgesImage, data);
     const contours = find_page_contours(edgesImage, resizedImage, data);
+    if (!contours) {
+        return;
+    }
     return { edgesImage, resizedImage, contours };
 }
 
@@ -583,8 +589,7 @@ export function calculateTextRotation(img: cv2.Mat, dst?: cv2.Mat) {
     return 0;
 }
 
-export function toBlackAndWhite(img: cv2.Mat, dest: cv2.Mat)
-{
+export function toBlackAndWhite(img: cv2.Mat, dest: cv2.Mat) {
     if (img.channels() === 4) {
         cv2.Imgproc.cvtColor(img, dest, cv2.Imgproc.COLOR_RGBA2GRAY);
     } else if (img.channels() === 3) {
