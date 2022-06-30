@@ -13,7 +13,7 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 }
 
 export function EventEmitter<T extends new (...args: any[]) => {}>(constructor: T) {
-    return (class extends constructor {
+    return class extends constructor {
         _observable: Observable;
 
         constructor(...args) {
@@ -46,5 +46,5 @@ export function EventEmitter<T extends new (...args: any[]) => {}>(constructor: 
         notify<T extends EventData>(data: T): void {
             this._observable.notify(data);
         }
-    } as any) as T & Observable;
+    } as any as T & Observable;
 }

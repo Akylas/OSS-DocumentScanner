@@ -1,11 +1,8 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, JoinTable, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from '@akylas/typeorm/browser';
-import OCRImage from './OCRImage';
-import OCRPage, { ColorType } from './OCRPage';
-import { Imgproc, Mat, imageFromMat } from 'nativescript-opencv';
+import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from '@nativescript-community/typeorm/browser';
+import { Imgproc, Mat, imageFromMat, matFromImage } from 'nativescript-opencv';
 import { toBlackAndWhite } from '~/workers/contours';
 import { EventData, ImageSource, Observable, ObservableArray } from '@nativescript/core';
-import OCRRawImage from './OCRRawImage';
-import { documentsService } from '~/services/documents';
+// import { documentsService } from '~/services/documents';
 import { EventEmitter, applyMixins } from '~/utils/decorators';
 import { addWeakEventListener, removeWeakEventListener } from '@nativescript/core/ui/core/weak-event-listener';
 
@@ -15,44 +12,20 @@ export interface ImageConfig {
     crop?: number[];
 }
 
-export const observableArrayTransformer = {
-    // lastValue: undefined as any[],
-    from(val: any[]) {
-        console.log('from', val);
-        return new ObservableArray(val);
-    },
-    to(w: ObservableArray<any>) {
-        console.log('to', w);
-        return w['_array'];
-    },
-};
+// export const observableArrayTransformer = {
+//     // lastValue: undefined as any[],
+//     from(val: any[]) {
+//         console.log('from', val);
+//         return new ObservableArray(val);
+//     },
+//     to(w: ObservableArray<any>) {
+//         console.log('to', w);
+//         return w['_array'];
+//     }
+// };
 
-function createArrayBuffer(length: number, useInts = true) {
-    let bb: java.nio.ByteBuffer;
-    if (useInts) {
-        bb = java.nio.ByteBuffer.allocateDirect(length);
-    } else {
-        bb = java.nio.ByteBuffer.allocateDirect(length * 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-    }
-    // var bb = java.nio.ByteBuffer.allocateDirect(length * 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-    const result = (ArrayBuffer as any).from(bb);
-    // result.bb = bb;
-    return result;
-}
-export function arrayoNativeArray(array, useInts = true) {
-    if (!Array.isArray(array)) {
-        return array;
-    }
-    const length = array.length;
-    const buffer = createArrayBuffer(length, useInts);
-    const arrayBuffer = useInts ? new Int8Array(buffer) : new Float32Array(buffer);
-    arrayBuffer.set(array);
-
-    return arrayBuffer;
-}
-
+// @EventEmitter
 @Entity()
-@EventEmitter
 class OCRDocument extends BaseEntity {
     @PrimaryColumn()
     id: string;
@@ -68,6 +41,7 @@ class OCRDocument extends BaseEntity {
 
     constructor(id: string) {
         super();
+        this['_observers'] = {};
         this.id = id;
     }
 
@@ -88,7 +62,7 @@ class OCRDocument extends BaseEntity {
 
                 const image = new OCRImage(pageId + '_1');
                 image.mat = mat;
-                console.log('test', mat, image._imageSource, image._mat);
+                // console.log('test', mat, image._imageSource, image._mat);
                 const rawimage = new OCRRawImage(pageId + '_2');
                 rawimage._imageSource = image._imageSource;
                 rawimage._mat = image._mat;
@@ -169,9 +143,9 @@ class OCRDocument extends BaseEntity {
         }
     }
     onPageUpdated(pageIndex: number, page: OCRPage) {
-        console.log('onPageUpdated', pageIndex);
         page.notify({ eventName: 'updated', object: page });
         this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
+        // documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex });
     }
     _observables: ObservableArray<OCRPage>[] = [];
     _observablesListeners: Function[] = [];
@@ -196,8 +170,169 @@ class OCRDocument extends BaseEntity {
         }
     }
 }
-
+applyMixins(OCRDocument, [Observable]);
 interface OCRDocument extends Observable {}
 
-// applyMixins(OCRDocument, [Observable]);
-export default OCRDocument;
+export enum ColorType {
+    NONE,
+    GRAY,
+    BLACK_WHITE
+}
+
+// @EventEmitter
+@Entity()
+class OCRPage extends BaseEntity {
+    @PrimaryColumn()
+    id: string;
+
+    @Column({
+        type: 'simple-enum',
+        enum: ColorType,
+        nullable: false,
+        default: ColorType.NONE
+    })
+    colorType?: ColorType;
+
+    @Column('int', { nullable: false, default: 0 })
+    rotation?: number;
+
+    @Column('int', { nullable: true, array: true })
+    crop?: number[];
+
+    @ManyToOne((type) => OCRDocument, (document) => document.pages)
+    @JoinColumn()
+    document: OCRDocument;
+
+    @OneToOne((type) => OCRRawImage, { cascade: true })
+    @JoinColumn()
+    rawimage: Promise<OCRRawImage>;
+
+    @OneToOne((type) => OCRImage, { cascade: true })
+    @JoinColumn()
+    image: Promise<OCRImage>;
+    constructor(id: string) {
+        super();
+        this['_observers'] = {};
+        this.id = id;
+    }
+    _imageSource: ImageSource;
+    get imageSource() {
+        return this._imageSource;
+    }
+    async getImageSource() {
+        if (!this._imageSource) {
+            const image = await this.image;
+            if (image) {
+                this._imageSource = image.imageSource;
+            }
+        }
+        return this._imageSource;
+    }
+}
+applyMixins(OCRPage, [Observable]);
+interface OCRPage extends Observable {}
+
+@Entity()
+export class OCRImage extends BaseEntity {
+    @PrimaryColumn()
+    id: string;
+    @Column('blob', { nullable: false })
+    data: any;
+
+    @Column('int', { nullable: false })
+    width: number;
+
+    @Column('int', { nullable: false })
+    height: number;
+
+    @OneToOne((type) => OCRPage, (page) => page.image)
+    page: Promise<OCRPage>;
+
+    constructor(id: string) {
+        super();
+        this.id = id;
+    }
+    _imageSource: ImageSource;
+    get imageSource() {
+        if (!this._imageSource) {
+            const bmp = android.graphics.BitmapFactory.decodeByteArray(this.data, 0, this.data.length);
+            this._imageSource = new ImageSource(bmp);
+        }
+        return this._imageSource;
+    }
+    _mat: Mat;
+    get mat() {
+        if (!this._mat) {
+            if (global.isAndroid) {
+                this._mat = matFromImage(this.imageSource.android);
+            } else {
+                this._mat = matFromImage(this.imageSource.ios);
+            }
+        }
+        return this._mat;
+    }
+
+    set mat(value: Mat) {
+        this._mat = value;
+        const nimage = imageFromMat(value);
+        // if (!this._imageSource) {
+        this._imageSource = new ImageSource(nimage);
+        // } else {
+        //     this._imageSource.setNativeSource(nimage);
+        // }
+        const byteArrayOutputStream = new java.io.ByteArrayOutputStream();
+        nimage.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        this.data = byteArrayOutputStream.toByteArray();
+    }
+}
+
+@Entity()
+export class OCRRawImage extends BaseEntity {
+    @PrimaryColumn()
+    id: string;
+
+    @Column('blob', { nullable: false })
+    data: any;
+
+    @Column('int', { nullable: false })
+    width: number;
+
+    @Column('int', { nullable: false })
+    height: number;
+
+    @OneToOne((type) => OCRPage, (page) => page.rawimage)
+    page: Promise<OCRPage>;
+    constructor(id: string) {
+        super();
+        this.id = id;
+    }
+    _imageSource: ImageSource;
+    get imageSource() {
+        if (!this._imageSource) {
+            const bmp = android.graphics.BitmapFactory.decodeByteArray(this.data, 0, this.data.length);
+            this._imageSource = new ImageSource(bmp);
+        }
+        return this._imageSource;
+    }
+    _mat: Mat;
+    get mat() {
+        if (!this._mat) {
+            if (global.isAndroid) {
+                this._mat = matFromImage(this.imageSource.android);
+            } else {
+                this._mat = matFromImage(this.imageSource.ios);
+            }
+        }
+        return this._mat;
+    }
+    set mat(value: Mat) {
+        this._mat = value;
+        const nimage = imageFromMat(value);
+        this._imageSource = new ImageSource(nimage);
+        const byteArrayOutputStream = new java.io.ByteArrayOutputStream();
+        nimage.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        this.data = byteArrayOutputStream.toByteArray();
+    }
+}
+
+export { OCRDocument, OCRPage };

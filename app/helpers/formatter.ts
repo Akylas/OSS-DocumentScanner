@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 // import utc from 'dayjs/plugin/utc';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 dayjs.extend(LocalizedFormat);
-import Color from 'tinycolor2';
 
 // export function localize(s: string, ...args) {
 //     return l(s, ...args);

@@ -1,3 +1,3 @@
-import { Preferences } from 'nativescript-akylas-preferences';
+import { Preferences } from '@nativescript-community/preferences';
 
 export const prefs = new Preferences();

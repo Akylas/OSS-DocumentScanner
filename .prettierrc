@@ -3,6 +3,5 @@
     "semi": true,
     "tabWidth": 4,
     "singleQuote": true,
-	"svelteSortOrder": "scripts-markup-styles",
-	"svelteStrictMode": false
+    "trailingComma": "none"
 }

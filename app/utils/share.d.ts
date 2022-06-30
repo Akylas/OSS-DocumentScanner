@@ -1,17 +1,17 @@
-import { ImageSource } from '@nativescript/core';
+import { Color } from '@nativescript/core';
 
-export function share(
-    content: {
-        image?: ImageSource;
-        title?: string;
-        message?: string;
-        url?: string;
-    },
-    options?: {
-        dialogTitle?: string;
-        excludedActivityTypes?: string[];
-        tintColor?: string;
-        subject?: string;
-        appearance?: 'light' | 'dark';
-    }
-): Promise<boolean>;
+export interface Content {
+    title?: string;
+    message?: string;
+    image?: ImageSource;
+    url?: string;
+}
+export interface Options {
+    dialogTitle?: string;
+    excludedActivityTypes?: string[];
+    tintColor?: string | Color;
+    subject?: string;
+    anchor?: View; //ios only
+    appearance?: 'light' | 'dark';
+}
+export function share(content: Content, options?: Options): Promise<boolean>;

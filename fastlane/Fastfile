@@ -224,7 +224,7 @@ lane :write_changelog do |params|
   repo_clean = repo_status.empty?
   if repo_clean
   else
-    sh("git commit -m '#{version} release notes'")
+    sh("git commit -m '#{version} release notes' --allow-empty")
   end
 end
   lane :upload_store   do |params| 

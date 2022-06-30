@@ -3,10 +3,12 @@
     accentColor: $accent-color;
     primaryColor: $primary-color;
     darkColor: $dark-color;
+    backgroundColor: $background-color;
     actionBarHeight: $actionbar-height;
+    textColorDark: $text-color-dark;
+    textColorLight: $text-color-light;
     statusBarHeight: $status-bar-height;
     navigationBarHeight: $navigation-bar-height;
     actionBarButtonHeight: $actionbar-button-height;
-    latoFontFamily: $lato-fontFamily;
-    mdiFontFamily:$mdi-fontFamily;
+    mdiFontFamily: $mdi-fontFamily;
 }

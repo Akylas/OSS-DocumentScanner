@@ -2,7 +2,7 @@ import { connectionType, getConnectionType, startMonitoring, stopMonitoring } fr
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { CustomError } from '~/utils/error';
 import { clog } from '~/utils/logging';
-import * as https from 'nativescript-akylas-https';
+import * as https from '@nativescript-community/https';
 import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 
 type HTTPSOptions = https.HttpsRequestOptions;

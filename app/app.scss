@@ -1,14 +1,13 @@
 ﻿@import './variables';
-@use "sass:color";
 
 .lato {
-    font-family: $lato-fontFamily;
+    // font-family: $lato-fontFamily;
 }
 .mdi {
     font-family: $mdi-fontFamily;
 }
 
-htmllabel,
+label,
 canvaslabel,
 label,
 mdbutton {
@@ -64,7 +63,7 @@ mdtextfield {
 // for now we set the font on both platform.
 // but on android it should be possible to do it through style, though not working yet
 label,
-htmllabel,
+label,
 canvaslabel {
     @extend .lato;
 }
