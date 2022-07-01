@@ -1,5 +1,5 @@
-import { CameraViewBase, torchProperty } from './index.common';
-import { isSimulator } from '@nativescript-community/extendedinfo';
+import { CameraViewBase, flashModeProperty } from './index.common';
+import { File } from '@nativescript/core';
 
 export class CameraView extends CameraViewBase {
     // nativeViewProtected: com.otaliastudios.cameraview.CameraView;
@@ -26,8 +26,12 @@ export class CameraView extends CameraViewBase {
             onCameraClose: () => {
                 this.photoListeners?.forEach((c) => c.onCameraClose());
             },
-            onCameraPhoto: (file) => {
-                this.photoListeners?.forEach((c) => c.onCameraPhoto(file));
+            onCameraPhoto: (file: java.io.File) => {
+                const result = File.fromPath(file.getPath());
+                this.photoListeners?.forEach((c) => c.onCameraPhoto(result));
+            },
+            onCameraPhotoImage: (image, info, processor) => {
+                this.photoListeners?.forEach((c) => c.onCameraPhotoImage(image, info, processor));
             }
         }));
         nativeView.setListener(listener);
@@ -80,27 +84,41 @@ export class CameraView extends CameraViewBase {
             this.processor = null;
         }
     }
+    onLoaded(): void {
+        console.log('onLoaded');
+        super.onLoaded();
+        this.startPreview();
+    }
+    onUnloaded(): void {
+        console.log('onUnloaded');
+        this.stopPreview();
+        super.onUnloaded();
+    }
     disposeNativeView() {
+        console.log('disposeNativeView');
         const nativeView = this.nativeViewProtected;
-        nativeView.stopPreview();
-        nativeView.stop();
-        if (this.listener) {
-            nativeView.setListener(null);
-            (nativeView as any).listener = this.listener = null;
+        if (nativeView) {
+            nativeView.stopPreview();
+            nativeView.stop();
+            if (this.listener) {
+                nativeView.setListener(null);
+            }
+            if (this.processor) {
+                nativeView.setAnalyserCallback(null);
+            }
         }
-        if (this.processor) {
-            nativeView.setAnalyserCallback(null);
-            (nativeView as any).processor = this.processor = null;
-        }
+        this.listener = null;
+        this.processor = null;
+
         super.disposeNativeView();
     }
     startPreview() {
         const nativeView = this.nativeViewProtected;
 
-        if (this.processor) {
-            this.nativeViewProtected.setAnalyserCallback(this.processor);
-        }
         if (nativeView) {
+            if (this.processor) {
+                this.nativeViewProtected.setAnalyserCallback(this.processor);
+            }
             nativeView.startPreview();
         }
     }
@@ -118,15 +136,28 @@ export class CameraView extends CameraViewBase {
     }
     photoListeners: {
         onCameraError(param0: string, error);
+        onCameraPhotoImage(image, info, processor);
         onCameraClose();
         onCameraPhoto(file);
     }[] = [];
-    takePicture() {
+    takePicture(savePhotoToDisk = true) {
         return new Promise((resolve, reject) => {
             const myListener = {
                 onCameraPhoto: (file) => {
+                    console.log('onCameraPhoto', file);
                     removeListener();
                     resolve(file);
+                    // const size = res.getSize();
+                    // resolve({
+                    //     data: res.getData(),
+                    //     rotation: res.getRotation() - 90,
+                    //     size: { width: size.getWidth(), height: size.getHeight() }
+                    // });
+                },
+                onCameraPhotoImage: (image, info, processor) => {
+                    console.log('onCameraPhotoImage', image, info, processor);
+                    removeListener();
+                    resolve({ image, info, processor });
                     // const size = res.getSize();
                     // resolve({
                     //     data: res.getData(),
@@ -150,24 +181,29 @@ export class CameraView extends CameraViewBase {
                 }
             };
             this.photoListeners.push(myListener);
+            this.nativeViewProtected.setSavePhotoToDisk(savePhotoToDisk);
             this.nativeViewProtected.takePhoto();
         });
     }
 
-    [torchProperty.setNative](value: string) {
-        switch (value) {
-            case 'off':
-                this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.OFF);
-                break;
-            case 'on':
-                this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.ON);
-                break;
-            case 'auto':
-                this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.AUTO);
-                break;
-            case 'torch':
-                this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.TORCH);
-                break;
+    [flashModeProperty.setNative](value: string | number) {
+        if (typeof value === 'string') {
+            switch (value) {
+                case 'off':
+                    this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.OFF);
+                    break;
+                case 'on':
+                    this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.ON);
+                    break;
+                case 'auto':
+                    this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.AUTO);
+                    break;
+                case 'torch':
+                    this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.TORCH);
+                    break;
+            }
+        } else {
+            this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.values()[value]);
         }
     }
 }

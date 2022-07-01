@@ -1,10 +1,25 @@
 import * as cv2 from 'nativescript-opencv';
 cv2.init();
 import { ImageWorkerOptions } from './options';
+import { simplify_line } from './simplify';
+import { presimplify } from 'topojson-simplify/src';
 const SMALL_HEIGHT = 300;
 const FULL_HEIGHT = 400;
 let resizedImage: cv2.Mat;
 let edgesImage: cv2.Mat;
+
+export function getCVRotation(rotation) {
+    switch (rotation) {
+        case -90:
+            return cv2.Core.ROTATE_90_COUNTERCLOCKWISE;
+        case 90:
+            return cv2.Core.ROTATE_90_CLOCKWISE;
+        case 180:
+            return cv2.Core.ROTATE_180;
+        default:
+            return -1;
+    }
+}
 
 export function resize(img: cv2.Mat, output: cv2.Mat, height = SMALL_HEIGHT, allways = false) {
     const rat = height / img.size().height;
@@ -16,6 +31,71 @@ export function resize(img: cv2.Mat, output: cv2.Mat, height = SMALL_HEIGHT, all
 
 export function ratio(img: cv2.Mat, height = SMALL_HEIGHT) {
     return img.size().height / height;
+}
+
+function getQuadrilateral(points: [number, number][]) {
+    // if document has a bent corner
+    let shortestDistance = Number.MAX_SAFE_INTEGER;
+    let shortestPoint1 = null;
+    let shortestPoint2 = null;
+
+    let diagonal = 0;
+    let diagonalPoint1 = null;
+    let diagonalPoint2 = null;
+
+    for (let i = 0; i < points.length - 1; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+            const d = getDistance(points[i], points[j]);
+            if (d < shortestDistance) {
+                shortestDistance = d;
+                shortestPoint1 = points[i];
+                shortestPoint2 = points[j];
+            }
+            if (d > diagonal) {
+                diagonal = d;
+                diagonalPoint1 = points[i];
+                diagonalPoint2 = points[j];
+            }
+        }
+    }
+    const newArray = [shortestPoint1, shortestPoint2, diagonalPoint1, diagonalPoint2];
+    const difference = points.filter((x) => newArray.indexOf(x) === -1);
+
+    const trianglePointWithHypotenuse = difference[0];
+    let newPoint;
+    if (
+        trianglePointWithHypotenuse[0] > shortestPoint1[0] &&
+        trianglePointWithHypotenuse[0] > shortestPoint2[0] &&
+        trianglePointWithHypotenuse[1] > shortestPoint1[1] &&
+        trianglePointWithHypotenuse[1] > shortestPoint2[1]
+    ) {
+        newPoint = [Math.min(shortestPoint1[0], shortestPoint2[0]), Math.min(shortestPoint1[1], shortestPoint2[1])];
+    } else if (
+        trianglePointWithHypotenuse[0] < shortestPoint1[0] &&
+        trianglePointWithHypotenuse[0] < shortestPoint2[0] &&
+        trianglePointWithHypotenuse[1] > shortestPoint1[1] &&
+        trianglePointWithHypotenuse[1] > shortestPoint2[1]
+    ) {
+        newPoint = [Math.max(shortestPoint1[0], shortestPoint2[0]), Math.min(shortestPoint1[1], shortestPoint2[1])];
+    } else if (
+        trianglePointWithHypotenuse[0] < shortestPoint1[0] &&
+        trianglePointWithHypotenuse[0] < shortestPoint2[0] &&
+        trianglePointWithHypotenuse[1] < shortestPoint1[1] &&
+        trianglePointWithHypotenuse[1] < shortestPoint2[1]
+    ) {
+        newPoint = [Math.max(shortestPoint1[0], shortestPoint2[0]), Math.max(shortestPoint1[1], shortestPoint2[1])];
+    } else if (
+        trianglePointWithHypotenuse[0] > shortestPoint1[0] &&
+        trianglePointWithHypotenuse[0] > shortestPoint2[0] &&
+        trianglePointWithHypotenuse[1] < shortestPoint1[1] &&
+        trianglePointWithHypotenuse[1] < shortestPoint2[1]
+    ) {
+        newPoint = [Math.min(shortestPoint1[0], shortestPoint2[0]), Math.max(shortestPoint1[1], shortestPoint2[1])];
+    } else {
+        newPoint = [0.0, 0.0];
+    }
+
+    return [trianglePointWithHypotenuse, diagonalPoint1, diagonalPoint2, newPoint];
 }
 
 function intersection(a, b) {
@@ -30,6 +110,15 @@ function intersection(a, b) {
 }
 
 let hierarchyMat: cv2.Mat;
+
+
+function simplify(inPoints, nbPoints) {
+    const presimplified = presimplify(({arcs:[inPoints]}));
+    // Remove points whose weight is less than the minimum weight.
+    const sorted = presimplified.arcs[0].sort((a, b) => a[2] - b[2]);
+    const result = sorted.splice(0, nbPoints);
+    return result.map(p=>p.slice(0,2));
+}
 
 export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWorkerOptions) {
     // Getting contours
@@ -80,24 +169,25 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
     }[] = [];
     const page_contours = [];
     const temp_contours = [];
-
+    if (data.debug) {
+        cv2.Imgproc.drawContours(img, nContours, -1, new cv2.Scalar(255, 255, 0), 2);
+    }
     // const max_area = MIN_COUNTOUR_AREA;
     for (let index = 0; index < nContours.size(); index++) {
         const contour = nContours.get(index) as cv2.MatOfPoint;
-
-        contours[index] = {
+        contours.push({
             contour,
             index,
             area: cv2.Imgproc.contourArea(contour)
-        };
+        });
     }
 
     const MIN_COUNTOUR_AREA = height * width * 0.1 * 0.1;
     const MAX_COUNTOUR_AREA = height * width * 0.99 * 0.99;
+    // console.log('test1', MIN_COUNTOUR_AREA, MAX_COUNTOUR_AREA,contours.map(c=>c.area))
     const sorted = contours.filter((a) => MIN_COUNTOUR_AREA < a.area && a.area < MAX_COUNTOUR_AREA).sort((a, b) => b.area - a.area);
+    // console.log('sorted', sorted.map(c=>c.area))
     const foundContoursLength = sorted.length;
-    // console.log('sorted', nContours.size(), foundContoursLength);
-    cv2.Imgproc.drawContours(img, nContours, -1, new cv2.Scalar(255, 255, 0), 2);
 
     const approx = data.approxValue || 0.02;
     for (let index = 0; index < foundContoursLength; index++) {
@@ -108,22 +198,19 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
             const floatPoint = new org.opencv.core.MatOfPoint2f();
             cnt.convertTo(floatPoint, cv2.CvType.CV_32F);
             const perimeter = cv2.Imgproc.arcLength(floatPoint, true);
-            // console.log('approxPolyDP', approx);
             cv2.Imgproc.approxPolyDP(floatPoint, floatPoint, approx * perimeter, true);
             floatPoint.convertTo(cnt, cv2.CvType.CV_32S);
             contours[index].contour = cnt;
         }
-        cv2.Imgproc.drawContours(img, nContours, index, new cv2.Scalar(255, 0, 255), 1);
+        // cv2.Imgproc.drawContours(img, nContours, index, new cv2.Scalar(255, 0, 255), 1);
 
-        // Page has 4 corners and it is convex
         const area = c.area;
         const length = cnt.height();
         if (area <= MIN_COUNTOUR_AREA) {
-            // console.log('ignoring small contour', index, area, MIN_COUNTOUR_AREA);
-            // cv2.Imgproc.drawContours(img, nContours, index, new cv2.Scalar(255, 0, 0), 4);
+            // sorted by area so if first too small they are all too small
             break;
         }
-        const maxLength = 16;
+        const maxLength = 30;
         if (length >= 4 && length <= maxLength && cv2.Imgproc.isContourConvex(cnt)) {
             let tooClose = false;
             for (let j = 0; j < temp_contours.length; j++) {
@@ -131,48 +218,53 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                 const inter = intersection(cv2.Imgproc.boundingRect(cnt2), cv2.Imgproc.boundingRect(cnt));
                 if (inter[2] * inter[3] > 0) {
                     tooClose = true;
-                    // cv2.Imgproc.drawContours(img, nContours, index, new cv2.Scalar(255, 0, 0), 4);
-                    // console.log('ignoring contour', index, length, temp_contours.length, area, MIN_COUNTOUR_AREA);
                     break;
                 }
             }
             if (!tooClose) {
                 temp_contours.push(cnt);
-                // const points = cnt.toArray();
                 let points: any[] = [];
-                const offset = 0;
                 let realPoints = [];
-                if (data.boundType === 0 || data.debug) {
+                if (data.boundType === 0) {
                     points = cnt.toArray() as any;
 
                     if (data.boundType === 0) {
                         const length = points.length;
                         for (let j = 0; j < length; j++) {
                             const element = points[j];
-                            realPoints.push([element.x + offset, element.y + offset]);
-                            // realPoints.push([element[0]+ offset, element[1]+ offset]);
+                            realPoints.push([element.x, element.y]);
+                        }
+                        if (realPoints.length > 4) {
+                            realPoints = simplify(realPoints, 4);
+                            realPoints = sortCorners(realPoints);
                         }
                     }
                     if (data.debug) {
                         cv2.Imgproc.drawContours(img, nContours, c.index, new cv2.Scalar(0, 255, 0), 2);
+                        for (let i = 0; i < realPoints.length; i++) {
+                            const realPoint1 = realPoints[i];
+                            const realPoint2 = realPoints[(i + 1) % realPoints.length];
+                            cv2.Imgproc.line(img, new cv2.Point(realPoint1[0], realPoint1[1]), new cv2.Point(realPoint2[0], realPoint2[1]), new cv2.Scalar(0, 0, 255), 2);
+                        }
                     }
-                }
-
-                if (data.boundType === 1 || data.debug) {
+                } else if (data.boundType === 1) {
                     const rect = cv2.Imgproc.boundingRect(cnt);
                     if (data.boundType === 1) {
                         realPoints = [
-                            [rect.x, rect.y],
                             [rect.x + rect.width - 1, rect.y],
-                            [rect.x + rect.width - 1, rect.y + rect.height - 1],
-                            [rect.x, rect.y + rect.height - 1]
+                            [rect.x, rect.y],
+                            [rect.x, rect.y + rect.height - 1],
+                            [rect.x + rect.width - 1, rect.y + rect.height - 1]
                         ];
                     }
                     if (data.debug) {
-                        cv2.Imgproc.rectangle(img, rect, new cv2.Scalar(255, 0, 0), 2);
+                        for (let i = 0; i < 4; i++) {
+                            const realPoint1 = realPoints[i];
+                            const realPoint2 = realPoints[(i + 1) % 4];
+                            cv2.Imgproc.line(img, new cv2.Point(realPoint1[0], realPoint1[1]), new cv2.Point(realPoint2[0], realPoint2[1]), new cv2.Scalar(0, 0, 255), 2);
+                        }
                     }
-                }
-                if (data.boundType === 2 || data.debug) {
+                } else if (data.boundType === 2) {
                     const floatPoint = new org.opencv.core.MatOfPoint2f();
                     cnt.convertTo(floatPoint, cv2.CvType.CV_32F);
                     const points = Array.create(org.opencv.core.Point, 4);
@@ -180,9 +272,9 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                     rotrect.points(points);
                     if (data.boundType === 2) {
                         realPoints = [
-                            [points[0].x, points[0].y],
-                            [points[1].x, points[1].y],
                             [points[2].x, points[2].y],
+                            [points[1].x, points[1].y],
+                            [points[0].x, points[0].y],
                             [points[3].x, points[3].y]
                         ];
                     }
@@ -191,8 +283,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                             cv2.Imgproc.line(img, points[i], points[(i + 1) % 4], new cv2.Scalar(0, 0, 255), 2);
                         }
                     }
-                }
-                if (data.boundType === 3 || data.debug) {
+                } else if (data.boundType === 3) {
                     const floatPoint = new org.opencv.core.MatOfPoint2f();
                     cnt.convertTo(floatPoint, cv2.CvType.CV_32F);
                     const rotrect = cv2.Imgproc.minAreaRect(floatPoint);
@@ -223,7 +314,6 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                         cv2.Imgproc.minEnclosingCircle(newArrayPoints, circleCenter, radius);
                         let Ds = points.map((p, i) => Math.abs(cvnorm(circleCenter, p) - radius[0]) * (360 - (cvangle(p, circleCenter) - cvangle(points[(i + 1) % nbPoints], circleCenter))));
                         let sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[a] - Ds[b]);
-                        // const test = points.map((p) => Math.abs(cvnorm(circleCenter, p) - radius[0]));
                         points = sortedIndexes.slice(0, 4).map((i) => points[i]);
                         Ds = points.map((p) => cvangle(p, circleCenter));
                         sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[b] - Ds[a]);
@@ -232,7 +322,12 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                     }
                     // points = order_cv_points(points);
                     if (data.boundType === 3) {
-                        realPoints = points.map((p) => [p.x, p.y]);
+                        realPoints = [
+                            [points[3].x, points[3].y],
+                            [points[0].x, points[0].y],
+                            [points[1].x, points[1].y],
+                            [points[2].x, points[2].y]
+                        ];
                     }
                     if (data.debug) {
                         for (let i = 0; i < points.length; i++) {
@@ -255,10 +350,10 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
     return page_contours;
 }
 
-function norm(p1: [number, number], p2: [number, number]) {
-    const res = [p1[0] - p2[0], p1[1] - p2[1]];
-    return Math.sqrt(Math.pow(res[0], 2) + Math.pow(res[1], 2));
-}
+// function norm(p1: [number, number], p2: [number, number]) {
+//     const res = [p1[0] - p2[0], p1[1] - p2[1]];
+//     return Math.sqrt(Math.pow(res[0], 2) + Math.pow(res[1], 2));
+// }
 function cvnorm(p1: cv2.Point, p2: cv2.Point) {
     const res = [p1.x - p2.x, p1.y - p2.y];
     return Math.sqrt(Math.pow(res[0], 2) + Math.pow(res[1], 2));
@@ -271,78 +366,78 @@ function cvangle(p1: cv2.Point, p2: cv2.Point) {
     return angle;
 }
 
-function order_points(pts: [number, number][]) {
-    if (pts.length === 0) {
-        return pts;
-    }
-    // sort the points based on their x-coordinates
-    const xSorted = pts.sort(function (a, b) {
-        return a[0] - b[0];
-    });
+// function order_points(pts: [number, number][]) {
+//     if (pts.length === 0) {
+//         return pts;
+//     }
+//     // sort the points based on their x-coordinates
+//     const xSorted = pts.sort(function (a, b) {
+//         return a[0] - b[0];
+//     });
 
-    // grab the left-most and right-most points from the sorted
-    // x-roodinate points
-    let leftMost = xSorted.slice(0, 2);
-    const rightMost = xSorted.slice(-2);
+//     // grab the left-most and right-most points from the sorted
+//     // x-roodinate points
+//     let leftMost = xSorted.slice(0, 2);
+//     const rightMost = xSorted.slice(-2);
 
-    // now, sort the left-most coordinates according to their
-    // y-coordinates so we can grab the top-left and bottom-left
-    // points, respectively
-    leftMost = leftMost.sort(function (a, b) {
-        return a[1] - b[1];
-    });
-    const [tl, bl] = leftMost;
+//     // now, sort the left-most coordinates according to their
+//     // y-coordinates so we can grab the top-left and bottom-left
+//     // points, respectively
+//     leftMost = leftMost.sort(function (a, b) {
+//         return a[1] - b[1];
+//     });
+//     const [tl, bl] = leftMost;
 
-    // now that we have the top-left coordinate, use it as an
-    // anchor to calculate the Euclidean distance between the
-    // top-left and right-most points; by the Pythagorean
-    // theorem, the point with the largest distance will be
-    // our bottom-right point
-    const Ds = rightMost.map((p) => norm(tl, p));
-    const sortedIndexes = Ds.map((s, i) => i).sort(function (a, b) {
-        return Ds[a] - Ds[b];
-    });
-    const br = rightMost[sortedIndexes[1]];
-    const tr = rightMost[sortedIndexes[0]];
-    // return the coordinates in top-left, top-right,
-    // bottom-right, and bottom-left order
-    return [tl, tr, br, bl];
-}
+//     // now that we have the top-left coordinate, use it as an
+//     // anchor to calculate the Euclidean distance between the
+//     // top-left and right-most points; by the Pythagorean
+//     // theorem, the point with the largest distance will be
+//     // our bottom-right point
+//     const Ds = rightMost.map((p) => norm(tl, p));
+//     const sortedIndexes = Ds.map((s, i) => i).sort(function (a, b) {
+//         return Ds[a] - Ds[b];
+//     });
+//     const br = rightMost[sortedIndexes[1]];
+//     const tr = rightMost[sortedIndexes[0]];
+//     // return the coordinates in top-left, top-right,
+//     // bottom-right, and bottom-left order
+//     return [tl, tr, br, bl];
+// }
 
-function order_cv_points(pts: cv2.Point[]) {
-    if (pts.length === 0) {
-        return pts;
-    }
-    // sort the points based on their x-coordinates
-    const xSorted = pts.sort((a, b) => a.x - b.x);
-    // console.log('xSorted', xSorted);
+// function order_cv_points(pts: cv2.Point[]) {
+//     if (pts.length === 0) {
+//         return pts;
+//     }
+//     // sort the points based on their x-coordinates
+//     const xSorted = pts.sort((a, b) => a.x - b.x);
+//     // console.log('xSorted', xSorted);
 
-    // grab the left-most and right-most points from the sorted
-    // x-roodinate points
-    let leftMost = xSorted.slice(0, 2);
-    const rightMost = xSorted.slice(-2);
+//     // grab the left-most and right-most points from the sorted
+//     // x-roodinate points
+//     let leftMost = xSorted.slice(0, 2);
+//     const rightMost = xSorted.slice(-2);
 
-    // now, sort the left-most coordinates according to their
-    // y-coordinates so we can grab the top-left and bottom-left
-    // points, respectively
-    leftMost = leftMost.sort((a, b) => a.y - b.y);
-    const [tl, bl] = leftMost;
+//     // now, sort the left-most coordinates according to their
+//     // y-coordinates so we can grab the top-left and bottom-left
+//     // points, respectively
+//     leftMost = leftMost.sort((a, b) => a.y - b.y);
+//     const [tl, bl] = leftMost;
 
-    // now that we have the top-left coordinate, use it as an
-    // anchor to calculate the Euclidean distance between the
-    // top-left and right-most points; by the Pythagorean
-    // theorem, the point with the largest distance will be
-    // our bottom-right point
-    const Ds = rightMost.map((p) => cvnorm(tl, p));
+//     // now that we have the top-left coordinate, use it as an
+//     // anchor to calculate the Euclidean distance between the
+//     // top-left and right-most points; by the Pythagorean
+//     // theorem, the point with the largest distance will be
+//     // our bottom-right point
+//     const Ds = rightMost.map((p) => cvnorm(tl, p));
 
-    const sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[b] - Ds[a]);
+//     const sortedIndexes = Ds.map((s, i) => i).sort((a, b) => Ds[b] - Ds[a]);
 
-    const br = rightMost[sortedIndexes[1]];
-    const tr = rightMost[sortedIndexes[0]];
-    // return the coordinates in top-left, top-right,
-    // bottom-right, and bottom-left order
-    return [tl, tr, br, bl];
-}
+//     const br = rightMost[sortedIndexes[1]];
+//     const tr = rightMost[sortedIndexes[0]];
+//     // return the coordinates in top-left, top-right,
+//     // bottom-right, and bottom-left order
+//     return [tl, tr, br, bl];
+// }
 
 function matFromArray(rows, cols, type, array) {
     const mat = new cv2.Mat(rows, cols, type);
@@ -355,43 +450,123 @@ function matFromArray(rows, cols, type, array) {
     }
     return mat;
 }
-export function persp_transform(img: cv2.Mat, s_points: [number, number][], ratio: number = 1) {
-    if (ratio !== 1) {
-        s_points = s_points.map((p) => [Math.round(p[0] * ratio), Math.round(p[1] * ratio)]);
+function getMassCenter(points: [number, number][]): [number, number] {
+    let xSum = 0.0;
+    let ySum = 0.0;
+    const len = points.length;
+    for (let index = 0; index < len; index++) {
+        const point = points[index];
+        xSum += point[0];
+        ySum += point[1];
     }
-    const sMat = matFromArray(s_points.length, 2, cv2.CvType.CV_32F, s_points);
-    // Euclidean distance - calculate maximum height and width
-    const [tl, tr, br, bl] = s_points;
-
-    //  compute the width of the new image, which will be the
-    //  maximum distance between bottom-right and bottom-left
-    //  x-coordiates or the top-right and top-left x-coordinates
-    const widthA = Math.sqrt((br[0] - bl[0]) ** 2 + (br[1] - bl[1]) ** 2);
-    const widthB = Math.sqrt((tr[0] - tl[0]) ** 2 + (tr[1] - tl[1]) ** 2);
-    const maxWidth = Math.max(Math.round(widthA), Math.round(widthB));
-
-    //  compute the height of the new image, which will be the
-    //  maximum distance between the top-right and bottom-right
-    //  y-coordinates or the top-left and bottom-left y-coordinates
-    const heightA = Math.sqrt((tr[0] - br[0]) ** 2 + (tr[1] - br[1]) ** 2);
-    const heightB = Math.sqrt((tl[0] - bl[0]) ** 2 + (tl[1] - bl[1]) ** 2);
-    const maxHeight = Math.max(Math.round(heightA), Math.round(heightB));
-    // Create target points
-    const t_points = [
-        [0, 0],
-        [maxWidth - 1, 0],
-        [maxWidth - 1, maxHeight - 1],
-        [0, maxHeight - 1]
-    ];
-    // console.log('persp_transform', t_points, s_points);
-    const tMat = matFromArray(t_points.length, 2, cv2.CvType.CV_32F, t_points.reverse());
-
-    const M = cv2.Imgproc.getPerspectiveTransform(sMat, tMat);
-    const out = new cv2.Mat();
-    cv2.Imgproc.warpPerspective(img, out, M, new cv2.Size(maxWidth, maxHeight));
-    cv2.Imgproc.cvtColor(out, out, cv2.Imgproc.COLOR_RGBA2RGB);
-    return out;
+    return [xSum / len, ySum / len];
 }
+
+function getMinPointIndex(point1, point2, index) {
+    if (point1[index] < point2[index]) {
+        return point1;
+    }
+    return point2;
+}
+function sortCorners(points: [number, number][]): [number, number][] {
+    let diagonal = 0;
+    let diagonal1Point1 = null;
+    let diagonal1Point2 = null;
+    for (let i = 0; i < points.length - 1; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+            const d = getDistance(points[i], points[j]);
+            if (d > diagonal) {
+                diagonal = d;
+                diagonal1Point1 = points[i];
+                diagonal1Point2 = points[j];
+            }
+        }
+    }
+    const difference = points.filter((x) => x !== diagonal1Point1 && x !== diagonal1Point2);
+    const diagonal2Point1 = difference[0];
+    const diagonal2Point2 = difference[1];
+    const tops = [getMinPointIndex(diagonal1Point1, diagonal1Point2, 1), getMinPointIndex(diagonal2Point1, diagonal2Point2, 1)];
+    const bottoms = points.filter((x) => tops.indexOf(x) === -1);
+    const topLeft = getMinPointIndex(tops[0], tops[1], 0);
+    const bottomLeft = getMinPointIndex(bottoms[0], bottoms[1], 0);
+
+    return [topLeft, tops[0] === topLeft ? tops[1] : tops[0], bottoms[0] === bottomLeft ? bottoms[1] : bottoms[0], bottomLeft];
+}
+
+function getDistance(p1: [number, number], p2: [number, number]) {
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    return Math.sqrt(dx * dx + dy * dy);
+}
+function getRectangleSize(corners: [number, number][]): cv2.Size {
+    const top = getDistance(corners[0], corners[1]);
+    const right = getDistance(corners[1], corners[2]);
+    const bottom = getDistance(corners[2], corners[3]);
+    const left = getDistance(corners[3], corners[0]);
+    const averageWidth = (top + bottom) / 2;
+    const averageHeight = (right + left) / 2;
+    return new cv2.Size(averageWidth, averageHeight);
+}
+
+function getOutline(size: cv2.Size): cv2.Mat {
+    const topLeft = [0, 0];
+    const topRight = [size.width, 0];
+    const bottomRight = [size.width, size.height];
+    const bottomLeft = [0, size.height];
+    const points = [topLeft, topRight, bottomRight, bottomLeft];
+    return matFromArray(points.length, 2, cv2.CvType.CV_32F, points);
+}
+export function persp_transform(img: cv2.Mat, s_points: [number, number][], ratio: number = 1) {
+    let sortedCorners = sortCorners(s_points);
+    if (ratio !== 1) {
+        sortedCorners = sortedCorners.map((p) => [Math.round(p[0] * ratio), Math.round(p[1] * ratio)]);
+    }
+    const size = getRectangleSize(sortedCorners);
+    const result = new cv2.Mat();
+    const imageOutline = getOutline(size);
+    const transformation = cv2.Imgproc.getPerspectiveTransform(matFromArray(sortedCorners.length, 2, cv2.CvType.CV_32F, sortedCorners), imageOutline);
+    cv2.Imgproc.warpPerspective(img, result, transformation, size);
+    cv2.Imgproc.cvtColor(result, result, cv2.Imgproc.COLOR_RGBA2RGB);
+    return result;
+}
+
+// export function persp_transform(img: cv2.Mat, s_points: [number, number][], ratio: number = 1) {
+//     // s_points = sortCorners(s_points);
+//     if (ratio !== 1) {
+//         s_points = s_points.map((p) => [Math.round(p[0] * ratio), Math.round(p[1] * ratio)]);
+//     }
+//     const sMat = matFromArray(s_points.length, 2, cv2.CvType.CV_32F, s_points);
+//     // Euclidean distance - calculate maximum height and width
+//     const [tl, tr, br, bl] = s_points;
+
+//     //  compute the width of the new image, which will be the
+//     //  maximum distance between bottom-right and bottom-left
+//     //  x-coordiates or the top-right and top-left x-coordinates
+//     const widthA = Math.sqrt((br[0] - bl[0]) ** 2 + (br[1] - bl[1]) ** 2);
+//     const widthB = Math.sqrt((tr[0] - tl[0]) ** 2 + (tr[1] - tl[1]) ** 2);
+//     const maxWidth = Math.max(Math.round(widthA), Math.round(widthB));
+
+//     //  compute the height of the new image, which will be the
+//     //  maximum distance between the top-right and bottom-right
+//     //  y-coordinates or the top-left and bottom-left y-coordinates
+//     const heightA = Math.sqrt((tr[0] - br[0]) ** 2 + (tr[1] - br[1]) ** 2);
+//     const heightB = Math.sqrt((tl[0] - bl[0]) ** 2 + (tl[1] - bl[1]) ** 2);
+//     const maxHeight = Math.max(Math.round(heightA), Math.round(heightB));
+//     // Create target points
+//     const t_points = [
+//         [0, 0],
+//         [maxWidth - 1, 0],
+//         [maxWidth - 1, maxHeight - 1],
+//         [0, maxHeight - 1]
+//     ];
+//     const tMat = matFromArray(t_points.length, 2, cv2.CvType.CV_32F, t_points);
+
+//     const M = cv2.Imgproc.getPerspectiveTransform(sMat, tMat);
+//     const out = new cv2.Mat();
+//     cv2.Imgproc.warpPerspective(img, out, M, new cv2.Size(maxWidth, maxHeight));
+//     // cv2.Imgproc.cvtColor(out, out, cv2.Imgproc.COLOR_RGBA2RGB);
+//     return out;
+// }
 
 let kernel9: cv2.Mat;
 let kernel2: cv2.Mat;
@@ -497,13 +672,14 @@ export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
         if (!resizedImage) {
             resizedImage = new cv2.Mat();
         }
-        resize(image, resizedImage);
+        resize(image, resizedImage, wantedHeight);
     } else {
         resizedImage = image.clone();
     }
-    // const rsize = resizedImage.size();
-    // const rw = rsize.width;
-    // const rh = rsize.height;
+    if (data.full) {
+        //image is NOT gray
+        cv2.Imgproc.cvtColor(resizedImage, resizedImage, cv2.Imgproc.COLOR_RGBA2GRAY);
+    }
     if (!edgesImage) {
         edgesImage = new cv2.Mat();
     }
@@ -557,7 +733,6 @@ export function calculateTextRotation(img: cv2.Mat, dst?: cv2.Mat) {
     const lines = new cv2.Mat();
     cv2.Imgproc.HoughLinesP(midImage, lines, 1, Math.PI / 180, 20, 0, 40); // the fifth parameter is the threshold. The larger the threshold, the higher the detection accuracy
     const length = lines.rows();
-    console.log('lines', length, lines.cols(), ratio);
     let sum = 0;
     // Draw each line in turn
     for (let i = 0; i < length; i++) {

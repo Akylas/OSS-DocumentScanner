@@ -45,28 +45,38 @@ class OCRDocument extends BaseEntity {
         this.id = id;
     }
 
-    static async createDocument(name?: string, mats?: Mat[], setRaw = false) {
+    static async createDocument(name?: string, pagesData?: { mat; bitmap; transformedMat }[], setRaw = false) {
         const docId = Date.now() + '';
-        let doc = new OCRDocument(docId);
+        const doc = new OCRDocument(docId);
         if (name) {
             doc.name = name;
         }
-        if (mats) {
-            const length = mats.length;
+        await doc.addPages(pagesData);
+        return doc;
+    }
+
+    async addPages(pagesData) {
+        if (pagesData) {
+            const docId = this.id;
+            const length = pagesData.length;
+            console.log('addPages', length);
             const pages = [];
             for (let index = 0; index < length; index++) {
                 const pageId = docId + '_' + index;
                 const page = new OCRPage(pageId);
-                const mat = mats[index];
+                const { mat, bitmap, transformedMat, ...pageData } = pagesData[index];
                 const size = mat.size();
+                console.log('addPage', mat, bitmap, transformedMat);
+                Object.assign(page, pageData);
 
                 const image = new OCRImage(pageId + '_1');
-                image.mat = mat;
+                image.mat = transformedMat || mat;
+                if (bitmap) {
+                    image._imageSource = new ImageSource(bitmap);
+                }
                 // console.log('test', mat, image._imageSource, image._mat);
                 const rawimage = new OCRRawImage(pageId + '_2');
-                rawimage._imageSource = image._imageSource;
-                rawimage._mat = image._mat;
-                rawimage.data = image.data;
+                rawimage.mat = mat;
 
                 rawimage.width = image.width = size.width;
                 rawimage.height = image.height = size.height;
@@ -76,10 +86,16 @@ class OCRDocument extends BaseEntity {
 
                 pages.push(page);
             }
-            doc.pages = pages;
-            doc = await doc.save();
+            if (this.pages) {
+                this.pages.push(...pages);
+                if (this._observables) {
+                    this._observables.push(...pages);
+                }
+            } else {
+                this.pages = pages;
+            }
+            return this.save();
         }
-        return doc;
     }
 
     getFirstImage() {}
@@ -101,18 +117,18 @@ class OCRDocument extends BaseEntity {
                         const rawMat = (await page.rawimage).mat;
                         needsSavingImage = true;
                         switch (imageConfig.colorType) {
-                            case 0:
+                            case ColorType.NONE:
                                 currentMat.release();
                                 currentMat = rawMat.clone();
                                 break;
-                            case 1:
+                            case ColorType.GRAY:
                                 if (rawMat.channels() === 4) {
                                     Imgproc.cvtColor(rawMat, currentMat, Imgproc.COLOR_RGBA2GRAY);
                                 } else if (rawMat.channels() === 3) {
                                     Imgproc.cvtColor(rawMat, currentMat, Imgproc.COLOR_RGB2GRAY);
                                 }
                                 break;
-                            case 2:
+                            case ColorType.BLACK_WHITE:
                                 toBlackAndWhite(rawMat, currentMat);
                                 break;
                         }
@@ -147,28 +163,28 @@ class OCRDocument extends BaseEntity {
         this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
         // documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex });
     }
-    _observables: ObservableArray<OCRPage>[] = [];
+    _observables: ObservableArray<OCRPage>;
     _observablesListeners: Function[] = [];
-    async getObservablePages() {
-        const pages = this.pages;
-        await Promise.all(pages.map((p) => p.getImageSource()));
-        const result = new ObservableArray(pages);
-        this._observables.push(result);
-        const handler = (event: EventData & { pageIndex: number }) => {
-            result.setItem(event.pageIndex, result.getItem(event.pageIndex));
-        };
-        this._observablesListeners.push(handler);
-        this.on('pageUpdated', handler);
-
-        return result;
-    }
-    clearObservableArray(array: ObservableArray<OCRPage>) {
-        const index = this._observables.indexOf(array);
-        if (index >= 0) {
-            this._observables.splice(index, 1);
-            this._observablesListeners.splice(index, 1);
+    getObservablePages() {
+        if (!this._observables) {
+            const pages = this.pages;
+            // await Promise.all(pages.map((p) => p.getImageSource()));
+            this._observables = new ObservableArray(pages);
+            const handler = (event: EventData & { pageIndex: number }) => {
+                this._observables.setItem(event.pageIndex, this._observables.getItem(event.pageIndex));
+            };
+            this._observablesListeners.push(handler);
+            this.on('pageUpdated', handler);
         }
+        return this._observables;
     }
+    // clearObservableArray(array: ObservableArray<OCRPage>) {
+    //     const index = this._observables.indexOf(array);
+    //     if (this._observables) {
+    //         this._observables.splice(index, 1);
+    //         this._observablesListeners.splice(index, 1);
+    //     }
+    // }
 }
 applyMixins(OCRDocument, [Observable]);
 interface OCRDocument extends Observable {}

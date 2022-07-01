@@ -50,6 +50,7 @@
         "nativescript-iqkeyboardmanager": "1.5.1",
         "nativescript-opencv": "link:../nativescript-opencv/plugin",
         "svelte-native": "1.0.4",
+        "topojson-simplify": "^3.0.3",
         "util": "^0.12.4"
     },
     "devDependencies": {

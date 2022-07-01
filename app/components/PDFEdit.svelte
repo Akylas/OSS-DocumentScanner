@@ -26,10 +26,11 @@
     export let document: OCRDocument;
     let items: ObservableArray<OCRPage>;
     $: {
-        document.getObservablePages().then((r) => ((items = r), (currentIndex = startPageIndex)));
+        items = document.getObservablePages();
+        currentIndex = startPageIndex;
     }
     export let startPageIndex: number = 0;
-    let currentIndex;
+    let currentIndex = 0;
 
     function onImageTap(item) {
         navigate({
@@ -65,8 +66,13 @@
             showError(err);
         }
     }
-
+    let colorType = 0;
+    $: {
+        colorType = document.pages[currentIndex].colorType || 0;
+    }
     async function setColorType(type: number) {
+        colorType = type;
+        console.log('setColorType', colorType);
         try {
             await document.updateImageConfig(currentIndex, {
                 colorType: type
@@ -78,48 +84,35 @@
     }
 
     onDestroy(() => {
-        document.clearObservableArray(items);
+        // document.clearObservableArray(items);
     });
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,200">
+    <gridlayout rows="auto,*,50" backgroundColor="black">
         <CActionBar title={document.name}>
             <mdbutton variant="flat" class="icon-btn" text="mdi-file-pdf-box" on:tap={savePDF} />
         </CActionBar>
         <pager bind:this={pager} row={1} {items} selectedIndex={startPageIndex} on:selectedIndexChange={onSelectedIndex}>
             <Template let:item let:index>
                 <gridLayout width="100%">
-                    <image rotate={item.rotation} src={item.imageSource} stretch="aspectFit" />
+                    <image rotate={item.rotation} src={item.getImageSource()} stretch="aspectFit" />
+                    <mdbutton
+                        color={accentColor}
+                        variant="flat"
+                        class="icon-btn"
+                        text="mdi-share-variant"
+                        on:tap={() => share({ image: item.imageSource })}
+                        verticalAlignment="bottom"
+                        horizontalAlignment="right"
+                    />
                 </gridLayout>
             </Template>
         </pager>
-        <tabs row={2}>
-            <tabStrip>
-                <tabStripItem>
-                    <label text={l('edit')} />
-                    <image src="font://mdi-pencil" class="mdi" />
-                </tabStripItem>
-                <tabStripItem>
-                    <label text={l('filters')} />
-                    <image src="font://mdi-eyedropper-variant" class="mdi" />
-                </tabStripItem>
-            </tabStrip>
-
-            <tabContentItem>
-                <stackLayout orientation="horizontal">
-                    <mdbutton variant="flat" class="icon-btn" text="mdi-crop" />
-                    <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
-                </stackLayout>
-            </tabContentItem>
-            <tabContentItem>
-                <stackLayout orientation="horizontal">
-
-                    <mdbutton variant="outline" text={l('none')} on:tap={() => setColorType(0)} />
-                    <mdbutton variant="outline" text={l('gray')} on:tap={() => setColorType(1)} />
-                    <mdbutton variant="outline" text={l('black_and_white')} on:tap={() => setColorType(2)} />
-                </stackLayout>
-            </tabContentItem>
-        </tabs>
+        <stacklayout orientation="horizontal" row={2}>
+            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-crop" />
+            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
+            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} />
+        </stacklayout>
     </gridlayout>
 </page>
