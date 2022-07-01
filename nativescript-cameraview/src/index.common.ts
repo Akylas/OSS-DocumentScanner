@@ -5,10 +5,10 @@ import { booleanConverter } from '@nativescript/core/ui/core/view-base';
 
 export class CameraViewBase extends View {
     static FRAME_EVENT = 'frame';
-    torch = 'off';
+    flashMode = 'off';
 }
-export const torchProperty = new Property<CameraViewBase, string>({
-    name: 'torch',
+export const flashModeProperty = new Property<CameraViewBase, string | number>({
+    name: 'flashMode',
     defaultValue: 'off'
 });
-torchProperty.register(CameraViewBase);
+flashModeProperty.register(CameraViewBase);

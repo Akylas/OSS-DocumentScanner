@@ -245,6 +245,7 @@ declare module com {
 					onCameraOpen(): void;
 					onCameraClose(): void;
 					onCameraPhoto(param0: java.io.File): void;
+					onCameraPhotoImage(param0: globalAndroid.media.Image, param1: androidx.camera.core.ImageInfo, param2: com.akylas.cameraview.ImageAsyncProcessor): void;
 					onCameraVideo(param0: java.io.File): void;
 					onCameraAnalysis(param0: com.akylas.cameraview.ImageAnalysis): void;
 					onCameraError(param0: string, param1: java.lang.Exception): void;
@@ -256,6 +257,7 @@ declare module com {
 				public onCameraAnalysis(param0: com.akylas.cameraview.ImageAnalysis): void;
 				public onCameraVideoStart(): void;
 				public onCameraClose(): void;
+				public onCameraPhotoImage(param0: globalAndroid.media.Image, param1: androidx.camera.core.ImageInfo, param2: com.akylas.cameraview.ImageAsyncProcessor): void;
 				public onCameraOpen(): void;
 				public onCameraPhoto(param0: java.io.File): void;
 				public onCameraError(param0: string, param1: java.lang.Exception): void;
@@ -376,6 +378,7 @@ declare module com {
 				public requestChildRectangleOnScreen(param0: globalAndroid.view.View, param1: globalAndroid.graphics.Rect, param2: boolean): boolean;
 				public getMaxVideoBitrate(): number;
 				public isTextDirectionResolved(): boolean;
+				public setSavePhotoToDisk(param0: boolean): void;
 				public showContextMenuForChild(param0: globalAndroid.view.View, param1: number, param2: number): boolean;
 				public isLayoutDirectionResolved(): boolean;
 				public getFlashMode(): com.akylas.cameraview.CameraFlashMode;
@@ -418,6 +421,7 @@ declare module com {
 				public invalidateChild(param0: globalAndroid.view.View, param1: globalAndroid.graphics.Rect): void;
 				public requestChildFocus(param0: globalAndroid.view.View, param1: globalAndroid.view.View): void;
 				public onKeyDown(param0: number, param1: globalAndroid.view.KeyEvent): boolean;
+				public getSavePhotoToDisk(): boolean;
 				public addView(param0: globalAndroid.view.View, param1: globalAndroid.view.ViewGroup.LayoutParams): void;
 				public createContextMenu(param0: globalAndroid.view.ContextMenu): void;
 				public setRotation(param0: com.akylas.cameraview.CameraOrientation): void;

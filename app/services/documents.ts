@@ -109,14 +109,14 @@ export class DocumentsService extends Observable {
             for (let index = 0; index < pages.length; index++) {
                 page = pages[index];
                 image = await page.image;
-                let width = image.width;
-                let height = image.height;
-                if (page.rotation % 180 === 90) {
-                    width = image.height;
-                    height = image.width;
-                }
+                const width = image.width;
+                const height = image.height;
+                // if (page.rotation % 180 === 90) {
+                //     width = image.height;
+                //     height = image.width;
+                // }
                 const matrix = new android.graphics.Matrix();
-                matrix.setRotate(page.rotation, image.width / 2, image.height / 2);
+                // matrix.setRotate(page.rotation, image.width / 2, image.height / 2);
                 matrix.postTranslate(width / 2 - image.width / 2, height / 2 - image.height / 2);
                 const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width, height, index + 1).create();
                 const pdfpage = pdfDocument.startPage(pageInfo);

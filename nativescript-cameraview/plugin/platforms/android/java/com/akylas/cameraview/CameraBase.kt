@@ -5,13 +5,16 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.hardware.display.DisplayManager
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.OrientationEventListener
+import android.view.Surface
 import android.widget.FrameLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -67,6 +70,11 @@ abstract class CameraBase @JvmOverloads constructor(
     abstract var pictureSize: String
     abstract var enablePinchZoom: Boolean
     abstract var zoom: Float
+    protected var displayId: Int = -1
+
+    protected val displayManager by lazy {
+        context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+    }
 
     internal fun resetCurrentFrame() {
         if (isProcessingEveryNthFrame()) {
@@ -109,10 +117,22 @@ abstract class CameraBase @JvmOverloads constructor(
     }
 
 
-    /** Device orientation in degrees 0-359 */
-    var currentOrientation: Int = OrientationEventListener.ORIENTATION_UNKNOWN
+    var currentRotation: Int = Surface.ROTATION_0
 
     abstract fun orientationUpdated();
+
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(p0: Int) {
+            if (displayId == this@CameraBase.displayId) {
+                if (display != null && display.rotation != currentRotation) {
+                    currentRotation = display.rotation
+                    orientationUpdated()
+                }
+            }
+        }
+    }
 
     internal val VIDEO_RECORDER_PERMISSIONS_REQUEST = 868
     internal val VIDEO_RECORDER_PERMISSIONS =
@@ -133,32 +153,39 @@ abstract class CameraBase @JvmOverloads constructor(
 
     var listener: CameraEventListener? = null
 
-    private val orientationEventListener = object : OrientationEventListener(context) {
-        override fun onOrientationChanged(orientation: Int) {
+//    private val orientationEventListener = object : OrientationEventListener(context) {
+//        override fun onOrientationChanged(orientation: Int) {
+//            Log.d("JS", "onOrientationChanged" + orientation)
 //            if (rotation == CameraOrientation.UNKNOWN) {
-            val newOrientation = when (orientation) {
-                in 45 until 135 -> 270
-                in 135 until 225 -> 180
-                in 225 until 315 -> 90
-                else -> 0
-            }
-
-            if (newOrientation != currentOrientation) {
-                currentOrientation = newOrientation
-                orientationUpdated()
-            }
+//            val newOrientation = when (orientation) {
+//                in 45 until 135 -> 270
+//                in 135 until 225 -> 180
+//                in 225 until 315 -> 90
+//                else -> 0
 //            }
-        }
-    }
+//
+//            if (newOrientation != currentOrientation) {
+//                currentOrientation = newOrientation
+//                orientationUpdated()
+//            }
+//            }
+//        }
+//    }
 
     init {
-        orientationEventListener.enable()
+//        orientationEventListener.enable()
+        this.afterMeasured {
+            displayId = display.displayId
+            currentRotation = display.rotation
+            displayManager.registerDisplayListener(displayListener, null)
+        }
     }
 
     @Synchronized
     @Throws(Throwable::class)
     protected open fun finalize() {
-        orientationEventListener.disable()
+//        orientationEventListener.disable()
+        displayManager.unregisterDisplayListener(displayListener)
     }
 
 

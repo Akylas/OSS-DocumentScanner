@@ -7,6 +7,8 @@
 
 package com.akylas.cameraview
 
+import android.media.Image
+import androidx.camera.core.ImageInfo
 import java.io.File
 import java.lang.Exception
 
@@ -15,6 +17,7 @@ interface CameraEventListener {
     fun onCameraOpen()
     fun onCameraClose()
     fun onCameraPhoto(file: File?)
+    fun onCameraPhotoImage(image: Image?, info: ImageInfo, processor: ImageAsyncProcessor)
     fun onCameraVideo(file: File?)
     fun onCameraAnalysis(analysis: ImageAnalysis)
     fun onCameraError(message: String, ex: Exception)

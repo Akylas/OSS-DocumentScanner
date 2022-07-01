@@ -231,7 +231,6 @@ public class CameraView @JvmOverloads constructor(
         windowManager.defaultDisplay.getSize(point)
         displayRatio = aspectRatio(point.x, point.y)
         previewView.afterMeasured {
-            currentOrientation = previewView.display.rotation
             if (autoFocus) {
                 val factory: MeteringPointFactory = SurfaceOrientedMeteringPointFactory(
                     previewView.width.toFloat(), previewView.height.toFloat()
@@ -282,6 +281,7 @@ public class CameraView @JvmOverloads constructor(
     }
 
     override var allowExifRotation: Boolean = true
+    var savePhotoToDisk: Boolean = true
     override var autoSquareCrop: Boolean = false
     override var autoFocus: Boolean = false
     override var saveToGallery: Boolean = false
@@ -335,19 +335,10 @@ public class CameraView @JvmOverloads constructor(
 
     @SuppressLint("RestrictedApi", "UnsafeExperimentalUsageError")
     override fun orientationUpdated() {
-        val rotation = when (currentOrientation) {
-            270 -> Surface.ROTATION_270
-            180 -> Surface.ROTATION_180
-            90 -> Surface.ROTATION_90
-            else -> Surface.ROTATION_0
-        }
-        imageCapture?.targetRotation = rotation
-        videoCapture?.setTargetRotation(rotation)
-        imageAnalysis?.targetRotation = rotation
-    }
 
-    private fun getDeviceRotation(): Int {
-        return currentOrientation
+        imageCapture?.targetRotation = currentRotation
+        videoCapture?.setTargetRotation(currentRotation)
+        imageAnalysis?.targetRotation = currentRotation
     }
 
     private fun safeUnbindAll() {
@@ -437,7 +428,7 @@ public class CameraView @JvmOverloads constructor(
         }
         val builder = ImageAnalysis.Builder()
             .apply {
-                setTargetRotation(getDeviceRotation())
+                setTargetRotation(currentRotation)
                 setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
                 setTargetAspectRatio(
                     when (displayRatio) {
@@ -487,7 +478,7 @@ public class CameraView @JvmOverloads constructor(
         }
 
         val builder = ImageCapture.Builder().apply {
-            setTargetRotation(getDeviceRotation())
+            setTargetRotation(currentRotation)
             if (pictureSize == "0x0") {
                 setTargetAspectRatio(
                     when (displayRatio) {
@@ -576,7 +567,7 @@ public class CameraView @JvmOverloads constructor(
         preview = Preview.Builder()
             .apply {
 
-                setTargetRotation(getDeviceRotation())
+                setTargetRotation(currentRotation)
                 setTargetAspectRatio(
                     when (displayRatio) {
                         "16:9" -> AspectRatio.RATIO_16_9
@@ -644,7 +635,7 @@ public class CameraView @JvmOverloads constructor(
 
 
             videoCapture = VideoCapture.withOutput(recorder).apply {
-                targetRotation = getDeviceRotation()
+                targetRotation = currentRotation
             }
         }
     }
@@ -979,13 +970,21 @@ public class CameraView @JvmOverloads constructor(
             return
         }
 
-        val useImageProxy = autoSquareCrop || !allowExifRotation
+        val useImageProxy = autoSquareCrop || !allowExifRotation || !savePhotoToDisk
         if (useImageProxy) {
             imageCapture?.takePicture(
                 imageCaptureExecutor,
                 object : ImageCapture.OnImageCapturedCallback() {
+                    @SuppressLint("UnsafeOptInUsageError")
                     override fun onCaptureSuccess(image: ImageProxy) {
-                        processImageProxy(image, fileName)
+                        if (!savePhotoToDisk) {
+                            val latch = CountDownLatch(1);
+                            val processor = ImageAsyncProcessor(latch)
+                            listener?.onCameraPhotoImage(image.image, image.imageInfo, processor)
+                            latch.await()
+                        } else {
+                            processImageProxy(image, fileName)
+                        }
                     }
 
                     override fun onError(exception: ImageCaptureException) {

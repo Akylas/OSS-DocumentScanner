@@ -14,16 +14,14 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { onDestroy } from 'svelte';
+    import { share } from '~/utils/share';
 
     export let document: OCRDocument;
     // let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<OCRPage>;
     $: {
         console.log('document', document);
-        document.getObservablePages().then((r) => {
-            console.log('r', r);
-            items = r;
-        }).catch(showError);
+        items = document.getObservablePages();
     }
     // function onImageUpdated (event: any)  {
     //         const index = event.data.index;
@@ -67,7 +65,7 @@
     }
 
     onDestroy(() => {
-        document.clearObservableArray(items);
+        // document.clearObservableArray(items);
     });
 </script>
 
@@ -80,7 +78,7 @@
         <collectionview row={1} {items}>
             <Template let:index let:item>
                 <gridLayout padding="4" width="80%" height="200">
-                    <image rotate={item.rotation} src={item.imageSource} width="100%" rippleColor={accentColor} on:tap={() => onImageTap(item, index)} />
+                    <image rotate={item.rotation} src={item.getImageSource()} width="100%" rippleColor={accentColor} on:tap={() => onImageTap(item, index)} />
                 </gridLayout>
             </Template>
         </collectionview>

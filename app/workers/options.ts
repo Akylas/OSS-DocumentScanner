@@ -1,6 +1,7 @@
-export  interface ImageComputeOptions {
+export interface ImageComputeOptions {
     full?: boolean;
     debug?: boolean;
+    maxSize?: number;
     colorType: number;
     computeTextOrientation?: boolean;
     algo: number;

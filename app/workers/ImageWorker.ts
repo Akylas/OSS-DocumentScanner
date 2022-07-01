@@ -1,10 +1,12 @@
 import '@nativescript/core/globals';
 const context: Worker = self as any;
 import BaseWorker, { WorkerPostEvent } from './BaseWorker';
-import { calculateTextRotation, findDocuments, persp_transform } from '~/workers/contours';
+import { calculateTextRotation, findDocuments, getCVRotation, persp_transform, toBlackAndWhite } from '~/workers/contours';
 import { knownFolders, path } from '@nativescript/core/file-system';
 import * as cv2 from 'nativescript-opencv';
 import { ImageWorkerOptions } from './options';
+import { ImageSource } from '@nativescript/core';
+import { ColorType } from '~/models/OCRDocument';
 
 function nativeArray(array) {
     if (global.isAndroid) {
@@ -20,8 +22,9 @@ let net: cv2.Net;
 export default class ImageWorker extends BaseWorker {
     processing = false;
     processImage(nativeDatas: { [k: string]: any }, data: ImageWorkerOptions) {
+        const time = Date.now();
         this.processing = true;
-        const mat = nativeDatas.image;
+        const mat = nativeDatas.image as cv2.Mat;
 
         const id = data.id;
         let result: {
@@ -30,16 +33,32 @@ export default class ImageWorker extends BaseWorker {
             contours: any[];
         };
         try {
-            // if (data.full) {
-            // console.log('starting', mat);
-            //     cv2.Core.flip(mat, mat, 0);
-            // }
+            if (data.full) {
+                // console.log('starting', mat);
+                //     cv2.Core.flip(mat, mat, 0);
+                // }
+                if (data.maxSize && (data.width > data.maxSize || data.height > data.maxSize)) {
+                    let newWidth, newHeight;
+                    const originalRatio = data.width / data.height;
+                    if (data.width > data.height) {
+                        newWidth = data.maxSize;
+                        newHeight = newWidth / originalRatio;
+                    } else {
+                        newHeight = data.maxSize;
+                        newWidth = originalRatio * newHeight;
+                    }
+                    cv2.Imgproc.resize(mat, mat, new cv2.Size(newWidth, newHeight));
+                    console.log('resize image', mat.size().width, mat.size().height, Date.now() - time, 'ms');
+                }
+            }
             result = findDocuments(mat, data);
+            if (data.full) {
+                console.log('findDocuments', Date.now() - time, 'ms');
+            }
             if (!result) {
                 return;
             }
             // try {
-            //     const time = Date.now();
             //     if (!net) {
             //         const filepath = path.join(knownFolders.currentApp().path, 'assets/frozen_east_text_detection.pb');
             //         console.log('net file', filepath);
@@ -109,18 +128,19 @@ export default class ImageWorker extends BaseWorker {
             // }
 
             if (data.full) {
-                // console.log('full', 'contours', data);
-                // if (full) {
-                // console.log('handling full image', data, result.contours.length);
-                // }
+                //image is NOT gray
                 const width = result.resizedImage.size().width;
-                const ratio = data.width / width;
-                const images = result.contours.map((c, i) => {
+                const ratio = mat.size().width / width;
+                const bitmaps = [];
+                const mats = [];
+                const transformedMats = [];
+                const pages = [];
+                result.contours.forEach((c, i) => {
                     try {
                         const rMat = persp_transform(mat, c, ratio);
-                        const gray = new cv2.Mat();
-                        cv2.Imgproc.cvtColor(rMat, gray, cv2.Imgproc.COLOR_RGB2GRAY);
                         if (data.computeTextOrientation) {
+                            const gray = new cv2.Mat();
+                            cv2.Imgproc.cvtColor(rMat, gray, cv2.Imgproc.COLOR_RGB2GRAY);
                             const time = Date.now();
                             try {
                                 const angle = calculateTextRotation(gray, rMat);
@@ -131,54 +151,65 @@ export default class ImageWorker extends BaseWorker {
                             } catch (err2) {
                                 console.error('error calculateTextRotation', err2);
                             }
+                            gray.release();
                         }
-                        // if (data.colorType > 0) {
-                        //     // convert the warped image to grayscale
 
-                        //     // sharpen image
-                        //     const sharpen = new cv2.Mat();
-                        //     cv2.Imgproc.GaussianBlur(gray, sharpen, new cv2.Size(0, 0), 3);
-                        //     cv2.Core.addWeighted(rMat, 1.5, sharpen, -0.5, 0, rMat);
-
-                        //     // apply adaptive threshold to get black and white effect
-                        //     // cv2.Imgproc.threshold(rMat, rMat, 127, 255, cv2.Imgproc.THRESH_BINARY);
-                        //     if (data.colorType === 2) {
-                        //         cv2.Imgproc.adaptiveThreshold(rMat, rMat, 255, cv2.Imgproc.ADAPTIVE_THRESH_MEAN_C, cv2.Imgproc.THRESH_BINARY, 11, 12);
-                        //     }
-                        // }
-                        if (data.rotation !== 0) {
-                            cv2.Core.rotate(rMat, rMat, cv2.Core.ROTATE_90_COUNTERCLOCKWISE);
-                            // console.log('rotation', 'data.rotation', i, data.rotation);
-                            // const matrix = new android.graphics.Matrix();
-                            // matrix.postRotate(data.rotation);
-                            // bitmap = android.graphics.Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                        const cvRot = getCVRotation(data.rotation);
+                        if (cvRot !== -1) {
+                            cv2.Core.rotate(rMat, rMat, cvRot);
                         }
-                        const bitmap = cv2.imageFromMat(rMat);
-                        // rMat.release();
-                        gray.release();
-                        return { bitmap, mat: rMat };
+
+                        let transformedMat = rMat;
+                        switch (data.colorType) {
+                            case ColorType.GRAY:
+                                transformedMat = rMat.clone();
+                                if (rMat.channels() === 4) {
+                                    cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGBA2GRAY);
+                                } else if (rMat.channels() === 3) {
+                                    cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGB2GRAY);
+                                }
+                                break;
+                            case ColorType.BLACK_WHITE:
+                                transformedMat = rMat.clone();
+                                toBlackAndWhite(rMat, transformedMat);
+                                break;
+                            case ColorType.NONE:
+                            default:
+                                break;
+                        }
+
+                        bitmaps.push(cv2.imageFromMat(transformedMat));
+                        mats.push(rMat);
+                        transformedMats.push(transformedMat);
+                        pages.push({ colorType: data.colorType });
                     } catch (err) {
-                        console.error('error persp_transform', err);
+                        console.error('error persp_transform', err, err.stack);
                     }
-                }) as { bitmap: android.graphics.Bitmap; mat: cv2.Mat }[];
-                // console.log('full', 'images', images);
-
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_edgesImage`, result.edgesImage.clone());
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_images`, nativeArray(images.map((i) => i.bitmap)));
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_mats`, nativeArray(images.map((i) => (i.mat as any)._native)));
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_resizedImage`, result.resizedImage.clone());
-                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_image`, mat.clone());
+                });
+                console.log('created images', Date.now() - time, 'ms');
+                const nativeDataKeys = ['mats', 'bitmaps', 'transformedMats'];
+                com.akylas.documentscanner.WorkersContext.setValue(`${id}_images`, nativeArray(bitmaps));
+                com.akylas.documentscanner.WorkersContext.setValue(`${id}_mats`, nativeArray(mats.map((i) => i._native || i)));
+                com.akylas.documentscanner.WorkersContext.setValue(`${id}_bitmaps`, nativeArray(bitmaps));
+                com.akylas.documentscanner.WorkersContext.setValue(`${id}_transformedMats`, nativeArray(transformedMats.map((i) => i._native || i)));
+                if (!PRODUCTION && data.debug) {
+                    com.akylas.documentscanner.WorkersContext.setValue(`${id}_edgesImage`, result.edgesImage.clone());
+                    com.akylas.documentscanner.WorkersContext.setValue(`${id}_resizedImage`, result.resizedImage.clone());
+                    nativeDataKeys.push('edgesImage', 'resizedImage');
+                }
 
                 (global as any).postMessage(
                     Object.assign(data, {
                         type: 'contours',
                         id,
+                        pages,
                         contours: result.contours,
-                        width,
+                        rotation: data.rotation,
+                        width: result.resizedImage.size().width,
                         height: result.resizedImage.size().height,
                         originalWidth: data.width,
                         originalHeight: data.height,
-                        nativeDataKeys: ['edgesImage', 'images', 'mats', 'resizedImage']
+                        nativeDataKeys
                     })
                 );
                 result.edgesImage.release();
@@ -193,6 +224,7 @@ export default class ImageWorker extends BaseWorker {
                         type: 'contours',
                         id,
                         contours: result.contours,
+                        rotation: data.rotation,
                         width: result.resizedImage.size().width,
                         height: result.resizedImage.size().height,
                         originalWidth: data.width,
@@ -230,6 +262,12 @@ context.onmessage = ((event: { data }) => {
         case 'image':
             const id = data.id;
             const nativeDatas = {};
+            if (data.filePath) {
+                const imageSource = ImageSource.fromFileSync(data.filePath);
+                const mat = cv2.matFromImage(imageSource);
+                nativeDatas['image'] = mat;
+                Object.assign(data, { width: imageSource.width, height: imageSource.height, rotation: imageSource.rotationAngle });
+            }
             // if (worker.processing) {
             //     console.log('ignoring processing');
             //     (global as any).postMessage(
