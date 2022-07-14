@@ -1,46 +1,31 @@
 <script lang="ts">
-    import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
-    import { share } from '~/utils/share';
-    import { mdiFontFamily, primaryColor } from '~/variables';
-    import * as EInfo from '@nativescript-community/extendedinfo';
-    import { l } from '~/helpers/locale';
-    import { openLink, showLoading, hideLoading } from '~/utils/ui';
-    import CActionBar from './CActionBar.svelte';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { Template } from 'svelte-native/components';
-    import { accentColor } from '~/variables';
-    import { Mat } from 'nativescript-opencv';
-    import { ObservableArray, ImageSource, StackLayout } from '@nativescript/core';
-    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import PdfView from './PDFView.svelte';
-    import { navigate } from 'svelte-native';
-    import { documentsService } from '~/services/documents';
-    import { openUrl, openFile } from '@nativescript/core/utils';
-    import { showError } from '~/utils/error';
-    import { Imgproc } from 'nativescript-opencv';
     import { Pager } from '@nativescript-community/ui-pager';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { ObservableArray } from '@nativescript/core';
+    import { layout, openFile } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { l } from '~/helpers/locale';
+    import { ColorType, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { documentsService } from '~/services/documents';
+    import { showError } from '~/utils/error';
+    import { share } from '~/utils/share';
+    import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
+    import CActionBar from './CActionBar.svelte';
+    import RotableImageView from './RotableImageView.svelte';
 
     let pager: NativeViewElementNode<Pager>;
     export let document: OCRDocument;
     let items: ObservableArray<OCRPage>;
     $: {
         items = document.getObservablePages();
-        currentIndex = startPageIndex;
     }
     export let startPageIndex: number = 0;
-    let currentIndex = 0;
+    let currentIndex = startPageIndex;
+    console.log('currentIndex', currentIndex, startPageIndex);
 
-    function onImageTap(item) {
-        navigate({
-            page: PdfView,
-            transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
-            props: {
-                document
-            }
-        });
-    }
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -54,17 +39,29 @@
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
     }
-
-    async function rotateImageRight() {
-        try {
-            const current = items.getItem(currentIndex);
-            // current.config.rotation = (current.config.rotation) % 360
-            await document.updateImageConfig(currentIndex, {
-                rotation: (current.rotation + 90) % 360
+    function onFirstLayout(item, e) {
+        console.log('onFirstLayout');
+        if (item.rotation % 180 === 90) {
+            const currentWidth = layout.toDeviceIndependentPixels(e.object.getMeasuredWidth());
+            const currentHeight = layout.toDeviceIndependentPixels(e.object.getMeasuredHeight());
+            const delta = item.rotation % 180 === 0 ? 0 : (currentWidth - currentHeight) / 2;
+            Object.assign(e.object, {
+                translateX: delta,
+                translateY: -delta,
+                width: currentHeight,
+                height: currentWidth
             });
-        } catch (err) {
-            showError(err);
         }
+    }
+
+    async function onImageRotated(item, event) {
+        if (event.detail.newRotation === undefined) {
+            return;
+        }
+        await document.updateImageConfig(currentIndex, {
+            rotation: event.detail.newRotation % 360
+        });
+        items.setItem(currentIndex, item);
     }
     let colorType = 0;
     $: {
@@ -72,10 +69,10 @@
     }
     async function setColorType(type: number) {
         colorType = type;
-        console.log('setColorType', colorType);
         try {
             await document.updateImageConfig(currentIndex, {
-                colorType: type
+                colorType: type,
+                colorMatrix: getColorMatrix(type)
             });
             // pages.setItem(currentIndex, current);
         } catch (err) {
@@ -83,6 +80,55 @@
         }
     }
 
+    function rotateImageRight() {
+        const current = items.getItem(currentIndex);
+        current['newRotation'] = current.rotation + 90;
+        items.setItem(currentIndex, current);
+    }
+    async function shareItem(item) {
+        try {
+            share({ file: await item.getImagePath() });
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    async function setBlackWhiteLevel(event) {
+        const current = items.getItem(currentIndex);
+        if (current.colorType !== ColorType.BLACK_WHITE) {
+            return;
+        }
+
+        const currentValue = current.colorMatrix[0];
+        try {
+            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
+            showPopover({
+                view: SliderPopover,
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                props: {
+                    min: 0.5,
+                    max: 2,
+                    step: 0.1,
+                    title: 'black_white_level',
+                    icon: 'mdi-brightness-6',
+                    value: currentValue,
+                    onChange(value) {
+                        console.log('changed', value);
+                        document.updateImageConfig(currentIndex, {
+                            colorMatrix: getColorMatrix(current.colorType, value)
+                        });
+                    }
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
+    function getItemColorMatrix(item) {
+        const result = item.colorMatrix || getColorMatrix(item.colorType);
+        return result;
+    }
     onDestroy(() => {
         // document.clearObservableArray(items);
     });
@@ -91,28 +137,26 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*,50" backgroundColor="black">
         <CActionBar title={document.name}>
-            <mdbutton variant="flat" class="icon-btn" text="mdi-file-pdf-box" on:tap={savePDF} />
+            <mdbutton variant="text" class="actionBarButton" text="mdi-file-pdf-box" on:tap={savePDF} />
         </CActionBar>
         <pager bind:this={pager} row={1} {items} selectedIndex={startPageIndex} on:selectedIndexChange={onSelectedIndex}>
             <Template let:item let:index>
                 <gridLayout width="100%">
-                    <image rotate={item.rotation} src={item.getImageSource()} stretch="aspectFit" />
-                    <mdbutton
-                        color={accentColor}
-                        variant="flat"
-                        class="icon-btn"
-                        text="mdi-share-variant"
-                        on:tap={() => share({ image: item.imageSource })}
-                        verticalAlignment="bottom"
-                        horizontalAlignment="right"
+                    <RotableImageView
+                        zoomable={true}
+                        item={item}
+                        on:rotated={(e) => onImageRotated(item, e)}
                     />
+
+                    <label padding={10} text={`${item.width} x ${item.height}`} color="white" verticalAlignment="bottom" fontSize={14} />
+                    <mdbutton color="white" variant="flat" class="icon-btn" text="mdi-share-variant" on:tap={() => shareItem(item)} verticalAlignment="bottom" horizontalAlignment="right" />
                 </gridLayout>
             </Template>
         </pager>
         <stacklayout orientation="horizontal" row={2}>
             <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-crop" />
             <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
-            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} />
+            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} />
         </stacklayout>
     </gridlayout>
 </page>

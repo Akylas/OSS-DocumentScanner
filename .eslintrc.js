@@ -1,4 +1,4 @@
-const ignoreWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control']);
+const ignoreWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus']);
 module.exports = {
     extends: ['plugin:prettier/recommended'],
     env: {

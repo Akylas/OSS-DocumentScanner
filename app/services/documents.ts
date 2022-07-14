@@ -1,10 +1,11 @@
-import { Folder, ObservableArray, knownFolders, path } from '@nativescript/core';
+import { File, Folder, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 // import { createPDF } from '~/utils/pdf';
 import { installMixins } from '@nativescript-community/sqlite/typeorm';
 import { Imgcodecs, Mat } from 'nativescript-opencv';
 import { Connection, createConnection } from '@nativescript-community/typeorm/browser';
 import { OCRDocument, OCRImage, OCRPage, OCRRawImage } from '~/models/OCRDocument';
+import { ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
 // import OCRDocument, { ImageConfig } from '~/models/Document';
 
 export class DocumentsService extends Observable {
@@ -100,33 +101,39 @@ export class DocumentsService extends Observable {
 
     async exportPDF(document: OCRDocument) {
         const start = Date.now();
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             const pdfDocument = new android.graphics.pdf.PdfDocument();
-            // const paint = new android.graphics.Paint();
             const pages = document.pages;
             let page: OCRPage;
-            let image: OCRImage;
+            let imagePath: string;
+            const bitmapPaint: Paint = null;
             for (let index = 0; index < pages.length; index++) {
                 page = pages[index];
-                image = await page.image;
-                const width = image.width;
-                const height = image.height;
-                // if (page.rotation % 180 === 90) {
-                //     width = image.height;
-                //     height = image.width;
-                // }
-                const matrix = new android.graphics.Matrix();
-                // matrix.setRotate(page.rotation, image.width / 2, image.height / 2);
-                matrix.postTranslate(width / 2 - image.width / 2, height / 2 - image.height / 2);
+                imagePath = await page.getImagePath();
+                let width = page.width;
+                let height = page.height;
+                if (page.rotation % 180 === 90) {
+                    width = page.height;
+                    height = page.width;
+                }
                 const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width, height, index + 1).create();
                 const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = pdfpage.getCanvas();
-                // pageCanvas.save();
-                // pageCanvas.rotate(page.rotation);
-                pageCanvas.drawBitmap(image.imageSource.android, matrix, null);
+                const imageSource = ImageSource.fromFileSync(imagePath);
+                let bitmapPaint: Paint = null;
+                if (page.colorType !== 0) {
+                    if (!bitmapPaint) {
+                        bitmapPaint = new Paint();
+                    }
+                    bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix));
+                }
+                pageCanvas.translate(width / 2, height / 2);
+                pageCanvas.rotate(page.rotation, 0, 0);
+                pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
+                imageSource.android.recycle();
                 pdfDocument.finishPage(pdfpage);
             }
-            const pdfFile = this.dataFolder.getFile(document.id + '.pdf');
+            const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
             const newFile = new java.io.File(pdfFile.path);
             const fos = new java.io.FileOutputStream(newFile);
             pdfDocument.writeTo(fos);

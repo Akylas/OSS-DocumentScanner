@@ -96,7 +96,7 @@ module.exports = (env, params = {}) => {
     config.externals.push('~/licenses.json');
     config.externals.push(function ({ context, request }, cb) {
         if (/i18n$/i.test(context)) {
-            return cb(null, './i18n/' + request);
+            return cb(null, './i18n/' + request.slice(2));
         }
         cb();
     });
@@ -475,6 +475,11 @@ module.exports = (env, params = {}) => {
     } else {
         config.devtool = false;
     }
+
+
+    config.experiments = {
+        topLevelAwait: true
+    };
 
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};

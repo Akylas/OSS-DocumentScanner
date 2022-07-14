@@ -24,7 +24,7 @@ export default class ImageWorker extends BaseWorker {
     processImage(nativeDatas: { [k: string]: any }, data: ImageWorkerOptions) {
         const time = Date.now();
         this.processing = true;
-        const mat = nativeDatas.image as cv2.Mat;
+        const mat = nativeDatas.mat as cv2.Mat;
 
         const id = data.id;
         let result: {
@@ -34,6 +34,7 @@ export default class ImageWorker extends BaseWorker {
         };
         try {
             if (data.full) {
+                console.log('processImage')
                 // console.log('starting', mat);
                 //     cv2.Core.flip(mat, mat, 0);
                 // }
@@ -128,16 +129,18 @@ export default class ImageWorker extends BaseWorker {
             // }
 
             if (data.full) {
-                //image is NOT gray
                 const width = result.resizedImage.size().width;
                 const ratio = mat.size().width / width;
-                const bitmaps = [];
                 const mats = [];
-                const transformedMats = [];
                 const pages = [];
+                // if (data.debug) {
+                    // mats.push(mat);
+                    // pages.push({ colorType: 0 });
+                // }
                 result.contours.forEach((c, i) => {
                     try {
                         const rMat = persp_transform(mat, c, ratio);
+                        console.log('persp_transform image', Date.now() - time, 'ms');
                         if (data.computeTextOrientation) {
                             const gray = new cv2.Mat();
                             cv2.Imgproc.cvtColor(rMat, gray, cv2.Imgproc.COLOR_RGB2GRAY);
@@ -159,45 +162,47 @@ export default class ImageWorker extends BaseWorker {
                             cv2.Core.rotate(rMat, rMat, cvRot);
                         }
 
-                        let transformedMat = rMat;
-                        switch (data.colorType) {
-                            case ColorType.GRAY:
-                                transformedMat = rMat.clone();
-                                if (rMat.channels() === 4) {
-                                    cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGBA2GRAY);
-                                } else if (rMat.channels() === 3) {
-                                    cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGB2GRAY);
-                                }
-                                break;
-                            case ColorType.BLACK_WHITE:
-                                transformedMat = rMat.clone();
-                                toBlackAndWhite(rMat, transformedMat);
-                                break;
-                            case ColorType.NONE:
-                            default:
-                                break;
-                        }
+                        // let transformedMat = rMat;
+                        // switch (data.colorType) {
+                        //     case ColorType.GRAY:
+                        //         transformedMat = rMat.clone();
+                        //         if (rMat.channels() === 4) {
+                        //             cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGBA2GRAY);
+                        //         } else if (rMat.channels() === 3) {
+                        //             cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGB2GRAY);
+                        //         }
+                        //         break;
+                        //     case ColorType.BLACK_WHITE:
+                        //         transformedMat = rMat.clone();
+                        //         toBlackAndWhite(rMat, transformedMat);
+                        //         break;
+                        //     case ColorType.NONE:
+                        //     default:
+                        //         break;
+                        // }
+                        console.log('transformed image', Date.now() - time, 'ms');
 
-                        bitmaps.push(cv2.imageFromMat(transformedMat));
+                        // bitmaps.push(cv2.imageFromMat(transformedMat));
                         mats.push(rMat);
-                        transformedMats.push(transformedMat);
+                        // transformedMats.push(transformedMat);
                         pages.push({ colorType: data.colorType });
                     } catch (err) {
                         console.error('error persp_transform', err, err.stack);
                     }
                 });
                 console.log('created images', Date.now() - time, 'ms');
-                const nativeDataKeys = ['mats', 'bitmaps', 'transformedMats'];
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_images`, nativeArray(bitmaps));
+                const nativeDataKeys = ['mats'];
+                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_images`, nativeArray(bitmaps));
                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_mats`, nativeArray(mats.map((i) => i._native || i)));
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_bitmaps`, nativeArray(bitmaps));
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_transformedMats`, nativeArray(transformedMats.map((i) => i._native || i)));
+                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_bitmaps`, nativeArray(bitmaps));
+                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_transformedMats`, nativeArray(transformedMats.map((i) => i._native || i)));
                 if (!PRODUCTION && data.debug) {
                     com.akylas.documentscanner.WorkersContext.setValue(`${id}_edgesImage`, result.edgesImage.clone());
                     com.akylas.documentscanner.WorkersContext.setValue(`${id}_resizedImage`, result.resizedImage.clone());
                     nativeDataKeys.push('edgesImage', 'resizedImage');
                 }
 
+                console.log('worker done', Date.now() - time, 'ms');
                 (global as any).postMessage(
                     Object.assign(data, {
                         type: 'contours',
@@ -214,7 +219,9 @@ export default class ImageWorker extends BaseWorker {
                 );
                 result.edgesImage.release();
                 result.resizedImage.release();
-                mat.release();
+                // if (!data.debug) {
+                    mat.release();
+                // }
             } else {
                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_edgesImage`, result.edgesImage.clone());
                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_resizedImage`, result.resizedImage.clone());
@@ -262,11 +269,26 @@ context.onmessage = ((event: { data }) => {
         case 'image':
             const id = data.id;
             const nativeDatas = {};
+
+            data.nativeDataKeys.forEach((k) => {
+                nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
+                com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
+            });
             if (data.filePath) {
                 const imageSource = ImageSource.fromFileSync(data.filePath);
                 const mat = cv2.matFromImage(imageSource);
-                nativeDatas['image'] = mat;
+                nativeDatas['mat'] = mat;
                 Object.assign(data, { width: imageSource.width, height: imageSource.height, rotation: imageSource.rotationAngle });
+            } else if (nativeDatas['bitmap']) {
+                const mat = cv2.matFromImage(nativeDatas['bitmap']);
+                if (__ANDROID__) {
+                    nativeDatas['bitmap'].recycle();
+                }
+                    delete nativeDatas['bitmap'];
+                const size = mat.size();
+                nativeDatas['mat'] = mat;
+                Object.assign(data, { width: size.width, height: size.height, rotation: 0 });
+                console.log('handling full image', size.width, size.height);
             }
             // if (worker.processing) {
             //     console.log('ignoring processing');
@@ -279,10 +301,6 @@ context.onmessage = ((event: { data }) => {
             //     );
             //     return;
             // }
-            data.nativeDataKeys.forEach((k) => {
-                nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
-            });
             worker.processImage(nativeDatas, data);
             break;
     }

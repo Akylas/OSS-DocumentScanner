@@ -3,6 +3,7 @@
 .lato {
     // font-family: $lato-fontFamily;
 }
+
 .mdi {
     font-family: $mdi-fontFamily;
 }
@@ -14,20 +15,20 @@ mdbutton {
     // background-color: rgba(255, 0,0,0.2);
     // .ns-light & {
     color: black;
+
     // }
     .ns-dark &,
     .ns-black & {
         color: white;
     }
+
     // white-space: normal;
-}
-mdbutton[variant="text"] {
-    color: $accent-color;
 }
 
 .dailyViewBorder {
     height: 1;
-   background-color: #ccc;
+    background-color: #ccc;
+
     .ns-dark &,
     .ns-black & {
         background-color: #333;
@@ -40,9 +41,11 @@ mdbutton[variant="text"] {
     padding-bottom: 10;
     border-radius: 4;
     background-color: #eee;
+
     .ns-dark & {
         background-color: #444;
     }
+
     .ns-black & {
         background-color: #222;
     }
@@ -50,11 +53,12 @@ mdbutton[variant="text"] {
 
 mdtextfield {
     color: black;
-    backgroundcolor-color: white;
+    background-color: white;
     placeholder-color: black;
+
     .ns-dark & {
         color: white;
-        backgroundcolor-color: black;
+        background-color: black;
         placeholder-color: white;
     }
 }
@@ -67,6 +71,7 @@ label,
 canvaslabel {
     @extend .lato;
 }
+
 // }
 
 page {
@@ -84,6 +89,7 @@ page {
         status-bar-color: black;
         background-color: #1c1c1e;
     }
+
     .ns-black & {
         status-bar-style: dark;
         // navigation-bar-color: black;
@@ -93,12 +99,14 @@ page {
 }
 
 .bottomsheet {
+
     // background-color: white;
     .ns-dark &,
     .ns-black & {
         background-color: #1c1c1e;
     }
 }
+
 .actionBar {
     z-index: 0;
     border-radius: 0;
@@ -115,24 +123,29 @@ page {
 
 .actionBarButton {
     @extend .mdi;
-    width: $actionbar-height;
-    height: $actionbar-height;
-    color: black;
-    .ns-dark &,
-    .ns-black & {
-        color: white;
-    }
+    shape:round;
+    width: $actionbar-button-height;
+    height: $actionbar-button-height;
+    color: white;
+
+    // .ns-dark &,
+    // .ns-black & {
+    //     color: white;
+    // }
+
+    width: 44;
+    height: 44;
+    border-radius: 22;
+    font-size: 24;
     margin: 0;
     padding: 0;
-    font-size: 32;
-    border-radius: $actionbar-height/2;
 }
 
 .actionBarTitle {
     // @extend .lato;
     font-size: 20;
     font-weight: 500;
-    color: black;
+    color: white;
     // .ns-dark &,
     // .ns-black & {
     //     color: white;
@@ -149,15 +162,60 @@ page {
     background-color: transparent;
     ripple-color: gray;
     color: black;
+
     .ns-dark &,
     .ns-black & {
         color: white;
         ripple-color: white;
     }
+
     width: 44;
     height: 44;
     border-radius: 22;
     font-size: 24;
     margin: 0;
     padding: 0;
+}
+
+.floating-btn {
+    @extend .mdi;
+    color:white;
+    shape: round;
+    elevation: 6;
+    font-size: 24;
+    padding: 0;
+    margin: 16;
+    width: 56;
+    height: 56;
+}
+
+.small-floating-btn {
+    @extend .mdi;
+    shape: round;
+    background-color: white;
+    color: $accent-color;
+    ripple-color: $accent-color;
+    elevation: 6;
+    font-size: 24;
+    padding: 0;
+    margin: 8;
+    width: 40;
+    height: 40;
+}
+
+.icon-label {
+    @extend .mdi;
+
+    color: $text-color-light;
+
+    .ns-dark & {
+        color: $text-color-dark;
+        ripple-color: $text-color-dark;
+    }
+
+    width: $actionbar-button-height;
+    height: $actionbar-button-height;
+    text-align: center;
+    vertical-text-alignment: center;
+    font-size: 24;
 }

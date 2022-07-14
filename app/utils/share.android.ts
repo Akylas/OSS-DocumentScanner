@@ -1,4 +1,5 @@
 import { Application, Device, ImageSource, knownFolders, path } from '@nativescript/core';
+import { ad } from '@nativescript/core/utils';
 import { Content, Options } from './share';
 
 let numberOfImagesCreated = 0;
@@ -36,6 +37,19 @@ export async function share(content: Content, options: Options = {}) {
         }
         intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
     }
+    if (content.file) {
+        console.log('sharing file',content.file )
+        const sdkVersionInt = parseInt(Device.sdkVersion, 10);
+        const newFile = new java.io.File(content.file);
+        let shareableFileUri;
+        if (sdkVersionInt >= 21) {
+            shareableFileUri = androidx.core.content.FileProvider.getUriForFile(currentActivity, Application.android.nativeApp.getPackageName() + '.provider', newFile);
+        } else {
+            shareableFileUri = android.net.Uri.fromFile(newFile);
+        }
+        intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
+        console.log('sharing file done ',content.file )
+    }
 
     const chooser = Intent.createChooser(intent, options.dialogTitle);
     chooser.addCategory(Intent.CATEGORY_DEFAULT);
@@ -43,7 +57,7 @@ export async function share(content: Content, options: Options = {}) {
     if (currentActivity !== null) {
         currentActivity.startActivity(chooser);
     } else {
-        Application.android.context.startActivity(chooser);
+        ad.getApplicationContext().startActivity(chooser);
     }
     return true;
 }

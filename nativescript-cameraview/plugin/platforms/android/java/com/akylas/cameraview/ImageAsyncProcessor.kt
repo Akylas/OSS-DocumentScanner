@@ -1,5 +1,6 @@
 package com.akylas.cameraview
 
+import android.util.Log
 import java.lang.Exception
 import java.util.concurrent.CountDownLatch
 

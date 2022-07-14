@@ -23,7 +23,7 @@ export function getCVRotation(rotation) {
 
 export function resize(img: cv2.Mat, output: cv2.Mat, height = SMALL_HEIGHT, allways = false) {
     const rat = height / img.size().height;
-    cv2.Imgproc.resize(img, output, new cv2.Size(rat * img.size().width, height));
+    cv2.Imgproc.resize(img, output, new cv2.Size(rat * img.size().width, height), cv2.Imgproc.INTER_NEAREST);
 
     output = img;
     return rat;
@@ -111,13 +111,12 @@ function intersection(a, b) {
 
 let hierarchyMat: cv2.Mat;
 
-
 function simplify(inPoints, nbPoints) {
-    const presimplified = presimplify(({arcs:[inPoints]}));
+    const presimplified = presimplify({ arcs: [inPoints] });
     // Remove points whose weight is less than the minimum weight.
     const sorted = presimplified.arcs[0].sort((a, b) => a[2] - b[2]);
     const result = sorted.splice(0, nbPoints);
-    return result.map(p=>p.slice(0,2));
+    return result.map((p) => p.slice(0, 2));
 }
 
 export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWorkerOptions) {
@@ -184,7 +183,6 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
 
     const MIN_COUNTOUR_AREA = height * width * 0.1 * 0.1;
     const MAX_COUNTOUR_AREA = height * width * 0.99 * 0.99;
-    // console.log('test1', MIN_COUNTOUR_AREA, MAX_COUNTOUR_AREA,contours.map(c=>c.area))
     const sorted = contours.filter((a) => MIN_COUNTOUR_AREA < a.area && a.area < MAX_COUNTOUR_AREA).sort((a, b) => b.area - a.area);
     // console.log('sorted', sorted.map(c=>c.area))
     const foundContoursLength = sorted.length;
@@ -210,8 +208,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
             // sorted by area so if first too small they are all too small
             break;
         }
-        const maxLength = 30;
-        if (length >= 4 && length <= maxLength && cv2.Imgproc.isContourConvex(cnt)) {
+        if (length >= 4 && cv2.Imgproc.isContourConvex(cnt)) {
             let tooClose = false;
             for (let j = 0; j < temp_contours.length; j++) {
                 const cnt2 = temp_contours[j];
@@ -235,8 +232,10 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                             realPoints.push([element.x, element.y]);
                         }
                         if (realPoints.length > 4) {
-                            realPoints = simplify(realPoints, 4);
+                            realPoints = minBoundingRect(realPoints);
+                        } else {
                             realPoints = sortCorners(realPoints);
+                            // realPoints = four_corners_sort(realPoints);
                         }
                     }
                     if (data.debug) {
@@ -335,18 +334,17 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
                         }
                     }
                 }
-
                 page_contours.push(realPoints);
             }
         } else {
-            // console.log('ignoring  contour too many points', index, length);
-            // cv2.Imgproc.drawContours(img, nContours, index, new cv2.Scalar(0, 0, 255), 4);
         }
+        // cnt.release();
     }
-    // if (data.full) {
-    //     return page_contours.map((c) => order_points(c));
-    // }
-    // console.log('contours', page_contours.length);
+    // release native objects
+    for (let index = 0; index < nContours.size(); index++) {
+        const contour = nContours.get(index) as cv2.MatOfPoint;
+        contour.release();
+    }
     return page_contours;
 }
 
@@ -493,6 +491,178 @@ function sortCorners(points: [number, number][]): [number, number][] {
     return [topLeft, tops[0] === topLeft ? tops[1] : tops[0], bottoms[0] === bottomLeft ? bottoms[1] : bottoms[0], bottomLeft];
 }
 
+function linearDiff(array) {
+    const result = [];
+    for (let index = 0; index < array.length; index++) {
+        result[index] = result[index + 1] - result[index];
+    }
+    return result;
+}
+function four_corners_sort(pts: [number, number][]) {
+    let minDiffCurrent = Number.MAX_SAFE_INTEGER;
+    let minDiffCurrentIndex = 0;
+    let maxDiffCurrent = 0;
+    let maxDiffCurrentIndex = 0;
+    let minSumCurrent = Number.MAX_SAFE_INTEGER;
+    let minSumCurrentIndex = 0;
+    let maxSumCurrent = 0;
+    let maxSumCurrentIndex = 0;
+    let p, diff, sum;
+    for (let index = 0; index < pts.length; index++) {
+        p = pts[index];
+        diff = p[1] - p[0];
+        sum = p[1] + p[0];
+        if (diff < minDiffCurrent) {
+            minDiffCurrent = diff;
+            minDiffCurrentIndex = index;
+        } else if (diff > maxDiffCurrent) {
+            maxDiffCurrent = diff;
+            maxDiffCurrentIndex = index;
+        }
+        if (sum < minSumCurrent) {
+            minSumCurrent = sum;
+            minSumCurrentIndex = index;
+        } else if (sum > maxSumCurrent) {
+            maxSumCurrent = sum;
+            maxSumCurrentIndex = index;
+        }
+    }
+    return [pts[minSumCurrentIndex], pts[minDiffCurrentIndex], pts[maxSumCurrentIndex], pts[maxDiffCurrentIndex]];
+}
+
+function nanmin(array) {
+    return Math.min(...array.filter((n) => !isNaN(n)));
+}
+
+function nanmax(array) {
+    return Math.max(...array.filter((n) => !isNaN(n)));
+}
+
+const mmultiply = (a, b) => a.map((x) => transpose(b).map((y) => dotproduct(x, y)));
+const dotproduct = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+const transpose = (a) => a[0].map((x, i) => a.map((y) => y[i]));
+function matrixDot(A, B) {
+    const result = new Array(A.length).fill(0).map((row) => new Array(B[0].length).fill(0));
+    return result.map((row, i) => row.map((val, j) => A[i].reduce((sum, elm, k) => sum + elm * B[k][j], 0)));
+}
+const PI_2 = Math.PI / 2;
+
+function minBoundingRect(hull_points_2d) {
+    // console.log('minBoundingRect', hull_points_2d);
+    // Compute edges (x2-x1,y2-y1)
+    const edges = [];
+    let edge_x, edge_y;
+    for (let i = 0; i < hull_points_2d.length - 1; i++) {
+        edge_x = hull_points_2d[i + 1][0] - hull_points_2d[i][0];
+        edge_y = hull_points_2d[i + 1][1] - hull_points_2d[i][1];
+        edges[i] = [edge_x, edge_y];
+    }
+    //print "Edges: \n", edges
+    // console.log('Edges', edges);
+
+    // Calculate edge angles   atan2(y/x)
+    let edge_angles = [];
+    for (let i = 0; i < edges.length; i++) {
+        edge_angles[i] = Math.atan2(edges[i][1], edges[i][0]);
+    }
+    // console.log('Edges angles1', edge_angles);
+    //print "Edge angles: \n", edge_angles
+
+    // Check for angles in 1st quadrant
+    for (let i = 0; i < edge_angles.length; i++) {
+        edge_angles[i] = Math.abs(edge_angles[i] % PI_2); // want strictly positive answers
+    }
+    //print "Edge angles in 1st Quadrant: \n", edge_angles
+
+    // Remove duplicate angles
+    edge_angles = [...new Set(edge_angles)];
+    //print "Unique edge angles: \n", edge_angles
+    // console.log('Unique Edges angles', edge_angles);
+
+    // Test each angle to find bounding box with smallest area
+    let min_bbox = [0, Number.MAX_SAFE_INTEGER, 0, 0, 0, 0, 0, 0]; // rot_angle, area, width, height, min_x, max_x, min_y, max_y
+    // print('Testing', edge_angles.length, 'possible rotations for bounding box... \n');
+
+    let R, rot_points, min_x, max_x, min_y, max_y, area, width, height;
+    for (let i = 0; i < edge_angles.length; i++) {
+        // Create rotation matrix to shift points to baseline
+        // R = [ cos(theta)      , cos(theta-PI/2)
+        //       cos(theta+PI/2) , cos(theta)     ]
+        R = [
+            [Math.cos(edge_angles[i]), Math.cos(edge_angles[i] - PI_2)],
+            [Math.cos(edge_angles[i] + PI_2), Math.cos(edge_angles[i])]
+        ];
+        //print "Rotation matrix for ", edge_angles[i], " is \n", R
+        // console.log('Rotation matrix for', edge_angles[i], R);
+
+        // Apply this rotation to convex hull points
+        rot_points = matrixDot(R, transpose(hull_points_2d)); // 2x2 * 2xn
+        //print "Rotated hull points are \n", rot_points
+        // console.log('rotated hull points are', rot_points);
+
+        // Find min/max x,y points
+        min_x = nanmin(rot_points[0]);
+        max_x = nanmax(rot_points[0]);
+        min_y = nanmin(rot_points[1]);
+        max_y = nanmax(rot_points[1]);
+        // console.log('Min x:', min_x, ' Max x: ', max_x, '   Min y:', min_y, ' Max y: ', max_y);
+        //print "Min x:", min_x, " Max x: ", max_x, "   Min y:", min_y, " Max y: ", max_y
+
+        // Calculate height/width/area of this bounding rectangle
+        width = max_x - min_x;
+        height = max_y - min_y;
+        area = width * height;
+        //print "Potential bounding box ", i, ":  width: ", width, " height: ", height, "  area: ", area
+        // console.log('Potential bounding box ', i, ':  width: ', width, ' height: ', height, '  area: ', area);
+
+        // Store the smallest rect found first (a simple convex hull might have 2 answers with same area)
+        if (area < min_bbox[1]) {
+            min_bbox = [edge_angles[i], area, width, height, min_x, max_x, min_y, max_y];
+        }
+        // Bypass, return the last found rect
+        //min_bbox = ( edge_angles[i], area, width, height, min_x, max_x, min_y, max_y )
+    }
+    // Re-create rotation matrix for smallest rect
+    const angle = min_bbox[0];
+    R = [
+        [Math.cos(angle), Math.cos(angle - PI_2)],
+        [Math.cos(angle + PI_2), Math.cos(angle)]
+    ];
+    //print "Projection matrix: \n", R
+
+    // Project convex hull points onto rotated frame
+    // const proj_points = dotproduct(R, transpose(hull_points_2d)); // 2x2 * 2xn
+    //print "Project hull points are \n", proj_points
+
+    // min/max x,y points are against baseline
+    min_x = min_bbox[4];
+    max_x = min_bbox[5];
+    min_y = min_bbox[6];
+    max_y = min_bbox[7];
+    // console.log('Min x:', min_x, ' Max x: ', max_x, '   Min y:', min_y, ' Max y: ', max_y);
+    //print "Min x:", min_x, " Max x: ", max_x, "   Min y:", min_y, " Max y: ", max_y
+
+    // Calculate center point and project onto rotated frame
+    // const center_x = (min_x + max_x) / 2;
+    // const center_y = (min_y + max_y) / 2;
+    // const center_point = dotproduct([center_x, center_y], R);
+    //print "Bounding box center point: \n", center_point
+
+    // Calculate corner points and project onto rotated frame
+    const corner_points = []; // empty 2 column array
+    corner_points[0] = matrixDot([[max_x, min_y]], R)[0];
+    corner_points[1] = matrixDot([[min_x, min_y]], R)[0];
+    corner_points[2] = matrixDot([[min_x, max_y]], R)[0];
+    corner_points[3] = matrixDot([[max_x, max_y]], R)[0];
+    // print('Bounding box corner points: \n', corner_points);
+    // console.log('Bounding box corner points', corner_points);
+
+    //print "Angle of rotation: ", angle, "rad  ", angle * (180/math.pi), "deg"
+
+    //rot_angle, area, width, height, center_point, corner_points
+    return corner_points;
+}
+
 function getDistance(p1: [number, number], p2: [number, number]) {
     const dx = p2[0] - p1[0];
     const dy = p2[1] - p1[1];
@@ -570,6 +740,9 @@ export function persp_transform(img: cv2.Mat, s_points: [number, number][], rati
 
 let kernel9: cv2.Mat;
 let kernel2: cv2.Mat;
+let kernel1: cv2.Mat;
+let kernel3: cv2.Mat;
+let kernel4: cv2.Mat;
 let gray: cv2.Mat;
 
 function apply_brightness_contrast(input_img, buf, brightness = 0, contrast = 0) {
@@ -597,7 +770,7 @@ function apply_brightness_contrast(input_img, buf, brightness = 0, contrast = 0)
     return buf;
 }
 
-function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions) {
+function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions, hardTest = false) {
     // if (full) {
     if (!gray) {
         gray = new cv2.Mat(img.size().height, img.size().width, cv2.CvType.CV_8UC1);
@@ -614,7 +787,7 @@ function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions) {
     }
     switch (data.algo) {
         case 0:
-            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(7, 7), 0);
+            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
             // cv2.Imgproc.bilateralFilter(img, out, 7, 50, 50);
             if (!kernel9) {
                 kernel9 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(9, 9));
@@ -622,13 +795,13 @@ function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions) {
             cv2.Imgproc.morphologyEx(out, out, cv2.Imgproc.MORPH_CLOSE, kernel9);
 
             cv2.Imgproc.Canny(out, out, 0, 84);
-            if (!kernel2) {
-                kernel2 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(3, 3));
+            if (!kernel3) {
+                kernel3 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(3, 3));
             }
-            cv2.Imgproc.dilate(out, out, kernel2);
+            cv2.Imgproc.dilate(out, out, kernel3);
             break;
         case 1:
-            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(7, 7), 0);
+            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
             if (!kernel2) {
                 kernel2 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(9, 9));
             }
@@ -636,7 +809,7 @@ function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions) {
             cv2.Imgproc.Canny(out, out, 0, 84);
             break;
         case 2:
-            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(5, 5), 0);
+            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
             cv2.Imgproc.Canny(out, out, 0, 84);
             break;
         case 3:
@@ -651,18 +824,51 @@ function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions) {
             cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(5, 5), 0);
             // apply_brightness_contrast(out, out, -64, 64);
             cv2.Imgproc.Canny(out, out, 75, 200);
-            if (!kernel2) {
-                kernel2 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(3, 3));
+            if (!kernel3) {
+                kernel3 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(3, 3));
             }
-            cv2.Imgproc.dilate(out, out, kernel2);
+            cv2.Imgproc.dilate(out, out, kernel3);
+            break;
+        case 5:
+            // cv2.Imgproc.blur(img, out, new cv2.Size(3, 3));
+            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
+            // cv2.Core.normalize(out, out, 0, 255, cv2.Core.NORM_MINMAX);
+            // cv2.Imgproc.threshold(out, out, 150, 255, cv2.Imgproc.THRESH_TRUNC);
+            // cv2.Core.normalize(out, out, 0, 255, cv2.Core.NORM_MINMAX);
+            // apply_brightness_contrast(out, out, -64, 64);
+            cv2.Imgproc.Canny(out, out, 0, 85);
+            cv2.Imgproc.threshold(out, out, 155, 255, cv2.Imgproc.THRESH_TOZERO);
+            // const kernel9 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_ELLIPSE, new cv2.Size(9, 9));
+            // cv2.Imgproc.morphologyEx(out, out, cv2.Imgproc.MORPH_CLOSE, kernel9);
+            cv2.Imgproc.morphologyEx(out, out, cv2.Imgproc.MORPH_CLOSE, new cv2.Mat(new cv2.Size(10, 10), cv2.CvType.CV_8UC1, new cv2.Scalar(255)), new cv2.Point(-1.0, -1.0), 1);
+            if (!kernel3) {
+                kernel3 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(3, 3));
+            }
+            cv2.Imgproc.dilate(out, out, kernel3);
+            break;
+        case 6:
+            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
+
+            if (hardTest) {
+                if (!kernel4) {
+                    kernel4 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(4, 4));
+                }
+                out = cv2.Imgproc.morphologyEx(out, out, cv2.Imgproc.MORPH_RECT, kernel4);
+                cv2.Imgproc.Canny(out, out, 200, 200);
+            } else {
+                cv2.Imgproc.Canny(out, out, 75, 200);
+            }
+            if (!kernel1) {
+                kernel1 = cv2.Imgproc.getStructuringElement(cv2.Imgproc.MORPH_RECT, new cv2.Size(2, 2));
+            }
+            cv2.Imgproc.dilate(out, out, kernel1);
             break;
     }
     // }
 
     return out;
 }
-
-export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
+function resizeIfNeeded(image, data) {
     const size = image.size();
     const w = size.width;
     const h = size.height;
@@ -676,17 +882,22 @@ export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
     } else {
         resizedImage = image.clone();
     }
-    if (data.full) {
-        //image is NOT gray
-        cv2.Imgproc.cvtColor(resizedImage, resizedImage, cv2.Imgproc.COLOR_RGBA2GRAY);
-    }
+    return resizedImage;
+}
+export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
     if (!edgesImage) {
         edgesImage = new cv2.Mat();
     }
+    resizedImage = resizeIfNeeded(image, data);
     edges_det(resizedImage, edgesImage, data);
-    const contours = find_page_contours(edgesImage, resizedImage, data);
+    let contours = find_page_contours(edgesImage, resizedImage, data);
     if (!contours) {
-        return;
+        resizedImage = resizeIfNeeded(image, data);
+        edges_det(resizedImage, edgesImage, data);
+        contours = find_page_contours(edgesImage, resizedImage, data);
+    }
+    if (!contours) {
+        return null;
     }
     return { edgesImage, resizedImage, contours };
 }

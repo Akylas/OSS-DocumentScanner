@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="ns_accent">#FFC82F</color>
+	<color name="colorAccent">#57E07E</color>
 </resources>

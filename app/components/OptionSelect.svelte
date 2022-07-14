@@ -7,11 +7,11 @@
 </script>
 
 <script lang="ts">
-    import { Template } from 'svelte-native/components';
-    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
-    import ListItem from './ListItem.svelte';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { File } from '@nativescript/core';
+    import { Template } from 'svelte-native/components';
+    import ListItem from './ListItem.svelte';
 
     export let options: OptionType[];
 

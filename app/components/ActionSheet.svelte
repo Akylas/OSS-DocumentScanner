@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { accentColor } from '~/variables';
-    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     export let options;
     export let title = null;
 

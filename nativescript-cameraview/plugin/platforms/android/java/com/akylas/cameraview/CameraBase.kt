@@ -60,14 +60,15 @@ abstract class CameraBase @JvmOverloads constructor(
     abstract fun stopPreview()
     abstract fun startRecording()
     abstract fun stopRecording()
-    abstract fun takePhoto()
+    abstract fun takePhoto(jsonStringOptions: String)
     abstract fun hasFlash(): Boolean
     abstract fun cameraRecording(): Boolean
     abstract fun toggleCamera()
     abstract fun getSupportedRatios(): Array<String>
     abstract fun getAvailablePictureSizes(ratio: String): Array<Size>
+    abstract fun getAllAvailablePictureSizes(): Array<Size>
     abstract var displayRatio: String
-    abstract var pictureSize: String
+    abstract var pictureSize: String?
     abstract var enablePinchZoom: Boolean
     abstract var zoom: Float
     protected var displayId: Int = -1
@@ -92,7 +93,10 @@ abstract class CameraBase @JvmOverloads constructor(
         }
     }
 
-    internal fun stringSizeToSize(value: String): Size {
+    internal fun stringSizeToSize(value: String?): Size? {
+        if (value == null) {
+            return null;
+        }
         val size = value.split("x")
         val width = size[0].toIntOrNull(10) ?: 0
         val height = size[1].toIntOrNull() ?: 0

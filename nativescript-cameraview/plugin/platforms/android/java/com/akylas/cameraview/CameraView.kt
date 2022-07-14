@@ -28,6 +28,7 @@ import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
+import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -147,7 +148,6 @@ public class CameraView @JvmOverloads constructor(
         set(value) {
             if (!isRecording) {
                 field = value
-                Log.d("JS", "whiteBalance changed");
                 safeUnbindAll()
                 refreshCamera()
             }
@@ -167,10 +167,10 @@ public class CameraView @JvmOverloads constructor(
                 refreshCamera()
             }
         }
-    override var pictureSize: String = "0x0"
+    override var pictureSize: String? = null
         get() {
             if (field == "0x0") {
-                val size = cachedPictureRatioSizeMap[displayRatio]?.get(0)
+                val size = cachedPictureRatioSizeMap[displayRatio]?.first()
                 if (size != null) {
                     return when (resources.configuration.orientation) {
                         Configuration.ORIENTATION_LANDSCAPE -> "${size.width}x${size.height}"
@@ -227,28 +227,10 @@ public class CameraView @JvmOverloads constructor(
     init {
         handlePinchZoom()
 
-        val point = Point()
-        windowManager.defaultDisplay.getSize(point)
-        displayRatio = aspectRatio(point.x, point.y)
         previewView.afterMeasured {
+            displayRatio = aspectRatio(previewView.width, previewView.height)
             if (autoFocus) {
-                val factory: MeteringPointFactory = SurfaceOrientedMeteringPointFactory(
-                    previewView.width.toFloat(), previewView.height.toFloat()
-                )
-                val centerWidth = previewView.width.toFloat() / 2
-                val centerHeight = previewView.height.toFloat() / 2
-                val autoFocusPoint = factory.createPoint(centerWidth, centerHeight)
-                try {
-                    camera?.cameraControl?.startFocusAndMetering(
-                        FocusMeteringAction.Builder(
-                            autoFocusPoint,
-                            FocusMeteringAction.FLAG_AF
-                        ).apply {
-                            setAutoCancelDuration(2, TimeUnit.SECONDS)
-                        }.build()
-                    )
-                } catch (e: CameraInfoUnavailableException) {
-                }
+                startAutoFocus()
             }
         }
         addView(previewView)
@@ -268,6 +250,42 @@ public class CameraView @JvmOverloads constructor(
                 isStarted = false
             }
         }, ContextCompat.getMainExecutor(context))
+    }
+
+    fun focusAtPoint(x: Float, y: Float) {
+        val factory: MeteringPointFactory = SurfaceOrientedMeteringPointFactory(
+            previewView.width.toFloat(), previewView.height.toFloat()
+        )
+        val autoFocusPoint = factory.createPoint(x, y)
+        try {
+            camera?.cameraControl?.startFocusAndMetering(
+                FocusMeteringAction.Builder(
+                    autoFocusPoint,
+                    FocusMeteringAction.FLAG_AF
+                ).apply {
+                    //focus only when the user tap the preview
+                    disableAutoCancel()
+                }.build()
+            )
+        } catch (e: CameraInfoUnavailableException) {
+            Log.d("ERROR", "cannot access camera", e)
+        }
+    }
+    fun startAutoFocus() {
+        val autoFocusPoint = SurfaceOrientedMeteringPointFactory(1f, 1f)
+            .createPoint(.5f, .5f)
+        try {
+            val autoFocusAction = FocusMeteringAction.Builder(
+                autoFocusPoint,
+                FocusMeteringAction.FLAG_AF
+            ).apply {
+                //start auto-focusing after 2 seconds
+                setAutoCancelDuration(2, TimeUnit.SECONDS)
+            }.build()
+            camera?.cameraControl?.startFocusAndMetering(autoFocusAction)
+        } catch (e: CameraInfoUnavailableException) {
+            Log.d("ERROR", "cannot access camera", e)
+        }
     }
 
     @Synchronized
@@ -463,11 +481,11 @@ public class CameraView @JvmOverloads constructor(
         })
     }
 
-    private var cachedPictureRatioSizeMap: MutableMap<String, MutableList<Size>> = HashMap()
-    private var cachedPreviewRatioSizeMap: MutableMap<String, MutableList<Size>> = HashMap()
+    private var cachedPictureRatioSizeMap: MutableMap<String, MutableSet<Size>> = HashMap()
+    private var cachedPreviewRatioSizeMap: MutableMap<String, MutableSet<Size>> = HashMap()
 
     @SuppressLint("UnsafeOptInUsageError")
-    private fun updateImageCapture() {
+    private fun updateImageCapture(jsonStringOptions: String?) {
         var wasBounded = false
         if (imageCapture != null) {
             wasBounded = cameraProvider?.isBound(imageCapture!!) ?: false
@@ -478,8 +496,38 @@ public class CameraView @JvmOverloads constructor(
         }
 
         val builder = ImageCapture.Builder().apply {
-            setTargetRotation(currentRotation)
-            if (pictureSize == "0x0") {
+
+            var options: JSONObject? = null;
+            if(jsonStringOptions != null) {
+                try {
+                    options = JSONObject(jsonStringOptions)
+                } catch (e: Exception) {
+                    e.printStackTrace();
+                }
+            }
+            if (options?.has("targetRotation") == true) {
+                setTargetRotation(options.getInt("targetRotation"))
+            } else {
+                setTargetRotation(currentRotation)
+            }
+            if (options?.has("pictureSize") == true) {
+                var pictureSize: JSONObject? = options.getJSONObject("pictureSize");
+                if (pictureSize != null) {
+                    try {
+
+                        setTargetResolution(
+                            android.util.Size(pictureSize.getInt("width"), pictureSize.getInt("height")))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        setTargetAspectRatio(
+                            when (displayRatio) {
+                                "16:9" -> AspectRatio.RATIO_16_9
+                                else -> AspectRatio.RATIO_4_3
+                            }
+                        )
+                    }
+                }
+            } else if (pictureSize == null || pictureSize == "0x0") {
                 setTargetAspectRatio(
                     when (displayRatio) {
                         "16:9" -> AspectRatio.RATIO_16_9
@@ -492,6 +540,7 @@ public class CameraView @JvmOverloads constructor(
                         android.util.Size.parseSize(pictureSize)
                     )
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     setTargetAspectRatio(
                         when (displayRatio) {
                             "16:9" -> AspectRatio.RATIO_16_9
@@ -500,8 +549,23 @@ public class CameraView @JvmOverloads constructor(
                     )
                 }
             }
-            setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            setFlashMode(getFlashMode())
+            if (options?.has("captureMode") == true) {
+                setCaptureMode(options.getInt("captureMode"))
+            } else {
+                setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            }
+            if (options?.has("flashMode") == true) {
+                setFlashMode(options.getInt("flashMode"))
+            } else {
+                setFlashMode(getFlashMode())
+            }
+
+            if (options?.has("jpegQuality") == true) {
+                setJpegQuality(options.getInt("jpegQuality"))
+            }
+//            if (options?.has("flashMode") == true) {
+//                setFlashType(options.getInt("flashType"))
+//            }
         }
 
         val extender = Camera2Interop.Extender(builder)
@@ -685,19 +749,18 @@ public class CameraView @JvmOverloads constructor(
                         in 1.77F..1.7777778F -> key = "16:9"
                         1.5F -> key = "3:2"
                     }
-
                     if (key != null) {
                         val list = cachedPictureRatioSizeMap[key]
                         list?.let {
                             list.add(value)
                         } ?: run {
-                            cachedPictureRatioSizeMap[key] = mutableListOf(value)
+                            cachedPictureRatioSizeMap[key] = mutableSetOf(value)
                         }
                     }
                 }
             }
         }
-        updateImageCapture()
+        updateImageCapture(null)
 
         if (flashMode == CameraFlashMode.TORCH && camera?.cameraInfo?.hasFlashUnit() == true) {
             camera?.cameraControl?.enableTorch(true)
@@ -926,7 +989,7 @@ public class CameraView @JvmOverloads constructor(
         recording?.stop()
     }
 
-    override fun takePhoto() {
+    override fun takePhoto(jsonStringOptions: String) {
         val df = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
         val today = Calendar.getInstance().time
         val fileName = "PIC_" + df.format(today) + ".jpg"
@@ -952,7 +1015,7 @@ public class CameraView @JvmOverloads constructor(
         cameraProvider?.let { provider ->
             videoCapture?.let { if (provider.isBound(it)) provider.unbind(it) }
 
-            if (imageCapture == null) updateImageCapture()
+            if (imageCapture == null || jsonStringOptions != null) updateImageCapture(jsonStringOptions)
             imageCapture?.let { capture ->
                 if (!provider.isBound(capture)) {
                     provider.bindToLifecycle(
@@ -1237,6 +1300,9 @@ public class CameraView @JvmOverloads constructor(
 
     override fun getAvailablePictureSizes(ratio: String): Array<Size> {
         return cachedPictureRatioSizeMap[ratio]?.toTypedArray() ?: arrayOf()
+    }
+    override fun getAllAvailablePictureSizes(): Array<Size> {
+        return cachedPictureRatioSizeMap?.values?.flatten()?.distinct()?.sortedByDescending{it.height*it.width}?.toTypedArray() ?: arrayOf()
     }
 
     override fun stop() {
