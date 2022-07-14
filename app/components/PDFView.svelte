@@ -1,26 +1,23 @@
 <script lang="ts">
+    import { l } from '@nativescript-community/l';
+    import { ObservableArray } from '@nativescript/core';
+    import { openFile } from '@nativescript/core/utils';
+    import { onDestroy } from 'svelte';
+    import { navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { documentsService } from '~/services/documents';
+    import { showError } from '~/utils/error';
+    import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import { accentColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
-    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import PdfEdit from './PDFEdit.svelte';
-    import { navigate } from 'svelte-native';
-    import { documentsService } from '~/services/documents';
-    import { openUrl, openFile } from '@nativescript/core/utils';
-    import { showError } from '~/utils/error';
-    import { showLoading, hideLoading } from '~/utils/ui';
-    import { l } from '@nativescript-community/l';
-    import { Observable, ObservableArray } from '@nativescript/core';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { onDestroy } from 'svelte';
-    import { share } from '~/utils/share';
 
     export let document: OCRDocument;
     // let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<OCRPage>;
     $: {
-        console.log('document', document);
+        console.log('updating items');
         items = document.getObservablePages();
     }
     // function onImageUpdated (event: any)  {
@@ -53,10 +50,12 @@
             showError(err);
         }
     }
-    function onImageTap(image, index) {
+    function onImageTap(item) {
+        const index = items.findIndex((p) => p.id === item.id);
+        console.log('onImageTap', index);
         navigate({
             page: PdfEdit,
-            transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
+            // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
             props: {
                 document,
                 startPageIndex: index
@@ -72,13 +71,22 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar title={document.name}>
-            <mdbutton variant="flat" class="icon-btn" text="mdi-file-pdf-box" on:tap={savePDF} />
-            <mdbutton variant="flat" class="icon-btn" text="mdi-content-save" on:tap={saveDocument} />
+            <mdbutton variant="text" class="actionBarButton" text="mdi-file-pdf-box" on:tap={savePDF} />
+            <mdbutton variant="text" class="actionBarButton" text="mdi-content-save" on:tap={saveDocument} />
         </CActionBar>
         <collectionview row={1} {items}>
             <Template let:index let:item>
                 <gridLayout padding="4" width="80%" height="200">
-                    <image rotate={item.rotation} src={item.getImageSource()} width="100%" rippleColor={accentColor} on:tap={() => onImageTap(item, index)} />
+                    <image
+                        rotate={item.rotation}
+                        src={item.getImagePath()}
+                        width="100%"
+                        height="100%"
+                        stretch="aspectFit"
+                        rippleColor={accentColor}
+                        on:tap={() => onImageTap(item)}
+                        colorMatrix={item.colorMatrix || getColorMatrix(item.colorType)}
+                    />
                 </gridLayout>
             </Template>
         </collectionview>

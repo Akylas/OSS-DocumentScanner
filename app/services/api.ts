@@ -19,10 +19,6 @@ export interface HttpRequestOptions extends HTTPSOptions {
     queryParams?: {};
 }
 
-function timeout(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function queryString(params, location) {
     const obj = {};
     let i, len, key, value;
@@ -84,7 +80,7 @@ export class TimeoutError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'timeout_error',
+                    message: 'timeout_error'
                 },
                 props
             ),
@@ -98,7 +94,7 @@ export class NoNetworkError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'no_network',
+                    message: 'no_network'
                 },
                 props
             ),
@@ -118,7 +114,7 @@ export class HTTPError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'httpError',
+                    message: 'httpError'
                 },
                 props
             ),
@@ -146,8 +142,8 @@ class NetworkService extends Observable {
                 object: this,
                 data: {
                     connected: value,
-                    connectionType: this._connectionType,
-                },
+                    connectionType: this._connectionType
+                }
             } as NetworkConnectionStateEventData);
         }
     }
@@ -196,7 +192,7 @@ async function handleRequestRetry(requestParams: HttpRequestOptions, retry = 0) 
     throw new HTTPError({
         statusCode: 401,
         message: 'HTTP error',
-        requestParams,
+        requestParams
     });
 }
 
@@ -226,7 +222,7 @@ async function handleRequestResponse(response: https.HttpsResponse, requestParam
                 new HTTPError({
                     statusCode,
                     message: match ? match[1] : content.toString(),
-                    requestParams,
+                    requestParams
                 })
             );
             // }
@@ -242,7 +238,7 @@ async function handleRequestResponse(response: https.HttpsResponse, requestParam
             throw new HTTPError({
                 statusCode: error.code || statusCode,
                 message: error.error_description || error.form || error.message || error.error || error,
-                requestParams,
+                requestParams
             });
         }
     }
@@ -292,7 +288,6 @@ export function request<T = any>(requestParams: HttpRequestOptions, retry = 0) {
         delete requestParams.queryParams;
     }
     requestParams.headers = getRequestHeaders(requestParams);
-    requestParams.useLegacy = true;
 
     clog('request', requestParams);
     const requestStartTime = Date.now();

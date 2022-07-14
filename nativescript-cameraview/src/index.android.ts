@@ -1,7 +1,8 @@
-import { CameraViewBase, flashModeProperty } from './index.common';
+import { autoFocusProperty, CameraViewBase, enablePinchZoomProperty, flashModeProperty, saveToGalleryProperty } from './index.common';
 import { File } from '@nativescript/core';
 
 export class CameraView extends CameraViewBase {
+    autoFocus:boolean;
     // nativeViewProtected: com.otaliastudios.cameraview.CameraView;
     nativeViewProtected: com.akylas.cameraview.CameraView;
     public createNativeView() {
@@ -85,12 +86,10 @@ export class CameraView extends CameraViewBase {
         }
     }
     onLoaded(): void {
-        console.log('onLoaded');
         super.onLoaded();
         this.startPreview();
     }
     onUnloaded(): void {
-        console.log('onUnloaded');
         this.stopPreview();
         super.onUnloaded();
     }
@@ -140,7 +139,15 @@ export class CameraView extends CameraViewBase {
         onCameraClose();
         onCameraPhoto(file);
     }[] = [];
-    takePicture(savePhotoToDisk = true) {
+    takePicture(
+        options: {
+            savePhotoToDisk?: boolean;
+            captureMode?: number;
+            targetRotation?: number;
+            flashMode?: number;
+            pictureSize?: { width: number; height: number };
+        } = {}
+    ) {
         return new Promise((resolve, reject) => {
             const myListener = {
                 onCameraPhoto: (file) => {
@@ -181,11 +188,20 @@ export class CameraView extends CameraViewBase {
                 }
             };
             this.photoListeners.push(myListener);
-            this.nativeViewProtected.setSavePhotoToDisk(savePhotoToDisk);
-            this.nativeViewProtected.takePhoto();
+            this.nativeViewProtected.setSavePhotoToDisk(options.savePhotoToDisk !== false);
+            this.nativeViewProtected.takePhoto(JSON.stringify(options));
         });
     }
 
+    [enablePinchZoomProperty.setNative](value: boolean) {
+        this.nativeViewProtected.setEnablePinchZoom(value);
+    }
+    [autoFocusProperty.setNative](value: boolean) {
+        this.nativeViewProtected.setAutoFocus(value);
+    }
+    [saveToGalleryProperty.setNative](value: boolean) {
+        this.nativeViewProtected.setSaveToGallery(value);
+    }
     [flashModeProperty.setNative](value: string | number) {
         if (typeof value === 'string') {
             switch (value) {
@@ -205,5 +221,21 @@ export class CameraView extends CameraViewBase {
         } else {
             this.nativeViewProtected.setFlashMode(com.akylas.cameraview.CameraFlashMode.values()[value]);
         }
+    }
+
+    getAllAvailablePictureSizes() {
+        return this.nativeViewProtected?.getAllAvailablePictureSizes();
+    }
+    getAvailablePictureSizes(ratio: string) {
+        return this.nativeViewProtected?.getAvailablePictureSizes(ratio);
+    }
+
+    startAutoFocus() {
+        return this.nativeViewProtected?.startAutoFocus();
+
+    }
+    focusAtPoint(x, y) {
+        return this.nativeViewProtected?.focusAtPoint(x, y);
+
     }
 }

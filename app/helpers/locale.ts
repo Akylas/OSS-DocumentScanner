@@ -11,7 +11,7 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 import utc from 'dayjs/plugin/utc';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 const supportedLanguages = SUPPORTED_LOCALES;
 

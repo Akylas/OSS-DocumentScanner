@@ -8,7 +8,7 @@
     import { openLink } from '~/utils/ui';
     import CActionBar from './CActionBar.svelte';
     import SettingLabelIcon from './SettingLabelIcon.svelte';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 
     const appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
 
@@ -23,7 +23,7 @@
                 break;
             case 'share':
                 share({
-                    message: STORE_LINK,
+                    message: STORE_LINK
                 });
                 break;
             case 'review':
@@ -31,10 +31,10 @@
                 break;
             case 'third_party':
                 showBottomSheet({
-                    parent:this,
-                    view:ThirdPartySoftwareBottomSheet,
+                    parent: this,
+                    view: ThirdPartySoftwareBottomSheet,
                     ignoreTopSafeArea: true,
-                    trackingScrollView: 'trackingScrollView',
+                    trackingScrollView: 'trackingScrollView'
                 });
                 break;
         }
@@ -42,17 +42,17 @@
 </script>
 
 <frame backgroundColor="transparent">
-    <page actionBarHidden="true">
+    <page actionBarHidden={true}>
         <gridlayout rows="auto,*">
-            <CActionBar canGoBack modalWindow title={l('about')}/>
+            <CActionBar canGoBack modalWindow title={l('about')} />
             <scrollView row={1}>
                 <stackLayout>
-                <SettingLabelIcon title={l('version')} subtitle={appVersion} />
-                <SettingLabelIcon title={l('share_application')} icon="mdi-chevron-right" on:tap={()=>onTap('share')} />
-                <SettingLabelIcon title={l('source_code')} subtitle="obtenir le code source de l'application sur Github" icon="mdi-chevron-right" on:tap={()=>onTap('github')} />
-                <SettingLabelIcon title={l('third_parties')} subtitle="les logiciels que nous aimons et utilisons" icon="mdi-chevron-right" on:tap={()=>onTap('third_party')} />
-                <SettingLabelIcon title={l('share_application')} icon="mdi-chevron-right" on:tap={()=>onTap('share')} />
-                <SettingLabelIcon title={l('review_application')} icon="mdi-chevron-right" on:tap={()=>onTap('review')} />
+                    <SettingLabelIcon title={l('version')} subtitle={appVersion} />
+                    <SettingLabelIcon title={l('share_application')} icon="mdi-chevron-right" on:tap={() => onTap('share')} />
+                    <SettingLabelIcon title={l('source_code')} subtitle="obtenir le code source de l'application sur Github" icon="mdi-chevron-right" on:tap={() => onTap('github')} />
+                    <SettingLabelIcon title={l('third_parties')} subtitle="les logiciels que nous aimons et utilisons" icon="mdi-chevron-right" on:tap={() => onTap('third_party')} />
+                    <SettingLabelIcon title={l('share_application')} icon="mdi-chevron-right" on:tap={() => onTap('share')} />
+                    <SettingLabelIcon title={l('review_application')} icon="mdi-chevron-right" on:tap={() => onTap('review')} />
                 </stackLayout>
             </scrollView>
         </gridlayout>

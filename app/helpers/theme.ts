@@ -4,7 +4,7 @@ import Theme from '@nativescript-community/css-theme';
 import { Application, ApplicationSettings } from '@nativescript/core';
 import { prefs } from '~/services/preferences';
 import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { lc } from '@nativescript-community/l';
 import { writable } from 'svelte/store';
 

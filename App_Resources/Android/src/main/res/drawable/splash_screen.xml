@@ -1,12 +1,11 @@
-<layer-list
-    xmlns:android="http://schemas.android.com/apk/res/android" android:gravity="fill">
-    <!-- <item><bitmap android:gravity="fill" android:src="@drawable/background" /></item> -->
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#000000" />
-        </shape>
-    </item>
-    <item>
-        <bitmap android:gravity="center|clip_vertical" android:src="@mipmap/icon" />
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+    android:drawable="@color/background"
+    android:gravity="fill" />
+    <item android:left="27dp" android:right="27dp">
+        <bitmap
+        android:gravity="clip_horizontal|center_vertical"
+        android:src="@drawable/ic_launcher_foreground"/>
     </item>
 </layer-list>

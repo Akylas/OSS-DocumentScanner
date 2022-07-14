@@ -38,6 +38,7 @@ declare module com {
 				public childDrawableStateChanged(param0: globalAndroid.view.View): void;
 				public getPreviewSurface(): any;
 				public requestStoragePermission(): void;
+				public getCurrentRotation(): number;
 				public clearChildFocus(param0: globalAndroid.view.View): void;
 				public setFlashMode(param0: com.akylas.cameraview.CameraFlashMode): void;
 				public getDb(): number;
@@ -48,7 +49,6 @@ declare module com {
 				public isLayoutRequested(): boolean;
 				public sendAccessibilityEvent(param0: number): void;
 				public getDATETIME_FORMAT$library_debug(): java.lang.ThreadLocal<java.text.SimpleDateFormat>;
-				public getCurrentOrientation(): number;
 				public onStartNestedScroll(param0: globalAndroid.view.View, param1: globalAndroid.view.View, param2: number): boolean;
 				public onKeyUp(param0: number, param1: globalAndroid.view.KeyEvent): boolean;
 				public getTextDirection(): number;
@@ -64,10 +64,8 @@ declare module com {
 				public getProcessEveryNthFrame(): number;
 				public setQuality(param0: com.akylas.cameraview.Quality): void;
 				public startDurationTimer$library_debug(): void;
-				public setCurrentOrientation(param0: number): void;
 				public getParentForAccessibility(): globalAndroid.view.ViewParent;
 				public getAmplitude(): number;
-				public takePhoto(): void;
 				public isGettingAudioLevels$library_debug(): boolean;
 				public onNestedPrePerformAccessibilityAction(param0: globalAndroid.view.View, param1: number, param2: globalAndroid.os.Bundle): boolean;
 				public getPictureSize(): string;
@@ -110,6 +108,7 @@ declare module com {
 				public incrementCurrentFrame$library_debug(): void;
 				public release(): void;
 				public setEnablePinchZoom(param0: boolean): void;
+				public getDisplayId(): number;
 				public getCamcorderProfile$library_debug(param0: com.akylas.cameraview.Quality): globalAndroid.media.CamcorderProfile;
 				public setZoom(param0: number): void;
 				public onNestedScroll(param0: globalAndroid.view.View, param1: number, param2: number, param3: number, param4: number): void;
@@ -124,6 +123,7 @@ declare module com {
 				/** @deprecated */
 				public invalidateChildInParent(param0: androidNative.Array<number>, param1: globalAndroid.graphics.Rect): globalAndroid.view.ViewParent;
 				public getParent(): globalAndroid.view.ViewParent;
+				public takePhoto(param0: string): void;
 				public requestDisallowInterceptTouchEvent(param0: boolean): void;
 				public setDisableHEVC(param0: boolean): void;
 				public requestCameraPermission(): void;
@@ -148,6 +148,7 @@ declare module com {
 				public startActionModeForChild(param0: globalAndroid.view.View, param1: globalAndroid.view.ActionMode.Callback): globalAndroid.view.ActionMode;
 				public onNestedFling(param0: globalAndroid.view.View, param1: number, param2: number, param3: boolean): boolean;
 				public stringSizeToSize$library_debug(param0: string): com.akylas.cameraview.Size;
+				public setCurrentRotation(param0: number): void;
 				public getListener(): com.akylas.cameraview.CameraEventListener;
 				public setSaveToGallery(param0: boolean): void;
 				public getLatestImage$library_debug(): globalAndroid.graphics.Bitmap;
@@ -192,6 +193,7 @@ declare module com {
 				public requestLayout(): void;
 				public onKeyLongPress(param0: number, param1: globalAndroid.view.KeyEvent): boolean;
 				public constructor(param0: globalAndroid.content.Context);
+				public setDisplayId(param0: number): void;
 				public getRecorder$library_debug(): globalAndroid.media.MediaRecorder;
 				public convertFromExifDateTime$library_debug(param0: string): java.util.Date;
 				public getEnableAudio(): boolean;
@@ -201,6 +203,7 @@ declare module com {
 				public initListener$library_debug(param0: globalAndroid.media.MediaRecorder): void;
 				public requestSendAccessibilityEvent(param0: globalAndroid.view.View, param1: globalAndroid.view.accessibility.AccessibilityEvent): boolean;
 				public setAudioLevelsEnabled(param0: boolean): void;
+				public getAllAvailablePictureSizes(): androidNative.Array<com.akylas.cameraview.Size>;
 				public focusableViewAvailable(param0: globalAndroid.view.View): void;
 				public setAutoSquareCrop(param0: boolean): void;
 				public canResolveLayoutDirection(): boolean;
@@ -215,6 +218,7 @@ declare module com {
 				public getMDuration$library_debug(): number;
 				public setRotation(param0: number): void;
 				public hasFlash(): boolean;
+				public getDisplayManager(): globalAndroid.hardware.display.DisplayManager;
 				public hasStoragePermission(): boolean;
 				public scheduleDrawable(param0: globalAndroid.graphics.drawable.Drawable, param1: java.lang.Runnable, param2: number): void;
 				public setRetrieveLatestImage(param0: boolean): void;
@@ -368,10 +372,10 @@ declare module com {
 				public getAutoFocus(): boolean;
 				public getChildVisibleRect(param0: globalAndroid.view.View, param1: globalAndroid.graphics.Rect, param2: globalAndroid.graphics.Point): boolean;
 				public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
+				public startAutoFocus(): void;
 				public setQuality(param0: com.akylas.cameraview.Quality): void;
 				public getParentForAccessibility(): globalAndroid.view.ViewParent;
 				public getAmplitude(): number;
-				public takePhoto(): void;
 				public onNestedPrePerformAccessibilityAction(param0: globalAndroid.view.View, param1: number, param2: globalAndroid.os.Bundle): boolean;
 				public getPictureSize(): string;
 				public getSaveToGallery(): boolean;
@@ -400,6 +404,7 @@ declare module com {
 				public setMaxVideoBitrate(param0: number): void;
 				public stopRecording(): void;
 				public cameraRecording(): boolean;
+				public focusAtPoint(param0: number, param1: number): void;
 				public release(): void;
 				public setEnablePinchZoom(param0: boolean): void;
 				public setZoom(param0: number): void;
@@ -415,6 +420,7 @@ declare module com {
 				/** @deprecated */
 				public invalidateChildInParent(param0: androidNative.Array<number>, param1: globalAndroid.graphics.Rect): globalAndroid.view.ViewParent;
 				public getParent(): globalAndroid.view.ViewParent;
+				public takePhoto(param0: string): void;
 				public requestDisallowInterceptTouchEvent(param0: boolean): void;
 				public setDisableHEVC(param0: boolean): void;
 				/** @deprecated */
@@ -470,6 +476,7 @@ declare module com {
 				public keyboardNavigationClusterSearch(param0: globalAndroid.view.View, param1: number): globalAndroid.view.View;
 				public requestSendAccessibilityEvent(param0: globalAndroid.view.View, param1: globalAndroid.view.accessibility.AccessibilityEvent): boolean;
 				public setAudioLevelsEnabled(param0: boolean): void;
+				public getAllAvailablePictureSizes(): androidNative.Array<com.akylas.cameraview.Size>;
 				public focusableViewAvailable(param0: globalAndroid.view.View): void;
 				public setAutoSquareCrop(param0: boolean): void;
 				public canResolveLayoutDirection(): boolean;

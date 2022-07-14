@@ -7,14 +7,6 @@
         app:key="language"
         app:title="@string/language" />
     <PreferenceCategory app:title="@string/settings.title">
-        <EditTextPreference
-        app:key="owmApiKey"
-        app:summary="api_key_required_description"
-        app:title="own_api_key"/>
-        <EditTextPreference
-        app:key="ccApiKey"
-        app:summary="climal_cell_api_key_optional_description"
-        app:title="cc_api_key"/>
         <ListPreference
         app:defaultValue="dark"
         app:entries="@array/themes"
@@ -23,8 +15,8 @@
         app:title="@string/theme.title" />
         <SwitchPreference
         app:defaultValue="false"
-        app:key="animations"
-        app:title="@string/animations" />
+        app:key="startOnCam"
+        app:title="@string/start_on_cam" />
 
     </PreferenceCategory>
 </PreferenceScreen>
