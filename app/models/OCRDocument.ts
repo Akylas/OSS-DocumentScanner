@@ -113,11 +113,11 @@ class OCRDocument extends BaseEntity {
             }
             if (this.pages) {
                 this.pages.push(...pages);
-                if (this._observables) {
-                    this._observables.push(...pages);
-                }
             } else {
                 this.pages = pages;
+            }
+            if (this._observables) {
+                this._observables.push(...pages);
             }
         }
     }

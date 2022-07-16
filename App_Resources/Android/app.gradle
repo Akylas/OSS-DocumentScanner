@@ -52,11 +52,11 @@ android {
     release {
       // Enables code shrinking, obfuscation, and optimization for only
       // your project's release build type.
-      minifyEnabled true
+      minifyEnabled false
 
       // Enables resource shrinking, which is performed by the
       // Android Gradle plugin.
-      shrinkResources true
+      shrinkResources false
 
       // Disables PNG crunching for the release build type.
       crunchPngs false

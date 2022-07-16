@@ -5,10 +5,11 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ApplicationSettings, CoreTypes, File, ObservableArray, Page, TouchAnimationOptions } from '@nativescript/core';
+    import { ApplicationSettings, CoreTypes, File, ObservableArray, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
     import { getString, setString } from '@nativescript/core/application-settings';
     import { ImageSource } from '@nativescript/core/image-source';
+    import { StackLayout } from '@nativescript/core/ui';
     import { CameraView } from 'nativescript-cameraview';
     import * as cv2 from 'nativescript-opencv';
     import { onDestroy, onMount } from 'svelte';
@@ -17,7 +18,7 @@
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { l, onLanguageChanged } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { documentsService } from '~/services/documents';
+    import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, sendMessageToWorker, showLoading } from '~/utils/ui';
@@ -81,6 +82,8 @@ import { documentsService } from '~/services/documents';
     let cameraScreenRatio = 1;
     let showingFullScreenImage = false;
 
+    const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
+
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
     let computeOptions: ImageComputeOptions = PRODUCTION
         ? DEFAULT_PRODUCTION_COMPUTE_OPTIONS
@@ -92,11 +95,12 @@ import { documentsService } from '~/services/documents';
         "boundType": 0,
         "pageContourType": 4,
         "colorType": 1,
-        "approxValue": 0.01,
+        "approxValue": 0.02,
         "computeTextOrientation": false,
         "debug": false,
         "sizeFactor": 1,
-        "blurSize": 3
+        "blurSize": 3,
+        "contrast": 1.3
     }`
               )
           );
@@ -354,7 +358,7 @@ import { documentsService } from '~/services/documents';
                 if (!currentDocument) {
                     currentDocument = await OCRDocument.createDocument(new Date().toString(), pagesToAdd);
                 } else {
-                    currentDocument.addPages(pagesToAdd);
+                    await currentDocument.addPages(pagesToAdd);
                 }
                 pagesToAdd.forEach((p) => {
                     p.mat.release();
@@ -389,15 +393,15 @@ import { documentsService } from '~/services/documents';
         pauseProcessing = true;
         try {
             const start = Date.now();
-            const available = cameraPreview.nativeView.getAllAvailablePictureSizes();
-            console.log('available', available.length);
-            const test = available[0];
-            console.log('max size', test.width, test.height);
-            showLoading(l('computing'));
+            // const available = cameraPreview.nativeView.getAllAvailablePictureSizes();
+            // console.log('available', available.length);
+            // const test = available[0];
+            // console.log('max size', test.width, test.height);
             const file: File = (await cameraPreview.nativeView.takePicture({
                 // pictureSize: { width: test.width, height: test.height },
                 captureMode: batchMode ? 1 : 0
             })) as any;
+            showLoading(l('computing'));
             console.log('got image', Date.now() - start, 'ms');
             // const imageSource = await ImageSource.fromFile(file.path);
             // const mat = cv2.matFromImage(imageSource);
@@ -464,8 +468,7 @@ import { documentsService } from '~/services/documents';
         console.log('saveCurrentDocument');
         if (currentDocument) {
             currentDocument.save();
-            documentsService.notify({ eventName: 'documentAdded', object: this, doc });
-            const startOnCam = ApplicationSettings.getBoolean('startOnCam', false);
+            documentsService.notify({ eventName: 'documentAdded', object: this, doc: currentDocument });
             // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
             navigate({
                 page: PdfEdit,
@@ -474,12 +477,15 @@ import { documentsService } from '~/services/documents';
                     document: currentDocument
                 }
             });
+            pages
             if (!startOnCam) {
                 closeModal(undefined);
             }
 
             currentDocument = null;
-            pages = null;
+            nbPages = 0;
+            pages = new ObservableArray([]);
+            resetPreview();
         }
     }
 
@@ -510,12 +516,11 @@ import { documentsService } from '~/services/documents';
                 }
             });
             if (needAnimateBack) {
-                imageView.originX = 0;
-                imageView.originY = 1;
-                console.log(collectionView.nativeElement.getMeasuredWidth(), collectionView.nativeElement.getMeasuredHeight(), imageView.getMeasuredWidth(), imageView.getMeasuredHeight());
-                const scaleX = collectionView.nativeElement.getMeasuredWidth() / imageView.getMeasuredWidth();
+                imageView.originX = 1;
+                imageView.originY = 1 - 80 / Utils.layout.toDeviceIndependentPixels(canvasView.nativeElement.getMeasuredHeight());
+                const ratio = imageView.getMeasuredWidth() / imageView.getMeasuredHeight();
+                const scaleX = ratio*collectionView.nativeElement.getMeasuredHeight() / imageView.getMeasuredWidth();
                 const scaleY = collectionView.nativeElement.getMeasuredHeight() / imageView.getMeasuredHeight();
-                console.log();
                 await imageView.animate({
                     duration: 500,
                     scale: {
@@ -530,7 +535,6 @@ import { documentsService } from '~/services/documents';
         }
     }
     $: canSaveDoc = currentDocument && batchMode;
-    const startOnCam = ApplicationSettings.getBoolean('startOnCam', false);
 
     function onCameraLayoutChanged() {
         cameraScreenRatio = cameraPreview.nativeElement.getMeasuredWidth() / cameraPreview.nativeElement.getMeasuredHeight();
@@ -540,7 +544,7 @@ import { documentsService } from '~/services/documents';
         cameraPreview.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
     function onCollectionLayoutChanged(e) {
-        console.log('onCameraLayoutChanged', e.object.getMeasuredWidth(), e.object.getMeasuredHeight(), e.object.getMeasuredWidth() / e.object.getMeasuredHeight());
+        // console.log('onCameraLayoutChanged', e.object.getMeasuredWidth(), e.object.getMeasuredHeight(), e.object.getMeasuredWidth() / e.object.getMeasuredHeight());
     }
 </script>
 
@@ -548,9 +552,9 @@ import { documentsService } from '~/services/documents';
     <gridlayout rows="auto,*,50">
         <cameraView rowSpan="2" bind:this={cameraPreview} {flashMode} on:frame={processFrame} on:layoutChanged={onCameraLayoutChanged} enablePinchZoom={true} autoFocus={true} />
         <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} />
-        <CActionBar title={l('document_scanner')} backgroundColor="transparent">
-            <mdbutton variant="text" class="actionBarButton" text="mdi-file-document" on:tap={showDocumentsList} />
-            <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} />
+        <CActionBar title={startOnCam ? l('app.name') : null} backgroundColor="transparent" modalWindow={!startOnCam}>
+            <mdbutton variant="text" class="actionBarButton" text="mdi-file-document" on:tap={showDocumentsList} visibility={startOnCam ? 'visible' : 'collapsed'} />
+            <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} visibility={startOnCam ? 'visible' : 'collapsed'} />
         </CActionBar>
         <gridLayout row={1} rows="auto,*,auto" padding="10">
             <stacklayout orientation="horizontal">
@@ -561,29 +565,46 @@ import { documentsService } from '~/services/documents';
             </stacklayout>
             <mdbutton color="white" variant="flat" class="icon-btn" text={batchMode ? 'mdi-image-multiple' : 'mdi-image'} on:tap={() => (batchMode = !batchMode)} horizontalAlignment="right" />
             {#if computeOptions.debug}
-                <slider
-                    row={1}
-                    height={0}
-                    verticalAlignment="top"
-                    minValue={1}
-                    maxValue={21}
-                    stepSize={2}
-                    value={computeOptions.blurSize}
-                    on:valueChange={(event) => setOptionsKey('blurSize', event.value)}
-                />
-                <slider
-                    row={1}
-                    marginTop="30"
-                    height="30"
-                    verticalAlignment="top"
-                    stepSize={1}
-                    maxValue="20"
-                    value={computeOptions.approxValue * 100}
-                    on:valueChange={(event) => setOptionsKey('approxValue', event.value / 100)}
-                />
+                <stackLayout row={1} verticalAlignment="top">
+                    <gridlayout columns="auto,*,auto" rows="auto">
+                        <label text="blurSize" fontSize="12" verticalAlignment="center" color="white"/>
+                        <slider col={1} minValue={1} maxValue={21} stepSize={2} value={computeOptions.blurSize} on:valueChange={(event) => setOptionsKey('blurSize', event.value)} />
+                        <label col={2} text={computeOptions.blurSize + ''} fontSize="12" verticalAlignment="center"  color="white"/>
+                    </gridlayout>
+                    <gridlayout columns="auto,*,auto" rows="auto">
+                        <label text="approxValue" fontSize="12" verticalAlignment="center"  color="white"/>
+                        <slider col={1} stepSize={1} maxValue="20" value={computeOptions.approxValue * 100} on:valueChange={(event) => setOptionsKey('approxValue', event.value / 100)} />
+                        <label col={2} text={computeOptions.approxValue + ''} fontSize="12" verticalAlignment="center"  color="white"/>
+                    </gridlayout>
+                    <gridlayout columns="auto,*,auto" rows="auto">
+                        <label text="contrast" fontSize="12" verticalAlignment="center"  color="white"/>
+                        <slider col={1} stepSize={0.1} maxValue="2" value={computeOptions.contrast || 1} on:valueChange={(event) => setOptionsKey('contrast', event.value)} />
+                        <label col={2} text={computeOptions.contrast + ''} fontSize="12" verticalAlignment="center"  color="white"/>
+                    </gridlayout>
+                </stackLayout>
+
                 <image row={1} stretch="aspectFit" src={showEdges ? debugEdgesImage : debugResizedImage} width="50%" height="50%" horizontalAlignment="right" verticalAlignment="center" />
             {/if}
 
+            <collectionView
+                items={pages}
+                bind:this={collectionView}
+                horizontalAlignment="left"
+                verticalAlignment="bottom"
+                width="100%"
+                height={60 / cameraScreenRatio}
+                row={1}
+                orientation="horizontal"
+                reverseLayout={false}
+                colWidth="auto"
+                marginBottom={80}
+            >
+                <Template let:item>
+                    <gridLayout>
+                        <image stretch="aspectFit" height="100%" src={item.getImagePath()} rippleColor={accentColor} on:tap={(e) => onImageTap(e, item)} margin="0 5 0 5"/>
+                    </gridLayout>
+                </Template>
+            </collectionView>
             <!-- <mdbutton row={1} text="takePicture" on:tap={takePicture} verticalAlignment="bottom" horizontalAlignment="center" /> -->
             <gridlayout row={1} marginBottom={10} width={70} height={70} borderRadius={35} borderWidth={3} borderColor="white" verticalAlignment="bottom" horizontalAlignment="center">
                 <gridlayout touchAnimation={touchAnimationShrink} backgroundColor={primaryColor} width={60} height={60} borderRadius={30} on:tap={takePicture} />
@@ -608,25 +629,6 @@ import { documentsService } from '~/services/documents';
                 on:tap={() => saveCurrentDocument()}
                 visibility={canSaveDoc ? 'visible' : 'hidden'}
             />
-            <collectionView
-                items={pages}
-                bind:this={collectionView}
-                horizontalAlignment="left"
-                verticalAlignment="bottom"
-                width={60}
-                height={60 / cameraScreenRatio}
-                row={1}
-                orientation="horizontal"
-                reverseLayout={false}
-                colWidth="100%"
-                on:layoutChanged={onCollectionLayoutChanged}
-            >
-                <Template let:item>
-                    <gridLayout>
-                        <image stretch="aspectFit" height="100%" src={item.getImagePath()} rippleColor={accentColor} on:tap={(e) => onImageTap(e, item)} />
-                    </gridLayout>
-                </Template>
-            </collectionView>
             <image bind:this={fullImageView} rowSpan={2} stretch="aspectFit" src={currentImage} on:tap={() => setCurrentImage(null)} isUserInteractionEnabled={showingFullScreenImage} />
         </gridLayout>
         <stackLayout row="2" orientation="horizontal" backgroundColor="black">

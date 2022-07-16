@@ -10,6 +10,7 @@ export interface ImageComputeOptions {
     approxValue?: number;
     sizeFactor?: number;
     blurSize?: number;
+    contrast?: number;
 }
 export interface ImageWorkerOptions extends ImageComputeOptions {
     id: number;
@@ -18,10 +19,10 @@ export interface ImageWorkerOptions extends ImageComputeOptions {
     rotation: number;
 }
 
-
 export const DEFAULT_PRODUCTION_COMPUTE_OPTIONS: ImageComputeOptions = {
     algo: 4,
     boundType: 0,
+    contrast: 1.3,
     pageContourType: 4,
     colorType: 1,
     approxValue: 0.02,
@@ -29,4 +30,4 @@ export const DEFAULT_PRODUCTION_COMPUTE_OPTIONS: ImageComputeOptions = {
     debug: false,
     sizeFactor: 1,
     blurSize: 3
-}
+};

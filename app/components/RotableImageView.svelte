@@ -23,8 +23,12 @@ import { getColorMatrix } from '~/utils/ui';
             const imageView = SVImageView.nativeElement;
             await imageView.animate({
                 duration: 200,
-                imageRotation: newRotation - 0.001
+                imageRotation: newRotation
             } as any);
+            if (newRotation === 360) {
+                // fix Android rotation going counter clock wise
+                imageView['imageRotation'] = item.newRotation= 0;
+            }
             dispatch('rotated', { newRotation });
         } catch (err) {
             showError(err);

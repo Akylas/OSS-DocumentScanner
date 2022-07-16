@@ -73,9 +73,8 @@ PagerElement.register();
 CollectionViewElement.register();
 startSentry();
 
-// import {Trace} from '@nativescript/core';
-// import {CollectionViewTraceCategory} from '@nativescript-community/ui-collectionview';
-// Trace.addCategories(CollectionViewTraceCategory);
+// import { Trace } from '@nativescript/core';
+// Trace.addCategories(Trace.categories.All);
 // Trace.enable();
 
 // switchTorch();
@@ -117,7 +116,7 @@ themer.createShape('round', {
     }
 });
 let Comp;
-if (ApplicationSettings.getBoolean('startOnCam', false)) {
+if (ApplicationSettings.getBoolean('startOnCam', START_ON_CAM)) {
     Comp = await import('~/components/Camera.svelte');
 } else {
     Comp = await import('~/components/DocumentsList.svelte');
