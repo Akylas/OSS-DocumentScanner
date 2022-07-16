@@ -88,16 +88,19 @@ async function start() {
     }
 }
 onApp('launch', () => {
+    console.log('launch');
     launched = true;
     start();
 });
 onApp('resume', () => {
+    console.log('resume');
     if (!launched) {
         launched = true;
         start();
     }
 });
 onApp('exit', () => {
+    console.log('exit');
     launched = false;
     documentsService.stop();
 });

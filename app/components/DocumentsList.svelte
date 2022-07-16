@@ -6,7 +6,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
-import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
@@ -31,25 +31,26 @@ import { NativeViewElementNode } from 'svelte-native/dom';
     // }> = null;
 
     async function refresh() {
-        const r = await OCRDocument.find({
-            order: {
-                id: 'DESC'
-            },
-            take: 50
-        });
         // console.log('pages0', r.map((d) => d.pages));
         try {
+            const r = await OCRDocument.find({
+                order: {
+                    id: 'DESC'
+                },
+                take: 50
+            });
+
+            documents = new ObservableArray(
+                r.map((s) => ({
+                    doc: s,
+                    selected: false
+                }))
+            );
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
             // console.log('getImageSource', 'done');
         } catch (error) {
             console.error(error);
         }
-        documents = new ObservableArray(
-            r.map((s) => ({
-                doc: s,
-                selected: false
-            }))
-        );
     }
     function onDocumentAdded(event: EventData & { doc }) {
         documents.unshift({
@@ -112,8 +113,13 @@ import { NativeViewElementNode } from 'svelte-native/dom';
         }
     }
     function onNavigatedTo(e: NavigatedData) {
+        console.log('onNavigatedTo', e.isBackNavigation, documentsService.started);
         if (!e.isBackNavigation) {
-            refresh();
+            if (documentsService.started) {
+                refresh();
+            } else {
+                documentsService.once('started', refresh);
+            }
         }
     }
     let nbSelected = 0;
@@ -260,7 +266,7 @@ import { NativeViewElementNode } from 'svelte-native/dom';
 
 <page actionBarHidden={true} on:navigatedTo={onNavigatedTo} bind:this={page}>
     <gridlayout rows="auto,*">
-        <CActionBar title={nbSelected ? l('selected', nbSelected) : l('documents')} onGoBack={unselectAll} forceCanGoBack={nbSelected}>
+        <CActionBar title={nbSelected ? l('selected', nbSelected) : l('documents')} onGoBack={nbSelected ? unselectAll : null} forceCanGoBack={nbSelected}>
             <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteSelectedDocuments} visibility={nbSelected ? 'visible' : 'hidden'} />
             <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} />
         </CActionBar>

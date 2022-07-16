@@ -21,7 +21,7 @@
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, sendMessageToWorker, showLoading } from '~/utils/ui';
+    import { getColorMatrix, hideLoading, importAndScanImage, sendMessageToWorker, showLoading } from '~/utils/ui';
     import { accentColor, primaryColor } from '~/variables';
     import { getCVRotation } from '~/workers/contours';
     import { DEFAULT_PRODUCTION_COMPUTE_OPTIONS, ImageComputeOptions, ImageWorkerOptions } from '../workers/options';
@@ -29,6 +29,7 @@
     import CActionBar from './CActionBar.svelte';
     import DocumentsList from './DocumentsList.svelte';
     import PdfEdit from './PDFEdit.svelte';
+import RotableImageView from './RotableImageView.svelte';
 
     // import { ImageWorkerOptions, ImageComputeOptions } from './workers/index';
 
@@ -352,6 +353,9 @@
                 const pagesToAdd = data.pages;
                 pagesToAdd.forEach((p, i) => {
                     p['mat'] = mats[i];
+                    if (p.colorType && !p.colorMatrix) {
+                        p.colorMatrix = getColorMatrix(p.colorType);
+                    }
                     // p['bitmap'] = bitmaps[i];
                     // p['transformedMat'] = transformedMats[i];
                 });
@@ -477,7 +481,7 @@
                     document: currentDocument
                 }
             });
-            pages
+            pages;
             if (!startOnCam) {
                 closeModal(undefined);
             }
@@ -519,7 +523,7 @@
                 imageView.originX = 1;
                 imageView.originY = 1 - 80 / Utils.layout.toDeviceIndependentPixels(canvasView.nativeElement.getMeasuredHeight());
                 const ratio = imageView.getMeasuredWidth() / imageView.getMeasuredHeight();
-                const scaleX = ratio*collectionView.nativeElement.getMeasuredHeight() / imageView.getMeasuredWidth();
+                const scaleX = (ratio * collectionView.nativeElement.getMeasuredHeight()) / imageView.getMeasuredWidth();
                 const scaleY = collectionView.nativeElement.getMeasuredHeight() / imageView.getMeasuredHeight();
                 await imageView.animate({
                     duration: 500,
@@ -567,19 +571,19 @@
             {#if computeOptions.debug}
                 <stackLayout row={1} verticalAlignment="top">
                     <gridlayout columns="auto,*,auto" rows="auto">
-                        <label text="blurSize" fontSize="12" verticalAlignment="center" color="white"/>
+                        <label text="blurSize" fontSize="12" verticalAlignment="center" color="white" />
                         <slider col={1} minValue={1} maxValue={21} stepSize={2} value={computeOptions.blurSize} on:valueChange={(event) => setOptionsKey('blurSize', event.value)} />
-                        <label col={2} text={computeOptions.blurSize + ''} fontSize="12" verticalAlignment="center"  color="white"/>
+                        <label col={2} text={computeOptions.blurSize + ''} fontSize="12" verticalAlignment="center" color="white" />
                     </gridlayout>
                     <gridlayout columns="auto,*,auto" rows="auto">
-                        <label text="approxValue" fontSize="12" verticalAlignment="center"  color="white"/>
+                        <label text="approxValue" fontSize="12" verticalAlignment="center" color="white" />
                         <slider col={1} stepSize={1} maxValue="20" value={computeOptions.approxValue * 100} on:valueChange={(event) => setOptionsKey('approxValue', event.value / 100)} />
-                        <label col={2} text={computeOptions.approxValue + ''} fontSize="12" verticalAlignment="center"  color="white"/>
+                        <label col={2} text={computeOptions.approxValue + ''} fontSize="12" verticalAlignment="center" color="white" />
                     </gridlayout>
                     <gridlayout columns="auto,*,auto" rows="auto">
-                        <label text="contrast" fontSize="12" verticalAlignment="center"  color="white"/>
+                        <label text="contrast" fontSize="12" verticalAlignment="center" color="white" />
                         <slider col={1} stepSize={0.1} maxValue="2" value={computeOptions.contrast || 1} on:valueChange={(event) => setOptionsKey('contrast', event.value)} />
-                        <label col={2} text={computeOptions.contrast + ''} fontSize="12" verticalAlignment="center"  color="white"/>
+                        <label col={2} text={computeOptions.contrast + ''} fontSize="12" verticalAlignment="center" color="white" />
                     </gridlayout>
                 </stackLayout>
 
@@ -601,14 +605,14 @@
             >
                 <Template let:item>
                     <gridLayout>
-                        <image stretch="aspectFit" height="100%" src={item.getImagePath()} rippleColor={accentColor} on:tap={(e) => onImageTap(e, item)} margin="0 5 0 5"/>
+                        <RotableImageView {item} height="100%" rippleColor={accentColor} on:tap={(e) => onImageTap(e, item)} margin="0 5 0 5" />
                     </gridLayout>
                 </Template>
             </collectionView>
             <!-- <mdbutton row={1} text="takePicture" on:tap={takePicture} verticalAlignment="bottom" horizontalAlignment="center" /> -->
             <gridlayout row={1} marginBottom={10} width={70} height={70} borderRadius={35} borderWidth={3} borderColor="white" verticalAlignment="bottom" horizontalAlignment="center">
                 <gridlayout touchAnimation={touchAnimationShrink} backgroundColor={primaryColor} width={60} height={60} borderRadius={30} on:tap={takePicture} />
-                <label color="white" fontSize={20} textAlignment="center" verticalAlignment="center" visibility={pages ? 'visible' : 'hidden'} text={nbPages + ''} />
+                <label color="white" fontSize={20} textAlignment="center" verticalAlignment="center" visibility={nbPages ? 'visible' : 'hidden'} text={nbPages + ''} />
             </gridlayout>
             <mdbutton
                 row={1}

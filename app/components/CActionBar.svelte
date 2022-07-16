@@ -3,6 +3,7 @@
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from 'svelte-native';
+import { showError } from '~/utils/error';
     export let title: string;
     // export let showLogo = false;
     export let backgroundColor: Color | string = undefined;
