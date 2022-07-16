@@ -1,16 +1,20 @@
 <script lang="ts">
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { AndroidApplication, Application, ApplicationSettings, EventData, NavigatedData, ObservableArray } from '@nativescript/core';
+    import { AndroidApplication, Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
+import { NativeViewElementNode } from 'svelte-native/dom';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
+    import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { getColorMatrix, importAndScanImage, timeout } from '~/utils/ui';
     import { accentColor, primaryColor } from '~/variables';
+    import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
     import Camera from './Camera.svelte';
     import PdfEdit from './PDFEdit.svelte';
@@ -21,6 +25,7 @@
         selected: boolean;
     }
     let documents: ObservableArray<Item> = null;
+    let page: NativeViewElementNode<Page>;
     // let items: ObservableArray<{
     //     doc: OCRDocument; selected: boolean
     // }> = null;
@@ -82,7 +87,7 @@
         documentsService.off('documentAdded', onDocumentAdded);
     });
 
-    let showActionButton = !ApplicationSettings.getBoolean('startOnCam', false);
+    let showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
 
     function onStartCam() {
         showModal({
@@ -219,12 +224,45 @@
             }
         }
     }
+    async function showOptions() {
+        const result: { icon: string; id: string; text: string } = await showBottomSheet({
+            parent: page,
+            view: ActionSheet,
+            props: {
+                options: [
+                    {
+                        icon: 'mdi-cogs',
+                        id: 'preferences',
+                        text: l('preferences')
+                    },
+                    {
+                        icon: 'mdi-information-outline',
+                        id: 'about',
+                        text: l('about')
+                    }
+                ]
+            }
+        });
+        if (result) {
+            switch (result.id) {
+                case 'preferences':
+                    prefs.openSettings();
+                    break;
+
+                case 'about':
+                    const About = require('./About.svelte').default;
+                    showModal({ page: About, animated: true, fullscreen: true });
+                    break;
+            }
+        }
+    }
 </script>
 
-<page actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page actionBarHidden={true} on:navigatedTo={onNavigatedTo} bind:this={page}>
     <gridlayout rows="auto,*">
         <CActionBar title={nbSelected ? l('selected', nbSelected) : l('documents')} onGoBack={unselectAll} forceCanGoBack={nbSelected}>
             <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteSelectedDocuments} visibility={nbSelected ? 'visible' : 'hidden'} />
+            <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} />
         </CActionBar>
         <collectionView row={1} items={documents} colWidth="50%" rowHeight="200">
             <Template let:item>

@@ -4,7 +4,7 @@ import { ImageWorkerOptions } from './options';
 import { simplify_line } from './simplify';
 import { presimplify } from 'topojson-simplify/src';
 const SMALL_HEIGHT = 300;
-const FULL_HEIGHT = 400;
+const FULL_HEIGHT = 300;
 let resizedImage: cv2.Mat;
 let edgesImage: cv2.Mat;
 
@@ -181,10 +181,14 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
         });
     }
 
-    const MIN_COUNTOUR_AREA = height * width * 0.1 * 0.1;
+    const MIN_COUNTOUR_AREA = height * width * 0.05 * 0.05;
     const MAX_COUNTOUR_AREA = height * width * 0.99 * 0.99;
+    // console.log(
+    //     'test',
+    //     contours.length,
+    // );
     const sorted = contours.filter((a) => MIN_COUNTOUR_AREA < a.area && a.area < MAX_COUNTOUR_AREA).sort((a, b) => b.area - a.area);
-    // console.log('sorted', sorted.map(c=>c.area))
+    // console.log('sorted', sorted.length);
     const foundContoursLength = sorted.length;
 
     const approx = data.approxValue || 0.02;
@@ -199,15 +203,12 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
             cv2.Imgproc.approxPolyDP(floatPoint, floatPoint, approx * perimeter, true);
             floatPoint.convertTo(cnt, cv2.CvType.CV_32S);
             contours[index].contour = cnt;
+            nContours.set(index, cnt);
         }
         // cv2.Imgproc.drawContours(img, nContours, index, new cv2.Scalar(255, 0, 255), 1);
 
         const area = c.area;
         const length = cnt.height();
-        if (area <= MIN_COUNTOUR_AREA) {
-            // sorted by area so if first too small they are all too small
-            break;
-        }
         if (length >= 4 && cv2.Imgproc.isContourConvex(cnt)) {
             let tooClose = false;
             for (let j = 0; j < temp_contours.length; j++) {
@@ -341,8 +342,8 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
         // cnt.release();
     }
     // release native objects
-    for (let index = 0; index < nContours.size(); index++) {
-        const contour = nContours.get(index) as cv2.MatOfPoint;
+    for (let index = 0; index < contours.length; index++) {
+        const contour = contours[index].contour;
         contour.release();
     }
     return page_contours;
@@ -847,7 +848,12 @@ function edges_det(img: cv2.Mat, out, data: ImageWorkerOptions, hardTest = false
             cv2.Imgproc.dilate(out, out, kernel3);
             break;
         case 6:
-            cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
+            if (data.contrast && data.contrast !== 1) {
+                img.convertTo(out, -1, data.contrast, 0);
+                cv2.Imgproc.GaussianBlur(out, out, new cv2.Size(data.blurSize, data.blurSize), 0);
+            } else {
+                cv2.Imgproc.GaussianBlur(img, out, new cv2.Size(data.blurSize, data.blurSize), 0);
+            }
 
             if (hardTest) {
                 if (!kernel4) {
@@ -872,7 +878,7 @@ function resizeIfNeeded(image, data) {
     const size = image.size();
     const w = size.width;
     const h = size.height;
-    const wantedHeight = data.full ? FULL_HEIGHT : SMALL_HEIGHT * data.sizeFactor;
+    const wantedHeight = data.full ? FULL_HEIGHT : SMALL_HEIGHT;
 
     if (h > wantedHeight) {
         if (!resizedImage) {

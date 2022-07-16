@@ -20,12 +20,17 @@
         canGoBack = Frame.topmost() && (Frame.topmost().canGoBack() || !!Frame.topmost().currentEntry);
     });
     function onMenuIcon() {
-        if (onGoBack) {
-            onGoBack();
-        } else if (modalWindow) {
-            closeModal(undefined);
-        } else {
-            goBack();
+        try {
+            if (onGoBack) {
+                onGoBack();
+            } else if (modalWindow) {
+                closeModal(undefined);
+            } else {
+                console.log('goBack');
+                goBack();
+            }
+        } catch (error) {
+            showError(error);
         }
     }
     $: {

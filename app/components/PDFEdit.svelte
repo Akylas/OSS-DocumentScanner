@@ -135,7 +135,7 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,50" backgroundColor="black">
+    <gridlayout rows="auto,*,50">
         <CActionBar title={document.name}>
             <mdbutton variant="text" class="actionBarButton" text="mdi-file-pdf-box" on:tap={savePDF} />
         </CActionBar>
@@ -148,15 +148,15 @@
                         on:rotated={(e) => onImageRotated(item, e)}
                     />
 
-                    <label padding={10} text={`${item.width} x ${item.height}`} color="white" verticalAlignment="bottom" fontSize={14} />
-                    <mdbutton color="white" variant="flat" class="icon-btn" text="mdi-share-variant" on:tap={() => shareItem(item)} verticalAlignment="bottom" horizontalAlignment="right" />
+                    <label padding={10} text={`${item.width} x ${item.height}`} verticalAlignment="bottom" fontSize={14} />
+                    <mdbutton variant="flat" class="icon-btn" text="mdi-share-variant" on:tap={() => shareItem(item)} verticalAlignment="bottom" horizontalAlignment="right" />
                 </gridLayout>
             </Template>
         </pager>
         <stacklayout orientation="horizontal" row={2}>
-            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-crop" />
-            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
-            <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} />
+            <mdbutton variant="flat" class="icon-btn" text="mdi-crop" />
+            <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
+            <mdbutton variant="flat" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} />
         </stacklayout>
     </gridlayout>
 </page>

@@ -24,36 +24,37 @@ Application.on(Application.systemAppearanceChangedEvent, (event) => {
     }
 });
 
-export function getThemeDisplayName(toDisplay = theme) {
-    switch (toDisplay) {
-        case 'auto':
-            return lc('auto');
-        case 'dark':
-            return lc('dark');
-        case 'light':
-            return lc('light');
-    }
-}
+// export function getThemeDisplayName(toDisplay = theme) {
+//     switch (toDisplay) {
+//         case 'auto':
+//             return lc('auto');
+//         case 'dark':
+//             return lc('dark');
+//         case 'light':
+//             return lc('light');
+//     }
+// }
 
-export async function selectTheme() {
-    try {
-        const actions: Themes[] = ['auto', 'light', 'dark'];
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-        const result = await showBottomSheet<any>({
-            view: OptionSelect,
-            props: {
-                title: lc('select_language'),
-                options: actions.map((k) => ({ name: getThemeDisplayName(k), data: k }))
-            },
-            trackingScrollView: 'collectionView'
-        });
-        if (result && actions.indexOf(result.data) !== -1) {
-            ApplicationSettings.setString('theme', result.data);
-        }
-    } catch (err) {
-        this.showError(err);
-    }
-}
+// export async function selectTheme() {
+//     try {
+//         const actions: Themes[] = ['auto', 'light', 'dark'];
+//         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+//         const result = await showBottomSheet<any>({
+//             view: OptionSelect,
+//             parent: null,
+//             props: {
+//                 title: lc('select_language'),
+//                 options: actions.map((k) => ({ name: getThemeDisplayName(k), data: k }))
+//             },
+//             trackingScrollView: 'collectionView'
+//         });
+//         if (result && actions.indexOf(result.data) !== -1) {
+//             ApplicationSettings.setString('theme', result.data);
+//         }
+//     } catch (err) {
+//         this.showError(err);
+//     }
+// }
 
 export function applyTheme(theme: Themes) {
     const AppCompatDelegate = __ANDROID__ ? androidx.appcompat.app.AppCompatDelegate : undefined;
@@ -113,7 +114,6 @@ export function start() {
     } else {
         theme = getString('theme', DEFAULT_THEME) as Themes;
     }
-
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
         if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {

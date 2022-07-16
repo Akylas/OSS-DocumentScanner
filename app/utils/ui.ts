@@ -11,6 +11,7 @@ import { ColorType, OCRDocument } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
 import { WorkerEventType, WorkerResult } from '~/workers/BaseWorker';
 import { DEFAULT_PRODUCTION_COMPUTE_OPTIONS, ImageComputeOptions } from '~/workers/options';
+import { showError } from './error';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -294,17 +295,22 @@ export function sendMessageToWorker(
 
 export async function importAndScanImage(computeOptions: ImageComputeOptions = DEFAULT_PRODUCTION_COMPUTE_OPTIONS) {
     await request('storage');
-    const selection = await imagepicker
-        .create({
-            mediaType: 1,
-            android: {
-                read_external_storage: 'reading images'
-            },
-            mode: 'single' // use "multiple" for multiple selection
-        })
-        // on android pressing the back button will trigger an error which we dont want
-        .present();
-    if (selection.length > 0) {
+    let selection;
+    try {
+        selection = await imagepicker
+            .create({
+                mediaType: 1,
+                android: {
+                    read_external_storage: 'reading images'
+                },
+                mode: 'single' // use "multiple" for multiple selection
+            })
+            // on android pressing the back button will trigger an error which we dont want
+            .present();
+    } catch (error) {
+        showError(error);
+    }
+    if (selection?.length) {
         const image = await new Promise((resolve, reject) => {
             selection[0].getImageAsync((image, error) => {
                 if (error) {

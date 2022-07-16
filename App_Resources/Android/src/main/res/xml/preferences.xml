@@ -8,7 +8,7 @@
         app:title="@string/language" />
     <PreferenceCategory app:title="@string/settings.title">
         <ListPreference
-        app:defaultValue="dark"
+        app:defaultValue="auto"
         app:entries="@array/themes"
         app:entryValues="@array/themesValues"
         app:key="theme"
