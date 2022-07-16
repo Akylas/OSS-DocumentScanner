@@ -40,9 +40,13 @@ export class DocumentsService extends Observable {
         }
 
         await this.connection.synchronize(false);
+        this.notify({ eventName: 'started' });
         this.started = true;
     }
     stop() {
+        if (DEV_LOG) {
+            console.log('DocumentsService stop');
+        }
         if (!this.started) {
             return;
         }

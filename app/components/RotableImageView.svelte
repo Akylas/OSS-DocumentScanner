@@ -41,7 +41,7 @@ import { getColorMatrix } from '~/utils/ui';
 </script>
 
 {#if zoomable}
-    <zoomimage {...$$restProps} bind:this={SVImageView} id="imageView" src={item.getImagePath()} stretch="aspectFit" colorMatrix={getItemColorMatrix(item)} imageRotation={item.rotation} maxZoomScale={10}/>
+    <zoomimage {...$$restProps} bind:this={SVImageView} id="imageView" src={item.getImagePath()} stretch="aspectFit" colorMatrix={getItemColorMatrix(item)} imageRotation={item.rotation} maxZoomScale={10} minZoomScale={0.2}/>
 {:else}
     <image {...$$restProps} bind:this={SVImageView} id="imageView" src={item.getImagePath()} stretch="aspectFit" colorMatrix={getItemColorMatrix(item)} imageRotation={item.rotation} />
 {/if}
