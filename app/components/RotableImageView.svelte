@@ -2,13 +2,14 @@
     import { Img } from '@nativescript-community/ui-image';
     import { createEventDispatcher } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-import { OCRPage } from '~/models/OCRDocument';
+    import { OCRPage } from '~/models/OCRDocument';
     import { showError } from '~/utils/error';
-import { getColorMatrix } from '~/utils/ui';
+    import { getColorMatrix } from '~/utils/ui';
 
     const dispatch = createEventDispatcher();
     export let zoomable = false;
     export let item: OCRPage;
+    export let stretch: any = 'aspectFit';
 
     let SVImageView: NativeViewElementNode<Img>;
     $: item && rotateToRotation(item.newRotation);
@@ -27,7 +28,7 @@ import { getColorMatrix } from '~/utils/ui';
             } as any);
             if (newRotation === 360) {
                 // fix Android rotation going counter clock wise
-                imageView['imageRotation'] = item.newRotation= 0;
+                imageView['imageRotation'] = item.newRotation = 0;
             }
             dispatch('rotated', { newRotation });
         } catch (err) {
@@ -41,7 +42,17 @@ import { getColorMatrix } from '~/utils/ui';
 </script>
 
 {#if zoomable}
-    <zoomimage {...$$restProps} bind:this={SVImageView} id="imageView" src={item.getImagePath()} stretch="aspectFit" colorMatrix={getItemColorMatrix(item)} imageRotation={item.rotation} maxZoomScale={10} minZoomScale={0.2}/>
+    <zoomimage
+        {...$$restProps}
+        bind:this={SVImageView}
+        id="imageView"
+        src={item.getImagePath()}
+        {stretch}
+        colorMatrix={getItemColorMatrix(item)}
+        imageRotation={item.rotation}
+        maxZoomScale={10}
+        minZoomScale={0.2}
+    />
 {:else}
-    <image {...$$restProps} bind:this={SVImageView} id="imageView" src={item.getImagePath()} stretch="aspectFit" colorMatrix={getItemColorMatrix(item)} imageRotation={item.rotation} />
+    <image {...$$restProps} bind:this={SVImageView} id="imageView" src={item.getImagePath()} {stretch} colorMatrix={getItemColorMatrix(item)} imageRotation={item.rotation} />
 {/if}

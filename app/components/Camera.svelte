@@ -5,6 +5,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ApplicationSettings, CoreTypes, File, ObservableArray, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
     import { getString, setString } from '@nativescript/core/application-settings';
@@ -28,14 +29,9 @@
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
     import DocumentsList from './DocumentsList.svelte';
-    import PdfEdit from './PDFEdit.svelte';
-import RotableImageView from './RotableImageView.svelte';
-
-    // import { ImageWorkerOptions, ImageComputeOptions } from './workers/index';
+    import RotableImageView from './RotableImageView.svelte';
 
     cv2.init();
-
-    // let networkConnected = false;
 
     const touchAnimationShrink: TouchAnimationOptions = {
         down: {
@@ -63,11 +59,15 @@ import RotableImageView from './RotableImageView.svelte';
     paint.setColor('red');
     paint.setStrokeWidth(1);
 
+    export let document: OCRDocument;
+    export let modal = false;
+    let newDocument = !document;
+
     let contours: [number, number][][] = null;
-    let matrix = new Matrix();
     let pages: ObservableArray<OCRPage>;
     let nbPages = 0;
     let pauseProcessing = false;
+    let takingPicture = false;
     let currentImage: ImageSource = null;
     let debugEdgesImage: ImageSource = null;
     let debugResizedImage: ImageSource = null;
@@ -78,13 +78,11 @@ import RotableImageView from './RotableImageView.svelte';
     let torchEnabled = false;
     let showEdges = true;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
-    let currentDocument: OCRDocument;
     let canSaveDoc = false;
     let cameraScreenRatio = 1;
     let showingFullScreenImage = false;
 
-    const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
-
+    const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
     let computeOptions: ImageComputeOptions = PRODUCTION
         ? DEFAULT_PRODUCTION_COMPUTE_OPTIONS
@@ -155,9 +153,9 @@ import RotableImageView from './RotableImageView.svelte';
                 case 'image_import':
                     try {
                         const doc = await importAndScanImage(computeOptions);
+                        const page = (await import('~/components/PDFView.svelte')).default;
                         await navigate({
-                            page: PdfEdit,
-                            // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
+                            page,
                             props: {
                                 document: doc
                             }
@@ -339,14 +337,15 @@ import RotableImageView from './RotableImageView.svelte';
     function resetPreview() {
         pauseProcessing = false;
     }
-    async function handleFullResult(data: { id: number; nativeDatas?: { [k: string]: any }; [k: string]: any }) {
+    async function handleFullResult(data: { id: number; nativeDatas?: { [k: string]: any }; [k: string]: any }, filePath) {
         const start = Date.now();
         const mats = data.nativeDatas.mats;
+        const hasMats = mats && mats.length;
         // console.log('handleFullResult', data, mats);
         try {
             // doc.mats = data.nativeDatas.mats;
             // doc.rawmats = data.nativeDatas.mats;
-            if (mats && mats.length) {
+            if (hasMats) {
                 // const bitmaps = data.nativeDatas.bitmaps;
                 // const transformedMats = data.nativeDatas.transformedMats;
                 // const bitmaps = data.nativeDatas.bitmaps;
@@ -359,10 +358,10 @@ import RotableImageView from './RotableImageView.svelte';
                     // p['bitmap'] = bitmaps[i];
                     // p['transformedMat'] = transformedMats[i];
                 });
-                if (!currentDocument) {
-                    currentDocument = await OCRDocument.createDocument(new Date().toString(), pagesToAdd);
+                if (!document) {
+                    document = await OCRDocument.createDocument(new Date().toString(), pagesToAdd);
                 } else {
-                    await currentDocument.addPages(pagesToAdd);
+                    await document.addPages(pagesToAdd);
                 }
                 pagesToAdd.forEach((p) => {
                     p.mat.release();
@@ -378,7 +377,7 @@ import RotableImageView from './RotableImageView.svelte';
                 }
                 if (batchMode) {
                     if (!pages) {
-                        pages = currentDocument.getObservablePages();
+                        pages = document.getObservablePages();
                     }
                     nbPages = pages.length;
                     setCurrentImage(pages.getItem(pages.length - 1).getImagePath(), true);
@@ -386,7 +385,7 @@ import RotableImageView from './RotableImageView.svelte';
                     saveCurrentDocument();
                 }
             } else {
-                throw new Error('no contours found');
+                showSnack({ message: 'no_scan_found' });
             }
         } catch (err) {
             showError(err);
@@ -394,7 +393,11 @@ import RotableImageView from './RotableImageView.svelte';
     }
 
     async function takePicture() {
+        if (takingPicture) {
+            return;
+        }
         pauseProcessing = true;
+        takingPicture = true;
         try {
             const start = Date.now();
             // const available = cameraPreview.nativeView.getAllAvailablePictureSizes();
@@ -411,7 +414,7 @@ import RotableImageView from './RotableImageView.svelte';
             // const mat = cv2.matFromImage(imageSource);
             const data = await sendMessageToWorker({}, { filePath: file.path, full: true, ...computeOptions });
             console.log('worker is done!', Date.now() - start, 'ms');
-            await handleFullResult(data);
+            await handleFullResult(data, file.path);
             console.log('handleFullResult is done!', Date.now() - start, 'ms');
             if (!computeOptions.debug) {
                 resetPreview();
@@ -420,6 +423,7 @@ import RotableImageView from './RotableImageView.svelte';
             showError(err);
             resetPreview();
         } finally {
+            takingPicture = false;
             hideLoading();
         }
     }
@@ -468,25 +472,30 @@ import RotableImageView from './RotableImageView.svelte';
         cameraPreview?.nativeView.startPreview();
     }
     $: console.log('flashMode', flashMode);
-    function saveCurrentDocument() {
-        console.log('saveCurrentDocument');
-        if (currentDocument) {
-            currentDocument.save();
-            documentsService.notify({ eventName: 'documentAdded', object: this, doc: currentDocument });
-            // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
-            navigate({
-                page: PdfEdit,
-                // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
-                props: {
-                    document: currentDocument
-                }
-            });
-            pages;
-            if (!startOnCam) {
-                closeModal(undefined);
+    async function saveCurrentDocument() {
+        console.log('saveCurrentDocument', newDocument);
+        if (document) {
+            document.save();
+            if (newDocument) {
+                documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
+                // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
+                const page = (await import('~/components/PDFView.svelte')).default;
+                navigate({
+                    page,
+                    // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
+                    props: {
+                        document: document
+                    }
+                });
+            } else {
+                // we should already be in edit so closing should go back there
             }
 
-            currentDocument = null;
+            if (!startOnCam) {
+                closeModal(document);
+            }
+
+            document = null;
             nbPages = 0;
             pages = new ObservableArray([]);
             resetPreview();
@@ -538,7 +547,7 @@ import RotableImageView from './RotableImageView.svelte';
             }
         }
     }
-    $: canSaveDoc = currentDocument && batchMode;
+    $: canSaveDoc = document && batchMode;
 
     function onCameraLayoutChanged() {
         cameraScreenRatio = cameraPreview.nativeElement.getMeasuredWidth() / cameraPreview.nativeElement.getMeasuredHeight();
@@ -610,7 +619,18 @@ import RotableImageView from './RotableImageView.svelte';
                 </Template>
             </collectionView>
             <!-- <mdbutton row={1} text="takePicture" on:tap={takePicture} verticalAlignment="bottom" horizontalAlignment="center" /> -->
-            <gridlayout row={1} marginBottom={10} width={70} height={70} borderRadius={35} borderWidth={3} borderColor="white" verticalAlignment="bottom" horizontalAlignment="center">
+            <gridlayout
+                row={1}
+                marginBottom={10}
+                width={70}
+                height={70}
+                borderRadius={35}
+                borderWidth={3}
+                borderColor="white"
+                verticalAlignment="bottom"
+                horizontalAlignment="center"
+                opacity={takingPicture ? 0.6 : 1}
+            >
                 <gridlayout touchAnimation={touchAnimationShrink} backgroundColor={primaryColor} width={60} height={60} borderRadius={30} on:tap={takePicture} />
                 <label color="white" fontSize={20} textAlignment="center" verticalAlignment="center" visibility={nbPages ? 'visible' : 'hidden'} text={nbPages + ''} />
             </gridlayout>

@@ -31,6 +31,9 @@ const IMG_FORMAT = 'jpg';
 // @EventEmitter
 @Entity()
 class OCRDocument extends BaseEntity {
+    _observers: any;
+    _observables: ObservableArray<OCRPage>;
+
     @PrimaryColumn()
     id: string;
     @CreateDateColumn()
@@ -39,13 +42,13 @@ class OCRDocument extends BaseEntity {
     name?: string;
     // @Column({ nullable: true, transformer:observableArrayTransformer })
     // @JoinTable()
-    @OneToMany((type) => OCRPage, (page) => page.document, { cascade: true, eager: true })
+    @OneToMany((type) => OCRPage, (page) => page.document, { cascade: ['insert', 'update'], eager: true })
     @JoinTable()
     pages: OCRPage[];
 
     constructor(id: string) {
         super();
-        this['_observers'] = {};
+        this._observers = {};
         this.id = id;
     }
 
@@ -64,14 +67,13 @@ class OCRDocument extends BaseEntity {
             const docId = this.id;
             const docData = documentsService.dataFolder.getFolder(docId);
             const length = pagesData.length;
-            console.log('addPages', length);
+            const currentDocPagesLength = this.pages?.length || 0;
             const pages = [];
             for (let index = 0; index < length; index++) {
-                const pageId = docId + '_' + index;
+                const pageId = docId + '_' + (index + currentDocPagesLength);
                 const page = new OCRPage(pageId);
                 const { mat, ...pageData } = pagesData[index];
                 const size = mat.size();
-                console.log('addPage', mat, size.width, size.height);
                 Object.assign(page, { ...pageData, width: size.width, height: size.height });
 
                 const rawimage = new OCRRawImage(pageId + '_2');
@@ -119,7 +121,18 @@ class OCRDocument extends BaseEntity {
             if (this._observables) {
                 this._observables.push(...pages);
             }
+            this.notify({ eventName: 'pagesAdded', pages });
         }
+    }
+
+    async deletePage(pageIndex: number) {
+        this.pages.splice(pageIndex, 1);
+        if (this._observables) {
+            this._observables.splice(pageIndex, 1);
+        }
+        const result = await this.save();
+        documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex });
+        return result;
     }
 
     getFirstImage() {}
@@ -167,8 +180,8 @@ class OCRDocument extends BaseEntity {
             // }
             // imageSource.android.recycle();
             // rawImageSource.android.recycle();
-            this.onPageUpdated(pageIndex, page);
             await this.save();
+            this.onPageUpdated(pageIndex, page);
 
             // this.notify({
             //     eventName: 'imageUpdated',
@@ -186,7 +199,6 @@ class OCRDocument extends BaseEntity {
         this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
         documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex });
     }
-    _observables: ObservableArray<OCRPage>;
     _observablesListeners: Function[] = [];
     getObservablePages() {
         if (!this._observables) {
@@ -264,7 +276,6 @@ class OCRPage extends BaseEntity {
     height: number;
 
     @ManyToOne((type) => OCRDocument, (document) => document.pages, { onDelete: 'CASCADE' })
-    @JoinColumn()
     document: OCRDocument;
 
     @OneToOne((type) => OCRRawImage, { cascade: true })

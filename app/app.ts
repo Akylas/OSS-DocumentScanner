@@ -21,6 +21,7 @@ import { ApplicationSettings, ScrollView } from '@nativescript/core';
 import { documentsService } from './services/documents';
 import { primaryColor } from './variables';
 import { start as startThemeHelper } from '~/helpers/theme';
+console.log('test starting')
 
 // installGestures(true);
 installMixins();
@@ -119,7 +120,9 @@ themer.createShape('round', {
     }
 });
 let Comp;
-if (ApplicationSettings.getBoolean('startOnCam', START_ON_CAM)) {
+const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
+console.log('test starting app', startOnCam)
+if (startOnCam) {
     Comp = await import('~/components/Camera.svelte');
 } else {
     Comp = await import('~/components/DocumentsList.svelte');

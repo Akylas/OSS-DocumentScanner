@@ -188,7 +188,7 @@ module.exports = (env, params = {}) => {
         SUPPORTED_LOCALES: JSON.stringify(locales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
-        START_ON_CAM: `"${startOnCam}"`,
+        START_ON_CAM: startOnCam,
         'gVars.sentry': !!sentry,
         NO_CONSOLE: noconsole,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,

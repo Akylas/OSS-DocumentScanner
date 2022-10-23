@@ -293,7 +293,7 @@ export function sendMessageToWorker(
     });
 }
 
-export async function importAndScanImage(computeOptions: ImageComputeOptions = DEFAULT_PRODUCTION_COMPUTE_OPTIONS) {
+export async function importAndScanImage(computeOptions: ImageComputeOptions = DEFAULT_PRODUCTION_COMPUTE_OPTIONS, document?: OCRDocument) {
     await request('storage');
     let selection;
     try {
@@ -335,15 +335,22 @@ export async function importAndScanImage(computeOptions: ImageComputeOptions = D
                 // p['bitmap'] = bitmaps[i];
                 // p['transformedMat'] = transformedMats[i];
             });
-            const doc = await OCRDocument.createDocument(dayjs().format('LLL'), pagesToAdd);
+            const newDoc = !document;
+            if (!document) {
+                document = await OCRDocument.createDocument(dayjs().format('LLL'), pagesToAdd);
+            } else {
+                await document.addPages(pagesToAdd);
+            }
             pagesToAdd.forEach((p) => {
                 p.mat.release();
             });
+            // await documentsService.connection.manager.save(document);
+            document = await document.save();
+            if (newDoc) {
+                documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
+            }
 
-            await doc.save();
-            documentsService.notify({ eventName: 'documentAdded', object: this, doc });
-
-            return doc;
+            return document;
         } else {
             throw new Error('no contours found');
         }

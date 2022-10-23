@@ -34,7 +34,6 @@ export default class ImageWorker extends BaseWorker {
         };
         try {
             if (data.full) {
-                console.log('processImage')
                 // console.log('starting', mat);
                 //     cv2.Core.flip(mat, mat, 0);
                 // }
@@ -56,9 +55,9 @@ export default class ImageWorker extends BaseWorker {
             if (data.full) {
                 console.log('findDocuments', Date.now() - time, 'ms');
             }
-            if (!result) {
-                return;
-            }
+            // if (!result) {
+            //     return;
+            // }
             // try {
             //     if (!net) {
             //         const filepath = path.join(knownFolders.currentApp().path, 'assets/frozen_east_text_detection.pb');
@@ -127,75 +126,58 @@ export default class ImageWorker extends BaseWorker {
             // } catch (err2) {
             //     console.error('error running dnn', err2, err2.stack);
             // }
-
+            let releaseMat = true;
             if (data.full) {
                 const width = result.resizedImage.size().width;
                 const ratio = mat.size().width / width;
                 const mats = [];
                 const pages = [];
                 // if (data.debug) {
-                    // mats.push(mat);
-                    // pages.push({ colorType: 0 });
+                // mats.push(mat);
+                // pages.push({ colorType: 0 });
                 // }
-                result.contours.forEach((c, i) => {
-                    try {
-                        const rMat = persp_transform(mat, c, ratio);
-                        console.log('persp_transform image', Date.now() - time, 'ms');
-                        if (data.computeTextOrientation) {
-                            const gray = new cv2.Mat();
-                            cv2.Imgproc.cvtColor(rMat, gray, cv2.Imgproc.COLOR_RGB2GRAY);
-                            const time = Date.now();
-                            try {
-                                const angle = calculateTextRotation(gray, rMat);
-                                if (angle % 180 === 90 || angle % 180 === 0) {
-                                    cv2.Core.rotate(rMat, rMat, cv2.Core.ROTATE_90_COUNTERCLOCKWISE);
+                if (result && result.contours.length) {
+                    result.contours.forEach((c, i) => {
+                        try {
+                            const rMat = persp_transform(mat, c, ratio);
+                            console.log('persp_transform image', Date.now() - time, 'ms');
+                            if (data.computeTextOrientation) {
+                                const gray = new cv2.Mat();
+                                cv2.Imgproc.cvtColor(rMat, gray, cv2.Imgproc.COLOR_RGB2GRAY);
+                                const time = Date.now();
+                                try {
+                                    const angle = calculateTextRotation(gray, rMat);
+                                    if (angle % 180 === 90 || angle % 180 === 0) {
+                                        cv2.Core.rotate(rMat, rMat, cv2.Core.ROTATE_90_COUNTERCLOCKWISE);
+                                    }
+                                    console.log('calculateTextRotation', angle, Date.now() - time, 'ms');
+                                } catch (err2) {
+                                    console.error('error calculateTextRotation', err2);
                                 }
-                                console.log('calculateTextRotation', angle, Date.now() - time, 'ms');
-                            } catch (err2) {
-                                console.error('error calculateTextRotation', err2);
+                                gray.release();
                             }
-                            gray.release();
+
+                            const cvRot = getCVRotation(data.rotation);
+                            if (cvRot !== -1) {
+                                cv2.Core.rotate(rMat, rMat, cvRot);
+                            }
+                            console.log('transformed image', Date.now() - time, 'ms');
+
+                            mats.push(rMat);
+                            pages.push({ colorType: data.colorType });
+                        } catch (err) {
+                            console.error('error persp_transform', err, err.stack);
                         }
+                    });
+                } else {
+                    releaseMat = false;
+                    mats.push(mat);
+                    pages.push({ colorType: data.colorType });
+                }
 
-                        const cvRot = getCVRotation(data.rotation);
-                        if (cvRot !== -1) {
-                            cv2.Core.rotate(rMat, rMat, cvRot);
-                        }
-
-                        // let transformedMat = rMat;
-                        // switch (data.colorType) {
-                        //     case ColorType.GRAY:
-                        //         transformedMat = rMat.clone();
-                        //         if (rMat.channels() === 4) {
-                        //             cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGBA2GRAY);
-                        //         } else if (rMat.channels() === 3) {
-                        //             cv2.Imgproc.cvtColor(rMat, transformedMat, cv2.Imgproc.COLOR_RGB2GRAY);
-                        //         }
-                        //         break;
-                        //     case ColorType.BLACK_WHITE:
-                        //         transformedMat = rMat.clone();
-                        //         toBlackAndWhite(rMat, transformedMat);
-                        //         break;
-                        //     case ColorType.NONE:
-                        //     default:
-                        //         break;
-                        // }
-                        console.log('transformed image', Date.now() - time, 'ms');
-
-                        // bitmaps.push(cv2.imageFromMat(transformedMat));
-                        mats.push(rMat);
-                        // transformedMats.push(transformedMat);
-                        pages.push({ colorType: data.colorType });
-                    } catch (err) {
-                        console.error('error persp_transform', err, err.stack);
-                    }
-                });
                 console.log('created images', Date.now() - time, 'ms');
                 const nativeDataKeys = ['mats'];
-                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_images`, nativeArray(bitmaps));
                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_mats`, nativeArray(mats.map((i) => i._native || i)));
-                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_bitmaps`, nativeArray(bitmaps));
-                // com.akylas.documentscanner.WorkersContext.setValue(`${id}_transformedMats`, nativeArray(transformedMats.map((i) => i._native || i)));
                 if (!PRODUCTION && data.debug) {
                     com.akylas.documentscanner.WorkersContext.setValue(`${id}_edgesImage`, result.edgesImage.clone());
                     com.akylas.documentscanner.WorkersContext.setValue(`${id}_resizedImage`, result.resizedImage.clone());
@@ -220,7 +202,9 @@ export default class ImageWorker extends BaseWorker {
                 result.edgesImage.release();
                 result.resizedImage.release();
                 // if (!data.debug) {
+                if (releaseMat) {
                     mat.release();
+                }
                 // }
             } else {
                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_edgesImage`, result.edgesImage.clone());
@@ -284,7 +268,7 @@ context.onmessage = ((event: { data }) => {
                 if (__ANDROID__) {
                     nativeDatas['bitmap'].recycle();
                 }
-                    delete nativeDatas['bitmap'];
+                delete nativeDatas['bitmap'];
                 const size = mat.size();
                 nativeDatas['mat'] = mat;
                 Object.assign(data, { width: size.width, height: size.height, rotation: 0 });
