@@ -181,7 +181,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
         });
     }
 
-    const MIN_COUNTOUR_AREA = height * width * 0.05 * 0.05;
+    const MIN_COUNTOUR_AREA = height * width * 0.15 * 0.15;
     const MAX_COUNTOUR_AREA = height * width * 0.99 * 0.99;
     // console.log(
     //     'test',

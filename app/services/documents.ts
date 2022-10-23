@@ -1,12 +1,11 @@
-import { File, Folder, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
-import { Observable } from '@nativescript/core/data/observable';
-// import { createPDF } from '~/utils/pdf';
 import { installMixins } from '@nativescript-community/sqlite/typeorm';
-import { Imgcodecs, Mat } from 'nativescript-opencv';
 import { Connection, createConnection } from '@nativescript-community/typeorm/browser';
-import { OCRDocument, OCRImage, OCRPage, OCRRawImage } from '~/models/OCRDocument';
 import { ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-// import OCRDocument, { ImageConfig } from '~/models/Document';
+import { Folder, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
+import { Observable } from '@nativescript/core/data/observable';
+import { Imgcodecs, Mat } from 'nativescript-opencv';
+import { OCRDocument, OCRImage, OCRPage, OCRRawImage } from '~/models/OCRDocument';
+import { omit } from '~/utils/utils';
 
 export class DocumentsService extends Observable {
     dataFolder: Folder;
@@ -42,6 +41,10 @@ export class DocumentsService extends Observable {
         await this.connection.synchronize(false);
         this.notify({ eventName: 'started' });
         this.started = true;
+    }
+    async deleteDocuments(docs: OCRDocument[]) {
+        await OCRDocument.delete(docs.map((d) => d.id));
+        this.notify({ eventName: 'documentsDeleted', docs });
     }
     stop() {
         if (DEV_LOG) {
@@ -147,5 +150,4 @@ export class DocumentsService extends Observable {
         }
     }
 }
-
 export const documentsService = new DocumentsService();

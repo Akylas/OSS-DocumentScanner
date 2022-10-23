@@ -3,6 +3,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { AndroidApplication, Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
+import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
@@ -12,13 +13,13 @@
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { getColorMatrix, importAndScanImage, timeout } from '~/utils/ui';
-    import { accentColor, primaryColor } from '~/variables';
+    import { importAndScanImage, timeout } from '~/utils/ui';
+    import { accentColor, backgroundColor, primaryColor, subtitleColor } from '~/variables';
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
     import Camera from './Camera.svelte';
-    import PdfEdit from './PDFEdit.svelte';
     import RotableImageView from './RotableImageView.svelte';
+    import SelectedIndicator from './SelectedIndicator.svelte';
 
     interface Item {
         doc: OCRDocument;
@@ -41,8 +42,8 @@
             });
 
             documents = new ObservableArray(
-                r.map((s) => ({
-                    doc: s,
+                r.map((doc) => ({
+                    doc,
                     selected: false
                 }))
             );
@@ -57,6 +58,14 @@
             doc: event.doc,
             selected: false
         } as Item);
+    }
+    function onDocumentsDeleted(event: EventData & { docs: OCRDocument[] }) {
+        for (let index = documents.length - 1; index >= 0; index--) {
+            if (event.docs.indexOf(documents.getItem(index).doc) !== -1) {
+                documents.splice(index, 1);
+                nbSelected -= 1;
+            }
+        }
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number }) {
         let index = -1;
@@ -78,6 +87,7 @@
         }
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         documentsService.on('documentAdded', onDocumentAdded);
+        documentsService.on('documentsDeleted', onDocumentsDeleted);
         // refresh();
     });
     onDestroy(() => {
@@ -86,6 +96,7 @@
         }
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
         documentsService.off('documentAdded', onDocumentAdded);
+        documentsService.off('documentsDeleted', onDocumentsDeleted);
     });
 
     let showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -101,9 +112,9 @@
         try {
             const doc = await importAndScanImage();
             await timeout(10);
+            const component = (await import('~/components/PDFEdit.svelte')).default;
             await navigate({
-                page: PdfEdit,
-                // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
+                page: component,
                 props: {
                     document: doc
                 }
@@ -172,22 +183,26 @@
             selectItem(item);
         }
     }
-    function onItemTap(item: Item) {
-        if (ignoreTap) {
-            ignoreTap = false;
-            return;
-        }
-        // console.log('onItemTap', event && event.ios && event.ios.state, selectedSessions.length);
-        if (nbSelected > 0) {
-            onItemLongPress(item);
-        } else {
-            navigate({
-                page: PdfEdit,
-                // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
-                props: {
-                    document: item.doc
-                }
-            });
+    async function onItemTap(item: Item) {
+        try {
+            if (ignoreTap) {
+                ignoreTap = false;
+                return;
+            }
+            // console.log('onItemTap', event && event.ios && event.ios.state, selectedSessions.length);
+            if (nbSelected > 0) {
+                onItemLongPress(item);
+            } else {
+                const component = (await import('~/components/PDFView.svelte')).default;
+                await navigate({
+                    page: component,
+                    props: {
+                        document: item.doc
+                    }
+                });
+            }
+        } catch (error) {
+            showError(error);
         }
     }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
@@ -203,27 +218,19 @@
             try {
                 const result = await confirm({
                     title: lc('delete'),
-                    message: lc('confirm_delete_sessions', nbSelected),
+                    message: lc('confirm_delete_documents', nbSelected),
                     okButtonText: lc('delete'),
                     cancelButtonText: lc('cancel')
                 });
                 console.log('delete, confirmed', result);
                 if (result) {
-                    const indexes = [];
                     const selected = [];
                     documents.forEach((d, index) => {
                         if (d.selected) {
-                            indexes.push(index);
                             selected.push(d.doc);
                         }
                     });
-                    await OCRDocument.delete(selected);
-                    indexes.reverse().forEach((index) => {
-                        documents.splice(index, 1);
-                    });
-                    nbSelected = 0;
-                    // this.refresh();
-                    // });
+                    await documentsService.deleteDocuments(selected);
                 }
             } catch (error) {
                 showError(error);
@@ -270,28 +277,16 @@
             <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteSelectedDocuments} visibility={nbSelected ? 'visible' : 'hidden'} />
             <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} />
         </CActionBar>
-        <collectionView row={1} items={documents} colWidth="50%" rowHeight="200">
+        <collectionView row={1} items={documents} colWidth="50%" rowHeight="270">
             <Template let:item>
-                <gridLayout rows="*,auto" padding="4" borderRadius="4" margin="4" rippleColor={accentColor} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView item={item.doc.pages[0]} />
-                    <label row={1} text={item.doc.name} padding="4" />
-                    <label
-                        rowSpan={2}
-                        class="mdi"
-                        backgroundColor={primaryColor}
-                        color="white"
-                        text="mdi-check"
-                        fontSize={16}
-                        width={20}
-                        height={20}
-                        borderRadius={10}
-                        textAlignment="center"
-                        verticalTextAlignment="center"
-                        verticalAlignment="bottom"
-                        horizontalAlignment="right"
-                        margin={10}
-                        visibility={item.selected ? 'visible' : 'hidden'}
-                    />
+                <gridLayout rows="*,auto" borderRadius="4" margin="8" rippleColor={accentColor} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)} elevation="2" backgroundColor={backgroundColor}>
+                    <RotableImageView item={item.doc.pages[0]} stretch="aspectFill"/>
+                    <canvaslabel row={1}  padding="10" height={60}>
+                        <cspan text={item.doc.name} fontSize={12}/>
+                        <cspan text={dayjs(item.doc.createdDate).format('L LT')} paddingTop={16}  fontSize={10} color={$subtitleColor}/>
+                        <cspan text={lc('nb_pages', item.doc.pages.length)}  paddingTop={29} fontSize={10} color={$subtitleColor}/>
+                        </canvaslabel>
+                    <SelectedIndicator rowSpan={2} selected={item.selected} />
                 </gridLayout>
             </Template>
         </collectionView>

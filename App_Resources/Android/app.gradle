@@ -28,6 +28,10 @@ android {
 
     }
   }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
   lintOptions {
       checkReleaseBuilds false
       // Or, if you prefer, you can continue to check for errors in release builds,
