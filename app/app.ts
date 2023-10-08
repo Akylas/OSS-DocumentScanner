@@ -26,7 +26,6 @@ import { Pager } from '@nativescript-community/ui-pager';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 
 Pager.registerTransformer('zoomOut', ZoomOutTransformer);
-
 // installGestures(true);
 installMixins();
 installColorFilters();
