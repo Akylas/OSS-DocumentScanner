@@ -27,7 +27,21 @@ module.exports = (env, params = {}) => {
             env[k] = true;
         }
     });
-    if (env.adhoc) {
+    if (env.adhoc_sentry) {
+        env = Object.assign(
+            {},
+            {
+                production: env.production !== false,
+                sentry: true,
+                uploadSentry: true,
+                testlog: true,
+                noconsole: false,
+                sourceMap: true,
+                uglify: env.production !== false
+            },
+            env
+        );
+    } else if (env.adhoc) {
         env = Object.assign(
             {},
             {
@@ -35,6 +49,7 @@ module.exports = (env, params = {}) => {
                 noconsole: true,
                 sentry: false,
                 uploadSentry: false,
+                apiKeys: true,
                 sourceMap: false,
                 uglify: true
             },
@@ -48,6 +63,7 @@ module.exports = (env, params = {}) => {
                 sentry: false,
                 noconsole: false,
                 uploadSentry: false,
+                keep_classnames_functionnames: true,
                 sourceMap: false,
                 uglify: true
             },
@@ -70,11 +86,9 @@ module.exports = (env, params = {}) => {
         timeline,
         cartoLicense = false,
         devlog,
+        testlog,
         fork = true,
-        buildpeakfinder,
-        buildstyle,
         startOnCam = false,
-        apiKeys = true,
         locale = 'auto',
         theme = 'auto',
         adhoc
@@ -83,6 +97,24 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
+
+    nsWebpack.chainWebpack((config, env) => {
+        config.when(env.production, (config) => {
+            config.module
+                .rule('svelte')
+                .use('string-replace-loader')
+                .loader('string-replace-loader')
+                .before('svelte-loader')
+                .options({
+                    search: 'createElementNS\\("https:\\/\\/svelte.dev\\/docs#template-syntax-svelte-options"',
+                    replace: 'createElementNS(svN',
+                    flags: 'gm'
+                })
+                .end();
+        });
+
+        return config;
+    });
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
@@ -91,9 +123,21 @@ module.exports = (env, params = {}) => {
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
 
     if (profile) {
-        config.profile = true;
-        config.stats = { preset: 'minimal', chunkModules: true, modules: true };
+        const StatsPlugin = require('stats-webpack-plugin');
+
+        config.plugins.unshift(
+            new StatsPlugin(resolve(join(projectRoot, 'webpack.stats.json')), {
+                preset: 'minimal',
+                chunkModules: true,
+                modules: true,
+                usedExports: true
+            })
+        );
+        // config.profile = true;
+        // config.parallelism = 1;
+        // config.stats = { preset: 'minimal', chunkModules: true, modules: true, usedExports: true };
     }
+
     config.externals.push('~/licenses.json');
     config.externals.push(function ({ context, request }, cb) {
         if (/i18n$/i.test(context)) {
@@ -103,10 +147,28 @@ module.exports = (env, params = {}) => {
     });
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
-    config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
+    if (fork) {
+        config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
+        Object.assign(config.resolve.alias, {
+            '@nativescript/core': `${coreModulesPackageName}`,
+            'tns-core-modules': `${coreModulesPackageName}`
+        });
+    }
+    let appVersion;
+    let buildNumber;
+    if (platform === 'android') {
+        const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
+        const gradleData = readFileSync(gradlePath, 'utf8');
+        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+)"/)[1];
+        buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
+    } else if (platform === 'ios') {
+        const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
+        const plistData = readFileSync(plistPath, 'utf8');
+        appVersion = plistData.match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
+        buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
+    }
+
     Object.assign(config.resolve.alias, {
-        '@nativescript/core': `${coreModulesPackageName}`,
-        'tns-core-modules': `${coreModulesPackageName}`,
         '../driver/oracle/OracleDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
         './oracle/OracleDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
         '../driver/cockroachdb/CockroachDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
@@ -139,7 +201,8 @@ module.exports = (env, params = {}) => {
 
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
-    config.resolve.fallback.buffer = require.resolve('buffer/');
+    // config.resolve.fallback.buffer = require.resolve('buffer/');
+    config.resolve.fallback.buffer = false;
     config.resolve.fallback.util = require.resolve('util/');
     config.resolve.fallback.path = false;
     config.resolve.fallback.fs = false;
@@ -147,25 +210,12 @@ module.exports = (env, params = {}) => {
     config.resolve.fallback.tty = false;
     config.resolve.fallback.os = false;
 
-    let appVersion;
-    let buildNumber;
-    if (platform === 'android') {
-        const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
-        const gradleData = readFileSync(gradlePath, 'utf8');
-        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+)"/)[1];
-        buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
-    } else if (platform === 'ios') {
-        const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
-        const plistData = readFileSync(plistPath, 'utf8');
-        appVersion = plistData.match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
-        buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
-    }
 
     const package = require('./package.json');
     const isIOS = platform === 'ios';
     const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
-    const locales = readdirSync(join(projectRoot, appPath, 'i18n'))
+    const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
     const defines = {
@@ -185,11 +235,11 @@ module.exports = (env, params = {}) => {
         __APP_VERSION__: `"${appVersion}"`,
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
         __CARTO_PACKAGESERVICE__: cartoLicense,
-        SUPPORTED_LOCALES: JSON.stringify(locales),
+        SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
         START_ON_CAM: startOnCam,
-        'gVars.sentry': !!sentry,
+        SENTRY_ENABLED: !!sentry,
         NO_CONSOLE: noconsole,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
@@ -351,40 +401,41 @@ module.exports = (env, params = {}) => {
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
             clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
-            FormData: [require.resolve(coreModulesPackageName + '/polyfills/formdata'), 'FormData'],
+            // FormData: [require.resolve(coreModulesPackageName + '/polyfills/formdata'), 'FormData'],
             requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
-    console.log('locales', locales);
-    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`^(${locales.join('|')})$`)));
+    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
 
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
-    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|node_modules)';
-    config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
-            if (resource.context.match(nativescriptReplace)) {
-                resource.request = '@nativescript-community/https';
-            }
-        })
-    );
-
-    config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
-            if (resource.context.match(nativescriptReplace)) {
-                resource.request = '~/shims/accessibility';
-            }
-        })
-    );
-    config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
-            if (resource.context.match(nativescriptReplace)) {
-                resource.request = '~/shims/action-bar';
-            }
-        })
-    );
+    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core)';
+    // config.plugins.push(
+    //     new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
+    //         if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http') {
+    //             resource.request = '@nativescript-community/https';
+    //         }
+    //     })
+    // );
+    if (fork) {
+        config.plugins.push(
+            new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/accessibility';
+                }
+            })
+        );
+        config.plugins.push(
+            new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/action-bar';
+                }
+            })
+        );
+    }
+    // save as long as we dont use calc in css
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /^url$/ }));
@@ -396,13 +447,17 @@ module.exports = (env, params = {}) => {
                 if (resource.context.match(nativescriptReplace)) {
                     resource.request = '~/shims/profile';
                 }
-            }),
-            new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
-                if (resource.context.match(nativescriptReplace)) {
-                    resource.request = '~/shims/trace';
-                }
             })
         );
+        if (!sentry) {
+            config.plugins.push(
+                new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
+                    if (resource.context.match(nativescriptReplace)) {
+                        resource.request = '~/shims/trace';
+                    }
+                })
+            );
+        }
         config.module.rules.push(
             {
                 // rules to replace mdi icons and not use nativescript-font-icon
@@ -411,8 +466,8 @@ module.exports = (env, params = {}) => {
                     {
                         loader: 'string-replace-loader',
                         options: {
-                            search: '^__decorate\\(\\[((\\s|\\t|\\n)*?)profile((\\s|\\t|\\n)*?)\\],.*?,.*?,.*?\\);?',
-                            replace: (match, p1, offset, string) => '',
+                            search: /__decorate\(\[((\s|\t|\n)*?)([a-zA-Z]+\.)?profile((\s|\t|\n)*?)\],.*?,.*?,.*?\);?/gm,
+                            replace: (match, p1, offset, str) => '',
                             flags: 'gm'
                         }
                     }
@@ -426,7 +481,7 @@ module.exports = (env, params = {}) => {
                         loader: 'string-replace-loader',
                         options: {
                             search: '@profile',
-                            replace: (match, p1, offset, string) => '',
+                            replace: (match, p1, offset, str) => '',
                             flags: ''
                         }
                     }
@@ -440,13 +495,20 @@ module.exports = (env, params = {}) => {
                     {
                         loader: 'string-replace-loader',
                         options: {
-                            search: 'if\\s*\\(\\s*Trace.isEnabled\\(\\)\\s*\\)',
-                            replace: 'if (false)',
+                            search: /if\s*\(\s*Trace.isEnabled\(\)\s*\)/gm,
+                            replace: (match, p1, offset, str) => 'if (false)',
                             flags: 'g'
                         }
                     }
                 ]
             }
+        );
+    }
+    if (!!production) {
+        config.plugins.push(
+            new ForkTsCheckerWebpackPlugin({
+                async: false
+            })
         );
     }
 
@@ -486,7 +548,8 @@ module.exports = (env, params = {}) => {
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
     // config.resolve.fallback.timers = require.resolve('timers/');
-    // config.resolve.fallback.stream = require.resolve('stream/');
+    config.resolve.fallback.stream = false;
+    config.resolve.fallback.timers = false;
     // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;

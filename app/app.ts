@@ -1,4 +1,3 @@
-import { Device } from '@nativescript/core/platform';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { startSentry } from '~/utils/sentry';
 
@@ -8,20 +7,25 @@ import { installMixins as installUIMixins } from '@nativescript-community/system
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 
-import { android as androidApp, ios as iosApp, on as onApp } from '@nativescript/core/application';
-import { getString } from '@nativescript/core/application-settings';
-import { prefs } from '~/services/preferences';
-import { Label } from '@nativescript-community/ui-label';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
+import { Label } from '@nativescript-community/ui-label';
+import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import PagerElement from '@nativescript-community/ui-pager/svelte';
+import { Application, ApplicationSettings, SharedTransition } from '@nativescript/core';
 import { svelteNative } from 'svelte-native';
-import { ApplicationSettings, ScrollView } from '@nativescript/core';
+import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from './services/documents';
 import { primaryColor } from './variables';
-import { start as startThemeHelper } from '~/helpers/theme';
-console.log('test starting')
+import { ImageViewTraceCategory, initialize } from '@nativescript-community/ui-image';
+import { CropView } from './CropView';
+import { NestedScrollView } from './NestedScrollView';
+import { request } from '@nativescript-community/perms';
+import { Pager } from '@nativescript-community/ui-pager';
+
+import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
+
+Pager.registerTransformer('zoomOut', ZoomOutTransformer);
 
 // installGestures(true);
 installMixins();
@@ -30,15 +34,7 @@ installBottomSheets();
 installUIMixins();
 overrideSpanAndFormattedString();
 
-class NestedScrollView extends ScrollView {
-    createNativeView() {
-        if (__ANDROID__) {
-            return new androidx.core.widget.NestedScrollView(this._context);
-        }
-        return super.createNativeView();
-    }
-}
-
+registerNativeViewElement('cropview', () => CropView);
 registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
 registerElement('Frame', () => new FrameElement());
 registerElement('Page', () => new PageElement());
@@ -59,6 +55,7 @@ registerNativeViewElement('tabStrip', () => require('@nativescript-community/ui-
 registerNativeViewElement('tabStripItem', () => require('@nativescript-community/ui-material-tabs').TabStripItem);
 registerNativeViewElement('tabContentItem', () => require('@nativescript-community/ui-material-tabs').TabContentItem);
 registerNativeViewElement('label', () => Label);
+// registerNativeViewElement('image', () => require('@nativescript/core').Image);
 registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
 registerNativeViewElement('zoomimage', () => require('@nativescript-community/ui-zoomimage').ZoomImg);
 // registerNativeViewElement('pullrefresh', () => require('nativescript-akylas-pulltorefresh').PullToRefresh);
@@ -67,20 +64,21 @@ registerNativeViewElement('canvasView', () => require('@nativescript-community/u
 registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
 registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
 registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
-registerNativeViewElement('cameraView', () => require('nativescript-cameraview').CameraView);
+registerNativeViewElement('cameraView', () => require('@nativescript-community/ui-cameraview').CameraView);
 // registerNativeViewElement('settingLabelIcon', () => require('./SettingLabelIcon.svelte').default);
 
 PagerElement.register();
 CollectionViewElement.register();
 startSentry();
-
+initialize();
 // import { Trace } from '@nativescript/core';
-// Trace.addCategories(Trace.categories.All);
+// import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+// Trace.addCategories(Trace.categories.NativeLifecycle);
+// Trace.addCategories(CollectionViewTraceCategory)
+// Trace.addCategories(ImageViewTraceCategory)
 // Trace.enable();
 
-// switchTorch();
 let launched = false;
-
 async function start() {
     try {
         await documentsService.start();
@@ -88,26 +86,26 @@ async function start() {
         console.error('start', error, error.stack);
     }
 }
-onApp('launch', () => {
+Application.on('launch', () => {
     console.log('launch');
     launched = true;
     start();
 });
-onApp('resume', () => {
+Application.on('resume', () => {
     console.log('resume');
     if (!launched) {
         launched = true;
         start();
     }
 });
-onApp('exit', () => {
+Application.on('exit', () => {
     console.log('exit');
     launched = false;
     documentsService.stop();
 });
 startThemeHelper();
 
-if (global.isIOS) {
+if (__IOS__) {
     themer.setPrimaryColor(primaryColor);
     themer.setAccentColor(primaryColor);
 }
@@ -120,8 +118,8 @@ themer.createShape('round', {
     }
 });
 let Comp;
-const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
-console.log('test starting app', startOnCam)
+const startOnCam = START_ON_CAM; /* ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) */
+console.log('test starting app', startOnCam);
 if (startOnCam) {
     Comp = await import('~/components/Camera.svelte');
 } else {

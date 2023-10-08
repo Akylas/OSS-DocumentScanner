@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
@@ -6,28 +7,30 @@
     import { ObservableArray } from '@nativescript/core';
     import { layout, openFile } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
-    import { goBack } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import CActionBar from '~/components/CActionBar.svelte';
+    import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { ColorType, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
-    import CActionBar from './CActionBar.svelte';
-    import RotableImageView from './RotableImageView.svelte';
+    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
 
     let pager: NativeViewElementNode<Pager>;
+    let collectionView: NativeViewElementNode<CollectionView>;
     export let document: OCRDocument;
-    let items: ObservableArray<OCRPage>;
-    $: {
-        items = document.getObservablePages();
-    }
+    let items: ObservableArray<OCRPage> = document.getObservablePages();
+    console.log('items', items.length);
     export let startPageIndex: number = 0;
     let currentIndex = startPageIndex;
-    console.log('currentIndex', currentIndex, startPageIndex);
+    const firstItem = items.getItem(currentIndex);
+    let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
 
+    let currentSelectedImagePath = firstItem.getImagePath();
+    let currentSelectedImageRotation = firstItem.rotation;
+    console.log('currentSelectedImageRotation', currentSelectedImageRotation);
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -40,6 +43,13 @@
     }
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
+        const item = items.getItem(currentIndex);
+        currentItemSubtitle = `${item.width} x ${item.height}`;
+        currentSelectedImagePath = item.getImagePath();
+        currentSelectedImageRotation = item.rotation;
+        currentIndex = event.object.selectedIndex;
+        console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
+        refreshCollectionView();
     }
     function onFirstLayout(item, e) {
         console.log('onFirstLayout');
@@ -57,24 +67,29 @@
     }
 
     async function onImageRotated(item, event) {
-        if (event.detail.newRotation === undefined) {
+        const newRotation = event.detail.detail.newRotation;
+        if (newRotation === undefined) {
             return;
         }
         await document.updateImageConfig(currentIndex, {
-            rotation: event.detail.newRotation % 360
+            rotation: newRotation % 360
         });
+
+        currentSelectedImageRotation = item.rotation;
+        console.log('currentSelectedImageRotation changed', currentSelectedImageRotation);
         items.setItem(currentIndex, item);
+        refreshCollectionView();
     }
     let colorType = 0;
-    $: {
-        colorType = document.pages[currentIndex].colorType || 0;
-    }
+    // $: {
+    //     colorType = document.pages[currentIndex].colorType || 0;
+    // }
     async function setColorType(type: number) {
         colorType = type;
         try {
             await document.updateImageConfig(currentIndex, {
-                colorType: type,
-                colorMatrix: getColorMatrix(type)
+                colorType: type
+                // colorMatrix: getColorMatrix(type)
             });
             // pages.setItem(currentIndex, current);
         } catch (err) {
@@ -82,10 +97,20 @@
         }
     }
 
-    function rotateImageRight() {
+    function applyRotation(newRotation) {
+        console.log('applyRotation', newRotation);
+        pager?.nativeView?.getChildView(currentIndex)?.getViewById('imageView').notify({ eventName: 'rotateAnimated', rotation: newRotation });
+        // current['newRotation'] = (current['newRotation'] ?? current.rotation) + 90;
+        // items.setItem(currentIndex, current);
+    }
+    async function rotateImageLeft() {
         const current = items.getItem(currentIndex);
-        current['newRotation'] = current.rotation + 90;
-        items.setItem(currentIndex, current);
+        console.log('current', current.rotation);
+        return applyRotation((current.rotation ?? 0) - 90);
+    }
+    async function rotateImageRight() {
+        const current = items.getItem(currentIndex);
+        return applyRotation((current.rotation ?? 0) + 90);
     }
     async function shareItem(item) {
         try {
@@ -93,6 +118,10 @@
         } catch (error) {
             showError(error);
         }
+    }
+
+    async function shareCurrentItem() {
+        shareItem(items.getItem(currentIndex));
     }
 
     async function setBlackWhiteLevel(event) {
@@ -105,7 +134,7 @@
         try {
             const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
             showPopover({
-                view: SliderPopover,
+                view: SliderPopover as any,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
                 props: {
@@ -127,10 +156,6 @@
             showError(err);
         }
     }
-    function getItemColorMatrix(item) {
-        const result = item.colorMatrix || getColorMatrix(item.colorType);
-        return result;
-    }
     onDestroy(() => {
         // document.clearObservableArray(items);
     });
@@ -148,6 +173,8 @@
             if (result) {
                 try {
                     await document.deletePage(currentIndex);
+                    pager.nativeView.scrollToIndexAnimated(currentIndex, true);
+                    // startPageIndex = currentIndex -= 1;
                 } catch (err) {
                     //for now ignore typeorm error in delete about _observablesListeners
                 }
@@ -156,28 +183,56 @@
             showError(err);
         }
     }
+
+    async function applyImageTransform(i) {
+        const current = items.getItem(currentIndex);
+        current.colorType = i.colorType;
+        document.updateImageConfig(currentIndex, {
+            colorType: i.colorType,
+            colorMatrix: null
+        });
+    }
+
+    const filters = ColorMatricesTypes.map((k) => ({
+        id: k,
+        text: lc(k),
+        colorType: k
+    }));
+
+    function refreshCollectionView() {
+        collectionView?.nativeView?.refreshVisibleItems();
+    }
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,50">
+    <gridlayout rows="auto,*,auto,auto">
         <CActionBar title={document.name}>
             <mdbutton variant="text" class="actionBarButton" text="mdi-file-pdf-box" on:tap={savePDF} />
             <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteCurrentPage} />
         </CActionBar>
-        <pager bind:this={pager} row={1} {items} selectedIndex={startPageIndex} on:selectedIndexChange={onSelectedIndex}>
-            <Template let:item let:index>
+        <pager bind:this={pager} row={1} {items} selectedIndex={startPageIndex} on:selectedIndexChange={onSelectedIndex} transformers="zoomOut">
+            <Template let:item>
                 <gridLayout width="100%">
-                    <RotableImageView zoomable={true} {item} on:rotated={(e) => onImageRotated(item, e)} />
-
-                    <label padding={10} text={`${item.width} x ${item.height}`} verticalAlignment="bottom" fontSize={14} />
-                    <mdbutton variant="flat" class="icon-btn" text="mdi-share-variant" on:tap={() => shareItem(item)} verticalAlignment="bottom" horizontalAlignment="right" />
+                    <RotableImageView id="imageView" zoomable={true} {item} on:rotated={(e) => onImageRotated(item, e)} sharedTransitionTag={`document_${document.id}_${item.id}`} />
                 </gridLayout>
             </Template>
         </pager>
+        <label padding={10} text={currentItemSubtitle} horizontalAlignment="left" row={1} verticalAlignment="bottom" fontSize={14} />
+        <mdbutton variant="text" row={1} class="icon-btn" text="mdi-share-variant" on:tap={() => shareCurrentItem()} verticalAlignment="bottom" horizontalAlignment="right" />
+
         <stacklayout orientation="horizontal" row={2}>
-            <mdbutton variant="flat" class="icon-btn" text="mdi-crop" />
+            <mdbutton variant="text" class="icon-btn" text="mdi-crop" />
+            <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-left" on:tap={() => rotateImageLeft()} />
             <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
-            <mdbutton variant="flat" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} />
+            <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
-    </gridlayout></page
->
+        <collectionview bind:this={collectionView} height={85} row={3} items={filters} colWidth={60} orientation="horizontal">
+            <Template let:item>
+                <gridlayout rows="*,24" on:tap={applyImageTransform(item)} padding={4}>
+                    <image src={currentSelectedImagePath} imageRotation={currentSelectedImageRotation} colorMatrix={getColorMatrix(item.colorType)} />
+                    <label text={item.text} row={1} fontSize={10} color="white" textAlignment="center" />
+                </gridlayout>
+            </Template>
+        </collectionview>
+    </gridlayout>
+</page>

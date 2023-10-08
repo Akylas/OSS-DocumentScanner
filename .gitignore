@@ -15,6 +15,7 @@ e2e/**/*.js
 /fastlane/report.xml
 /gpx
 /dist
+build
 /Gemfile.lock
 firmware
 firmwares

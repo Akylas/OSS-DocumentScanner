@@ -7,6 +7,7 @@ android {
   def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
   defaultConfig {  
     multiDexEnabled false
+    applicationId "com.akylas.documentscanner"
     minSdkVersion 21
     versionCode 1
     versionName "1.0.0"
@@ -25,18 +26,42 @@ android {
           abiFilters.addAll(project.findProperty('abiFilters').split(',').collect{it as String})
         }
       }
-
     }
+    externalNativeBuild {
+        cmake {
+            cppFlags "-std=c++11 -frtti -fexceptions"
+            abiFilters 'armeabi-v7a', "arm64-v8a", 'x86', 'x86_64'
+            arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static"
+        }
+    }
+  }
+  ndkVersion = "25.2.9519653"
+  externalNativeBuild {
+      cmake {
+          path "src/main/cpp/CMakeLists.txt"
+      }
   }
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_11
     targetCompatibility JavaVersion.VERSION_11
   }
+  // kotlinOptions {
+  //   jvmTarget = JavaVersion.VERSION_11
+  // }
   lintOptions {
+      // disable("LintError")
       checkReleaseBuilds false
       // Or, if you prefer, you can continue to check for errors in release builds,
       // but continue the build even when errors are found:
       abortOnError false
+  }
+  bundle {
+      language {
+          // We disable language split because we do not use
+          // runtime Google Play Service APIs and thus cannot dynamically
+          // request to download the language resources for a specific locale.
+          enableSplit = false
+      }
   }
   splits {
       abi {
@@ -49,6 +74,7 @@ android {
           universalApk project.hasProperty('universalApk')
       }
   }
+  
   // aaptOptions {
   //   additionalParameters "--no-version-vectors"  
   // }  
@@ -56,11 +82,11 @@ android {
     release {
       // Enables code shrinking, obfuscation, and optimization for only
       // your project's release build type.
-      minifyEnabled false
+      // minifyEnabled true
 
       // Enables resource shrinking, which is performed by the
       // Android Gradle plugin.
-      shrinkResources false
+      // shrinkResources true
 
       // Disables PNG crunching for the release build type.
       crunchPngs false
@@ -69,10 +95,10 @@ android {
       // Includes the default ProGuard rules files that are packaged with
       // the Android Gradle plugin. To learn more, go to the section about
       // R8 configuration files.
-      def absolutePathToAppResources = getAppResourcesPath()
-      proguardFiles getDefaultProguardFile(
-        'proguard-android-optimize.txt'),
-        "$BUILD_TOOLS_PATH/proguard-rules.pro"
+      // def absolutePathToAppResources = getAppResourcesPath()
+      // proguardFiles getDefaultProguardFile(
+      //   'proguard-android-optimize.txt'),
+      //   "$BUILD_TOOLS_PATH/proguard-rules.pro"
 
       debuggable false
       jniDebuggable false
@@ -82,6 +108,12 @@ android {
       multiDexEnabled true;
     }
   }  
+  packagingOptions {
+    pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+    pickFirst 'lib/arm64-v8a/libc++_shared.so'
+    pickFirst 'lib/x86_64/libc++_shared.so'
+    pickFirst 'lib/x86/libc++_shared.so'
+  }
   // flavorDimensions "stage"
   // productFlavors {
   //   dev {
@@ -105,14 +137,14 @@ android {
 //         }
 //     }
 // }
-tasks.whenTaskAdded({ DefaultTask currentTask ->
-    // if (currentTask =~ /buildMetadata/) {
-    //     currentTask.finalizedBy(createProguard)
-    // }
-    // if (currentTask =~ /minify.*WithR8/) {
-    //     currentTask.dependsOn(createProguard)
-    // }
-})
+// tasks.whenTaskAdded({ DefaultTask currentTask ->
+//     if (currentTask =~ /buildMetadata/) {
+//         currentTask.finalizedBy(createProguard)
+//     }
+//     if (currentTask =~ /minify.*WithR8/) {
+//         currentTask.dependsOn(createProguard)
+//     }
+// })
 
 android.applicationVariants.all { variant ->
     if (project.hasProperty('splitEnabled')) {
@@ -128,7 +160,16 @@ android.applicationVariants.all { variant ->
     }
 }
 dependencies {
-  implementation 'com.otaliastudios:cameraview:2.7.2'
-  // implementation 'cz.adaptech.android:tesseract4android:4.1.1'
-  implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
+    def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
+    implementation "androidx.core:core-ktx:$androidxVersion"
+    implementation 'com.otaliastudios:cameraview:2.7.2'
+    implementation 'androidx.core:core-splashscreen:1.0.0'
+    constraints {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.10") {
+            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
+        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10") {
+            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
+        }
+    }
 }

@@ -11,7 +11,7 @@
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { File } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
-    import ListItem from './ListItem.svelte';
+    import ListItem from '~/components/ListItem.svelte';
 
     export let options: OptionType[];
 

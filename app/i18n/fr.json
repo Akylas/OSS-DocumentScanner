@@ -3,7 +3,10 @@
   "app": {
     "name": "OSS Document Scanner"
   },
+  "auto": "auto",
   "bug_report_sent": "rapport de bug envoyé",
+  "english": "english",
+  "french": "french",
   "ios": {
     "info": {
       "plist": {
@@ -11,19 +14,20 @@
       }
     }
   },
+  "language": "language",
+  "nb_pages": "%1$s pages",
   "ok": "OK",
   "preferences": "préférences",
   "review_application": "noter l'application",
+  "select_language": "sélectionner la langue",
   "select_on_map": "sélectionner sur une carte",
   "selected": "%1$s sélectionnés",
   "settings": {
-    "title":"settings"
+    "title": "settings"
   },
-  "start_on_cam": "start on camera",
   "share_application": "partager l'application",
   "source_code": "code source",
-  "third_parties": "bibliothèques tierces",
-  "version": "version",
+  "start_on_cam": "start on camera",
   "theme": {
     "auto": "auto",
     "black": "black",
@@ -31,7 +35,6 @@
     "light": "light",
     "title": "theme"
   },
-  "language": "language",
-  "english": "english",
-  "french": "french"
+  "third_parties": "bibliothèques tierces",
+  "version": "version"
 }

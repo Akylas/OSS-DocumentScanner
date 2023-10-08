@@ -1,17 +1,20 @@
 // import InAppBrowser from '@akylas/nativescript-inappbrowser';
+import { DocumentScanner } from '@nativescript-community/document-scanner';
 import { request } from '@nativescript-community/perms';
 import { Label } from '@nativescript-community/ui-label';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
 import { AlertDialog } from '@nativescript-community/ui-material-dialogs';
-import { Image, StackLayout } from '@nativescript/core';
-import { openUrl } from '@nativescript/core/utils/utils';
+import { Image, ImageAsset, ImageSource, StackLayout } from '@nativescript/core';
+import { openUrl } from '@nativescript/core/utils';
 import * as imagepicker from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
-import { ColorType, OCRDocument } from '~/models/OCRDocument';
+import { OCRDocument, PageData } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
-import { WorkerEventType, WorkerResult } from '~/workers/BaseWorker';
-import { DEFAULT_PRODUCTION_COMPUTE_OPTIONS, ImageComputeOptions } from '~/workers/options';
 import { showError } from './error';
+import ColorMatrices from './color_matrix';
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { lc } from '@nativescript-community/l';
+import { showModal } from 'svelte-native';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,7 +78,7 @@ function getLoadingIndicator() {
 }
 export function showLoading(msg: string) {
     const loadingIndicator = getLoadingIndicator();
-    // log('showLoading', msg, !!loadingIndicator);
+    console.log('showLoading', msg, !!loadingIndicator);
     loadingIndicator.label.text = msg + '...';
     showLoadingStartTime = Date.now();
     loadingIndicator.show();
@@ -92,22 +95,30 @@ export function hideLoading() {
     }
 }
 
-export const IMAGE_FILTERS = {
-    grayscale: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
-    bw: (value = 1) => [value, value, value, -1, 0, value, value, value, -1, 0, value, value, value, -1, 0, 0, 0, 0, 1, 0],
-    nightVision: [0.1, 0.4, 0, 0, 0, 0.3, 1, 0.3, 0, 0, 0, 0.4, 0.1, 0, 0, 0, 0, 0, 1, 0],
-    polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0]
-};
+// export const IMAGE_FILTERS = {
+//     grayscale: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
+//     bw: (value = 1) => [value, value, value, -1, 0, value, value, value, -1, 0, value, value, value, -1, 0, 0, 0, 0, 1, 0],
+//     nightVision: [0.1, 0.4, 0, 0, 0, 0.3, 1, 0.3, 0, 0, 0, 0.4, 0.1, 0, 0, 0, 0, 0, 1, 0],
+//     polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0]
+// };
 
-export function getColorMatrix(color: ColorType, value?): number[] {
-    switch (color) {
-        case ColorType.BLACK_WHITE:
-            return IMAGE_FILTERS.bw(value);
-        case ColorType.GRAY:
-            return IMAGE_FILTERS.grayscale;
-        default:
-            return 0 as any;
-    }
+export const ColorMatricesTypes = Object.keys(ColorMatrices);
+export type ColorMatricesType = keyof typeof ColorMatricesTypes;
+
+export function getColorMatrix(type: string, ...args): number[] {
+    return (ColorMatrices[type] as Function)?.apply(ColorMatrices, args);
+    // switch (color) {
+    //     case ColorType.BLACK_WHITE:
+    //         return IMAGE_FILTERS.bw(value);
+    //     case ColorType.GRAY:
+    //         return IMAGE_FILTERS.grayscale;
+    //     case ColorType.NIGHT_VISION:
+    //         return IMAGE_FILTERS.nightVision;
+    //     case ColorType.POLAROID:
+    //         return IMAGE_FILTERS.polaroid;
+    //     default:
+    //         return 0 as any;
+    // }
 }
 
 function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues, stopValues, fraction) {
@@ -191,7 +202,6 @@ export async function setImageMatrix(imageView: Image, values: number[], duratio
             console.log('arr', index, values[index]);
             arr[index] = values[index];
         }
-        console.log('applying values', values, arr, imageView.nativeViewProtected);
         matrix.setValues(arr);
         const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
         if (scaleType['setImageMatrix']) {
@@ -202,100 +212,101 @@ export async function setImageMatrix(imageView: Image, values: number[], duratio
     }
 }
 
-const worker = new Worker('~/workers/ImageWorker');
-const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
-worker.onmessage = function onWorkerMessage(event: {
-    data: {
-        type: WorkerEventType;
-        result: WorkerResult;
-        full?: boolean;
-        contours?: number[][];
-        width?: number;
-        height?: number;
-        originalWidth?: number;
-        originaHeight?: number;
-        id?: number;
-        rotation?: number;
-        nativeDataKeys: string[];
-        nativeDatas?: { [k: string]: any };
-    };
-}) {
-    const data = event.data;
-    const id = data.id;
+// const worker = new Worker('~/workers/ImageWorker');
+// const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
+// worker.onmessage = function onWorkerMessage(event: {
+//     data: {
+//         type: WorkerEventType;
+//         result: WorkerResult;
+//         full?: boolean;
+//         contours?: number[][];
+//         width?: number;
+//         height?: number;
+//         originalWidth?: number;
+//         originaHeight?: number;
+//         id?: number;
+//         rotation?: number;
+//         nativeDataKeys: string[];
+//         nativeDatas?: { [k: string]: any };
+//     };
+// }) {
+//     const data = event.data;
+//     const id = data.id;
 
-    if (id && messagePromises.hasOwnProperty(id)) {
-        messagePromises[id].forEach(function (executor) {
-            executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
-            // if (isError) {
-            // executor.reject(createErrorFromMessage(message));
-            // } else {
-            const id = data.id;
-            if (data.nativeDataKeys.length > 0) {
-                const nativeDatas: { [k: string]: any } = {};
-                if (global.isAndroid) {
-                    data.nativeDataKeys.forEach((k) => {
-                        nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
-                        com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
-                    });
-                    data.nativeDatas = nativeDatas;
-                }
-            }
+//     if (id && messagePromises.hasOwnProperty(id)) {
+//         messagePromises[id].forEach(function (executor) {
+//             executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
+//             // if (isError) {
+//             // executor.reject(createErrorFromMessage(message));
+//             // } else {
+//             const id = data.id;
+//             if (data.nativeDataKeys.length > 0) {
+//                 const nativeDatas: { [k: string]: any } = {};
+//                 if (__ANDROID__) {
+//                     data.nativeDataKeys.forEach((k) => {
+//                         nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
+//                         com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
+//                     });
+//                     data.nativeDatas = nativeDatas;
+//                 }
+//             }
 
-            executor.resolve(data);
-            // }
-        });
-        delete messagePromises[id];
-    }
-};
-export function sendMessageToWorker(
-    nativeData,
-    messageData,
-    timeout = 0
-): Promise<{
-    id: number;
-    nativeDatas?: { [k: string]: any };
-    [k: string]: any;
-}> {
-    return new Promise((resolve, reject) => {
-        const id = Date.now().valueOf();
-        messagePromises[id] = messagePromises[id] || [];
-        let timeoutTimer;
-        if (timeout > 0) {
-            timeoutTimer = setTimeout(() => {
-                // we need to try catch because the simple fact of creating a new Error actually throws.
-                // so we will get an uncaughtException
-                try {
-                    reject(new Error('timeout'));
-                } catch {}
-                delete messagePromises[id];
-            }, timeout);
-        }
-        messagePromises[id].push({ resolve, reject, timeoutTimer });
+//             executor.resolve(data);
+//             // }
+//         });
+//         delete messagePromises[id];
+//     }
+// };
+// export function sendMessageToWorker(
+//     nativeData,
+//     messageData,
+//     timeout = 0
+// ): Promise<{
+//     id: number;
+//     nativeDatas?: { [k: string]: any };
+//     [k: string]: any;
+// }> {
+//     return new Promise((resolve, reject) => {
+//         const id = Date.now().valueOf();
+//         messagePromises[id] = messagePromises[id] || [];
+//         let timeoutTimer;
+//         if (timeout > 0) {
+//             timeoutTimer = setTimeout(() => {
+//                 // we need to try catch because the simple fact of creating a new Error actually throws.
+//                 // so we will get an uncaughtException
+//                 try {
+//                     reject(new Error('timeout'));
+//                 } catch {}
+//                 delete messagePromises[id];
+//             }, timeout);
+//         }
+//         messagePromises[id].push({ resolve, reject, timeoutTimer });
 
-        // const result = worker.processImage(image, { width, height, rotation });
-        // handleContours(result.contours, rotation, width, height);
-        const keys = Object.keys(nativeData);
-        if (global.isAndroid) {
-            keys.forEach((k) => {
-                com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, nativeData[k]._native || nativeData[k]);
-            });
-        }
-        const mData = Object.assign(
-            {
-                type: 'image',
-                id,
-                nativeDataKeys: keys
-            },
-            messageData
-        );
-        // console.log('postMessage', mData);
-        worker.postMessage(mData);
-    });
-}
+//         // const result = worker.processImage(image, { width, height, rotation });
+//         // handleContours(result.contours, rotation, width, height);
+//         const keys = Object.keys(nativeData);
+//         if (__ANDROID__) {
+//             keys.forEach((k) => {
+//                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, nativeData[k]._native || nativeData[k]);
+//             });
+//         }
+//         const mData = Object.assign(
+//             {
+//                 type: 'image',
+//                 id,
+//                 nativeDataKeys: keys
+//             },
+//             messageData
+//         );
+//         // console.log('postMessage', mData);
+//         worker.postMessage(mData);
+//     });
+// }
 
-export async function importAndScanImage(computeOptions: ImageComputeOptions = DEFAULT_PRODUCTION_COMPUTE_OPTIONS, document?: OCRDocument) {
+export async function importAndScanImage(document?: OCRDocument) {
     await request('storage');
     let selection;
+    let editingImage: ImageSource;
     try {
         selection = await imagepicker
             .create({
@@ -307,52 +318,81 @@ export async function importAndScanImage(computeOptions: ImageComputeOptions = D
             })
             // on android pressing the back button will trigger an error which we dont want
             .present();
+        if (selection?.length) {
+            const sourceImagePath = selection[0].path;
+            console.log('selection', selection[0], selection[0].constructor.name);
+            if (__ANDROID__) {
+                const asset = new ImageAsset(sourceImagePath);
+                const bitmap = await new Promise((resolve, reject) => {
+                    asset.getImageAsync((image, error) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(image);
+                        }
+                    });
+                });
+                editingImage = new ImageSource(bitmap);
+            } else {
+                editingImage = await ImageSource.fromFile(sourceImagePath);
+            }
+            if (!editingImage) {
+                throw new Error('failed to read imported image');
+            }
+            let quads;
+            console.log('editingImage', editingImage.width, editingImage.height, editingImage.android);
+            if (__ANDROID__) {
+                quads = JSON.parse(com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 600, 0));
+            }
+            if (quads?.length) {
+                console.log('quads', quads);
+                const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
+                quads = await showModal({
+                    page: ModalImportImage,
+                    animated: true,
+                    fullscreen: true,
+                    props: {
+                        editingImage,
+                        quads
+                    }
+                });
+                if (quads) {
+                    let images /* : android.graphics.Bitmap[] */;
+                    if (__ANDROID__) {
+                        images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
+                    }
+                    if (images) {
+                        const pagesToAdd: PageData[] = [];
+                        for (let index = 0; index < images.length; index++) {
+                            const image = images[index];
+                            pagesToAdd.push({
+                                image,
+                                crop: quads[index],
+                                sourceImagePath,
+                                width: __ANDROID__ ? image.getWidth() : image.size.width,
+                                height: __ANDROID__ ? image.getHeight() : image.size.height,
+                                rotation: editingImage.rotationAngle
+                            });
+                        }
+                        if (document) {
+                            document.addPages(pagesToAdd);
+                            document.save();
+                        } else {
+                            const document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                            document.save();
+                            documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
+                        }
+                        return document;
+                    }
+                }
+            } else {
+                showSnack({ message: lc('no_document_found') });
+            }
+        }
     } catch (error) {
         showError(error);
-    }
-    if (selection?.length) {
-        const image = await new Promise((resolve, reject) => {
-            selection[0].getImageAsync((image, error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(image);
-                }
-            });
-        });
-        const data = await sendMessageToWorker({ bitmap: image }, { full: true, ...computeOptions });
-        const mats = data.nativeDatas.mats;
-        // console.log('handleFullResult', data, mats);
-        // doc.mats = data.nativeDatas.mats;
-        // doc.rawmats = data.nativeDatas.mats;
-        if (mats && mats.length) {
-            // const bitmaps = data.nativeDatas.bitmaps;
-            // const transformedMats = data.nativeDatas.transformedMats;
-            // const bitmaps = data.nativeDatas.bitmaps;
-            const pagesToAdd = data.pages;
-            pagesToAdd.forEach((p, i) => {
-                p['mat'] = mats[i];
-                // p['bitmap'] = bitmaps[i];
-                // p['transformedMat'] = transformedMats[i];
-            });
-            const newDoc = !document;
-            if (!document) {
-                document = await OCRDocument.createDocument(dayjs().format('LLL'), pagesToAdd);
-            } else {
-                await document.addPages(pagesToAdd);
-            }
-            pagesToAdd.forEach((p) => {
-                p.mat.release();
-            });
-            // await documentsService.connection.manager.save(document);
-            document = await document.save();
-            if (newDoc) {
-                documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
-            }
-
-            return document;
-        } else {
-            throw new Error('no contours found');
+        if (__ANDROID__) {
+            editingImage?.android?.recycle();
         }
     }
 }

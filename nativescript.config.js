@@ -1,5 +1,5 @@
 module.exports = {
-    ignoredNativeDependencies: ['@nativescript-community/sentry'],
+    ignoredNativeDependencies: ['@nativescript-community/sentry', '@nativescript-community/https'],
     id: 'com.akylas.documentscanner',
     appResourcesPath: 'App_Resources',
     webpackConfigPath: 'app.webpack.config.js',

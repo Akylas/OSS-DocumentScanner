@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "*.h": "objective-c",
+        "*.mss": "less",
+        "**/vendor.js": "plaintext",
+        "**/bundle.js": "plaintext",
+        "**/*.min.js": "plaintext",
+        "*.wls": "wolfram",
+        "*.ejs": "html",
+        "deque": "cpp",
+        "string": "cpp",
+        "vector": "cpp"
+    }
+}

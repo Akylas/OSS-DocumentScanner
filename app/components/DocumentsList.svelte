@@ -1,25 +1,26 @@
 <script lang="ts">
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { DocumentScanner } from '@nativescript-community/document-scanner';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { AndroidApplication, Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page } from '@nativescript/core';
+    import { Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
-import dayjs from 'dayjs';
+    import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import ActionSheet from '~/components/ActionSheet.svelte';
+    import CActionBar from '~/components/CActionBar.svelte';
+    import Camera from '~/components/Camera.svelte';
+    import RotableImageView from '~/components/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/SelectedIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { importAndScanImage, timeout } from '~/utils/ui';
-    import { accentColor, backgroundColor, primaryColor, subtitleColor } from '~/variables';
-    import ActionSheet from './ActionSheet.svelte';
-    import CActionBar from './CActionBar.svelte';
-    import Camera from './Camera.svelte';
-    import RotableImageView from './RotableImageView.svelte';
-    import SelectedIndicator from './SelectedIndicator.svelte';
+    import { accentColor, backgroundColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
 
     interface Item {
         doc: OCRDocument;
@@ -71,7 +72,7 @@ import dayjs from 'dayjs';
         let index = -1;
         if (event.pageIndex === 0) {
             documents.some((d, i) => {
-                if (d.doc === event.object) {
+                if (d.doc === (event.object as any)) {
                     index = i;
                     return true;
                 }
@@ -83,17 +84,19 @@ import dayjs from 'dayjs';
     }
     onMount(() => {
         if (__ANDROID__) {
-            Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
+            Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
+        documentsService.on('documentPageDeleted', onDocumentPageUpdated);
         documentsService.on('documentAdded', onDocumentAdded);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         // refresh();
     });
     onDestroy(() => {
         if (__ANDROID__) {
-            Application.android.off(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
+            Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        documentsService.on('documentPageDeleted', onDocumentPageUpdated);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
         documentsService.off('documentAdded', onDocumentAdded);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
@@ -101,20 +104,64 @@ import dayjs from 'dayjs';
 
     let showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
 
-    function onStartCam() {
-        showModal({
-            page: Camera,
-            fullscreen: true
-        });
+    async function onStartCam() {
+        try {
+            const document = await showModal({
+                page: Camera as any,
+                fullscreen: true
+            });
+            if (document) {
+                const PDFView = (await import('~/components/PDFView.svelte')).default;
+                navigate({
+                    page: PDFView as any,
+                    transition: SharedTransition.custom(new PageTransition(300)),
+                    props: {
+                        document: document
+                    }
+                });
+            }
+            // const documentScanner = new DocumentScanner({
+            //     showColorFilters: false,
+            //     maxNumSimultaneousDocuments: 1
+            // });
+
+            // const result = await documentScanner.startScan();
+            // if (result?.length) {
+            //     const document = await OCRDocument.createDocument(
+            //         dayjs().format('L LT'),
+            //         __ANDROID__ ? result.map((s) => ({ ...s, colorType: 1, imagePath: s.imagePath.replace('file://', '') })) : result.map((s) => ({ ...s, colorType: 1 }))
+            //     );
+            //     document.save();
+            //     documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
+            //     // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
+            //     const PDFView = (await import('~/components/PDFView.svelte')).default;
+            //     navigate({
+            //         page: PDFView as any,
+            //         transition: SharedTransition.custom(new PageTransition(300)),
+            //         props: {
+            //             document: document
+            //         }
+            //     });
+            // }
+        } catch (error) {
+            showError(error);
+        }
+        // showModal({
+        //     page: Camera as any,
+        //     fullscreen: true
+        // });
     }
 
     async function importDocument() {
         try {
             const doc = await importAndScanImage();
+            if (!doc) {
+                return;
+            }
             await timeout(10);
             const component = (await import('~/components/PDFEdit.svelte')).default;
             await navigate({
-                page: component,
+                page: component as any,
                 props: {
                     document: doc
                 }
@@ -124,7 +171,6 @@ import dayjs from 'dayjs';
         }
     }
     function onNavigatedTo(e: NavigatedData) {
-        console.log('onNavigatedTo', e.isBackNavigation, documentsService.started);
         if (!e.isBackNavigation) {
             if (documentsService.started) {
                 refresh();
@@ -195,7 +241,8 @@ import dayjs from 'dayjs';
             } else {
                 const component = (await import('~/components/PDFView.svelte')).default;
                 await navigate({
-                    page: component,
+                    page: component as any,
+                    transition: SharedTransition.custom(new PageTransition(300)),
                     props: {
                         document: item.doc
                     }
@@ -222,7 +269,6 @@ import dayjs from 'dayjs';
                     okButtonText: lc('delete'),
                     cancelButtonText: lc('cancel')
                 });
-                console.log('delete, confirmed', result);
                 if (result) {
                     const selected = [];
                     documents.forEach((d, index) => {
@@ -240,7 +286,7 @@ import dayjs from 'dayjs';
     async function showOptions() {
         const result: { icon: string; id: string; text: string } = await showBottomSheet({
             parent: page,
-            view: ActionSheet,
+            view: ActionSheet as any,
             props: {
                 options: [
                     {
@@ -263,7 +309,7 @@ import dayjs from 'dayjs';
                     break;
 
                 case 'about':
-                    const About = require('./About.svelte').default;
+                    const About = require('~/components/About.svelte').default;
                     showModal({ page: About, animated: true, fullscreen: true });
                     break;
             }
@@ -273,19 +319,29 @@ import dayjs from 'dayjs';
 
 <page actionBarHidden={true} on:navigatedTo={onNavigatedTo} bind:this={page}>
     <gridlayout rows="auto,*">
-        <CActionBar title={nbSelected ? l('selected', nbSelected) : l('documents')} onGoBack={nbSelected ? unselectAll : null} forceCanGoBack={nbSelected}>
+        <CActionBar title={nbSelected ? l('selected', nbSelected) : l('documents')} onGoBack={nbSelected ? unselectAll : null} forceCanGoBack={nbSelected > 0}>
             <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteSelectedDocuments} visibility={nbSelected ? 'visible' : 'hidden'} />
             <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} />
         </CActionBar>
-        <collectionView row={1} items={documents} colWidth="50%" rowHeight="270">
+        <collectionView row={1} items={documents} colWidth="50%" rowHeight="180">
             <Template let:item>
-                <gridLayout rows="*,auto" borderRadius="4" margin="8" rippleColor={accentColor} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)} elevation="2" backgroundColor={backgroundColor}>
-                    <RotableImageView item={item.doc.pages[0]} stretch="aspectFill"/>
-                    <canvaslabel row={1}  padding="10" height={60}>
-                        <cspan text={item.doc.name} fontSize={12}/>
-                        <cspan text={dayjs(item.doc.createdDate).format('L LT')} paddingTop={16}  fontSize={10} color={$subtitleColor}/>
-                        <cspan text={lc('nb_pages', item.doc.pages.length)}  paddingTop={29} fontSize={10} color={$subtitleColor}/>
-                        </canvaslabel>
+                <gridLayout
+                    rows="*,auto"
+                    borderRadius="4"
+                    margin="8"
+                    clipToBounds={true}
+                    rippleColor={accentColor}
+                    on:tap={() => onItemTap(item)}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    elevation="2"
+                    backgroundColor={$widgetBackgroundColor}
+                    >/
+                    <RotableImageView item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} />
+                    <canvaslabel row={1} padding="10" height={60} color={$textColor}>
+                        <cspan text={item.doc.name} fontSize={12} />
+                        <!-- <cspan text={dayjs(item.doc.createdDate).format('L LT')} paddingTop={16} fontSize={10} color={$subtitleColor} /> -->
+                        <cspan text={lc('nb_pages', item.doc.pages.length)} paddingTop={29} fontSize={10} color={$subtitleColor} />
+                    </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
                 </gridLayout>
             </Template>

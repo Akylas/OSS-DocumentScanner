@@ -3,26 +3,30 @@
   "app": {
     "name": "OSS Document Scanner"
   },
+  "auto": "auto",
   "bug_report_sent": "bug report sent",
+  "english": "english",
+  "french": "french",
   "ios": {
     "info": {
       "plist": {
-        "NSPhotoLibraryUsageDescription":"Description text goes here"
+        "NSPhotoLibraryUsageDescription": "Description text goes here"
       }
     }
   },
+  "language": "language",
+  "nb_pages": "%1$s pages",
   "ok": "OK",
   "preferences": "preferences",
   "review_application": "review application",
+  "select_language": "select language",
   "select_on_map": "select on a map",
   "selected": "%1$s selected",
   "settings": {
-    "title":"settings"
+    "title": "settings"
   },
   "share_application": "share application",
   "source_code": "source code",
-  "third_parties": "third party libraries",
-  "version": "version",
   "start_on_cam": "start on camera",
   "theme": {
     "auto": "auto",
@@ -31,7 +35,6 @@
     "light": "light",
     "title": "theme"
   },
-  "english": "english",
-  "language": "language",
-  "french": "french"
+  "third_parties": "third party libraries",
+  "version": "version"
 }

@@ -38,7 +38,7 @@ import { showError } from '~/utils/error';
         if (modalWindow) {
             menuIcon = 'mdi-close';
         } else {
-            menuIcon = forceCanGoBack || canGoBack ? (global.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
+            menuIcon = forceCanGoBack || canGoBack ? (__IOS__ ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
         }
     }
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
@@ -48,7 +48,7 @@ import { showError } from '~/utils/error';
 <gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="10" paddingRight="10" {backgroundColor}>
     <label col={1} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <!-- {#if showLogo && !title}
-        <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
+        <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
     {/if} -->
     <stackLayout col={0} orientation="horizontal">
         <slot name="left" />
