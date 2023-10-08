@@ -5,9 +5,9 @@ const { dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const SentryCliPlugin = require('@sentry/webpack-plugin');
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
+const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
 
@@ -70,7 +70,7 @@ module.exports = (env, params = {}) => {
             env
         );
     }
-    const nconfig = require('./nativescript.config.js');
+    const nconfig = require('./nativescript.config');
     const {
         appPath = nconfig.appPath,
         appResourcesPath = nconfig.appResourcesPath,
@@ -89,6 +89,7 @@ module.exports = (env, params = {}) => {
         testlog,
         fork = true,
         startOnCam = false,
+        keep_classnames_functionnames = false,
         locale = 'auto',
         theme = 'auto',
         adhoc
@@ -210,7 +211,6 @@ module.exports = (env, params = {}) => {
     config.resolve.fallback.tty = false;
     config.resolve.fallback.os = false;
 
-
     const package = require('./package.json');
     const isIOS = platform === 'ios';
     const isAndroid = platform === 'android';
@@ -223,6 +223,7 @@ module.exports = (env, params = {}) => {
         process: 'global.process',
         'global.TNS_WEBPACK': 'true',
         'gVars.platform': `"${platform}"`,
+        __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
@@ -252,7 +253,7 @@ module.exports = (env, params = {}) => {
                 : `market://details?id=${nconfig.id}`
         }"`,
         DEV_LOG: !!devlog,
-        TEST_LOGS: !!adhoc || !production
+        TEST_LOG: !!devlog || !!testlog
     };
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
@@ -325,7 +326,7 @@ module.exports = (env, params = {}) => {
     const usedMDIICons = [];
     config.module.rules.push({
         // rules to replace mdi icons and not use nativescript-font-icon
-        test: /\.svelte$/,
+        test: /\.(ts|js|scss|css|svelte)$/,
         exclude: /node_modules/,
         use: [
             {
@@ -412,13 +413,13 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core)';
-    // config.plugins.push(
-    //     new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
-    //         if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http') {
-    //             resource.request = '@nativescript-community/https';
-    //         }
-    //     })
-    // );
+    config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
+            if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http') {
+                resource.request = '@nativescript-community/https';
+            }
+        })
+    );
     if (fork) {
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
@@ -512,7 +513,6 @@ module.exports = (env, params = {}) => {
         );
     }
 
-
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
             config.devtool = false;
@@ -523,14 +523,15 @@ module.exports = (env, params = {}) => {
                 })
             );
             config.plugins.push(
-                new SentryCliPlugin({
-                    release: appVersion,
-                    urlPrefix: 'app:///',
-                    rewrite: true,
-                    release: `${nconfig.id}@${appVersion}+${buildNumber}`,
-                    dist: `${buildNumber}.${platform}`,
-                    ignoreFile: '.sentrycliignore',
-                    include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                new sentryWebpackPlugin({
+                    release: {
+                        name: `${nconfig.id}@${appVersion}+${buildNumber}`,
+                        dist: `${buildNumber}.${platform}`
+                    },
+                    sourcemaps: {
+                        assets: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
+                        ignore: ['tns-java-classes', 'hot-update']
+                    }
                 })
             );
         } else {
@@ -539,7 +540,6 @@ module.exports = (env, params = {}) => {
     } else {
         config.devtool = false;
     }
-
 
     config.experiments = {
         topLevelAwait: true
@@ -553,15 +553,17 @@ module.exports = (env, params = {}) => {
     // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
+    const actual_keep_classnames_functionnames = keep_classnames_functionnames || platform !== 'android';
+    config.optimization.usedExports = true;
     config.optimization.minimizer = [
         new TerserPlugin({
             parallel: true,
             terserOptions: {
-                ecma: isAndroid ? 2020 : 2017,
+                ecma: isAndroid ? 2020 : 2020,
                 module: true,
                 toplevel: false,
-                keep_classnames: platform !== 'android',
-                keep_fnames: platform !== 'android',
+                keep_classnames: actual_keep_classnames_functionnames,
+                keep_fnames: actual_keep_classnames_functionnames,
                 output: {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
