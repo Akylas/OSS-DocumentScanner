@@ -13,7 +13,6 @@ export default class ZoomOutTransformer extends java.lang.Object {
     public transformPage(page, position) {
         const pageWidth = page.getWidth();
         const pageHeight = page.getHeight();
-        console.log('transformPage')
 
         if (position < -1) {
             // [ -Infinity,-1 )
