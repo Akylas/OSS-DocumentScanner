@@ -11,13 +11,14 @@ const originalConsole = {
 
 function convertArg(arg) {
     const type = typeof arg;
-    if (!arg) {
-        return;
+    if (type === 'undefined') {
+        return 'undefined';
+    } else if (arg === null) {
+        return 'null';
     }
-    if (type === 'function' || typeof arg.getClass === 'function' || typeof arg.class === 'function') {
-        return (arg as Function).toString();
-    } else if (Array.isArray(arg)) {
-        return arg.map(convertArg);
+    if (Array.isArray(arg)) {
+        // one issue with JSON.stringify is that undefined will become null
+        return JSON.stringify(arg);
     } else if (type === 'object') {
         const str = arg.toString();
         if (str === '[object Object]') {
@@ -25,12 +26,11 @@ function convertArg(arg) {
         } else {
             return str;
         }
-    } else {
-        return arg.toString();
     }
+    return arg;
 }
 function actualLog(level: 'info' | 'log' | 'error' | 'warn' | 'debug', ...args) {
-    if (gVars.sentry && Sentry) {
+    if (SENTRY_ENABLED && Sentry) {
         Sentry.addBreadcrumb({
             category: 'console',
             message: args.map(convertArg).join(' '),
@@ -48,7 +48,7 @@ export function install() {
         return;
     }
     installed = true;
-    if (NO_CONSOLE !== true && gVars.sentry) {
+    if (NO_CONSOLE !== true && SENTRY_ENABLED) {
         console.log = (...args) => actualLog('log', ...args);
         console.info = (...args) => actualLog('info', ...args);
         console.error = (...args) => actualLog('error', ...args);

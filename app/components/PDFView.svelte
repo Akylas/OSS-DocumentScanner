@@ -2,26 +2,24 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { EventData } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { Application, ObservableArray } from '@nativescript/core';
-    import { AndroidActivityBackPressedEventData, AndroidApplication } from '@nativescript/core/application';
-    import { ChangeType } from '@nativescript/core/data/observable-array';
+    import { Application, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
-    import { goBack, navigate, showModal } from 'svelte-native';
+    import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import CActionBar from '~/components/CActionBar.svelte';
+    import Camera from '~/components/Camera.svelte';
+    import PdfEdit from '~/components/PDFEdit.svelte';
+    import RotableImageView from '~/components/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/SelectedIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
-    import { getColorMatrix, hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
     import { accentColor } from '~/variables';
-    import { DEFAULT_PRODUCTION_COMPUTE_OPTIONS } from '~/workers/options';
-    import CActionBar from './CActionBar.svelte';
-    import Camera from './Camera.svelte';
-    import PdfEdit from './PDFEdit.svelte';
-    import RotableImageView from './RotableImageView.svelte';
-    import SelectedIndicator from './SelectedIndicator.svelte';
 
     interface Item {
         page: OCRPage;
@@ -32,16 +30,16 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<Item> = null;
 
-    $: {
-        const pages = document.getObservablePages();
-        items = pages.map((page) => ({ selected: false, page })) as any as ObservableArray<Item>;
-        // pages.on('change', (event)=>{
-        //     switch(event.action) {
-        //         case ChangeType.Splice:
-        //         items.splice(event.index, event.removed.length, event.added)
-        //     }
-        // });
-    }
+    // $: {
+    const pages = document.getObservablePages();
+    items = pages.map((page) => ({ selected: false, page })) as any as ObservableArray<Item>;
+    // pages.on('change', (event)=>{
+    //     switch(event.action) {
+    //         case ChangeType.Splice:
+    //         items.splice(event.index, event.removed.length, event.added)
+    //     }
+    // });
+    // }
     // function onImageUpdated (event: any)  {
     //         const index = event.data.index;
     //         const current = document.pages.getItem(index)
@@ -73,19 +71,23 @@
         }
     }
     async function addPages() {
-        document = await showModal({
-            page: Camera,
-            fullscreen: true,
-            props: {
-                modal: true,
-                document
-            }
-        });
+        try {
+            document = await showModal({
+                page: Camera as any,
+                fullscreen: true,
+                props: {
+                    modal: true,
+                    document
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
 
     async function importDocument() {
         try {
-            await importAndScanImage(DEFAULT_PRODUCTION_COMPUTE_OPTIONS, document);
+            await importAndScanImage(document);
         } catch (error) {
             showError(error);
         }
@@ -98,13 +100,15 @@
                 okButtonText: lc('delete'),
                 cancelButtonText: lc('cancel')
             });
-            console.log('deleteDoc, confirmed', result);
             if (result) {
-                goBack();
+                console.log('deleteDoc')
                 try {
                     await documentsService.deleteDocuments([document]);
+                    items = null;
+                    goBack();
+                    console.log('goneBack')
                 } catch (err) {
-                    console.log(err);
+                    console.error(err);
                     //for now ignore typeorm error in delete about _observablesListeners
                 }
             }
@@ -174,9 +178,10 @@
                 onItemLongPress(item);
             } else {
                 const index = items.findIndex((p) => p.page === item.page);
-                console.log('onItemTap', index);
+                // console.log('onItemTap', index);
                 await navigate({
-                    page: PdfEdit,
+                    page: PdfEdit as any,
+                    transition: SharedTransition.custom(new PageTransition(300)),
                     // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                     props: {
                         document,
@@ -205,7 +210,6 @@
                     okButtonText: lc('delete'),
                     cancelButtonText: lc('cancel')
                 });
-                console.log('delete, confirmed', result);
                 if (result) {
                     const indexes = [];
                     items.forEach((d, index) => {
@@ -215,6 +219,8 @@
                     });
                     for (let index = 0; index < indexes.length; index++) {
                         await document.deletePage(indexes[index]);
+
+                        items.splice(indexes[index], 1);
                     }
                     nbSelected = 0;
                 }
@@ -224,31 +230,38 @@
         }
     }
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
-        console.log('onPagesAdded', event.pages);
         items.push(...event.pages.map((page) => ({ page, selected: false })));
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number }) {
-        console.log('onDocumentPageUpdated');
         if (event.object !== document) {
             return;
         }
         const index = event.pageIndex;
-        console.log('onDocumentPageUpdated1', index);
         const current = items.getItem(index);
         items.setItem(index, { selected: current.selected, page: document.getObservablePages().getItem(index) });
     }
-    onMount(() => {
-        if (__ANDROID__) {
-            Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
+    function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
+        if (event.object !== document) {
+            return;
         }
+        const index = event.pageIndex;
+        items.splice(index, 1);
+    }
+    onMount(() => {
+        console.log(`document_${document.id}`);
+        if (__ANDROID__) {
+            Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
+        }
+        documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         document.on('pagesAdded', onPagesAdded);
         // refresh();
     });
     onDestroy(() => {
         if (__ANDROID__) {
-            Application.android.off(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
+            Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        documentsService.off('documentPageDeleted', onDocumentPageDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
         document?.off('pagesAdded', onPagesAdded);
     });
@@ -263,7 +276,7 @@
         <collectionview bind:this={collectionView} row={1} {items} rowHeight={200}>
             <Template let:item>
                 <gridLayout borderRadius="4" margin="4" rippleColor={accentColor} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView item={item.page} />
+                    <RotableImageView item={item.page} sharedTransitionTag={`document_${document.id}_${item.page.id}`} />
                     <SelectedIndicator selected={item.selected} />
                 </gridLayout>
             </Template>

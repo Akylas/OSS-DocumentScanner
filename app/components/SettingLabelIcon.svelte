@@ -11,11 +11,11 @@
 </script>
 
 <gridLayout columns="16,*,auto,16" rippleColor={primaryColor} on:tap={(event) => dispatch('tap', event)} rows="12,auto,12">
-    <stackLayout row={1} col={1} verticalAlignment="center">
+    <stackLayout row={1} col={1} verticalAlignment="middle">
         <label fontSize="17" text={title} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
         <label visibility={!!subtitle ? 'visible' : 'collapsed'} fontSize="14" text={subtitle} verticalTextAlignment="top" color={$subtitleColor} maxLines={subtitleMaxLines} lineBreak="end" />
     </stackLayout>
-    <label row={1} col={2} visibility={!!icon ? 'visible' : 'collapsed'} fontFamily={mdiFontFamily} fontSize="24" textAlignment="right" color={$iconColor} text={icon} verticalAlignment="center" />
+    <label row={1} col={2} visibility={!!icon ? 'visible' : 'collapsed'} fontFamily={mdiFontFamily} fontSize="24" textAlignment="right" color={$iconColor} text={icon} verticalAlignment="middle" />
 
     <absoluteLayout row={2} col={1} colSpan="3" backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
 </gridLayout>

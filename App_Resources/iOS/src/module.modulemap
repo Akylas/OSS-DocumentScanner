@@ -1,0 +1,5 @@
+module CameraViewDemo {
+  umbrella header "Module.h"
+  export *
+  module * { export * }
+}

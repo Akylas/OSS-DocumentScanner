@@ -1,10 +1,11 @@
+import { request } from '@nativescript-community/perms';
 import { installMixins } from '@nativescript-community/sqlite/typeorm';
 import { Connection, createConnection } from '@nativescript-community/typeorm/browser';
 import { ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
 import { Folder, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
-import { Imgcodecs, Mat } from 'nativescript-opencv';
-import { OCRDocument, OCRImage, OCRPage, OCRRawImage } from '~/models/OCRDocument';
+import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+import { getColorMatrix } from '~/utils/ui';
 import { omit } from '~/utils/utils';
 
 export class DocumentsService extends Observable {
@@ -18,8 +19,9 @@ export class DocumentsService extends Observable {
         if (DEV_LOG) {
             console.log('DocumentsService start');
         }
-        this.dataFolder = knownFolders.documents().getFolder('data');
-        const filePath = path.join(knownFolders.documents().path, 'db.sqlite');
+        await request('storage');
+        this.dataFolder = knownFolders.externalDocuments().getFolder('data');
+        const filePath = path.join(knownFolders.externalDocuments().path, 'db.sqlite');
         // this.log('DBHandler', 'start', filePath);
         installMixins();
         // return Promise.resolve().then(() => {
@@ -27,7 +29,7 @@ export class DocumentsService extends Observable {
         this.connection = await createConnection({
             database: filePath,
             type: '@nativescript-community/sqlite' as any,
-            entities: [OCRPage, OCRImage, OCRRawImage, OCRDocument],
+            entities: [OCRPage, OCRDocument],
             logging: DEV_LOG,
             extra: {
                 threading: false,
@@ -44,6 +46,7 @@ export class DocumentsService extends Observable {
     }
     async deleteDocuments(docs: OCRDocument[]) {
         await OCRDocument.delete(docs.map((d) => d.id));
+        docs.forEach((doc) => doc.removeFromDisk());
         this.notify({ eventName: 'documentsDeleted', docs });
     }
     stop() {
@@ -59,17 +62,6 @@ export class DocumentsService extends Observable {
             this.connection = null;
         }
         // return Promise.resolve().then(() => this.connection.close());
-    }
-
-    saveImages(folder: Folder, images: ObservableArray<Mat>, prefix: string = '') {
-        for (let index = 0; index < images.length; index++) {
-            const mat = images.getItem(index);
-            this.saveImage(folder, mat, index, prefix);
-        }
-    }
-    saveImage(folder: Folder, mat: Mat, index: number, prefix: string = '') {
-        // console.log('imwrite', path.join(folder.path, `${prefix}_${index}.jpg`), mat);
-        Imgcodecs.imwrite(path.join(folder.path, `${prefix ? prefix + '_' : ''}${index}.jpg`), mat);
     }
 
     async saveDocument(doc: OCRDocument) {
@@ -116,7 +108,7 @@ export class DocumentsService extends Observable {
             const bitmapPaint: Paint = null;
             for (let index = 0; index < pages.length; index++) {
                 page = pages[index];
-                imagePath = await page.getImagePath();
+                imagePath = page.getImagePath();
                 let width = page.width;
                 let height = page.height;
                 if (page.rotation % 180 === 90) {
@@ -126,13 +118,13 @@ export class DocumentsService extends Observable {
                 const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width, height, index + 1).create();
                 const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = pdfpage.getCanvas();
-                const imageSource = ImageSource.fromFileSync(imagePath);
+                const imageSource = await ImageSource.fromFile(imagePath);
                 let bitmapPaint: Paint = null;
-                if (page.colorType !== 0) {
+                if (page.colorType || page.colorMatrix) {
                     if (!bitmapPaint) {
                         bitmapPaint = new Paint();
                     }
-                    bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix));
+                    bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
                 }
                 pageCanvas.translate(width / 2, height / 2);
                 pageCanvas.rotate(page.rotation, 0, 0);

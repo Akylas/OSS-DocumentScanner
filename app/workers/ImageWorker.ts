@@ -9,7 +9,7 @@ import { ImageSource } from '@nativescript/core';
 import { ColorType } from '~/models/OCRDocument';
 
 function nativeArray(array) {
-    if (global.isAndroid) {
+    if (__ANDROID__) {
         const nArray = Array.create(java.lang.Object, array.length);
         for (let index = 0; index < array.length; index++) {
             nArray[index] = array[index];
@@ -199,7 +199,7 @@ export default class ImageWorker extends BaseWorker {
                         nativeDataKeys
                     })
                 );
-                result.edgesImage.release();
+                result.edgesImage?.release();
                 result.resizedImage.release();
                 // if (!data.debug) {
                 if (releaseMat) {

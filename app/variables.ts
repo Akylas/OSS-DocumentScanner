@@ -1,6 +1,5 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
 import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
-import { ad } from '@nativescript/core/utils/utils';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
 import { get_current_component } from 'svelte/internal';
@@ -47,9 +46,10 @@ export const textColorDark = locals.textColorDark;
 export const textColorLight = locals.textColorLight;
 export const backgroundColor = new Color(locals.backgroundColor);
 export const mdiFontFamily: string = locals.mdiFontFamily;
-export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
-export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
+let innerStatusBarHeight = 20;
+export const statusBarHeight = writable(innerStatusBarHeight);
 export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);
+export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeight));
@@ -57,19 +57,21 @@ export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeigh
 export let globalMarginTop = 0;
 
 if (__ANDROID__) {
-    const resources = (ad.getApplicationContext() as android.content.Context).getResources();
+    const resources = (Utils.android.getApplicationContext() as android.content.Context).getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
-    const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
-    // wont work on emulator though!
+    let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
         navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
-        // navigationBarHeight/ = Utils.layout.toDeviceIndependentPixels(48);
     }
-    globalMarginTop = statusBarHeight;
+    resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
+    if (id > 0 && resourceId > 0) {
+        innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+        statusBarHeight.set(innerStatusBarHeight);
+    }
+    globalMarginTop = innerStatusBarHeight;
 } else {
     const onAppLaunch = function () {
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
-        console.log('navigationBarHeight', Application.ios.window.safeAreaInsets.bottomonBarHeight);
         Application.off(Application.launchEvent, onAppLaunch);
     };
     Application.on(Application.launchEvent, onAppLaunch);

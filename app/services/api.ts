@@ -1,7 +1,6 @@
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { CustomError } from '~/utils/error';
-import { clog } from '~/utils/logging';
 import * as https from '@nativescript-community/https';
 import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 
@@ -157,9 +156,6 @@ class NetworkService extends Observable {
             // this.notify({ eventName: 'connection', object: this, connectionType: value, connected: this.connected });
         }
     }
-    log(...args) {
-        clog(`[${this.constructor.name}]`, ...args);
-    }
     monitoring = false;
     start() {
         if (this.monitoring) {
@@ -289,7 +285,6 @@ export function request<T = any>(requestParams: HttpRequestOptions, retry = 0) {
     }
     requestParams.headers = getRequestHeaders(requestParams);
 
-    clog('request', requestParams);
     const requestStartTime = Date.now();
     return https.request(requestParams).then((response) => handleRequestResponse(response, requestParams, requestStartTime, retry));
 }

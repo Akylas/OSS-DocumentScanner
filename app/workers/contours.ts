@@ -196,7 +196,7 @@ export function find_page_contours(edges: cv2.Mat, img: cv2.Mat, data: ImageWork
         const c = sorted[index];
 
         const cnt = c.contour;
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             const floatPoint = new org.opencv.core.MatOfPoint2f();
             cnt.convertTo(floatPoint, cv2.CvType.CV_32F);
             const perimeter = cv2.Imgproc.arcLength(floatPoint, true);
@@ -895,13 +895,25 @@ export function findDocuments(image: cv2.Mat, data: ImageWorkerOptions) {
         edgesImage = new cv2.Mat();
     }
     resizedImage = resizeIfNeeded(image, data);
-    edges_det(resizedImage, edgesImage, data);
-    let contours = find_page_contours(edgesImage, resizedImage, data);
-    if (!contours) {
-        resizedImage = resizeIfNeeded(image, data);
-        edges_det(resizedImage, edgesImage, data);
-        contours = find_page_contours(edgesImage, resizedImage, data);
+
+    const contoursList = (com.akylas.documentscanner as any).ScanIntFunctionsKt.getPoints((resizedImage as any)._native);
+    const contours = [[]];
+    for (let i = 0; i < contoursList.size(); i++) {
+        const contourList = contoursList.get(i);
+        const contour = [];
+        for (let j = 0; j < contourList.size(); j++) {
+            const element = contourList.get(j);
+            contour.push([element.x, element.y]);
+        }
+        contours.push(contour);
     }
+    // edges_det(resizedImage, edgesImage, data);
+    // let contours = find_page_contours(edgesImage, resizedImage, data);
+    // if (!contours) {
+    //     resizedImage = resizeIfNeeded(image, data);
+    //     edges_det(resizedImage, edgesImage, data);
+    //     contours = find_page_contours(edgesImage, resizedImage, data);
+    // }
     if (!contours) {
         return null;
     }

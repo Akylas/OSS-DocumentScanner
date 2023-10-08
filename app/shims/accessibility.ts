@@ -4,3 +4,4 @@ export function getCurrentFontScale() {
 export function isAccessibilityServiceEnabled() {
     return false;
 }
+export function setupAccessibleView(view) {}

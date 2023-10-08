@@ -99,12 +99,12 @@ page {
     shape:round;
     width: $actionbar-button-height;
     height: $actionbar-button-height;
-    color: white;
+    color: black;
 
-    // .ns-dark &,
-    // .ns-black & {
-    //     color: white;
-    // }
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
 
     width: 44;
     height: 44;
@@ -118,16 +118,20 @@ page {
     // @extend .lato;
     font-size: 20;
     font-weight: 500;
-    color: white;
-    // .ns-dark &,
-    // .ns-black & {
-    //     color: white;
-    // }
+    color: black;
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
 }
 
 .actionBarSubtitle {
     font-size: 13;
-    color: rgba(255, 255, 255, 0.533);
+    color: rgba(0, 0, 0, 0.533);
+    .ns-dark &,
+    .ns-black & {
+        color: rgba(255, 255, 255, 0.533);
+    }
 }
 
 .icon-btn {

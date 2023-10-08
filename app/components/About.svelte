@@ -1,16 +1,14 @@
 <script lang="ts">
-    import { openUrl } from '@nativescript/core/utils/utils';
     import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
     import { share } from '~/utils/share';
-    import { mdiFontFamily, primaryColor } from '~/variables';
-    import * as EInfo from '@nativescript-community/extendedinfo';
     import { l } from '~/helpers/locale';
     import { openLink } from '~/utils/ui';
     import CActionBar from './CActionBar.svelte';
     import SettingLabelIcon from './SettingLabelIcon.svelte';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { openUrl } from '@nativescript/core/utils';
 
-    const appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
+    const appVersion = __APP_VERSION__ + '.' + __APP_ID__;
 
     function onTap(command) {
         switch (command) {
@@ -32,7 +30,7 @@
             case 'third_party':
                 showBottomSheet({
                     parent: this,
-                    view: ThirdPartySoftwareBottomSheet,
+                    view: ThirdPartySoftwareBottomSheet as any,
                     ignoreTopSafeArea: true,
                     trackingScrollView: 'trackingScrollView'
                 });
