@@ -2,11 +2,10 @@ import { request } from '@nativescript-community/perms';
 import { installMixins } from '@nativescript-community/sqlite/typeorm';
 import { Connection, createConnection } from '@nativescript-community/typeorm/browser';
 import { ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { Folder, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
+import { Folder, ImageSource, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/ui';
-import { omit } from '~/utils/utils';
 
 export class DocumentsService extends Observable {
     dataFolder: Folder;

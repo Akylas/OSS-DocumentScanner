@@ -5,7 +5,6 @@ const MIN_ALPHA = 0.5;
 @Interfaces([androidx.viewpager2.widget.ViewPager2.PageTransformer])
 export default class ZoomOutTransformer extends java.lang.Object {
     constructor() {
-        console.log('ZoomOutTransformer')
         super();
         return global.__native(this);
     }
