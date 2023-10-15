@@ -13,5 +13,5 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
-add_executable( scanner scanner.cpp src/DocumentDetector.cpp src/nQuantGpp/bitmapUtilities.cpp src/nQuantGpp/BlueNoise.cpp src/nQuantGpp/bitmapUtilities.cpp src/nQuantGpp/PnnQuantizer.cpp src/nQuantGpp/GilbertCurve.cpp src/nQuantGpp/CIELABConvertor.cpp )
+add_executable( scanner scanner.cpp src/DocumentDetector.cpp )
 target_link_libraries( scanner ${OpenCV_LIBS} )
