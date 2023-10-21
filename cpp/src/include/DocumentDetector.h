@@ -17,6 +17,7 @@ namespace detector {
 
         DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation);
         DocumentDetector(int resizeThreshold, int imageRotation);
+        DocumentDetector();
 
 
         virtual ~DocumentDetector();
@@ -26,9 +27,18 @@ namespace detector {
         cv::Mat resizeImage();
         cv::Mat image;
 
-    private:
+
+        float borderSize = 10.0f;
+        float cannySigmaX = 0.0f;
+        float cannyThreshold1 = 0.0f;
+        float cannyThreshold2 = 200.0f;
+        float morphologyAnchorSize = 5.0f;
+        float dilateAnchorSize = 3.0f;
         float resizeScale = 1.0f;
+        float gaussianBlur = 5.0f;
         int resizeThreshold = 500;
+
+    private:
         int imageRotation = 0;
         int areaScaleMinFactor = 6;
         double contoursApproxEpsilonFactor = 0.02;
