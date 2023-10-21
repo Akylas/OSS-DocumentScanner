@@ -2,12 +2,19 @@ import { GestureRootView } from '@nativescript-community/gesturehandler';
 import type { BottomSheetOptions } from '@nativescript-community/ui-material-bottomsheet';
 import { Frame, View } from '@nativescript/core';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
-import type { PageSpec } from 'svelte-native/dom/navigation';
+import { PageSpec } from 'svelte-native/dom/navigation';
 
-export interface ShowBottomSheetOptions extends Omit<BottomSheetOptions, 'view'> {
-    view: PageSpec;
+declare module '@nativescript/core/ui/core/view' {
+    interface View {
+        closeBottomSheet(...args: any): void;
+        showBottomSheet(options: BottomSheetOptions): View;
+    }
+}
+
+export interface SvelteShowBottomSheetOptions<U> extends Omit<BottomSheetOptions, 'view'> {
+    view: PageSpec<U>;
     parent?: NativeViewElementNode<View> | View;
-    props?: any;
+    props?: U;
 }
 interface ComponentInstanceInfo {
     element: NativeViewElementNode<View>;
@@ -16,24 +23,23 @@ interface ComponentInstanceInfo {
 
 const modalStack: ComponentInstanceInfo[] = [];
 
-export function resolveComponentElement(viewSpec: PageSpec, props?: any): ComponentInstanceInfo {
+export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: any): ComponentInstanceInfo {
     const dummy = createElement('fragment', window.document as any);
     const viewInstance = new viewSpec({ target: dummy, props });
     const element = dummy.firstElement() as NativeViewElementNode<View>;
     return { element, viewInstance };
 }
 
-export function showBottomSheet<T>(modalOptions: ShowBottomSheetOptions): Promise<T> {
+export function showBottomSheet<T, U = any>(modalOptions: SvelteShowBottomSheetOptions<U>): Promise<T> {
     const { view, parent, props = {}, ...options } = modalOptions;
     // Get this before any potential new frames are created by component below
     const modalLauncher: View = (parent && (parent instanceof View ? parent : parent.nativeView)) || Frame.topmost().currentPage;
 
     const componentInstanceInfo = resolveComponentElement(view, props);
     let modalView: View = componentInstanceInfo.element.nativeView;
-
     if (!(modalView instanceof GestureRootView)) {
         const gestureView = new GestureRootView();
-        gestureView.height = modalView.height;
+        gestureView['rows'] = 'auto';
         gestureView.addChild(modalView);
         modalView = gestureView;
     }
