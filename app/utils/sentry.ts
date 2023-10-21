@@ -15,7 +15,6 @@ export async function startSentry() {
                 release: `${__APP_ID__}@${__APP_VERSION__}+${__APP_BUILD_NUMBER__}`,
                 dist: `${__APP_BUILD_NUMBER__}.${__ANDROID__ ? 'android' : 'ios'}`
             });
-            // Sentry.setTag('locale', Device.language);
             install();
             isSentryEnabled = true;
         }
