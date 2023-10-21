@@ -7,10 +7,8 @@ export const fillAlphaProperty = new Property<CropView, number>({ name: 'fillAlp
 export class CropView extends View {
     createNativeView() {
         if (__ANDROID__) {
-            //@ts-ignore
             return new com.akylas.documentscanner.CropView(this._context);
         } else if (__IOS__) {
-            //@ts-ignore
             return NSCropView.alloc().init();
         }
         return null;

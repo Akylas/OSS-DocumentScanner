@@ -2,10 +2,10 @@
     "compilerOptions": {
         "target": "es2020",
         "module": "esnext",
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "node",
         "declaration": false,
         "removeComments": true,
-        "emitDecoratorMetadata": true,
+        "emitDecoratorMetadata": false,
         "experimentalDecorators": true,
         "sourceMap": true,
         "skipLibCheck": true,
@@ -21,10 +21,14 @@
         "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
         "lib": ["esnext", "es2017", "dom"],
-        "types": ["node", "svelte-native"],
+        "types": ["node", "svelte-native", "svelte"],
         "baseUrl": ".",
         "paths": {
-            "~/*": ["app/*"]
+            "~/*": ["app/*"],
+            "kiss-orm": ["node_modules/@akylas/kiss-orm"],
+            "kiss-orm/*": ["node_modules/@akylas/kiss-orm/*"],
+            "@nativescript/core": ["node_modules/@akylas/nativescript"],
+            "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"]
         }
     },
     "include": ["app/**/*", "typings/*.d.ts"],

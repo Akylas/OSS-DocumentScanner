@@ -2,6 +2,9 @@
 project.ext.abiCodes = ['armeabi':1, 'armeabi-v7a':2, 'arm64-v8a':3, 'x86':4, 'x86_64':5]
 def BUILD_TOOLS_PATH = "$rootDir/build-tools"
 
+apply plugin: "androidx.baselineprofile"
+apply plugin: "org.jetbrains.kotlin.android"
+
 android { 
   // we only enable split if specified as an arg or if in debug and abiFilters is used(through cli)
   def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
@@ -41,13 +44,13 @@ android {
           path "src/main/cpp/CMakeLists.txt"
       }
   }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
+  kotlin {
+        jvmToolchain(17)
   }
-  // kotlinOptions {
-  //   jvmTarget = JavaVersion.VERSION_11
-  // }
+  compileOptions {
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+  }
   lintOptions {
       // disable("LintError")
       checkReleaseBuilds false
@@ -82,11 +85,11 @@ android {
     release {
       // Enables code shrinking, obfuscation, and optimization for only
       // your project's release build type.
-      // minifyEnabled true
+      minifyEnabled true
 
       // Enables resource shrinking, which is performed by the
       // Android Gradle plugin.
-      // shrinkResources true
+      shrinkResources true
 
       // Disables PNG crunching for the release build type.
       crunchPngs false
@@ -95,10 +98,10 @@ android {
       // Includes the default ProGuard rules files that are packaged with
       // the Android Gradle plugin. To learn more, go to the section about
       // R8 configuration files.
-      // def absolutePathToAppResources = getAppResourcesPath()
-      // proguardFiles getDefaultProguardFile(
-      //   'proguard-android-optimize.txt'),
-      //   "$BUILD_TOOLS_PATH/proguard-rules.pro"
+      def absolutePathToAppResources = getAppResourcesPath()
+      proguardFiles getDefaultProguardFile(
+        'proguard-android-optimize.txt'),
+        "$BUILD_TOOLS_PATH/proguard-rules.pro"
 
       debuggable false
       jniDebuggable false
@@ -106,6 +109,13 @@ android {
     }
     debug {
       multiDexEnabled true;
+    }
+    benchmark {
+        initWith release
+        proguardFiles("../benchmark/benchmark-rules.pro")
+        signingConfig signingConfigs.debug
+        matchingFallbacks = ['release']
+        debuggable false
     }
   }  
   packagingOptions {
@@ -128,23 +138,23 @@ android {
   // }
 }
 
-// task createProguard {
-//     dependsOn 'buildMetadata'
-//     doLast {
-//         exec {
-//             workingDir "$USER_PROJECT_ROOT"
-//             commandLine 'node', 'scripts/createProguard.js'
-//         }
-//     }
-// }
-// tasks.whenTaskAdded({ DefaultTask currentTask ->
-//     if (currentTask =~ /buildMetadata/) {
-//         currentTask.finalizedBy(createProguard)
-//     }
-//     if (currentTask =~ /minify.*WithR8/) {
-//         currentTask.dependsOn(createProguard)
-//     }
-// })
+task createProguard {
+    dependsOn 'buildMetadata'
+    doLast {
+        exec {
+            workingDir "$USER_PROJECT_ROOT"
+            commandLine 'node', 'scripts/createProguard.js'
+        }
+    }
+}
+project.tasks.configureEach {
+    if (name =~ /buildMetadata/) {
+        it.finalizedBy(createProguard)
+    }
+    if (name =~ /minify(Debug|Release)WithR8/) {
+        it.dependsOn(createProguard)
+    }
+}
 
 android.applicationVariants.all { variant ->
     if (project.hasProperty('splitEnabled')) {
@@ -160,16 +170,19 @@ android.applicationVariants.all { variant ->
     }
 }
 dependencies {
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
+    def kotlinVersion = computeKotlinVersion()
     def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
     implementation "androidx.core:core-ktx:$androidxVersion"
-    implementation 'com.otaliastudios:cameraview:2.7.2'
-    implementation 'androidx.core:core-splashscreen:1.0.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
     constraints {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.10") {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
         }
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10") {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion") {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }
+    implementation "androidx.profileinstaller:profileinstaller:1.3.1"
+    baselineProfile project(':benchmark')
 }
