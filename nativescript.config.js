@@ -1,10 +1,11 @@
 module.exports = {
-    ignoredNativeDependencies: ['@nativescript-community/sentry', '@nativescript-community/https'],
+    ignoredNativeDependencies: ['@nativescript-community/sentry'],
     id: 'com.akylas.documentscanner',
     appResourcesPath: 'App_Resources',
     webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
     android: {
+        gradleVersion: '8.3',
         markingMode: 'none',
         codeCache: true,
         enableMultithreadedJavascript: false

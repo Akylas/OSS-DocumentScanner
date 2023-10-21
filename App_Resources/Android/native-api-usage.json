@@ -1,0 +1,52 @@
+{
+    "whitelist-plugins-usages": true,
+    "whitelist": [
+        "com.akylas.documentscanner:CropView",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback.Companion",
+        "androidx.appcompat.app:AppCompatDelegate",
+        "androidx.core.os:LocaleListCompat",
+        "android.graphics.pdf:PdfDocument",
+        "android.graphics.pdf:PdfDocument.PageInfo",
+        "android.graphics.pdf:PdfDocument.PageInfo.Builder",
+        "java.io:FileOutputStream",
+        "androidx.core.widget:NestedScrollView",
+        "android.text.format:DateFormat",
+        "android.graphics:BitmapShader"
+    ],
+    "blacklist": [
+        "org.ow2.asmdex*:*",
+        "org.nativescript.widgets:TabItemSpec*",
+        "org.nativescript.widgets:TabsBar*",
+        "org.nativescript.widgets:SegmentedBar*",
+        "org.nativescript.widgets:TabViewPager*",
+        "org.nativescript.widgets:TabLayout*",
+        "org.nativescript.widgets:BottomNavigationBar*",
+        "com.google.android.material.chip*:*",
+        "com.google.android.material.appbar*:*",
+        "com.google.android.material.floatingactionbutton*:*",
+        "com.google.android.material.bottomappbar*:*",
+        "com.google.android.material.internal*:*",
+        "com.google.android.material.transformation*:*",
+        "com.google.android.material.theme*:*",
+        "*:*BuildConfig",
+        "*:R.*",
+        "*:R",
+        "*:R$"
+    ],
+    "proguard_blacklist": [
+        "org.nativescript.widgets:TabItemSpec*",
+        "org.nativescript.widgets:TabsBar*",
+        "org.nativescript.widgets:SegmentedBar*",
+        "org.nativescript.widgets:TabViewPager*",
+        "org.nativescript.widgets:TabLayout*",
+        "org.nativescript.widgets:BottomNavigationBar*",
+        "com.google.android.material.chip*:*",
+        "com.google.android.material.appbar*:*",
+        "com.google.android.material.floatingactionbutton*:*",
+        "com.google.android.material.bottomappbar*:*",
+        "com.google.android.material.internal*:*",
+        "com.google.android.material.transformation*:*",
+        "com.google.android.material.theme*:*"
+    ]
+}

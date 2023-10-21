@@ -1,0 +1,17 @@
+
+repositories {
+    google()
+    mavenCentral()
+}
+// dependencies {
+//     classpath 'io.sentry:sentry-android-gradle-plugin:3.0.1'
+// }
+// sentry {
+//     includeProguardMapping = false
+//     autoUploadProguardMapping = false
+//     experimentalGuardsquareSupport = false
+//     uploadNativeSymbols = false
+//     tracingInstrumentation {
+//       enabled = false
+//     }
+// }

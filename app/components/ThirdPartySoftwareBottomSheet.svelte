@@ -2,8 +2,8 @@
     import { Template } from 'svelte-native/components';
     import { openLink } from '~/utils/ui';
     import { primaryColor } from '~/variables';
-    //@ts-ignore
-    import licences from '~/licenses.json';
+
+    const licences = require('~/licenses.json');
 
     const items = licences.dependencies;
 
@@ -14,11 +14,11 @@
     }
 </script>
 
-<collectionView id="trackingScrollView" {items} rowHeight="60" itemIdGenerator={(item, i) => i} class="bottomsheet" height="300">
+<collectionView id="trackingScrollView" class="bottomsheet" height="300" itemIdGenerator={(item, i) => i} {items} rowHeight="60">
     <Template let:item>
-        <stackLayout padding="0 16 0 16" rippleColor={primaryColor} on:tap={() => onTap(item)} verticalAlignment="middle">
-            <label text={item.moduleName} verticalAlignment="top" fontSize={17} maxLines={1} />
-            <label text={item.moduleUrl} color="#aaaaaa" verticalAlignment="bottom" fontSize={14} />
-        </stackLayout>
+        <stacklayout padding="0 16 0 16" rippleColor={primaryColor} verticalAlignment="middle" on:tap={() => onTap(item)}>
+            <label fontSize={17} maxLines={1} text={item.moduleName} verticalAlignment="top" />
+            <label color="#aaaaaa" fontSize={14} text={item.moduleUrl} verticalAlignment="bottom" />
+        </stacklayout>
     </Template>
 </collectionView>

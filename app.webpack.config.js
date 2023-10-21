@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
@@ -5,11 +6,11 @@ const { dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
+const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
@@ -31,13 +32,13 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                production: env.production !== false,
+                production: true,
                 sentry: true,
                 uploadSentry: true,
                 testlog: true,
                 noconsole: false,
                 sourceMap: true,
-                uglify: env.production !== false
+                uglify: true
             },
             env
         );
@@ -46,11 +47,12 @@ module.exports = (env, params = {}) => {
             {},
             {
                 production: true,
-                noconsole: true,
                 sentry: false,
                 uploadSentry: false,
+                noconsole: true,
                 apiKeys: true,
                 sourceMap: false,
+                testlog: false,
                 uglify: true
             },
             env
@@ -74,32 +76,45 @@ module.exports = (env, params = {}) => {
     const {
         appPath = nconfig.appPath,
         appResourcesPath = nconfig.appResourcesPath,
-        production,
-        sourceMap,
-        hiddenSourceMap,
-        inlineSourceMap,
-        sentry,
+        hmr, // --env.hmr
+        production, // --env.production
+        sourceMap, // --env.sourceMap
+        hiddenSourceMap, // --env.hiddenSourceMap
+        inlineSourceMap, // --env.inlineSourceMap
+        sentry, // --env.sentry
         uploadSentry,
-        uglify,
-        profile,
-        noconsole,
-        timeline,
-        cartoLicense = false,
-        devlog,
-        testlog,
-        fork = true,
-        startOnCam = false,
+        verbose, // --env.verbose
+        uglify, // --env.uglify
+        noconsole, // --env.noconsole
+        devlog, // --env.devlog
+        testlog, // --env.testlog
+        fakeall, // --env.fakeall
+        profile, // --env.profile
+        fork = true, // --env.fakeall
+        accessibility = false, // --env.adhoc
+        adhoc, // --env.adhoc
+        timeline, // --env.timeline
+        locale = 'auto', // --env.locale
+        theme = 'auto', // --env.theme
         keep_classnames_functionnames = false,
-        locale = 'auto',
-        theme = 'auto',
-        adhoc
+        startOnCam = false
     } = env;
     console.log('env', env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
+    const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus', 'illegal-attribute-character']);
 
     nsWebpack.chainWebpack((config, env) => {
+        config.module
+            .rule('svelte')
+            .use('svelte-loader')
+            .tap((options) => {
+                options.onwarn = function (warning, onwarn) {
+                    return ignoredSvelteWarnings.has(warning.code) || onwarn(warning);
+                };
+                return options;
+            });
         config.when(env.production, (config) => {
             config.module
                 .rule('svelte')
@@ -107,7 +122,7 @@ module.exports = (env, params = {}) => {
                 .loader('string-replace-loader')
                 .before('svelte-loader')
                 .options({
-                    search: 'createElementNS\\("https:\\/\\/svelte.dev\\/docs#template-syntax-svelte-options"',
+                    search: 'createElementNS\\("https:\\/\\/svelte.dev\\/docs\\/special-elements#svelte-options"',
                     replace: 'createElementNS(svN',
                     flags: 'gm'
                 })
@@ -139,12 +154,18 @@ module.exports = (env, params = {}) => {
         // config.stats = { preset: 'minimal', chunkModules: true, modules: true, usedExports: true };
     }
 
+    const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
+        .filter((s) => s.endsWith('.json'))
+        .map((s) => s.replace('.json', ''));
     config.externals.push('~/licenses.json');
     config.externals.push(function ({ context, request }, cb) {
         if (/i18n$/i.test(context)) {
-            return cb(null, './i18n/' + request.slice(2));
+            return cb(null, join('~/i18n/', request));
         }
         cb();
+    });
+    supportedLocales.forEach((l) => {
+        config.externals.push(`~/i18n/${l}.json`);
     });
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
@@ -155,6 +176,9 @@ module.exports = (env, params = {}) => {
             'tns-core-modules': `${coreModulesPackageName}`
         });
     }
+    Object.assign(config.resolve.alias, {
+        'kiss-orm': '@akylas/kiss-orm'
+    });
     let appVersion;
     let buildNumber;
     if (platform === 'android') {
@@ -169,55 +193,10 @@ module.exports = (env, params = {}) => {
         buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
     }
 
-    Object.assign(config.resolve.alias, {
-        '../driver/oracle/OracleDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './oracle/OracleDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/cockroachdb/CockroachDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './cockroachdb/CockroachDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/cordova/CordovaDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './cordova/CordovaDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './react-native/ReactNativeDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/react-native/ReactNativeDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './nativescript/NativescriptDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/nativescript/NativescriptDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './mysql/MysqlDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/mysql/MysqlDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './postgres/PostgresDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/postgres/PostgresDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './expo/ExpoDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './aurora-data-api/AuroraDataApiDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/aurora-data-api/AuroraDataApiDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './sqlite/SqliteDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/sqljs/SqljsDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './sqljs/SqljsDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/sqlserver/SqlServerDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './sqlserver/SqlServerDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './mongodb/MongoDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/mongodb/MongoDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './sap/SapDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/sap/SapDriver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        './better-sqlite3/BetterSqlite3Driver': '@nativescript-community/sqlite/typeorm/NativescriptDriver',
-        '../driver/better-sqlite3/BetterSqlite3Driver': '@nativescript-community/sqlite/typeorm/NativescriptDriver'
-    });
-
-    config.externalsPresets = { node: false };
-    config.resolve.fallback = config.resolve.fallback || {};
-    // config.resolve.fallback.buffer = require.resolve('buffer/');
-    config.resolve.fallback.buffer = false;
-    config.resolve.fallback.util = require.resolve('util/');
-    config.resolve.fallback.path = false;
-    config.resolve.fallback.fs = false;
-    config.resolve.fallback.assert = false;
-    config.resolve.fallback.tty = false;
-    config.resolve.fallback.os = false;
-
     const package = require('./package.json');
     const isIOS = platform === 'ios';
     const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
-    const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
-        .filter((s) => s.endsWith('.json'))
-        .map((s) => s.replace('.json', ''));
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
@@ -235,7 +214,6 @@ module.exports = (env, params = {}) => {
         __APP_ID__: `"${nconfig.id}"`,
         __APP_VERSION__: `"${appVersion}"`,
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
-        __CARTO_PACKAGESERVICE__: cartoLicense,
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
@@ -245,7 +223,7 @@ module.exports = (env, params = {}) => {
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
-        // SUPPORT_URL: `"${package.bugs.url}"`,
+        SUPPORT_URL: `"${package.bugs.url}"`,
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS
@@ -345,6 +323,14 @@ module.exports = (env, params = {}) => {
                     },
                     flags: 'g'
                 }
+            },
+            {
+                loader: 'string-replace-loader',
+                options: {
+                    search: '__PACKAGE__',
+                    replace: nconfig.id,
+                    flags: 'g'
+                }
             }
         ]
     });
@@ -402,7 +388,6 @@ module.exports = (env, params = {}) => {
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
             clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
-            // FormData: [require.resolve(coreModulesPackageName + '/polyfills/formdata'), 'FormData'],
             requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
@@ -421,13 +406,15 @@ module.exports = (env, params = {}) => {
         })
     );
     if (fork) {
-        config.plugins.push(
-            new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
-                if (resource.context.match(nativescriptReplace)) {
-                    resource.request = '~/shims/accessibility';
-                }
-            })
-        );
+        if (!accessibility) {
+            config.plugins.push(
+                new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
+                    if (resource.context.match(nativescriptReplace)) {
+                        resource.request = '~/shims/accessibility';
+                    }
+                })
+            );
+        }
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
                 if (resource.context.match(nativescriptReplace)) {
@@ -505,6 +492,7 @@ module.exports = (env, params = {}) => {
             }
         );
     }
+
     if (!!production) {
         config.plugins.push(
             new ForkTsCheckerWebpackPlugin({
@@ -523,15 +511,14 @@ module.exports = (env, params = {}) => {
                 })
             );
             config.plugins.push(
-                new sentryWebpackPlugin({
-                    release: {
-                        name: `${nconfig.id}@${appVersion}+${buildNumber}`,
-                        dist: `${buildNumber}.${platform}`
-                    },
-                    sourcemaps: {
-                        assets: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
-                        ignore: ['tns-java-classes', 'hot-update']
-                    }
+                new SentryCliPlugin({
+                    release: appVersion,
+                    urlPrefix: 'app:///',
+                    rewrite: true,
+                    release: `${nconfig.id}@${appVersion}+${buildNumber}`,
+                    dist: `${buildNumber}.${platform}`,
+                    ignoreFile: '.sentrycliignore',
+                    include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
                 })
             );
         } else {
@@ -540,17 +527,18 @@ module.exports = (env, params = {}) => {
     } else {
         config.devtool = false;
     }
-
-    config.experiments = {
-        topLevelAwait: true
-    };
-
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
     // config.resolve.fallback.timers = require.resolve('timers/');
     config.resolve.fallback.stream = false;
     config.resolve.fallback.timers = false;
-    // config.optimization.usedExports = true;
+    config.resolve.fallback.buffer = false;
+    config.resolve.fallback.util = require.resolve('util/');
+    config.resolve.fallback.path = false;
+    config.resolve.fallback.fs = false;
+    config.resolve.fallback.assert = false;
+    config.resolve.fallback.tty = false;
+    config.resolve.fallback.os = false;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     const actual_keep_classnames_functionnames = keep_classnames_functionnames || platform !== 'android';
@@ -559,7 +547,7 @@ module.exports = (env, params = {}) => {
         new TerserPlugin({
             parallel: true,
             terserOptions: {
-                ecma: isAndroid ? 2020 : 2020,
+                ecma: 2020,
                 module: true,
                 toplevel: false,
                 keep_classnames: actual_keep_classnames_functionnames,

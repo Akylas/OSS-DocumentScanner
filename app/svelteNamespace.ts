@@ -1,1 +1,1 @@
-exports = 'https://svelte.dev/docs#svelte_options';
+exports = 'https://svelte.dev/docs/special-elements#svelte-options';

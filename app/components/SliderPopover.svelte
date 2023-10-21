@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { widgetBackgroundColor } from '~/variables';
 </script>
 
@@ -20,16 +20,16 @@
     }
 </script>
 
-<gridLayout>
-    <gridLayout rows="auto,auto" columns="auto,*,auto" padding="0 10 0 10" borderRadius="4" {backgroundColor} margin="2" elevation="2">
+<gridlayout>
+    <gridlayout {backgroundColor} borderRadius="4" columns="auto,*,auto" elevation="2" margin="2" padding="0 10 0 10" rows="auto,auto">
         {#if icon}
-            <label class="icon-label" text={icon} marginTop="0" />
+            <label class="icon-label" marginTop="0" text={icon} />
         {/if}
         {#if title}
-            <label text={title} col={1} verticalTextAlignment="center" marginTop="0" />
+            <label col={1} marginTop="0" text={title} verticalTextAlignment="center" />
         {/if}
-        <label text={formatter(min)} row={1} verticalTextAlignment="center" textAlignment="center" />
-        <label text={formatter(max)} row={1} col={2} verticalTextAlignment="center" textAlignment="center" />
-        <slider row={1} col={1} {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} />
-    </gridLayout>
-</gridLayout>
+        <label row={1} text={formatter(min)} textAlignment="center" verticalTextAlignment="center" />
+        <label col={2} row={1} text={formatter(max)} textAlignment="center" verticalTextAlignment="center" />
+        <slider col={1} maxValue={max} minValue={min} row={1} stepSize={step} {value} on:valueChange={onValueChange} />
+    </gridlayout>
+</gridlayout>

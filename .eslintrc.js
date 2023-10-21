@@ -1,6 +1,7 @@
-const ignoreWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus']);
+const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character'];
 module.exports = {
-    extends: ['plugin:prettier/recommended'],
+    globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true, __ANDROID__: true, __IOS__: true, LatLonKeys: true, DEV_LOG: true },
+    extends: ['plugin:prettier/recommended', 'plugin:@typescript-eslint/recommended-type-checked', 'plugin:svelte/recommended'],
     env: {
         es6: true,
         node: true
@@ -9,32 +10,61 @@ module.exports = {
     parser: '@typescript-eslint/parser',
 
     parserOptions: {
-        ecmaVersion: 2019,
+        ecmaVersion: 2021,
         sourceType: 'module',
-        project: ['tsconfig.eslint.json'],
-        // extraFileExtensions: ['.svelte'],
-        warnOnUnsupportedTypeScriptVersion: false,
+        project: 'tsconfig.eslint.json',
+        extraFileExtensions: ['.svelte'],
         tsconfigRootDir: __dirname
     },
-    globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true },
-    plugins: ['prettier', 'svelte3', '@typescript-eslint'],
+    plugins: ['prettier', '@typescript-eslint'],
     overrides: [
-        { files: ['*.svelte'], processor: 'svelte3/svelte3' },
+        {
+            files: ['*.svelte'],
+            parser: 'svelte-eslint-parser',
+            parserOptions: {
+                sourceType: 'module',
+                ecmaVersion: 2021,
+                parser: '@typescript-eslint/parser'
+            },
+            rules: {
+                'no-undef': 'off',
+                'svelte/sort-attributes': 'warn',
+                'svelte/no-inner-declarations': 'off',
+                'svelte/valid-compile': [
+                    'error',
+                    {
+                        ignoreWarnings: true
+                    }
+                ]
+            }
+        },
         {
             files: '*.ts',
             rules: {
-                'eslint-plugin-svelte3/parse-error': 'off',
+                // 'eslint-plugin-svelte/parse-error': 'off',
                 'no-undef': 'off'
             }
         }
     ],
     settings: {
-        'svelte3/ignore-warnings': (w) => ignoreWarnings.has(w && w.code),
-        'svelte3/typescript': true // load TypeScript as peer dependency
+        svelte: {
+            ignoreWarnings
+        }
     },
     rules: {
-        'prettier/prettier': 'warn',
-        'eslint-plugin-svelte3/invalid-binding': 'off',
+        'svelte/no-inner-declarations': 'off',
+        'prettier/prettier': [
+            'warn',
+            {
+                // parser: 'typescript'
+            }
+        ],
+        '@typescript-eslint/unbound-method': 'off',
+        'no-duplicate-imports': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/adjacent-overload-signatures': 'off',
         '@typescript-eslint/array-type': 'error',
         '@typescript-eslint/await-thenable': 'error',
@@ -48,7 +78,12 @@ module.exports = {
                 accessibility: 'explicit'
             }
         ],
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
         '@typescript-eslint/indent': 'off',
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/ban-ts-comment': 'warn',
         '@typescript-eslint/interface-name-prefix': 'off',
         '@typescript-eslint/member-delimiter-style': 'error',
         '@typescript-eslint/member-ordering': 'off',
@@ -146,7 +181,6 @@ module.exports = {
         'no-constant-condition': 'error',
         'no-control-regex': 'off',
         'no-debugger': 'error',
-        'no-duplicate-imports': 'error',
         'no-empty': 'off',
         'no-eval': 'off',
         'no-extra-semi': 'off',

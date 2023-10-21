@@ -4,20 +4,20 @@
 </script>
 
 <label
-    rowSpan={2}
     class="mdi"
     backgroundColor={primaryColor}
-    color="white"
-    text="mdi-check"
-    fontSize={16}
-    width={20}
-    height={20}
     borderRadius={10}
-    textAlignment="center"
-    verticalTextAlignment="center"
-    verticalAlignment="top"
+    color="white"
+    fontSize={16}
+    height={20}
     horizontalAlignment="right"
     margin={10}
+    rowSpan={2}
+    text="mdi-check"
+    textAlignment="center"
+    verticalAlignment="top"
+    verticalTextAlignment="center"
     visibility={selected ? 'visible' : 'hidden'}
+    width={20}
     {...$$restProps}
 />

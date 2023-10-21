@@ -18,14 +18,14 @@
 
 <gridlayout rippleColor={primaryColor} on:tap={(event) => dispatch('tap', event)}>
     <canvaslabel padding="16" on:draw={onDraw}>
-        <symbolshape visibility={showSymbol ? 'visible' : 'hidden'} {symbol} color={symbolColor} width="34" height="34" verticalAligment="middle" />
-        <cgroup verticalAlignment="middle" paddingBottom={subtitle ? 10 : 0}>
-            <cspan visibility={leftIcon ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={leftIcon} fontFamily={leftIconFonFamily} fontSize="24" />
+        <symbolshape color={symbolColor} height="34" {symbol} verticalAligment="middle" visibility={showSymbol ? 'visible' : 'hidden'} width="34" />
+        <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
+            <cspan fontFamily={leftIconFonFamily} fontSize="24" paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width="40" />
         </cgroup>
-        <cgroup paddingLeft={(leftIcon ? 40 : 0) + extraPaddingLeft} verticalAlignment="middle" textAlignment="left">
-            <cspan text={title} fontWeight="bold" fontSize="16" />
-            <cspan text={subtitle ? '\n' + subtitle : ''} color={$subtitleColor} fontSize="13" />
+        <cgroup paddingLeft={(leftIcon ? 40 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
+            <cspan fontSize="16" fontWeight="bold" text={title} />
+            <cspan color={$subtitleColor} fontSize="13" text={subtitle ? '\n' + subtitle : ''} />
         </cgroup>
-        <line visibility={showBottomLine ? 'visible' : 'hidden'} height="1" color={$borderColor} strokeWidth="1" startX="0" verticalAlignment="bottom" startY="0" stopX="100%" stopY="0" />
+        <line color={$borderColor} height="1" startX="0" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" visibility={showBottomLine ? 'visible' : 'hidden'} />
     </canvaslabel>
 </gridlayout>

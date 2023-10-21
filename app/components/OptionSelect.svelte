@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     export interface OptionType {
         name: string;
         isPick?: boolean;
@@ -44,7 +44,7 @@
     }
 </script>
 
-<collectionView row={1} items={options} {height} rowHeight="72">
+<collectionView {height} items={options} row={1} rowHeight="72">
     <Template let:item>
         <ListItem title={item.name} on:tap={(event) => onTap(item, event)} />
     </Template>

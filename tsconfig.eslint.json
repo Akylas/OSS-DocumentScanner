@@ -1,10 +1,4 @@
 {
     "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "preserveValueImports": true,
-        "isolatedModules": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true
-    },
-    "include": [".*.js", "*.js", "**/*.ts"]
+    "include": [".*.js", "*.js", "*.mjs", "app/**/*.ts", "app/**/*.svelte", "typings/*.d.ts"]
 }

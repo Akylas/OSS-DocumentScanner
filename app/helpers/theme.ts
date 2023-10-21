@@ -1,12 +1,10 @@
-import { getString, setString } from '@nativescript/core/application-settings';
-import { iOSNativeHelper } from '@nativescript/core/utils';
 import Theme from '@nativescript-community/css-theme';
-import { Application, ApplicationSettings } from '@nativescript/core';
+import { Application } from '@nativescript/core';
+import { getString, setString } from '@nativescript/core/application-settings';
+import { SDK_VERSION } from '@nativescript/core/utils';
+import { writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { lc } from '@nativescript-community/l';
-import { writable } from 'svelte/store';
 
 export type Themes = 'auto' | 'light' | 'dark';
 
@@ -65,8 +63,7 @@ export function applyTheme(theme: Themes) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
             } else {
                 if (Application.ios.window) {
-                    //@ts-ignore
-                    (Application.ios.window as UIWindow).overrideUserInterfaceStyle = UIUserInterfaceStyle.Unspecified;
+                    Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Unspecified;
                 }
             }
             break;
@@ -76,8 +73,7 @@ export function applyTheme(theme: Themes) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             } else {
                 if (Application.ios.window) {
-                    //@ts-ignore
-                    (Application.ios.window as UIWindow).overrideUserInterfaceStyle = UIUserInterfaceStyle.Light;
+                    Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Light;
                 }
             }
             break;
@@ -87,8 +83,7 @@ export function applyTheme(theme: Themes) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
                 if (Application.ios.window) {
-                    //@ts-ignore
-                    (Application.ios.window as UIWindow).overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
+                    Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
                 }
             }
             break;
@@ -109,14 +104,14 @@ export function start() {
         return;
     }
     started = true;
-    if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
+    if (__IOS__ && SDK_VERSION < 13) {
         theme = 'light';
     } else {
         theme = getString('theme', DEFAULT_THEME) as Themes;
     }
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
-        if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
+        if (__IOS__ && SDK_VERSION < 13) {
             newTheme = 'light';
         }
         // on pref change we are updating
