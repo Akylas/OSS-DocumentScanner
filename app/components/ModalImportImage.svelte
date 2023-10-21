@@ -8,7 +8,6 @@
     let page: NativeViewElementNode<Page>;
     export let editingImage;
     export let quads;
-    console.log('quads2', quads)
 
     function onTapFinish() {
         closeModal(quads);
@@ -17,8 +16,8 @@
 
 <page bind:this={page} actionBarHidden={true}>
     <gridlayout rows="auto,*,auto">
-        <CActionBar title={null} backgroundColor="transparent" modalWindow={true} />
-        <CropView rowSpan={3} {editingImage} bind:quads />
-        <mdbutton row={2} class="floating-btn" margin="0" rippleColor="white" elevation={0} variant="text" horizontalAlignment="center" text="mdi-check" on:tap={onTapFinish} />
+        <CropView {editingImage} rowSpan={3} bind:quads />
+        <mdbutton class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onTapFinish} />
+        <CActionBar clazz="ns-dark" modalWindow={true} title={null} />
     </gridlayout>
 </page>

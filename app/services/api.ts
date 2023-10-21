@@ -1,10 +1,10 @@
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { CustomError } from '~/utils/error';
+import { CustomError, HTTPError, NoNetworkError } from '~/utils/error';
 import * as https from '@nativescript-community/https';
-import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+import { Application, ApplicationEventData } from '@nativescript/core';
 
-type HTTPSOptions = https.HttpsRequestOptions;
+export type HTTPSOptions = https.HttpsRequestOptions;
 
 export const NetworkConnectionStateEvent = 'connected';
 export interface NetworkConnectionStateEventData extends EventData {
@@ -74,53 +74,6 @@ export function queryString(params, location) {
     return parts.splice(0, 2).join('?') + (parts.length > 0 ? '&' + parts.join('&') : '');
 }
 
-export class TimeoutError extends CustomError {
-    constructor(props?) {
-        super(
-            Object.assign(
-                {
-                    message: 'timeout_error'
-                },
-                props
-            ),
-            'TimeoutError'
-        );
-    }
-}
-
-export class NoNetworkError extends CustomError {
-    constructor(props?) {
-        super(
-            Object.assign(
-                {
-                    message: 'no_network'
-                },
-                props
-            ),
-            'NoNetworkError'
-        );
-    }
-}
-export interface HTTPErrorProps {
-    statusCode: number;
-    message: string;
-    requestParams: HTTPSOptions;
-}
-export class HTTPError extends CustomError {
-    statusCode: number;
-    requestParams: HTTPSOptions;
-    constructor(props: HTTPErrorProps | HTTPError) {
-        super(
-            Object.assign(
-                {
-                    message: 'httpError'
-                },
-                props
-            ),
-            'HTTPError'
-        );
-    }
-}
 
 interface NetworkService {
     // on(eventNames: 'connected', callback: (data: NetworkConnectionStateEventData) => void, thisArg?: any);
@@ -162,7 +115,7 @@ class NetworkService extends Observable {
             return;
         }
         this.monitoring = true;
-        applicationOn(resumeEvent, this.onAppResume, this);
+        Application.on(Application.resumeEvent, this.onAppResume, this);
         startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = getConnectionType();
     }
@@ -170,7 +123,7 @@ class NetworkService extends Observable {
         if (!this.monitoring) {
             return;
         }
-        applicationOff(resumeEvent, this.onAppResume, this);
+        Application.off(Application.resumeEvent, this.onAppResume, this);
         this.monitoring = false;
         stopMonitoring();
     }

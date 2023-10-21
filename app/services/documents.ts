@@ -1,101 +1,334 @@
 import { request } from '@nativescript-community/perms';
-import { installMixins } from '@nativescript-community/sqlite/typeorm';
-import { Connection, createConnection } from '@nativescript-community/typeorm/browser';
 import { ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
 import { Folder, ImageSource, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
-import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
+import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/ui';
+import NSQLDatabase from './NSQLDatabase';
+const sql = SqlQuery.createFromTemplateString;
+
+export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
+    constructor(data) {
+        super(data);
+    }
+    static migrations = {
+        // addGroupName: sql`ALTER TABLE Groups ADD COLUMN name TEXT`,
+        // addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
+    };
+    async applyMigrations() {
+        const migrations = this.constructor.prototype.migrations;
+        if (!migrations) {
+            return;
+        }
+        const migrationKeys = Object.keys(migrations);
+        for (let index = 0; index < migrationKeys.length; index++) {
+            const key = migrationKeys[index];
+            try {
+                await this.database.migrate({
+                    [key]: migrations[key]
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+}
+
+export class TagRepository extends BaseRepository<Tag, Tag> {
+    constructor(database: NSQLDatabase) {
+        super({
+            database,
+            table: 'Tag',
+            primaryKey: 'id',
+            model: Tag
+        });
+    }
+
+    async createTables() {
+        await this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "Tag" (
+            id BIGINT PRIMARY KEY NOT NULL,
+            name TEXT NOT NULL
+        );
+        `);
+        return this.applyMigrations();
+    }
+}
+export class PageRepository extends BaseRepository<OCRPage, Page> {
+    constructor(database: NSQLDatabase) {
+        super({
+            database,
+            table: 'Page',
+            primaryKey: 'id',
+            model: OCRPage
+        });
+    }
+
+    async createTables() {
+        await this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "Page" (
+            id TEXT PRIMARY KEY NOT NULL,
+            createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+            modifiedDate BIGINT,
+            pageIndex INTEGER NOT NULL,
+            colorType TEXT,
+            colorMatrix TEXT,
+            rotation INTEGER DEFAULT 0,
+            scale INTEGER DEFAULT 1,
+            crop TEXT,
+            width INTEGER NOT NULL,
+            height INTEGER NOT NULL,
+            sourceImagePath TEXT NOT NULL,
+            imagePath TEXT NOT NULL,
+            transformedImagePath TEXT,
+            document_id TEXT,
+            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        `);
+        return this.applyMigrations();
+    }
+
+    async createPage(page: OCRPage) {
+        return this.create({
+            id: page.id,
+            createdDate: Date.now(),
+            document_id: page.document_id,
+            pageIndex: page.pageIndex,
+            width: page.width,
+            height: page.height,
+            rotation: page.rotation ?? 0,
+            scale: page.scale ?? 1,
+            imagePath: page.imagePath,
+            colorType: page.colorType,
+            sourceImagePath: page.sourceImagePath,
+            transformedImagePath: page.transformedImagePath,
+            crop: page._crop || (JSON.stringify(page.crop) as any),
+            colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any)
+        });
+    }
+    async update(page: OCRPage, data?: Partial<OCRPage>) {
+        if (!data) {
+            const toUpdate = {
+                modifiedDate: Date.now()
+            };
+            await this.update(page, toUpdate);
+            return page;
+        }
+        data.modifiedDate = Date.now();
+        const toSave: Partial<Document> = {};
+        const toUpdate: any = {};
+        Object.keys(data).forEach((k) => {
+            const value = data[k];
+            toSave[k] = value;
+            if (typeof value === 'object' || Array.isArray(value)) {
+                toUpdate[k] = JSON.stringify(value);
+            } else {
+                toUpdate[k] = value;
+            }
+        });
+
+        console.log('OCRPage update', page, toUpdate, toSave);
+        await super.update(page, toUpdate);
+        console.log('OCRPage update done', toUpdate, toSave);
+        Object.assign(page, toSave);
+        return page;
+    }
+    async createModelFromAttributes(attributes: Required<any> | OCRPage): Promise<OCRPage> {
+        const { id, document_id, ...other } = attributes;
+        const model = new OCRPage(id, document_id);
+        Object.assign(model, {
+            ...other,
+            _crop: other.crop,
+            crop: other.crop ? JSON.parse(other.crop) : other.crop,
+            _colorMatrix: other.colorMatrix,
+            colorMatrix: other.colorMatrix ? JSON.parse(other.colorMatrix) : undefined
+        });
+        return model;
+    }
+}
+
+export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
+    constructor(
+        database: NSQLDatabase,
+        public pagesRepository: PageRepository,
+        public tagsRepository: TagRepository
+    ) {
+        super({
+            database,
+            table: 'Document',
+            primaryKey: 'id',
+            model: OCRDocument
+        });
+    }
+
+    async createTables() {
+        return Promise.all([
+            this.database.query(sql`
+            CREATE TABLE IF NOT EXISTS "Document" (
+                id TEXT PRIMARY KEY NOT NULL,
+                createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+                modifiedDate BIGINT,
+                name TEXT
+            );
+        `),
+            this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "DocumentsTags" (
+            document_id TEXT,
+            tag_id TEXT,
+            PRIMARY KEY(document_id, tag_id),
+            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE,
+            FOREIGN KEY(tag_id) REFERENCES Tag(id) ON DELETE CASCADE
+        );
+    `)
+        ]);
+    }
+
+    async createDocument(document: Document) {
+        document.createdDate = Date.now();
+        return this.create(document);
+    }
+
+    async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
+        const tags = await this.tagsRepository.search({
+            where: sql`
+            "id" IN (
+                SELECT "tag_id"
+                FROM "DocumentsTags"
+                WHERE "document_id" = ${document.id}
+            )
+        `
+        });
+        document.tags = tags.map((g) => g.id);
+        return document;
+    }
+
+    async update(document: OCRDocument, data?: Partial<OCRDocument>) {
+        if (!data) {
+            const toUpdate = {
+                modifiedDate: Date.now()
+            };
+            await this.update(document, toUpdate);
+            return document;
+        }
+        data.modifiedDate = Date.now();
+        const toSave: Partial<Document> = {};
+        const toUpdate: any = {};
+        Object.keys(data).forEach((k) => {
+            const value = data[k];
+            toSave[k] = value;
+            if (typeof value === 'object' || Array.isArray(value)) {
+                toUpdate[k] = JSON.stringify(value);
+            } else {
+                toUpdate[k] = value;
+            }
+        });
+
+        await super.update(document, toUpdate);
+        Object.assign(document, toSave);
+        return document;
+    }
+    async addTag(document: OCRDocument, tagId: string) {
+        try {
+            let tag;
+            try {
+                tag = await this.tagsRepository.get(tagId);
+            } catch (error) {}
+            // console.log('addGroupToItem', group);
+            if (!tag) {
+                tag = await this.tagsRepository.create({ id: tagId, name: tagId });
+            }
+            const relation = await this.database.query(sql` SELECT * FROM DocumentsTags WHERE "document_id" = ${document.id} AND "tag_id" = ${tagId}`);
+            if (relation.length === 0) {
+                await this.database.query(sql` INSERT INTO DocumentsTags ( document_id, tag_id ) VALUES(${document.id}, ${tagId})`);
+            }
+            document.tags = document.tags || [];
+            document.tags.push(tagId);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async getPages(document: OCRDocument) {
+        return this.pagesRepository.search({ where: sql`document_id = ${document.id}`, orderBy: sql`pageIndex ASC` });
+    }
+
+    async getItem(itemId: string) {
+        const element = await this.get(itemId);
+        return element;
+    }
+    async search(args: { postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
+        const result = await super.search({ ...args /* , postfix: sql`d LEFT JOIN PAGE p on p.document_id = d.id` */ });
+        for (let index = 0; index < result.length; index++) {
+            const doc = result[index];
+            doc.pages = (await this.getPages(doc)) as any;
+        }
+        return result;
+    }
+
+    async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<OCRDocument> {
+        const model = new OCRDocument(attributes.id);
+        Object.assign(model, {
+            ...attributes
+        });
+        return model;
+    }
+}
 
 export class DocumentsService extends Observable {
     dataFolder: Folder;
-    connection: Connection;
+    // connection: Connection;
     started = false;
+    db: NSQLDatabase;
+    pageRepository: PageRepository;
+    tagRepository: TagRepository;
+    documentRepository: DocumentRepository;
     async start() {
         if (this.started) {
             return;
         }
-        if (DEV_LOG) {
-            console.log('DocumentsService start');
-        }
+        DEV_LOG && console.log('DocumentsService start');
         await request('storage');
         this.dataFolder = knownFolders.externalDocuments().getFolder('data');
         const filePath = path.join(knownFolders.externalDocuments().path, 'db.sqlite');
-        // this.log('DBHandler', 'start', filePath);
-        installMixins();
-        // return Promise.resolve().then(() => {
+        DEV_LOG && console.log('DocumentsService', 'start', filePath);
 
-        this.connection = await createConnection({
-            database: filePath,
-            type: '@nativescript-community/sqlite' as any,
-            entities: [OCRPage, OCRDocument],
-            logging: DEV_LOG,
-            extra: {
-                threading: false,
-                transformBlobs: false
-            }
-        });
-        if (DEV_LOG) {
-            console.log('Connection Created');
-        }
+        this.db = new NSQLDatabase(filePath, {
+            // for now it breaks
+            // threading: true,
+            transformBlobs: false
+        } as any);
+        this.pageRepository = new PageRepository(this.db);
+        this.tagRepository = new TagRepository(this.db);
+        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository);
+        await this.documentRepository.createTables();
+        await this.pageRepository.createTables();
+        await this.tagRepository.createTables();
 
-        await this.connection.synchronize(false);
         this.notify({ eventName: 'started' });
         this.started = true;
     }
     async deleteDocuments(docs: OCRDocument[]) {
-        await OCRDocument.delete(docs.map((d) => d.id));
+        // await this.documentRepository.delete(model);
+        await Promise.all(docs.map((d) => this.documentRepository.delete(d)));
+        // await OCRDocument.delete(docs.map((d) => d.id));
         docs.forEach((doc) => doc.removeFromDisk());
         this.notify({ eventName: 'documentsDeleted', docs });
     }
     stop() {
-        if (DEV_LOG) {
-            console.log('DocumentsService stop');
-        }
+        DEV_LOG && console.log('DocumentsService stop');
         if (!this.started) {
             return;
         }
         this.started = false;
-        if (this.connection) {
-            this.connection.close();
-            this.connection = null;
-        }
-        // return Promise.resolve().then(() => this.connection.close());
+        this.db && this.db.disconnect();
     }
 
     async saveDocument(doc: OCRDocument) {
-        doc.save();
+        this.documentRepository.update(doc);
+        // doc.save();
     }
-    // async getDocuments() {
-    //     const result: OCRDocument[] = [];
-    //     const folders = await this.dataFolder.getEntities();
-    //     console.log('getDocuments', folders);
-    //     for (const f of folders) {
-    //         const docFolder = this.dataFolder.getFolder(f.name);
-    //         const folderEntities = await docFolder.getEntities();
-    //         console.log('folderEntities', docFolder, folderEntities);
-    //         const doc = new OCRDocument();
-    //         const jsonData = JSON.parse(await docFolder.getFile('config.json').readText());
-    //         console.log('jsonData', JSON.stringify(jsonData));
-    //         doc.id = jsonData.id;
-    //         doc.name = jsonData.name;
-    //         doc.pages = new ObservableArray(
-    //             jsonData.imagesConfig.map((c, index) => {
-    //                 const mat = Imgcodecs.imread(docFolder.getFile(`${index}.jpg`).path);
-    //                 return {
-    //                     config: c,
-    //                     mat,
-    //                     image: new ImageSource(imageFromMat(mat)),
-    //                 };
-    //             })
-    //         );
-
-    //         if (doc.id) {
-    //             result.push(doc);
-    //         }
-    //     }
-    //     return result;
-    // }
 
     async exportPDF(document: OCRDocument) {
         const start = Date.now();
@@ -104,7 +337,6 @@ export class DocumentsService extends Observable {
             const pages = document.pages;
             let page: OCRPage;
             let imagePath: string;
-            const bitmapPaint: Paint = null;
             for (let index = 0; index < pages.length; index++) {
                 page = pages[index];
                 imagePath = page.getImagePath();
@@ -114,7 +346,9 @@ export class DocumentsService extends Observable {
                     width = page.height;
                     height = page.width;
                 }
-                const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width, height, index + 1).create();
+                width *= page.scale;
+                height *= page.scale;
+                const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
                 const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = pdfpage.getCanvas();
                 const imageSource = await ImageSource.fromFile(imagePath);
@@ -127,6 +361,7 @@ export class DocumentsService extends Observable {
                 }
                 pageCanvas.translate(width / 2, height / 2);
                 pageCanvas.rotate(page.rotation, 0, 0);
+                pageCanvas.scale(page.scale, page.scale, 0, 0);
                 pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
                 imageSource.android.recycle();
                 pdfDocument.finishPage(pdfpage);
@@ -136,7 +371,7 @@ export class DocumentsService extends Observable {
             const fos = new java.io.FileOutputStream(newFile);
             pdfDocument.writeTo(fos);
             pdfDocument.close();
-            console.log('pdfFile', Date.now() - start, 'ms');
+            DEV_LOG && console.log('pdfFile', Date.now() - start, 'ms');
             return pdfFile;
         }
     }

@@ -15,15 +15,16 @@
     let SVImageView: NativeViewElementNode<Img>;
     // $: item && rotateToRotation(item.newRotation);
     export async function rotateToRotation(newRotation, animated = false) {
+        console.log('rotateToRotation', newRotation, item.rotation, animated, !!item);
         if (!item || newRotation === undefined) {
             return;
         }
         try {
+            const imageView = SVImageView?.nativeElement;
             // console.log('rotateToRotation', item.rotation, newRotation, animated)
-            if (newRotation == item.rotation || !SVImageView) {
+            if (newRotation === item.rotation || !imageView) {
                 return;
             }
-            const imageView = SVImageView.nativeElement;
             if (animated) {
                 await imageView.animate({
                     duration: 200,
@@ -46,21 +47,19 @@
     <zoomimage
         {...$$restProps}
         bind:this={SVImageView}
-        src={item.image || item.getImagePath?.()}
-        {stretch}
         colorMatrix={getItemColorMatrix(item)}
         imageRotation={item.rotation}
-        on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)}
         maxZoom={10}
-    />
+        src={item.image || item.getImagePath?.()}
+        {stretch}
+        on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)} />
 {:else}
     <image
         {...$$restProps}
         bind:this={SVImageView}
-        src={item.image || item.getImagePath?.()}
-        {stretch}
         colorMatrix={getItemColorMatrix(item)}
         imageRotation={item.rotation}
-        on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)}
-    />
+        src={item.image || item.getImagePath?.()}
+        {stretch}
+        on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)} />
 {/if}

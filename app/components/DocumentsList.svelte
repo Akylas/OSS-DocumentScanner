@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { DocumentScanner } from '@nativescript-community/document-scanner';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
@@ -20,7 +19,8 @@
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { importAndScanImage, timeout } from '~/utils/ui';
-    import { accentColor, backgroundColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { accentColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 
     interface Item {
         doc: OCRDocument;
@@ -33,15 +33,17 @@
     // }> = null;
 
     async function refresh() {
-        // console.log('pages0', r.map((d) => d.pages));
         try {
-            const r = await OCRDocument.find({
-                order: {
-                    id: 'DESC'
-                },
-                take: 50
+            const r = await documentsService.documentRepository.search({
+                orderBy: SqlQuery.createFromTemplateString`id DESC`
+                // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
             });
-
+            // const r = await OCRDocument.find({
+            //     order: {
+            //         id: 'DESC'
+            //     },
+            //     take: 50
+            // });
             documents = new ObservableArray(
                 r.map((doc) => ({
                     doc,
@@ -55,6 +57,7 @@
         }
     }
     function onDocumentAdded(event: EventData & { doc }) {
+        console.log('onDocumentAdded', event.doc);
         documents.unshift({
             doc: event.doc,
             selected: false
@@ -102,7 +105,7 @@
         documentsService.off('documentsDeleted', onDocumentsDeleted);
     });
 
-    let showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
+    const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
 
     async function onStartCam() {
         try {
@@ -116,7 +119,7 @@
                     page: PDFView as any,
                     transition: SharedTransition.custom(new PageTransition(300)),
                     props: {
-                        document: document
+                        document
                     }
                 });
             }
@@ -160,7 +163,7 @@
             }
             await timeout(10);
             const component = (await import('~/components/PDFEdit.svelte')).default;
-            await navigate({
+            navigate({
                 page: component as any,
                 props: {
                     document: doc
@@ -240,7 +243,7 @@
                 onItemLongPress(item);
             } else {
                 const component = (await import('~/components/PDFView.svelte')).default;
-                await navigate({
+                navigate({
                     page: component as any,
                     transition: SharedTransition.custom(new PageTransition(300)),
                     props: {
@@ -317,39 +320,39 @@
     }
 </script>
 
-<page actionBarHidden={true} on:navigatedTo={onNavigatedTo} bind:this={page}>
+<page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
-        <CActionBar title={nbSelected ? l('selected', nbSelected) : l('documents')} onGoBack={nbSelected ? unselectAll : null} forceCanGoBack={nbSelected > 0}>
-            <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteSelectedDocuments} visibility={nbSelected ? 'visible' : 'hidden'} />
-            <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} />
+        <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? l('selected', nbSelected) : l('documents')}>
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" visibility={nbSelected ? 'visible' : 'hidden'} on:tap={deleteSelectedDocuments} />
+            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
         </CActionBar>
-        <collectionView row={1} items={documents} colWidth="50%" rowHeight="180">
+        <collectionView colWidth="50%" items={documents} row={1} rowHeight="180">
             <Template let:item>
-                <gridLayout
-                    rows="*,auto"
+                <gridlayout
+                    backgroundColor={$widgetBackgroundColor}
                     borderRadius="4"
-                    margin="8"
                     clipToBounds={true}
+                    elevation="2"
+                    margin="8"
                     rippleColor={accentColor}
+                    rows="*,auto"
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
-                    elevation="2"
-                    backgroundColor={$widgetBackgroundColor}
                     >/
                     <RotableImageView item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} />
-                    <canvaslabel row={1} padding="10" height={60} color={$textColor}>
-                        <cspan text={item.doc.name} fontSize={12} />
-                        <!-- <cspan text={dayjs(item.doc.createdDate).format('L LT')} paddingTop={16} fontSize={10} color={$subtitleColor} /> -->
-                        <cspan text={lc('nb_pages', item.doc.pages.length)} paddingTop={29} fontSize={10} color={$subtitleColor} />
+                    <canvaslabel color={$textColor} height={60} padding="10" row={1}>
+                        <cspan fontSize={12} text={item.doc.name} />
+                        <cspan color={$subtitleColor} fontSize={10} paddingTop={16} text={dayjs(item.doc.createdDate).format('L LT')} />
+                        <cspan color={$subtitleColor} fontSize={10} paddingTop={29} text={lc('nb_pages', item.doc.pages.length)} />
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                </gridLayout>
+                </gridlayout>
             </Template>
         </collectionView>
         {#if showActionButton}
-            <stacklayout verticalAlignment="bottom" horizontalAlignment="right" row={1}>
-                <mdbutton class="small-floating-btn" text="mdi-image-plus" on:tap={importDocument} horizontalAlignment="center" />
-                <mdbutton class="floating-btn" text="mdi-camera" on:tap={onStartCam} margin="8 16 16 16" />
+            <stacklayout horizontalAlignment="right" row={1} verticalAlignment="bottom">
+                <mdbutton class="small-floating-btn" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
+                <mdbutton class="floating-btn" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>
         {/if}
     </gridlayout>

@@ -2,19 +2,9 @@
     import { request } from '@nativescript-community/perms';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Img } from '@nativescript-community/ui-image';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import {
-        AndroidActivityBackPressedEventData,
-        Application,
-        ApplicationSettings,
-        CoreTypes,
-        File,
-        ObservableArray,
-        Page,
-        TouchAnimationOptions,
-        Utils
-    } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, File, ObservableArray, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -30,7 +20,7 @@
     import { accentColor, primaryColor } from '~/variables';
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
-    import CropEditPage from './CropEditPage.svelte';
+    import CropEditView from './CropEditView.svelte';
     import DocumentsList from './DocumentsList.svelte';
 
     const touchAnimationShrink: TouchAnimationOptions = {
@@ -56,9 +46,9 @@
 
     export let modal = false;
     export let document: OCRDocument;
-    let newDocument = !document;
+    const newDocument = !document;
 
-    let contours: [number, number][][] = null;
+    const contours: [number, number][][] = null;
     let pages: ObservableArray<OCRPage>;
     let nbPages = 0;
     let takingPicture = false;
@@ -128,7 +118,7 @@
                     try {
                         const doc = await importAndScanImage();
                         const page = (await import('~/components/PDFView.svelte')).default;
-                        await navigate({
+                        navigate({
                             page: page as any,
                             props: {
                                 document: doc
@@ -205,7 +195,7 @@
                 // pictureSize: { width: test.width, height: test.height },
                 captureMode: 0
                 // captureMode: batchMode ? 1 : 0
-            })) as any;
+            }));
             await processAndAddImage(file.path);
         } catch (err) {
             console.error(err, err.stack);
@@ -215,11 +205,15 @@
             hideLoading();
         }
     }
+
+    function setTorchEnabled(enabled: boolean) {
+        cameraPreview.nativeView.flashMode = enabled ? 'torch' : (flashMode as any);
+    }
     function switchTorch() {
         if (cameraPreview) {
             const current = cameraPreview.nativeView.flashMode;
             torchEnabled = !(current === 'torch');
-            cameraPreview.nativeView.flashMode = torchEnabled ? 'torch' : (flashMode as any);
+            setTorchEnabled(torchEnabled);
         }
     }
     function toggleCamera() {
@@ -253,7 +247,7 @@
     function onNavigatedFrom() {
         DEV_LOG && console.log('onNavigatedFrom');
         if (torchEnabled) {
-            switchTorch();
+            setTorchEnabled(false);
         }
         stopPreview();
         if (document) {
@@ -295,32 +289,38 @@
     }
     $: DEV_LOG && console.log('flashMode', flashMode);
     async function saveCurrentDocument() {
-        DEV_LOG && console.log('saveCurrentDocument', newDocument);
-        if (document) {
-            document.save();
-            if (newDocument && startOnCam) {
+        try {
+            DEV_LOG && console.log('saveCurrentDocument', newDocument);
+            if (document) {
+                await document.save();
+                if (newDocument) {
                     documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
-                    // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
-                    const page = (await import('~/components/PDFView.svelte')).default;
-                    navigate({
-                        page: page as any,
-                        // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
-                        props: {
-                            document: document
-                        }
-                    });
-            } else {
-                // we should already be in edit so closing should go back there
-            }
+                    if (startOnCam) {
+                        // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
+                        const page = (await import('~/components/PDFView.svelte')).default;
+                        navigate({
+                            page: page as any,
+                            // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
+                            props: {
+                                document
+                            }
+                        });
+                    } else {
+                        // we should already be in edit so closing should go back there
+                    }
+                }
 
-            if (!startOnCam) {
-                closeModal(document);
+                if (!startOnCam) {
+                    closeModal(document);
+                }
+                clearImages();
+                document = null;
+                croppedImageRotation = 0;
+                nbPages = 0;
+                pages = new ObservableArray([]);
             }
-            clearImages();
-            document = null;
-            croppedImageRotation = 0;
-            nbPages = 0;
-            pages = new ObservableArray([]);
+        } catch (error) {
+            showError(error);
         }
     }
 
@@ -396,6 +396,7 @@
             // }
             const lastPage = pages.getItem(pages.length - 1);
             currentQuad = lastPage.crop;
+            console.log('currentQuad', currentQuad);
             setCurrentImage(lastPage.getImagePath(), lastPage.rotation, true);
         } catch (error) {
             showError(error);
@@ -478,12 +479,10 @@
         try {
             if (__ANDROID__) {
                 console.log('applyProcessor');
-                //@ts-ignore
                 processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(Utils.android.getApplicationContext(), cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             } else {
-                //@ts-ignore
-                processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(cropView.nativeView.nativeViewProtected);
+                processor = (OpencvDocumentProcessDelegate.alloc() as OpencvDocumentProcessDelegate).initWithCropView(cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             }
             if (documentsService.started) {
@@ -512,7 +511,7 @@
     function toggleEditing() {
         editing = !editing;
         if (torchEnabled) {
-            switchTorch();
+            setTorchEnabled(!editing);
         }
         if (editing) {
             stopPreview();
@@ -524,71 +523,71 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
-        <cameraView rowSpan="2" bind:this={cameraPreview} {flashMode} on:layoutChanged={onCameraLayoutChanged} enablePinchZoom={true} autoFocus={true} on:loaded={applyProcessor} />
-        <cropview rowSpan="2" bind:this={cropView} colors={[primaryColor]} strokeWidth={3} fillAlpha={120} />
+        <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
+        <cropview bind:this={cropView} colors={[primaryColor]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
-        <CActionBar title={null} backgroundColor="transparent" modalWindow={true}>
-            <mdbutton variant="text" class="actionBarButton" text="mdi-file-document" on:tap={showDocumentsList} visibility={startOnCam ? 'visible' : 'collapsed'} />
-            <mdbutton variant="text" class="actionBarButton" text="mdi-dots-vertical" on:tap={showOptions} visibility={startOnCam ? 'visible' : 'collapsed'} />
+        <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
+            <mdbutton class="actionBarButton" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
+            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showOptions} />
         </CActionBar>
 
-        <gridLayout row={1} rows="*,auto" padding="10">
+        <gridlayout padding="10" row={1} rows="*,auto">
             <gridlayout>
-                <stacklayout verticalAlignment="center" horizontalAlignment="left">
-                    <mdbutton variant="flat" class="icon-btn" color="white" text="mdi-flash " on:tap={() => (flashMode = (flashMode + 1) % 5)} />
-                    <mdbutton color={torchEnabled ? accentColor : 'white'} variant="flat" class="icon-btn" text="mdi-flashlight" on:tap={switchTorch} />
-                    <mdbutton variant="flat" color="white" class="icon-btn" text="mdi-camera" on:tap={toggleCamera} />
+                <stacklayout horizontalAlignment="left" verticalAlignment="center">
+                    <mdbutton class="icon-btn" color="white" text="mdi-flash " variant="text" on:tap={() => (flashMode = (flashMode + 1) % 5)} />
+                    <mdbutton class="icon-btn" color={torchEnabled ? accentColor : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
+                    <mdbutton class="icon-btn" color="white" text="mdi-camera" variant="text" on:tap={toggleCamera} />
                 </stacklayout>
                 <mdbutton
-                    color="white"
-                    variant="flat"
                     class="icon-btn"
-                    text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
-                    on:tap={() => (batchMode = !batchMode)}
+                    color="white"
                     horizontalAlignment="left"
+                    text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
+                    variant="text"
                     verticalAlignment="bottom"
+                    on:tap={() => (batchMode = !batchMode)}
                 />
             </gridlayout>
 
             <image
                 bind:this={smallImageView}
-                rowSpan={2}
-                stretch="aspectFit"
-                imageRotation={croppedImageRotation}
                 colorMatrix={getColorMatrix(colorType)}
-                verticalAlignment="bottom"
-                horizontalAlignment="left"
-                width={80}
                 height={80}
+                horizontalAlignment="left"
+                imageRotation={croppedImageRotation}
+                rowSpan={2}
                 src={smallImagePath}
+                stretch="aspectFit"
+                verticalAlignment="bottom"
+                width={80}
                 on:tap={toggleEditing}
             />
 
             <image
                 bind:this={fullImageView}
-                rowSpan={2}
-                stretch="aspectFit"
                 colorMatrix={getColorMatrix(colorType)}
-                src={croppedImagePath}
-                on:tap={() => setCurrentImage(null)}
-                isUserInteractionEnabled={showingFullScreenImage}
                 imageRotation={croppedImageRotation}
+                isUserInteractionEnabled={showingFullScreenImage}
+                rowSpan={2}
+                src={croppedImagePath}
+                stretch="aspectFit"
+                on:tap={() => setCurrentImage(null)}
             />
 
             <gridlayout
-                row={1}
-                marginBottom={10}
-                width={70}
-                height={70}
+                borderColor="white"
                 borderRadius={35}
                 borderWidth={3}
-                borderColor="white"
-                verticalAlignment="bottom"
+                height={70}
                 horizontalAlignment="center"
+                marginBottom={10}
                 opacity={takingPicture ? 0.6 : 1}
+                row={1}
+                verticalAlignment="bottom"
+                width={70}
             >
-                <gridlayout touchAnimation={touchAnimationShrink} backgroundColor={primaryColor} width={54} height={54} borderRadius={27} on:tap={takePicture} />
-                <label color="white" fontSize={20} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} text={nbPages + ''} />
+                <gridlayout backgroundColor={primaryColor} borderRadius={27} height={54} touchAnimation={touchAnimationShrink} width={54} on:tap={takePicture} />
+                <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
             <!-- <mdbutton
                 row={1}
@@ -600,23 +599,23 @@
             /> -->
             <mdbutton
                 class="floating-btn"
-                variant="text"
-                row={1}
                 elevation={0}
-                rippleColor="white"
-                verticalAlignment="center"
                 horizontalAlignment="right"
+                rippleColor="white"
+                row={1}
                 text="mdi-check"
-                on:tap={() => saveCurrentDocument()}
+                variant="text"
+                verticalAlignment="center"
                 visibility={canSaveDoc ? 'visible' : 'hidden'}
+                on:tap={() => saveCurrentDocument()}
             />
-        </gridLayout>
-        <CropEditPage
+        </gridlayout>
+        <CropEditView
+            {croppedImagePath}
+            {editingImage}
+            quad={currentQuad}
             rowSpan={2}
             visibility={editing ? 'visible' : 'collapsed'}
-            {editingImage}
-            {croppedImagePath}
-            quad={currentQuad}
             bind:croppedImageRotation
             bind:colorType
             on:finished={onFinishEditing}
