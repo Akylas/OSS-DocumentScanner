@@ -17,12 +17,6 @@
     let topView: NativeViewElementNode<View>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let rotableImageView: RotableImageView;
-    let prevTouchPoint;
-    let currentMatrix: Matrix;
-    let inversedCurrentMatrix: Matrix;
-    let drawingRatio: number;
-    // let closestQuadIndex = -1;
-    let closestCornerIndex = -1;
     const cornersPaint = new Paint();
     cornersPaint.color = primaryColor;
     cornersPaint.setStrokeWidth(14);
@@ -35,14 +29,14 @@
         croppedImageChanged: null;
     }>();
 
-    export let editingImage: ImageSource;
     export let croppedImagePath: string;
     export let colorType: ColorMatricesType = null;
     export let croppedImageRotation: number = 0;
+    export let editingImage: ImageSource;
     export let quad;
-    let quads = [quad];
+    let quads;
+    $: quads = [quad];
     let quadChanged = false;
-    let mappedQuad;
 
     let item;
     $: {
@@ -113,34 +107,34 @@
     }));
 </script>
 
-<gridlayout bind:this={topView} rows="*,auto" backgroundColor="black" {...$$restProps}>
+<gridlayout bind:this={topView} backgroundColor="black" rows="*,auto,auto" {...$$restProps}>
     <RotableImageView bind:this={rotableImageView} {item} zoomable={true} />
-    <CropView bind:quadChanged bind:quads {editingImage} visibility={recrop ? 'visible' : 'hidden'} />
-    <gridlayout row="1" rows="auto,auto,auto">
-        <stacklayout orientation="horizontal" verticalAlignment="top" visibility={recrop ? 'hidden' : 'visible'}>
-            <mdbutton variant="flat" class="icon-btn" text="mdi-crop" on:tap={() => (recrop = true)} />
-            <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-left" on:tap={() => rotateImageLeft()} />
-            <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
+    <CropView {editingImage} rowSpan={2} visibility={recrop ? 'visible' : 'hidden'} bind:quadChanged bind:quads/>
+    <gridlayout row="1" rows="auto,auto" visibility={recrop ? 'collapsed' : 'visible'}>
+        <stacklayout orientation="horizontal" verticalAlignment="top">
+            <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => (recrop = true)} />
+            <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
+            <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
         </stacklayout>
-        <collectionview bind:this={collectionView} height={85} row={1} items={filters} colWidth={60} orientation="horizontal" visibility={recrop ? 'hidden' : 'visible'}>
+        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
             <Template let:item>
-                <gridlayout rows="*,24" on:tap={applyImageTransform(item)} padding={4}>
-                    <image src={croppedImagePath} imageRotation={croppedImageRotation} colorMatrix={getColorMatrix(item.colorType)} />
-                    <label text={item.text} row={1} fontSize={10} color="white" textAlignment="center" />
+                <gridlayout padding={4} rows="*,24" on:tap={applyImageTransform(item)}>
+                    <image colorMatrix={getColorMatrix(item.colorType)} imageRotation={croppedImageRotation} src={croppedImagePath} />
+                    <label color="white" fontSize={10} row={1} text={item.text} textAlignment="center" />
                 </gridlayout>
             </Template>
         </collectionview>
-        <mdbutton
-            row={2}
-            class="floating-btn"
-            margin="0"
-            rippleColor="white"
-            elevation={0}
-            variant="text"
-            verticalAlignment="bottom"
-            horizontalAlignment="center"
-            text="mdi-check"
-            on:tap={onTapFinish}
-        />
     </gridlayout>
+    <mdbutton
+        class="floating-btn"
+        elevation={0}
+        horizontalAlignment="center"
+        margin="0"
+        rippleColor="white"
+        row={2}
+        text="mdi-check"
+        variant="text"
+        verticalAlignment="bottom"
+        on:tap={onTapFinish}
+    />
 </gridlayout>

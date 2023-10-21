@@ -3,6 +3,7 @@ import { confirm, alert as mdAlert } from '@nativescript-community/ui-material-d
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
+import type { HTTPSOptions } from '~/services/api';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
 
 function evalTemplateString(resource: string, obj: {}) {
@@ -77,6 +78,54 @@ export class CustomError extends BaseError {
     getMessage() {}
 }
 
+export class TimeoutError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'timeout_error'
+                },
+                props
+            ),
+            'TimeoutError'
+        );
+    }
+}
+
+export class NoNetworkError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'no_network'
+                },
+                props
+            ),
+            'NoNetworkError'
+        );
+    }
+}
+export interface HTTPErrorProps {
+    statusCode: number;
+    message: string;
+    requestParams: HTTPSOptions;
+}
+export class HTTPError extends CustomError {
+    statusCode: number;
+    requestParams: HTTPSOptions;
+    constructor(props: HTTPErrorProps | HTTPError) {
+        super(
+            Object.assign(
+                {
+                    message: 'httpError'
+                },
+                props
+            ),
+            'HTTPError'
+        );
+    }
+}
+
 export async function showError(err: Error | string, showAsSnack = false) {
     try {
         if (!err) {
@@ -88,12 +137,12 @@ export async function showError(err: Error | string, showAsSnack = false) {
 
         const isString = realError === null || realError === undefined;
         const message = isString ? (err as string) : realError.message || realError.toString();
-        if (showAsSnack ) {
+        if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
             showSnack({ message });
             return;
         }
         const title = lc('error');
-        const showSendBugReport = reporterEnabled && !isString && !!realError.stack;
+        const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
         // if (!PRODUCTION) {
         // }
         const result = await confirm({

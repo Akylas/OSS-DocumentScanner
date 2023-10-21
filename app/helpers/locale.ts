@@ -1,89 +1,74 @@
-import { l, lc, loadLocaleJSON, lt, lu } from '@nativescript-community/l';
-import { ApplicationSettings, Utils } from '@nativescript/core';
-import { getString, setString } from '@nativescript/core/application-settings';
-import { Device } from '@nativescript/core/platform';
+import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
+import { ApplicationSettings, Device, File, Utils } from '@nativescript/core';
+import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
-// import timezone from 'dayjs/plugin/timezone';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import updateLocale from 'dayjs/plugin/updateLocale';
-import utc from 'dayjs/plugin/utc';
+import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
-import { showError } from '~/utils/error';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 const supportedLanguages = SUPPORTED_LOCALES;
-
-dayjs.extend(updateLocale);
-// dayjs.extend(timezone);
-dayjs.extend(duration);
-dayjs.extend(relativeTime);
-dayjs.extend(localizedFormat);
-dayjs.extend(utc);
+dayjs.extend(LocalizedFormat);
 
 export let lang;
+export const $lang = writable(null);
 let default24Clock = false;
 if (__ANDROID__) {
-    default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.android.getApplicationContext());
+    default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.ad.getApplicationContext());
 }
-export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock);
-console.log('clock_24', clock_24);
-let currentLocale = null;
-export const langStore = writable(null);
+export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock) || default24Clock;
 export const clock_24Store = writable(null);
-export const onLanguageChanged = createGlobalEventListener('language');
-export const onMapLanguageChanged = createGlobalEventListener('map_language');
 
-async function setLang(newLang) {
-    newLang = getActualLanguage(newLang);
-    if (supportedLanguages.indexOf(newLang) === -1) {
-        newLang = 'en';
-    }
-    DEV_LOG && console.log('changed lang', newLang, Device.region);
-    currentLocale = null;
-    if (lang === newLang) {
-        return;
-    }
+export const onLanguageChanged = createGlobalEventListener('language');
+export const onTimeChanged = createGlobalEventListener('time');
+
+$lang.subscribe((newLang: string) => {
     lang = newLang;
-    if (lang === null) {
+    if (!lang) {
         return;
     }
-    // console.log('changed lang', lang, newLang, Device.region);
+    // console.log('changed lang', lang, Device.region);
     try {
         require(`dayjs/locale/${newLang}.js`);
     } catch (err) {
-        console.error('failed to load dayjs locale', lang, `dayjs/locale/${newLang}`, err);
+        console.error('failed to load dayjs locale', lang, `~/dayjs/${newLang}`, err, err.stack);
     }
     dayjs.locale(lang); // switch back to default English locale globally
-    if (lang === 'fr') {
-        dayjs.updateLocale('fr', {
-            calendar: {
-                lastDay: '[Hier à] LT',
-                sameDay: "[Aujourd'hui à] LT",
-                nextDay: '[Demain à] LT',
-                lastWeek: 'dddd [dernier] [à] LT',
-                nextWeek: 'dddd [à] LT',
-                sameElse: 'L'
-            }
-        });
-    }
-
     try {
         const localeData = require(`~/i18n/${lang}.json`);
         loadLocaleJSON(localeData);
     } catch (err) {
-        console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, err, err.stack);
+        console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
     }
     globalObservable.notify({ eventName: 'language', data: lang });
-    langStore.set(newLang);
+});
+function setLang(newLang) {
+    newLang = getActualLanguage(newLang);
+    if (supportedLanguages.indexOf(newLang) === -1) {
+        newLang = newLang.split('-')[0].toLowerCase();
+        if (supportedLanguages.indexOf(newLang) === -1) {
+            newLang = 'en';
+        }
+    }
+    if (__IOS__) {
+        overrideNativeLocale(newLang);
+    } else {
+        // Application.android.foregroundActivity?.recreate();
+        try {
+            const appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(newLang);
+            // Call this on the main thread as it may require Activity.restart()
+            androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    $lang.set(newLang);
 }
+
+const deviceLanguage = getString('language', DEFAULT_LOCALE);
 function getActualLanguage(language) {
     if (language === 'auto') {
         language = Device.language;
     }
-    language = language.split('-')[0].toLowerCase();
     switch (language) {
         case 'cs':
             return 'cz';
@@ -96,64 +81,24 @@ function getActualLanguage(language) {
     }
 }
 
-function titlecase(str: string) {
-    let upper = true;
-    let newStr = '';
-    for (let i = 0, l = str.length; i < l; i++) {
-        if (str[i] === ' ') {
-            upper = true;
-            newStr += ' ';
-            continue;
-        }
-        newStr += upper ? str[i].toUpperCase() : str[i].toLowerCase();
-        upper = false;
-    }
-    return newStr;
-}
-export function getLocaleDisplayName(locale?) {
-    if (__IOS__) {
-        if (!currentLocale) {
-            //@ts-ignore
-            currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
-        }
-        return titlecase(currentLocale.localizedStringForLanguageCode(locale || lang));
-    } else {
-        if (!currentLocale) {
-            currentLocale = java.util.Locale.forLanguageTag(lang);
-        }
-        return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
-    }
-}
+// const rtf = new Intl.RelativeTimeFormat('es');
 
-async function internalSelectLanguage() {
-    try {
-        const actions = SUPPORTED_LOCALES;
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-        const result = await showBottomSheet<any>({
-            parent: null,
-            view: OptionSelect,
-            props: {
-                title: lc('select_language'),
-                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k), data: k })))
-            },
-            trackingScrollView: 'collectionView'
-        });
-        return result;
-    } catch (err) {
-        showError(err);
-    }
-}
-export async function selectLanguage() {
-    try {
-        const result = await internalSelectLanguage();
-        if (result && result.data) {
-            ApplicationSettings.setString('language', result.data);
+export function formatDate(date: number | string | dayjs.Dayjs, formatStr: string = 'dddd LT') {
+    if (date) {
+        if (!date['format']) {
+            date = dayjs(date);
         }
-    } catch (err) {
-        showError(err);
-    }
-}
 
+        if (clock_24 && formatStr.indexOf('LT') >= 0) {
+            formatStr.replace(/LT/g, 'HH:mm');
+        } else if (clock_24 && formatStr.indexOf('LTS') >= 0) {
+            // formatStr = 'HH:mm:ss';
+            formatStr.replace(/LTS/g, 'HH:mm:ss');
+        }
+        return capitalize((date as dayjs.Dayjs).format(formatStr));
+    }
+    return '';
+}
 export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr: string = 'LT') {
     if (date) {
         if (!date['format']) {
@@ -169,30 +114,9 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
     return '';
 }
 
-export function convertDurationSeconds(seconds, formatStr?: string) {
-    const thedate = new Date(0, 0, 0, 0, 0, seconds);
-    if (!formatStr) {
-        if (thedate.getHours()) {
-            formatStr = 'H [h] m [m]';
-        } else {
-            formatStr = 'm [m]';
-        }
-    }
-    return dayjs(thedate).format(formatStr);
-}
-
-export function formatDate(date: number | string | dayjs.Dayjs | Date, formatStr: string) {
-    if (date) {
-        if (!date['format']) {
-            date = dayjs(date);
-        }
-        return (date as dayjs.Dayjs).format(formatStr);
-    }
-    return '';
-}
-
 prefs.on('key:language', () => {
     const newLanguage = getString('language');
+    DEV_LOG && console.log('language changed', newLanguage);
     // on pref change we are updating
     if (newLanguage === lang) {
         return;
@@ -205,22 +129,33 @@ prefs.on('key:clock_24', () => {
     DEV_LOG && console.log('clock_24 changed', newValue);
     clock_24 = newValue;
     clock_24Store.set(newValue);
+    // we fake a language change to update the UI
+    globalObservable.notify({ eventName: 'language', data: lang });
 });
 
-let currentLanguage = getString('language', DEFAULT_LOCALE);
-if (!currentLanguage) {
-    currentLanguage = Device.language.split('-')[0].toLowerCase();
-    setString('language', currentLanguage);
-} else {
-    setLang(currentLanguage);
+let currentLocale = null;
+export function getLocaleDisplayName(locale?) {
+    if (__IOS__) {
+        if (!currentLocale) {
+            currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
+        }
+        return titlecase(currentLocale.localizedStringForLanguageCode(locale || lang));
+    } else {
+        if (!currentLocale) {
+            currentLocale = java.util.Locale.forLanguageTag(lang);
+        }
+        return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
+    }
 }
 
-export { l, lc, lu, lt };
-export const sl = derived(langStore, () => l);
-export const slc = derived(langStore, () => lc);
-export const slt = derived(langStore, () => lt);
-export const slu = derived(langStore, () => lu);
-export const sconvertDurationSeconds = derived(langStore, () => convertDurationSeconds);
-export const scformatDate = derived(langStore, () => formatDate);
-export const scformatTime = derived([langStore, clock_24Store], () => formatTime);
-export const sgetLocaleDisplayName = derived(langStore, () => getLocaleDisplayName);
+setLang(deviceLanguage);
+
+export { l, lc, lt, lu };
+export const sl = derived([$lang], () => l);
+export const slc = derived([$lang], () => lc);
+export const slt = derived([$lang], () => lt);
+export const slu = derived([$lang], () => lu);
+// export const sconvertDuration = derived([$lang], () => convertDuration);
+export const scformatDate = derived($lang, () => formatDate);
+export const scformatTime = derived([$lang, clock_24Store], () => formatTime);
+export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);

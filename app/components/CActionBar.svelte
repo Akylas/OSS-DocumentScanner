@@ -6,12 +6,13 @@
 import { showError } from '~/utils/error';
     export let title: string;
     // export let showLogo = false;
-    export let backgroundColor: Color | string = undefined;
+    export let backgroundColor: Color | string = null;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;
     export let forceCanGoBack: boolean = false;
     export let modalWindow: boolean = false;
     export let disableBackButton: boolean = false;
+    export let clazz: string = '';
     export let onGoBack: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
@@ -45,16 +46,16 @@ import { showError } from '~/utils/error';
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
 </script>
 
-<gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="10" paddingRight="10" {backgroundColor}>
-    <label col={1} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+<gridlayout class={'actionBar ' + clazz} {backgroundColor} columns="auto,*, auto" paddingLeft="10" paddingRight="10" rows="*">
+    <label class={'actionBarTitle ' + clazz } col={1} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} />
     <!-- {#if showLogo && !title}
         <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
     {/if} -->
-    <stackLayout col={0} orientation="horizontal">
+    <stacklayout col={0} orientation="horizontal">
         <slot name="left" />
-        <mdbutton variant="text" visibility={menuIconVisibility} class="actionBarButton" text={menuIcon} on:tap={onMenuIcon} />
-    </stackLayout>
-    <stackLayout col={2} orientation="horizontal">
+        <mdbutton class={'actionBarButton ' + clazz} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />
+    </stacklayout>
+    <stacklayout col={2} orientation="horizontal">
         <slot />
-    </stackLayout>
-</gridLayout>
+    </stacklayout>
+</gridlayout>

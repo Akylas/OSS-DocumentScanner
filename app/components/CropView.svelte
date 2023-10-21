@@ -7,8 +7,10 @@
     let canvasView: NativeViewElementNode<CanvasView>;
     let prevTouchPoint;
     let drawingRatio: number;
-    let currentMatrix: Matrix;
-    let inversedCurrentMatrix: Matrix;
+    const shaderMatrix: Matrix = new Matrix();
+    const currentImageMatrix: Matrix = new Matrix();
+    const currentCropMatrix: Matrix = new Matrix();
+    const inversedCurrentMatrix: Matrix = new Matrix();
     let closestQuadIndex = -1;
     let closestCornerQuadIndex = -1;
     const cornersPaint = new Paint();
@@ -19,11 +21,11 @@
     shaderPaint.style = Style.FILL;
 
     export let editingImage: ImageSource;
+    let rotation = 0;
     export let quads;
     export let quadChanged = false;
     let editingImageShader: BitmapShader;
     let mappedQuads;
-    console.log('quads3', quads)
 
     $: updateMatrix(canvasView, editingImage);
 
@@ -110,6 +112,10 @@
             return matrix.mapPoints(p);
         }
     }
+
+    function getRotation() {
+        return rotation || editingImage.rotationAngle;
+    }
     function updateMatrix(canvas = canvasView, image = editingImage) {
         try {
             if (!canvas?.nativeView || !image) {
@@ -125,7 +131,10 @@
             const canvasRatio = w / h;
             let imageWidth = image.width;
             let imageHeight = image.height;
-            const needRotation = editingImage.rotationAngle && editingImage.rotationAngle % 180 != 0
+            rotation = getRotation();
+            const needRotation = rotation && rotation % 180 !== 0;
+            // const needRotation = false ;
+            console.log('updateMatrix', rotation, needRotation, editingImage.rotationAngle, editingImage.width, editingImage.height);
             if (needRotation) {
                 imageWidth = image.height;
                 imageHeight = image.width;
@@ -140,18 +149,22 @@
                 drawingRatio = w / imageWidth;
                 cy = (h - w / imageRatio) / 2;
             }
-            currentMatrix = new Matrix();
-            if (needRotation) {
-                currentMatrix.postTranslate(-image.width / 2, -image.height / 2);
-                currentMatrix.postRotate(image.rotationAngle);
-                currentMatrix.postTranslate(image.height / 2, image.width / 2);
-            }
+            console.log('imageRatio', imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
+            currentImageMatrix.reset();
+            currentCropMatrix.reset();
+            // if (needRotation) {
+            //     currentImageMatrix.postTranslate(-image.width / 2, -image.height / 2);
+            //     currentImageMatrix.postRotate(rotation);
+            //     currentImageMatrix.postTranslate(image.height / 2, image.width / 2);
+            // }
             // console.log('updateMatrix', imageWidth, imageHeight, editingImage.rotationAngle, needRotation, editingImage.rotationAngle % 180, imageRatio, canvasRatio, drawingRatio, cx, cy,  quads)
-            currentMatrix.postScale(drawingRatio, drawingRatio);
-            currentMatrix.postTranslate(cx, cy);
-            inversedCurrentMatrix = new Matrix();
-            currentMatrix.invert(inversedCurrentMatrix);
-            mappedQuads = quads.map((quad) => quad.map((p) => getMatrixMappedPoint(currentMatrix, p)));
+            currentImageMatrix.postScale(drawingRatio, drawingRatio);
+            currentCropMatrix.postScale(drawingRatio, drawingRatio);
+            currentImageMatrix.postTranslate(cx, cy);
+            currentCropMatrix.postTranslate(cx, cy);
+            // inversedCurrentMatrix = new Matrix();
+            currentCropMatrix.invert(inversedCurrentMatrix);
+            mappedQuads = quads.map((quad) => quad.map((p) => getMatrixMappedPoint(currentCropMatrix, p)));
             canvas?.nativeView.invalidate();
         } catch (error) {
             console.error(error);
@@ -159,9 +172,14 @@
     }
 
     function onCanvasDraw({ canvas }: { canvas: Canvas }) {
-        canvas.concat(currentMatrix);
+        // canvas.save();
+        canvas.concat(currentImageMatrix);
 
         canvas.drawBitmap(editingImage, 0, 0, null);
+
+        // canvas.restore();
+        // canvas.concat(currentCropMatrix);
+        // canvas.rotate(-rotation);
 
         cornersPaint.strokeWidth = 2 / drawingRatio;
         if (quads?.length > 0) {
@@ -179,10 +197,10 @@
                 for (let index2 = 0; index2 < corners.length; index2++) {
                     const point = corners[index2];
                     if (closestQuadIndex === index && closestCornerQuadIndex === index2) {
-                        const matrix = new Matrix();
+                        shaderMatrix.reset();
                         // matrix.postScale(point[0], point[1], 0, 0);
-                        matrix.postScale(4, 4, point[0], point[1]);
-                        editingImageShader.setLocalMatrix(matrix);
+                        shaderMatrix.postScale(4, 4, point[0], point[1]);
+                        editingImageShader.setLocalMatrix(shaderMatrix);
                         canvas.drawCircle(point[0], point[1], 30 / drawingRatio, shaderPaint);
                         canvas.drawCircle(point[0], point[1], 30 / drawingRatio, cornersPaint);
                         cornersPaint.strokeWidth = 1 / drawingRatio;
@@ -200,9 +218,9 @@
 
 <canvasView
     bind:this={canvasView}
+    backgroundColor="black"
     on:draw={onCanvasDraw}
     on:layoutChanged={() => updateMatrix()}
     on:touch={onTouch}
-    backgroundColor="black"
     {...$$restProps}
 />

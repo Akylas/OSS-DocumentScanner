@@ -1,8 +1,7 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { EventData } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { Application, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
+    import { Application, ContentView, EventData, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
@@ -19,7 +18,7 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
-    import { accentColor } from '~/variables';
+    import { accentColor, widgetBackgroundColor } from '~/variables';
 
     interface Item {
         page: OCRPage;
@@ -101,15 +100,14 @@
                 cancelButtonText: lc('cancel')
             });
             if (result) {
-                console.log('deleteDoc')
+                console.log('deleteDoc');
                 try {
                     await documentsService.deleteDocuments([document]);
                     items = null;
                     goBack();
-                    console.log('goneBack')
+                    console.log('goneBack');
                 } catch (err) {
-                    console.error(err);
-                    //for now ignore typeorm error in delete about _observablesListeners
+                    console.error(err.err.stack);
                 }
             }
         } catch (err) {
@@ -179,9 +177,9 @@
             } else {
                 const index = items.findIndex((p) => p.page === item.page);
                 // console.log('onItemTap', index);
-                await navigate({
+                navigate({
                     page: PdfEdit as any,
-                    transition: SharedTransition.custom(new PageTransition(300)),
+                    transition: SharedTransition.custom(new PageTransition(300, undefined, 10)),
                     // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                     props: {
                         document,
@@ -265,26 +263,50 @@
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
         document?.off('pagesAdded', onPagesAdded);
     });
+
+    async function onItemReordered(e) {
+        (e.view as ContentView).content.opacity = 1;
+        try {
+            await document.movePage(e.index, e.data.targetIndex);
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function onItemReorderStarting(e) {
+        (e.view as ContentView).content.opacity = 0.6;
+    }
 </script>
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <CActionBar title={document.name}>
-            <mdbutton variant="text" class="actionBarButton" text="mdi-file-pdf-box" on:tap={savePDF} />
-            <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
+        <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : document.name}>
+            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
         </CActionBar>
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight={200}>
+        <collectionview bind:this={collectionView} {items} reorderEnabled={true} row={1} rowHeight={200} on:itemReordered={onItemReordered} on:itemReorderStarting={onItemReorderStarting}>
             <Template let:item>
-                <gridLayout borderRadius="4" margin="4" rippleColor={accentColor} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView item={item.page} sharedTransitionTag={`document_${document.id}_${item.page.id}`} />
+                <gridlayout
+                    backgroundColor={$widgetBackgroundColor}
+                    borderRadius="4"
+                    clipToBounds={true}
+                    elevation="2"
+                    margin="8"
+                    rippleColor={accentColor}
+                    rows="*,auto"
+                    on:tap={() => onItemTap(item)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    <RotableImageView id={`view_${document.id}_${item.page.id}`} item={item.page} rowSpan={2} sharedTransitionTag={`document_${document.id}_${item.page.id}`} />
                     <SelectedIndicator selected={item.selected} />
-                </gridLayout>
+                    <canvaslabel backgroundColor="#00000088" color="white" height={30} padding="10" row={1}>
+                        <cspan fontSize={12} text={`${item.page.width} x ${item.page.height}`} />
+                    </canvaslabel>
+                </gridlayout>
             </Template>
         </collectionview>
 
-        <stacklayout verticalAlignment="bottom" horizontalAlignment="right" row={1}>
-            <mdbutton class="small-floating-btn" text="mdi-file-document-plus-outline" on:tap={importDocument} horizontalAlignment="center" />
-            <mdbutton class="floating-btn" text="mdi-plus" on:tap={addPages} margin="8 16 16 16" />
+        <stacklayout horizontalAlignment="right" row={1} verticalAlignment="bottom">
+            <mdbutton class="small-floating-btn" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
+            <mdbutton class="floating-btn" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
         </stacklayout>
     </gridlayout>
 </page>

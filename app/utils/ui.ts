@@ -1,5 +1,4 @@
 // import InAppBrowser from '@akylas/nativescript-inappbrowser';
-import { DocumentScanner } from '@nativescript-community/document-scanner';
 import { request } from '@nativescript-community/perms';
 import { Label } from '@nativescript-community/ui-label';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
@@ -15,6 +14,7 @@ import ColorMatrices from './color_matrix';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { lc } from '@nativescript-community/l';
 import { showModal } from 'svelte-native';
+import { loadImage } from './utils';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -103,7 +103,8 @@ export function hideLoading() {
 // };
 
 export const ColorMatricesTypes = Object.keys(ColorMatrices);
-export type ColorMatricesType = keyof typeof ColorMatricesTypes;
+export type ColorMatricesType = string;
+// export type ColorMatricesType = keyof typeof ColorMatricesTypes;
 
 export function getColorMatrix(type: string, ...args): number[] {
     return (ColorMatrices[type] as Function)?.apply(ColorMatrices, args);
@@ -317,25 +318,13 @@ export async function importAndScanImage(document?: OCRDocument) {
                 mode: 'single' // use "multiple" for multiple selection
             })
             // on android pressing the back button will trigger an error which we dont want
-            .present();
+            .present()
+            .catch((err) => null);
         if (selection?.length) {
             const sourceImagePath = selection[0].path;
             console.log('selection', selection[0], selection[0].constructor.name);
-            if (__ANDROID__) {
-                const asset = new ImageAsset(sourceImagePath);
-                const bitmap = await new Promise((resolve, reject) => {
-                    asset.getImageAsync((image, error) => {
-                        if (error) {
-                            reject(error);
-                        } else {
-                            resolve(image);
-                        }
-                    });
-                });
-                editingImage = new ImageSource(bitmap);
-            } else {
-                editingImage = await ImageSource.fromFile(sourceImagePath);
-            }
+            editingImage = await loadImage(sourceImagePath);
+
             if (!editingImage) {
                 throw new Error('failed to read imported image');
             }
@@ -375,11 +364,11 @@ export async function importAndScanImage(document?: OCRDocument) {
                             });
                         }
                         if (document) {
-                            document.addPages(pagesToAdd);
-                            document.save();
+                            await document.addPages(pagesToAdd);
+                            await document.save();
                         } else {
                             const document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-                            document.save();
+                            await document.save();
                             documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
                         }
                         return document;

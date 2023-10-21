@@ -4,7 +4,7 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { ObservableArray } from '@nativescript/core';
+    import { ImageAsset, ImageSource, ObservableArray } from '@nativescript/core';
     import { layout, openFile } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -12,25 +12,33 @@
     import CActionBar from '~/components/CActionBar.svelte';
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
+    import CropView from '~/components/CropView.svelte';
+    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
+    import { loadImage } from '~/utils/utils';
 
+    export let startPageIndex: number = 0;
+    export let document: OCRDocument;
     let pager: NativeViewElementNode<Pager>;
     let collectionView: NativeViewElementNode<CollectionView>;
-    export let document: OCRDocument;
-    let items: ObservableArray<OCRPage> = document.getObservablePages();
-    console.log('items', items.length);
-    export let startPageIndex: number = 0;
+
+    const items: ObservableArray<OCRPage> = document.getObservablePages();
+    let recrop = false;
+    let editingImage: ImageSource;
+    let quad;
+    let quads;
+    $: quads = [quad];
+    $: console.log('quads', quads);
+    let quadChanged = false;
     let currentIndex = startPageIndex;
     const firstItem = items.getItem(currentIndex);
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
-
     let currentSelectedImagePath = firstItem.getImagePath();
     let currentSelectedImageRotation = firstItem.rotation;
-    console.log('currentSelectedImageRotation', currentSelectedImageRotation);
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -67,54 +75,80 @@
     }
 
     async function onImageRotated(item, event) {
-        const newRotation = event.detail.detail.newRotation;
-        if (newRotation === undefined) {
-            return;
-        }
-        await document.updateImageConfig(currentIndex, {
-            rotation: newRotation % 360
-        });
+        try {
+            const newRotation = event.detail.detail.newRotation;
+            if (newRotation === undefined) {
+                return;
+            }
+            await document.updatePage(currentIndex, {
+                rotation: newRotation % 360
+            });
 
-        currentSelectedImageRotation = item.rotation;
-        console.log('currentSelectedImageRotation changed', currentSelectedImageRotation);
-        items.setItem(currentIndex, item);
-        refreshCollectionView();
+            currentSelectedImageRotation = item.rotation;
+            items.setItem(currentIndex, item);
+            refreshCollectionView();
+        } catch (error) {
+            showError(error);
+        }
     }
-    let colorType = 0;
+    const colorType = 0;
     // $: {
     //     colorType = document.pages[currentIndex].colorType || 0;
     // }
-    async function setColorType(type: number) {
-        colorType = type;
-        try {
-            await document.updateImageConfig(currentIndex, {
-                colorType: type
-                // colorMatrix: getColorMatrix(type)
-            });
-            // pages.setItem(currentIndex, current);
-        } catch (err) {
-            showError(err);
-        }
+    // async function setColorType(type: number) {
+    //     colorType = type;
+    //     try {
+    //         await document.updatePage(currentIndex, {
+    //             colorType: type
+    //             // colorMatrix: getColorMatrix(type)
+    //         });
+    //         // pages.setItem(currentIndex, current);
+    //     } catch (err) {
+    //         showError(err);
+    //     }
+    // }
+
+    function getCurrentImageView() {
+        return pager?.nativeView?.getChildView(currentIndex)?.getViewById<Img>('imageView');
     }
 
     function applyRotation(newRotation) {
-        console.log('applyRotation', newRotation);
-        pager?.nativeView?.getChildView(currentIndex)?.getViewById('imageView').notify({ eventName: 'rotateAnimated', rotation: newRotation });
-        // current['newRotation'] = (current['newRotation'] ?? current.rotation) + 90;
-        // items.setItem(currentIndex, current);
+        getCurrentImageView().notify({ eventName: 'rotateAnimated', rotation: newRotation });
     }
     async function rotateImageLeft() {
-        const current = items.getItem(currentIndex);
-        console.log('current', current.rotation);
-        return applyRotation((current.rotation ?? 0) - 90);
+        try {
+            const current = items.getItem(currentIndex);
+            console.log('current', current.rotation);
+            applyRotation((current.rotation ?? 0) - 90);
+        } catch (error) {
+            showError(error);
+        }
     }
     async function rotateImageRight() {
-        const current = items.getItem(currentIndex);
-        return applyRotation((current.rotation ?? 0) + 90);
+        try {
+            const current = items.getItem(currentIndex);
+            applyRotation((current.rotation ?? 0) + 90);
+        } catch (error) {
+            showError(error);
+        }
     }
     async function shareItem(item) {
         try {
             share({ file: await item.getImagePath() });
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function cropEdit() {
+        try {
+            const item = items.getItem(currentIndex);
+
+            editingImage = await loadImage(item.sourceImagePath);
+            // editingImage = await ImageSource.fromFile(item.sourceImagePath);
+            console.log('cropEdit', item.crop);
+
+            quad = item.crop;
+            recrop = true;
         } catch (error) {
             showError(error);
         }
@@ -126,9 +160,9 @@
 
     async function setBlackWhiteLevel(event) {
         const current = items.getItem(currentIndex);
-        if (current.colorType !== ColorType.BLACK_WHITE) {
-            return;
-        }
+        // if (current.colorType !== ColorType.BLACK_WHITE) {
+        //     return;
+        // }
 
         const currentValue = current.colorMatrix[0];
         try {
@@ -146,7 +180,7 @@
                     value: currentValue,
                     onChange(value) {
                         console.log('changed', value);
-                        document.updateImageConfig(currentIndex, {
+                        document.updatePage(currentIndex, {
                             colorMatrix: getColorMatrix(current.colorType, value)
                         });
                     }
@@ -162,7 +196,6 @@
 
     async function deleteCurrentPage() {
         try {
-            const current = items.getItem(currentIndex);
             const result = await confirm({
                 title: lc('delete_page', currentIndex),
                 message: lc('confirm_delete'),
@@ -176,7 +209,7 @@
                     pager.nativeView.scrollToIndexAnimated(currentIndex, true);
                     // startPageIndex = currentIndex -= 1;
                 } catch (err) {
-                    //for now ignore typeorm error in delete about _observablesListeners
+                    console.error(err.err.stack);
                 }
             }
         } catch (err) {
@@ -187,7 +220,7 @@
     async function applyImageTransform(i) {
         const current = items.getItem(currentIndex);
         current.colorType = i.colorType;
-        document.updateImageConfig(currentIndex, {
+        document.updatePage(currentIndex, {
             colorType: i.colorType,
             colorMatrix: null
         });
@@ -202,37 +235,65 @@
     function refreshCollectionView() {
         collectionView?.nativeView?.refreshVisibleItems();
     }
+
+    async function onRecropTapFinish() {
+        console.log('onTapFinish', recrop, quadChanged);
+        if (recrop) {
+            // let s see if quads changed and update image
+            if (quadChanged) {
+                let images;
+                if (__ANDROID__) {
+                    images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]));
+                }
+                const croppedImagePath = items.getItem(currentIndex).imagePath;
+                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
+                console.log('onImage Changed', croppedImagePath);
+                //we remove from cache so that everything gets updated
+                getImagePipeline().evictFromCache(croppedImagePath);
+                getCurrentImageView().updateImageUri();
+                refreshCollectionView();
+                quadChanged = false;
+                editingImage = null;
+                quads = [];
+            }
+            recrop = false;
+        }
+    }
 </script>
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,auto">
         <CActionBar title={document.name}>
-            <mdbutton variant="text" class="actionBarButton" text="mdi-file-pdf-box" on:tap={savePDF} />
-            <mdbutton variant="text" class="actionBarButton" text="mdi-delete" on:tap={deleteCurrentPage} />
+            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
         </CActionBar>
-        <pager bind:this={pager} row={1} {items} selectedIndex={startPageIndex} on:selectedIndexChange={onSelectedIndex} transformers="zoomOut">
+        <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
-                <gridLayout width="100%">
-                    <RotableImageView id="imageView" zoomable={true} {item} on:rotated={(e) => onImageRotated(item, e)} sharedTransitionTag={`document_${document.id}_${item.id}`} />
-                </gridLayout>
+                <gridlayout width="100%">
+                    <RotableImageView id={'imageView'} {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
+                </gridlayout>
             </Template>
         </pager>
-        <label padding={10} text={currentItemSubtitle} horizontalAlignment="left" row={1} verticalAlignment="bottom" fontSize={14} />
-        <mdbutton variant="text" row={1} class="icon-btn" text="mdi-share-variant" on:tap={() => shareCurrentItem()} verticalAlignment="bottom" horizontalAlignment="right" />
+        <label fontSize={14} horizontalAlignment="left" padding={10} row={1} text={currentItemSubtitle} verticalAlignment="bottom" />
+        <mdbutton class="icon-btn" horizontalAlignment="right" row={1} text="mdi-share-variant" variant="text" verticalAlignment="bottom" on:tap={() => shareCurrentItem()} />
 
         <stacklayout orientation="horizontal" row={2}>
-            <mdbutton variant="text" class="icon-btn" text="mdi-crop" />
-            <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-left" on:tap={() => rotateImageLeft()} />
-            <mdbutton variant="flat" class="icon-btn" text="mdi-rotate-right" on:tap={() => rotateImageRight()} />
+            <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
+            <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
+            <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
-        <collectionview bind:this={collectionView} height={85} row={3} items={filters} colWidth={60} orientation="horizontal">
+        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={3}>
             <Template let:item>
-                <gridlayout rows="*,24" on:tap={applyImageTransform(item)} padding={4}>
-                    <image src={currentSelectedImagePath} imageRotation={currentSelectedImageRotation} colorMatrix={getColorMatrix(item.colorType)} />
-                    <label text={item.text} row={1} fontSize={10} color="white" textAlignment="center" />
+                <gridlayout padding={4} rows="*,24" on:tap={applyImageTransform(item)}>
+                    <image colorMatrix={getColorMatrix(item.colorType)} imageRotation={currentSelectedImageRotation} src={currentSelectedImagePath} />
+                    <label color="white" fontSize={10} row={1} text={item.text} textAlignment="center" />
                 </gridlayout>
             </Template>
         </collectionview>
+        <gridlayout backgroundColor="black" row={1} rowSpan={3} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
+            <CropView {editingImage} bind:quadChanged bind:quads />
+            <mdbutton  class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
+        </gridlayout>
     </gridlayout>
 </page>

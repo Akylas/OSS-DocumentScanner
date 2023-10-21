@@ -1,8 +1,8 @@
 ﻿@import './variables';
 
-.lato {
+// .lato {
     // font-family: $lato-fontFamily;
-}
+// }
 
 .mdi {
     font-family: $mdi-fontFamily;
@@ -42,7 +42,7 @@ mdtextfield {
 label,
 label,
 canvaslabel {
-    @extend .lato;
+    // @extend .lato;
 }
 
 // }
@@ -94,25 +94,27 @@ page {
     height: $actionbar-height;
 }
 
-.actionBarButton {
-    @extend .mdi;
-    shape:round;
-    width: $actionbar-button-height;
-    height: $actionbar-button-height;
-    color: black;
+// .actionBarButton {
+    // @extend .mdi;
+//     shape:round;
+//     width: $actionbar-button-height;
+//     height: $actionbar-button-height;
+//     color: black;
+//     ripple-color:black;
 
-    .ns-dark &,
-    .ns-black & {
-        color: white;
-    }
+//     .ns-dark &,
+//     .ns-black & {
+//         color: white;
+//         ripple-color:white;
+//     }
 
-    width: 44;
-    height: 44;
-    border-radius: 22;
-    font-size: 24;
-    margin: 0;
-    padding: 0;
-}
+//     width: 44;
+//     height: 44;
+//     border-radius: 22;
+//     font-size: 24;
+//     margin: 0;
+//     padding: 0;
+// }
 
 .actionBarTitle {
     // @extend .lato;
@@ -134,8 +136,9 @@ page {
     }
 }
 
-.icon-btn {
+.icon-btn, .actionBarButton {
     @extend .mdi;
+    shape:round;
     background-color: transparent;
     ripple-color: gray;
     color: black;
