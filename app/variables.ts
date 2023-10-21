@@ -2,17 +2,28 @@ import { isSimulator } from '@nativescript-community/extendedinfo';
 import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
-import { get_current_component } from 'svelte/internal';
+import { onDestroy } from 'svelte';
 const locals = CSSModule.locals;
 
 export const globalObservable = new Observable();
 
 const callbacks = {};
-
 export function createGlobalEventListener(eventName: string) {
-    return function (callback: Function) {
+    return function (callback: Function, once = false) {
         callbacks[eventName] = callbacks[eventName] || {};
+        let cleaned = false;
+
+        function clean() {
+            if (!cleaned) {
+                cleaned = true;
+                delete callbacks[eventName][callback];
+                globalObservable.off(eventName, eventCallack);
+            }
+        }
         const eventCallack = (event) => {
+            if (once) {
+                clean();
+            }
             if (Array.isArray(event.data)) {
                 event.result = callback(...event.data);
             } else {
@@ -21,13 +32,11 @@ export function createGlobalEventListener(eventName: string) {
         };
         callbacks[eventName][callback] = eventCallack;
         globalObservable.on(eventName, eventCallack);
-        const component = get_current_component();
-        if (component) {
-            component.$$.on_destroy.push(() => {
-                delete callbacks[eventName][callback];
-                globalObservable.off(eventName, eventCallack);
-            });
-        }
+
+        onDestroy(() => {
+            clean();
+        });
+        return clean;
     };
 }
 export function createUnregisterGlobalEventListener(eventName: string) {
@@ -57,7 +66,7 @@ export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeigh
 export let globalMarginTop = 0;
 
 if (__ANDROID__) {
-    const resources = (Utils.android.getApplicationContext() as android.content.Context).getResources();
+    const resources = Utils.android.getApplicationContext().getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
     let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
