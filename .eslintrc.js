@@ -52,6 +52,7 @@ module.exports = {
         }
     },
     rules: {
+        '@typescript-eslint/no-unsafe-declaration-merging': 'off',
         'svelte/no-inner-declarations': 'off',
         'prettier/prettier': [
             'warn',
@@ -59,6 +60,9 @@ module.exports = {
                 // parser: 'typescript'
             }
         ],
+        '@typescript-eslint/restrict-template-expressions': 'off',
+        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
         '@typescript-eslint/unbound-method': 'off',
         'no-duplicate-imports': 'off',
         '@typescript-eslint/no-unused-vars': 'off',

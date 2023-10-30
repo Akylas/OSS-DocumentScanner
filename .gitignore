@@ -16,6 +16,7 @@ e2e/**/*.js
 /gpx
 /dist
 build
+/opencv
 /Gemfile.lock
 firmware
 firmwares
