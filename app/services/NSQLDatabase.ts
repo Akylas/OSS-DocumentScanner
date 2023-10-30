@@ -36,7 +36,7 @@ export default class NSQLDatabase implements DatabaseInterface {
         const compiledQuery = query.compile(this.indexToPlaceholder, formatIdentifier);
         const sqlQuery = compiledQuery.sql.trim();
         const result = await this.db.select(sqlQuery, compiledQuery.params);
-        console.info('compiledQuery', sqlQuery, compiledQuery.params, result);
+        // console.info('compiledQuery', sqlQuery, compiledQuery.params, result);
         return result as any[];
     }
     async sequence<T>(sequence: (sequenceDb: NSQLDatabase) => Promise<T>): Promise<T> {
@@ -51,7 +51,7 @@ export default class NSQLDatabase implements DatabaseInterface {
         const compiledQuery = standardInsertQuery.compile(this.indexToPlaceholder, formatIdentifier);
         const sqlQuery = compiledQuery.sql.trim();
         let result = await this.db.execute(sqlQuery, compiledQuery.params);
-        console.info('insertAndGet', sqlQuery, compiledQuery.params, result);
+        // console.info('insertAndGet', sqlQuery, compiledQuery.params, result);
         if (!result) {
             // create await an array result.
             result = [undefined];

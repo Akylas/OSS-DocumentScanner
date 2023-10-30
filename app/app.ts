@@ -19,9 +19,9 @@ import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
 import { primaryColor } from '~/variables';
 import { showError } from './utils/error';
+import { syncService } from './services/sync';
 
 try {
-    console.log('test');
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
     installMixins();
     installColorFilters();
@@ -55,11 +55,13 @@ try {
     registerNativeViewElement('zoomimage', () => require('@nativescript-community/ui-zoomimage').ZoomImg);
     // registerNativeViewElement('pullrefresh', () => require('nativescript-akylas-pulltorefresh').PullToRefresh);
     registerNativeViewElement('canvasView', () => require('@nativescript-community/ui-canvas').CanvasView);
-    // registerNativeViewElement('line', () => require('nativescript-canvas/shapes/line').default);
+    registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes/line').default);
     registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
     registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
     registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
     registerNativeViewElement('cameraView', () => require('@nativescript-community/ui-cameraview').CameraView);
+    registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
+    registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
     // registerNativeViewElement('settingLabelIcon', () => require('./SettingLabelIcon.svelte').default);
 
     PagerElement.register();
@@ -77,25 +79,29 @@ try {
     let launched = false;
     async function start() {
         try {
+            await syncService.start();
             await documentsService.start();
+
+            try {
+                await syncService.syncDocuments();
+            } catch (error) {
+                console.error(error, error.stack);
+            }
         } catch (error) {
             showError(error);
         }
     }
-    Application.on('launch', () => {
-        console.log('launch');
+    Application.on('launch', async () => {
         launched = true;
         start();
     });
     Application.on('resume', () => {
-        console.log('resume');
         if (!launched) {
             launched = true;
             start();
         }
     });
     Application.on('exit', () => {
-        console.log('exit');
         launched = false;
         // documentsService.stop();
     });
@@ -115,7 +121,6 @@ try {
     });
     let Comp;
     const startOnCam = START_ON_CAM; /* ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) */
-    console.log('test starting app', startOnCam);
     if (startOnCam) {
         Comp = await import('~/components/Camera.svelte');
     } else {

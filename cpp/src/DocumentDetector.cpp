@@ -1,4 +1,5 @@
 #include "./include/DocumentDetector.h"
+#include "./include/WhitePaperTransform.h"
 
 using namespace detector;
 using namespace cv;
@@ -84,7 +85,6 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint()
 {
     Mat edged;
     vector<vector<cv::Point>> result = scanPoint(edged);
-    edged.release();
     return result;
 }
 vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged)
@@ -178,7 +178,7 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged)
         }
     }
     //    blurred.release();
-    image.release();
+    // image.release();
     if (squares.size() > 0)
     {
         sort(squares.begin(), squares.end(), sortByArea);
@@ -188,11 +188,11 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged)
             std::vector<Point> points = squares[i].first;
             for (int j = 0; j < points.size(); j++)
             {
-                if (borderSize > 0) {
+                if (borderSize > 0)
+                {
                     points[j] -= Point(borderSize, borderSize);
                 }
                 points[j] *= resizeScale;
-                
             }
             result.push_back(points);
         }
@@ -219,15 +219,43 @@ Mat DocumentDetector::resizeImage()
         Size size(width, height);
         Mat resizedBitmap(size, CV_8UC3);
         resize(image, resizedBitmap, size);
-        if (borderSize > 0) {
+        if (borderSize > 0)
+        {
             copyMakeBorder(resizedBitmap, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
         }
         return resizedBitmap;
     }
-    if (borderSize > 0) {
+    if (borderSize > 0)
+    {
         Mat resizedBitmap;
         copyMakeBorder(image, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
         return resizedBitmap;
     }
     return image;
+}
+auto splitString(std::string in, char sep) {
+    std::vector<std::string> r;
+    r.reserve(std::count(in.begin(), in.end(), sep) + 1); // optional
+    for (auto p = in.begin();; ++p) {
+        auto q = p;
+        p = std::find(p, in.end(), sep);
+        r.emplace_back(q, p);
+        if (p == in.end())
+            return r;
+    }
+}
+
+void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms)
+{
+    std::vector<std::string> transformArray = splitString(transforms, ',');
+    for (size_t i = 0; i < transformArray.size(); i++)
+    {
+        std::string transform = transformArray[i];
+        if (transform == "whitepaper") {
+            whiteboardEnhance(srcMat, srcMat);
+        }
+        else if (transform == "enhance") {
+            cv::detailEnhance(srcMat, srcMat, 10, 0.15);
+        }
+    }
 }

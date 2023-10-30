@@ -25,6 +25,8 @@ namespace detector {
         vector<vector<cv::Point>> scanPoint(Mat &edged);
         vector<vector<cv::Point>> scanPoint();
         cv::Mat resizeImage();
+
+        static void applyTransforms(Mat &srcMat, std::string transforms);
         cv::Mat image;
 
 

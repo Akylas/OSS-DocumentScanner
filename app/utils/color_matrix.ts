@@ -147,45 +147,45 @@ const staticFilters: { [key: string]: Matrix } = {
 export default {
     normal: (): Matrix => staticFilters.normal,
 
-    rgba: (r = 1, g = 1, b = 1, a = 1): Matrix => [r, 0, 0, 0, 0, 0, g, 0, 0, 0, 0, 0, b, 0, 0, 0, 0, 0, a, 0],
+    // rgba: (r = 1, g = 1, b = 1, a = 1): Matrix => [r, 0, 0, 0, 0, 0, g, 0, 0, 0, 0, 0, b, 0, 0, 0, 0, 0, a, 0],
 
-    saturate: (v = 1): Matrix => [
-        0.213 + 0.787 * v,
-        0.715 - 0.715 * v,
-        0.072 - 0.072 * v,
-        0,
-        0,
-        0.213 - 0.213 * v,
-        0.715 + 0.285 * v,
-        0.072 - 0.072 * v,
-        0,
-        0,
-        0.213 - 0.213 * v,
-        0.715 - 0.715 * v,
-        0.072 + 0.928 * v,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0
-    ],
+    // saturate: (v = 1): Matrix => [
+    //     0.213 + 0.787 * v,
+    //     0.715 - 0.715 * v,
+    //     0.072 - 0.072 * v,
+    //     0,
+    //     0,
+    //     0.213 - 0.213 * v,
+    //     0.715 + 0.285 * v,
+    //     0.072 - 0.072 * v,
+    //     0,
+    //     0,
+    //     0.213 - 0.213 * v,
+    //     0.715 - 0.715 * v,
+    //     0.072 + 0.928 * v,
+    //     0,
+    //     0,
+    //     0,
+    //     0,
+    //     0,
+    //     1,
+    //     0
+    // ],
 
-    hueRotate: (v = 0): Matrix => {
-        const cos = Math.cos(v);
-        const sin = Math.sin(v);
-        const a00 = 0.213 + cos * 0.787 - sin * 0.213;
-        const a01 = 0.715 - cos * 0.715 - sin * 0.715;
-        const a02 = 0.072 - cos * 0.072 + sin * 0.928;
-        const a10 = 0.213 - cos * 0.213 + sin * 0.143;
-        const a11 = 0.715 + cos * 0.285 + sin * 0.14;
-        const a12 = 0.072 - cos * 0.072 - sin * 0.283;
-        const a20 = 0.213 - cos * 0.213 - sin * 0.787;
-        const a21 = 0.715 - cos * 0.715 + sin * 0.715;
-        const a22 = 0.072 + cos * 0.928 + sin * 0.072;
-        return [a00, a01, a02, 0, 0, a10, a11, a12, 0, 0, a20, a21, a22, 0, 0, 0, 0, 0, 1, 0];
-    },
+    // hueRotate: (v = 0): Matrix => {
+    //     const cos = Math.cos(v);
+    //     const sin = Math.sin(v);
+    //     const a00 = 0.213 + cos * 0.787 - sin * 0.213;
+    //     const a01 = 0.715 - cos * 0.715 - sin * 0.715;
+    //     const a02 = 0.072 - cos * 0.072 + sin * 0.928;
+    //     const a10 = 0.213 - cos * 0.213 + sin * 0.143;
+    //     const a11 = 0.715 + cos * 0.285 + sin * 0.14;
+    //     const a12 = 0.072 - cos * 0.072 - sin * 0.283;
+    //     const a20 = 0.213 - cos * 0.213 - sin * 0.787;
+    //     const a21 = 0.715 - cos * 0.715 + sin * 0.715;
+    //     const a22 = 0.072 + cos * 0.928 + sin * 0.072;
+    //     return [a00, a01, a02, 0, 0, a10, a11, a12, 0, 0, a20, a21, a22, 0, 0, 0, 0, 0, 1, 0];
+    // },
 
     luminanceToAlpha: (): Matrix => staticFilters.luminanceToAlpha,
 
@@ -249,26 +249,26 @@ export default {
 
     cool: (): Matrix => staticFilters.cool,
     bw: (value = 1) => [value, value, value, -1, 0, value, value, value, -1, 0, value, value, value, -1, 0, 0, 0, 0, 1, 0],
-    brightness: (v = 1): Matrix => [v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, 1, 0],
+    // brightness: (v = 1): Matrix => [v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, 1, 0],
 
-    contrast: (v = 1): Matrix => {
-        const n = 0.5 * (1 - v);
-        return [v, 0, 0, 0, bias * n, 0, v, 0, 0, bias * n, 0, 0, v, 0, bias * n, 0, 0, 0, 1, 0];
-    },
+    // contrast: (v = 1): Matrix => {
+    //     const n = 0.5 * (1 - v);
+    //     return [v, 0, 0, 0, bias * n, 0, v, 0, 0, bias * n, 0, 0, v, 0, bias * n, 0, 0, 0, 1, 0];
+    // },
 
-    temperature: (v = 0): Matrix => [1 + v, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 - v, 0, 0, 0, 0, 0, 1, 0],
+    // temperature: (v = 0): Matrix => [1 + v, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 - v, 0, 0, 0, 0, 0, 1, 0],
 
-    tint: (v = 0): Matrix => [1 + v, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 + v, 0, 0, 0, 0, 0, 1, 0],
+    // tint: (v = 0): Matrix => [1 +     v, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 + v, 0, 0, 0, 0, 0, 1, 0],
 
-    threshold: (v = 0): Matrix => {
-        const rLum = 0.03086;
-        const gLum = 0.06094;
-        const bLum = 0.0082;
-        const r = rLum * 255;
-        const g = gLum * 255;
-        const b = bLum * 255;
-        return [r, g, b, 0, -bias * v, r, g, b, 0, -bias * v, r, g, b, 0, -bias * v, 0, 0, 0, 1, 0];
-    },
+    // threshold: (v = 0): Matrix => {
+    //     const rLum = 0.03086;
+    //     const gLum = 0.06094;
+    //     const bLum = 0.0082;
+    //     const r = rLum * 255;
+    //     const g = gLum * 255;
+    //     const b = bLum * 255;
+    //     return [r, g, b, 0, -bias * v, r, g, b, 0, -bias * v, r, g, b, 0, -bias * v, 0, 0, 0, 1, 0];
+    // },
 
     technicolor: (): Matrix => staticFilters.technicolor,
 

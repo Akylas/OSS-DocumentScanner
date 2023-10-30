@@ -32,8 +32,9 @@ android {
     }
     externalNativeBuild {
         cmake {
-            cppFlags "-std=c++11 -frtti -fexceptions"
+            cppFlags "-std=c++14 -frtti -fexceptions"
             abiFilters 'armeabi-v7a', "arm64-v8a", 'x86', 'x86_64'
+            // arguments "-DANDROID_TOOLCHAIN=clang", "-DCMAKE_BUILD_TYPE=DEBUG"
             arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static"
         }
     }
@@ -185,4 +186,5 @@ dependencies {
     }
     implementation "androidx.profileinstaller:profileinstaller:1.3.1"
     baselineProfile project(':benchmark')
+    implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
 }

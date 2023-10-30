@@ -7,6 +7,7 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/ui';
 import NSQLDatabase from './NSQLDatabase';
+import { loadImage, recycleImages } from '~/utils/utils';
 const sql = SqlQuery.createFromTemplateString;
 
 export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
@@ -71,10 +72,11 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         CREATE TABLE IF NOT EXISTS "Page" (
             id TEXT PRIMARY KEY NOT NULL,
             createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
-            modifiedDate BIGINT,
+            modifiedDate NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
             pageIndex INTEGER NOT NULL,
             colorType TEXT,
             colorMatrix TEXT,
+            transforms TEXT,
             rotation INTEGER DEFAULT 0,
             scale INTEGER DEFAULT 1,
             crop TEXT,
@@ -82,7 +84,6 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             height INTEGER NOT NULL,
             sourceImagePath TEXT NOT NULL,
             imagePath TEXT NOT NULL,
-            transformedImagePath TEXT,
             document_id TEXT,
             FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
         );
@@ -91,9 +92,11 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     }
 
     async createPage(page: OCRPage) {
+        const createdDate = Date.now();
         return this.create({
             id: page.id,
-            createdDate: Date.now(),
+            createdDate,
+            modifiedDate: createdDate,
             document_id: page.document_id,
             pageIndex: page.pageIndex,
             width: page.width,
@@ -103,7 +106,6 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             imagePath: page.imagePath,
             colorType: page.colorType,
             sourceImagePath: page.sourceImagePath,
-            transformedImagePath: page.transformedImagePath,
             crop: page._crop || (JSON.stringify(page.crop) as any),
             colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any)
         });
@@ -169,9 +171,10 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             CREATE TABLE IF NOT EXISTS "Document" (
                 id TEXT PRIMARY KEY NOT NULL,
                 createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
-                modifiedDate BIGINT,
-                name TEXT
-            );
+                modifiedDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+                name TEXT,
+                _synced INTEGER DEFAULT 0
+                );
         `),
             this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "DocumentsTags" (
@@ -186,7 +189,8 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
 
     async createDocument(document: Document) {
-        document.createdDate = Date.now();
+        document.createdDate = document.modifiedDate = Date.now();
+        document._synced = 0;
         return this.create(document);
     }
 
@@ -204,15 +208,23 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         return document;
     }
 
-    async update(document: OCRDocument, data?: Partial<OCRDocument>) {
+    async update(document: OCRDocument, data?: Partial<OCRDocument>, updateModifiedDate = true) {
         if (!data) {
-            const toUpdate = {
-                modifiedDate: Date.now()
+            const toUpdate: Partial<OCRDocument> = {
+                _synced: 0
             };
+            if (updateModifiedDate) {
+                toUpdate.modifiedDate = Date.now();
+            }
             await this.update(document, toUpdate);
             return document;
         }
-        data.modifiedDate = Date.now();
+        if (updateModifiedDate && !data.modifiedDate) {
+            data.modifiedDate = Date.now();
+        }
+        if (data._synced === undefined) {
+            data._synced = 0;
+        }
         const toSave: Partial<Document> = {};
         const toUpdate: any = {};
         Object.keys(data).forEach((k) => {
@@ -288,7 +300,6 @@ export class DocumentsService extends Observable {
         if (this.started) {
             return;
         }
-        DEV_LOG && console.log('DocumentsService start');
         await request('storage');
         this.dataFolder = knownFolders.externalDocuments().getFolder('data');
         const filePath = path.join(knownFolders.externalDocuments().path, 'db.sqlite');
@@ -342,7 +353,7 @@ export class DocumentsService extends Observable {
                 imagePath = page.getImagePath();
                 let width = page.width;
                 let height = page.height;
-                if (page.rotation % 180 === 90) {
+                if (page.rotation % 180 !== 0) {
                     width = page.height;
                     height = page.width;
                 }
@@ -351,7 +362,7 @@ export class DocumentsService extends Observable {
                 const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
                 const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = pdfpage.getCanvas();
-                const imageSource = await ImageSource.fromFile(imagePath);
+                const imageSource = await loadImage(imagePath);
                 let bitmapPaint: Paint = null;
                 if (page.colorType || page.colorMatrix) {
                     if (!bitmapPaint) {
@@ -363,7 +374,7 @@ export class DocumentsService extends Observable {
                 pageCanvas.rotate(page.rotation, 0, 0);
                 pageCanvas.scale(page.scale, page.scale, 0, 0);
                 pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
-                imageSource.android.recycle();
+                recycleImages(imageSource);
                 pdfDocument.finishPage(pdfpage);
             }
             const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
@@ -371,7 +382,7 @@ export class DocumentsService extends Observable {
             const fos = new java.io.FileOutputStream(newFile);
             pdfDocument.writeTo(fos);
             pdfDocument.close();
-            DEV_LOG && console.log('pdfFile', Date.now() - start, 'ms');
+            DEV_LOG && console.log('pdfFile', java.nio.file.Files.size(newFile.toPath()), Date.now() - start, 'ms');
             return pdfFile;
         }
     }

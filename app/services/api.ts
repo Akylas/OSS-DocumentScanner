@@ -5,6 +5,7 @@ import * as https from '@nativescript-community/https';
 import { Application, ApplicationEventData } from '@nativescript/core';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
+export type { Headers } from '@nativescript-community/https';
 
 export const NetworkConnectionStateEvent = 'connected';
 export interface NetworkConnectionStateEventData extends EventData {
@@ -74,15 +75,14 @@ export function queryString(params, location) {
     return parts.splice(0, 2).join('?') + (parts.length > 0 ? '&' + parts.join('&') : '');
 }
 
-
 interface NetworkService {
-    // on(eventNames: 'connected', callback: (data: NetworkConnectionStateEventData) => void, thisArg?: any);
-    // on(eventNames: 'connection', callback: (e: EventData & { connectionType: connectionType; connected: boolean }) => void, thisArg?: any);
+    on(eventNames: 'connected', callback: (data: NetworkConnectionStateEventData) => void, thisArg?: any);
+    on(eventNames: 'connection', callback: (e: EventData & { connectionType: connectionType; connected: boolean }) => void, thisArg?: any);
 }
 
 class NetworkService extends Observable {
     _connectionType: connectionType = connectionType.none;
-    _connected = false;
+    _connected = true;
     get connected() {
         return this._connected;
     }
@@ -145,44 +145,37 @@ async function handleRequestRetry(requestParams: HttpRequestOptions, retry = 0) 
     });
 }
 
-async function handleRequestResponse(response: https.HttpsResponse, requestParams: HttpRequestOptions, requestStartTime, retry) {
+async function handleRequestResponse<T>(response: https.HttpsResponse<https.HttpsResponseLegacy<T>>, requestParams: HttpRequestOptions, requestStartTime, retry): Promise<T> {
     const statusCode = response.statusCode;
-    // return Promise.resolve()
-    // .then(() => {
-    let content = await response.content.toJSONAsync();
+    let content: T;
+    try {
+        content = await response.content.toJSONAsync();
+    } catch (err) {
+        console.error(err);
+    }
     if (!content) {
-        content = await response.content.toStringAsync();
+        content = (await response.content.toStringAsync()) as any;
     }
     const isJSON = typeof content === 'object' || Array.isArray(content);
-    // const isJSON = !!jsonContent;
     if (Math.round(statusCode / 100) !== 2) {
         let jsonReturn;
         if (isJSON) {
             jsonReturn = content;
         } else {
-            // jsonReturn = jsonContent;
-            // } else {
-            // try {
-            // jsonReturn = JSON.parse(content);
-            // } catch (err) {
-            // error result might html
-            const match = /<title>(.*)\n*<\/title>/.exec(content);
-            return Promise.reject(
-                new HTTPError({
-                    statusCode,
-                    message: match ? match[1] : content.toString(),
-                    requestParams
-                })
-            );
-            // }
+            const match = /<title>(.*)\n*<\/title>/.exec(content as any as string);
+            throw new HTTPError({
+                statusCode,
+                message: match ? match[1] : content.toString(),
+                requestParams
+            });
         }
         if (jsonReturn) {
             if (Array.isArray(jsonReturn)) {
                 jsonReturn = jsonReturn[0];
             }
-            if (statusCode === 401 && jsonReturn.error === 'invalid_grant') {
-                return this.handleRequestRetry(requestParams, retry);
-            }
+            // if (statusCode === 401 && jsonReturn.error === 'invalid_grant') {
+            //     return this.handleRequestRetry(requestParams, retry);
+            // }
             const error = jsonReturn.error_description || jsonReturn.error || jsonReturn;
             throw new HTTPError({
                 statusCode: error.code || statusCode,
@@ -191,34 +184,7 @@ async function handleRequestResponse(response: https.HttpsResponse, requestParam
             });
         }
     }
-    // if (isJSON) {
-    // if (isJSON) {
-    // clog('handleRequestResponse response', JSON.stringify(content));
-    return content;
-    // }
-    // try {
-    //     // we should never go there anymore
-    //     return JSON.parse(content);
-    // } catch (e) {
-    //     // console.log('failed to parse result to JSON', e);
-    //     return content;
-    // }
-    // }
-    // try {
-    //     return response.content.toJSON();
-    // } catch (e) {
-    //     // console.log('failed to parse result to JSON', e);
-    //     return response.content;
-    // }
-    // })
-    // .catch(err => {
-    //     const delta = Date.now() - requestStartTime;
-    //     if (delta >= 0 && delta < 500) {
-    //         return timeout(delta).then(() => Promise.reject(err));
-    //     } else {
-    //         return Promise.reject(err);
-    //     }
-    // });
+    return content as any as T;
 }
 function getRequestHeaders(requestParams?: HttpRequestOptions) {
     const headers = requestParams?.headers ?? {};
@@ -228,7 +194,7 @@ function getRequestHeaders(requestParams?: HttpRequestOptions) {
 
     return headers;
 }
-export function request<T = any>(requestParams: HttpRequestOptions, retry = 0) {
+export async function request<T = any>(requestParams: HttpRequestOptions, retry = 0) {
     if (!networkService.connected) {
         throw new NoNetworkError();
     }
@@ -239,5 +205,7 @@ export function request<T = any>(requestParams: HttpRequestOptions, retry = 0) {
     requestParams.headers = getRequestHeaders(requestParams);
 
     const requestStartTime = Date.now();
-    return https.request(requestParams).then((response) => handleRequestResponse(response, requestParams, requestStartTime, retry));
+    DEV_LOG && console.log('request', requestParams);
+    const response = await https.request<T>(requestParams);
+    return handleRequestResponse<T>(response, requestParams, requestStartTime, retry);
 }
