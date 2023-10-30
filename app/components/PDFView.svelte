@@ -1,5 +1,6 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { Img } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Application, ContentView, EventData, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
@@ -72,7 +73,7 @@
     async function addPages() {
         try {
             document = await showModal({
-                page: Camera as any,
+                page: Camera,
                 fullscreen: true,
                 props: {
                     modal: true,
@@ -178,7 +179,7 @@
                 const index = items.findIndex((p) => p.page === item.page);
                 // console.log('onItemTap', index);
                 navigate({
-                    page: PdfEdit as any,
+                    page: PdfEdit,
                     transition: SharedTransition.custom(new PageTransition(300, undefined, 10)),
                     // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                     props: {
@@ -227,16 +228,25 @@
             }
         }
     }
+
+    function getImageView(index: number) {
+        return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
+    }
+
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
         items.push(...event.pages.map((page) => ({ page, selected: false })));
     }
-    function onDocumentPageUpdated(event: EventData & { pageIndex: number }) {
+    function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         if (event.object !== document) {
             return;
         }
         const index = event.pageIndex;
         const current = items.getItem(index);
         items.setItem(index, { selected: current.selected, page: document.getObservablePages().getItem(index) });
+        if (!!event.imageUpdated) {
+            const imageView = getImageView(index);
+            imageView?.updateImageUri();
+        }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
         if (event.object !== document) {
@@ -295,7 +305,7 @@
                     rows="*,auto"
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView id={`view_${document.id}_${item.page.id}`} item={item.page} rowSpan={2} sharedTransitionTag={`document_${document.id}_${item.page.id}`} />
+                    <RotableImageView id="imageView" item={item.page} rowSpan={2} sharedTransitionTag={`document_${document.id}_${item.page.id}`} />
                     <SelectedIndicator selected={item.selected} />
                     <canvaslabel backgroundColor="#00000088" color="white" height={30} padding="10" row={1}>
                         <cspan fontSize={12} text={`${item.page.width} x ${item.page.height}`} />

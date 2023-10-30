@@ -14,7 +14,7 @@ import ColorMatrices from './color_matrix';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { lc } from '@nativescript-community/l';
 import { showModal } from 'svelte-native';
-import { loadImage } from './utils';
+import { loadImage, recycleImages } from './utils';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -78,14 +78,13 @@ function getLoadingIndicator() {
 }
 export function showLoading(msg: string) {
     const loadingIndicator = getLoadingIndicator();
-    console.log('showLoading', msg, !!loadingIndicator);
     loadingIndicator.label.text = msg + '...';
     showLoadingStartTime = Date.now();
     loadingIndicator.show();
 }
 export function hideLoading() {
     const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
-    if (delta >= 0 && delta < 1000) {
+    if (__IOS__ && delta >= 0 && delta < 1000) {
         setTimeout(() => hideLoading(), 1000 - delta);
         return;
     }
@@ -102,7 +101,20 @@ export function hideLoading() {
 //     polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0]
 // };
 
-export const ColorMatricesTypes = Object.keys(ColorMatrices);
+const sortPriority = ['normal', 'grayscale', 'bw', 'sepia', 'invert', 'polaroid', 'nightvision'];
+export const ColorMatricesTypes = Object.keys(ColorMatrices).sort((a, b) => {
+    const sortIndexA = sortPriority.indexOf(a);
+    const sortIndexB = sortPriority.indexOf(b);
+    if (sortIndexA !== -1) {
+        if (sortIndexB !== -1) {
+            return sortIndexA - sortIndexB;
+        }
+        return -1;
+    } else if (sortIndexB !== -1) {
+        return 1;
+    }
+    return a.localeCompare(b);
+});
 export type ColorMatricesType = string;
 // export type ColorMatricesType = keyof typeof ColorMatricesTypes;
 
@@ -322,7 +334,6 @@ export async function importAndScanImage(document?: OCRDocument) {
             .catch((err) => null);
         if (selection?.length) {
             const sourceImagePath = selection[0].path;
-            console.log('selection', selection[0], selection[0].constructor.name);
             editingImage = await loadImage(sourceImagePath);
 
             if (!editingImage) {
@@ -331,10 +342,19 @@ export async function importAndScanImage(document?: OCRDocument) {
             let quads;
             console.log('editingImage', editingImage.width, editingImage.height, editingImage.android);
             if (__ANDROID__) {
-                quads = JSON.parse(com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 600, 0));
+                quads = JSON.parse(com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 300, 0));
+            } else {
+                // TODO: implement IOS
+            }
+            if (quads.length === 0) {
+                quads.push([
+                    [0, 0],
+                    [editingImage.width, 0],
+                    [editingImage.width, editingImage.height],
+                    [0, editingImage.height]
+                ]);
             }
             if (quads?.length) {
-                console.log('quads', quads);
                 const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
                 quads = await showModal({
                     page: ModalImportImage,
@@ -349,6 +369,8 @@ export async function importAndScanImage(document?: OCRDocument) {
                     let images /* : android.graphics.Bitmap[] */;
                     if (__ANDROID__) {
                         images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
+                    } else {
+                        //TODO: implement iOS
                     }
                     if (images) {
                         const pagesToAdd: PageData[] = [];
@@ -367,10 +389,12 @@ export async function importAndScanImage(document?: OCRDocument) {
                             await document.addPages(pagesToAdd);
                             await document.save();
                         } else {
-                            const document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-                            await document.save();
-                            documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
+                            document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                            // TODO: do we need to save?
+                            // await document.save();
+                            documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc: document });
                         }
+                        recycleImages(images);
                         return document;
                     }
                 }
@@ -380,8 +404,7 @@ export async function importAndScanImage(document?: OCRDocument) {
         }
     } catch (error) {
         showError(error);
-        if (__ANDROID__) {
-            editingImage?.android?.recycle();
-        }
+    } finally {
+        recycleImages(editingImage);
     }
 }

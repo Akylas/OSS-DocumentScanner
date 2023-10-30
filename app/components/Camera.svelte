@@ -22,6 +22,7 @@
     import CActionBar from './CActionBar.svelte';
     import CropEditView from './CropEditView.svelte';
     import DocumentsList from './DocumentsList.svelte';
+    import { loadImage, recycleImages } from '~/utils/utils';
 
     const touchAnimationShrink: TouchAnimationOptions = {
         down: {
@@ -77,13 +78,13 @@
     //     text: string;
     // }
     async function showDocumentsList() {
-        return navigate({ page: DocumentsList as any });
+        return navigate({ page: DocumentsList });
     }
 
     async function showOptions() {
         const result: { icon: string; id: string; text: string } = await showBottomSheet({
             parent: page,
-            view: ActionSheet as any,
+            view: ActionSheet,
             props: {
                 options: [
                     // {
@@ -119,7 +120,7 @@
                         const doc = await importAndScanImage();
                         const page = (await import('~/components/PDFView.svelte')).default;
                         navigate({
-                            page: page as any,
+                            page,
                             props: {
                                 document: doc
                             }
@@ -153,10 +154,10 @@
         try {
             stopPreview();
             showLoading(l('computing'));
-            editingImage = await ImageSource.fromFile(imagePath);
+            editingImage = await loadImage(imagePath);
             let corners;
             if (__ANDROID__) {
-                corners = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 600, 0);
+                corners = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 300, 0);
             }
             const quads = JSON.parse(corners);
             console.log('processAndAddImage', imagePath, quads);
@@ -190,12 +191,12 @@
             // const test = available[0];
             // console.log('max size', test.width, test.height);
             showLoading(l('capturing'));
-            const file: File = (await cameraPreview.nativeView.takePicture({
+            const file: File = await cameraPreview.nativeView.takePicture({
                 // savePhotoToDisk: true,
                 // pictureSize: { width: test.width, height: test.height },
                 captureMode: 0
                 // captureMode: batchMode ? 1 : 0
-            }));
+            });
             await processAndAddImage(file.path);
         } catch (err) {
             console.error(err, err.stack);
@@ -299,7 +300,7 @@
                         // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
                         const page = (await import('~/components/PDFView.svelte')).default;
                         navigate({
-                            page: page as any,
+                            page,
                             // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                             props: {
                                 document
@@ -341,12 +342,10 @@
     }
 
     function clearImages() {
-        if (editingImage) {
-            if (__ANDROID__) {
-                editingImage?.android.recycle();
-            }
-            editingImage = null;
-        }
+        // if (editingImage) {
+        recycleImages(editingImage);
+        editingImage = null;
+        // }
         smallImagePath = null;
         croppedImagePath = null;
     }
@@ -360,6 +359,8 @@
             let images /* : android.graphics.Bitmap[] */;
             if (__ANDROID__) {
                 images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
+            } else {
+                //TODO: implement iOS
             }
             console.log('images', images, images.length);
             const pagesToAdd: PageData[] = [];
@@ -382,14 +383,9 @@
             if (!pages) {
                 pages = document.getObservablePages();
             }
-            if (__ANDROID__) {
-                for (let index = 0; index < images.length; index++) {
-                    images[index].recycle();
-                }
-            }
+            recycleImages(images);
             images = null;
             nbPages = pages.length;
-            console.log('addPages done', nbPages, pages.getItem(pages.length - 1));
             startPreview();
             // if (editing) {
             //     toggleEditing();
@@ -545,8 +541,7 @@
                     text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
                     variant="text"
                     verticalAlignment="bottom"
-                    on:tap={() => (batchMode = !batchMode)}
-                />
+                    on:tap={() => (batchMode = !batchMode)} />
             </gridlayout>
 
             <image
@@ -560,8 +555,7 @@
                 stretch="aspectFit"
                 verticalAlignment="bottom"
                 width={80}
-                on:tap={toggleEditing}
-            />
+                on:tap={toggleEditing} />
 
             <image
                 bind:this={fullImageView}
@@ -571,8 +565,7 @@
                 rowSpan={2}
                 src={croppedImagePath}
                 stretch="aspectFit"
-                on:tap={() => setCurrentImage(null)}
-            />
+                on:tap={() => setCurrentImage(null)} />
 
             <gridlayout
                 borderColor="white"
@@ -584,8 +577,7 @@
                 opacity={takingPicture ? 0.6 : 1}
                 row={1}
                 verticalAlignment="bottom"
-                width={70}
-            >
+                width={70}>
                 <gridlayout backgroundColor={primaryColor} borderRadius={27} height={54} touchAnimation={touchAnimationShrink} width={54} on:tap={takePicture} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
@@ -607,8 +599,7 @@
                 variant="text"
                 verticalAlignment="center"
                 visibility={canSaveDoc ? 'visible' : 'hidden'}
-                on:tap={() => saveCurrentDocument()}
-            />
+                on:tap={() => saveCurrentDocument()} />
         </gridlayout>
         <CropEditView
             {croppedImagePath}
@@ -619,7 +610,6 @@
             bind:croppedImageRotation
             bind:colorType
             on:finished={onFinishEditing}
-            on:croppedImageChanged={onCroppedImageChanged}
-        />
+            on:croppedImageChanged={onCroppedImageChanged} />
     </gridlayout>
 </page>

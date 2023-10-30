@@ -1,6 +1,8 @@
+import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/ui';
+import { loadImage, recycleImages } from '~/utils/utils';
 
 export interface ImageConfig {
     colorType?: ColorMatricesType;
@@ -21,34 +23,85 @@ export interface Document {
     modifiedDate: number;
     name?: string;
     tags: string[];
+    _synced: number;
 }
 
 export class OCRDocument extends Observable implements Document {
-    id: string;
+    // id: string;
     createdDate: number;
     modifiedDate: number;
     name?: string;
     tags: string[];
+    _synced: number;
 
-    _observables: ObservableArray<OCRPage>;
+    #observables: ObservableArray<OCRPage>;
     pages: OCRPage[];
 
-    constructor(id: string) {
+    constructor(public id: string) {
         super();
-        console.log('OCRDocument', id);
-        this.id = id;
+        // this.id = id;
     }
 
     static async createDocument(name?: string, pagesData?: PageData[], setRaw = false) {
         const docId = Date.now() + '';
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
-        console.log('createDocument', doc);
+        DEV_LOG && console.log('createDocument', doc);
         await doc.addPages(pagesData);
         return doc;
     }
 
+    async addPage(pageData: PageData, index: number = this.pages.length) {
+        const docId = this.id;
+        const docData = documentsService.dataFolder.getFolder(docId);
+        const { id, imagePath, sourceImagePath, image, ...otherPageData } = pageData;
+        const pageId = id || Date.now() + '_' + index;
+        // const page = new OCRPage(pageId, docId);
+        const pageFileData = docData.getFolder(pageId);
+        const attributes = { ...otherPageData, id: pageId, document_id: docId } as OCRPage;
+        attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
+        DEV_LOG && console.log('add page', attributes.imagePath, imagePath, sourceImagePath, image, otherPageData);
+        if (imagePath) {
+            const file = File.fromPath(imagePath);
+            await file.copy(attributes.imagePath);
+        } else if (image) {
+            await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, 100);
+        } else {
+            return;
+        }
+        if (sourceImagePath) {
+            let baseName = sourceImagePath
+                .split('/')
+                .slice(-1)[0]
+                .replace(/%[a-zA-Z\d]{2}/, '');
+            if (!baseName.endsWith(IMG_FORMAT)) {
+                baseName += '.' + IMG_FORMAT;
+            }
+            const actualSourceImagePath = path.join(pageFileData.path, baseName);
+            const file = File.fromPath(sourceImagePath);
+            await file.copy(actualSourceImagePath);
+            attributes.sourceImagePath = actualSourceImagePath;
+        }
+        // we add 1000 to each pageIndex so that we can reorder them
+        if (!attributes.pageIndex) {
+            attributes.pageIndex = index + 1000;
+        }
+        const addedPage = await documentsService.pageRepository.createPage(attributes);
+        // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
+
+        //using saved image to disk
+        if (this.pages) {
+            this.pages.splice(index, 0, addedPage);
+        } else {
+            this.pages = [addedPage];
+        }
+        if (this.#observables) {
+            this.#observables.splice(index, 0, addedPage);
+        }
+        this.notify({ eventName: 'pagesAdded', pages: [addedPage] });
+    }
+
     async addPages(pagesData?: PageData[]) {
-        console.log('addPages', pagesData);
+        DEV_LOG && console.log('addPages', JSON.stringify(pagesData));
         if (pagesData) {
             const docId = this.id;
             const docData = documentsService.dataFolder.getFolder(docId);
@@ -56,13 +109,13 @@ export class OCRDocument extends Observable implements Document {
             const pages = [];
             const pageStartId = Date.now();
             for (let index = 0; index < length; index++) {
-                const pageId = pageStartId + '_' + index;
+                const { id, imagePath, sourceImagePath, image, ...pageData } = pagesData[index];
+                const pageId = id || pageStartId + '_' + index;
                 // const page = new OCRPage(pageId, docId);
                 const pageFileData = docData.getFolder(pageId);
-                const { imagePath, sourceImagePath, image, ...pageData } = pagesData[index];
                 const attributes = { ...pageData, id: pageId, document_id: docId } as OCRPage;
                 attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
-                DEV_LOG && console.log('add page', attributes.imagePath, imagePath, sourceImagePath, image, pageData);
+                DEV_LOG && console.log('add page', attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
                 if (imagePath) {
                     const file = File.fromPath(imagePath);
                     await file.copy(attributes.imagePath);
@@ -72,7 +125,13 @@ export class OCRDocument extends Observable implements Document {
                     continue;
                 }
                 if (sourceImagePath) {
-                    const baseName = sourceImagePath.split('/').slice(-1)[0];
+                    let baseName = sourceImagePath
+                        .split('/')
+                        .slice(-1)[0]
+                        .replace(/%[a-zA-Z\d]{2}/, '');
+                    if (!baseName.endsWith(IMG_FORMAT)) {
+                        baseName += '.' + IMG_FORMAT;
+                    }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
                     const file = File.fromPath(sourceImagePath);
                     await file.copy(actualSourceImagePath);
@@ -85,14 +144,14 @@ export class OCRDocument extends Observable implements Document {
                 //using saved image to disk
                 pages.push(await documentsService.pageRepository.createPage(attributes));
             }
-            console.log('addPages done', pages);
+            DEV_LOG && console.log('addPages done', JSON.stringify(pages));
             if (this.pages) {
                 this.pages.push(...pages);
             } else {
                 this.pages = pages;
             }
-            if (this._observables) {
-                this._observables.push(...pages);
+            if (this.#observables) {
+                this.#observables.push(...pages);
             }
             this.notify({ eventName: 'pagesAdded', pages });
         }
@@ -100,14 +159,14 @@ export class OCRDocument extends Observable implements Document {
 
     async removeFromDisk() {
         const docData = documentsService.dataFolder.getFolder(this.id);
-        console.log('OCRDocument', 'removeFromDisk');
+        DEV_LOG && console.log('OCRDocument', 'removeFromDisk');
         return docData.remove();
     }
 
     async deletePage(pageIndex: number) {
         const removed = this.pages.splice(pageIndex, 1);
-        if (this._observables) {
-            this._observables.splice(pageIndex, 1);
+        if (this.#observables) {
+            this.#observables.splice(pageIndex, 1);
         }
         await documentsService.pageRepository.delete(removed[0]);
         const docData = documentsService.dataFolder.getFolder(this.id);
@@ -119,13 +178,15 @@ export class OCRDocument extends Observable implements Document {
         return this;
     }
 
-    async updatePage(pageIndex, data: Partial<Page>) {
+    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false) {
         const page = this.pages[pageIndex];
-        console.log('updatePage', pageIndex, data);
+        DEV_LOG && console.log('updatePage', pageIndex, data);
         if (page) {
             await documentsService.pageRepository.update(page, data);
-            // await this.save();
-            this.onPageUpdated(pageIndex, page);
+            // we save the document so that the modifiedDate gets changed
+            // no need to notify though
+            await this.save();
+            this.onPageUpdated(pageIndex, page, imageUpdated);
         }
     }
     async movePage(oldIndex: any, newIndex: any) {
@@ -143,33 +204,89 @@ export class OCRDocument extends Observable implements Document {
         const item = this.pages[oldIndex];
         this.pages.splice(oldIndex, 1);
         this.pages.splice(newIndex, 0, item);
-        if (this._observables) {
-            const item = this._observables.getItem(oldIndex);
-            this._observables.splice(oldIndex, 1);
-            this._observables.splice(newIndex, 0, item);
+        if (this.#observables) {
+            const item = this.#observables.getItem(oldIndex);
+            this.#observables.splice(oldIndex, 1);
+            this.#observables.splice(newIndex, 0, item);
         }
     }
-    onPageUpdated(pageIndex: number, page: OCRPage) {
+    onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
         page.notify({ eventName: 'updated', object: page });
         this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
-        documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex });
+        documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex, imageUpdated });
     }
-    _observablesListeners: Function[] = [];
+    #_observablesListeners: Function[] = [];
     getObservablePages() {
-        if (!this._observables) {
+        if (!this.#observables) {
             const pages = this.pages;
-            this._observables = new ObservableArray(pages);
+            this.#observables = new ObservableArray(pages);
             const handler = (event: EventData & { pageIndex: number }) => {
-                this._observables.setItem(event.pageIndex, this._observables.getItem(event.pageIndex));
+                this.#observables.setItem(event.pageIndex, this.#observables.getItem(event.pageIndex));
             };
-            this._observablesListeners.push(handler);
+            this.#_observablesListeners.push(handler);
             this.on('pageUpdated', handler);
         }
-        return this._observables;
+        return this.#observables;
     }
 
-    async save() {
-        return documentsService.documentRepository.update(this);
+    async save(data?: Partial<OCRDocument>, updateModifiedDate = true) {
+        await documentsService.documentRepository.update(this, data, updateModifiedDate);
+        documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this });
+    }
+
+    toString() {
+        return JSON.stringify(this, (key, value) => (key.startsWith('_') ? undefined : value));
+    }
+
+    toJSONObject() {
+        return JSON.parse(this.toString());
+    }
+
+    async updatePageCrop(pageIndex: number, quad: any, editingImage: ImageSource) {
+        const page = this.pages[pageIndex];
+        let images;
+        if (__ANDROID__) {
+            images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]), page.transforms || '');
+        } else {
+            //TODO: implement iOS
+        }
+        const croppedImagePath = page.imagePath;
+        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
+        getImagePipeline().evictFromCache(croppedImagePath);
+        await this.updatePage(
+            pageIndex,
+            {
+                crop: quad
+            },
+            true
+        );
+        //we remove from cache so that everything gets updated
+        recycleImages(images);
+    }
+    async updatePageTransforms(pageIndex: number, transforms: string, editingImage?: ImageSource) {
+        const page = this.pages[pageIndex];
+        if (!editingImage) {
+            editingImage = await loadImage(page.sourceImagePath);
+        }
+        let images;
+        if (__ANDROID__) {
+            console.log('updatePageTransforms', page.crop, transforms);
+            images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([page.crop]), transforms);
+        } else {
+            //TODO: implement iOS
+        }
+        const croppedImagePath = page.imagePath;
+        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
+        getImagePipeline().evictFromCache(croppedImagePath);
+        await this.updatePage(
+            pageIndex,
+            {
+                transforms
+            },
+            true
+        );
+        //we remove from cache so that everything gets updated
+        recycleImages(images, editingImage);
     }
 }
 
@@ -179,6 +296,7 @@ export interface Page {
     modifiedDate?: number;
     document_id: string;
 
+    transforms?: string;
     colorType?: string;
     colorMatrix?: number[];
     rotation: number;
@@ -189,7 +307,6 @@ export interface Page {
     height: number;
     sourceImagePath: string;
     imagePath: string;
-    transformedImagePath?: string;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -213,15 +330,16 @@ export class OCRPage extends Observable implements Page {
     crop: number[];
     _crop: string;
 
+    transforms?: string;
+
     pageIndex: number;
     width: number;
     height: number;
     sourceImagePath: string;
     imagePath: string;
-    transformedImagePath?: string;
 
     getImagePath() {
-        return this.transformedImagePath || this.imagePath;
+        return this.imagePath;
     }
     constructor(id: string, docId: string) {
         super();

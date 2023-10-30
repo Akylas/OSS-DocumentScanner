@@ -42,10 +42,10 @@ target_link_libraries(${TARGET} log jnigraphics z dl m)
 # build script, prebuilt third-party libraries, or system libraries.
 
 if(${ANDROID_ABI} STREQUAL x86_64)
-    target_link_libraries(${TARGET} opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc)
+    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc)
 elseif(${ANDROID_ABI} STREQUAL x86)
-        target_link_libraries(${TARGET} opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc ippiw ippicv)
+        target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc ippiw ippicv)
 else()
-    target_link_libraries(${TARGET} opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc tegra_hal)
+    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc tegra_hal)
 endif()
 

@@ -53,7 +53,7 @@ export const accentColor = new Color(locals.accentColor);
 export const darkColor = new Color(locals.darkColor);
 export const textColorDark = locals.textColorDark;
 export const textColorLight = locals.textColorLight;
-export const backgroundColor = new Color(locals.backgroundColor);
+export const backgroundColor = writable('');
 export const mdiFontFamily: string = locals.mdiFontFamily;
 let innerStatusBarHeight = 20;
 export const statusBarHeight = writable(innerStatusBarHeight);
@@ -109,6 +109,7 @@ export function updateThemeColors(theme: string, force = false) {
         textLightColor.set('#aaaaaa');
         borderColor.set('#cccccc55');
         subtitleColor.set('#aaaaaa');
+        backgroundColor.set('#1c1c1e');
         iconColor.set('#aaaaaa');
         widgetBackgroundColor.set('#000000aa');
     } else {
@@ -116,6 +117,7 @@ export function updateThemeColors(theme: string, force = false) {
         textLightColor.set('#444444');
         borderColor.set('#cccccc55');
         subtitleColor.set('#888888');
+        backgroundColor.set(textColorDark);
         iconColor.set('#444444');
         widgetBackgroundColor.set('#ffffff');
     }

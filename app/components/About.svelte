@@ -30,7 +30,7 @@
             case 'third_party':
                 showBottomSheet({
                     parent: this,
-                    view: ThirdPartySoftwareBottomSheet as any,
+                    view: ThirdPartySoftwareBottomSheet,
                     ignoreTopSafeArea: true,
                     trackingScrollView: 'trackingScrollView'
                 });

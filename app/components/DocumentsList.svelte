@@ -13,6 +13,7 @@
     import Camera from '~/components/Camera.svelte';
     import RotableImageView from '~/components/RotableImageView.svelte';
     import SelectedIndicator from '~/components/SelectedIndicator.svelte';
+    import SyncIndicator from '~/components/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
@@ -21,6 +22,11 @@
     import { importAndScanImage, timeout } from '~/utils/ui';
     import { accentColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+    import { syncService } from '~/services/sync';
+    import { Img } from '@nativescript-community/ui-image';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
 
     interface Item {
         doc: OCRDocument;
@@ -28,12 +34,17 @@
     }
     let documents: ObservableArray<Item> = null;
     let page: NativeViewElementNode<Page>;
+    let collectionView: NativeViewElementNode<CollectionView>;
+
+    let syncEnabled = syncService.enabled;
     // let items: ObservableArray<{
     //     doc: OCRDocument; selected: boolean
     // }> = null;
 
     async function refresh() {
         try {
+            syncEnabled = syncService.enabled;
+            DEV_LOG && console.log('syncEnabled', syncEnabled);
             const r = await documentsService.documentRepository.search({
                 orderBy: SqlQuery.createFromTemplateString`id DESC`
                 // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
@@ -63,6 +74,19 @@
             selected: false
         } as Item);
     }
+    function onDocumentUpdated(event: EventData & { doc }) {
+        let index = -1;
+        documents.some((d, i) => {
+            if (d.doc.id === event.doc.id) {
+                index = i;
+                return true;
+            }
+        });
+        DEV_LOG && console.log('onDocumentUpdated', event.doc, index);
+        if (index >= 0) {
+            documents.setItem(index, documents.getItem(index));
+        }
+    }
     function onDocumentsDeleted(event: EventData & { docs: OCRDocument[] }) {
         for (let index = documents.length - 1; index >= 0; index--) {
             if (event.docs.indexOf(documents.getItem(index).doc) !== -1) {
@@ -71,8 +95,13 @@
             }
         }
     }
-    function onDocumentPageUpdated(event: EventData & { pageIndex: number }) {
+    function getImageView(index: number) {
+        return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
+    }
+
+    function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         let index = -1;
+        DEV_LOG && console.log('onDocumentPageUpdated', event.pageIndex, event.imageUpdated);
         if (event.pageIndex === 0) {
             documents.some((d, i) => {
                 if (d.doc === (event.object as any)) {
@@ -82,8 +111,17 @@
             });
             if (index >= 0) {
                 documents.setItem(index, documents.getItem(index));
+                if (!!event.imageUpdated) {
+                    const imageView = getImageView(index);
+                    imageView?.updateImageUri();
+                }
             }
         }
+    }
+    let syncRunning = false;
+    function onSyncState(event: EventData & { state: 'running' | 'finished' }) {
+        syncRunning = event.state === 'running';
+        DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
     onMount(() => {
         if (__ANDROID__) {
@@ -92,7 +130,9 @@
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         documentsService.on('documentPageDeleted', onDocumentPageUpdated);
         documentsService.on('documentAdded', onDocumentAdded);
+        documentsService.on('documentUpdated', onDocumentUpdated);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
+        syncService.on('syncState', onSyncState);
         // refresh();
     });
     onDestroy(() => {
@@ -101,8 +141,10 @@
         }
         documentsService.on('documentPageDeleted', onDocumentPageUpdated);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
+        documentsService.off('documentUpdated', onDocumentUpdated);
         documentsService.off('documentAdded', onDocumentAdded);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
+        syncService.off('syncState', onSyncState);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -110,13 +152,13 @@
     async function onStartCam() {
         try {
             const document = await showModal({
-                page: Camera as any,
+                page: Camera,
                 fullscreen: true
             });
             if (document) {
                 const PDFView = (await import('~/components/PDFView.svelte')).default;
                 navigate({
-                    page: PDFView as any,
+                    page: PDFView,
                     transition: SharedTransition.custom(new PageTransition(300)),
                     props: {
                         document
@@ -139,7 +181,7 @@
             //     // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
             //     const PDFView = (await import('~/components/PDFView.svelte')).default;
             //     navigate({
-            //         page: PDFView as any,
+            //         page: PDFView,
             //         transition: SharedTransition.custom(new PageTransition(300)),
             //         props: {
             //             document: document
@@ -150,7 +192,7 @@
             showError(error);
         }
         // showModal({
-        //     page: Camera as any,
+        //     page: Camera,
         //     fullscreen: true
         // });
     }
@@ -158,13 +200,14 @@
     async function importDocument() {
         try {
             const doc = await importAndScanImage();
+            console.log('importDocument', doc);
             if (!doc) {
                 return;
             }
-            await timeout(10);
+            // await timeout(10);
             const component = (await import('~/components/PDFEdit.svelte')).default;
             navigate({
-                page: component as any,
+                page: component,
                 props: {
                     document: doc
                 }
@@ -244,7 +287,7 @@
             } else {
                 const component = (await import('~/components/PDFView.svelte')).default;
                 navigate({
-                    page: component as any,
+                    page: component,
                     transition: SharedTransition.custom(new PageTransition(300)),
                     props: {
                         document: item.doc
@@ -286,48 +329,78 @@
             }
         }
     }
-    async function showOptions() {
-        const result: { icon: string; id: string; text: string } = await showBottomSheet({
-            parent: page,
-            view: ActionSheet as any,
-            props: {
-                options: [
-                    {
-                        icon: 'mdi-cogs',
-                        id: 'preferences',
-                        text: l('preferences')
-                    },
-                    {
-                        icon: 'mdi-information-outline',
-                        id: 'about',
-                        text: l('about')
-                    }
-                ]
-            }
-        });
-        if (result) {
-            switch (result.id) {
-                case 'preferences':
-                    prefs.openSettings();
-                    break;
+    async function showOptions(event) {
+        try {
+            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            const options = [
+                {
+                    icon: 'mdi-cogs',
+                    id: 'preferences',
+                    name: l('preferences')
+                },
+                {
+                    icon: 'mdi-information-outline',
+                    id: 'about',
+                    name: l('about')
+                }
+            ];
+            const result: { icon: string; id: string; text: string } = await showPopover({
+                view: OptionSelect,
+                anchor: event.object,
+                vertPos: VerticalPosition.ALIGN_TOP,
+                props: {
+                    width: 200,
+                    fontSize: 17,
+                    iconFontSize: 24,
+                    rowHeight: 60,
+                    height: options.length * 60,
+                    fontWeight: 'normal',
+                    onClose: closePopover,
+                    margin: 4,
+                    borderRadius: 6,
+                    elevation: 2,
+                    options
+                }
+            });
+            if (result) {
+                switch (result.id) {
+                    case 'preferences':
+                        prefs.openSettings();
+                        break;
 
-                case 'about':
-                    const About = require('~/components/About.svelte').default;
-                    showModal({ page: About, animated: true, fullscreen: true });
-                    break;
+                    case 'about':
+                        const About = (await import('~/components/About.svelte')).default;
+                        showModal({ page: About, animated: true, fullscreen: true });
+                        break;
+                }
             }
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function syncDocuments() {
+        try {
+            syncService.syncDocuments(true);
+        } catch (error) {
+            showError(error);
         }
     }
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
-        <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? l('selected', nbSelected) : l('documents')}>
-            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" visibility={nbSelected ? 'visible' : 'hidden'} on:tap={deleteSelectedDocuments} />
+        <CActionBar title={l('documents')}>
+            <mdbutton class="actionBarButton" isEnabled={!syncRunning} text="mdi-sync" variant="text" visibility={syncEnabled ? 'visible' : 'collapsed'} on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
         </CActionBar>
-        <collectionView colWidth="50%" items={documents} row={1} rowHeight="180">
+        <!-- {#if nbSelected > 0} -->
+        <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} visibility={nbSelected > 0 ? 'visible' : 'collapsed'}>
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+        </CActionBar>
+        <!-- {/if} -->
+        <collectionView bind:this={collectionView} colWidth="50%" items={documents} row={1} rowHeight="180">
             <Template let:item>
+                <!-- TODO: make this a canvas -->
                 <gridlayout
                     backgroundColor={$widgetBackgroundColor}
                     borderRadius="4"
@@ -339,13 +412,14 @@
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
-                    <RotableImageView item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} />
+                    <RotableImageView id="imageView" item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} />
                     <canvaslabel color={$textColor} height={60} padding="10" row={1}>
                         <cspan fontSize={12} text={item.doc.name} />
                         <cspan color={$subtitleColor} fontSize={10} paddingTop={16} text={dayjs(item.doc.createdDate).format('L LT')} />
                         <cspan color={$subtitleColor} fontSize={10} paddingTop={29} text={lc('nb_pages', item.doc.pages.length)} />
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
+                    <SyncIndicator rowSpan={2} selected={item.doc._synced === 1} visible={syncEnabled} />
                 </gridlayout>
             </Template>
         </collectionView>

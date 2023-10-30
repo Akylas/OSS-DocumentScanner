@@ -6,7 +6,7 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ImageAsset, ImageSource, ObservableArray } from '@nativescript/core';
     import { layout, openFile } from '@nativescript/core/utils';
-    import { onDestroy } from 'svelte';
+    import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/CActionBar.svelte';
@@ -19,7 +19,10 @@
     import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import CropView from '~/components/CropView.svelte';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
-    import { loadImage } from '~/utils/utils';
+    import { loadImage, recycleImages } from '~/utils/utils';
+    import { primaryColor } from '~/variables';
+    import { Writable, get, writable } from 'svelte/store';
+    import { notifyWhenChanges } from '~/utils/svelte/store';
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -32,13 +35,15 @@
     let quad;
     let quads;
     $: quads = [quad];
-    $: console.log('quads', quads);
     let quadChanged = false;
     let currentIndex = startPageIndex;
     const firstItem = items.getItem(currentIndex);
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
     let currentSelectedImagePath = firstItem.getImagePath();
     let currentSelectedImageRotation = firstItem.rotation;
+    const transforms = firstItem.transforms?.split(',') || [];
+    const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
+    const enhanced = writable(transforms.indexOf('enhance') !== -1);
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -55,7 +60,9 @@
         currentItemSubtitle = `${item.width} x ${item.height}`;
         currentSelectedImagePath = item.getImagePath();
         currentSelectedImageRotation = item.rotation;
-        currentIndex = event.object.selectedIndex;
+        const transforms = item.transforms?.split(',') || [];
+        $whitepaper = transforms.indexOf('whitepaper') !== -1;
+        $enhanced = transforms.indexOf('enhance') !== -1;
         console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
         refreshCollectionView();
     }
@@ -168,7 +175,7 @@
         try {
             const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
             showPopover({
-                view: SliderPopover as any,
+                view: SliderPopover,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
                 props: {
@@ -226,37 +233,87 @@
         });
     }
 
+    function updateImageUris() {
+        getCurrentImageView().updateImageUri();
+        collectionView?.nativeView.eachChild((c) => {
+            c.getViewById<Img>('imageView')?.updateImageUri();
+            return true;
+        });
+        // refreshCollectionView();
+    }
+
     const filters = ColorMatricesTypes.map((k) => ({
         id: k,
         text: lc(k),
         colorType: k
     }));
+    let updatingTransform = false;
+    async function updateTransform(value: boolean, store: Writable<boolean>, type: string) {
+        console.log('updateTransform', value, type, updatingTransform);
+        if (updatingTransform) {
+            store.set(!value);
+            return;
+        }
+        updatingTransform = true;
+        try {
+            const page = items.getItem(currentIndex);
+            const currentTransforms = page.transforms?.split(',') || [];
+            if (value) {
+                if (currentTransforms.indexOf(type) === -1) {
+                    showLoading(l('computing'));
+                    currentTransforms.push(type);
+                    await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
+                    updateImageUris();
+                }
+            } else {
+                const index = currentTransforms.indexOf(type);
+                if (index !== -1) {
+                    showLoading(l('computing'));
+                    currentTransforms.splice(index, 1);
+                    await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
+                    updateImageUris();
+                }
+            }
+        } catch (error) {
+            showError(error);
+        } finally {
+            updatingTransform = false;
+            hideLoading();
+        }
+    }
+
+    onMount(() => {
+        notifyWhenChanges(enhanced, (value) => {
+            updateTransform(value, enhanced, 'enhance');
+        });
+        notifyWhenChanges(whitepaper, (value) => {
+            updateTransform(value, whitepaper, 'whitepaper');
+        });
+        // $:
+
+        // $: updateTransform($whitepaper, whitepaper, 'whitepaper');
+    });
 
     function refreshCollectionView() {
         collectionView?.nativeView?.refreshVisibleItems();
     }
 
     async function onRecropTapFinish() {
-        console.log('onTapFinish', recrop, quadChanged);
-        if (recrop) {
-            // let s see if quads changed and update image
-            if (quadChanged) {
-                let images;
-                if (__ANDROID__) {
-                    images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]));
+        try {
+            if (recrop) {
+                // let s see if quads changed and update image
+                if (quadChanged) {
+                    await document.updatePageCrop(currentIndex, quad, editingImage);
+                    updateImageUris();
+                    quadChanged = false;
+                    recycleImages(editingImage);
+                    editingImage = null;
+                    quads = [];
                 }
-                const croppedImagePath = items.getItem(currentIndex).imagePath;
-                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
-                console.log('onImage Changed', croppedImagePath);
-                //we remove from cache so that everything gets updated
-                getImagePipeline().evictFromCache(croppedImagePath);
-                getCurrentImageView().updateImageUri();
-                refreshCollectionView();
-                quadChanged = false;
-                editingImage = null;
-                quads = [];
+                recrop = false;
             }
-            recrop = false;
+        } catch (error) {
+            showError(error);
         }
     }
 </script>
@@ -281,19 +338,21 @@
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
+            <checkbox checked={$enhanced} text={lc('enhance')} tintColor={primaryColor} on:checkedChange={(e) => ($enhanced = e.value)} />
+            <checkbox checked={$whitepaper} text={lc('whitepaper')} tintColor={primaryColor} on:checkedChange={(e) => ($whitepaper = e.value)} />
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={3}>
             <Template let:item>
                 <gridlayout padding={4} rows="*,24" on:tap={applyImageTransform(item)}>
-                    <image colorMatrix={getColorMatrix(item.colorType)} imageRotation={currentSelectedImageRotation} src={currentSelectedImagePath} />
-                    <label color="white" fontSize={10} row={1} text={item.text} textAlignment="center" />
+                    <image id="imageView" colorMatrix={getColorMatrix(item.colorType)} imageRotation={currentSelectedImageRotation} src={currentSelectedImagePath} />
+                    <label fontSize={10} row={1} text={item.text} textAlignment="center" />
                 </gridlayout>
             </Template>
         </collectionview>
         <gridlayout backgroundColor="black" row={1} rowSpan={3} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
             <CropView {editingImage} bind:quadChanged bind:quads />
-            <mdbutton  class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
+            <mdbutton class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
         </gridlayout>
     </gridlayout>
 </page>

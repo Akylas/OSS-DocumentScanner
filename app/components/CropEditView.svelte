@@ -12,6 +12,7 @@
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
     import { primaryColor } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
+    import { recycleImages } from '~/utils/utils';
 
     let recrop = false;
     let topView: NativeViewElementNode<View>;
@@ -56,8 +57,12 @@
                 let images;
                 if (__ANDROID__) {
                     images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]));
+                } else {
+                    //TODO: implement iOS
                 }
                 await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
+                recycleImages(images);
+
                 console.log('onImage Changed', croppedImagePath);
                 //we remove from cache so that everything gets updated
                 getImagePipeline().evictFromCache(croppedImagePath);
@@ -109,7 +114,7 @@
 
 <gridlayout bind:this={topView} backgroundColor="black" rows="*,auto,auto" {...$$restProps}>
     <RotableImageView bind:this={rotableImageView} {item} zoomable={true} />
-    <CropView {editingImage} rowSpan={2} visibility={recrop ? 'visible' : 'hidden'} bind:quadChanged bind:quads/>
+    <CropView {editingImage} rowSpan={2} visibility={recrop ? 'visible' : 'hidden'} bind:quadChanged bind:quads />
     <gridlayout row="1" rows="auto,auto" visibility={recrop ? 'collapsed' : 'visible'}>
         <stacklayout orientation="horizontal" verticalAlignment="top">
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => (recrop = true)} />
@@ -125,16 +130,5 @@
             </Template>
         </collectionview>
     </gridlayout>
-    <mdbutton
-        class="floating-btn"
-        elevation={0}
-        horizontalAlignment="center"
-        margin="0"
-        rippleColor="white"
-        row={2}
-        text="mdi-check"
-        variant="text"
-        verticalAlignment="bottom"
-        on:tap={onTapFinish}
-    />
+    <mdbutton class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" verticalAlignment="bottom" on:tap={onTapFinish} />
 </gridlayout>

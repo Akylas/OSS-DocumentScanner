@@ -4,6 +4,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { primaryColor } from '~/variables';
 
+    const padding = 20;
     let canvasView: NativeViewElementNode<CanvasView>;
     let prevTouchPoint;
     let drawingRatio: number;
@@ -19,6 +20,7 @@
     cornersPaint.style = Style.STROKE;
     const shaderPaint = new Paint();
     shaderPaint.style = Style.FILL;
+    shaderPaint.color = 'black';
 
     export let editingImage: ImageSource;
     let rotation = 0;
@@ -123,8 +125,8 @@
             }
             editingImageShader = new BitmapShader(image, TileMode.CLAMP, TileMode.CLAMP);
             shaderPaint.setShader(editingImageShader);
-            const w = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredWidth());
-            const h = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredHeight());
+            const w = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredWidth()) - 2*padding;
+            const h = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredHeight()) - 2*padding;
             if (w === 0 || h === 0) {
                 return;
             }
@@ -140,14 +142,14 @@
                 imageHeight = image.width;
             }
             const imageRatio = imageWidth / imageHeight;
-            let cx = 0;
-            let cy = 0;
+            let cx = padding;
+            let cy = padding;
             if (imageRatio < canvasRatio) {
                 drawingRatio = h / imageHeight;
-                cx = (w - h * imageRatio) / 2;
+                cx += (w - h * imageRatio) / 2;
             } else {
                 drawingRatio = w / imageWidth;
-                cy = (h - w / imageRatio) / 2;
+                cy += (h - w / imageRatio) / 2;
             }
             console.log('imageRatio', imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
             currentImageMatrix.reset();
@@ -170,7 +172,6 @@
             console.error(error);
         }
     }
-
     function onCanvasDraw({ canvas }: { canvas: Canvas }) {
         // canvas.save();
         canvas.concat(currentImageMatrix);
