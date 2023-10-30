@@ -8,15 +8,19 @@
         "androidx.core.os:LocaleListCompat",
         "java.nio.file:Files",
         "android.graphics.pdf:PdfDocument",
-        "android.graphics:ColorMatrixColorFilter",
-        "android.graphics:ColorFilter",
         "android.graphics.pdf:PdfDocument.Page",
         "android.graphics.pdf:PdfDocument.PageInfo",
         "android.graphics.pdf:PdfDocument.PageInfo.Builder",
         "java.io:FileOutputStream",
         "androidx.core.widget:NestedScrollView",
         "android.text.format:DateFormat",
-        "android.graphics:BitmapShader"
+        "android.graphics:BitmapShader",
+        "com.tom_roush.pdfbox.pdmodel:PDDocument",
+        "com.tom_roush.pdfbox.pdmodel.common:PDRectangle",
+        "com.tom_roush.pdfbox.pdmodel:PDPage",
+        "com.tom_roush.pdfbox.pdmodel:PDPageContentStream",
+        "com.tom_roush.pdfbox.pdmodel.graphics.image:JPEGFactory",
+        "com.tom_roush.pdfbox.pdmodel.graphics.image:PDImageXObject"
     ],
     "blacklist": [
         "org.ow2.asmdex*:*",

@@ -1,5 +1,5 @@
 import { request } from '@nativescript-community/perms';
-import { ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
+import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
 import { Folder, ImageSource, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
@@ -344,7 +344,8 @@ export class DocumentsService extends Observable {
     async exportPDF(document: OCRDocument) {
         const start = Date.now();
         if (__ANDROID__) {
-            const pdfDocument = new android.graphics.pdf.PdfDocument();
+            // const pdfDocument = new android.graphics.pdf.PdfDocument();
+            const pdfDocument = new com.tom_roush.pdfbox.pdmodel.PDDocument();
             const pages = document.pages;
             let page: OCRPage;
             let imagePath: string;
@@ -359,9 +360,11 @@ export class DocumentsService extends Observable {
                 }
                 width *= page.scale;
                 height *= page.scale;
-                const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
-                const pdfpage = pdfDocument.startPage(pageInfo);
-                const pageCanvas = pdfpage.getCanvas();
+                // const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
+                const pdfpage = new com.tom_roush.pdfbox.pdmodel.PDPage(new com.tom_roush.pdfbox.pdmodel.common.PDRectangle(0,0,width * page.scale, height * page.scale));
+                const contentStream = new com.tom_roush.pdfbox.pdmodel.PDPageContentStream(pdfDocument, pdfpage);
+                // const pdfpage = pdfDocument.startPage(pageInfo);
+                const pageCanvas = new Canvas(width * page.scale, height * page.scale);
                 const imageSource = await loadImage(imagePath);
                 let bitmapPaint: Paint = null;
                 if (page.colorType || page.colorMatrix) {
@@ -374,13 +377,22 @@ export class DocumentsService extends Observable {
                 pageCanvas.rotate(page.rotation, 0, 0);
                 pageCanvas.scale(page.scale, page.scale, 0, 0);
                 pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
-                recycleImages(imageSource);
-                pdfDocument.finishPage(pdfpage);
+                const actualBitmap = pageCanvas.getImage();
+
+                const ximage = com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory.createFromImage(pdfDocument, actualBitmap, 0.75, 72);
+                // You may want to call PDPage.getCropBox() in order to place your image
+                // somewhere inside this page rect with (x, y) and (width, height).
+                contentStream.drawImage(ximage, 0, 0);
+                contentStream.close();
+                pdfDocument.addPage(pdfpage);
+                recycleImages(imageSource,actualBitmap);
             }
             const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
             const newFile = new java.io.File(pdfFile.path);
-            const fos = new java.io.FileOutputStream(newFile);
-            pdfDocument.writeTo(fos);
+            pdfDocument.save(newFile);
+            pdfDocument.close();
+            // const fos = new java.io.FileOutputStream(newFile);
+            // pdfDocument.writeTo(fos);
             pdfDocument.close();
             DEV_LOG && console.log('pdfFile', java.nio.file.Files.size(newFile.toPath()), Date.now() - start, 'ms');
             return pdfFile;
