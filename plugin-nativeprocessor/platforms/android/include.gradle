@@ -14,6 +14,7 @@ android {
         }
     }
     if (project.hasProperty("tempBuild")) {
+        ndkVersion "25.2.9519653"
         externalNativeBuild {
             cmake {
                 path "src/main/cpp/CMakeLists.txt"
@@ -22,10 +23,14 @@ android {
     }
 
     kotlin {
-            jvmToolchain(17)
+        jvmToolchain(17)
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+dependencies {
+    // def androidxVersion =  project.hasProperty("coreKtxVersion") ? project.coreKtxVersion : "1.12.0"
+    // implementation "androidx.core:core-ktx:$coreKtxVersion"
 }

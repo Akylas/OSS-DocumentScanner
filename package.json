@@ -64,7 +64,7 @@
         "nativescript-bitmap-factory": "^1.8.1",
         "nativescript-iqkeyboardmanager": "1.5.1",
         "nested-property": "^4.0.0",
-        "plugin-nativeprocessor": "file:plugin-nativeprocessor",
+        "plugin-nativeprocessor": "portal:plugin-nativeprocessor",
         "svelte-native": "1.0.9",
         "topojson-simplify": "3.0.3",
         "util": "0.12.5"
@@ -135,9 +135,9 @@
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
         "@nativescript-community/https": "portal:../https/packages/https",
-        "@nativescript-community/ui-image": "portal:/Volumes/dev/nativescript/ui-image/packages/image",
-        "@nativescript-community/ui-image-colorfilter": "portal:/Volumes/dev/nativescript/ui-image/packages/image-colorfilter",
-        "@nativescript-community/ui-canvas": "portal:/Volumes/dev/nativescript/ui-canvas/packages/ui-canvas",
-        "@nativescript-community/ui-collectionview": "portal:/Volumes/dev/nativescript/ui-collectionview/packages/collectionview"
+        "@nativescript-community/ui-image": "portal:../ui-image/packages/image",
+        "@nativescript-community/ui-image-colorfilter": "portal:../ui-image/packages/image-colorfilter",
+        "@nativescript-community/ui-canvas": "portal:../ui-canvas/packages/ui-canvas",
+        "@nativescript-community/ui-collectionview": "portal:../ui-collectionview/packages/collectionview"
     }
 }
