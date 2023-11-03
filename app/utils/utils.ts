@@ -11,23 +11,24 @@ export function omit<T extends object, U extends keyof T>(object: T, ...props: U
 }
 
 export async function loadImage(sourceImagePath) {
-    if (__ANDROID__) {
-        // we need to use ImageAsset to correctly load images with content:
-        // we also need it cause it loads the image "rotated"
-        const asset = new ImageAsset(sourceImagePath);
-        const bitmap = await new Promise((resolve, reject) => {
-            asset.getImageAsync((image, error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(image);
-                }
-            });
+    // if (__ANDROID__) {
+    // we need to use ImageAsset to correctly load images with content:
+    // we also need it cause it loads the image "rotated"
+    const asset = new ImageAsset(sourceImagePath);
+    asset.options = { autoScaleFactor: false };
+    const bitmap = await new Promise((resolve, reject) => {
+        asset.getImageAsync((image, error) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(image);
+            }
         });
-        return new ImageSource(bitmap);
-    } else {
-        return ImageSource.fromFile(sourceImagePath);
-    }
+    });
+    return new ImageSource(bitmap);
+    // } else {
+    //     return ImageSource.fromFile(sourceImagePath);
+    // }
 }
 
 export function recycleImages(...args) {

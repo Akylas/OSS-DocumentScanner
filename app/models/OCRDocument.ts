@@ -1,7 +1,7 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import { documentsService } from '~/services/documents';
-import { ColorMatricesType } from '~/utils/ui';
+import { ColorMatricesType, timeout } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils';
 
 export interface ImageConfig {
@@ -16,6 +16,7 @@ export class Tag {
 }
 
 export const IMG_FORMAT = 'jpg';
+export const IMG_COMPRESS = 80;
 
 export interface Document {
     id: string;
@@ -64,7 +65,7 @@ export class OCRDocument extends Observable implements Document {
             const file = File.fromPath(imagePath);
             await file.copy(attributes.imagePath);
         } else if (image) {
-            await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, 100);
+            await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
         } else {
             return;
         }
@@ -120,7 +121,7 @@ export class OCRDocument extends Observable implements Document {
                     const file = File.fromPath(imagePath);
                     await file.copy(attributes.imagePath);
                 } else if (image) {
-                    await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, 100);
+                    await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
                 } else {
                     continue;
                 }
@@ -248,11 +249,21 @@ export class OCRDocument extends Observable implements Document {
         if (__ANDROID__) {
             images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]), page.transforms || '');
         } else {
-            //TODO: implement iOS
+            // nImages is a NSArray
+            const nImages = OpencvDocumentProcessDelegate.cropDocumentQuadsTransforms(editingImage.ios, JSON.stringify([quad]), page.transforms || '');
+            images = [];
+            for (let index = 0; index < nImages.count; index++) {
+                images[index] = nImages.objectAtIndex(index);
+            }
         }
         const croppedImagePath = page.imagePath;
-        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
-        getImagePipeline().evictFromCache(croppedImagePath);
+        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
+        if (__IOS__) {
+            // TODO: fix why do we need to clear the whole cache? wrong cache key?
+            getImagePipeline().clearCaches();
+        } else {
+            getImagePipeline().evictFromCache(croppedImagePath);
+        }
         await this.updatePage(
             pageIndex,
             {
@@ -270,14 +281,25 @@ export class OCRDocument extends Observable implements Document {
         }
         let images;
         if (__ANDROID__) {
-            console.log('updatePageTransforms', page.crop, transforms);
             images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([page.crop]), transforms);
         } else {
-            //TODO: implement iOS
+            // nImages is a NSArray
+            const nImages = OpencvDocumentProcessDelegate.cropDocumentQuadsTransforms(editingImage.ios, JSON.stringify([page.crop]), transforms);
+            images = [];
+            for (let index = 0; index < nImages.count; index++) {
+                images[index] = nImages.objectAtIndex(index);
+            }
         }
+        console.log('updatePageTransforms', page.crop, transforms, images[0]);
         const croppedImagePath = page.imagePath;
-        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
-        getImagePipeline().evictFromCache(croppedImagePath);
+        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
+        if (__IOS__) {
+            // TODO: fix why do we need to clear the whole cache
+            // transformers change the key so we cant simply use the url as a key
+            getImagePipeline().clearCaches();
+        } else {
+            getImagePipeline().evictFromCache(croppedImagePath);
+        }
         await this.updatePage(
             pageIndex,
             {

@@ -34,16 +34,17 @@
     let editingImage: ImageSource;
     let quad;
     let quads;
-    $: quads = [quad];
+    $: quads = quad ? [quad] : [];
     let quadChanged = false;
     let currentIndex = startPageIndex;
     const firstItem = items.getItem(currentIndex);
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
     let currentSelectedImagePath = firstItem.getImagePath();
-    let currentSelectedImageRotation = firstItem.rotation;
+    let currentSelectedImageRotation = firstItem.rotation || 0;
     const transforms = firstItem.transforms?.split(',') || [];
     const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     const enhanced = writable(transforms.indexOf('enhance') !== -1);
+    console.log('firstItem', currentItemSubtitle, currentSelectedImagePath, currentSelectedImageRotation, transforms);
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -338,14 +339,38 @@
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
-            <checkbox checked={$enhanced} text={lc('enhance')} tintColor={primaryColor} on:checkedChange={(e) => ($enhanced = e.value)} />
-            <checkbox checked={$whitepaper} text={lc('whitepaper')} tintColor={primaryColor} on:checkedChange={(e) => ($whitepaper = e.value)} />
+            <checkbox
+                checked={$enhanced}
+                fillColor={primaryColor}
+                marginLeft={4}
+                onCheckColor="white"
+                onTintColor={primaryColor}
+                text={lc('enhance')}
+                tintColor={primaryColor}
+                verticalAlignment="middle"
+                on:checkedChange={(e) => ($enhanced = e.value)} />
+            <checkbox
+                checked={$whitepaper}
+                fillColor={primaryColor}
+                marginLeft={4}
+                onCheckColor="white"
+                onTintColor={primaryColor}
+                text={lc('whitepaper')}
+                tintColor={primaryColor}
+                verticalAlignment="middle"
+                on:checkedChange={(e) => ($whitepaper = e.value)} />
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={3}>
             <Template let:item>
-                <gridlayout padding={4} rows="*,24" on:tap={applyImageTransform(item)}>
-                    <image id="imageView" colorMatrix={getColorMatrix(item.colorType)} imageRotation={currentSelectedImageRotation} src={currentSelectedImagePath} />
+                <gridlayout id={item.text} padding={4} rows="*,25" on:tap={applyImageTransform(item)}>
+                    <image
+                        id="imageView"
+                        colorMatrix={getColorMatrix(item.colorType)}
+                        decodeHeight={120}
+                        decodeWidth={120}
+                        imageRotation={currentSelectedImageRotation}
+                        src={currentSelectedImagePath} />
                     <label fontSize={10} row={1} text={item.text} textAlignment="center" />
                 </gridlayout>
             </Template>

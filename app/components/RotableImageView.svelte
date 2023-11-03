@@ -21,11 +21,11 @@
         }
         try {
             const imageView = SVImageView?.nativeElement;
-            // console.log('rotateToRotation', item.rotation, newRotation, animated)
+            console.log('rotateToRotation', item.rotation, newRotation, animated, imageView)
             if (newRotation === item.rotation || !imageView) {
                 return;
             }
-            if (animated) {
+            if (__ANDROID__ && animated) {
                 await imageView.animate({
                     duration: 200,
                     imageRotation: newRotation

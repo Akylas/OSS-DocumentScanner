@@ -27,6 +27,7 @@
     }
 
     export let document: OCRDocument;
+    console.log('PDFView', JSON.stringify(document));
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<Item> = null;
 
@@ -180,7 +181,7 @@
                 // console.log('onItemTap', index);
                 navigate({
                     page: PdfEdit,
-                    transition: SharedTransition.custom(new PageTransition(300, undefined, 10)),
+                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10)) : undefined,
                     // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                     props: {
                         document,
