@@ -1,5 +1,8 @@
 {
     "name": "plugin-nativeprocessor",
+    "dependencies": {
+        "@nativescript-community/ui-cameraview": "*"
+    },
     "nativescript": {
         "platforms": {
             "ios": "6.2.1",

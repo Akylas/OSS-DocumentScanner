@@ -161,8 +161,8 @@ android.applicationVariants.all { variant ->
 dependencies {
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
     def kotlinVersion = computeKotlinVersion()
-    def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
-    implementation "androidx.core:core-ktx:$androidxVersion"
+    // def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
+    // implementation "androidx.core:core-ktx:$androidxVersion"
     implementation 'androidx.core:core-splashscreen:1.0.1'
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion") {

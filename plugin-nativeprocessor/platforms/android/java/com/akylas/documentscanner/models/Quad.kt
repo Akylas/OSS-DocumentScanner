@@ -3,11 +3,12 @@ package com.akylas.documentscanner.models
 import android.graphics.Point
 import android.graphics.PointF
 import android.graphics.RectF
-import androidx.core.graphics.toPoint
+// import androidx.core.graphics.toPoint
 import com.akylas.documentscanner.distance
 import com.akylas.documentscanner.move
 import com.akylas.documentscanner.multiply
 import com.akylas.documentscanner.toPointF
+import com.akylas.documentscanner.toPoint
 import java.util.Arrays
 
 /**
