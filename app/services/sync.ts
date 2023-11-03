@@ -4,7 +4,7 @@ import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
 import { basename } from '~/webdav/tools/path';
 import { documentsService } from './documents';
 import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-import { Document, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
+import { Document, IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { networkService } from './api';
 import { loadImage, recycleImages } from '~/utils/utils';
 
@@ -46,15 +46,16 @@ export class SyncService extends Observable {
         this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
         this.remoteFolder = 'documents';
         DEV_LOG && console.log('SyncService', 'start', this.remoteUrl, this.remoteFolder, this.username);
-        // this.client = createClient(this.remoteUrl, {
-        //     headers: {
-        //         Authorization: 'Basic ZmFyZnJvbXJlZnVnZTpMdHZxSUk0d25mVWJkZWZiZkpNWnNKT1BWbzZZLzRHZzhpZWpSTHQ1eW1F'
-        //     },
-        //     authType: AuthType.None
-        // });
+        this.client = createClient(this.remoteUrl, {
+            headers: {
+                Authorization: 'Basic ZmFyZnJvbXJlZnVnZTpMdHZxSUk0d25mVWJkZWZiZkpNWnNKT1BWbzZZLzRHZzhpZWpSTHQ1eW1F'
+            },
+            authType: AuthType.None
+        });
     }
 
     async ensureRemoteFolder() {
+        DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
         if (!(await this.client.exists(this.remoteFolder))) {
             await this.client.createDirectory(this.remoteFolder, { recursive: true });
         }
@@ -194,9 +195,14 @@ export class SyncService extends Observable {
                         if (__ANDROID__) {
                             images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([pageTooUpdate.crop]));
                         } else {
-                            //TODO: implement iOS
+                            // nImages is a NSArray
+                            const nImages = OpencvDocumentProcessDelegate.cropDocumentQuads(editingImage.ios, JSON.stringify([pageTooUpdate.crop]));
+                            images = [];
+                            for (let index = 0; index < nImages.count; index++) {
+                                images[index] = nImages.objectAtIndex(index);
+                            }
                         }
-                        await new ImageSource(images[0]).saveToFileAsync(localPage.imagePath, IMG_FORMAT, 100);
+                        await new ImageSource(images[0]).saveToFileAsync(localPage.imagePath, IMG_FORMAT, IMG_COMPRESS);
                         recycleImages(editingImage, images);
                     }
                     await document.updatePage(localPageIndex, pageTooUpdate);
@@ -263,6 +269,7 @@ export class SyncService extends Observable {
         }
         this.syncRunning = true;
         this.notify({ eventName: 'syncState', state: 'running' });
+        DEV_LOG && console.log('syncDocuments', bothWays);
         const localDocuments = (await documentsService.documentRepository.search({})) as OCRDocument[];
         console.log(
             'localDocuments',
@@ -304,9 +311,9 @@ export class SyncService extends Observable {
                 for (let index = 0; index < missingRemoteDocuments.length; index++) {
                     await this.addDocumentToWebdav(missingRemoteDocuments[index]);
                 }
-                for (let index = 0; index < missingLocalDocuments.length; index++) {
-                    await this.importDocumentFromWebdav(missingLocalDocuments[index]);
-                }
+                // for (let index = 0; index < missingLocalDocuments.length; index++) {
+                //     await this.importDocumentFromWebdav(missingLocalDocuments[index]);
+                // }
                 for (let index = 0; index < toBeSyncDocuments.length; index++) {
                     await this.syncDocumentOnWebdav(toBeSyncDocuments[index]);
                 }

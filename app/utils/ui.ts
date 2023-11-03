@@ -344,7 +344,7 @@ export async function importAndScanImage(document?: OCRDocument) {
             if (__ANDROID__) {
                 quads = JSON.parse(com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 300, 0));
             } else {
-                // TODO: implement IOS
+                quads = JSON.parse(OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotation(editingImage.ios, 300, 0));
             }
             if (quads.length === 0) {
                 quads.push([
@@ -355,6 +355,9 @@ export async function importAndScanImage(document?: OCRDocument) {
                 ]);
             }
             if (quads?.length) {
+                if (__IOS__) {
+                    await timeout(500);
+                }
                 const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
                 quads = await showModal({
                     page: ModalImportImage,
@@ -368,11 +371,17 @@ export async function importAndScanImage(document?: OCRDocument) {
                 if (quads) {
                     let images /* : android.graphics.Bitmap[] */;
                     if (__ANDROID__) {
+                        // images is a native array
                         images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
                     } else {
-                        //TODO: implement iOS
+                        // nImages is a NSArray
+                        const nImages = OpencvDocumentProcessDelegate.cropDocumentQuads(editingImage.ios, JSON.stringify(quads));
+                        images = [];
+                        for (let index = 0; index < nImages.count; index++) {
+                            images[index] = nImages.objectAtIndex(index);
+                        }
                     }
-                    if (images) {
+                    if (images?.length) {
                         const pagesToAdd: PageData[] = [];
                         for (let index = 0; index < images.length; index++) {
                             const image = images[index];

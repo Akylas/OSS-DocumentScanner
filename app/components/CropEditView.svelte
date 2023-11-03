@@ -8,7 +8,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CropView from '~/components/CropView.svelte';
-    import { IMG_FORMAT } from '~/models/OCRDocument';
+    import { IMG_COMPRESS, IMG_FORMAT } from '~/models/OCRDocument';
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
     import { primaryColor } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
@@ -60,12 +60,17 @@
                 } else {
                     //TODO: implement iOS
                 }
-                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, 100);
+                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
                 recycleImages(images);
 
                 console.log('onImage Changed', croppedImagePath);
                 //we remove from cache so that everything gets updated
-                getImagePipeline().evictFromCache(croppedImagePath);
+                if (__IOS__) {
+                    // TODO: fix why do we need to clear the whole cache? wrong cache key?
+                    getImagePipeline().clearCaches();
+                } else {
+                    getImagePipeline().evictFromCache(croppedImagePath);
+                }
                 croppedImagePath = croppedImagePath;
                 const views = querySelectorAll(topView.nativeView, 'imageRotation');
                 console.log('views', views);

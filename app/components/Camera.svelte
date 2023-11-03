@@ -158,6 +158,9 @@
             let corners;
             if (__ANDROID__) {
                 corners = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 300, 0);
+            } else {
+                // TODO: implement IOS
+                corners = OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotation(editingImage.ios, 300, 0);
             }
             const quads = JSON.parse(corners);
             console.log('processAndAddImage', imagePath, quads);
@@ -360,7 +363,12 @@
             if (__ANDROID__) {
                 images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
             } else {
-                //TODO: implement iOS
+                // nImages is a NSArray
+                const nImages = OpencvDocumentProcessDelegate.cropDocumentQuads(editingImage.ios, JSON.stringify(quads));
+                images = [];
+                for (let index = 0; index < nImages.count; index++) {
+                    images[index] = nImages.objectAtIndex(index);
+                }
             }
             console.log('images', images, images.length);
             const pagesToAdd: PageData[] = [];

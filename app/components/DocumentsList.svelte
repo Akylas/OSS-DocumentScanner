@@ -159,7 +159,7 @@
                 const PDFView = (await import('~/components/PDFView.svelte')).default;
                 navigate({
                     page: PDFView,
-                    transition: SharedTransition.custom(new PageTransition(300)),
+                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300)) : undefined,
                     props: {
                         document
                     }
@@ -288,7 +288,7 @@
                 const component = (await import('~/components/PDFView.svelte')).default;
                 navigate({
                     page: component,
-                    transition: SharedTransition.custom(new PageTransition(300)),
+                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300)) : undefined,
                     props: {
                         document: item.doc
                     }
@@ -380,7 +380,7 @@
     }
     async function syncDocuments() {
         try {
-            syncService.syncDocuments(true);
+            await syncService.syncDocuments(true);
         } catch (error) {
             showError(error);
         }
