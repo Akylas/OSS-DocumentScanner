@@ -1,6 +1,6 @@
 # NativeScript application
 hooks
-platforms
+/platforms
 node_modules/
 
 Gemfile.lock
@@ -11,12 +11,12 @@ certs
 pnpm-lock.yaml
 *.js.map
 e2e/**/*.js
+*.xcframework
 /mochawesome-report
 /fastlane/report.xml
 /gpx
 /dist
 build
-/opencv
 /Gemfile.lock
 firmware
 firmwares
