@@ -142,9 +142,9 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
                                 .flatten()
                     }
             val result = ArrayList<ArrayList<List<Int>>>()
-            quads?.forEach { points ->
+            quads?.forEach { quad ->
                 val result2 = ArrayList<List<Int>>()
-                points.forEach { point -> result2.add(listOf(point.x, point.y)) }
+                quad.forEach { point -> result2.add(listOf(point.x, point.y)) }
                 val count = result2.size
                 var temp = result2[count - 1] // Save value before overwrite.
                 result2[count - 1] = result2[count - 2] // First half of swap.

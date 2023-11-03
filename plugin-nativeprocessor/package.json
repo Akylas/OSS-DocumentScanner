@@ -1,0 +1,9 @@
+{
+    "name": "plugin-nativeprocessor",
+    "nativescript": {
+        "platforms": {
+            "ios": "6.2.1",
+            "android": "6.2.1"
+        }
+    }
+}

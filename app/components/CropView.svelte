@@ -103,7 +103,7 @@
         canvasView.nativeView.invalidate();
     }
 
-    function getMatrixMappedPoint(matrix, p) {
+    function getMatrixMappedPoint(matrix: Matrix, p) {
         if (__ANDROID__) {
             const nArray = Array.create('float', 2);
             nArray[0] = p[0];
@@ -111,12 +111,18 @@
             matrix.mapPoints(nArray);
             return [nArray[0], nArray[1]];
         } else {
-            return matrix.mapPoints(p);
+            const dst = [];
+            matrix.mapPoints(dst, p);
+            return dst;
         }
     }
 
     function getRotation() {
-        return rotation || editingImage.rotationAngle;
+        if (__IOS__) {
+            return rotation;
+        } else {
+            return rotation || editingImage.rotationAngle;
+        }
     }
     function updateMatrix(canvas = canvasView, image = editingImage) {
         try {
@@ -125,9 +131,9 @@
             }
             editingImageShader = new BitmapShader(image, TileMode.CLAMP, TileMode.CLAMP);
             shaderPaint.setShader(editingImageShader);
-            const w = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredWidth()) - 2*padding;
-            const h = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredHeight()) - 2*padding;
-            if (w === 0 || h === 0) {
+            const w = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredWidth()) - 2 * padding;
+            const h = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredHeight()) - 2 * padding;
+            if (w <= 0 || h <= 0) {
                 return;
             }
             const canvasRatio = w / h;
@@ -151,7 +157,7 @@
                 drawingRatio = w / imageWidth;
                 cy += (h - w / imageRatio) / 2;
             }
-            console.log('imageRatio', imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
+            console.log('imageRatio', drawingRatio, imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
             currentImageMatrix.reset();
             currentCropMatrix.reset();
             // if (needRotation) {
@@ -166,7 +172,9 @@
             currentCropMatrix.postTranslate(cx, cy);
             // inversedCurrentMatrix = new Matrix();
             currentCropMatrix.invert(inversedCurrentMatrix);
+            console.log('quads', quads);
             mappedQuads = quads.map((quad) => quad.map((p) => getMatrixMappedPoint(currentCropMatrix, p)));
+            console.log('mappedQuads', mappedQuads);
             canvas?.nativeView.invalidate();
         } catch (error) {
             console.error(error);
@@ -217,11 +225,4 @@
     }
 </script>
 
-<canvasView
-    bind:this={canvasView}
-    backgroundColor="black"
-    on:draw={onCanvasDraw}
-    on:layoutChanged={() => updateMatrix()}
-    on:touch={onTouch}
-    {...$$restProps}
-/>
+<canvasView bind:this={canvasView} backgroundColor="black" on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} {...$$restProps} />
