@@ -264,6 +264,142 @@ void on_trackbar_image(int, void *)
     updateSourceImage();
 }
 
+int main(const cv::Mat & image,const cv::Mat & out_img)
+{
+    cout << endl << argv[0] << endl << endl;
+    cout << "A demo program of End-to-end Scene Text Detection and Recognition: " << endl;
+    cout << "Shows the use of the Tesseract OCR API with the Extremal Region Filter algorithm described in:" << endl;
+    cout << "Neumann L., Matas J.: Real-Time Scene Text Localization and Recognition, CVPR 2012" << endl << endl;
+
+    Mat image;
+    if(argc>1)
+        image  = imread(argv[1]);
+    else
+    {
+        cout << "    Usage: " << argv[0] << " <input_image> [<gt_word1> ... <gt_wordN>]" << endl;
+        return(0);
+    }
+
+    cout << "IMG_W=" << image.cols << endl;
+    cout << "IMG_H=" << image.rows << endl;
+
+    /*Text Detection*/
+
+    // Extract channels to be processed individually
+    vector<Mat> channels;
+
+    Mat grey;
+    cvtColor(image,grey,COLOR_RGB2GRAY);
+
+    // Notice here we are only using grey channel, see textdetection.cpp for example with more channels
+    channels.push_back(grey);
+    channels.push_back(255-grey);
+
+    double t_d = (double)getTickCount();
+    // Create ERFilter objects with the 1st and 2nd stage default classifiers
+    Ptr<ERFilter> er_filter1 = createERFilterNM1(loadClassifierNM1("trained_classifierNM1.xml"),8,0.00015f,0.13f,0.2f,true,0.1f);
+    Ptr<ERFilter> er_filter2 = createERFilterNM2(loadClassifierNM2("trained_classifierNM2.xml"),0.5);
+
+    vector<vector<ERStat> > regions(channels.size());
+    // Apply the default cascade classifier to each independent channel (could be done in parallel)
+    for (int c=0; c<(int)channels.size(); c++)
+    {
+        er_filter1->run(channels[c], regions[c]);
+        er_filter2->run(channels[c], regions[c]);
+    }
+    cout << "TIME_REGION_DETECTION = " << ((double)getTickCount() - t_d)*1000/getTickFrequency() << endl;
+
+    Mat out_img_decomposition= Mat::zeros(image.rows+2, image.cols+2, CV_8UC1);
+    vector<Vec2i> tmp_group;
+    for (int i=0; i<(int)regions.size(); i++)
+    {
+        for (int j=0; j<(int)regions[i].size();j++)
+        {
+            tmp_group.push_back(Vec2i(i,j));
+        }
+        Mat tmp= Mat::zeros(image.rows+2, image.cols+2, CV_8UC1);
+        er_draw(channels, regions, tmp_group, tmp);
+        if (i > 0)
+            tmp = tmp / 2;
+        out_img_decomposition = out_img_decomposition | tmp;
+        tmp_group.clear();
+    }
+
+    double t_g = (double)getTickCount();
+    // Detect character groups
+    vector< vector<Vec2i> > nm_region_groups;
+    vector<Rect> nm_boxes;
+    erGrouping(image, channels, regions, nm_region_groups, nm_boxes,ERGROUPING_ORIENTATION_HORIZ);
+    cout << "TIME_GROUPING = " << ((double)getTickCount() - t_g)*1000/getTickFrequency() << endl;
+
+
+
+    /*Text Recognition (OCR)*/
+
+    double t_r = (double)getTickCount();
+    Ptr<OCRTesseract> ocr = OCRTesseract::create();
+    cout << "TIME_OCR_INITIALIZATION = " << ((double)getTickCount() - t_r)*1000/getTickFrequency() << endl;
+    string output;
+
+    Mat out_img_detection;
+    Mat out_img_segmentation = Mat::zeros(image.rows+2, image.cols+2, CV_8UC1);
+    image.copyTo(out_img);
+    image.copyTo(out_img_detection);
+    float scale_img  = 600.f/image.rows;
+    float scale_font = (float)(2-scale_img)/1.4f;
+    vector<string> words_detection;
+
+    t_r = (double)getTickCount();
+
+    for (int i=0; i<(int)nm_boxes.size(); i++)
+    {
+
+        rectangle(out_img_detection, nm_boxes[i].tl(), nm_boxes[i].br(), Scalar(0,255,255), 3);
+
+        Mat group_img = Mat::zeros(image.rows+2, image.cols+2, CV_8UC1);
+        er_draw(channels, regions, nm_region_groups[i], group_img);
+        Mat group_segmentation;
+        group_img.copyTo(group_segmentation);
+        //image(nm_boxes[i]).copyTo(group_img);
+        group_img(nm_boxes[i]).copyTo(group_img);
+        copyMakeBorder(group_img,group_img,15,15,15,15,BORDER_CONSTANT,Scalar(0));
+
+        vector<Rect>   boxes;
+        vector<string> words;
+        vector<float>  confidences;
+        ocr->run(group_img, output, &boxes, &words, &confidences, OCR_LEVEL_WORD);
+
+        output.erase(remove(output.begin(), output.end(), '\n'), output.end());
+        //cout << "OCR output = \"" << output << "\" length = " << output.size() << endl;
+        if (output.size() < 3)
+            continue;
+
+        for (int j=0; j<(int)boxes.size(); j++)
+        {
+            boxes[j].x += nm_boxes[i].x-15;
+            boxes[j].y += nm_boxes[i].y-15;
+
+            //cout << "  word = " << words[j] << "\t confidence = " << confidences[j] << endl;
+            if ((words[j].size() < 2) || (confidences[j] < 51) ||
+                    ((words[j].size()==2) && (words[j][0] == words[j][1])) ||
+                    ((words[j].size()< 4) && (confidences[j] < 60)) ||
+                    isRepetitive(words[j]))
+                continue;
+            words_detection.push_back(words[j]);
+            rectangle(out_img, boxes[j].tl(), boxes[j].br(), Scalar(255,0,255),3);
+            Size word_size = getTextSize(words[j], FONT_HERSHEY_SIMPLEX, (double)scale_font, (int)(3*scale_font), NULL);
+            rectangle(out_img, boxes[j].tl()-Point(3,word_size.height+3), boxes[j].tl()+Point(word_size.width,0), Scalar(255,0,255),-1);
+            putText(out_img, words[j], boxes[j].tl()-Point(1,1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255,255,255),(int)(3*scale_font));
+            out_img_segmentation = out_img_segmentation | group_segmentation;
+        }
+
+    }
+    cout << "TIME_OCR = " << ((double)getTickCount() - t_r)*1000/getTickFrequency() << endl;
+
+    return out_img;
+
+}
+
 int main(int argc, char **argv)
 {
     // with single image
