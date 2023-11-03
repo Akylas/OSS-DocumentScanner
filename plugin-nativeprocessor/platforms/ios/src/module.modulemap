@@ -1,4 +1,4 @@
-module CameraViewDemo {
+module DocumentScanner {
   umbrella header "Module.h"
   export *
   module * { export * }

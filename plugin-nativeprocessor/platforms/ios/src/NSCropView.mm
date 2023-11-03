@@ -38,7 +38,7 @@
     CGContextTranslateCTM(context,  deltaX, deltaY - addedDeltaY);
     CGContextSetLineWidth(context, self.strokeWidth);
     [self.quads enumerateObjectsUsingBlock:^(NSArray*  _Nonnull quad, NSUInteger idx, BOOL * _Nonnull stop) {
-      CGContextSetStrokeColorWithColor(context, [self.colors objectAtIndex:( idx % [self.colors count] )].CGColor);
+      CGContextSetStrokeColorWithColor(context, ((UIColor*)[self.colors objectAtIndex:( idx % [self.colors count] )]).CGColor);
       CGPoint startPoint = [((NSValue*)[quad objectAtIndex:0]) CGPointValue];
       CGContextMoveToPoint(context, startPoint.x * ratio, startPoint.y * ratio); //start at this point
       [quad enumerateObjectsUsingBlock:^(NSValue*  _Nonnull value, NSUInteger idx, BOOL * _Nonnull stop) {
