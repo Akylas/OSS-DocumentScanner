@@ -10,6 +10,7 @@
   "ios": {
     "info": {
       "plist": {
+        "NSCameraUsageDescription": "Description text goes here",
         "NSPhotoLibraryUsageDescription": "Description text goes here"
       }
     }

@@ -1,7 +1,7 @@
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import { initialize } from '@nativescript-community/ui-image';
+import { ImageViewTraceCategory, initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
@@ -20,6 +20,7 @@ import { startSentry } from '~/utils/sentry';
 import { primaryColor } from '~/variables';
 import { showError } from './utils/error';
 import { syncService } from './services/sync';
+import { Trace } from '@nativescript/core';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -69,11 +70,10 @@ try {
     startSentry();
     initialize();
 
-    // import { Trace } from '@nativescript/core';
     // import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
     // Trace.addCategories(Trace.categories.NativeLifecycle);
     // Trace.addCategories(CollectionViewTraceCategory)
-    // Trace.addCategories(ImageViewTraceCategory)
+    // Trace.addCategories(ImageViewTraceCategory);
     // Trace.enable();
 
     let launched = false;
@@ -85,7 +85,7 @@ try {
             try {
                 await syncService.syncDocuments();
             } catch (error) {
-                console.error(error, error.stack);
+                console.error('start sync error', error, error.stack);
             }
         } catch (error) {
             showError(error);
