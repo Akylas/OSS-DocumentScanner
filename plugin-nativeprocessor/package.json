@@ -1,5 +1,7 @@
 {
     "name": "plugin-nativeprocessor",
+    "main": "index.ts",
+    "typings": "index.ts",
     "dependencies": {
         "@nativescript-community/ui-cameraview": "*"
     },

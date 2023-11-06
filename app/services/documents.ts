@@ -105,6 +105,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             scale: page.scale ?? 1,
             imagePath: page.imagePath,
             colorType: page.colorType,
+            transforms: page.transforms,
             sourceImagePath: page.sourceImagePath,
             crop: page._crop || (JSON.stringify(page.crop) as any),
             colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any)

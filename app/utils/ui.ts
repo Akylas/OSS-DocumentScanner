@@ -15,6 +15,7 @@ import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { lc } from '@nativescript-community/l';
 import { showModal } from 'svelte-native';
 import { loadImage, recycleImages } from './utils';
+import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -339,13 +340,9 @@ export async function importAndScanImage(document?: OCRDocument) {
             if (!editingImage) {
                 throw new Error('failed to read imported image');
             }
-            let quads;
             console.log('editingImage', editingImage.width, editingImage.height, editingImage.android);
-            if (__ANDROID__) {
-                quads = JSON.parse(com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 300, 0));
-            } else {
-                quads = JSON.parse(OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotation(editingImage.ios, 300, 0));
-            }
+            let quads = getJSONDocumentCorners(editingImage, 300, 0);
+
             if (quads.length === 0) {
                 quads.push([
                     [0, 0],
@@ -369,18 +366,8 @@ export async function importAndScanImage(document?: OCRDocument) {
                     }
                 });
                 if (quads) {
-                    let images /* : android.graphics.Bitmap[] */;
-                    if (__ANDROID__) {
-                        // images is a native array
-                        images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
-                    } else {
-                        // nImages is a NSArray
-                        const nImages = OpencvDocumentProcessDelegate.cropDocumentQuads(editingImage.ios, JSON.stringify(quads));
-                        images = [];
-                        for (let index = 0; index < nImages.count; index++) {
-                            images[index] = nImages.objectAtIndex(index);
-                        }
-                    }
+                    const images = cropDocument(editingImage, quads);
+
                     if (images?.length) {
                         const pagesToAdd: PageData[] = [];
                         for (let index = 0; index < images.length; index++) {

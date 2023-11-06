@@ -7,6 +7,7 @@ import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 import { Document, IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { networkService } from './api';
 import { loadImage, recycleImages } from '~/utils/utils';
+import { cropDocument } from 'plugin-nativeprocessor';
 
 function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
     const union: S[] = [];
@@ -191,17 +192,8 @@ export class SyncService extends Observable {
                     // check if we need to recreate the image
                     if (pageTooUpdate.crop || pageTooUpdate.transforms) {
                         const editingImage = await loadImage(localPage.sourceImagePath);
-                        let images;
-                        if (__ANDROID__) {
-                            images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([pageTooUpdate.crop]));
-                        } else {
-                            // nImages is a NSArray
-                            const nImages = OpencvDocumentProcessDelegate.cropDocumentQuads(editingImage.ios, JSON.stringify([pageTooUpdate.crop]));
-                            images = [];
-                            for (let index = 0; index < nImages.count; index++) {
-                                images[index] = nImages.objectAtIndex(index);
-                            }
-                        }
+                        const images = cropDocument(editingImage, [pageTooUpdate.crop]);
+
                         await new ImageSource(images[0]).saveToFileAsync(localPage.imagePath, IMG_FORMAT, IMG_COMPRESS);
                         recycleImages(editingImage, images);
                     }

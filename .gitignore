@@ -17,6 +17,7 @@ e2e/**/*.js
 /gpx
 /dist
 build
+.cxx
 /Gemfile.lock
 firmware
 firmwares
@@ -48,6 +49,8 @@ tmp/
 typings/
 opencv/android/*
 !opencv/android/README.md
+tesseract/android/*
+!tesseract/android/README.md
 
 
 # Visual Studio Code

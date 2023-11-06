@@ -1,8 +1,10 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
+import { cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType, timeout } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils';
+
 
 export interface ImageConfig {
     colorType?: ColorMatricesType;
@@ -245,17 +247,8 @@ export class OCRDocument extends Observable implements Document {
 
     async updatePageCrop(pageIndex: number, quad: any, editingImage: ImageSource) {
         const page = this.pages[pageIndex];
-        let images;
-        if (__ANDROID__) {
-            images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]), page.transforms || '');
-        } else {
-            // nImages is a NSArray
-            const nImages = OpencvDocumentProcessDelegate.cropDocumentQuadsTransforms(editingImage.ios, JSON.stringify([quad]), page.transforms || '');
-            images = [];
-            for (let index = 0; index < nImages.count; index++) {
-                images[index] = nImages.objectAtIndex(index);
-            }
-        }
+        const images = cropDocument(editingImage, [quad], page.transforms || '');
+
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         if (__IOS__) {
@@ -279,17 +272,8 @@ export class OCRDocument extends Observable implements Document {
         if (!editingImage) {
             editingImage = await loadImage(page.sourceImagePath);
         }
-        let images;
-        if (__ANDROID__) {
-            images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([page.crop]), transforms);
-        } else {
-            // nImages is a NSArray
-            const nImages = OpencvDocumentProcessDelegate.cropDocumentQuadsTransforms(editingImage.ios, JSON.stringify([page.crop]), transforms);
-            images = [];
-            for (let index = 0; index < nImages.count; index++) {
-                images[index] = nImages.objectAtIndex(index);
-            }
-        }
+        const images = cropDocument(editingImage, [page.crop], transforms);
+
         console.log('updatePageTransforms', page.crop, transforms, images[0]);
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
@@ -322,13 +306,15 @@ export interface Page {
     colorType?: string;
     colorMatrix?: number[];
     rotation: number;
-    crop: number[];
+    crop: [number, number][];
     pageIndex: number;
     scale: number;
     width: number;
     height: number;
     sourceImagePath: string;
     imagePath: string;
+
+    ocrData: { text: string; blocks: { block: string; text: string; confidence: number; font_name?: string; bold?: boolean; italic?: boolean; underlined?: boolean; pointsize?: number }[] };
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -349,7 +335,7 @@ export class OCRPage extends Observable implements Page {
     rotation: number = 0;
     scale: number = 1;
 
-    crop: number[];
+    crop: [number, number][];
     _crop: string;
 
     transforms?: string;

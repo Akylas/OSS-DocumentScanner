@@ -13,6 +13,7 @@
     import { primaryColor } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
     import { recycleImages } from '~/utils/utils';
+    import { cropDocument } from 'plugin-nativeprocessor';
 
     let recrop = false;
     let topView: NativeViewElementNode<View>;
@@ -54,12 +55,7 @@
         if (recrop) {
             // let s see if quads changed and update image
             if (quadChanged) {
-                let images;
-                if (__ANDROID__) {
-                    images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify([quad]));
-                } else {
-                    //TODO: implement iOS
-                }
+                const images = cropDocument(editingImage, [quad]);
                 await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
                 recycleImages(images);
 

@@ -25,13 +25,20 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
     var previewResizeThreshold = 300.0
 
     companion object {
+        private external fun nativeScanJSON(
+                srcBitmap: Bitmap,
+                shrunkImageHeight: Int,
+                imageRotation: Int
+        ): String
+
         private external fun nativeScan(
                 srcBitmap: Bitmap,
                 shrunkImageHeight: Int,
                 imageRotation: Int
         ): Vector<Vector<Point>>
 
-        private external fun nativeCrop(srcBitmap: Bitmap, points: Array<Point>, transforms:String, outBitmap: Bitmap)
+        private external fun nativeCrop(srcBitmap: Bitmap, points: String, transforms:String, outBitmap: Bitmap)
+        private external fun nativeOCR(srcBitmap: Bitmap, options: String): String
 
         /**
          * @property cropperOffsetWhenCornersNotFound if we can't find document corners, we set
@@ -53,6 +60,63 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
          * @param image a photo with a document
          * @return a list with document corners (top left, top right, bottom right, bottom left)
          */
+        @JvmOverloads
+        fun ocrDocument(
+                image: Bitmap,
+                options: String = ""
+        ): String {
+            return nativeOCR(image, options)
+        }
+        /**
+         * take a photo with a document, and find the document's corners
+         *
+         * @param image a photo with a document
+         * @return a list with document corners (top left, top right, bottom right, bottom left)
+         */
+        @JvmOverloads
+        fun getJSONDocumentCorners(
+                image: Bitmap,
+                shrunkImageHeight: Double = 500.0,
+                imageRotation: Int = 0
+        ): String {
+            return nativeScanJSON(image, shrunkImageHeight.toInt(), imageRotation)
+        }
+
+        fun quadsFromJSONString(str: String): List<Quad>? {
+                val jsonArray = JSONArray(str)
+                val listdata = ArrayList<Quad>()
+                for (i in 0 until jsonArray.length()) {
+                    val subJsonArray = jsonArray.getJSONArray(i)
+                    listdata.add(
+                            Quad(
+                                    PointF(
+                                            subJsonArray.getJSONArray(0).getDouble(0).toFloat(),
+                                            subJsonArray.getJSONArray(0).getDouble(1).toFloat()
+                                    ),
+                                    PointF(
+                                            subJsonArray.getJSONArray(1).getDouble(0).toFloat(),
+                                            subJsonArray.getJSONArray(1).getDouble(1).toFloat()
+                                    ),
+                                    PointF(
+                                            subJsonArray.getJSONArray(2).getDouble(0).toFloat(),
+                                            subJsonArray.getJSONArray(2).getDouble(1).toFloat()
+                                    ),
+                                    PointF(
+                                            subJsonArray.getJSONArray(3).getDouble(0).toFloat(),
+                                            subJsonArray.getJSONArray(3).getDouble(1).toFloat()
+                                    )
+                            )
+                    )
+                }
+                return listdata
+            }
+
+        /**
+         * take a photo with a document, and find the document's corners
+         *
+         * @param image a photo with a document
+         * @return a list with document corners (top left, top right, bottom right, bottom left)
+         */
         fun findDocumentCorners(
                 image: Bitmap,
                 shrunkImageHeight: Double = 500.0,
@@ -67,7 +131,7 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
             }
             return null
         }
-
+        
         /**
          * Pass in a photo of a document, and get back 4 corner points (top left, top right, bottom
          * right, bottom left). This tries to detect document corners, but falls back to photo
@@ -121,69 +185,6 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
         }
 
         /**
-         * take a photo with a document, and find the document's corners
-         *
-         * @param image a photo with a document
-         * @return a list with document corners (top left, top right, bottom right, bottom left)
-         */
-        @JvmOverloads
-        fun getJSONDocumentCorners(
-                image: Bitmap,
-                shrunkImageHeight: Double = 500.0,
-                imageRotation: Int = 0
-        ): String {
-            val outPoints = findDocumentCorners(image, shrunkImageHeight, imageRotation)
-            val quads =
-                    outPoints?.map { points ->
-                        points
-                                .sortedBy { it.y }
-                                .chunked(2)
-                                .map { it.sortedBy { point -> point.x } }
-                                .flatten()
-                    }
-            val result = ArrayList<ArrayList<List<Int>>>()
-            quads?.forEach { quad ->
-                val result2 = ArrayList<List<Int>>()
-                quad.forEach { point -> result2.add(listOf(point.x, point.y)) }
-                val count = result2.size
-                var temp = result2[count - 1] // Save value before overwrite.
-                result2[count - 1] = result2[count - 2] // First half of swap.
-                result2[count - 2] = temp
-                result.add(result2)
-            }
-            return result.toString()
-        }
-
-        fun quadsFromJSONString(str: String): List<Quad>? {
-            val jsonArray = JSONArray(str)
-            val listdata = ArrayList<Quad>()
-            for (i in 0 until jsonArray.length()) {
-                val subJsonArray = jsonArray.getJSONArray(i)
-                listdata.add(
-                        Quad(
-                                PointF(
-                                        subJsonArray.getJSONArray(0).getDouble(0).toFloat(),
-                                        subJsonArray.getJSONArray(0).getDouble(1).toFloat()
-                                ),
-                                PointF(
-                                        subJsonArray.getJSONArray(1).getDouble(0).toFloat(),
-                                        subJsonArray.getJSONArray(1).getDouble(1).toFloat()
-                                ),
-                                PointF(
-                                        subJsonArray.getJSONArray(2).getDouble(0).toFloat(),
-                                        subJsonArray.getJSONArray(2).getDouble(1).toFloat()
-                                ),
-                                PointF(
-                                        subJsonArray.getJSONArray(3).getDouble(0).toFloat(),
-                                        subJsonArray.getJSONArray(3).getDouble(1).toFloat()
-                                )
-                        )
-                )
-            }
-            return listdata
-        }
-
-        /**
          * take a photo with a document, crop everything out but document, and force it to display
          * as a rectangle
          *
@@ -231,7 +232,8 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
                                 .toInt()
 
                 val cropBitmap = Bitmap.createBitmap(cropWidth, cropHeight, Bitmap.Config.ARGB_8888)
-                nativeCrop(bitmap, corners.cornersList, transforms, cropBitmap)
+                val jsonArray = JSONArray(quads)
+                nativeCrop(bitmap, jsonArray.getJSONArray(index).toString(), transforms, cropBitmap)
                 bitmaps.add(cropBitmap)
             }
             return bitmaps.toArray()

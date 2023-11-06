@@ -10,7 +10,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { closeModal, showModal } from 'svelte-native';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
-    import { CropView } from '~/CropView';
+    import { CropView } from 'plugin-nativeprocessor/CropView';
     import { l, lc, onLanguageChanged } from '~/helpers/locale';
     import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
@@ -23,6 +23,7 @@
     import CropEditView from './CropEditView.svelte';
     import DocumentsList from './DocumentsList.svelte';
     import { loadImage, recycleImages } from '~/utils/utils';
+    import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 
     const touchAnimationShrink: TouchAnimationOptions = {
         down: {
@@ -155,14 +156,8 @@
             stopPreview();
             showLoading(l('computing'));
             editingImage = await loadImage(imagePath);
-            let corners;
-            if (__ANDROID__) {
-                corners = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, 300, 0);
-            } else {
-                // TODO: implement IOS
-                corners = OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotation(editingImage.ios, 300, 0);
-            }
-            const quads = JSON.parse(corners);
+            const quads = getJSONDocumentCorners(editingImage, 300, 0);
+
             console.log('processAndAddImage', imagePath, quads);
 
             if (quads.length === 0) {
@@ -359,17 +354,7 @@
                 return;
             }
             console.log('addCurrentImageToDocument', editingImage, quads, processor);
-            let images /* : android.graphics.Bitmap[] */;
-            if (__ANDROID__) {
-                images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads));
-            } else {
-                // nImages is a NSArray
-                const nImages = OpencvDocumentProcessDelegate.cropDocumentQuads(editingImage.ios, JSON.stringify(quads));
-                images = [];
-                for (let index = 0; index < nImages.count; index++) {
-                    images[index] = nImages.objectAtIndex(index);
-                }
-            }
+            let images = cropDocument(editingImage, quads);
             console.log('images', images, images.length);
             const pagesToAdd: PageData[] = [];
             for (let index = 0; index < images.length; index++) {
