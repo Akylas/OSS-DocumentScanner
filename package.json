@@ -138,6 +138,7 @@
         "@nativescript-community/ui-image": "portal:../ui-image/packages/image",
         "@nativescript-community/ui-image-colorfilter": "portal:../ui-image/packages/image-colorfilter",
         "@nativescript-community/ui-canvas": "portal:../ui-canvas/packages/ui-canvas",
-        "@nativescript-community/ui-collectionview": "portal:../ui-collectionview/packages/collectionview"
+        "@nativescript-community/ui-collectionview": "portal:../ui-collectionview/packages/collectionview",
+        "@akylas/kiss-orm": "portal:/home/mguillon/dev/nativescript/kiss-orm"
     }
 }

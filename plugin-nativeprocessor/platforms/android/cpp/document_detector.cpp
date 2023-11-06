@@ -1,11 +1,32 @@
 #include <jni.h>
 #include <string>
 #include <android_utils.h>
-#include "./src/include/DocumentDetector.h"
+#include <DocumentDetector.h>
+#include <DocumentOCR.h>
+#include <jsoncons/json.hpp>
 
 using namespace std;
 
 static const char *const kClassDocumentDetector = "com/nativescript/cameraViewDemo/ImageAnalysisCallback";
+jstring stringToJavaString(JNIEnv *env, const std::string &stringValue)
+{
+    return env->NewStringUTF(stringValue.c_str());
+}
+
+std::string jstringToString(JNIEnv *env, jstring value)
+{
+    if (value == nullptr)
+    {
+        return {};
+    }
+
+    jboolean f = JNI_FALSE;
+    auto chars = env->GetStringUTFChars(value, &f);
+    std::string s(chars);
+    env->ReleaseStringUTFChars(value, chars);
+
+    return s;
+}
 
 static struct
 {
@@ -30,6 +51,15 @@ static jobject createJavaPoint(JNIEnv *env, Point point_)
     return env->NewObject(gPointInfo.jClassPoint, gPointInfo.jMethodInit, point_.x, point_.y);
 }
 
+static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_)
+{
+    Mat srcBitmapMat;
+    bitmap_to_mat(env, srcBitmap, srcBitmapMat);
+    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
+    std::string options{jstringToString(env, options_)};
+    std::string result = detector::DocumentOCR::detectText(srcBitmapMat, options);
+    return stringToJavaString(env, result);
+}
 static jobject native_scan(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation)
 {
     Mat srcBitmapMat;
@@ -37,7 +67,7 @@ static jobject native_scan(JNIEnv *env, jobject type, jobject srcBitmap, jint sh
     Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
     cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
     detector::DocumentDetector docDetector(bgrData, shrunkImageHeight, imageRotation);
-    std::vector<vector<Point>> scanPointsList = docDetector.scanPoint();
+    std::vector<std::vector<cv::Point>> scanPointsList = docDetector.scanPoint();
     const int size = scanPointsList.size();
     jmethodID mid = env->GetMethodID(gPointInfo.jClassVector, "<init>", "()V");
     jmethodID addMethodID = env->GetMethodID(gPointInfo.jClassVector, "add", "(Ljava/lang/Object;)Z");
@@ -61,6 +91,37 @@ static jobject native_scan(JNIEnv *env, jobject type, jobject srcBitmap, jint sh
     srcBitmapMat.release();
     return outerVector;
 }
+static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation)
+{
+    Mat srcBitmapMat;
+    bitmap_to_mat(env, srcBitmap, srcBitmapMat);
+    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
+    cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
+    detector::DocumentDetector docDetector(bgrData, shrunkImageHeight, imageRotation);
+    std::string scanPointsList = docDetector.scanPointToJSON();
+    // const int size = scanPointsList.size();
+    // jmethodID mid = env->GetMethodID(gPointInfo.jClassVector, "<init>", "()V");
+    // jmethodID addMethodID = env->GetMethodID(gPointInfo.jClassVector, "add", "(Ljava/lang/Object;)Z");
+    // jobject outerVector = env->NewObject(gPointInfo.jClassVector, mid);
+    // if (size > 0)
+    // {
+    //     for (int i = 0; i < size; ++i)
+    //     {
+    //         vector<Point> scanPoints = scanPointsList[i];
+    //         jobject innerVector = env->NewObject(gPointInfo.jClassVector, mid);
+    //         if (scanPoints.size() == 4)
+    //         {
+    //             for (int j = 0; j < 4; ++j)
+    //             {
+    //                 env->CallBooleanMethod(innerVector, addMethodID, createJavaPoint(env, scanPoints[j]));
+    //             }
+    //         }
+    //         env->CallBooleanMethod(outerVector, addMethodID, innerVector);
+    //     }
+    // }
+    srcBitmapMat.release();
+    return stringToJavaString(env, scanPointsList);
+}
 
 static vector<Point> pointsToNative(JNIEnv *env, jobjectArray points_)
 {
@@ -76,37 +137,14 @@ static vector<Point> pointsToNative(JNIEnv *env, jobjectArray points_)
     return result;
 }
 
-std::string jstring2string(JNIEnv *env, jstring jStr)
+static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring points_, jstring transforms, jobject outBitmap)
 {
-    if (!jStr)
-        return "";
-
-    const jclass stringClass = env->GetObjectClass(jStr);
-    const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
-    const jbyteArray stringJbytes = (jbyteArray)env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
-
-    size_t length = (size_t)env->GetArrayLength(stringJbytes);
-    jbyte *pBytes = env->GetByteArrayElements(stringJbytes, NULL);
-
-    std::string ret = std::string((char *)pBytes, length);
-    env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
-
-    env->DeleteLocalRef(stringJbytes);
-    env->DeleteLocalRef(stringClass);
-    return ret;
-}
-
-static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jobjectArray points_, jstring transforms, jobject outBitmap)
-{
-    std::vector<Point> points = pointsToNative(env, points_);
-    if (points.size() != 4)
-    {
-        return;
-    }
-    Point leftTop = points[0];
-    Point rightTop = points[1];
-    Point rightBottom = points[2];
-    Point leftBottom = points[3];
+    std::string points{jstringToString(env, points_)};
+    jsoncons::json val = jsoncons::json::parse(points);
+    std::vector<int> leftTop = val[0].as<std::vector<int>>();
+    std::vector<int> rightTop = val[1].as<std::vector<int>>();
+    std::vector<int> rightBottom = val[2].as<std::vector<int>>();
+    std::vector<int> leftBottom = val[3].as<std::vector<int>>();
 
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
@@ -121,10 +159,10 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jobjectArr
     std::vector<Point2f> srcTriangle;
     std::vector<Point2f> dstTriangle;
 
-    srcTriangle.push_back(Point2f(leftTop.x, leftTop.y));
-    srcTriangle.push_back(Point2f(rightTop.x, rightTop.y));
-    srcTriangle.push_back(Point2f(leftBottom.x, leftBottom.y));
-    srcTriangle.push_back(Point2f(rightBottom.x, rightBottom.y));
+    srcTriangle.push_back(Point2f(leftTop[0], leftTop[1]));
+    srcTriangle.push_back(Point2f(rightTop[0], rightTop[1]));
+    srcTriangle.push_back(Point2f(leftBottom[0], leftBottom[1]));
+    srcTriangle.push_back(Point2f(rightBottom[0], rightBottom[1]));
 
     dstTriangle.push_back(Point2f(0, 0));
     dstTriangle.push_back(Point2f(newWidth, 0));
@@ -134,7 +172,7 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jobjectArr
     Mat transform = getPerspectiveTransform(srcTriangle, dstTriangle);
     warpPerspective(srcBitmapMat, dstBitmapMat, transform, dstBitmapMat.size());
 
-    std::string transformsStd{jstring2string(env, transforms)};
+    std::string transformsStd{jstringToString(env, transforms)};
     if (transformsStd.length() > 0)
     {
         detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd);
@@ -164,14 +202,32 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
 {
     return native_scan(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
 }
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSON(JNIEnv *env,
+                                                                                      jobject thiz,
+                                                                                      jobject src_bitmap,
+                                                                                      jint shrunk_image_height,
+                                                                                      jint image_rotation)
+{
+    return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
+}
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeCrop(JNIEnv *env,
                                                                                       jobject thiz,
                                                                                       jobject src_bitmap,
-                                                                                      jobjectArray points,
+                                                                                      jstring points,
                                                                                       jstring transforms,
                                                                                       jobject out_bitmap)
 {
     native_crop(env, thiz, src_bitmap, points, transforms, out_bitmap);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeOCR(JNIEnv *env,
+                                                                                     jobject thiz,
+                                                                                     jobject src_bitmap,
+                                                                                     jstring options)
+{
+    return native_ocr(env, thiz, src_bitmap, options);
 }

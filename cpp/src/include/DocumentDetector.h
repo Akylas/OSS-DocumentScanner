@@ -24,6 +24,7 @@ namespace detector {
 
         vector<vector<cv::Point>> scanPoint(Mat &edged);
         vector<vector<cv::Point>> scanPoint();
+        std::string scanPointToJSON();
         cv::Mat resizeImage();
 
         static void applyTransforms(Mat &srcMat, std::string transforms);
@@ -79,4 +80,4 @@ namespace detector {
 
 }
 
-#endif //CROPPER_DOC_SCANNER_H
+#endif //DOCUMENT_DETECTOR_H

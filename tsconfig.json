@@ -31,6 +31,6 @@
             "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"]
         }
     },
-    "include": ["app/**/*", "typings/*.d.ts"],
+    "include": ["app/**/*", "typings/*.d.ts", "plugin-nativeprocessor"],
     "exclude": ["**/node_modules", "**/build", "platforms", "**/angular"]
 }

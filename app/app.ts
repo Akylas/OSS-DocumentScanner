@@ -11,7 +11,7 @@ import PagerElement from '@nativescript-community/ui-pager/svelte';
 import { Application } from '@nativescript/core';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import { CropView } from '~/CropView';
+import { CropView } from 'plugin-nativeprocessor/CropView';
 import { NestedScrollView } from '~/NestedScrollView';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';

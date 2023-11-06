@@ -10,13 +10,17 @@ set(SRC_DIR ./)
 set(SRC_DIR2 ./src)
 set(OPENCV_LIB_DIR opencv/staticlibs/${ANDROID_ABI}/)
 set(OPENCV_3RD_LIB_DIR opencv/3rdparty/libs/${ANDROID_ABI}/)
+set(TESSERACT_LIB_DIR tesseract/staticlibs/${ANDROID_ABI}/)
 
 include_directories(opencv/include
-                    ./include)
+                    ./include
+                    ./src/include
+                    tesseract/include)
 
 
 link_directories(${OPENCV_LIB_DIR}
-                 ${OPENCV_3RD_LIB_DIR})
+                 ${OPENCV_3RD_LIB_DIR}
+                 ${TESSERACT_LIB_DIR})
 
 
 # Creates and names a library, sets it as either STATIC
@@ -49,3 +53,4 @@ else()
     target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc tegra_hal)
 endif()
 
+target_link_libraries(${TARGET} tesseract leptonica pngx jpeg  -fopenmp -static-openmp)

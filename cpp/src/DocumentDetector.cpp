@@ -1,9 +1,13 @@
-#include "./include/DocumentDetector.h"
-#include "./include/WhitePaperTransform.h"
+#include <DocumentDetector.h>
+#include <WhitePaperTransform.h>
+#include <jsoncons/json.hpp>
 
 using namespace detector;
 using namespace cv;
 using namespace std;
+
+JSONCONS_ALL_MEMBER_TRAITS(cv::Point, x, y);
+
 
 typedef std::pair<std::vector<cv::Point>, double> PointAndArea;
 bool sortByArea(PointAndArea contour1, PointAndArea contour2)
@@ -86,6 +90,23 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint()
     Mat edged;
     vector<vector<cv::Point>> result = scanPoint(edged);
     return result;
+}
+std::string DocumentDetector::scanPointToJSON()
+{
+    vector<vector<cv::Point>> result = scanPoint();
+    jsoncons::json jsonResult(jsoncons::json_array_arg); 
+    for (const auto& points : result)
+    {
+        jsoncons::json jsonResult1(jsoncons::json_array_arg); 
+        for (const auto& point : points)
+        {
+            jsonResult1.push_back(jsoncons::json(jsoncons::json_array_arg,{point.x, point.y}));
+        }
+        jsonResult.push_back(jsonResult1);
+    }
+    std::string s;
+    encode_json(jsonResult, s, jsoncons::indenting::no_indent);
+    return s;
 }
 vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged)
 {
@@ -193,9 +214,25 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged)
                     points[j] -= Point(borderSize, borderSize);
                 }
                 points[j] *= resizeScale;
+
             }
+            // sort by Y
+            std::sort(points.begin(), points.end(),
+                        [](Point const &a, Point const &b)
+                        { return a.y < b.y; });
+            // sort by X
+            std::sort(points.begin(), points.begin() + 2,
+                        [](Point const &a, Point const &b)
+                        { return a.x < b.x; });
+            // sort second half by  X descending
+            std::sort(points.begin() + 2, points.end(),
+                        [](Point const &a, Point const &b)
+                        { return a.x > b.x; });
             result.push_back(points);
         }
+
+        
+
         return result;
     }
     return vector<vector<Point>>();

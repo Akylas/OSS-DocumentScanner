@@ -23,6 +23,7 @@
     import { primaryColor } from '~/variables';
     import { Writable, get, writable } from 'svelte/store';
     import { notifyWhenChanges } from '~/utils/svelte/store';
+    import { ocrDocument } from 'plugin-nativeprocessor';
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -53,6 +54,23 @@
             openFile(file.path);
         } catch (err) {
             showError(err);
+        }
+    }
+    async function detectOCR() {
+        let ocrImage;
+        try {
+            showLoading(l('computing'));
+
+            const item = items.getItem(currentIndex);
+
+            ocrImage = await loadImage(item.sourceImagePath);
+            const result = ocrDocument(ocrImage);
+            console.log(result);
+        } catch (err) {
+            showError(err);
+        } finally {
+            hideLoading();
+            recycleImages(ocrImage);
         }
     }
     function onSelectedIndex(event) {
@@ -322,6 +340,7 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,auto">
         <CActionBar title={document.name}>
+            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={detectOCR} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
         </CActionBar>
