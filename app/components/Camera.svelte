@@ -558,6 +558,7 @@
                 rowSpan={2}
                 src={croppedImagePath}
                 stretch="aspectFit"
+                visibility={showingFullScreenImage ? 'visible' : 'hidden'}
                 on:tap={() => setCurrentImage(null)} />
 
             <gridlayout

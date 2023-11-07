@@ -1,33 +1,30 @@
 #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
 
-#include <tesseract/baseapi.h>
-
 using namespace std;
 using namespace cv;
 using namespace detector;
 
-// trim from start (in place)
-static inline void ltrim(std::string &s)
+const char *whitespaceChars = " \t\n\r\f\v";
+
+// trim from end of string (right)
+inline std::string &rtrim(std::string &s, const char *t = whitespaceChars)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch)
-                                    { return !std::isspace(ch); }));
+    s.erase(s.find_last_not_of(t) + 1);
+    return s;
 }
 
-// trim from end (in place)
-static inline void rtrim(std::string &s)
+// trim from beginning of string (left)
+inline std::string &ltrim(std::string &s, const char *t = whitespaceChars)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch)
-                         { return !std::isspace(ch); })
-                .base(),
-            s.end());
+    s.erase(0, s.find_first_not_of(t));
+    return s;
 }
 
-// trim from both ends (in place)
-static inline void trim(std::string &s)
+// trim from both ends of string (right then left)
+inline std::string &trim(std::string &s, const char *t = whitespaceChars)
 {
-    rtrim(s);
-    ltrim(s);
+    return ltrim(rtrim(s, t), t);
 }
 
 bool isRepetitive(const string &s)
@@ -67,46 +64,28 @@ cv::Mat resizeImageToThreshold(const cv::Mat &image, int resizeThreshold, int bo
         resize(image, resizedBitmap, size);
         if (borderSize > 0)
         {
-            copyMakeBorder(resizedBitmap, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
+            copyMakeBorder(resizedBitmap, resizedBitmap, borderSize, borderSize, borderSize,
+                           borderSize, BORDER_REPLICATE);
         }
         return resizedBitmap;
     }
     if (borderSize > 0)
     {
         Mat resizedBitmap;
-        copyMakeBorder(image, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
+        copyMakeBorder(image, resizedBitmap, borderSize, borderSize, borderSize, borderSize,
+                       BORDER_REPLICATE);
         return resizedBitmap;
     }
     return image;
 }
 
-struct OCRData
-{
-    cv::Rect box;
-    string text;
-    float confidence;
-    std::optional<std::string> font_name;
-    std::optional<bool> bold;
-    std::optional<bool> italic;
-    std::optional<bool> underlined;
-    std::optional<bool> monospace;
-    std::optional<bool> serif;
-    std::optional<bool> smallcaps;
-    std::optional<int> pointsize;
-    std::optional<int> font_id;
-};
-struct OCRResult
-{
-    string text;
-    std::vector<OCRData> blocks;
-};
 
 JSONCONS_ALL_MEMBER_TRAITS(cv::Rect, x, y, width, height);
-JSONCONS_N_MEMBER_TRAITS(OCRData, 0, box, text, confidence,
-                         font_name, bold, italic, underlined, pointsize);
-JSONCONS_ALL_MEMBER_TRAITS(OCRResult, text, blocks);
+JSONCONS_N_MEMBER_TRAITS(DocumentOCR::OCRData, 0, fontWeight, text, confidence, fontFamily, fontStyle, textDecoration, fontSize, box);
+JSONCONS_ALL_MEMBER_TRAITS(DocumentOCR::OCRResult, text, blocks, imageWidth, imageHeight);
 
 double contoursApproxEpsilonFactor = 0.02;
+
 // comparison function object
 bool compareContourAreas(std::vector<cv::Point> contour1, std::vector<cv::Point> contour2)
 {
@@ -119,6 +98,7 @@ float getYSortValue(const Rect &a)
 {
     return (round((a.y + a.height / 2) / 100) * 10000);
 }
+
 float getSorkKeyTopToBottomLeftToRight(const Rect &a)
 {
     return (getYSortValue(a) + a.x);
@@ -128,104 +108,39 @@ bool rectComparatorYThenX(const Rect &a, const Rect &b)
 {
     return getSorkKeyTopToBottomLeftToRight(a) < getSorkKeyTopToBottomLeftToRight(b);
 }
-string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
+
+std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &image, Mat &out_img, const DocumentOCR::DetectOptions &options)
 {
-    int adapThresholdBlockSize = 338; // 391
-    int adapThresholdC = 47;          // 53
-
-    bool tesseractDemo = true;
-    int actualTesseractDetect = 1;
-    int desseractDetectContours = 1;
-
-    int textDetectDilate = 40; // 0
-    int textDetect1 = 70;      // 34
-    int textDetect2 = 4;       // 12
-
-    std::string dataPath = "";
-    std::string language = "";
-    std::string dpi = "300";
-    int pageSegMode = tesseract::PSM_AUTO;
-    int iteratorLevel = tesseract::RIL_PARA;
-    if (!optionsJson.empty())
-    {
-        jsoncons::json j = jsoncons::json::parse(optionsJson);
-
-        if (j.contains("dataPath"))
-        {
-            dataPath = j["dataPath"].as<string>();
-        }
-
-        if (j.contains("language"))
-        {
-            language = j["language"].as<string>();
-        }
-        if (j.contains("dpi"))
-        {
-            dpi = j["dpi"].as<string>();
-        }
-
-        if (j.contains("pageSegMode"))
-        {
-            pageSegMode = j["pageSegMode"].as<int>();
-        }
-
-        if (j.contains("iteratorLevel"))
-        {
-            iteratorLevel = j["iteratorLevel"].as<int>();
-        }
-
-        if (j.contains("adapThresholdBlockSize"))
-        {
-            adapThresholdBlockSize = j["adapThresholdBlockSize"].as<int>();
-        }
-        if (j.contains("adapThresholdC"))
-        {
-            adapThresholdC = j["adapThresholdC"].as<int>();
-        }
-        if (j.contains("detectContours"))
-        {
-            desseractDetectContours = j["detectContours"].as<int>();
-        }
-        if (j.contains("textDetectDilate"))
-        {
-            textDetectDilate = j["textDetectDilate"].as<int>();
-        }
-        if (j.contains("textMorphologyEx1"))
-        {
-            textDetect1 = j["textMorphologyEx1"].as<int>();
-        }
-        if (j.contains("textMorphologyEx2"))
-        {
-            textDetect2 = j["textMorphologyEx2"].as<int>();
-        }
-    }
-    double t_r = (double)getTickCount();
-    cout << "TIME_OCR_INITIALIZATION = " << ((double)getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
+    //    double t_r = (double) getTickCount();
     std::vector<cv::Rect> boundRects;
     cv::Mat img_gray, img_sobel, img_threshold, element;
     cvtColor(image, img_sobel, COLOR_BGR2GRAY);
-    cv::adaptiveThreshold(img_sobel, img_sobel, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, adapThresholdBlockSize, adapThresholdC);
+    cv::adaptiveThreshold(img_sobel, img_sobel, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C,
+                          cv::THRESH_BINARY_INV, options.adapThresholdBlockSize, options.adapThresholdC);
 
     int imageWidth = img_sobel.size().width;
     int imageHeight = img_sobel.size().height;
     double resizeScale = (double)image.size().width / imageWidth;
 
-    if (desseractDetectContours == 1)
+    if (options.desseractDetectContours == 1)
     {
         vector<Vec4i> hierarchy;
         std::vector<std::vector<cv::Point>> contours;
         std::vector<cv::Point> contours_poly;
         std::vector<cv::Point> contour;
-        element = getStructuringElement(cv::MORPH_RECT, cv::Size(textDetect1, textDetect2));
+        element = getStructuringElement(cv::MORPH_RECT, cv::Size(options.textDetect1, options.textDetect2));
         cv::morphologyEx(img_sobel, img_threshold, MORPH_CLOSE, element); // Does the trick
 
-        if (textDetectDilate > 0)
+        if (options.textDetectDilate > 0)
         {
-            element = getStructuringElement(cv::MORPH_RECT, cv::Size(textDetectDilate, textDetectDilate));
-            cv::dilate(img_threshold, img_threshold, element, cv::Point(-1, -1), 1); // Does the trick
+            element = getStructuringElement(cv::MORPH_RECT,
+                                            cv::Size(options.textDetectDilate, options.textDetectDilate));
+            cv::dilate(img_threshold, img_threshold, element, cv::Point(-1, -1),
+                       1); // Does the trick
         }
         // img_threshold = resizeImageToThreshold(img_threshold, 1500, 0);
-        cv::findContours(img_threshold, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        cv::findContours(img_threshold, contours, hierarchy, cv::RETR_EXTERNAL,
+                         cv::CHAIN_APPROX_NONE);
         if (contours.size() > 0)
         {
 
@@ -235,7 +150,7 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
                 contour = contours[i];
                 if (contour.size() > 200)
                 {
-                    double epsilon = cv::arcLength(contour, true) * contoursApproxEpsilonFactor;
+                    //                    double epsilon = cv::arcLength(contour, true) * contoursApproxEpsilonFactor;
                     cv::approxPolyDP(cv::Mat(contour), contours_poly, 3, true);
                     cv::Rect appRect(boundingRect(cv::Mat(contours_poly)));
                     appRect.x *= resizeScale;
@@ -245,7 +160,10 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
                     if (appRect.width < 0.9 * imageWidth && appRect.height < 0.9 * imageHeight)
                     {
                         boundRects.push_back(appRect);
-                        // cv::rectangle(out_img, appRect, cv::Scalar(0, 255, 0), 3);
+                        if (!out_img.empty())
+                        {
+                            // cv::rectangle(out_img, appRect, cv::Scalar(0, 255, 0), 3);
+                        }
                     }
                 }
             }
@@ -262,40 +180,51 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
     }
 
     bitwise_not(img_sobel, img_sobel);
-    if (actualTesseractDetect == 0)
+    if (options.actualTesseractDetect == 0)
     {
-        return NULL;
+        return std::nullopt;
     }
 
     tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
-    api->Init(dataPath.c_str(), language.c_str());
-    api->SetPageSegMode(static_cast<tesseract::PageSegMode>(pageSegMode));
-    api->SetVariable("user_defined_dpi", dpi.c_str());
+    api->Init(options.dataPath.c_str(), options.language.c_str(), static_cast<tesseract::OcrEngineMode>(options.oem));
+    api->SetPageSegMode(static_cast<tesseract::PageSegMode>(options.pageSegMode));
+    api->SetVariable("user_defined_dpi", options.dpi.c_str());
     string fullText = "";
     float scale_img = 600.f / image.rows;
     float scale_font = (float)(2 - scale_img) / 1.4f;
     vector<OCRData> ocr_data;
     Rect lastBoundRect;
-    for (int i = 0; i < boundRects.size(); i++)
+    int boundRectsCount = boundRects.size();
+    for (int i = 0; i < boundRectsCount; i++)
     {
         Mat group_img = Mat::zeros(image.rows + 2, image.cols + 2, CV_8UC1);
         img_sobel(boundRects[i]).copyTo(group_img);
         copyMakeBorder(group_img, group_img, 15, 15, 15, 15, BORDER_CONSTANT, Scalar(255));
-        api->SetImage(group_img.data, group_img.size().width, group_img.size().height, group_img.channels(), group_img.step1());
+        api->SetImage(group_img.data, group_img.size().width, group_img.size().height,
+                      group_img.channels(), group_img.step1());
         api->Recognize(0);
         tesseract::ResultIterator *ri = api->GetIterator();
-        tesseract::PageIteratorLevel level = static_cast<tesseract::PageIteratorLevel>(iteratorLevel);
+        tesseract::PageIteratorLevel level = static_cast<tesseract::PageIteratorLevel>(options.iteratorLevel);
         if (ri != 0)
         {
             do
             {
+                float conf = ri->Confidence(level);
+                if (conf == 0)
+                {
+                    continue;
+                }
                 const char *word = ri->GetUTF8Text(level);
                 if (word == NULL)
                     continue;
-
-                OCRData data;
-                float conf = ri->Confidence(level);
+                DocumentOCR::OCRData data;
                 string stdWord = (string(word));
+                trim(stdWord);
+                //                if (!fullText.empty())
+                //                {
+                //                    // only clean up if we are merging
+                //                    stdWord.erase(std::remove(stdWord.begin(), stdWord.end(), '\n'), stdWord.end());
+                //                }
                 int wordSize = stdWord.size();
                 if ((wordSize < 2) || (conf < 51) ||
                     ((wordSize == 2) && (stdWord[0] == stdWord[1])) ||
@@ -305,11 +234,6 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
 
                 int x1, y1, x2, y2;
                 ri->BoundingBox(level, &x1, &y1, &x2, &y2);
-                trim(stdWord);
-                if (desseractDetectContours == 1)
-                {
-                    stdWord.erase(std::remove(stdWord.begin(), stdWord.end(), '\n'), stdWord.end());
-                }
                 if (!lastBoundRect.empty())
                 {
                     float lastYSortValue = getYSortValue(lastBoundRect);
@@ -340,7 +264,7 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
                                            &serif, &smallcaps, &pointsize, &font_id);
                 if (font_name != 0)
                 {
-                    data.font_name = string(font_name);
+                    data.fontFamily = string(font_name);
                 }
                 data.text = stdWord;
                 data.box = Rect(x1, y1, x2 - x1, y2 - y1);
@@ -348,18 +272,18 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
                 data.box.x += boundRects[i].x - 15;
                 data.box.y += boundRects[i].y - 15;
                 data.confidence = conf;
-                data.pointsize = pointsize;
+                data.fontSize = pointsize;
                 if (bold)
                 {
-                    data.bold = bold;
+                    data.fontWeight = "bold";
                 }
                 if (italic)
                 {
-                    data.italic = italic;
+                    data.fontStyle = "italic";
                 }
                 if (underlined)
                 {
-                    data.underlined = underlined;
+                    data.textDecoration = "underline";
                 }
                 if (smallcaps)
                 {
@@ -371,7 +295,10 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
             } while (ri->Next(level));
             delete ri;
         }
-        lastBoundRect = boundRects[i];
+        if (!fullText.empty())
+        {
+            lastBoundRect = boundRects[i];
+        }
     }
 
     // for (int j = 0; j < (int)ocr_data.size(); j++)
@@ -382,12 +309,100 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
     //     rectangle(out_img, data.box.tl() - Point(3, word_size.height + 3), data.box.tl() + Point(word_size.width, 0), Scalar(255, 0, 255), -1);
     //     putText(out_img, data.text, data.box.tl() - Point(1, 1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255, 255, 255), (int)(3 * scale_font));
     // }
-    OCRResult result;
-    result.text = fullText;
-    result.blocks = ocr_data;
     api->Clear();
-    std::string s;
-    encode_json(result, s, jsoncons::indenting::no_indent);
-    cout << "TIME_OCR = " << ((double)getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
+    // std::string s;
+    if (ocr_data.size() == 0)
+    {
+        return std::nullopt;
+    }
+    DocumentOCR::OCRResult result;
+    result.text = fullText;
+    result.imageWidth = imageWidth;
+    result.imageHeight = imageHeight;
+    result.blocks = ocr_data;
+    //    cout << "TIME_OCR = " << ((double) getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
+    return result;
+}
+
+std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &image, const DocumentOCR::DetectOptions &options)
+{
+    Mat output;
+    return detectTextImpl(image, output, options);
+}
+
+string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
+{
+    DetectOptions options;
+
+    if (!optionsJson.empty())
+    {
+        jsoncons::json j = jsoncons::json::parse(optionsJson);
+
+        if (j.contains("dataPath"))
+        {
+            options.dataPath = j["dataPath"].as<string>();
+        }
+
+        if (j.contains("language"))
+        {
+            options.language = j["language"].as<string>();
+        }
+        if (j.contains("dpi"))
+        {
+            options.dpi = j["dpi"].as<string>();
+        }
+
+        if (j.contains("oem"))
+        {
+            options.oem = j["oem"].as<int>();
+        }
+
+        if (j.contains("pageSegMode"))
+        {
+            options.pageSegMode = j["pageSegMode"].as<int>();
+        }
+
+        if (j.contains("iteratorLevel"))
+        {
+            options.iteratorLevel = j["iteratorLevel"].as<int>();
+        }
+
+        if (j.contains("adapThresholdBlockSize"))
+        {
+            options.adapThresholdBlockSize = j["adapThresholdBlockSize"].as<int>();
+        }
+        if (j.contains("adapThresholdC"))
+        {
+            options.adapThresholdC = j["adapThresholdC"].as<int>();
+        }
+        if (j.contains("detectContours"))
+        {
+            options.desseractDetectContours = j["detectContours"].as<int>();
+        }
+        if (j.contains("textDetectDilate"))
+        {
+            options.textDetectDilate = j["textDetectDilate"].as<int>();
+        }
+        if (j.contains("textMorphologyEx1"))
+        {
+            options.textDetect1 = j["textMorphologyEx1"].as<int>();
+        }
+        if (j.contains("textMorphologyEx2"))
+        {
+            options.textDetect2 = j["textMorphologyEx2"].as<int>();
+        }
+    }
+    std::optional<OCRResult> result = detectTextImpl(image, options);
+    if (result == std::nullopt)
+    {
+        Mat inversedImage;
+        bitwise_not(image, inversedImage);
+        result = detectTextImpl(inversedImage, options);
+    }
+    string s;
+    if (result != std::nullopt)
+    {
+        encode_json(result, s, jsoncons::indenting::no_indent);
+    }
     return s;
 }

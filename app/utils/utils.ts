@@ -38,7 +38,7 @@ export function recycleImages(...args) {
             if (!arg) {
                 continue;
             }
-            // TODO: we need to handle android native Array
+            // this first test detect android native arrays
             if (typeof arg === 'object' && arg.length > 0) {
                 for (let j = 0; j < arg.length; j++) {
                     arg[j].recycle();

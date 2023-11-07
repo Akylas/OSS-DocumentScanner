@@ -47,12 +47,12 @@ export class SyncService extends Observable {
         this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
         this.remoteFolder = 'documents';
         DEV_LOG && console.log('SyncService', 'start', this.remoteUrl, this.remoteFolder, this.username);
-        this.client = createClient(this.remoteUrl, {
-            headers: {
-                Authorization: 'Basic ZmFyZnJvbXJlZnVnZTpMdHZxSUk0d25mVWJkZWZiZkpNWnNKT1BWbzZZLzRHZzhpZWpSTHQ1eW1F'
-            },
-            authType: AuthType.None
-        });
+        // this.client = createClient(this.remoteUrl, {
+        //     headers: {
+        //         Authorization: 'Basic ZmFyZnJvbXJlZnVnZTpMdHZxSUk0d25mVWJkZWZiZkpNWnNKT1BWbzZZLzRHZzhpZWpSTHQ1eW1F'
+        //     },
+        //     authType: AuthType.None
+        // });
     }
 
     async ensureRemoteFolder() {

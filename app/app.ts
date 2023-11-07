@@ -6,9 +6,10 @@ import { installMixins as installColorFilters } from '@nativescript-community/ui
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application } from '@nativescript/core';
+import { AbsoluteLayout, Application } from '@nativescript/core';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { CropView } from 'plugin-nativeprocessor/CropView';
@@ -20,30 +21,36 @@ import { startSentry } from '~/utils/sentry';
 import { primaryColor } from '~/variables';
 import { showError } from './utils/error';
 import { syncService } from './services/sync';
+import { OCRService, ocrService } from './services/ocr';
 import { Trace } from '@nativescript/core';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
+    installGestures(true);
     installMixins();
     installColorFilters();
     installBottomSheets();
     installUIMixins();
     overrideSpanAndFormattedString();
 
+    // registerNativeViewElement('absolutelayoutwithmatrix', () => AbsoluteLayoutWithMatrix);
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
     registerElement('Frame', () => new FrameElement());
     registerElement('Page', () => new PageElement());
     registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
     registerNativeViewElement('ScrollView', () => NestedScrollView as any);
+    // registerNativeViewElement('DualScrollView', () => DualScrollView as any);
     registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
     // registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
     registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
     // registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
     registerNativeViewElement('Span', () => require('@nativescript/core').Span);
+    registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
 
     registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
     registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
+    // registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button);
     registerNativeViewElement('activityIndicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
     // registerNativeViewElement('tabs', () => require('@nativescript-community/ui-material-tabs').Tabs);
@@ -80,6 +87,7 @@ try {
     async function start() {
         try {
             await syncService.start();
+            await ocrService.start();
             await documentsService.start();
 
             try {

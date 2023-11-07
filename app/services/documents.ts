@@ -80,6 +80,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             rotation INTEGER DEFAULT 0,
             scale INTEGER DEFAULT 1,
             crop TEXT,
+            ocrData TEXT,
             width INTEGER NOT NULL,
             height INTEGER NOT NULL,
             sourceImagePath TEXT NOT NULL,
@@ -108,7 +109,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             transforms: page.transforms,
             sourceImagePath: page.sourceImagePath,
             crop: page._crop || (JSON.stringify(page.crop) as any),
-            colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any)
+            colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any),
+            ocrData: page._ocrData || (JSON.stringify(page.ocrData) as any)
         });
     }
     async update(page: OCRPage, data?: Partial<OCRPage>) {
@@ -144,9 +146,11 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         Object.assign(model, {
             ...other,
             _crop: other.crop,
-            crop: other.crop ? JSON.parse(other.crop) : other.crop,
+            crop: other.crop ? JSON.parse(other.crop) : undefined,
             _colorMatrix: other.colorMatrix,
-            colorMatrix: other.colorMatrix ? JSON.parse(other.colorMatrix) : undefined
+            colorMatrix: other.colorMatrix ? JSON.parse(other.colorMatrix) : undefined,
+            _ocrData: other.ocrData,
+            ocrData: other.ocrData ? JSON.parse(other.ocrData) : undefined
         });
         return model;
     }
@@ -362,7 +366,7 @@ export class DocumentsService extends Observable {
                 width *= page.scale;
                 height *= page.scale;
                 // const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
-                const pdfpage = new com.tom_roush.pdfbox.pdmodel.PDPage(new com.tom_roush.pdfbox.pdmodel.common.PDRectangle(0,0,width * page.scale, height * page.scale));
+                const pdfpage = new com.tom_roush.pdfbox.pdmodel.PDPage(new com.tom_roush.pdfbox.pdmodel.common.PDRectangle(0, 0, width * page.scale, height * page.scale));
                 const contentStream = new com.tom_roush.pdfbox.pdmodel.PDPageContentStream(pdfDocument, pdfpage);
                 // const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = new Canvas(width * page.scale, height * page.scale);
@@ -386,7 +390,7 @@ export class DocumentsService extends Observable {
                 contentStream.drawImage(ximage, 0, 0);
                 contentStream.close();
                 pdfDocument.addPage(pdfpage);
-                recycleImages(imageSource,actualBitmap);
+                recycleImages(imageSource, actualBitmap);
             }
             const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
             const newFile = new java.io.File(pdfFile.path);

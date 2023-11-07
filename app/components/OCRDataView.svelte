@@ -1,0 +1,201 @@
+<script lang="ts">
+    import { createNativeAttributedString } from '@nativescript-community/ui-label';
+    import { OCRData } from 'plugin-nativeprocessor';
+    import CActionBar from './CActionBar.svelte';
+    import { ImageSource, Page, Utils } from '@nativescript/core';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Canvas, CanvasView, ColorMatrixColorFilter, Matrix, Paint } from '@nativescript-community/ui-canvas';
+
+    export let ocrData: OCRData;
+    export let image: ImageSource;
+    export let rotation: number;
+    export let colorMatrix: number[];
+    export let imagePath: string;
+    export let imageWidth: number;
+    export let imageHeight: number;
+
+    let showTextView = true;
+    const showlabelsOnImage = true;
+    let page: NativeViewElementNode<Page>;
+    let canvasView: NativeViewElementNode<CanvasView>;
+    const padding = 20;
+    let drawingRatio: number;
+    const currentImageMatrix: Matrix = new Matrix();
+    let currentPinchPanMatrix: Matrix = new Matrix();
+    const bitmapPaint = new Paint();
+    if (colorMatrix) {
+        bitmapPaint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
+    }
+
+    const showWithCustomFontSize = false;
+
+    // ocrData.blocks.forEach((b) => {
+    //     console.log(JSON.stringify(b));
+    // });
+
+    function toggleShowTextView() {
+        if (showTextView) {
+            showTextView = false;
+        } else {
+            showTextView = true;
+            // TODO: reset pan/zoom Matrix
+        }
+    }
+
+    $: updateMatrix(canvasView);
+
+    let text = ocrData.text;
+
+    $: text = showWithCustomFontSize
+        ? createNativeAttributedString({
+              spans: ocrData.blocks.map((b) => ({
+                  text: b.text + '\n',
+                  fontSize: (b.fontSize * ocrData.imageHeight) / 300, //in pixels in image size
+                  fontWeight: b.fontWeight,
+                  fontStyle: b.fontStyle,
+                  textDecoration: b.textDecoration
+              }))
+          })
+        : ocrData.text;
+
+    function updateMatrix(cvView = canvasView) {
+        try {
+            const canvas = cvView?.nativeView;
+            if (!canvas || !image) {
+                return;
+            }
+            // editingImageShader = new BitmapShader(image, TileMode.CLAMP, TileMode.CLAMP);
+            // shaderPaint.setShader(editingImageShader);
+            const w = Utils.layout.toDeviceIndependentPixels(canvas.getMeasuredWidth()) - 2 * padding;
+            const h = Utils.layout.toDeviceIndependentPixels(canvas.getMeasuredHeight()) - 2 * padding;
+            if (w <= 0 || h <= 0) {
+                return;
+            }
+            const canvasRatio = w / h;
+            let imageWidth = image.width;
+            let imageHeight = image.height;
+            const needRotation = rotation && rotation % 180 !== 0;
+            // const needRotation = false ;
+            if (needRotation) {
+                imageWidth = image.height;
+                imageHeight = image.width;
+            }
+            const imageRatio = imageWidth / imageHeight;
+            let cx = padding;
+            let cy = padding;
+            if (imageRatio < canvasRatio) {
+                drawingRatio = h / imageHeight;
+                cx += (w - h * imageRatio) / 2;
+            } else {
+                drawingRatio = w / imageWidth;
+                cy += (h - w / imageRatio) / 2;
+            }
+            console.log('imageRatio', drawingRatio, imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
+            currentImageMatrix.reset();
+            if (needRotation) {
+                currentImageMatrix.postTranslate(-image.width / 2, -image.height / 2);
+                currentImageMatrix.postRotate(rotation);
+                currentImageMatrix.postTranslate(image.height / 2, image.width / 2);
+            }
+            // console.log('updateMatrix', imageWidth, imageHeight, editingImage.rotationAngle, needRotation, editingImage.rotationAngle % 180, imageRatio, canvasRatio, drawingRatio, cx, cy,  quads)
+            currentImageMatrix.postScale(drawingRatio, drawingRatio);
+            currentImageMatrix.postTranslate(cx, cy);
+            // inversedCurrentMatrix = new Matrix();
+            canvas.invalidate();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    function updatePinchPanMatrix() {
+        // console.log('updatePinchPanMatrix');
+        const matrix = new Matrix();
+        matrix.postScale(scale, scale, scaleFocusX, scaleFocusY);
+        matrix.postTranslate(translationX / textOnImageScale, translationY / textOnImageScale);
+        currentPinchPanMatrix = matrix;
+        // canvasView?.nativeView?.invalidate();
+    }
+    function onCanvasDraw({ canvas }: { canvas: Canvas }) {
+        // canvas.save();
+        canvas.concat(currentPinchPanMatrix);
+        canvas.concat(currentImageMatrix);
+
+        canvas.drawBitmap(image, 0, 0, bitmapPaint);
+    }
+
+    let startTranslationX = 0;
+    let startTranslationY = 0;
+    let translationX = 0;
+    let translationY = 0;
+    function onPan(e) {
+        if (e.state === 1) {
+            startTranslationX = translationX;
+            startTranslationY = translationY;
+        } else if (e.state === 2) {
+            translationX = startTranslationX + e.deltaX;
+            translationY = startTranslationY + e.deltaY;
+            page?.nativeView.clearFocus();
+            updatePinchPanMatrix();
+        }
+        // console.log('onPan', Date.now(), e.state, e.deltaX, e.deltaY, e.constructor.name, e.extraData?.numberOfPointers, Object.keys(e));
+    }
+    let scale = 1;
+    let startScale = 1;
+    let scaleFocusX;
+    let scaleFocusY;
+    function onPinch(e) {
+        if (e.state === 1) {
+            startScale = scale;
+        } else if (e.state === 2) {
+            scale = Math.max(startScale * e.scale, 1);
+            scaleFocusX = e.getFocusX();
+            scaleFocusY = e.getFocusY();
+            page?.nativeView.clearFocus();
+            updatePinchPanMatrix();
+        }
+        // console.log('onPinch', Date.now(), e.scale, e.constructor.name, e.extraData?.numberOfPointers, Object.keys(e));
+    }
+    let textOnImageScale = 1;
+    function updateTextOnImageScale(e) {
+        textOnImageScale = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth()) / imageWidth;
+        // console.log('updateTextOnImageScale', imageWidth, e.object.getMeasuredWidth(), textOnImageScale);
+    }
+</script>
+
+<page bind:this={page} actionBarHidden={true} backgroundColor="black">
+    <gridlayout rows="auto,*">
+        <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
+            <absolutelayout
+                height={imageHeight}
+                originX={0}
+                originY={0}
+                scaleX={scale * textOnImageScale}
+                scaleY={scale * textOnImageScale}
+                translateX={translationX}
+                translateY={translationY}
+                width={imageWidth}>
+                <image id="imageView" {colorMatrix} height={imageHeight} imageRotation={rotation} src={imagePath} width={imageWidth} />
+                {#if showlabelsOnImage}
+                    {#each ocrData.blocks as item}
+                        <label
+                            autoFontSize={true}
+                            backgroundColor="#00000088"
+                            color="white"
+                            fontSize={item.fontSize * 4}
+                            height={item.box.height}
+                            left={item.box.x}
+                            selectable={true}
+                            text={item.text}
+                            top={item.box.y}
+                            width={item.box.width} />
+                    {/each}
+                {/if}
+            </absolutelayout>
+        </absolutelayout>
+
+        <!-- <canvasView bind:this={canvasView} row={1} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} {...$$restProps} on:pinch={onPinch} /> -->
+        <textview backgroundColor="#000000cc" color="white" editable={false} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
+        <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
+            <mdbutton class="actionBarButton" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
+        </CActionBar>
+    </gridlayout>
+</page>
