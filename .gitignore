@@ -10,6 +10,7 @@ certs
 /times.html
 pnpm-lock.yaml
 *.js.map
+*.aar
 e2e/**/*.js
 *.xcframework
 /mochawesome-report
