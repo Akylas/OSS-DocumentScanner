@@ -12,6 +12,7 @@ import com.nativescript.cameraview.ImageAsyncProcessor
 import java.io.File
 import java.util.*
 import org.json.JSONArray
+import kotlin.concurrent.thread
 
 class CustomImageAnalysisCallback
 @JvmOverloads
@@ -23,6 +24,10 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
     }
 
     var previewResizeThreshold = 300.0
+
+     interface OCRDocumentCallback {
+        fun onResult(e: Exception?, result: String?)
+    }
 
     companion object {
         private external fun nativeScanJSON(
@@ -37,14 +42,19 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
                 imageRotation: Int
         ): Vector<Vector<Point>>
 
-        private external fun nativeCrop(srcBitmap: Bitmap, points: String, transforms:String, outBitmap: Bitmap)
+        private external fun nativeCrop(
+                srcBitmap: Bitmap,
+                points: String,
+                transforms: String,
+                outBitmap: Bitmap
+        )
         private external fun nativeOCR(srcBitmap: Bitmap, options: String): String
 
         /**
          * @property cropperOffsetWhenCornersNotFound if we can't find document corners, we set
          * corners to image size with a slight margin
          */
-        val cropperOffsetWhenCornersNotFound = 100.0
+        private const val cropperOffsetWhenCornersNotFound = 100.0
 
         init {
             try {
@@ -63,9 +73,16 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
         @JvmOverloads
         fun ocrDocument(
                 image: Bitmap,
+                callback: OCRDocumentCallback,
                 options: String = ""
-        ): String {
-            return nativeOCR(image, options)
+        ) {
+            thread(start = true) {
+                try {
+                    callback.onResult(null, nativeOCR(image, options))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
         }
         /**
          * take a photo with a document, and find the document's corners
@@ -83,33 +100,33 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
         }
 
         fun quadsFromJSONString(str: String): List<Quad>? {
-                val jsonArray = JSONArray(str)
-                val listdata = ArrayList<Quad>()
-                for (i in 0 until jsonArray.length()) {
-                    val subJsonArray = jsonArray.getJSONArray(i)
-                    listdata.add(
-                            Quad(
-                                    PointF(
-                                            subJsonArray.getJSONArray(0).getDouble(0).toFloat(),
-                                            subJsonArray.getJSONArray(0).getDouble(1).toFloat()
-                                    ),
-                                    PointF(
-                                            subJsonArray.getJSONArray(1).getDouble(0).toFloat(),
-                                            subJsonArray.getJSONArray(1).getDouble(1).toFloat()
-                                    ),
-                                    PointF(
-                                            subJsonArray.getJSONArray(2).getDouble(0).toFloat(),
-                                            subJsonArray.getJSONArray(2).getDouble(1).toFloat()
-                                    ),
-                                    PointF(
-                                            subJsonArray.getJSONArray(3).getDouble(0).toFloat(),
-                                            subJsonArray.getJSONArray(3).getDouble(1).toFloat()
-                                    )
-                            )
-                    )
-                }
-                return listdata
+            val jsonArray = JSONArray(str)
+            val listdata = ArrayList<Quad>()
+            for (i in 0 until jsonArray.length()) {
+                val subJsonArray = jsonArray.getJSONArray(i)
+                listdata.add(
+                        Quad(
+                                PointF(
+                                        subJsonArray.getJSONArray(0).getDouble(0).toFloat(),
+                                        subJsonArray.getJSONArray(0).getDouble(1).toFloat()
+                                ),
+                                PointF(
+                                        subJsonArray.getJSONArray(1).getDouble(0).toFloat(),
+                                        subJsonArray.getJSONArray(1).getDouble(1).toFloat()
+                                ),
+                                PointF(
+                                        subJsonArray.getJSONArray(2).getDouble(0).toFloat(),
+                                        subJsonArray.getJSONArray(2).getDouble(1).toFloat()
+                                ),
+                                PointF(
+                                        subJsonArray.getJSONArray(3).getDouble(0).toFloat(),
+                                        subJsonArray.getJSONArray(3).getDouble(1).toFloat()
+                                )
+                        )
+                )
             }
+            return listdata
+        }
 
         /**
          * take a photo with a document, and find the document's corners
@@ -131,7 +148,7 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
             }
             return null
         }
-        
+
         /**
          * Pass in a photo of a document, and get back 4 corner points (top left, top right, bottom
          * right, bottom left). This tries to detect document corners, but falls back to photo
@@ -149,7 +166,8 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
         ): List<List<Point>>? {
             val cornerPoints: List<List<Point>>? =
                     findDocumentCorners(photo, shrunkImageHeight, imageRotation)
-            // if cornerPoints is null then default the corners to the photo bounds with a margin
+            // if cornerPoints is null then default the corners to the photo bounds with
+            // a margin
             var default =
                     if (returnDefault)
                             listOf(
@@ -193,7 +211,11 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
          * @return bitmap with cropped and warped document
          */
         @JvmOverloads
-        fun cropDocument(originalPhotoPath: String, quads: String, transforms: String = ""): Array<out Any> {
+        fun cropDocument(
+                originalPhotoPath: String,
+                quads: String,
+                transforms: String = ""
+        ): Array<out Any> {
             val file = File(originalPhotoPath)
             val bitmap = ImageUtil.getImageFromFile(file, 4000)
             val result = cropDocument(bitmap, quads)
@@ -214,7 +236,8 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
         fun cropDocument(bitmap: Bitmap, quads: String, transforms: String = ""): Array<out Any> {
             val bitmaps = arrayListOf<Bitmap>()
             quadsFromJSONString(quads)!!.forEachIndexed { index, quad ->
-                // convert corners from image preview coordinates to original photo coordinates
+                // convert corners from image preview coordinates to original photo
+                // coordinates
                 // (original image is probably bigger than the preview image)
                 val corners = quad!!
                 // convert output image matrix to bitmap

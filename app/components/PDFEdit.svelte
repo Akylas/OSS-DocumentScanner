@@ -4,11 +4,11 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { ImageAsset, ImageSource, ObservableArray } from '@nativescript/core';
+    import { ImageAsset, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
     import { layout, openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
     import CActionBar from '~/components/CActionBar.svelte';
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
@@ -24,6 +24,9 @@
     import { Writable, get, writable } from 'svelte/store';
     import { notifyWhenChanges } from '~/utils/svelte/store';
     import { ocrDocument } from 'plugin-nativeprocessor';
+    import { ocrService } from '~/services/ocr';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -39,6 +42,7 @@
     let quadChanged = false;
     let currentIndex = startPageIndex;
     const firstItem = items.getItem(currentIndex);
+    let currentItemOCRData = firstItem.ocrData;
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
     let currentSelectedImagePath = firstItem.getImagePath();
     let currentSelectedImageRotation = firstItem.rotation || 0;
@@ -60,12 +64,13 @@
         let ocrImage;
         try {
             showLoading(l('computing'));
-
-            const item = items.getItem(currentIndex);
-
-            ocrImage = await loadImage(item.sourceImagePath);
-            const result = ocrDocument(ocrImage);
-            console.log(result);
+            const ocrData = await ocrService.ocrPage(document, currentIndex);
+            if (ocrData) {
+                currentItemOCRData = ocrData;
+                console.log(ocrData);
+            } else {
+                showSnack({ message: lc('no_text_found_in_page') });
+            }
         } catch (err) {
             showError(err);
         } finally {
@@ -79,26 +84,27 @@
         currentItemSubtitle = `${item.width} x ${item.height}`;
         currentSelectedImagePath = item.getImagePath();
         currentSelectedImageRotation = item.rotation;
+        currentItemOCRData = item.ocrData;
         const transforms = item.transforms?.split(',') || [];
         $whitepaper = transforms.indexOf('whitepaper') !== -1;
         $enhanced = transforms.indexOf('enhance') !== -1;
         console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
         refreshCollectionView();
     }
-    function onFirstLayout(item, e) {
-        console.log('onFirstLayout');
-        if (item.rotation % 180 === 90) {
-            const currentWidth = layout.toDeviceIndependentPixels(e.object.getMeasuredWidth());
-            const currentHeight = layout.toDeviceIndependentPixels(e.object.getMeasuredHeight());
-            const delta = item.rotation % 180 === 0 ? 0 : (currentWidth - currentHeight) / 2;
-            Object.assign(e.object, {
-                translateX: delta,
-                translateY: -delta,
-                width: currentHeight,
-                height: currentWidth
-            });
-        }
-    }
+    // function onFirstLayout(item, e) {
+    //     console.log('onFirstLayout');
+    //     if (item.rotation % 180 === 90) {
+    //         const currentWidth = layout.toDeviceIndependentPixels(e.object.getMeasuredWidth());
+    //         const currentHeight = layout.toDeviceIndependentPixels(e.object.getMeasuredHeight());
+    //         const delta = item.rotation % 180 === 0 ? 0 : (currentWidth - currentHeight) / 2;
+    //         Object.assign(e.object, {
+    //             translateX: delta,
+    //             translateY: -delta,
+    //             width: currentHeight,
+    //             height: currentWidth
+    //         });
+    //     }
+    // }
 
     async function onImageRotated(item, event) {
         try {
@@ -160,7 +166,7 @@
     }
     async function shareItem(item) {
         try {
-            share({ file: await item.getImagePath() });
+            await share({ file: await item.getImagePath() });
         } catch (error) {
             showError(error);
         }
@@ -182,6 +188,29 @@
 
     async function shareCurrentItem() {
         shareItem(items.getItem(currentIndex));
+    }
+
+    async function showCurrentOCRData() {
+        try {
+            const item = items.getItem(currentIndex);
+
+            const OCRDataBottomSheet = (await import('~/components/OCRDataView.svelte')).default;
+            await showModal({
+                page: OCRDataBottomSheet,
+                fullscreen: true,
+                props: {
+                    ocrData: items.getItem(currentIndex).ocrData,
+                    imagePath: item.imagePath,
+                    image: editingImage || (await loadImage(item.imagePath)),
+                    imageWidth:item.width,
+                    imageHeight:item.height,
+                    rotation: item.rotation,
+                    colorMatrix: getColorMatrix(item.colorType)
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
 
     async function setBlackWhiteLevel(event) {
@@ -353,6 +382,16 @@
         </pager>
         <label fontSize={14} horizontalAlignment="left" padding={10} row={1} text={currentItemSubtitle} verticalAlignment="bottom" />
         <mdbutton class="icon-btn" horizontalAlignment="right" row={1} text="mdi-share-variant" variant="text" verticalAlignment="bottom" on:tap={() => shareCurrentItem()} />
+        <mdbutton
+            class="icon-btn"
+            horizontalAlignment="right"
+            marginRight={40}
+            row={1}
+            text="mdi-format-textbox"
+            variant="text"
+            verticalAlignment="bottom"
+            visibility={currentItemOCRData ? 'visible' : 'hidden'}
+            on:tap={() => showCurrentOCRData()} />
 
         <stacklayout orientation="horizontal" row={2}>
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />

@@ -1,10 +1,9 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
-import { cropDocument } from 'plugin-nativeprocessor';
+import { OCRData, cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType, timeout } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils';
-
 
 export interface ImageConfig {
     colorType?: ColorMatricesType;
@@ -123,7 +122,8 @@ export class OCRDocument extends Observable implements Document {
                     const file = File.fromPath(imagePath);
                     await file.copy(attributes.imagePath);
                 } else if (image) {
-                    await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
+                    const imageSource = new ImageSource(image);
+                    await imageSource.saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
                 } else {
                     continue;
                 }
@@ -248,7 +248,7 @@ export class OCRDocument extends Observable implements Document {
     async updatePageCrop(pageIndex: number, quad: any, editingImage: ImageSource) {
         const page = this.pages[pageIndex];
         const images = cropDocument(editingImage, [quad], page.transforms || '');
-
+        const image = images[0];
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         if (__IOS__) {
@@ -260,7 +260,9 @@ export class OCRDocument extends Observable implements Document {
         await this.updatePage(
             pageIndex,
             {
-                crop: quad
+                crop: quad,
+                width: __ANDROID__ ? image.getWidth() : image.size.width,
+                height: __ANDROID__ ? image.getHeight() : image.size.height
             },
             true
         );
@@ -314,7 +316,7 @@ export interface Page {
     sourceImagePath: string;
     imagePath: string;
 
-    ocrData: { text: string; blocks: { block: string; text: string; confidence: number; font_name?: string; bold?: boolean; italic?: boolean; underlined?: boolean; pointsize?: number }[] };
+    ocrData: OCRData;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -345,6 +347,9 @@ export class OCRPage extends Observable implements Page {
     height: number;
     sourceImagePath: string;
     imagePath: string;
+
+    ocrData: OCRData;
+    _ocrData: string;
 
     getImagePath() {
         return this.imagePath;

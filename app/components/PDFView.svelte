@@ -19,7 +19,7 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
-    import { accentColor, widgetBackgroundColor } from '~/variables';
+    import { accentColor, mdiFontFamily, widgetBackgroundColor } from '~/variables';
 
     interface Item {
         page: OCRPage;
@@ -88,7 +88,16 @@
 
     async function importDocument() {
         try {
-            await importAndScanImage(document);
+            const doc = await importAndScanImage(document);
+            if (doc) {                const component = (await import('~/components/PDFEdit.svelte')).default;
+                navigate({
+                    page: component,
+                    props: {
+                        document,
+                        startPageIndex: document.pages.length - 1
+                    }
+                });
+            }
         } catch (error) {
             showError(error);
         }
@@ -308,8 +317,9 @@
                     on:longPress={(e) => onItemLongPress(item, e)}>
                     <RotableImageView id="imageView" item={item.page} rowSpan={2} sharedTransitionTag={`document_${document.id}_${item.page.id}`} />
                     <SelectedIndicator selected={item.selected} />
-                    <canvaslabel backgroundColor="#00000088" color="white" height={30} padding="10" row={1}>
+                    <canvaslabel backgroundColor="#00000088" color="white" height={30} padding="5" row={1}>
                         <cspan fontSize={12} text={`${item.page.width} x ${item.page.height}`} />
+                        <cspan fontFamily={mdiFontFamily} fontSize={20} text="mdi-text-recognition" textAlignment="right" visibility={item.page.ocrData ? 'visible' : 'hidden'} />
                     </canvaslabel>
                 </gridlayout>
             </Template>

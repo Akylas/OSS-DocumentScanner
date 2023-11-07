@@ -380,6 +380,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                                 height: __ANDROID__ ? image.getHeight() : image.size.height,
                                 rotation: editingImage.rotationAngle
                             });
+                            DEV_LOG && console.log('added page', image.getWidth(), image.getHeight());
                         }
                         if (document) {
                             await document.addPages(pagesToAdd);

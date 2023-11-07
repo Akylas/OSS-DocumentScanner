@@ -3,4 +3,6 @@
     <external-path name="external_files" path="." />
     <cache-path name="cached_files" path="." />
     <files-path name="app_directory" path="data/" />
+    <external-path name="my_images" path="data/" />
+    <root-path name="root" path="." />
 </paths>

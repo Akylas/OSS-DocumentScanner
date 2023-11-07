@@ -2,7 +2,36 @@ import type { ImageSource } from '@nativescript/core';
 
 export interface OCRData {
     text: string;
-    blocks: { block: string; text: string; confidence: number; font_name?: string; bold?: boolean; italic?: boolean; underlined?: boolean; pointsize?: number }[];
+    blocks: {
+        box: { x: number; y: number; width: number; height: number };
+        text: string;
+        confidence: number;
+        fontFamily?: string;
+        fontWeight?: string;
+        fontStyle?: string;
+        textDecoration?: string;
+        fontSize?: number;
+    }[];
+    imageWidth: number;
+    imageHeight: number;
+}
+
+export interface DetectOptions {
+    adapThresholdBlockSize: number; // 391
+    adapThresholdC: number; // 53
+
+    detectContours: number;
+
+    textDetectDilate: number; // 0
+    textMorphologyEx1: number; // 34
+    textMorphologyEx2: number; // 12
+
+    dataPath: string;
+    language: string;
+    dpi: string;
+    pageSegMode: number;
+    iteratorLevel: number;
+    oem: number;
 }
 
 export function cropDocument(editingImage: ImageSource, quads, transforms = '') {
@@ -31,12 +60,26 @@ export function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshol
     return corners ? JSON.parse(corners) : [];
 }
 
-export function ocrDocument(editingImage: ImageSource, options?: {}): OCRData {
-    let data;
-    if (__ANDROID__) {
-        data = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.ocrDocument(editingImage.android, options ? JSON.stringify(options) : '');
-    } else {
-        // TODO: implement iOS
-    }
-    return data ? JSON.parse(data) : [];
+export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>) {
+    // DEV_LOG && console.log('ocrDocument', editingImage.width, editingImage.height, options);
+    return new Promise<OCRData>((resolve, reject) => {
+        if (__ANDROID__) {
+            com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.ocrDocument(
+                editingImage.android,
+                new com.akylas.documentscanner.CustomImageAnalysisCallback.OCRDocumentCallback({
+                    onResult(e, result) {
+                        // DEV_LOG && console.log('ocrDocument onResult', e, result);
+                        if (e) {
+                            reject(e);
+                        } else {
+                            resolve(result ? JSON.parse(result) : null);
+                        }
+                    }
+                }),
+                options ? JSON.stringify(options) : ''
+            );
+        } else {
+            // TODO: implement iOS
+        }
+    });
 }
