@@ -46,6 +46,7 @@ yarn-error.log*
 .cloud
 .project
 .yarn
+yarn.lock
 tmp/
 typings/
 opencv/android/*
