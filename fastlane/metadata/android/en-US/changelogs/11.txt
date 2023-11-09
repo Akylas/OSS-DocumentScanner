@@ -1,2 +1,0 @@
-*Bug fixes*
-- *android:* some theming fixes

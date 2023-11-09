@@ -1,5 +1,0 @@
-*Bug fixes*
-- weather icons are not parsed correctly
-- ForkTsCheckerWebpackPlugin fails when more than one worker is used
-- TypeScript compilation fails
-- CleanWebpackPlugin is unable to delete some dirs

@@ -1,3 +1,0 @@
-*Bug fixes*
-- crash fix when trying to JSON.parse undefined ….
-- try catch for locale loading

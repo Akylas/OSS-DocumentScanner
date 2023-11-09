@@ -1,7 +1,0 @@
-*Bug fixes*
-- *android:* no more hickup on first scroll!
-- *android:* bigger actionBar per Google recommendation
-- better layout of week summarize
-- confirm to the user that we are going to close
-- localized select City view
-- wrong moon icon
