@@ -145,22 +145,26 @@ export class OCRService extends Observable {
     currentLanguage: string;
     async start() {
         DEV_LOG && console.log(TAG, 'start');
-        this.currentDataPath = ApplicationSettings.getString('tesseract_datapath', path.join(knownFolders.currentApp().path, 'assets', 'tesseract', 'standard'));
+        this.currentDataPath = ApplicationSettings.getString('tesseract_datapath', path.join(knownFolders.currentApp().path, 'assets', 'tesseract', 'best'));
         this.currentLanguage = 'fra';
     }
 
-    async ocrPage(document: OCRDocument, pageIndex: number) {
+    async ocrPage(document: OCRDocument, pageIndex: number, onProgress?: (progress: number) => void) {
         let ocrImage: ImageSource;
         try {
             const page = document.pages[pageIndex];
             ocrImage = await loadImage(page.imagePath);
             // TODO: apply colorMatrix to image before doing OCR
-            const ocrData = await ocrDocument(ocrImage, {
-                dataPath: this.currentDataPath,
-                language: this.currentLanguage,
-                // oem: 0,
-                detectContours: 0
-            });
+            const ocrData = await ocrDocument(
+                ocrImage,
+                {
+                    dataPath: this.currentDataPath,
+                    language: this.currentLanguage,
+                    // oem: 0,
+                    detectContours: 0
+                },
+                onProgress
+            );
             if (ocrData?.blocks?.length) {
                 await document.updatePage(pageIndex, {
                     ocrData

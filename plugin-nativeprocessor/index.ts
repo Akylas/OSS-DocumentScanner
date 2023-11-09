@@ -35,7 +35,6 @@ export interface DetectOptions {
 }
 
 export function cropDocument(editingImage: ImageSource, quads, transforms = '') {
-    console.log('cropDocument', editingImage.width, editingImage.height, quads, transforms);
     let images /* : android.graphics.Bitmap[] */;
     if (__ANDROID__) {
         images = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(editingImage.android, JSON.stringify(quads), transforms);
@@ -50,7 +49,6 @@ export function cropDocument(editingImage: ImageSource, quads, transforms = '') 
     return images;
 }
 export function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): [number, number][][] {
-    console.log('getJSONDocumentCorners', editingImage.width, editingImage.height, resizeThreshold, imageRotation);
     let corners;
     if (__ANDROID__) {
         corners = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(editingImage.android, resizeThreshold, imageRotation);
@@ -60,7 +58,7 @@ export function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshol
     return corners ? JSON.parse(corners) : [];
 }
 
-export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>) {
+export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
     // DEV_LOG && console.log('ocrDocument', editingImage.width, editingImage.height, options);
     return new Promise<OCRData>((resolve, reject) => {
         if (__ANDROID__) {
@@ -76,7 +74,12 @@ export async function ocrDocument(editingImage: ImageSource, options?: Partial<D
                         }
                     }
                 }),
-                options ? JSON.stringify(options) : ''
+                options ? JSON.stringify(options) : '',
+                onProgress
+                    ? new com.akylas.documentscanner.CustomImageAnalysisCallback.OCRDocumentProgress({
+                          onProgress
+                      })
+                    : undefined
             );
         } else {
             // TODO: implement iOS

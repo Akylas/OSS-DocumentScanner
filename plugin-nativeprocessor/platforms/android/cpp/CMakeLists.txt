@@ -39,7 +39,7 @@ add_library(${TARGET} SHARED ${DIR_LIB_SOURCE} ${DIR_LIB_SOURCE2})
 # you want to add. CMake verifies that the library exists before
 # completing its build.
 
-target_link_libraries(${TARGET} log jnigraphics z dl m)
+ target_link_libraries(${TARGET} log jnigraphics z)
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
@@ -53,4 +53,4 @@ else()
     target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc tegra_hal)
 endif()
 
-target_link_libraries(${TARGET} tesseract leptonica pngx jpeg  -fopenmp -static-openmp)
+target_link_libraries(${TARGET} tesseract leptonica pngx jpeg -fopenmp -static-openmp)

@@ -404,7 +404,6 @@
                 onCheckColor="white"
                 onTintColor={primaryColor}
                 text={lc('enhance')}
-                tintColor={primaryColor}
                 verticalAlignment="middle"
                 on:checkedChange={(e) => ($enhanced = e.value)} />
             <checkbox
@@ -414,7 +413,6 @@
                 onCheckColor="white"
                 onTintColor={primaryColor}
                 text={lc('whitepaper')}
-                tintColor={primaryColor}
                 verticalAlignment="middle"
                 on:checkedChange={(e) => ($whitepaper = e.value)} />
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->

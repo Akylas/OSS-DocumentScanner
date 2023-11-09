@@ -51,13 +51,22 @@ static jobject createJavaPoint(JNIEnv *env, Point point_)
     return env->NewObject(gPointInfo.jClassPoint, gPointInfo.jMethodInit, point_.x, point_.y);
 }
 
-static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_)
+static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_, jobject progressInterface)
 {
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
     Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
     std::string options{jstringToString(env, options_)};
-    std::string result = detector::DocumentOCR::detectText(srcBitmapMat, options);
+    std::optional<std::function<void(int)>> progressLambda;
+    if (progressInterface != NULL) {
+        jclass objclass = env->GetObjectClass(progressInterface);
+        jmethodID method = env->GetMethodID(objclass, "onProgress", "(I)V");
+        progressLambda = [&](int progress){
+            env->CallVoidMethod(progressInterface, method, progress);
+        };
+    }
+
+    std::string result = detector::DocumentOCR::detectText(srcBitmapMat, options, progressLambda);
     return stringToJavaString(env, result);
 }
 static jobject native_scan(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation)
@@ -227,7 +236,8 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeOCR(JNIEnv *env,
                                                                                      jobject thiz,
                                                                                      jobject src_bitmap,
-                                                                                     jstring options)
+                                                                                     jstring options,
+                                                                                     jobject progressInterface)
 {
-    return native_ocr(env, thiz, src_bitmap, options);
+    return native_ocr(env, thiz, src_bitmap, options, progressInterface);
 }
