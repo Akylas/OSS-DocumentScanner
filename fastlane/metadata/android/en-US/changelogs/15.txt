@@ -1,9 +1,0 @@
-*Bug fixes*
-- *android:* working theme on old devices
-- *android:* okhttp for old kitkat
-- map cache fix
-- use https
-- some layout fixes
-- missing moon icon
-- *ios:* use lato for now becasue of a bug in dtcoretext
-- *ios:* fixing upload

@@ -1,6 +1,0 @@
-*Bug fixes*
-- a little bit smaller precip height
-- faster listview with itemIdGenerator
-- moon icon fix
-- use canvaslabel
-- bugs fixes and improvements
