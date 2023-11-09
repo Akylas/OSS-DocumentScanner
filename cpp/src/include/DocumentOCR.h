@@ -54,9 +54,9 @@ namespace detector {
                 int oem = tesseract::OcrEngineMode::OEM_DEFAULT;
             };
 
-            static std::optional<OCRResult> detectTextImpl(const Mat &image, Mat &output, const DetectOptions &options);
-            static std::optional<OCRResult> detectTextImpl(const Mat &image, const DetectOptions &options);
-            static std::string detectText(const Mat &image, const std::string &optionsJson);
+            static std::optional<OCRResult> detectTextImpl(const Mat &image, Mat &output, const DetectOptions &options, std::optional<std::function<void(int)>> const& progressLambda);
+            static std::optional<OCRResult> detectTextImpl(const Mat &image, const DetectOptions &options, std::optional<std::function<void(int)>> const& progressLambda);
+            static std::string detectText(const Mat &image, const std::string &optionsJson, std::optional<std::function<void(int)>> const& progressLambda);
     };
 }
 #endif //DOCUMENT_OCR_H

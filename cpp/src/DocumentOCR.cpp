@@ -1,11 +1,45 @@
 #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
+#include <tesseract/ocrclass.h>
 
 using namespace std;
 using namespace cv;
 using namespace detector;
 
 const char *whitespaceChars = " \t\n\r\f\v";
+
+struct native_data_t {
+    tesseract::TessBaseAPI api;
+    void *data;
+    int lastProgress;
+    bool cancel_ocr;
+
+    bool isStateValid() {
+        if (!cancel_ocr) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    void initStateVariables() {
+        cancel_ocr = false;
+        lastProgress = 0;
+    }
+
+    void resetStateVariables() {
+        cancel_ocr = false;
+        lastProgress = 0;
+    }
+
+    native_data_t() {
+       lastProgress = 0;
+        data = NULL;
+        cancel_ocr = false;
+    }
+
+    ~native_data_t() {
+    }
+};
 
 // trim from end of string (right)
 inline std::string &rtrim(std::string &s, const char *t = whitespaceChars)
@@ -109,7 +143,7 @@ bool rectComparatorYThenX(const Rect &a, const Rect &b)
     return getSorkKeyTopToBottomLeftToRight(a) < getSorkKeyTopToBottomLeftToRight(b);
 }
 
-std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &image, Mat &out_img, const DocumentOCR::DetectOptions &options)
+std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &image, Mat &out_img, const DocumentOCR::DetectOptions &options, std::optional<std::function<void(int)>> const& progressLambda)
 {
     //    double t_r = (double) getTickCount();
     std::vector<cv::Rect> boundRects;
@@ -195,6 +229,28 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
     vector<OCRData> ocr_data;
     Rect lastBoundRect;
     int boundRectsCount = boundRects.size();
+    int boundRectDone = 0;
+
+//    tesseract::CANCEL_FUNC cancelCallback = [] (void* cancel_this, int words) {
+//        return true;
+//    };
+
+    std::optional<tesseract::ETEXT_DESC> monitor;
+    if (progressLambda != std::nullopt) {
+        int16_t lastProgress;
+        auto progressCallback = [&] (tesseract::ETEXT_DESC* monitor, int left, int right, int top, int bottom) -> bool {
+            int16_t progress = monitor->progress;
+            if (progress > lastProgress) {
+                lastProgress = progress;
+            }
+            progressLambda.value()(boundRectDone + lastProgress/boundRectsCount);
+            return true;
+        };
+        monitor = tesseract::ETEXT_DESC();
+        monitor->progress_callback2 = progressCallback;
+    }
+//    monitor.cancel = cancelCallback;
+//    monitor.cancel_this = nat;
     for (int i = 0; i < boundRectsCount; i++)
     {
         Mat group_img = Mat::zeros(image.rows + 2, image.cols + 2, CV_8UC1);
@@ -202,7 +258,11 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
         copyMakeBorder(group_img, group_img, 15, 15, 15, 15, BORDER_CONSTANT, Scalar(255));
         api->SetImage(group_img.data, group_img.size().width, group_img.size().height,
                       group_img.channels(), group_img.step1());
-        api->Recognize(0);
+        if (monitor != std::nullopt) {
+            api->Recognize(&monitor.value());
+        } else {
+            api->Recognize(0);
+        }
         tesseract::ResultIterator *ri = api->GetIterator();
         tesseract::PageIteratorLevel level = static_cast<tesseract::PageIteratorLevel>(options.iteratorLevel);
         if (ri != 0)
@@ -299,6 +359,7 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
         {
             lastBoundRect = boundRects[i];
         }
+        boundRectDone++;
     }
 
     // for (int j = 0; j < (int)ocr_data.size(); j++)
@@ -310,6 +371,9 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
     //     putText(out_img, data.text, data.box.tl() - Point(1, 1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255, 255, 255), (int)(3 * scale_font));
     // }
     api->Clear();
+    if (progressLambda != std::nullopt) {
+        progressLambda.value()(100);
+    }
     // std::string s;
     if (ocr_data.size() == 0)
     {
@@ -324,13 +388,13 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
     return result;
 }
 
-std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &image, const DocumentOCR::DetectOptions &options)
+std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &image, const DocumentOCR::DetectOptions &options, std::optional<std::function<void(int)>> const& progressLambda)
 {
     Mat output;
-    return detectTextImpl(image, output, options);
+    return detectTextImpl(image, output, options, progressLambda);
 }
 
-string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
+string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson, std::optional<std::function<void(int)>> const& progressLambda)
 {
     DetectOptions options;
 
@@ -392,12 +456,12 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson)
             options.textDetect2 = j["textMorphologyEx2"].as<int>();
         }
     }
-    std::optional<OCRResult> result = detectTextImpl(image, options);
+    std::optional<OCRResult> result = detectTextImpl(image, options, progressLambda);
     if (result == std::nullopt)
     {
         Mat inversedImage;
         bitwise_not(image, inversedImage);
-        result = detectTextImpl(inversedImage, options);
+        result = detectTextImpl(inversedImage, options, progressLambda);
     }
     string s;
     if (result != std::nullopt)

@@ -28,6 +28,9 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
      interface OCRDocumentCallback {
         fun onResult(e: Exception?, result: String?)
     }
+     interface OCRDocumentProgress {
+        fun onProgress(progress: Int)
+    }
 
     companion object {
         private external fun nativeScanJSON(
@@ -48,7 +51,7 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
                 transforms: String,
                 outBitmap: Bitmap
         )
-        private external fun nativeOCR(srcBitmap: Bitmap, options: String): String
+        private external fun nativeOCR(srcBitmap: Bitmap, options: String, progress: OCRDocumentProgress?): String
 
         /**
          * @property cropperOffsetWhenCornersNotFound if we can't find document corners, we set
@@ -74,11 +77,12 @@ constructor(context: Context, private val cropView: CropView? = null) : ImageAna
         fun ocrDocument(
                 image: Bitmap,
                 callback: OCRDocumentCallback,
-                options: String = ""
+                options: String = "",
+                progress: OCRDocumentProgress? = null,
         ) {
             thread(start = true) {
                 try {
-                    callback.onResult(null, nativeOCR(image, options))
+                    callback.onResult(null, nativeOCR(image, options, progress))
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 }
