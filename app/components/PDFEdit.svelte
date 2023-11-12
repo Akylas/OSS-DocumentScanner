@@ -4,7 +4,7 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { ImageAsset, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
+    import { File, ImageAsset, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
     import { layout, openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -12,11 +12,11 @@
     import CActionBar from '~/components/CActionBar.svelte';
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
     import CropView from '~/components/CropView.svelte';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { loadImage, recycleImages } from '~/utils/utils';
@@ -26,7 +26,7 @@
     import { ocrDocument } from 'plugin-nativeprocessor';
     import { ocrService } from '~/services/ocr';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -49,7 +49,6 @@
     const transforms = firstItem.transforms?.split(',') || [];
     const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     const enhanced = writable(transforms.indexOf('enhance') !== -1);
-    console.log('firstItem', currentItemSubtitle, currentSelectedImagePath, currentSelectedImageRotation, transforms);
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -63,8 +62,10 @@
     async function detectOCR() {
         let ocrImage;
         try {
-            showLoading(l('computing'));
-            const ocrData = await ocrService.ocrPage(document, currentIndex);
+            showLoading({ text: l('computing'), progress: 0 });
+            const ocrData = await ocrService.ocrPage(document, currentIndex, (progress: number) => {
+                updateLoadingProgress({ progress });
+            });
             if (ocrData) {
                 currentItemOCRData = ocrData;
                 console.log(ocrData);
@@ -150,7 +151,6 @@
     async function rotateImageLeft() {
         try {
             const current = items.getItem(currentIndex);
-            console.log('current', current.rotation);
             applyRotation((current.rotation ?? 0) - 90);
         } catch (error) {
             showError(error);
@@ -177,7 +177,6 @@
 
             editingImage = await loadImage(item.sourceImagePath);
             // editingImage = await ImageSource.fromFile(item.sourceImagePath);
-            console.log('cropEdit', item.crop);
 
             quad = item.crop;
             recrop = true;
@@ -187,7 +186,23 @@
     }
 
     async function shareCurrentItem() {
-        shareItem(items.getItem(currentIndex));
+        try {
+            shareItem(items.getItem(currentIndex));
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function saveCurrentImage() {
+        if (__ANDROID__) {
+            try {
+                const imagePath = items.getItem(currentIndex).imagePath;
+                const file = File.fromPath(imagePath);
+                const destinationPath = path.join(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), file.name);
+                await (await ImageSource.fromFile(imagePath)).saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+            } catch (error) {
+                showError(error);
+            }
+        }
     }
 
     async function showCurrentOCRData() {
@@ -202,8 +217,8 @@
                     ocrData: items.getItem(currentIndex).ocrData,
                     imagePath: item.imagePath,
                     image: editingImage || (await loadImage(item.imagePath)),
-                    imageWidth:item.width,
-                    imageHeight:item.height,
+                    imageWidth: item.width,
+                    imageHeight: item.height,
                     rotation: item.rotation,
                     colorMatrix: getColorMatrix(item.colorType)
                 }
@@ -234,7 +249,6 @@
                     icon: 'mdi-brightness-6',
                     value: currentValue,
                     onChange(value) {
-                        console.log('changed', value);
                         document.updatePage(currentIndex, {
                             colorMatrix: getColorMatrix(current.colorType, value)
                         });
@@ -257,7 +271,6 @@
                 okButtonText: lc('delete'),
                 cancelButtonText: lc('cancel')
             });
-            console.log('delete, confirmed', result);
             if (result) {
                 try {
                     await document.deletePage(currentIndex);
@@ -297,7 +310,6 @@
     }));
     let updatingTransform = false;
     async function updateTransform(value: boolean, store: Writable<boolean>, type: string) {
-        console.log('updateTransform', value, type, updatingTransform);
         if (updatingTransform) {
             store.set(!value);
             return;
@@ -381,7 +393,15 @@
             </Template>
         </pager>
         <label fontSize={14} horizontalAlignment="left" padding={10} row={1} text={currentItemSubtitle} verticalAlignment="bottom" />
-        <mdbutton class="icon-btn" horizontalAlignment="right" row={1} text="mdi-share-variant" variant="text" verticalAlignment="bottom" on:tap={() => shareCurrentItem()} />
+        <mdbutton
+            class="icon-btn"
+            horizontalAlignment="right"
+            row={1}
+            text="mdi-share-variant"
+            variant="text"
+            verticalAlignment="bottom"
+            on:tap={() => shareCurrentItem()}
+            on:longPress={() => saveCurrentImage()} />
         <mdbutton
             class="icon-btn"
             horizontalAlignment="right"

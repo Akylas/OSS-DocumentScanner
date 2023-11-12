@@ -5,7 +5,7 @@
     import { openLink } from '~/utils/ui';
     import CActionBar from './CActionBar.svelte';
     import SettingLabelIcon from './SettingLabelIcon.svelte';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { openUrl } from '@nativescript/core/utils';
 
     const appVersion = __APP_VERSION__ + '.' + __APP_ID__;

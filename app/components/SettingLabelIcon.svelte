@@ -12,7 +12,7 @@
 
 <gridlayout columns="16,*,auto,16" rippleColor={primaryColor} rows="12,auto,12" on:tap={(event) => dispatch('tap', event)}>
     <stacklayout col={1} row={1} verticalAlignment="middle">
-        <label fontSize="17" lineBreak="end" maxLines={2} text={title} textWrap="true" verticalTextAlignment="top" />
+        <label fontSize="17" lineBreak="end" maxLines={2} text={title} textWrap={true} verticalTextAlignment="top" />
         <label color={$subtitleColor} fontSize="14" lineBreak="end" maxLines={subtitleMaxLines} text={subtitle} verticalTextAlignment="top" visibility={!!subtitle ? 'visible' : 'collapsed'} />
     </stacklayout>
     <label col={2} color={$iconColor} fontFamily={mdiFontFamily} fontSize="24" row={1} text={icon} textAlignment="right" verticalAlignment="middle" visibility={!!icon ? 'visible' : 'collapsed'} />

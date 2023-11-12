@@ -4,6 +4,7 @@
 #include <DocumentDetector.h>
 #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
+#include <android/log.h>
 
 using namespace std;
 
@@ -58,10 +59,13 @@ static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring 
     Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
     std::string options{jstringToString(env, options_)};
     std::optional<std::function<void(int)>> progressLambda;
-    if (progressInterface != NULL) {
+    jmethodID method = NULL;
+    if (progressInterface != NULL)
+    {
         jclass objclass = env->GetObjectClass(progressInterface);
-        jmethodID method = env->GetMethodID(objclass, "onProgress", "(I)V");
-        progressLambda = [&](int progress){
+        method = env->GetMethodID(objclass, "onProgress", "(I)V");
+        progressLambda = [&](int progress)
+        {
             env->CallVoidMethod(progressInterface, method, progress);
         };
     }
@@ -213,10 +217,10 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSON(JNIEnv *env,
-                                                                                      jobject thiz,
-                                                                                      jobject src_bitmap,
-                                                                                      jint shrunk_image_height,
-                                                                                      jint image_rotation)
+                                                                                          jobject thiz,
+                                                                                          jobject src_bitmap,
+                                                                                          jint shrunk_image_height,
+                                                                                          jint image_rotation)
 {
     return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
 }

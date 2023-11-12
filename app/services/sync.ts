@@ -118,7 +118,6 @@ export class SyncService extends Observable {
             const pageDataFolder = docDataFolder.getFolder(page.id);
             page.sourceImagePath = path.join(pageDataFolder.path, basename(page.sourceImagePath));
             page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
-            console.log('page', page.sourceImagePath, page.imagePath);
         });
         await doc.addPages(pages);
         await this.importFolderFromWebdav(data.filename, docDataFolder, ['data.json']);
@@ -263,7 +262,7 @@ export class SyncService extends Observable {
         this.notify({ eventName: 'syncState', state: 'running' });
         DEV_LOG && console.log('syncDocuments', bothWays);
         const localDocuments = (await documentsService.documentRepository.search({})) as OCRDocument[];
-        console.log(
+        DEV_LOG && console.log(
             'localDocuments',
             localDocuments.map((d) => d.id)
         );
@@ -274,9 +273,9 @@ export class SyncService extends Observable {
 
             const { toBeAdded: missingLocalDocuments, toBeDeleted: missingRemoteDocuments, union: toBeSyncDocuments } = findArrayDiffs(localDocuments, remoteDocuments, (a, b) => a.id === b.basename);
 
-            console.log('missingRemoteDocuments', missingRemoteDocuments);
-            console.log('missingLocalDocuments', missingLocalDocuments);
-            console.log('toBeSyncDocuments', toBeSyncDocuments);
+            DEV_LOG && console.log('missingRemoteDocuments', missingRemoteDocuments);
+            DEV_LOG && console.log('missingLocalDocuments', missingLocalDocuments);
+            DEV_LOG && console.log('toBeSyncDocuments', toBeSyncDocuments);
             for (let index = 0; index < missingRemoteDocuments.length; index++) {
                 await this.addDocumentToWebdav(missingRemoteDocuments[index]);
             }
@@ -297,9 +296,9 @@ export class SyncService extends Observable {
                     union: toBeSyncDocuments
                 } = findArrayDiffs(localDocuments, remoteDocuments, (a, b) => a.id === b.basename);
 
-                console.log('missingRemoteDocuments', missingRemoteDocuments);
-                console.log('missingLocalDocuments', missingLocalDocuments);
-                console.log('toBeSyncDocuments', toBeSyncDocuments);
+                DEV_LOG && console.log('missingRemoteDocuments', missingRemoteDocuments);
+                DEV_LOG && console.log('missingLocalDocuments', missingLocalDocuments);
+                DEV_LOG && console.log('toBeSyncDocuments', toBeSyncDocuments);
                 for (let index = 0; index < missingRemoteDocuments.length; index++) {
                     await this.addDocumentToWebdav(missingRemoteDocuments[index]);
                 }

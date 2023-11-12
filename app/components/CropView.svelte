@@ -142,7 +142,6 @@
             rotation = getRotation();
             const needRotation = rotation && rotation % 180 !== 0;
             // const needRotation = false ;
-            console.log('updateMatrix', rotation, needRotation, editingImage.rotationAngle, editingImage.width, editingImage.height);
             if (needRotation) {
                 imageWidth = image.height;
                 imageHeight = image.width;
@@ -157,7 +156,6 @@
                 drawingRatio = w / imageWidth;
                 cy += (h - w / imageRatio) / 2;
             }
-            console.log('imageRatio', drawingRatio, imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
             currentImageMatrix.reset();
             currentCropMatrix.reset();
             // if (needRotation) {
@@ -172,9 +170,7 @@
             currentCropMatrix.postTranslate(cx, cy);
             // inversedCurrentMatrix = new Matrix();
             currentCropMatrix.invert(inversedCurrentMatrix);
-            console.log('quads', quads);
             mappedQuads = quads.map((quad) => quad.map((p) => getMatrixMappedPoint(currentCropMatrix, p)));
-            console.log('mappedQuads', mappedQuads);
             canvas?.nativeView.invalidate();
         } catch (error) {
             console.error(error);

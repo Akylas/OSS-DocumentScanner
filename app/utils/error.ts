@@ -1,4 +1,6 @@
+import { Color } from '@nativescript/core';
 import { lc } from '@nativescript-community/l';
+import { Label } from '@nativescript-community/ui-label';
 import { confirm, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { BaseError } from 'make-error';
@@ -12,6 +14,7 @@ function evalTemplateString(resource: string, obj: {}) {
     }
     const names = Object.keys(obj);
     const vals = Object.keys(obj).map((key) => obj[key]);
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     return new Function(...names, `return \`${resource}\`;`)(...vals);
 }
 
@@ -141,20 +144,22 @@ export async function showError(err: Error | string, showAsSnack = false) {
             showSnack({ message });
             return;
         }
-        const title = lc('error');
+        if (SENTRY_ENABLED && isSentryEnabled) {
+            Sentry.captureException(err);
+        }
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
+        const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
         // if (!PRODUCTION) {
         // }
-        const result = await confirm({
+        const label = new Label();
+        label.style.padding = '10 20 0 20';
+        label.style.color = new Color(255, 138, 138, 138);
+        label.html = message.trim();
+        return mdAlert({
+            okButtonText: lc('OKButton'),
             title,
-            okButtonText: showSendBugReport ? lc('send_bug_report') : undefined,
-            cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
-            message
+            view: label
         });
-        if (SENTRY_ENABLED && result && isSentryEnabled) {
-            Sentry.captureException(err);
-            this.$alert(l('bug_report_sent'));
-        }
     } catch (error) {
         console.error('showError', error);
     }

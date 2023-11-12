@@ -189,9 +189,10 @@ dependencies {
       exclude group: 'org.bouncycastle', module: 'bcprov-jdk15to18'
       exclude group: 'org.bouncycastle', module: 'bcutil-jdk15to18'
     }
-    implementation 'com.github.ultimate-deej:TwoWayNestedScrollView:0.1.1'
-}
+    // implementation 'com.github.ultimate-deej:TwoWayNestedScrollView:0.1.1'
+		// implementation 'com.github.Akylas:AndroidPdfViewer:3.3.1'
+    }
 repositories {
 			mavenCentral()
 			maven { url 'https://jitpack.io' }
-		}
+}

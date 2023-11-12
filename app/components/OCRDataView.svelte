@@ -5,27 +5,39 @@
     import { ImageSource, Page, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Canvas, CanvasView, ColorMatrixColorFilter, Matrix, Paint } from '@nativescript-community/ui-canvas';
+    import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
+    import { showError } from '~/utils/error';
 
     export let ocrData: OCRData;
+    export let imagePath: string;
     export let image: ImageSource;
     export let rotation: number;
     export let colorMatrix: number[];
-    export let imagePath: string;
     export let imageWidth: number;
     export let imageHeight: number;
+    let webView: NativeViewElementNode<AWebView>;
+
+    // console.log('ocrData', JSON.stringify(ocrData));
+    function onWebViewLoadFinished() {
+        try {
+            webView?.nativeView.executeJavaScript(`document.updateOCRData('${imagePath}', ${JSON.stringify(ocrData)})`);
+        } catch (error) {
+            showError(error);
+        }
+    }
 
     let showTextView = true;
-    const showlabelsOnImage = true;
+    // const showlabelsOnImage = true;
     let page: NativeViewElementNode<Page>;
-    let canvasView: NativeViewElementNode<CanvasView>;
-    const padding = 20;
-    let drawingRatio: number;
-    const currentImageMatrix: Matrix = new Matrix();
-    let currentPinchPanMatrix: Matrix = new Matrix();
-    const bitmapPaint = new Paint();
-    if (colorMatrix) {
-        bitmapPaint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
-    }
+    // let canvasView: NativeViewElementNode<CanvasView>;
+    // const padding = 20;
+    // let drawingRatio: number;
+    // const currentImageMatrix: Matrix = new Matrix();
+    // let currentPinchPanMatrix: Matrix = new Matrix();
+    // const bitmapPaint = new Paint();
+    // if (colorMatrix) {
+    //     bitmapPaint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
+    // }
 
     const showWithCustomFontSize = false;
 
@@ -42,7 +54,7 @@
         }
     }
 
-    $: updateMatrix(canvasView);
+    // $: updateMatrix(canvasView);
 
     let text = ocrData.text;
 
@@ -58,112 +70,122 @@
           })
         : ocrData.text;
 
-    function updateMatrix(cvView = canvasView) {
-        try {
-            const canvas = cvView?.nativeView;
-            if (!canvas || !image) {
-                return;
-            }
-            // editingImageShader = new BitmapShader(image, TileMode.CLAMP, TileMode.CLAMP);
-            // shaderPaint.setShader(editingImageShader);
-            const w = Utils.layout.toDeviceIndependentPixels(canvas.getMeasuredWidth()) - 2 * padding;
-            const h = Utils.layout.toDeviceIndependentPixels(canvas.getMeasuredHeight()) - 2 * padding;
-            if (w <= 0 || h <= 0) {
-                return;
-            }
-            const canvasRatio = w / h;
-            let imageWidth = image.width;
-            let imageHeight = image.height;
-            const needRotation = rotation && rotation % 180 !== 0;
-            // const needRotation = false ;
-            if (needRotation) {
-                imageWidth = image.height;
-                imageHeight = image.width;
-            }
-            const imageRatio = imageWidth / imageHeight;
-            let cx = padding;
-            let cy = padding;
-            if (imageRatio < canvasRatio) {
-                drawingRatio = h / imageHeight;
-                cx += (w - h * imageRatio) / 2;
-            } else {
-                drawingRatio = w / imageWidth;
-                cy += (h - w / imageRatio) / 2;
-            }
-            console.log('imageRatio', drawingRatio, imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
-            currentImageMatrix.reset();
-            if (needRotation) {
-                currentImageMatrix.postTranslate(-image.width / 2, -image.height / 2);
-                currentImageMatrix.postRotate(rotation);
-                currentImageMatrix.postTranslate(image.height / 2, image.width / 2);
-            }
-            // console.log('updateMatrix', imageWidth, imageHeight, editingImage.rotationAngle, needRotation, editingImage.rotationAngle % 180, imageRatio, canvasRatio, drawingRatio, cx, cy,  quads)
-            currentImageMatrix.postScale(drawingRatio, drawingRatio);
-            currentImageMatrix.postTranslate(cx, cy);
-            // inversedCurrentMatrix = new Matrix();
-            canvas.invalidate();
-        } catch (error) {
-            console.error(error);
-        }
-    }
-    function updatePinchPanMatrix() {
-        // console.log('updatePinchPanMatrix');
-        const matrix = new Matrix();
-        matrix.postScale(scale, scale, scaleFocusX, scaleFocusY);
-        matrix.postTranslate(translationX / textOnImageScale, translationY / textOnImageScale);
-        currentPinchPanMatrix = matrix;
-        // canvasView?.nativeView?.invalidate();
-    }
-    function onCanvasDraw({ canvas }: { canvas: Canvas }) {
-        // canvas.save();
-        canvas.concat(currentPinchPanMatrix);
-        canvas.concat(currentImageMatrix);
+    // function updateMatrix(cvView = canvasView) {
+    //     try {
+    //         const canvas = cvView?.nativeView;
+    //         if (!canvas || !image) {
+    //             return;
+    //         }
+    //         // editingImageShader = new BitmapShader(image, TileMode.CLAMP, TileMode.CLAMP);
+    //         // shaderPaint.setShader(editingImageShader);
+    //         const w = Utils.layout.toDeviceIndependentPixels(canvas.getMeasuredWidth()) - 2 * padding;
+    //         const h = Utils.layout.toDeviceIndependentPixels(canvas.getMeasuredHeight()) - 2 * padding;
+    //         if (w <= 0 || h <= 0) {
+    //             return;
+    //         }
+    //         const canvasRatio = w / h;
+    //         let imageWidth = image.width;
+    //         let imageHeight = image.height;
+    //         const needRotation = rotation && rotation % 180 !== 0;
+    //         // const needRotation = false ;
+    //         if (needRotation) {
+    //             imageWidth = image.height;
+    //             imageHeight = image.width;
+    //         }
+    //         const imageRatio = imageWidth / imageHeight;
+    //         let cx = padding;
+    //         let cy = padding;
+    //         if (imageRatio < canvasRatio) {
+    //             drawingRatio = h / imageHeight;
+    //             cx += (w - h * imageRatio) / 2;
+    //         } else {
+    //             drawingRatio = w / imageWidth;
+    //             cy += (h - w / imageRatio) / 2;
+    //         }
+    //         console.log('imageRatio', drawingRatio, imageRatio, canvasRatio, w, h, imageWidth, imageHeight, cx, cy);
+    //         currentImageMatrix.reset();
+    //         if (needRotation) {
+    //             currentImageMatrix.postTranslate(-image.width / 2, -image.height / 2);
+    //             currentImageMatrix.postRotate(rotation);
+    //             currentImageMatrix.postTranslate(image.height / 2, image.width / 2);
+    //         }
+    //         // console.log('updateMatrix', imageWidth, imageHeight, editingImage.rotationAngle, needRotation, editingImage.rotationAngle % 180, imageRatio, canvasRatio, drawingRatio, cx, cy,  quads)
+    //         currentImageMatrix.postScale(drawingRatio, drawingRatio);
+    //         currentImageMatrix.postTranslate(cx, cy);
+    //         // inversedCurrentMatrix = new Matrix();
+    //         canvas.invalidate();
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // }
+    // function updatePinchPanMatrix() {
+    //     // console.log('updatePinchPanMatrix');
+    //     const matrix = new Matrix();
+    //     matrix.postScale(scale, scale, scaleFocusX, scaleFocusY);
+    //     matrix.postTranslate(translationX / textOnImageScale, translationY / textOnImageScale);
+    //     currentPinchPanMatrix = matrix;
+    //     // canvasView?.nativeView?.invalidate();
+    // }
+    // function onCanvasDraw({ canvas }: { canvas: Canvas }) {
+    //     // canvas.save();
+    //     canvas.concat(currentPinchPanMatrix);
+    //     canvas.concat(currentImageMatrix);
 
-        canvas.drawBitmap(image, 0, 0, bitmapPaint);
-    }
+    //     canvas.drawBitmap(image, 0, 0, bitmapPaint);
+    // }
 
-    let startTranslationX = 0;
-    let startTranslationY = 0;
-    let translationX = 0;
-    let translationY = 0;
-    function onPan(e) {
-        if (e.state === 1) {
-            startTranslationX = translationX;
-            startTranslationY = translationY;
-        } else if (e.state === 2) {
-            translationX = startTranslationX + e.deltaX;
-            translationY = startTranslationY + e.deltaY;
-            page?.nativeView.clearFocus();
-            updatePinchPanMatrix();
-        }
-        // console.log('onPan', Date.now(), e.state, e.deltaX, e.deltaY, e.constructor.name, e.extraData?.numberOfPointers, Object.keys(e));
-    }
-    let scale = 1;
-    let startScale = 1;
-    let scaleFocusX;
-    let scaleFocusY;
-    function onPinch(e) {
-        if (e.state === 1) {
-            startScale = scale;
-        } else if (e.state === 2) {
-            scale = Math.max(startScale * e.scale, 1);
-            scaleFocusX = e.getFocusX();
-            scaleFocusY = e.getFocusY();
-            page?.nativeView.clearFocus();
-            updatePinchPanMatrix();
-        }
-        // console.log('onPinch', Date.now(), e.scale, e.constructor.name, e.extraData?.numberOfPointers, Object.keys(e));
-    }
-    let textOnImageScale = 1;
-    function updateTextOnImageScale(e) {
-        textOnImageScale = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth()) / imageWidth;
-        // console.log('updateTextOnImageScale', imageWidth, e.object.getMeasuredWidth(), textOnImageScale);
-    }
+    // let startTranslationX = 0;
+    // let startTranslationY = 0;
+    // let translationX = 0;
+    // let translationY = 0;
+    // function onPan(e) {
+    //     if (e.state === 1) {
+    //         startTranslationX = translationX;
+    //         startTranslationY = translationY;
+    //     } else if (e.state === 2) {
+    //         const width = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth());
+    //         const scaledImageWidth = imageWidth * scale * textOnImageScale;
+    //         const height = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredHeight());
+    //         const scaledImageHeight = imageHeight * scale * textOnImageScale;
+    //         console.log('translationX', width, scaledImageWidth);
+    //         console.log('translationy', height, scaledImageHeight, startTranslationY + e.deltaY);
+    //         translationX = Math.max(Math.min(startTranslationX + e.deltaX, 0), -(scaledImageWidth - width));
+    //         translationY = Math.max(Math.min(startTranslationY + e.deltaY, scaledImageHeight - height), -(scaledImageHeight - height));
+    //         // translationY = Math.max(startTranslationY + e.deltaY, 0);
+    //         page?.nativeView.clearFocus();
+    //         updatePinchPanMatrix();
+    //     }
+    //     // console.log('onPan', Date.now(), e.state, e.deltaX, e.deltaY, e.constructor.name, e.extraData?.numberOfPointers, Object.keys(e));
+    // }
+    // let scale = 1;
+    // let startScale = 1;
+    // let scaleFocusX = 0;
+    // let scaleFocusY = 0;
+    // function onPinch(e) {
+    //     if (e.state === 1) {
+    //         startScale = scale;
+    //     } else if (e.state === 2) {
+    //         scale = Math.max(startScale * e.scale, 1);
+    //         // translationX = -e.getFocusX();
+    //         // translationY = -e.getFocusY();
+    //         scaleFocusX = e.getFocusX() / Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth());
+    //         scaleFocusY = e.getFocusY() / Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredHeight());
+    //         console.log('onPinch', scaleFocusX, scaleFocusY, imageWidth, imageHeight, textOnImageScale);
+    //         page?.nativeView.clearFocus();
+    //         updatePinchPanMatrix();
+    //     }
+    //     // console.log('onPinch', Date.now(), e.scale, e.constructor.name, e.extraData?.numberOfPointers, Object.keys(e));
+    // }
+    // let textOnImageScale = 1;
+    // function updateTextOnImageScale(e) {
+    //     textOnImageScale = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth()) / imageWidth;
+    //     // console.log('updateTextOnImageScale', imageWidth, e.object.getMeasuredWidth(), textOnImageScale);
+    // }
 </script>
 
 <page bind:this={page} actionBarHidden={true} backgroundColor="black">
     <gridlayout rows="auto,*">
-        <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
+        <!-- <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
             <absolutelayout
                 height={imageHeight}
                 originX={0}
@@ -190,9 +212,19 @@
                     {/each}
                 {/if}
             </absolutelayout>
-        </absolutelayout>
+        </absolutelayout> -->
+        <awebview
+            bind:this={webView}
+            backgroundColor="black"
+            debugMode={!PRODUCTION}
+            displayZoomControls={false}
+            mediaPlaybackRequiresUserAction={false}
+            normalizeUrls={false}
+            row={1}
+            src="~/assets/webpdfviewer/index.html"
+            webConsoleEnabled={!PRODUCTION}
+            on:loadFinished={onWebViewLoadFinished} />
 
-        <!-- <canvasView bind:this={canvasView} row={1} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} {...$$restProps} on:pinch={onPinch} /> -->
         <textview backgroundColor="#000000cc" color="white" editable={false} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
         <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
             <mdbutton class="actionBarButton" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />

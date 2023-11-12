@@ -28,7 +28,6 @@
             } else if (modalWindow) {
                 closeModal(undefined);
             } else {
-                console.log('goBack');
                 goBack();
             }
         } catch (error) {

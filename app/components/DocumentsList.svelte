@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
@@ -68,7 +68,6 @@
         }
     }
     function onDocumentAdded(event: EventData & { doc }) {
-        console.log('onDocumentAdded', event.doc);
         documents.unshift({
             doc: event.doc,
             selected: false
@@ -200,7 +199,6 @@
     async function importDocument() {
         try {
             const doc = await importAndScanImage();
-            console.log('importDocument', doc);
             if (!doc) {
                 return;
             }
