@@ -1,8 +1,11 @@
-import { ApplicationSettings, Folder, ImageSource, Observable, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, File, Folder, ImageSource, Observable, knownFolders, path } from '@nativescript/core';
 import { ocrDocument } from 'plugin-nativeprocessor';
 import { OCRDocument } from '~/models/OCRDocument';
 import { loadImage, recycleImages } from '~/utils/utils';
 import { request } from '@nativescript-community/https';
+import { networkService } from './api';
+import { confirm } from '@nativescript-community/ui-material-dialogs';
+import { lc } from '~/helpers/locale';
 
 const languages = {
     afr: 'Afrikaans',
@@ -142,16 +145,36 @@ const TAG = 'OCRService';
 export class OCRService extends Observable {
     baseDataPath = ApplicationSettings.getString('tesseract_datapath_base', path.join(knownFolders.documents().path, 'tesseract'));
     currentDataPath: string;
-    currentLanguage: string;
+    mLanguages: string;
+    mDataType: 'best' | 'standard' | 'fast';
     async start() {
         DEV_LOG && console.log(TAG, 'start');
-        this.currentDataPath = ApplicationSettings.getString('tesseract_datapath', path.join(knownFolders.currentApp().path, 'assets', 'tesseract', 'best'));
-        this.currentLanguage = 'fra';
+        this.languages = ApplicationSettings.getString('tesseract_languages', 'fra');
+        this.dataType = ApplicationSettings.getString('tesseract_datatype', 'best') as any;
+    }
+
+    set languages(value) {
+        this.mLanguages = value;
+        ApplicationSettings.setString('tesseract_languages', value);
+    }
+    get languages() {
+        return this.mLanguages;
+    }
+    set dataType(value) {
+        this.mDataType = value;
+        ApplicationSettings.setString('tesseract_datatype', value);
+        this.currentDataPath = path.join(this.baseDataPath, value);
+    }
+    get dataType() {
+        return this.mDataType;
     }
 
     async ocrPage(document: OCRDocument, pageIndex: number, onProgress?: (progress: number) => void) {
         let ocrImage: ImageSource;
         try {
+            if (!(await this.checkOrDownload(this.dataType, this.languages))) {
+                return;
+            }
             const page = document.pages[pageIndex];
             ocrImage = await loadImage(page.imagePath);
             // TODO: apply colorMatrix to image before doing OCR
@@ -159,7 +182,7 @@ export class OCRService extends Observable {
                 ocrImage,
                 {
                     dataPath: this.currentDataPath,
-                    language: this.currentLanguage,
+                    language: this.mLanguages,
                     // oem: 0,
                     detectContours: 0
                 },
@@ -179,8 +202,37 @@ export class OCRService extends Observable {
         }
     }
 
-    async downloadLanguages(dataType: string, languages: string) {
+    async checkOrDownload(dataType: string, languages: string) {
+        DEV_LOG && console.log('checkOrDownload', dataType, languages);
         const langArray = languages.split('+');
+        const toDownload = [];
+        const destinationFolder = Folder.fromPath(this.baseDataPath).getFolder(dataType);
+        for (let index = 0; index < langArray.length; index++) {
+            const lang = langArray[index];
+            if (!File.exists(path.join(destinationFolder.path, lang + '.traineddata'))) {
+                toDownload.push(lang);
+            }
+        }
+        if (toDownload.length) {
+            if (!networkService._connected) {
+                throw new Error('missing_ocr_lang_network');
+            }
+            const result = await confirm({
+                message: lc('missing_languages'),
+                okButtonText: lc('download'),
+                cancelButtonText: lc('cancel')
+            });
+            if (result) {
+                await this.downloadLanguages(dataType, toDownload);
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    async downloadLanguages(dataType: string, langArray: string[]) {
+        DEV_LOG && console.log('downloadLanguages', dataType, langArray);
         let downloadURL;
         switch (dataType) {
             case 'best':
@@ -192,6 +244,7 @@ export class OCRService extends Observable {
             default:
                 downloadURL = 'https://github.com/tesseract-ocr/tessdata_fast/raw/4.0.0/';
         }
+        // TODO: show notification
         for (let index = 0; index < langArray.length; index++) {
             const lang = langArray[index];
             const url = downloadURL + lang + '.traineddata';

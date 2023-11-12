@@ -2,7 +2,6 @@
     import { request } from '@nativescript-community/perms';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Img } from '@nativescript-community/ui-image';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, File, ObservableArray, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
@@ -24,6 +23,8 @@
     import DocumentsList from './DocumentsList.svelte';
     import { loadImage, recycleImages } from '~/utils/utils';
     import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
 
     const touchAnimationShrink: TouchAnimationOptions = {
         down: {
@@ -57,8 +58,9 @@
     let croppedImagePath: string = null;
     let smallImagePath: string = null;
     let croppedImageRotation: number = 0;
-    let colorType = ApplicationSettings.getString('defaultColorType', null);
-    let flashMode = 0;
+    let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    let transforms = ApplicationSettings.getString('defaultTransforms', '').split(',');
+    let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
@@ -69,9 +71,6 @@
     const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
 
-    onLanguageChanged((lang) => {
-        console.log('refresh triggered by lang change');
-    });
 
     // interface Option {
     //     icon: string;
@@ -139,6 +138,23 @@
         }
     }
 
+    async function showCameraSettings() {
+        const result: { icon: string; id: string; text: string } = await showBottomSheet({
+            parent: page,
+            view: CameraSettingsBottomSheet,
+            closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
+                transforms = bottomsheetComponent.transforms;
+                colorType = bottomsheetComponent.colorType;
+                ApplicationSettings.setString('defaultColorType', colorType);
+                ApplicationSettings.setString('defaultTransforms', transforms.join(','));
+            },
+            props: {
+                colorType,
+                transforms
+            }
+        });
+    }
+
     function onImageTap(e, item) {
         setCurrentImage(e.object.src);
     }
@@ -156,17 +172,30 @@
             stopPreview();
             showLoading(l('computing'));
             editingImage = await loadImage(imagePath);
-            const quads = getJSONDocumentCorners(editingImage, 300, 0);
-
-            console.log('processAndAddImage', imagePath, quads);
+            let quads = getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
-                showSnack({ message: lc('no_document_found') });
-                startPreview();
-                clearImages();
-                return;
+                const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
+                quads = await showModal({
+                    page: ModalImportImage,
+                    animated: true,
+                    fullscreen: true,
+                    props: {
+                        editingImage,
+                        quads: [
+                            [
+                                [100, 100],
+                                [editingImage.width - 100, 100],
+                                [editingImage.width - 100, editingImage.height - 100],
+                                [100, editingImage.height - 100]
+                            ]
+                        ]
+                    }
+                });
             }
-            addCurrentImageToDocument(imagePath, quads);
+            if (quads?.length) {
+                await addCurrentImageToDocument(imagePath, quads);
+            }
         } catch (err) {
             console.error(err, err.stack);
             showError(err);
@@ -177,7 +206,6 @@
         }
     }
     async function takePicture() {
-        console.log('takePicture', takingPicture);
         if (takingPicture) {
             return;
         }
@@ -196,6 +224,9 @@
                 // captureMode: batchMode ? 1 : 0
             });
             await processAndAddImage(file.path);
+            if (!batchMode) {
+                await saveCurrentDocument();
+            }
         } catch (err) {
             console.error(err, err.stack);
             showError(err);
@@ -226,7 +257,6 @@
         }
         Application.on(Application.backgroundEvent, onBackground);
         Application.on(Application.foregroundEvent, onForeground);
-        console.log('onMount', documentsService.started);
 
         if (documentsService.started) {
             startPreview();
@@ -257,7 +287,6 @@
         }
     }
     function startPreview() {
-        console.log('startPreview');
         cameraPreview?.nativeView.startPreview();
     }
     function stopPreview() {
@@ -270,8 +299,7 @@
         DEV_LOG && console.log('onNavigatedTo', !!cameraPreview);
         (async () => {
             try {
-                const result = await request('camera');
-                console.log('result', result);
+                await request('camera');
                 startPreview();
             } catch (error) {
                 console.error(error, error.stack);
@@ -286,10 +314,9 @@
         DEV_LOG && console.log('onForeground', !!cameraPreview);
         startPreview();
     }
-    $: DEV_LOG && console.log('flashMode', flashMode);
     async function saveCurrentDocument() {
         try {
-            DEV_LOG && console.log('saveCurrentDocument', newDocument);
+            DEV_LOG && console.log('saveCurrentDocument', newDocument, !!document);
             if (document) {
                 await document.save();
                 if (newDocument) {
@@ -353,15 +380,17 @@
             if (!editingImage) {
                 return;
             }
-            console.log('addCurrentImageToDocument', editingImage, quads, processor);
-            let images = cropDocument(editingImage, quads);
-            console.log('images', images, images.length);
+            const strTransforms = transforms.join(',');
+            DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
+            let images = cropDocument(editingImage, quads, strTransforms);
             const pagesToAdd: PageData[] = [];
             for (let index = 0; index < images.length; index++) {
                 const image = images[index];
                 pagesToAdd.push({
                     image,
                     crop: quads[index],
+                    colorType,
+                    transforms: strTransforms,
                     sourceImagePath,
                     width: __ANDROID__ ? image.getWidth() : image.size.width,
                     height: __ANDROID__ ? image.getHeight() : image.size.height,
@@ -385,7 +414,6 @@
             // }
             const lastPage = pages.getItem(pages.length - 1);
             currentQuad = lastPage.crop;
-            console.log('currentQuad', currentQuad);
             setCurrentImage(lastPage.getImagePath(), lastPage.rotation, true);
         } catch (error) {
             showError(error);
@@ -467,7 +495,6 @@
         }
         try {
             if (__ANDROID__) {
-                console.log('applyProcessor');
                 processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(Utils.android.getApplicationContext(), cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             } else {
@@ -489,7 +516,6 @@
     }
 
     function onFinishEditing() {
-        console.log('onFinishEditing', editing);
         toggleEditing();
     }
     function onCroppedImageChanged() {
@@ -508,6 +534,21 @@
             startPreview();
         }
     }
+
+    function getFlashIcon(flashMode) {
+        switch (flashMode) {
+            case 0:
+                return 'mdi-flash-off';
+            case 1:
+                return 'mdi-flash';
+            case 2:
+                return 'mdi-flash-auto';
+            case 3:
+                return 'mdi-flash-red-eye';
+            case 4:
+                return 'mdi-flashlight';
+        }
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
@@ -518,14 +559,15 @@
         <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
             <mdbutton class="actionBarButton" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showOptions} />
+            <mdbutton class="actionBarButton" text="mdi-tune" variant="text" visibility={startOnCam ? 'collapsed' : 'visible'} on:tap={showCameraSettings} />
         </CActionBar>
 
         <gridlayout padding="10" row={1} rows="*,auto">
             <gridlayout>
                 <stacklayout horizontalAlignment="left" verticalAlignment="center">
-                    <mdbutton class="icon-btn" color="white" text="mdi-flash " variant="text" on:tap={() => (flashMode = (flashMode + 1) % 5)} />
+                    <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
                     <mdbutton class="icon-btn" color={torchEnabled ? accentColor : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
-                    <mdbutton class="icon-btn" color="white" text="mdi-camera" variant="text" on:tap={toggleCamera} />
+                    <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
                 </stacklayout>
                 <mdbutton
                     class="icon-btn"
@@ -563,16 +605,16 @@
 
             <gridlayout
                 borderColor="white"
-                borderRadius={35}
+                borderRadius="50%"
                 borderWidth={3}
-                height={70}
+                height={90}
                 horizontalAlignment="center"
                 marginBottom={10}
                 opacity={takingPicture ? 0.6 : 1}
                 row={1}
                 verticalAlignment="bottom"
-                width={70}>
-                <gridlayout backgroundColor={primaryColor} borderRadius={27} height={54} touchAnimation={touchAnimationShrink} width={54} on:tap={takePicture} />
+                width={90}>
+                <gridlayout backgroundColor={primaryColor} borderRadius="50%" height={74} touchAnimation={touchAnimationShrink} width={74} on:tap={takePicture} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
             <!-- <mdbutton

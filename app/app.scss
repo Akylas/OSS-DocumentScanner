@@ -170,7 +170,7 @@ page {
 .floating-btn {
     @extend .mdi;
     color:white;
-    shape: round;
+    shape: medium;
     elevation: 6;
     font-size: 24;
     padding: 0;
@@ -179,9 +179,10 @@ page {
     height: 56;
 }
 
+
 .small-floating-btn {
     @extend .mdi;
-    shape: round;
+    shape: medium;
     background-color: white;
     color: $accent-color;
     ripple-color: $accent-color;

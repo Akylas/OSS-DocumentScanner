@@ -134,9 +134,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             }
         });
 
-        console.log('OCRPage update', page, toUpdate, toSave);
         await super.update(page, toUpdate);
-        console.log('OCRPage update done', toUpdate, toSave);
         Object.assign(page, toSave);
         return page;
     }

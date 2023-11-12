@@ -15,13 +15,11 @@
     let SVImageView: NativeViewElementNode<Img>;
     // $: item && rotateToRotation(item.newRotation);
     export async function rotateToRotation(newRotation, animated = false) {
-        console.log('rotateToRotation', newRotation, item.rotation, animated, !!item);
         if (!item || newRotation === undefined) {
             return;
         }
         try {
             const imageView = SVImageView?.nativeElement;
-            console.log('rotateToRotation', item.rotation, newRotation, animated, imageView)
             if (newRotation === item.rotation || !imageView) {
                 return;
             }

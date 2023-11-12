@@ -1,0 +1,24 @@
+{
+  "extends": "../node_modules/@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false,
+    "allowJs": false,
+    "checkJs": false,
+    "sourceMap": true,
+    "removeComments": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+    "noUnusedLocals": false,
+    "noImplicitReturns": false,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "./",
+    "paths": {
+      "@svelte-app/*": ["src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

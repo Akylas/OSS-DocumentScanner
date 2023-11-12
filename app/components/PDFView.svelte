@@ -27,7 +27,6 @@
     }
 
     export let document: OCRDocument;
-    console.log('PDFView', JSON.stringify(document));
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<Item> = null;
 
@@ -111,12 +110,10 @@
                 cancelButtonText: lc('cancel')
             });
             if (result) {
-                console.log('deleteDoc');
                 try {
                     await documentsService.deleteDocuments([document]);
                     items = null;
                     goBack();
-                    console.log('goneBack');
                 } catch (err) {
                     console.error(err.err.stack);
                 }

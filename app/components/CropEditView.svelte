@@ -51,7 +51,6 @@
     }
 
     async function onTapFinish() {
-        console.log('onTapFinish', recrop, quadChanged);
         if (recrop) {
             // let s see if quads changed and update image
             if (quadChanged) {
@@ -59,7 +58,6 @@
                 await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
                 recycleImages(images);
 
-                console.log('onImage Changed', croppedImagePath);
                 //we remove from cache so that everything gets updated
                 if (__IOS__) {
                     // TODO: fix why do we need to clear the whole cache? wrong cache key?
@@ -69,7 +67,6 @@
                 }
                 croppedImagePath = croppedImagePath;
                 const views = querySelectorAll(topView.nativeView, 'imageRotation');
-                console.log('views', views);
                 views.forEach((view) => (view as Img).updateImageUri());
                 refreshCollectionView();
                 dispatch('croppedImageChanged');

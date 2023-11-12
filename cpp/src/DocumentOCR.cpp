@@ -1,6 +1,7 @@
 #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
 #include <tesseract/ocrclass.h>
+#include <android/log.h>
 
 using namespace std;
 using namespace cv;
@@ -236,14 +237,14 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
 //    };
 
     std::optional<tesseract::ETEXT_DESC> monitor;
+    int16_t lastProgress = 0;
     if (progressLambda != std::nullopt) {
-        int16_t lastProgress;
         auto progressCallback = [&] (tesseract::ETEXT_DESC* monitor, int left, int right, int top, int bottom) -> bool {
             int16_t progress = monitor->progress;
             if (progress > lastProgress) {
+                progressLambda.value()(boundRectDone + progress/boundRectsCount);
                 lastProgress = progress;
             }
-            progressLambda.value()(boundRectDone + lastProgress/boundRectsCount);
             return true;
         };
         monitor = tesseract::ETEXT_DESC();

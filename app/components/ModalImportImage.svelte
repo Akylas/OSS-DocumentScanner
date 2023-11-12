@@ -16,8 +16,8 @@
 
 <page bind:this={page} actionBarHidden={true}>
     <gridlayout backgroundColor="black" rows="auto,*,auto">
-        <CropView {editingImage} row={1} bind:quads />
+        <CropView {editingImage} rowSpan={2 } bind:quads />
         <mdbutton class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onTapFinish} />
-        <CActionBar clazz="ns-dark" modalWindow={true} title={null} />
+        <CActionBar backgroundColor="transparent" clazz="ns-dark" modalWindow={true} title={null} />
     </gridlayout>
 </page>

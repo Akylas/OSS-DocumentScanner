@@ -3,7 +3,7 @@ import { request } from '@nativescript-community/perms';
 import { Label } from '@nativescript-community/ui-label';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
 import { AlertDialog } from '@nativescript-community/ui-material-dialogs';
-import { Image, ImageAsset, ImageSource, StackLayout } from '@nativescript/core';
+import { Image, ImageAsset, ImageSource, StackLayout, View } from '@nativescript/core';
 import { openUrl } from '@nativescript/core/utils';
 import * as imagepicker from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
@@ -16,6 +16,22 @@ import { lc } from '@nativescript-community/l';
 import { showModal } from 'svelte-native';
 import { loadImage, recycleImages } from './utils';
 import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+import { NativeViewElementNode, createElement } from 'svelte-native/dom';
+
+import type LoadingIndicator__SvelteComponent_ from '~/components/LoadingIndicator.svelte';
+import LoadingIndicator from '~/components/LoadingIndicator.svelte';
+
+export interface ComponentInstanceInfo {
+    element: NativeViewElementNode<View>;
+    viewInstance: SvelteComponent;
+}
+
+export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: any): ComponentInstanceInfo {
+    const dummy = createElement('fragment', window.document as any);
+    const viewInstance = new viewSpec({ target: dummy, props });
+    const element = dummy.firstElement() as NativeViewElementNode<View>;
+    return { element, viewInstance };
+}
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -52,36 +68,69 @@ export async function openLink(url) {
         });
     }
 }
-let loadingIndicator: AlertDialog & { label?: Label };
+
+export interface ShowLoadingOptions {
+    title?: string;
+    text: string;
+    progress?: number;
+    onButtonTap?: () => void;
+}
+
+let loadingIndicator: AlertDialog & { instance?: LoadingIndicator__SvelteComponent_ };
 let showLoadingStartTime: number = null;
 function getLoadingIndicator() {
     if (!loadingIndicator) {
-        const stack = new StackLayout();
-        stack.padding = 10;
-        stack.orientation = 'horizontal';
-        const activityIndicator = new ActivityIndicator();
-        activityIndicator.className = 'activity-indicator';
-        activityIndicator.busy = true;
-        stack.addChild(activityIndicator);
-        const label = new Label();
-        label.paddingLeft = 15;
-        label.textWrap = true;
-        label.verticalAlignment = 'middle';
-        label.fontSize = 16;
-        stack.addChild(label);
+        const componentInstanceInfo = resolveComponentElement(LoadingIndicator, {});
+        const view: View = componentInstanceInfo.element.nativeView;
+        // const stack = new StackLayout()
         loadingIndicator = new AlertDialog({
-            view: stack,
+            view,
             cancelable: false
         });
-        loadingIndicator.label = label;
+        loadingIndicator.instance = componentInstanceInfo.viewInstance as LoadingIndicator__SvelteComponent_;
     }
     return loadingIndicator;
 }
-export function showLoading(msg: string) {
+export function updateLoadingProgress(msg: Partial<ShowLoadingOptions>) {
+    if (showingLoading()) {
+        const loadingIndicator = getLoadingIndicator();
+        const props = {
+            progress: msg.progress
+        };
+        if (msg.text) {
+            props['text'] = msg.text;
+        }
+        loadingIndicator.instance.$set(props);
+    }
+}
+export function showLoading(msg?: string | ShowLoadingOptions) {
+    const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
     const loadingIndicator = getLoadingIndicator();
-    loadingIndicator.label.text = msg + '...';
-    showLoadingStartTime = Date.now();
-    loadingIndicator.show();
+    loadingIndicator.instance.onButtonTap = msg['onButtonTap'];
+    // if (!!msg?.['onButtonTap']) {
+    //     loadingIndicator.instance.$on('tap', msg['onButtonTap']);
+    // } else {
+    //     loadingIndicator.instance.$off('tap');
+    // }
+    const props = {
+        showButton: !!msg?.['onButtonTap'],
+        text,
+        title: (msg as any)?.title,
+        progress: null
+    };
+    if (msg && typeof msg !== 'string' && msg?.hasOwnProperty('progress')) {
+        props.progress = msg.progress;
+    } else {
+        props.progress = null;
+    }
+    loadingIndicator.instance.$set(props);
+    if (showLoadingStartTime === null) {
+        showLoadingStartTime = Date.now();
+        loadingIndicator.show();
+    }
+}
+export function showingLoading() {
+    return showLoadingStartTime !== null;
 }
 export function hideLoading() {
     const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
@@ -89,6 +138,7 @@ export function hideLoading() {
         setTimeout(() => hideLoading(), 1000 - delta);
         return;
     }
+    showLoadingStartTime = null;
     // log('hideLoading', !!loadingIndicator);
     if (loadingIndicator) {
         loadingIndicator.hide();
@@ -144,7 +194,6 @@ function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues,
 }
 
 export async function setImageRotation(imageView: Image, rotation, duration?: number) {
-    console.log('setImageRotation', rotation);
     // let currentMatrix = new android.graphics.Matrix()
     // let values =  Array.create('float', 9);currentMatrix.getValues(values)
     // console.log('values', values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8])
@@ -158,7 +207,6 @@ export async function setImageRotation(imageView: Image, rotation, duration?: nu
     if (scaleType['setImageRotation']) {
         scaleType['setImageRotation'](rotation);
         (imageView.nativeViewProtected as android.widget.ImageView).invalidate();
-        console.log('setImageRotation done', rotation);
     }
 }
 export async function setImageMatrix(imageView: Image, values: number[], duration?: number) {
@@ -340,15 +388,14 @@ export async function importAndScanImage(document?: OCRDocument) {
             if (!editingImage) {
                 throw new Error('failed to read imported image');
             }
-            console.log('editingImage', editingImage.width, editingImage.height, editingImage.android);
             let quads = getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
                 quads.push([
                     [0, 0],
-                    [editingImage.width, 0],
-                    [editingImage.width, editingImage.height],
-                    [0, editingImage.height]
+                    [editingImage.width - 100, 0],
+                    [editingImage.width - 100, editingImage.height - 100],
+                    [0, editingImage.height - 100]
                 ]);
             }
             if (quads?.length) {

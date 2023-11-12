@@ -53,6 +53,7 @@ try {
     // registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button);
     registerNativeViewElement('activityIndicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
+    registerNativeViewElement('progress', () => require('@nativescript-community/ui-material-progress').Progress);
     // registerNativeViewElement('tabs', () => require('@nativescript-community/ui-material-tabs').Tabs);
     // registerNativeViewElement('tabStrip', () => require('@nativescript-community/ui-material-tabs').TabStrip);
     // registerNativeViewElement('tabStripItem', () => require('@nativescript-community/ui-material-tabs').TabStripItem);
@@ -71,6 +72,7 @@ try {
     registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
     registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
     // registerNativeViewElement('settingLabelIcon', () => require('./SettingLabelIcon.svelte').default);
+    registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
 
     PagerElement.register();
     CollectionViewElement.register();
@@ -126,6 +128,10 @@ try {
             value: 0.5,
             unit: '%'
         }
+    });
+    themer.createShape('medium', {
+        cornerFamily: 'rounded' as any,
+        cornerSize: 12
     });
     let Comp;
     const startOnCam = START_ON_CAM; /* ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) */
