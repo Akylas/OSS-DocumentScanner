@@ -286,7 +286,7 @@
                 const component = (await import('~/components/PDFView.svelte')).default;
                 navigate({
                     page: component,
-                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300)) : undefined,
+                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
                     props: {
                         document: item.doc
                     }
@@ -385,7 +385,7 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <CActionBar title={l('documents')}>
             <mdbutton class="actionBarButton" isEnabled={!syncRunning} text="mdi-sync" variant="text" visibility={syncEnabled ? 'visible' : 'collapsed'} on:tap={syncDocuments} />

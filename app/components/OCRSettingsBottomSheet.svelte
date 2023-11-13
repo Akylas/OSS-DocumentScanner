@@ -1,0 +1,134 @@
+<svelte:options accessors />
+
+<script lang="ts">
+    import { View, WrapLayout } from '@akylas/nativescript';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { getLocaleDisplayName, lc } from '~/helpers/locale';
+    import { ocrService } from '~/services/ocr';
+    import { showError } from '~/utils/error';
+    import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
+    import { accentColor, backgroundColor, mdiFontFamily, primaryColor, textColor } from '~/variables';
+
+    let collectionView: NativeViewElementNode<CollectionView>;
+    let downloaded = ocrService.downloadedLanguages;
+    let languages = ocrService.languagesArray;
+    let dataType = ocrService.dataType;
+    async function addLanguages(event) {
+        try {
+            const SearchModal = (await import('~/components/SelectOCRLanguaguesModal.svelte')).default;
+            // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
+            const anchorView = event.object as View;
+            const result: any = await showPopover({
+                vertPos: VerticalPosition.ALIGN_BOTTOM,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                view: SearchModal,
+                anchor: anchorView,
+                props: {
+                    selectedLanguages: languages
+                }
+            });
+            if (result) {
+                ocrService.addLanguages(result);
+                languages.push(result);
+                languages = languages;
+                console.log('should add language', result);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    async function removeLanguage(key: string) {
+        try {
+            ocrService.removeLanguages(key);
+            languages.splice(languages.indexOf(key), 1);
+            languages = languages;
+        } catch (error) {
+            showError(error);
+        }
+    }
+    const qualities = ocrService.qualities;
+
+    async function setDataType(value) {
+        dataType = value;
+        ocrService.dataType = dataType;
+        downloaded = ocrService.downloadedLanguages;
+        languages = languages;
+    }
+
+    function startOCR() {
+        closeBottomSheet(true);
+    }
+</script>
+
+<gesturerootview rows="auto">
+    <stacklayout padding={10} rows="auto,auto">
+        <label fontSize={18} fontWeight="bold" marginBottom={10} text={lc('quality')} />
+        <stacklayout orientation="horizontal">
+            {#each qualities as quality}
+                <gridlayout
+                    backgroundColor={dataType === quality ? accentColor : undefined}
+                    borderColor={$textColor}
+                    borderRadius={8}
+                    borderWidth={dataType === quality ? 0 : 1}
+                    columns="auto,auto"
+                    height={32}
+                    margin={4}
+                    paddingLeft={dataType === quality ? 8 : 12}
+                    paddingRight={12}
+                    on:tap={() => setDataType(quality)}>
+                    <label fontFamily={mdiFontFamily} fontSize={16} marginRight={4} text="mdi-check" verticalAlignment="middle" visibility={dataType === quality ? 'visible' : 'collapse'} />
+                    <label col={1} fontSize={14} fontWeight={dataType === quality ? 'bold' : 'normal'} text={lc(quality)} verticalAlignment="middle" />
+                </gridlayout>
+            {/each}
+        </stacklayout>
+        <gridlayout columns="*,auto" marginBottom={10} marginTop={15} rows="auto">
+            <label fontSize={18} fontWeight="bold" text={lc('languages')} verticalAlignment="middle" />
+            <mdbutton class="icon-btn" col={1} padding={0} text="mdi-plus" variant="text" on:tap={addLanguages} />
+        </gridlayout>
+        <wraplayout row={1}>
+            {#each languages as language}
+                <gridlayout
+                    borderColor={$textColor}
+                    borderRadius={8}
+                    borderWidth={1}
+                    columns="auto,auto,auto"
+                    height={32}
+                    margin={4}
+                    paddingLeft={downloaded.indexOf(language) !== -1 ? 8 : 12}
+                    paddingRight={8}>
+                    <label
+                        fontFamily={mdiFontFamily}
+                        fontSize={16}
+                        marginRight={4}
+                        text="mdi-download"
+                        verticalAlignment="middle"
+                        visibility={downloaded.indexOf(language) !== -1 ? 'visible' : 'collapse'} />
+
+                    <label col={1} fontSize={14} paddingBottom={2} text={ocrService.localizedLanguage(language)} verticalAlignment="middle" />
+                    <mdbutton
+                        col={2}
+                        color={$textColor}
+                        fontFamily={mdiFontFamily}
+                        fontSize={16}
+                        marginLeft={4}
+                        padding={0}
+                        text="mdi-close"
+                        variant="text"
+                        verticalAlignment="middle"
+                        width={20}
+                        on:tap={() => removeLanguage(language)} />
+                </gridlayout>
+            {/each}
+        </wraplayout>
+        <!-- <gridlayout , backgroundColor="" borderRadius="50%" columns="*,auto">
+            <textfield hint={lc('languages')} placeholder={lc('languages')} returnKeyType="search" variant="none" verticalTextAlignment="center" />
+        </gridlayout> -->
+        <mdbutton row={1} text={lc('start')} on:tap={startOCR} />
+    </stacklayout>
+</gesturerootview>

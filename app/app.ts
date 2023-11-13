@@ -36,6 +36,7 @@ try {
     // registerNativeViewElement('absolutelayoutwithmatrix', () => AbsoluteLayoutWithMatrix);
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
+    registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
     registerElement('Frame', () => new FrameElement());
     registerElement('Page', () => new PageElement());
     registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
