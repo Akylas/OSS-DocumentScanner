@@ -1,37 +1,37 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { Img } from '@nativescript-community/ui-image';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { File, ImageAsset, ImageSource, ObservableArray, knownFolders, path } from '@nativescript/core';
-    import { layout, openFile } from '@nativescript/core/utils';
+    import { File, ImageSource, ObservableArray, Page, path } from '@nativescript/core';
+    import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import { Writable, writable } from 'svelte/store';
     import CActionBar from '~/components/CActionBar.svelte';
+    import CropView from '~/components/CropView.svelte';
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
+    import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
+    import { notifyWhenChanges } from '~/utils/svelte/store';
     import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
-    import CropView from '~/components/CropView.svelte';
-    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { loadImage, recycleImages } from '~/utils/utils';
     import { primaryColor } from '~/variables';
-    import { Writable, get, writable } from 'svelte/store';
-    import { notifyWhenChanges } from '~/utils/svelte/store';
-    import { ocrDocument } from 'plugin-nativeprocessor';
-    import { ocrService } from '~/services/ocr';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
     let pager: NativeViewElementNode<Pager>;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let page: NativeViewElementNode<Page>;
 
     const items: ObservableArray<OCRPage> = document.getObservablePages();
     let recrop = false;
@@ -62,13 +62,15 @@
     async function detectOCR() {
         let ocrImage;
         try {
-            showLoading({ text: l('computing'), progress: 0 });
+            if (!(await ocrService.checkOrDownload(ocrService.dataType, ocrService.languages, false))) {
+                return;
+            }
+            showLoading({ text: l('ocr_computing', 0), progress: 0 });
             const ocrData = await ocrService.ocrPage(document, currentIndex, (progress: number) => {
-                updateLoadingProgress({ progress });
+                updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
             });
             if (ocrData) {
                 currentItemOCRData = ocrData;
-                console.log(ocrData);
             } else {
                 showSnack({ message: lc('no_text_found_in_page') });
             }
@@ -77,6 +79,22 @@
         } finally {
             hideLoading();
             recycleImages(ocrImage);
+        }
+    }
+
+    async function showOCRSettings() {
+        try {
+            const OCRSettingsBottomSheet = (await import('~/components/OCRSettingsBottomSheet.svelte')).default;
+            const shouldStart = await showBottomSheet({
+                parent: page,
+                view: OCRSettingsBottomSheet,
+                props: {}
+            });
+            if (shouldStart) {
+                detectOCR();
+            }
+        } catch (error) {
+            showError(error);
         }
     }
     function onSelectedIndex(event) {
@@ -267,7 +285,7 @@
         try {
             const result = await confirm({
                 title: lc('delete_page', currentIndex),
-                message: lc('confirm_delete'),
+                message: lc('confirm_delete_page', currentIndex + 1),
                 okButtonText: lc('delete'),
                 cancelButtonText: lc('cancel')
             });
@@ -378,10 +396,10 @@
     }
 </script>
 
-<page actionBarHidden={true}>
+<page bind:this={page} id="pdfEdit" actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,auto">
         <CActionBar title={document.name}>
-            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={detectOCR} />
+            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
         </CActionBar>

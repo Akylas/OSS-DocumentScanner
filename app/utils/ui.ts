@@ -103,7 +103,7 @@ export function updateLoadingProgress(msg: Partial<ShowLoadingOptions>) {
         loadingIndicator.instance.$set(props);
     }
 }
-export function showLoading(msg?: string | ShowLoadingOptions) {
+export async function showLoading(msg?: string | ShowLoadingOptions) {
     const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
     const loadingIndicator = getLoadingIndicator();
     loadingIndicator.instance.onButtonTap = msg['onButtonTap'];
@@ -132,7 +132,7 @@ export function showLoading(msg?: string | ShowLoadingOptions) {
 export function showingLoading() {
     return showLoadingStartTime !== null;
 }
-export function hideLoading() {
+export async function hideLoading() {
     const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
     if (__IOS__ && delta >= 0 && delta < 1000) {
         setTimeout(() => hideLoading(), 1000 - delta);

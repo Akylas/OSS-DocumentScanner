@@ -5,7 +5,8 @@ import { loadImage, recycleImages } from '~/utils/utils';
 import { request } from '@nativescript-community/https';
 import { networkService } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { lc } from '~/helpers/locale';
+import { getLocaleDisplayName, l, lc } from '~/helpers/locale';
+import { hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
 
 const languages = {
     afr: 'Afrikaans',
@@ -48,7 +49,7 @@ const languages = {
     fin: 'Finnish',
     fra: 'French',
     frk: 'Frankish',
-    frm: 'French,Middle(ca.1400–1600)',
+    frm: 'French,Middle(ca.1400-1600)',
     fry: 'Westtern Frisian',
     gla: 'Scottish Gaelic; Gaelic',
     gle: 'Irish',
@@ -147,10 +148,15 @@ export class OCRService extends Observable {
     currentDataPath: string;
     mLanguages: string;
     mDataType: 'best' | 'standard' | 'fast';
+    mDownloadedLanguages: string[] = [];
     async start() {
         DEV_LOG && console.log(TAG, 'start');
         this.languages = ApplicationSettings.getString('tesseract_languages', 'fra');
         this.dataType = ApplicationSettings.getString('tesseract_datatype', 'best') as any;
+    }
+
+    get downloadedLanguages() {
+        return this.mDownloadedLanguages;
     }
 
     set languages(value) {
@@ -160,21 +166,70 @@ export class OCRService extends Observable {
     get languages() {
         return this.mLanguages;
     }
+    get languagesArray() {
+        return this.mLanguages.split('+');
+    }
+
+    updateDownloadedLanguages() {
+        this.mDownloadedLanguages = Folder.fromPath(this.currentDataPath)
+            .getEntitiesSync()
+            .map((e) => e.name.split('.').slice(0, -1).join('.'));
+        console.log('set dataType', this.mDataType, this.currentDataPath, this.mDownloadedLanguages);
+    }
     set dataType(value) {
         this.mDataType = value;
         ApplicationSettings.setString('tesseract_datatype', value);
         this.currentDataPath = path.join(this.baseDataPath, value);
+        this.updateDownloadedLanguages();
     }
     get dataType() {
         return this.mDataType;
+    }
+    get qualities() {
+        return ['standard', 'best', 'fast'];
+    }
+
+    get availableLanguages() {
+        return Object.keys(languages);
+    }
+
+    localizedLanguage(key: string) {
+        return getLocaleDisplayName(key) || languages[key];
+    }
+
+    addLanguages(...languages) {
+        const array = this.languagesArray;
+        let needsUpdate = false;
+        for (let index = 0; index < languages.length; index++) {
+            const language = languages[index];
+            if (array.indexOf(language) === -1) {
+                needsUpdate = true;
+                array.push(language);
+            }
+        }
+        if (needsUpdate) {
+            this.languages = array.join('+');
+        }
+    }
+    removeLanguages(...languages) {
+        const array = this.languagesArray;
+        let needsUpdate = false;
+        for (let i = 0; i < languages.length; i++) {
+            const language = languages[i];
+            const index = array.indexOf(language);
+            if (index !== -1) {
+                needsUpdate = true;
+                array.splice(index, 1);
+            }
+        }
+        if (needsUpdate) {
+            this.languages = array.join('+');
+        }
     }
 
     async ocrPage(document: OCRDocument, pageIndex: number, onProgress?: (progress: number) => void) {
         let ocrImage: ImageSource;
         try {
-            if (!(await this.checkOrDownload(this.dataType, this.languages))) {
-                return;
-            }
             const page = document.pages[pageIndex];
             ocrImage = await loadImage(page.imagePath);
             // TODO: apply colorMatrix to image before doing OCR
@@ -202,7 +257,7 @@ export class OCRService extends Observable {
         }
     }
 
-    async checkOrDownload(dataType: string, languages: string) {
+    async checkOrDownload(dataType: string, languages: string, hideLoading = true) {
         DEV_LOG && console.log('checkOrDownload', dataType, languages);
         const langArray = languages.split('+');
         const toDownload = [];
@@ -218,12 +273,12 @@ export class OCRService extends Observable {
                 throw new Error('missing_ocr_lang_network');
             }
             const result = await confirm({
-                message: lc('missing_languages'),
+                message: lc('ocr_missing_languages', toDownload.map((l) => this.localizedLanguage(l)).join(',')),
                 okButtonText: lc('download'),
                 cancelButtonText: lc('cancel')
             });
             if (result) {
-                await this.downloadLanguages(dataType, toDownload);
+                await this.downloadLanguages(dataType, toDownload, hideLoading);
             } else {
                 return false;
             }
@@ -231,7 +286,7 @@ export class OCRService extends Observable {
         return true;
     }
 
-    async downloadLanguages(dataType: string, langArray: string[]) {
+    async downloadLanguages(dataType: string, langArray: string[], hideLoadingDialog = true) {
         DEV_LOG && console.log('downloadLanguages', dataType, langArray);
         let downloadURL;
         switch (dataType) {
@@ -244,14 +299,26 @@ export class OCRService extends Observable {
             default:
                 downloadURL = 'https://github.com/tesseract-ocr/tessdata_fast/raw/4.0.0/';
         }
+        showLoading({ text: l('downloading', 0), progress: 0 });
         // TODO: show notification
         for (let index = 0; index < langArray.length; index++) {
             const lang = langArray[index];
             const url = downloadURL + lang + '.traineddata';
             const destinationFolder = Folder.fromPath(this.baseDataPath).getFolder(dataType);
-            const result = await request({ url, method: 'GET' });
+            const result = await request({
+                url,
+                method: 'GET',
+                onProgress(current, total) {
+                    const progress = Math.round(((index + current / total) / langArray.length) * 100);
+                    updateLoadingProgress({ text: l('downloading', progress), progress });
+                }
+            });
             await result.content.toFile(path.join(destinationFolder.path, lang + '.traineddata'));
         }
+        if (hideLoadingDialog) {
+            await hideLoading();
+        }
+        this.updateDownloadedLanguages();
     }
 }
 export const ocrService = new OCRService();

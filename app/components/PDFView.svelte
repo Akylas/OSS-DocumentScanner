@@ -88,7 +88,8 @@
     async function importDocument() {
         try {
             const doc = await importAndScanImage(document);
-            if (doc) {                const component = (await import('~/components/PDFEdit.svelte')).default;
+            if (doc) {
+                const component = (await import('~/components/PDFEdit.svelte')).default;
                 navigate({
                     page: component,
                     props: {
@@ -294,7 +295,7 @@
     }
 </script>
 
-<page actionBarHidden={true}>
+<page id="pdfView" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : document.name}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
