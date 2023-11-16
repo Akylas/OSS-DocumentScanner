@@ -20,13 +20,16 @@
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { importAndScanImage, timeout } from '~/utils/ui';
-    import { accentColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { colors, screenWidthDips } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
     import { Img } from '@nativescript-community/ui-image';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+
+    const rowMargin = 8;
+    const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 100;
 
     interface Item {
         doc: OCRDocument;
@@ -132,6 +135,7 @@
         documentsService.on('documentUpdated', onDocumentUpdated);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         syncService.on('syncState', onSyncState);
+        syncService.on('state', refresh);
         // refresh();
     });
     onDestroy(() => {
@@ -345,30 +349,36 @@
             const result: { icon: string; id: string; text: string } = await showPopover({
                 view: OptionSelect,
                 anchor: event.object,
-                vertPos: VerticalPosition.ALIGN_TOP,
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
                 props: {
                     width: 200,
-                    fontSize: 17,
+                    fontSize: 16,
+                    backgroundColor: $colors.colorSurfaceContainer,
                     iconFontSize: 24,
-                    rowHeight: 60,
-                    height: options.length * 60,
+                    showBorders: false,
+                    rowHeight: 48,
+                    height: options.length * 48 + 16,
                     fontWeight: 'normal',
+                    containerColumns: 'auto',
                     onClose: closePopover,
                     margin: 4,
-                    borderRadius: 6,
-                    elevation: 2,
+                    borderRadius: 4,
+                    elevation: 3,
                     options
                 }
             });
             if (result) {
                 switch (result.id) {
-                    case 'preferences':
-                        prefs.openSettings();
-                        break;
-
                     case 'about':
                         const About = (await import('~/components/About.svelte')).default;
                         showModal({ page: About, animated: true, fullscreen: true });
+                        // navigate({ page: About });
+                        break;
+
+                    case 'preferences':
+                        const Settings = (await import('~/components/Settings.svelte')).default;
+                        navigate({ page: Settings });
                         break;
                 }
             }
@@ -378,7 +388,23 @@
     }
     async function syncDocuments() {
         try {
+            if (!syncEnabled) {
+                return;
+            }
             await syncService.syncDocuments(true);
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function showSyncSettings() {
+        try {
+            const WebdavConfig = (await import('~/components/WebdavConfig.svelte')).default;
+            await showBottomSheet({
+                parent: this,
+                skipCollapsedState: true,
+                view: WebdavConfig,
+                ignoreTopSafeArea: true
+            });
         } catch (error) {
             showError(error);
         }
@@ -387,45 +413,54 @@
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
-        <CActionBar title={l('documents')}>
-            <mdbutton class="actionBarButton" isEnabled={!syncRunning} text="mdi-sync" variant="text" visibility={syncEnabled ? 'visible' : 'collapsed'} on:tap={syncDocuments} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
-        </CActionBar>
-        <!-- {#if nbSelected > 0} -->
-        <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} visibility={nbSelected > 0 ? 'visible' : 'collapsed'}>
-            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
-        </CActionBar>
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} colWidth="50%" items={documents} row={1} rowHeight="180">
+        <collectionView bind:this={collectionView} colWidth="50%" items={documents} row={1} rowHeight={itemHeight}>
             <Template let:item>
                 <!-- TODO: make this a canvas -->
                 <gridlayout
-                    backgroundColor={$widgetBackgroundColor}
-                    borderRadius="4"
-                    clipToBounds={true}
-                    elevation="2"
-                    margin="8"
-                    rippleColor={accentColor}
-                    rows="*,auto"
+                    backgroundColor={$colors.colorSurfaceContainer}
+                    borderColor={$colors.colorOutline}
+                    borderRadius={12}
+                    borderWidth={1}
+                    margin={8}
+                    rippleColor={$colors.colorSurface}
+                    rows="*,100"
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
-                    <RotableImageView id="imageView" item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} />
-                    <canvaslabel color={$textColor} height={60} padding="10" row={1}>
-                        <cspan fontSize={12} text={item.doc.name} />
-                        <cspan color={$subtitleColor} fontSize={10} paddingTop={16} text={dayjs(item.doc.createdDate).format('L LT')} />
-                        <cspan color={$subtitleColor} fontSize={10} paddingTop={29} text={lc('nb_pages', item.doc.pages.length)} />
+                    <RotableImageView id="imageView" borderRadius={12} item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} stretch="aspectFill" />
+                    <canvaslabel height="100%" padding="16" row={1}>
+                        <cspan fontSize={14} fontWeight="bold" text={item.doc.name} />
+                        <cspan color={$colors.colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} />
+                        <cspan color={$colors.colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} />
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
                     <SyncIndicator rowSpan={2} selected={item.doc._synced === 1} visible={syncEnabled} />
                 </gridlayout>
             </Template>
         </collectionView>
+        <label fontSize={17} row={1} text={lc('no_document_yet')} textAlignment="center" verticalAlignment="middle" visibility={documents?.length ? 'hidden' : 'visible'} />
         {#if showActionButton}
             <stacklayout horizontalAlignment="right" row={1} verticalAlignment="bottom">
-                <mdbutton class="small-floating-btn" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
-                <mdbutton class="floating-btn" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
+                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>
         {/if}
+
+        <CActionBar title={l('documents')}>
+            <mdbutton
+                class="actionBarButton"
+                defaultVisualState={syncEnabled ? 'normal' : 'disabled'}
+                isEnabled={!syncRunning}
+                text="mdi-sync"
+                variant="text"
+                on:tap={syncDocuments}
+                on:longPress={showSyncSettings} />
+            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+        </CActionBar>
+        <!-- {#if nbSelected > 0} -->
+        <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} visibility={nbSelected > 0 ? 'visible' : 'collapsed'}>
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+        </CActionBar>
     </gridlayout>
 </page>

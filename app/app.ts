@@ -18,11 +18,12 @@ import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
-import { primaryColor } from '~/variables';
+import { colors } from '~/variables';
 import { showError } from './utils/error';
 import { syncService } from './services/sync';
 import { OCRService, ocrService } from './services/ocr';
 import { Trace } from '@nativescript/core';
+import { get } from 'svelte/store';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -44,7 +45,7 @@ try {
     // registerNativeViewElement('DualScrollView', () => DualScrollView as any);
     registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
     // registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
-    registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
+    registerNativeViewElement('Switch', () => require('@nativescript-community/ui-material-switch').Switch);
     // registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
     registerNativeViewElement('Span', () => require('@nativescript/core').Span);
     registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
@@ -102,25 +103,28 @@ try {
             showError(error);
         }
     }
-    Application.on('launch', async () => {
+    Application.on(Application.launchEvent, async () => {
+        startThemeHelper();
         launched = true;
         start();
     });
-    Application.on('resume', () => {
+    Application.on(Application.resumeEvent, () => {
         if (!launched) {
             launched = true;
             start();
         }
     });
-    Application.on('exit', () => {
+    Application.on(Application.exitEvent, () => {
         launched = false;
-        // documentsService.stop();
+        //  syncService.stop();
+        //  ocrService.stop();
+        documentsService.stop();
     });
-    startThemeHelper();
 
     if (__IOS__) {
-        themer.setPrimaryColor(primaryColor);
-        themer.setAccentColor(primaryColor);
+        const currentColors = get(colors);
+        themer.setPrimaryColor(currentColors.colorPrimary);
+        themer.setAccentColor(currentColors.colorPrimary);
     }
 
     themer.createShape('round', {
@@ -141,6 +145,7 @@ try {
     } else {
         Comp = await import('~/components/DocumentsList.svelte');
     }
+    console.log('test')
     svelteNative(Comp.default, {});
 } catch (error) {
     console.error(error, error.stack);

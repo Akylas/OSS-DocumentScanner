@@ -14,7 +14,7 @@ import ColorMatrices from './color_matrix';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { lc } from '@nativescript-community/l';
 import { showModal } from 'svelte-native';
-import { loadImage, recycleImages } from './utils';
+import { loadImage, recycleImages } from './utils.common';
 import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 
@@ -44,14 +44,14 @@ export async function openLink(url) {
         //     const result = await InAppBrowser.open(url, {
         //         // iOS Properties
         //         dismissButtonStyle: 'close',
-        //         preferredBarTintColor: primaryColor,
+        //         preferredBarTintColor: colorPrimary,
         //         preferredControlTintColor: 'white',
         //         readerMode: false,
         //         animated: true,
         //         enableBarCollapsing: false,
         //         // Android Properties
         //         showTitle: true,
-        //         toolbarColor: primaryColor,
+        //         toolbarColor: colorPrimary,
         //         secondaryToolbarColor: 'white',
         //         enableUrlBarHiding: true,
         //         enableDefaultShare: true,

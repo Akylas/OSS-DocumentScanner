@@ -2,37 +2,142 @@
 <resources
     xmlns:android="http://schemas.android.com/apk/res/android"  xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
-        <item name="android:statusBarColor">@color/background</item>
+    <!-- Uses Material Switches instead of the old ones -->
+    <style name="Preference.SwitchPreferenceCompat.Material3" parent="@style/Preference.SwitchPreferenceCompat.Material">
+    </style>
+    <!-- <style name="SettingsTheme" parent="Theme.Material3.DayNight">
+        <item name="android:statusBarColor">@color/md_theme_light_background</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorOnPrimary">@color/buttonTextColor</item>
         <item name="colorSecondary">@color/colorSecondary</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
-        <!-- Window decor -->
         <item name="android:windowLightStatusBar" tools:targetApi="m">@bool/use_light_status</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/use_light_navigation</item>
-     </style>
+     </style> -->
     <!-- theme to use FOR launch screen-->
-    <style name="LaunchScreenThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash_screen</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-    </style>
-    <style name="LaunchScreenTheme" parent="LaunchScreenThemeBase"></style>
-    <!-- theme to use AFTER launch screen is loaded-->
-    <style name="AppThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:statusBarColor">@color/background</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorSecondary">@color/colorSecondary</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
-    </style>
+    
     <style name="WindowAnimationTransition">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
     <style name="AppTheme" parent="AppThemeBase"></style>
+
+
+    <style name="UnelevatedButton.Custom" parent="@style/Widget.Material3.Button.UnelevatedButton">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="UnelevatedButton.Custom.Icon" parent="@style/Widget.Material3.Button.TonalButton.Icon">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="TextButton.Custom.Icon" parent="@style/Widget.Material3.Button.TextButton.Icon">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="TextButton.Custom" parent="@style/Widget.Material3.Button.TextButton">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="OutlinedButton.Custom" parent="@style/Widget.Material3.Button.OutlinedButton">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="OutlinedButton.Custom.Icon" parent="@style/Widget.Material3.Button.OutlinedButton.Icon">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="Button.Custom" parent="@style/Widget.Material3.Button">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="Button.Custom.Icon" parent="@style/Widget.Material3.Button.Icon">
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+
+
+    <style name="TextInputEditText" parent="@style/Widget.Material3.TextInputEditText.FilledBox">
+        <item name="backgroundColor">@null</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+    </style>
+    <style name="ThemeOverlay" parent="@style/ThemeOverlay.Material3.TextInputEditText.FilledBox">
+        <item name="editTextStyle">@style/TextInputEditText</item>
+    </style>
+    <style name="ShapeAppearanceOverlay" parent="">
+    </style>
+    <style name="TextInputLayout" parent="@style/Widget.Material3.TextInputLayout.FilledBox">
+        <item name="materialThemeOverlay">@style/ThemeOverlay</item>
+        <item name="boxBackgroundColor">@null</item>
+        <item name="boxBackgroundMode">none</item>
+        <item name="boxCollapsedPaddingTop">3dp</item>
+        <!-- <item name="boxStrokeWidth">0dp</item> -->
+
+        <item name="boxCornerRadiusTopStart">0dp</item>
+        <item name="boxCornerRadiusTopEnd">0dp</item>
+        <item name="boxCornerRadiusBottomStart">0dp</item>
+        <item name="boxCornerRadiusBottomEnd">0dp</item>
+
+        <!-- <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay</item> -->
+    </style>
+    <style name="ThemeOverlay.Filled" parent="@style/ThemeOverlay.Material3.TextInputEditText.FilledBox">
+        <!-- <item name="editTextStyle">@style/ThemeOverlay.MaterialComponents.TextInputEditText.FilledBox</item> -->
+    </style>
+    <style name="TextInputLayout.Filled" parent="@style/Widget.Material3.TextInputLayout.FilledBox">
+        <!-- <item name="materialThemeOverlay">@style/ThemeOverlay.Filled</item> -->
+        
+    </style>
+    <style name="ThemeOverlay.Outlined" parent="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox">
+        <!-- <item name="editTextStyle">@style/ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox</item> -->
+    </style>
+    <style name="TextInputLayout.Outlined" parent="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+        <!-- <item name="materialThemeOverlay">@style/ThemeOverlay.Outlined</item> -->
+        
+    </style>
 </resources> 

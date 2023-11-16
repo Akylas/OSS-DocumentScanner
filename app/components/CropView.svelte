@@ -2,7 +2,7 @@
     import { BitmapShader, Canvas, CanvasView, Matrix, Paint, Style, TileMode } from '@nativescript-community/ui-canvas';
     import { ImageSource, TouchGestureEventData, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { primaryColor } from '~/variables';
+    import { colors } from '~/variables';
 
     const padding = 20;
     let canvasView: NativeViewElementNode<CanvasView>;
@@ -15,7 +15,7 @@
     let closestQuadIndex = -1;
     let closestCornerQuadIndex = -1;
     const cornersPaint = new Paint();
-    cornersPaint.color = primaryColor;
+    cornersPaint.color = $colors.colorPrimaryContainer;
     cornersPaint.setStrokeWidth(14);
     cornersPaint.style = Style.STROKE;
     const shaderPaint = new Paint();

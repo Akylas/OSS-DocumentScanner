@@ -1,9 +1,10 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
 import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
-import { writable } from 'svelte/store';
-import CSSModule from '~/variables.module.scss';
+import { get, writable } from 'svelte/store';
+// import CSSModule from '~/variables.module.scss';
 import { onDestroy } from 'svelte';
-const locals = CSSModule.locals;
+import { getRealThemeAndUpdateColors } from './helpers/theme';
+// const locals = CSSModule.locals;
 
 export const globalObservable = new Observable();
 
@@ -48,77 +49,155 @@ export function createUnregisterGlobalEventListener(eventName: string) {
     };
 }
 
-export const primaryColor = new Color(locals.primaryColor);
-export const accentColor = new Color(locals.accentColor);
-export const darkColor = new Color(locals.darkColor);
-export const textColorDark = locals.textColorDark;
-export const textColorLight = locals.textColorLight;
-export const backgroundColor = writable('');
-export const mdiFontFamily: string = locals.mdiFontFamily;
+export const colors = writable({
+    colorPrimary: '',
+    colorPrimaryContainer: '',
+    colorOnPrimary: '',
+    colorOnPrimaryContainer: '',
+    colorSecondary: '',
+    colorSecondaryContainer: '',
+    colorOnSecondary: '',
+    colorTertiary: '',
+    colorTertiaryContainer: '',
+    colorOnTertiary: '',
+    colorBackground: '',
+    colorOnBackground: '',
+    colorError: '',
+    colorOnError: '',
+    colorOutline: '',
+    colorOutlineVariant: '',
+    colorSurface: '',
+    colorOnSurface: '',
+    colorOnSurfaceInverse: '',
+    colorOnSurfaceDisabled: '',
+    colorOnSurfaceVariant: '',
+    colorSurfaceContainer: '',
+    popupMenuBackground: ''
+});
+export const fonts = writable({
+    mdi: ''
+});
+// export const colorPrimary = writable('');
+// export const colorOnPrimary = writable('');
+// export const colorSecondary = writable('');
+// export const colorSecondaryContainer = writable('');
+// export const colorBackground = writable('');
+// export const colorOnBackground = writable('');
+// export const colorOnError = writable('');
+
+// export const darkColor = writable(locals.darkColor);
+// export const textColorDark = locals.textColorDark;
+// export const textColorLight = locals.textColorLight;
+// export const backgroundColor = writable('');
+// export const mdiFontFamily: string = locals.mdiFontFamily;
 let innerStatusBarHeight = 20;
 export const statusBarHeight = writable(innerStatusBarHeight);
-export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);
-export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
+export const actionBarButtonHeight = writable(0);
+export const actionBarHeight = writable(0);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
-export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeight));
+export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
 
-if (__ANDROID__) {
-    const resources = Utils.android.getApplicationContext().getResources();
-    const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
-    let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
-    if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
-        navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
-    }
-    resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
-    if (id > 0 && resourceId > 0) {
-        innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
-        statusBarHeight.set(innerStatusBarHeight);
-    }
-    globalMarginTop = innerStatusBarHeight;
-} else {
-    const onAppLaunch = function () {
-        navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
-        Application.off(Application.launchEvent, onAppLaunch);
-    };
-    Application.on(Application.launchEvent, onAppLaunch);
-}
-
-export const textColor = writable('');
-export const borderColor = writable('');
-export const textLightColor = writable('');
-
-export const subtitleColor = writable('');
-export const iconColor = writable('');
-export const widgetBackgroundColor = writable('');
+const onInitRootView = function () {
+    // we need a timeout to read rootView css variable. not 100% sure why yet
+    setTimeout(() => {
+        const rootView = Application.getRootView();
+        const rootViewStyle = rootView?.style;
+        // DEV_LOG && console.log('initRootView', rootView);
+        fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
+        // DEV_LOG && console.log('fonts', get(fonts));
+        actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
+        actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
+        if (__IOS__) {
+            navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
+        }
+        if (__ANDROID__) {
+            const activity = Application.android.startActivity;
+            const nUtils = com.akylas.documentscanner.Utils;
+            const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
+            if (nActionBarHeight > 0) {
+                actionBarHeight.set(nActionBarHeight);
+            }
+            const resources = Utils.android.getApplicationContext().getResources();
+            const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
+            let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
+            if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
+                navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
+            }
+            resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
+            if (id > 0 && resourceId > 0) {
+                innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+                statusBarHeight.set(innerStatusBarHeight);
+            }
+            globalMarginTop = innerStatusBarHeight;
+        }
+        // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
+        Application.off('initRootView', onInitRootView);
+        DEV_LOG && console.log('initRootView');
+        getRealThemeAndUpdateColors();
+    }, 0);
+};
+Application.on('initRootView', onInitRootView);
 
 export function updateThemeColors(theme: string, force = false) {
     try {
         if (!force) {
             theme = Application.systemAppearance();
-            // console.log('systemAppearance', theme);
+            console.log('systemAppearance', theme);
         }
     } catch (err) {
         console.error('updateThemeColors', err);
     }
-    // currentTheme.set(theme);
-    if (theme === 'dark') {
-        textColor.set(textColorDark);
-        textLightColor.set('#aaaaaa');
-        borderColor.set('#cccccc55');
-        subtitleColor.set('#aaaaaa');
-        backgroundColor.set('#1c1c1e');
-        iconColor.set('#aaaaaa');
-        widgetBackgroundColor.set('#000000aa');
+
+    if (__ANDROID__) {
+        const rootView = Application.getRootView();
+        const rootViewStyle = rootView?.style;
+        const nUtils = com.akylas.documentscanner.Utils;
+        const activity = Application.android.startActivity;
+        const currentColors = get(colors);
+        Object.keys(currentColors).forEach((c) => {
+            if (c.endsWith('Disabled')) {
+                return;
+            }
+            if (c === 'colorBackground') {
+                currentColors.colorBackground = new Color(nUtils.getColorFromInt(activity, 16842801)).hex;
+            } else if (c === 'popupMenuBackground') {
+                currentColors.popupMenuBackground = new Color(nUtils.getColorFromInt(activity, 16843126)).hex;
+            } else {
+                currentColors[c] = new Color(nUtils.getColorFromName(activity, c)).hex;
+            }
+            rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
+        });
+        currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
+        // console.log('colors', currentColors);
+        colors.set(currentColors);
+        rootView?._onCssStateChange();
     } else {
-        textColor.set(textColorLight);
-        textLightColor.set('#444444');
-        borderColor.set('#cccccc55');
-        subtitleColor.set('#888888');
-        backgroundColor.set(textColorDark);
-        iconColor.set('#444444');
-        widgetBackgroundColor.set('#ffffff');
+        const rootView = Application.getRootView();
+        const rootViewStyle = rootView?.style;
+        const currentColors = get(colors);
+        if (theme === 'dark') {
+            currentColors.colorBackground = '#1c1c1e';
+            currentColors.colorOnSurface = 'white';
+            currentColors.colorOutline = '#cccccc55';
+            currentColors.colorOnSurfaceVariant = '#aaaaaa';
+            currentColors.colorSurfaceContainer = '#000000aa';
+        } else {
+            currentColors.colorBackground = '#1c1c1e';
+            currentColors.colorOnSurface = 'black';
+            currentColors.colorOutline = '#cccccc55';
+            currentColors.colorOnSurfaceVariant = '#888888';
+            currentColors.colorSurfaceContainer = '#ffffff';
+        }
+        currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
+        Object.keys(currentColors).forEach((c) => {
+            rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
+        });
+
+        colors.set(currentColors);
+        rootView?._onCssStateChange();
     }
+
 }

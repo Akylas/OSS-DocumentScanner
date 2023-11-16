@@ -1,9 +1,8 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
+    import { actionBarButtonHeight, colors, fonts } from '~/variables';
     const iconPaint = new Paint();
-    iconPaint.fontFamily = mdiFontFamily;
 </script>
 
 <script lang="ts">
@@ -15,23 +14,25 @@
     export let gray = false;
     export let isSelected = false;
     export let text = null;
-    export let fontFamily = mdiFontFamily;
-    export let selectedColor = white ? 'white' : primaryColor;
+    export let fontFamily = $fonts.mdi;
+    export let selectedColor = white ? 'white' : $colors.colorPrimary;
     export let color = null;
     export let onLongPress: Function = null;
     export let fontSize = 0;
-    export let size: any = small ? 30 : actionBarButtonHeight;
+    export let size: any = small ? 30 : $actionBarButtonHeight;
     export let tooltip = null;
     export let rounded = true;
     export let shape = null;
     export let height = null;
     export let width = null;
 
+    iconPaint.fontFamily = $fonts.mdi;
+
     let canvas: NativeViewElementNode<CanvasView>;
 
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
-    $: actualColor = color || (!isEnabled || gray ? $subtitleColor : $textColor);
+    $: actualColor = color || (!isEnabled || gray ? $colors.colorOnSurfaceVariant : $colors.colorOnSurface);
     $: actualLongPress =
         onLongPress || tooltip
             ? (event) => {

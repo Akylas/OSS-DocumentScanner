@@ -156,7 +156,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
         label.style.color = new Color(255, 138, 138, 138);
         label.html = message.trim();
         return mdAlert({
-            okButtonText: lc('OKButton'),
+            okButtonText: lc('ok'),
             title,
             view: label
         });

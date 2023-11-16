@@ -181,7 +181,7 @@ export class WebDAVClient {
     unlock = (path: string, token: string, options?: WebDAVMethodOptions) => unlock(this.context, path, token, options);
 }
 
-export function createClient(remoteURL: string, options: WebDAVClientOptions = {}) {
+export function createContext(remoteURL: string, options: WebDAVClientOptions = {}) {
     const {
         authType: authTypeRaw = null,
         remoteBasePath: remoteBasePathRaw,
@@ -200,11 +200,14 @@ export function createClient(remoteURL: string, options: WebDAVClientOptions = {
         authType = username || password ? AuthType.Password : AuthType.None;
     }
     let remoteBasePath = remoteBasePathRaw;
+    if (!remoteURL.startsWith('http')) {
+        remoteURL = 'https://' + remoteURL;
+    }
     if (!remoteBasePath) {
         const array = remoteURL.split('//');
         remoteBasePath = array[0] + '//' + array[1].split('/')[0];
     }
-    const context: WebDAVClientContext = {
+    const context = {
         authType,
         remoteBasePath,
         contactHref,
@@ -212,14 +215,19 @@ export function createClient(remoteURL: string, options: WebDAVClientOptions = {
         headers: Object.assign({}, headers),
         httpAgent,
         httpsAgent,
-        password,
+        // password, // dont store the password!
         remotePath: remoteURL,
         remoteURL,
         token,
         username,
         withCredentials
-    };
+    } as WebDAVClientContext;
     setupAuth(context, username, password, token, ha1);
+    return context;
+}
+
+export function createClient(remoteURL: string, options: WebDAVClientOptions = {}) {
+    const context = createContext(remoteURL, options);
     return new WebDAVClient(context);
     // return {
     //     copyFile: (filename: string, destination: string, options?: WebDAVMethodOptions) => copyFile(context, filename, destination, options),

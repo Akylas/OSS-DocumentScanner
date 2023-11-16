@@ -1,6 +1,7 @@
 import { Application, ApplicationSettings, File, Folder, ImageSource, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core';
-import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
+import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';
+import { request as webdavRequest } from '~/webdav/request';
 import { basename } from '~/webdav/tools/path';
 import { documentsService } from './documents';
 import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
@@ -8,7 +9,9 @@ import { Document, IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/mode
 import { networkService } from './api';
 import { loadImage, recycleImages } from '~/utils/utils';
 import { cropDocument } from 'plugin-nativeprocessor';
+import { exists } from '~/webdav/operations/exists';
 
+const SETTINGS_KEY = 'webdav_config';
 function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
     const union: S[] = [];
     array1 = Array.from(array1);
@@ -34,25 +37,65 @@ function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) =>
 }
 
 export class SyncService extends Observable {
-    remoteUrl = ApplicationSettings.getString('webdav_remote_url');
-    username = ApplicationSettings.getString('webdav_username');
-    remoteFolder = ApplicationSettings.getString('webdav_remote_folder');
+    remoteURL;
+    username;
+    remoteFolder;
     client: WebDAVClient;
 
     get enabled() {
         return !!this.client;
     }
     async start() {
-        this.username = 'farfromrefuge';
-        this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
-        this.remoteFolder = 'documents';
-        DEV_LOG && console.log('SyncService', 'start', this.remoteUrl, this.remoteFolder, this.username);
+        const configStr = ApplicationSettings.getString(SETTINGS_KEY);
+        if (configStr) {
+            const config = JSON.parse(configStr);
+            // const context = createContext(config.remoteURL, { config.username, password, authType: AuthType.Password });
+            this.remoteURL = config.remoteURL;
+            this.remoteFolder = config.remoteFolder;
+            this.username = config.username;
+            this.client = createClient(config.remoteURL, {
+                headers: config.headers,
+                authType: AuthType.None
+            });
+            DEV_LOG && console.log('SyncService', 'start', config);
+            this.notify({ eventName: 'state', enabled: this.enabled });
+        }
+        // this.username = 'farfromrefuge';
+        // this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
+        // this.remoteFolder = 'documents';
         // this.client = createClient(this.remoteUrl, {
         //     headers: {
         //         Authorization: 'Basic ZmFyZnJvbXJlZnVnZTpMdHZxSUk0d25mVWJkZWZiZkpNWnNKT1BWbzZZLzRHZzhpZWpSTHQ1eW1F'
         //     },
         //     authType: AuthType.None
         // });
+    }
+
+    saveData({ remoteURL, username, password, remoteFolder }) {
+        if (remoteURL && username && password && remoteFolder) {
+            const context = createContext(remoteURL, { username, password, authType: AuthType.Password });
+            ApplicationSettings.setString(SETTINGS_KEY, JSON.stringify({ remoteURL, username, headers: context.headers, remoteFolder }));
+            this.remoteFolder = remoteFolder;
+            this.client = createClient(remoteURL, {
+                headers: context.headers,
+                authType: AuthType.None
+            });
+            this.syncDocuments();
+        } else {
+            ApplicationSettings.remove(SETTINGS_KEY);
+            this.client = null;
+        }
+        this.notify({ eventName: 'state', enabled: this.enabled });
+    }
+    async testConnection({ remoteURL, username, password, remoteFolder }): Promise<boolean> {
+        try {
+            const context = createContext(remoteURL, { password, username, authType: AuthType.Password });
+            const result = await exists(context, remoteFolder, { cachePolicy: 'noCache' });
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     }
 
     async ensureRemoteFolder() {
@@ -262,10 +305,11 @@ export class SyncService extends Observable {
         this.notify({ eventName: 'syncState', state: 'running' });
         DEV_LOG && console.log('syncDocuments', bothWays);
         const localDocuments = (await documentsService.documentRepository.search({})) as OCRDocument[];
-        DEV_LOG && console.log(
-            'localDocuments',
-            localDocuments.map((d) => d.id)
-        );
+        DEV_LOG &&
+            console.log(
+                'localDocuments',
+                localDocuments.map((d) => d.id)
+            );
 
         if (bothWays) {
             await this.ensureRemoteFolder();

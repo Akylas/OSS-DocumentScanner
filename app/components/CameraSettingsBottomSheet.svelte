@@ -1,13 +1,14 @@
 <svelte:options accessors />
 
 <script lang="ts">
+    import { Color } from '@nativescript/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { primaryColor } from '~/variables';
+    import { colors } from '~/variables';
 
     export let transforms = [];
     export let colorType;
@@ -38,7 +39,7 @@
         refreshCollectionView();
     }
     function getBackgroundColor(item) {
-        const result = colorType === item.colorType ? primaryColor.setAlpha(100).hex : undefined;
+        const result = colorType === item.colorType ? new Color($colors.colorPrimary).setAlpha(100).hex : undefined;
         return result;
     }
 </script>
@@ -47,19 +48,19 @@
     <stacklayout horizontalAlignment="right" orientation="horizontal" paddingRight="5">
         <checkbox
             checked={transforms.indexOf('enhance') !== -1}
-            fillColor={primaryColor}
+            fillColor={$colors.colorPrimary}
             marginLeft={4}
             onCheckColor="white"
-            onTintColor={primaryColor}
+            onTintColor={$colors.colorPrimary}
             text={lc('enhance')}
             verticalAlignment="middle"
             on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
         <checkbox
             checked={transforms.indexOf('whitepaper') !== -1}
-            fillColor={primaryColor}
+            fillColor={$colors.colorPrimary}
             marginLeft={4}
             onCheckColor="white"
-            onTintColor={primaryColor}
+            onTintColor={$colors.colorPrimary}
             text={lc('whitepaper')}
             verticalAlignment="middle"
             on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />

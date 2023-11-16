@@ -1,4 +1,4 @@
-export { createClient, WebDAVClient } from './factory';
+export { createClient, createContext, WebDAVClient } from './factory';
 export * from './types';
 
 // export { parseStat, parseXML, translateDiskSpace } from './tools/dav';

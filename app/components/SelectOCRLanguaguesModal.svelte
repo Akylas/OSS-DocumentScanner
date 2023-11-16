@@ -5,7 +5,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { getLocaleDisplayName, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
-    import { accentColor, mdiFontFamily, widgetBackgroundColor } from '~/variables';
+    import { colors, fonts, widgetBackgroundColor } from '~/variables';
     import SearchCollectionView from './SearchCollectionView.svelte';
     import { ocrService } from '~/services/ocr';
     import MiniSearch from '~/utils/minisearch';
@@ -133,10 +133,10 @@
             on:loaded={focus} />
         <collectionview bind:this={collectionView} {items} row={1} rowHeight={56}>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" padding={16} rippleColor={accentColor} on:tap={() => close(item)}>
-                    <label fontFamily={mdiFontFamily} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapsed'} />
+                <gridlayout columns="auto,*,auto" padding={16} rippleColor={$colors.colorPrimary} on:tap={() => close(item)}>
+                    <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapsed'} />
                     <label col={1} fontSize={17} text={item.name} verticalTextAlignment="middle" />
-                    <label col={2} fontFamily={mdiFontFamily} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapsed'} />
+                    <label col={2} fontFamily={$fonts.mdi} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapsed'} />
                 </gridlayout>
             </Template>
         </collectionview>

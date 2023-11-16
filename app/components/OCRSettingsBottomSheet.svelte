@@ -12,7 +12,7 @@
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { accentColor, backgroundColor, mdiFontFamily, primaryColor, textColor } from '~/variables';
+    import { colors, fonts, textColor } from '~/variables';
 
     let collectionView: NativeViewElementNode<CollectionView>;
     let downloaded = ocrService.downloadedLanguages;
@@ -72,7 +72,7 @@
         <stacklayout orientation="horizontal">
             {#each qualities as quality}
                 <gridlayout
-                    backgroundColor={dataType === quality ? accentColor : undefined}
+                    backgroundColor={dataType === quality ? $colors.colorPrimary : undefined}
                     borderColor={$textColor}
                     borderRadius={8}
                     borderWidth={dataType === quality ? 0 : 1}
@@ -82,7 +82,7 @@
                     paddingLeft={dataType === quality ? 8 : 12}
                     paddingRight={12}
                     on:tap={() => setDataType(quality)}>
-                    <label fontFamily={mdiFontFamily} fontSize={16} marginRight={4} text="mdi-check" verticalAlignment="middle" visibility={dataType === quality ? 'visible' : 'collapse'} />
+                    <label fontFamily={$fonts.mdi} fontSize={16} marginRight={4} text="mdi-check" verticalAlignment="middle" visibility={dataType === quality ? 'visible' : 'collapse'} />
                     <label col={1} fontSize={14} fontWeight={dataType === quality ? 'bold' : 'normal'} text={lc(quality)} verticalAlignment="middle" />
                 </gridlayout>
             {/each}
@@ -103,7 +103,7 @@
                     paddingLeft={downloaded.indexOf(language) !== -1 ? 8 : 12}
                     paddingRight={8}>
                     <label
-                        fontFamily={mdiFontFamily}
+                        fontFamily={$fonts.mdi}
                         fontSize={16}
                         marginRight={4}
                         text="mdi-download"
@@ -114,7 +114,7 @@
                     <mdbutton
                         col={2}
                         color={$textColor}
-                        fontFamily={mdiFontFamily}
+                        fontFamily={$fonts.mdi}
                         fontSize={16}
                         marginLeft={4}
                         padding={0}

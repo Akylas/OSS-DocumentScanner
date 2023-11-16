@@ -1,11 +1,49 @@
-﻿@import './variables';
+﻿// @import './variables';
+
+
+.ns-root {
+
+    --colorPrimary: #51AE5B;
+    --colorPrimaryContainer: #51AE5B;
+    --colorOnPrimary: #ffffff;
+    --colorOnPrimaryContainer: #ffffff;
+    --colorSecondary: #5492e7;
+    --colorOnSecondary: #C2C9BD;
+    --colorSecondaryContainer: #D5E8D0;
+    --colorTertiary: #5492e7;
+    --colorOnTertiary: #C2C9BD;
+    --colorTertiaryContainer: #D5E8D0;
+    --colorBackground: #FCFDF7;
+    --colorOnBackground: #1A1C19;
+    --colorError: #BA1A1A;
+    --colorOnError: #FFFFFF;
+    --colorOutline: #8C9388;
+    --colorOutlineVariant: #8C9388;
+    --colorOnSurface: black;
+    --colorOnSurfaceDisabled: #00000055;
+    --colorOnSurfaceVariant: #C2C9BD;
+    --colorSurface: #F9FAF4;
+    --colorOnSurfaceInverse: #000000;
+    --colorSurfaceContainer: #C2C9BD;
+    --popupMenuBackground: #C2C9BD;
+
+    --mdiFontFamily: #{$mdiFontFamily};
+
+    --navigationBarHeight: 0;
+    --actionBarButtonHeight: 50;
+    --actionBarHeight: 60;
+}
 
 // .lato {
-    // font-family: $lato-fontFamily;
+// font-family: $lato-fontFamily;
 // }
 
 .mdi {
-    font-family: $mdi-fontFamily;
+    font-family: $mdiFontFamily;
+}
+
+mdprogress {
+    color: var(--colorPrimary);
 }
 
 label,
@@ -13,165 +51,99 @@ canvaslabel,
 htmllabel {
     // background-color: rgba(255, 0,0,0.2);
     // .ns-light & {
-    color: black;
+    color: var(--colorOnSurface);
 
     // }
-    .ns-dark &,
-    .ns-black & {
-        color: white;
-    }
+    // .ns-dark &,
+    // .ns-black & {
+    //     color: var(--colorOnSurface-dark);
+    // }
 
     // white-space: normal;
 }
 
-mdtextfield {
-    color: black;
-    background-color: white;
-    placeholder-color: black;
+// mdtextfield {
+//     color: black;
+//     // background-color: white;
+//     // placeholder-color: black;
 
-    .ns-dark & {
-        color: white;
-        background-color: black;
-        placeholder-color: white;
-    }
-}
-
-// .ns-ios {
-// for now we set the font on both platform.
-// but on android it should be possible to do it through style, though not working yet
-label,
-label,
-canvaslabel {
-    // @extend .lato;
-}
-
+//     .ns-dark & {
+//         color: white;
+//         // background-color: black;
+//         // placeholder-color: white;
+//     }
 // }
 
+
 page {
-    // .ns-light & {
-    status-bar-style: dark;
-    // navigation-bar-color: #ddd;
-    // navigation-bar-color: $dark-color;
-    status-bar-color: $dark-color;
-    background-color: white;
-    // }
+    status-bar-style: light;
+    background-color: var(--colorBackground);
+    status-bar-color: var(--colorBackground);
 
-    .ns-dark & {
-        // status-bar-style: dark;
-        // navigation-bar-color: black;
-        // status-bar-color: black;
-        background-color: #1c1c1e;
-    }
-
-    .ns-black & {
-        status-bar-style: dark;
-        // navigation-bar-color: black;
-        status-bar-color: black;
-        background-color: black;
-    }
-}
-
-.bottomsheet {
-
-    // background-color: white;
     .ns-dark &,
     .ns-black & {
-        // background-color: #1c1c1e;
+        status-bar-style: dark;
     }
 }
 
 .actionBar {
     z-index: 0;
     border-radius: 0;
-    // background-color: scale-color(white, $alpha: -30%);
-    // .ns-black & {
-    //     background-color: scale-color(black, $alpha: -30%);
-    // }
-    // .ns-dark & {
-    //     background-color: scale-color(#1c1c1e, $alpha: -30%);
-    // }
-    background-color: $accent-color;
-    height: $actionbar-height;
+    // elevation:3;
+    height: var(--actionBarHeight);
+    background-color: var(--colorBackground);
+
 }
 
-// .actionBarButton {
-    // @extend .mdi;
-//     shape:round;
-//     width: $actionbar-button-height;
-//     height: $actionbar-button-height;
-//     color: black;
-//     ripple-color:black;
-
-//     .ns-dark &,
-//     .ns-black & {
-//         color: white;
-//         ripple-color:white;
-//     }
-
-//     width: 44;
-//     height: 44;
-//     border-radius: 22;
-//     font-size: 24;
-//     margin: 0;
-//     padding: 0;
-// }
 
 .actionBarTitle {
-    // @extend .lato;
-    font-size: 20;
-    font-weight: 500;
-    // color: black;
-    // .ns-dark &,
-    // .ns-black & {
-        color: white;
-    // }
+    font-size: 22;
+    font-weight: 400;
+    padding: 0 16 0 16;
+    color: var(--colorOnSurface);
 }
 
 .actionBarSubtitle {
     font-size: 13;
-    // color: rgba(0, 0, 0, 0.533);
-    // .ns-dark &,
-    // .ns-black & {
-        color: rgba(255, 255, 255, 0.533);
-    // }
+    color: var(--colorOnSurface);
 }
 
-.icon-btn, .actionBarButton {
+.icon-btn,
+.actionBarButton {
     @extend .mdi;
-    shape:round;
+    shape: round;
     background-color: transparent;
-    // ripple-color: gray;
-    // color: black;
 
-    // .ns-dark &,
-    // .ns-black & {
-        color: white;
-        ripple-color: white;
-    // }
+    &:disabled {
+        color: var(--colorOnSurfaceDisabled);
+        ripple-color: var(--colorOnSurfaceDisabled);
+    }
 
-    width: 44;
-    height: 44;
-    border-radius: 22;
+    color: var(--colorOnSurface);
+    ripple-color: var(--colorOnSurface);
+
+    width: 48;
+    height: 48;
+    border-radius: 50%;
     font-size: 24;
     margin: 0;
     padding: 0;
-}
-.icon-btn {
-    ripple-color: gray;
-    color: black;
 
-    .ns-dark &,
-    .ns-black & {
+
+    &:black {
+
         color: white;
         ripple-color: white;
     }
 }
 
-.floating-btn {
+.fab {
     @extend .mdi;
-    color:white;
+    background-color: var(--colorPrimaryContainer);
+    color: var(--colorOnPrimaryContainer);
+    ripple-color: var(--colorOnPrimaryContainer);
     shape: medium;
-    elevation: 6;
+    elevation: 2;
     font-size: 24;
     padding: 0;
     margin: 16;
@@ -180,13 +152,13 @@ page {
 }
 
 
-.small-floating-btn {
+.small-fab {
     @extend .mdi;
     shape: medium;
-    background-color: white;
-    color: $accent-color;
-    ripple-color: $accent-color;
-    elevation: 6;
+    background-color: var(--colorBackground);
+    color: var(--colorPrimary);
+    ripple-color: var(--colorPrimary);
+    elevation: 2;
     font-size: 24;
     padding: 0;
     margin: 8;
@@ -197,15 +169,10 @@ page {
 .icon-label {
     @extend .mdi;
 
-    color: $text-color-light;
+    color: var(--colorOnSurface);
 
-    .ns-dark & {
-        color: $text-color-dark;
-        ripple-color: $text-color-dark;
-    }
-
-    width: $actionbar-button-height;
-    height: $actionbar-button-height;
+    width: var(--actionBarButtonHeight);
+    height: var(--actionBarButtonHeight);
     text-align: center;
     vertical-text-alignment: center;
     font-size: 24;

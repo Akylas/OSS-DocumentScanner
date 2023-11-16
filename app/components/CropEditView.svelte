@@ -10,21 +10,21 @@
     import CropView from '~/components/CropView.svelte';
     import { IMG_COMPRESS, IMG_FORMAT } from '~/models/OCRDocument';
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { primaryColor } from '~/variables';
+    import { colors } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
-    import { recycleImages } from '~/utils/utils';
+    import { recycleImages } from '~/utils/utils.common';
     import { cropDocument } from 'plugin-nativeprocessor';
 
     let recrop = false;
     let topView: NativeViewElementNode<View>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let rotableImageView: RotableImageView;
-    const cornersPaint = new Paint();
-    cornersPaint.color = primaryColor;
-    cornersPaint.setStrokeWidth(14);
-    cornersPaint.style = Style.STROKE;
-    const shaderPaint = new Paint();
-    shaderPaint.style = Style.FILL;
+    // const cornersPaint = new Paint();
+    // cornersPaint.color = $colors.colorPrimaryContainer;
+    // cornersPaint.setStrokeWidth(14);
+    // cornersPaint.style = Style.STROKE;
+    // const shaderPaint = new Paint();
+    // shaderPaint.style = Style.FILL;
 
     const dispatch = createEventDispatcher<{
         finished: null;
@@ -128,5 +128,5 @@
             </Template>
         </collectionview>
     </gridlayout>
-    <mdbutton class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" verticalAlignment="bottom" on:tap={onTapFinish} />
+    <mdbutton class="fab" elevation={0} horizontalAlignment="center"  row={2} text="mdi-check" variant="text" verticalAlignment="bottom" on:tap={onTapFinish} />
 </gridlayout>

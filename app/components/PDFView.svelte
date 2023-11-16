@@ -19,7 +19,7 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
-    import { accentColor, mdiFontFamily, widgetBackgroundColor } from '~/variables';
+    import { colors, fonts } from '~/variables';
 
     interface Item {
         page: OCRPage;
@@ -304,12 +304,13 @@
         <collectionview bind:this={collectionView} {items} reorderEnabled={true} row={1} rowHeight={200} on:itemReordered={onItemReordered} on:itemReorderStarting={onItemReorderStarting}>
             <Template let:item>
                 <gridlayout
-                    backgroundColor={$widgetBackgroundColor}
-                    borderRadius="4"
+                    backgroundColor={$colors.colorSurfaceContainer}
+                    borderColor={$colors.colorOutline}
+                    borderRadius={12}
+                    borderWidth={1}
                     clipToBounds={true}
-                    elevation="2"
-                    margin="8"
-                    rippleColor={accentColor}
+                    margin={8}
+                    rippleColor={$colors.colorPrimary}
                     rows="*,auto"
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
@@ -317,15 +318,15 @@
                     <SelectedIndicator selected={item.selected} />
                     <canvaslabel backgroundColor="#00000088" color="white" height={30} padding="5" row={1}>
                         <cspan fontSize={12} text={`${item.page.width} x ${item.page.height}`} />
-                        <cspan fontFamily={mdiFontFamily} fontSize={20} text="mdi-text-recognition" textAlignment="right" visibility={item.page.ocrData ? 'visible' : 'hidden'} />
+                        <cspan fontFamily={$fonts.mdi} fontSize={20} text="mdi-text-recognition" textAlignment="right" visibility={item.page.ocrData ? 'visible' : 'hidden'} />
                     </canvaslabel>
                 </gridlayout>
             </Template>
         </collectionview>
 
         <stacklayout horizontalAlignment="right" row={1} verticalAlignment="bottom">
-            <mdbutton class="small-floating-btn" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
-            <mdbutton class="floating-btn" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
+            <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
+            <mdbutton class="fab" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
         </stacklayout>
     </gridlayout>
 </page>

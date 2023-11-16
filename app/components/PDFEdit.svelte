@@ -24,8 +24,8 @@
     import { share } from '~/utils/share';
     import { notifyWhenChanges } from '~/utils/svelte/store';
     import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
-    import { loadImage, recycleImages } from '~/utils/utils';
-    import { primaryColor } from '~/variables';
+    import { loadImage, recycleImages } from '~/utils/utils.common';
+    import { colors } from '~/variables';
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -437,19 +437,19 @@
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
             <checkbox
                 checked={$enhanced}
-                fillColor={primaryColor}
+                fillColor={$colors.colorPrimary}
                 marginLeft={4}
                 onCheckColor="white"
-                onTintColor={primaryColor}
+                onTintColor={$colors.colorPrimary}
                 text={lc('enhance')}
                 verticalAlignment="middle"
                 on:checkedChange={(e) => ($enhanced = e.value)} />
             <checkbox
                 checked={$whitepaper}
-                fillColor={primaryColor}
+                fillColor={$colors.colorPrimary}
                 marginLeft={4}
                 onCheckColor="white"
-                onTintColor={primaryColor}
+                onTintColor={$colors.colorPrimary}
                 text={lc('whitepaper')}
                 verticalAlignment="middle"
                 on:checkedChange={(e) => ($whitepaper = e.value)} />
@@ -471,7 +471,7 @@
         </collectionview>
         <gridlayout backgroundColor="black" row={1} rowSpan={3} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
             <CropView {editingImage} bind:quadChanged bind:quads />
-            <mdbutton class="floating-btn" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
+            <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
         </gridlayout>
     </gridlayout>
 </page>

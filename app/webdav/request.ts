@@ -43,11 +43,11 @@ import { Headers, HttpsRequestOptions, HttpsResponse, HttpsResponseLegacy, reque
 
 export function prepareRequestOptions(requestOptions: RequestOptions | RequestOptionsWithState, context: WebDAVClientContext, userOptions: WebDAVMethodOptions): RequestOptionsWithState {
     // const finalOptions = cloneShallow(requestOptions) as RequestOptionsWithState;
-    const finalOptions = requestOptions as RequestOptionsWithState;
+    const finalOptions = { ...requestOptions, ...(userOptions || {}) } as RequestOptionsWithState;
     finalOptions.headers = mergeHeaders(context.headers, finalOptions.headers || {}, userOptions.headers || {});
-    if (typeof userOptions.data !== 'undefined') {
-        finalOptions.data = userOptions.data;
-    }
+    // if (typeof userOptions.data !== 'undefined') {
+    //     finalOptions.data = userOptions.data;
+    // }
     // if (userOptions.signal) {
     //     finalOptions.signal = userOptions.signal;
     // }

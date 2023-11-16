@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { widgetBackgroundColor } from '~/variables';
+    import { colors } from '~/variables';
 </script>
 
 <script lang="ts">
@@ -9,7 +9,7 @@
     export let max = 1;
     export let step = 0.01;
     export let value = 0;
-    export let backgroundColor = $widgetBackgroundColor;
+    export let backgroundColor = $colors.colorSurfaceContainer;
     export let onChange = null;
     export let formatter = (value) => value + '';
 
