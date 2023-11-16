@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Template } from 'svelte-native/components';
     import { openLink } from '~/utils/ui';
-    import { primaryColor } from '~/variables';
+    import { colors } from '~/variables';
 
     const licences = require('~/licenses.json');
 
@@ -14,10 +14,10 @@
     }
 </script>
 
-<gesturerootview>
+<gesturerootview rows="auto">
     <collectionView id="trackingScrollView" class="bottomsheet" height="300" itemIdGenerator={(item, i) => i} {items} rowHeight="60">
         <Template let:item>
-            <stacklayout padding="0 16 0 16" rippleColor={primaryColor} verticalAlignment="middle" on:tap={() => onTap(item)}>
+            <stacklayout padding="0 16 0 16" rippleColor={$colors.colorPrimary} verticalAlignment="middle" on:tap={() => onTap(item)}>
                 <label fontSize={17} maxLines={1} text={item.moduleName} verticalAlignment="top" />
                 <label color="#aaaaaa" fontSize={14} text={item.moduleUrl} verticalAlignment="bottom" />
             </stacklayout>

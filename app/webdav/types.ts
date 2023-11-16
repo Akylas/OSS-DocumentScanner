@@ -152,7 +152,6 @@ export interface GetQuotaOptions extends WebDAVMethodOptions {
 
 export interface LockOptions extends WebDAVMethodOptions {
     refreshToken?: string;
-    timeout?: string;
 }
 
 export interface LockResponse {
@@ -247,7 +246,7 @@ export type UploadProgressCallback = ProgressEventCallback;
 export interface WebDAVClientContext {
     authType: AuthType;
     remoteBasePath: string;
-    contactHref: string;
+    contactHref?: string;
     digest?: DigestContext;
     ha1?: string;
     headers: Headers;
@@ -282,7 +281,7 @@ export interface WebDAVClientOptions {
     withCredentials?: boolean;
 }
 
-export interface WebDAVMethodOptions {
+export interface WebDAVMethodOptions extends Partial<HTTPSOptions> {
     data?: RequestDataPayload;
     headers?: Headers;
     signal?: AbortSignal;

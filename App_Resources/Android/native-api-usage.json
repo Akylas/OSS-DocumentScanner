@@ -1,8 +1,11 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "com.google.android.material.color:DynamicColors",
+        "androidx.core.splashscreen:SplashScreen",
         "org.deejdev.twowaynestedscrollview:TwoWayNestedScrollView",
         "com.akylas.documentscanner:CropView",
+        "com.akylas.documentscanner:Utils",
         "com.akylas.documentscanner:DualScrollView",
         "com.akylas.documentscanner:AbsoluteLayoutWithMatrix",
         "com.akylas.documentscanner:CustomImageAnalysisCallback",

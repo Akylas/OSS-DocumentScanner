@@ -12,6 +12,7 @@
     export let forceCanGoBack: boolean = false;
     export let modalWindow: boolean = false;
     export let disableBackButton: boolean = false;
+    export let buttonsDefaultVisualState = null;
     export let clazz: string = '';
     export let onGoBack: Function = null;
     let menuIcon: string;
@@ -52,14 +53,14 @@
     }
 </script>
 
-<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft="10" paddingRight="10" rows="*" {...$$restProps} transition:fade={{duration: 200}}>
-    <label class={'actionBarTitle ' + clazz } col={1} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} />
+<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 200 }}>
+    <label class={'actionBarTitle ' + clazz} col={1} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} />
     <!-- {#if showLogo && !title}
         <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
     {/if} -->
     <stacklayout col={0} orientation="horizontal">
         <slot name="left" />
-        <mdbutton class={'actionBarButton ' + clazz} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />
+        <mdbutton class={'actionBarButton ' + clazz} defaultVisualState={buttonsDefaultVisualState} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />
     </stacklayout>
     <stacklayout col={2} orientation="horizontal">
         <slot />

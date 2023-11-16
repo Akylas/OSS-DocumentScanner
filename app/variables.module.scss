@@ -1,7 +1,17 @@
 @import 'variables';
 :export {
-    accentColor: $accent-color;
-    primaryColor: $primary-color;
+    colorPrimary: $colorPrimary;
+    colorOnPrimary: $colorOnPrimary;
+    colorSecondary: $colorSecondary;
+    colorSecondaryContainer: $colorSecondaryContainer;
+    colorBackground: $colorBackground;
+    colorOnBackground: $colorOnBackground;
+    colorError: $colorError;
+    colorOnError: $colorOnError;
+
+
+
+
     darkColor: $dark-color;
     actionBarHeight: $actionbar-height;
     textColorDark: $text-color-dark;

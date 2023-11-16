@@ -1,10 +1,12 @@
 import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
+import { showError } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
@@ -34,8 +36,8 @@ $lang.subscribe((newLang: string) => {
     }
     dayjs.locale(lang); // switch back to default English locale globally
     try {
-        const localeData = require(`~/i18n/${lang}.json`);
-        loadLocaleJSON(localeData);
+        // const localeData = require(`~/i18n/${lang}.json`);
+        loadLocaleJSON(`~/i18n/${lang}.json`);
     } catch (err) {
         console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
     }
@@ -145,6 +147,34 @@ export function getLocaleDisplayName(locale?) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
         }
         return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
+    }
+}
+async function internalSelectLanguage() {
+    try {
+        const actions = SUPPORTED_LOCALES;
+        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+        const result = await showBottomSheet({
+            parent: null,
+            view: OptionSelect,
+            props: {
+                title: lc('select_language'),
+                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k), data: k })))
+            },
+            trackingScrollView: 'collectionView'
+        });
+        return result;
+    } catch (err) {
+        showError(err);
+    }
+}
+export async function selectLanguage() {
+    try {
+        const result = await internalSelectLanguage();
+        if (result && result.data) {
+            ApplicationSettings.setString('language', result.data);
+        }
+    } catch (err) {
+        showError(err);
     }
 }
 

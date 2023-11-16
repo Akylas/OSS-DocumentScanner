@@ -6,7 +6,7 @@
     import { Template } from 'svelte-native/components';
     import { lc } from '~/helpers/locale';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { actionBarButtonHeight, borderColor, backgroundColor as defaultBackgroundColor, mdiFontFamily, textColor } from '~/variables';
+    import { actionBarButtonHeight, colors, fonts } from '~/variables';
     import IconButton from './IconButton.svelte';
     export interface OptionType {
         name: string;
@@ -17,11 +17,12 @@
 
 <script lang="ts">
     export let showFilter = false;
-    export let showBorders = true;
-    export let backgroundColor = $defaultBackgroundColor;
+    export let showBorders = false;
+    export let backgroundColor = null;
     export let rowHeight = 72;
     export let width: string | number = '*';
-    export let fontWeight = 'bold';
+    export let containerColumns: string = '*';
+    export let fontWeight = 'normal';
     export let options: OptionType[];
     export let onClose = null;
     export let height: number | string = 350;
@@ -75,14 +76,14 @@
     }
 </script>
 
-<gesturerootview columns="auto" rows="auto">
+<gesturerootview columns={containerColumns} rows="auto">
     <gridlayout {backgroundColor} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
         {#if showFilter}
-            <gridlayout borderColor={$borderColor} margin="10 10 0 10">
+            <gridlayout borderColor={$colors.colorOutline} margin="10 10 0 10">
                 <textfield
                     autocapitalizationType="none"
                     backgroundColor="transparent"
-                    height={actionBarButtonHeight}
+                    height={$actionBarButtonHeight}
                     hint={lc('search')}
                     padding="0 30 0 20"
                     placeholder={lc('search')}
@@ -104,16 +105,16 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} row={1} {rowHeight}>
+        <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} paddingBottom={8} paddingTop={8} row={1} {rowHeight}>
             <Template key="checkbox" let:item>
                 <checkbox checked={item.value} text={item.name} on:checkedChange={(e) => onCheckBox(item, e.value)} />
             </Template>
             <Template let:item>
-                <canvaslabel color={item.color || $textColor} padding={16} rippleColor={item.color || $textColor} on:tap={(event) => onTap(item, event)}>
-                    <cspan fontFamily={mdiFontFamily} fontSize={iconFontSize} text={item.icon} textAlignment="left" verticalAlignment="middle" visibility={item.icon ? 'visible' : 'hidden'} />
-                    <cspan {fontSize} {fontWeight} paddingLeft={item.icon ? 30 : 0} text={item.name} textAlignment="left" verticalAlignment="middle" />
+                <canvaslabel color={item.color || $colors.colorOnSurface} paddingLeft={16} paddingRight={16} rippleColor={item.color || $colors.colorOnSurface} on:tap={(event) => onTap(item, event)}>
+                    <cspan fontFamily={$fonts.mdi} fontSize={iconFontSize} text={item.icon} textAlignment="left" verticalAlignment="middle" visibility={item.icon ? 'visible' : 'hidden'} />
+                    <cspan {fontSize} {fontWeight} paddingLeft={item.icon ? 48 : 0} text={item.name} textAlignment="left" verticalAlignment="middle" />
                     {#if showBorders}
-                        <line color={$borderColor} height={1} startX={0} startY={0} stopX="100%" stopY={0} strokeWidth={1} verticalAlignment="bottom" />
+                        <line color={$colors.colorOutlineVariant} height={1} startX={20} startY={0} stopX="100%" stopY={0} strokeWidth={1} verticalAlignment="bottom" />
                     {/if}
                 </canvaslabel>
             </Template>

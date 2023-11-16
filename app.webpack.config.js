@@ -102,7 +102,7 @@ module.exports = (env, params = {}) => {
     console.log('env', env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
-    env.appComponents = env.appComponents || [];
+    env.appComponents = env.appComponents || ['~/android/activity.android'];
     const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus', 'illegal-attribute-character']);
 
     nsWebpack.chainWebpack((config, env) => {
@@ -132,6 +132,7 @@ module.exports = (env, params = {}) => {
         return config;
     });
     const config = webpackConfig(env, params);
+    config.entry.application = '~/android/application.android';
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const projectRoot = params.projectRoot || __dirname;
@@ -239,14 +240,14 @@ module.exports = (env, params = {}) => {
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
     const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
 
-    const scssPrepend = `$mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
+    const scssPrepend = `$mdiFontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
     `;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
     config.module.rules.splice(
         scssLoaderRuleIndex,
         1,
         {
-            test: /app\.scss$/,
+            test: /\.scss$/,
             use: [
                 { loader: 'apply-css-loader' },
                 {
@@ -286,19 +287,19 @@ module.exports = (env, params = {}) => {
                     }
                 ])
         },
-        {
-            test: /\.module\.scss$/,
-            use: [
-                { loader: 'css-loader', options: { url: false } },
-                {
-                    loader: 'sass-loader',
-                    options: {
-                        sourceMap: false,
-                        additionalData: scssPrepend
-                    }
-                }
-            ]
-        }
+        // {
+        //     test: /\.module\.scss$/,
+        //     use: [
+        //         { loader: 'css-loader', options: { url: false } },
+        //         {
+        //             loader: 'sass-loader',
+        //             options: {
+        //                 sourceMap: false,
+        //                 additionalData: scssPrepend
+        //             }
+        //         }
+        //     ]
+        // }
     );
 
     const usedMDIICons = [];
@@ -405,7 +406,7 @@ module.exports = (env, params = {}) => {
             }
         })
     );
-    if (fork) {
+    if (fork && production) {
         if (!accessibility) {
             config.plugins.push(
                 new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {

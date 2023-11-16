@@ -16,12 +16,12 @@
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
-    import { accentColor, primaryColor } from '~/variables';
+    import { colors } from '~/variables';
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
     import CropEditView from './CropEditView.svelte';
     import DocumentsList from './DocumentsList.svelte';
-    import { loadImage, recycleImages } from '~/utils/utils';
+    import { loadImage, recycleImages } from '~/utils/utils.common';
     import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
@@ -29,13 +29,13 @@
     const touchAnimationShrink: TouchAnimationOptions = {
         down: {
             scale: { x: 0.9, y: 0.9 },
-            // backgroundColor: primaryColor.darken(10),
+            // backgroundColor: colorPrimary.darken(10),
             duration: 100,
             curve: CoreTypes.AnimationCurve.easeInOut
         },
         up: {
             scale: { x: 1, y: 1 },
-            // backgroundColor: primaryColor,
+            // backgroundColor: colorPrimary,
             duration: 100,
             curve: CoreTypes.AnimationCurve.easeInOut
         }
@@ -48,7 +48,7 @@
     // let collectionView: NativeViewElementNode<CollectionView>;
 
     export let modal = false;
-    export let document: OCRDocument;
+    export let document: OCRDocument = null;
     const newDocument = !document;
 
     const contours: [number, number][][] = null;
@@ -501,17 +501,17 @@
                 processor = (OpencvDocumentProcessDelegate.alloc() as OpencvDocumentProcessDelegate).initWithCropView(cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             }
-            if (documentsService.started) {
-                processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
-                // toggleEditing();
-            } else {
-                documentsService.once('started', () => {
-                    processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
-                    // toggleEditing();
-                });
-            }
+            // if (documentsService.started) {
+            //     processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
+            //     // toggleEditing();
+            // } else {
+            //     documentsService.once('started', () => {
+            //         processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
+            //         // toggleEditing();
+            //     });
+            // }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
@@ -554,7 +554,7 @@
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
         <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
-        <cropview bind:this={cropView} colors={[primaryColor]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
+        <cropview bind:this={cropView} colors={[$colors.colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
             <mdbutton class="actionBarButton" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
@@ -566,7 +566,7 @@
             <gridlayout>
                 <stacklayout horizontalAlignment="left" verticalAlignment="center">
                     <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
-                    <mdbutton class="icon-btn" color={torchEnabled ? accentColor : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
+                    <mdbutton class="icon-btn" color={torchEnabled ? $colors.colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
                     <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
                 </stacklayout>
                 <mdbutton
@@ -614,7 +614,7 @@
                 row={1}
                 verticalAlignment="bottom"
                 width={90}>
-                <gridlayout backgroundColor={primaryColor} borderRadius="50%" height={74} touchAnimation={touchAnimationShrink} width={74} on:tap={takePicture} />
+                <gridlayout backgroundColor={$colors.colorPrimary} borderRadius="50%" height={74} touchAnimation={touchAnimationShrink} width={74} on:tap={takePicture} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
             <!-- <mdbutton
@@ -626,7 +626,7 @@
                 horizontalAlignment="left"
             /> -->
             <mdbutton
-                class="floating-btn"
+                class="fab"
                 elevation={0}
                 horizontalAlignment="right"
                 rippleColor="white"

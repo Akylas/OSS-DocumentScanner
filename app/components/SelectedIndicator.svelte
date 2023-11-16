@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { primaryColor } from '~/variables';
+    import { colors, fonts } from '~/variables';
     export let selected: boolean = false;
 </script>
 
 <label
-    class="mdi"
-    backgroundColor={primaryColor}
+    backgroundColor={$colors.colorPrimary}
     borderRadius={10}
     color="white"
+    fontFamily={$fonts.mdi}
     fontSize={16}
     height={20}
     horizontalAlignment="right"
@@ -19,5 +19,4 @@
     verticalTextAlignment="center"
     visibility={selected ? 'visible' : 'hidden'}
     width={20}
-    {...$$restProps}
-/>
+    {...$$restProps} />
