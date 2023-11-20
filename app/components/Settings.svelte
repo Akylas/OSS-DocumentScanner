@@ -18,6 +18,9 @@
     import { restartApp } from '~/utils/utils';
     import { syncService } from '~/services/sync';
 
+    // technique for only specific properties to get updated on store change
+    $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
+
     let collectionView: NativeViewElementNode<CollectionView>;
 
     let items: ObservableArray<any>;
@@ -317,7 +320,7 @@
                     <stacklayout verticalAlignment="middle">
                         <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} verticalTextAlignment="top" />
                         <label
-                            color={$colors.colorOnSurfaceVariant}
+                            color={colorOnSurfaceVariant}
                             fontSize={14}
                             lineBreak="end"
                             maxLines={2}
@@ -326,16 +329,16 @@
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
                     </stacklayout>
                     <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
-                    <!-- <absolutelayout backgroundColor={$colors.colorOutline} colSpan={2} height={1} verticalAlignment="bottom" /> -->
+                    <!-- <absolutelayout backgroundColor={colorOutline} colSpan={2} height={1} verticalAlignment="bottom" /> -->
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" rippleColor={$colors.colorOnSurface} on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)}>
+                <gridlayout columns="auto,*,auto" rippleColor={colorOnSurface} on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)}>
                     <label fontFamily={$fonts.mdi} fontSize={36} marginLeft="-10" text={item.icon} verticalAlignment="middle" visibility={!!item.icon ? 'visible' : 'hidden'} width={40} />
                     <stacklayout col={1} marginLeft="10" verticalAlignment="middle">
                         <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
                         <label
-                            color={$colors.colorOnSurfaceVariant}
+                            color={colorOnSurfaceVariant}
                             fontSize={14}
                             lineBreak="end"
                             maxLines={2}
@@ -346,7 +349,7 @@
 
                     <label
                         col={2}
-                        color={$colors.colorOnSurfaceVariant}
+                        color={colorOnSurfaceVariant}
                         marginLeft={16}
                         marginRight={16}
                         text={item.rightValue && item.rightValue()}
@@ -354,7 +357,7 @@
                         visibility={!!item.rightValue ? 'visible' : 'collapsed'} />
                     <label
                         col={2}
-                        color={$colors.colorOutlineVariant}
+                        color={colorOutlineVariant}
                         fontFamily={$fonts.mdi}
                         fontSize={30}
                         horizontalAlignment="right"
@@ -363,7 +366,7 @@
                         text={item.rightBtnIcon}
                         visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
                         width={25} />
-                    <!-- <absolutelayout backgroundColor={$colors.colorOutlineVariant} col={1} colSpan={3} height={1} marginLeft={20} row={2} verticalAlignment="bottom" /> -->
+                    <!-- <absolutelayout backgroundColor={colorOutlineVariant} col={1} colSpan={3} height={1} marginLeft={20} row={2} verticalAlignment="bottom" /> -->
                 </gridlayout>
             </Template>
         </collectionview>

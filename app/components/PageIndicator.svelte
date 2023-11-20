@@ -1,24 +1,23 @@
 <script lang="ts">
     import { colors, fonts } from '~/variables';
-    export let selected: boolean = false;
+    export let text: string;
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorOnPrimary } = $colors);
+    $: ({ colorOnPrimary, colorPrimary } = $colors);
 </script>
 
 <label
     backgroundColor={colorPrimary}
     borderRadius="50%"
     color={colorOnPrimary}
-    fontFamily={$fonts.mdi}
-    fontSize={18}
-    height={26}
-    horizontalAlignment="right"
-    margin={10}
+    fontSize={14}
+    fontWeight="bold"
+    height={20}
+    horizontalAlignment="left"
+    paddingLeft={6}
+    paddingRight={6}
     rowSpan={2}
-    text="mdi-check"
+    {text}
     textAlignment="center"
-    verticalAlignment="top"
+    verticalAlignment="bottom"
     verticalTextAlignment="center"
-    visibility={selected ? 'visible' : 'hidden'}
-    width={26}
     {...$$restProps} />

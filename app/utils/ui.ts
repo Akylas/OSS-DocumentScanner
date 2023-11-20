@@ -12,11 +12,11 @@ import { documentsService } from '~/services/documents';
 import { showError } from './error';
 import ColorMatrices from './color_matrix';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { lc } from '@nativescript-community/l';
 import { showModal } from 'svelte-native';
 import { loadImage, recycleImages } from './utils.common';
 import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
+import { l, lc } from '~/helpers/locale';
 
 import type LoadingIndicator__SvelteComponent_ from '~/components/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/LoadingIndicator.svelte';
@@ -382,6 +382,7 @@ export async function importAndScanImage(document?: OCRDocument) {
             .present()
             .catch((err) => null);
         if (selection?.length) {
+            showLoading(l('computing'));
             const sourceImagePath = selection[0].path;
             editingImage = await loadImage(sourceImagePath);
 
@@ -449,6 +450,7 @@ export async function importAndScanImage(document?: OCRDocument) {
     } catch (error) {
         showError(error);
     } finally {
+        hideLoading();
         recycleImages(editingImage);
     }
 }

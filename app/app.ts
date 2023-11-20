@@ -1,29 +1,29 @@
+import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import { ImageViewTraceCategory, initialize } from '@nativescript-community/ui-image';
+import { initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
-import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { AbsoluteLayout, Application } from '@nativescript/core';
+import { Application, Trace } from '@nativescript/core';
+import { CropView } from 'plugin-nativeprocessor/CropView';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import { CropView } from 'plugin-nativeprocessor/CropView';
+import { get } from 'svelte/store';
 import { NestedScrollView } from '~/NestedScrollView';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
 import { colors } from '~/variables';
-import { showError } from './utils/error';
+import { ocrService } from './services/ocr';
 import { syncService } from './services/sync';
-import { OCRService, ocrService } from './services/ocr';
-import { Trace } from '@nativescript/core';
-import { get } from 'svelte/store';
+import { showError } from './utils/error';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -75,15 +75,15 @@ try {
     registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
     // registerNativeViewElement('settingLabelIcon', () => require('./SettingLabelIcon.svelte').default);
     registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
+    registerNativeViewElement('lottie', () => require('@nativescript-community/ui-lottie').LottieView);
 
     PagerElement.register();
     CollectionViewElement.register();
     startSentry();
     initialize();
 
-    // import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
     // Trace.addCategories(Trace.categories.NativeLifecycle);
-    // Trace.addCategories(CollectionViewTraceCategory)
+    // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
     // Trace.enable();
 
@@ -145,7 +145,6 @@ try {
     } else {
         Comp = await import('~/components/DocumentsList.svelte');
     }
-    console.log('test')
     svelteNative(Comp.default, {});
 } catch (error) {
     console.error(error, error.stack);

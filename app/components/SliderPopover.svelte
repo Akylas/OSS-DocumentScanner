@@ -3,13 +3,15 @@
 </script>
 
 <script lang="ts">
+    // technique for only specific properties to get updated on store change
+    $: ({ colorSurfaceContainer } = $colors);
     export let icon: string = null;
     export let title: string = null;
     export let min = 0;
     export let max = 1;
     export let step = 0.01;
     export let value = 0;
-    export let backgroundColor = $colors.colorSurfaceContainer;
+    export let backgroundColor = colorSurfaceContainer;
     export let onChange = null;
     export let formatter = (value) => value + '';
 

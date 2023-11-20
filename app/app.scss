@@ -4,21 +4,23 @@
 .ns-root {
 
     --colorPrimary: #51AE5B;
-    --colorPrimaryContainer: #51AE5B;
     --colorOnPrimary: #ffffff;
+    --colorPrimaryContainer: #51AE5B;
     --colorOnPrimaryContainer: #ffffff;
     --colorSecondary: #5492e7;
     --colorOnSecondary: #C2C9BD;
     --colorSecondaryContainer: #D5E8D0;
+    --colorOnSecondaryContainer: #D5E8D0;
     --colorTertiary: #5492e7;
     --colorOnTertiary: #C2C9BD;
     --colorTertiaryContainer: #D5E8D0;
+    --colorOnTertiaryContainer: #D5E8D0;
     --colorBackground: #FCFDF7;
     --colorOnBackground: #1A1C19;
     --colorError: #BA1A1A;
     --colorOnError: #FFFFFF;
     --colorOutline: #8C9388;
-    --colorOutlineVariant: #8C9388;
+    --colorOutlineVariant: #C2C9BD;
     --colorOnSurface: black;
     --colorOnSurfaceDisabled: #00000055;
     --colorOnSurfaceVariant: #C2C9BD;
@@ -42,8 +44,15 @@
     font-family: $mdiFontFamily;
 }
 
-mdprogress {
-    color: var(--colorPrimary);
+// mdprogress {
+//     color: var(--colorPrimary);
+// }
+
+checkbox {
+    color: var(--colorOnSurface);
+    fill-color: var(--colorPrimary);
+    on-check-color: var(--colorOnPrimary);
+    on-tint-color: var(--colorPrimary);
 }
 
 label,
@@ -98,6 +107,7 @@ page {
 
 .actionBarTitle {
     font-size: 22;
+    max-font-size: 22;
     font-weight: 400;
     padding: 0 16 0 16;
     color: var(--colorOnSurface);
@@ -115,8 +125,8 @@ page {
     background-color: transparent;
 
     &:disabled {
-        color: var(--colorOnSurfaceDisabled);
-        ripple-color: var(--colorOnSurfaceDisabled);
+        color: var(--colorOutlineVariant);
+        ripple-color: var(--colorOutlineVariant);
     }
 
     color: var(--colorOnSurface);
@@ -140,8 +150,8 @@ page {
 .fab {
     @extend .mdi;
     background-color: var(--colorPrimaryContainer);
+    ripple-color: var(--colorPrimaryContainer);
     color: var(--colorOnPrimaryContainer);
-    ripple-color: var(--colorOnPrimaryContainer);
     shape: medium;
     elevation: 2;
     font-size: 24;
@@ -155,9 +165,9 @@ page {
 .small-fab {
     @extend .mdi;
     shape: medium;
-    background-color: var(--colorBackground);
-    color: var(--colorPrimary);
-    ripple-color: var(--colorPrimary);
+    background-color: var(--colorSecondaryContainer);
+    ripple-color: var(--colorSecondaryContainer);
+    color: var(--colorOnSecondaryContainer);
     elevation: 2;
     font-size: 24;
     padding: 0;

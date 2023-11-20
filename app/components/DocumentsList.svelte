@@ -1,7 +1,8 @@
 <script lang="ts">
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { Application, ApplicationSettings, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
+    import { LottieView } from '@nativescript-community/ui-lottie';
+    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -27,6 +28,11 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { fade } from '~/utils/svelte/ui';
+    import PageIndicator from './PageIndicator.svelte';
+    import { filesize } from 'filesize';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { log } from 'console';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 100;
@@ -36,8 +42,11 @@
         selected: boolean;
     }
     let documents: ObservableArray<Item> = null;
+    let nbDocuments: number = 0;
+    let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let lottieView: NativeViewElementNode<LottieView>;
 
     let syncEnabled = syncService.enabled;
     // let items: ObservableArray<{
@@ -64,17 +73,25 @@
                     selected: false
                 }))
             );
+            updateNoDocument();
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
-            // console.log('getImageSource', 'done');
         } catch (error) {
             console.error(error);
         }
+    }
+
+    function updateNoDocument() {
+        nbDocuments = documents.length;
+        showNoDocument = nbDocuments === 0;
+        console.log('updateNoDocument', showNoDocument);
     }
     function onDocumentAdded(event: EventData & { doc }) {
         documents.unshift({
             doc: event.doc,
             selected: false
         } as Item);
+        updateNoDocument();
+        DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
     function onDocumentUpdated(event: EventData & { doc }) {
         let index = -1;
@@ -96,6 +113,7 @@
                 nbSelected -= 1;
             }
         }
+        updateNoDocument();
     }
     function getImageView(index: number) {
         return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
@@ -125,6 +143,9 @@
         syncRunning = event.state === 'running';
         DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
+    // technique for only specific properties to get updated on store change
+    $: ({ colorSurfaceContainerHigh, colorSurfaceContainerLow, colorOnSecondary, colorSurfaceContainer, colorOnSurfaceVariant, colorOutline, colorSurface, colorPrimaryContainer } = $colors);
+
     onMount(() => {
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -206,7 +227,7 @@
             if (!doc) {
                 return;
             }
-            // await timeout(10);
+            await timeout(10);
             const component = (await import('~/components/PDFEdit.svelte')).default;
             navigate({
                 page: component,
@@ -354,7 +375,7 @@
                 props: {
                     width: 200,
                     fontSize: 16,
-                    backgroundColor: $colors.colorSurfaceContainer,
+                    backgroundColor: colorSurfaceContainer,
                     iconFontSize: 24,
                     showBorders: false,
                     rowHeight: 48,
@@ -409,37 +430,88 @@
             showError(error);
         }
     }
+
+    // function setLottieColor(colorStr) {
+    //     if (!colorStr) {
+    //         return;
+    //     }
+    //     const color = new Color(colorStr);
+    //     // const nativeKeyPath: any[] = Array.create(java.lang.String, 2);
+    //     // nativeKeyPath[0] = 'trans';
+    //     // nativeKeyPath[1] = '*';
+    //     // const result = lottieView.nativeView.resolveKeyPath(new com.airbnb.lottie.model.KeyPath(nativeKeyPath));
+    //     // console.log('resolveKeyPath', result);
+    //     // lottieView.setColorValueDelegateForKeyPath(color, ['Rectangle','Rectangle', 'Fill 1']);
+    //     // lottieView.setColor(color, ['full', '**']);
+    //     // lottieView.setColorValueDelegateForKeyPath(color, ['full', 'Rectangle 3']);
+    //     // lottieView.setColor(color, ['bottom-grad', '**']);
+    //     // lottieView.setColor(color, ['trans', 'Rectangle', 'Rectangle', 'Fill 1']);
+    //     // lottieView.setColor(color, ['full', 'Rectangle 3', '**']);
+    //     lottieView?.nativeView?.setColor(color, ['**']);
+    // }
+
+    // $: setLottieColor(colorPrimaryContainer);
+
+    // function onLottieLoaded({ object: lottieView }: { object: LottieView }) {
+    //     try {
+    //         setLottieColor(colorPrimaryContainer);
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
+    function getSize(item: Item) {
+        return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
+    }
+    function refreshCollectionView() {
+        collectionView?.nativeView?.refresh();
+    }
+    onThemeChanged(refreshCollectionView);
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} colWidth="50%" items={documents} row={1} rowHeight={itemHeight}>
+        <collectionView bind:this={collectionView} id="edit" items={documents} row={1} rowHeight={150}>
             <Template let:item>
                 <!-- TODO: make this a canvas -->
                 <gridlayout
-                    backgroundColor={$colors.colorSurfaceContainer}
-                    borderColor={$colors.colorOutline}
+                    backgroundColor={colorSurfaceContainerHigh}
                     borderRadius={12}
-                    borderWidth={1}
-                    margin={8}
-                    rippleColor={$colors.colorSurface}
-                    rows="*,100"
+                    columns="auto,*"
+                    margin="8 16 8 16"
+                    padding={10}
+                    rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
-                    <RotableImageView id="imageView" borderRadius={12} item={item.doc.pages[0]} sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`} stretch="aspectFill" />
-                    <canvaslabel height="100%" padding="16" row={1}>
-                        <cspan fontSize={14} fontWeight="bold" text={item.doc.name} />
-                        <cspan color={$colors.colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} />
-                        <cspan color={$colors.colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} />
+                    <RotableImageView
+                        id="imageView"
+                        borderRadius={12}
+                        height={114}
+                        item={item.doc.pages[0]}
+                        sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
+                        stretch="aspectFill"
+                        width={114} />
+                    <canvaslabel col={1} paddingLeft={16}>
+                        <cgroup>
+                            <cspan fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
+                            <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
+                        </cgroup>
+
+                        <cspan color={colorOnSurfaceVariant} fontSize={14} paddingBottom={0} text={getSize(item)} verticalAlignment="bottom" />
                     </canvaslabel>
-                    <SelectedIndicator rowSpan={2} selected={item.selected} />
+                    <SelectedIndicator selected={item.selected} />
                     <SyncIndicator rowSpan={2} selected={item.doc._synced === 1} visible={syncEnabled} />
+                    <PageIndicator col={1} horizontalAlignment="right" text={item.doc.pages.length} />
                 </gridlayout>
             </Template>
         </collectionView>
-        <label fontSize={17} row={1} text={lc('no_document_yet')} textAlignment="center" verticalAlignment="middle" visibility={documents?.length ? 'hidden' : 'visible'} />
+        {#if showNoDocument}
+            <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
+                <lottie bind:this={lottieView} autoPlay={true} keyPathColors={{ '**': colorPrimaryContainer }} loop={true} marginBottom={20} src="~/assets/lottie/scanning.lottie" width="80%" />
+                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" verticalAlignment="bottom" width="80%" />
+            </gridlayout>
+        {/if}
         {#if showActionButton}
             <stacklayout horizontalAlignment="right" row={1} verticalAlignment="bottom">
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
@@ -459,8 +531,10 @@
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
         </CActionBar>
         <!-- {#if nbSelected > 0} -->
-        <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} visibility={nbSelected > 0 ? 'visible' : 'collapsed'}>
-            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
-        </CActionBar>
+        {#if nbSelected > 0}
+            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)}>
+                <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+            </CActionBar>
+        {/if}
     </gridlayout>
 </page>

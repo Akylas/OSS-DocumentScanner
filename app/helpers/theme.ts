@@ -4,9 +4,9 @@ import { getBoolean, getString, setString } from '@nativescript/core/application
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
-import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
+import { colors, createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
 import { lc } from '~/helpers/locale';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { SDK_VERSION } from '@nativescript/core/utils';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black';
@@ -28,18 +28,21 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
             theme = 'black';
         }
         if (__ANDROID__) {
-            const activity = Application.android.startActivity;
-            // we need to applyDayNight to update theme thus colors as we dont restart activity (configChanges:uiMode)
-            // but then dynamic colors are lost so let s call DynamicColors.applyIfAvailable
-            activity.getDelegate().applyDayNight();
-            com.google.android.material.color.DynamicColors.applyIfAvailable(activity);
+            // const activity = Application.android.startActivity;
+            com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity);
+            // try {
+            //     activity.getDelegate().applyDayNight();
+            // } catch (error) {
+            //     console.error(error, error.stack);
+            // }
+            // com.google.android.material.color.DynamicColors.applyIfAvailable(activity);
         }
         // no need to do it on android as we re create the activity (if configChanges:uiMode is missing)
         // if (__IOS__) {
         updateThemeColors(theme);
         // }
 
-        globalObservable.notify({ eventName: 'theme', data: theme });
+        globalObservable.notify({ eventName: 'theme', data: { theme, colors: get(colors) } });
     }
 });
 
@@ -179,7 +182,7 @@ export function start() {
             const realTheme = getRealTheme(theme);
             currentTheme.set(realTheme);
             updateThemeColors(realTheme);
-            globalObservable.notify({ eventName: 'theme', data: realTheme });
+            globalObservable.notify({ eventName: 'theme', data: { theme: realTheme, colors: get(colors) } });
         }
     });
 
@@ -200,7 +203,9 @@ export function start() {
         const realTheme = getRealTheme(newTheme);
         currentTheme.set(realTheme);
         updateThemeColors(realTheme);
-        globalObservable.notify({ eventName: 'theme', data: realTheme });
+        setTimeout(() => {
+            globalObservable.notify({ eventName: 'theme', data: { theme: realTheme, colors: get(colors) } });
+        }, 100);
         // if (__ANDROID__) {
         //     // we recreate the activity to get the change
         //     const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
@@ -229,7 +234,8 @@ export function start() {
                 getRealThemeAndUpdateColors();
             }
         });
-        updateThemeColors(realTheme);
+        // no need to update colors now will be done later
+        // updateThemeColors(realTheme);
     } else {
         if (Application.ios && Application.ios.window) {
             applyTheme(theme);

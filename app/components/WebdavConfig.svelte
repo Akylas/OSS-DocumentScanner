@@ -4,6 +4,8 @@
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
+    // technique for only specific properties to get updated on store change
+    $: ({ colorError, colorSecondary, colorOnError } = $colors);
 
     let remoteURL = syncService.remoteURL;
     let username = syncService.username;
@@ -95,8 +97,8 @@
             <mdbutton text={lc('save')} verticalAlignment="middle" on:tap={save} />
             <gridlayout col={1} columns="auto" horizontalAlignment="right" rows="auto" verticalAlignment="middle">
                 <mdbutton
-                    backgroundColor={testConnectionSuccess < 0 ? $colors.colorError : testConnectionSuccess > 0 ? 'lightgreen' : $colors.colorSecondary}
-                    color={$colors.colorOnError}
+                    backgroundColor={testConnectionSuccess < 0 ? colorError : testConnectionSuccess > 0 ? 'lightgreen' : colorSecondary}
+                    color={colorOnError}
                     text={testConnectionSuccess < 0 ? lc('failed') : testConnectionSuccess > 0 ? lc('successful') : lc('test')}
                     verticalAlignment="middle"
                     visibility={testing ? 'hidden' : 'visible'}

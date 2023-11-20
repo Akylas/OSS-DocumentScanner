@@ -40,6 +40,7 @@
   "email_required": "a valid email is required",
   "enabled": "eabled",
   "english": "english",
+  "enhance": "enhance",
   "error": "error",
   "espagnol": "spanish",
   "expires": "expires",
@@ -106,6 +107,7 @@
   "my_location": "my location",
   "name": "name",
   "nb_pages": "%1$s pages",
+  "no_document_yet": "add a document using the camera or import one from an image",
   "no_location_desc": "You haven't chosen a location yet. \nYou can search or use your GPS location",
   "no_location_set": "no location set",
   "no_network": "no network",
@@ -191,5 +193,6 @@
   "webdav_config": "webdav configuration",
   "webdav_sync": "webdav documents sync",
   "webdav_sync_desc": "enable webdav to sync your documents (backup)",
+  "whitepaper": "whitepaper",
   "wind": "wind"
 }

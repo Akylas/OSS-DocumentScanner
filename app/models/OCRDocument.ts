@@ -1,5 +1,6 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
+import dayjs from 'dayjs';
 import { OCRData, cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType, timeout } from '~/utils/ui';
@@ -61,7 +62,6 @@ export class OCRDocument extends Observable implements Document {
         const pageFileData = docData.getFolder(pageId);
         const attributes = { ...otherPageData, id: pageId, document_id: docId } as OCRPage;
         attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
-        DEV_LOG && console.log('add page', attributes.imagePath, imagePath, sourceImagePath, image, otherPageData);
         if (imagePath) {
             const file = File.fromPath(imagePath);
             await file.copy(attributes.imagePath);
@@ -70,6 +70,8 @@ export class OCRDocument extends Observable implements Document {
         } else {
             return;
         }
+        attributes.size = File.fromPath(attributes.imagePath).size;
+        DEV_LOG && console.log('add1 page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
         if (sourceImagePath) {
             let baseName = sourceImagePath
                 .split('/')
@@ -111,7 +113,7 @@ export class OCRDocument extends Observable implements Document {
             const pages = [];
             const pageStartId = Date.now();
             for (let index = 0; index < length; index++) {
-                const { id, imagePath, sourceImagePath, image, ...pageData } = pagesData[index];
+                const { id, imagePath, sourceImage, sourceImagePath, image, ...pageData } = pagesData[index];
                 const pageId = id || pageStartId + '_' + index;
                 // const page = new OCRPage(pageId, docId);
                 const pageFileData = docData.getFolder(pageId);
@@ -127,7 +129,23 @@ export class OCRDocument extends Observable implements Document {
                 } else {
                     continue;
                 }
-                if (sourceImagePath) {
+                attributes.size = File.fromPath(attributes.imagePath).size;
+                if (sourceImage) {
+                    // let baseName = sourceImagePath
+                    //     .split('/')
+                    //     .slice(-1)[0]
+                    //     .replace(/%[a-zA-Z\d]{2}/, '');
+                    // if (!baseName.endsWith(IMG_FORMAT)) {
+                        const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
+                    // }
+                    const actualSourceImagePath = path.join(pageFileData.path, baseName);
+
+                    const imageSource = new ImageSource(sourceImage);
+                    await imageSource.saveToFileAsync(actualSourceImagePath, IMG_FORMAT, IMG_COMPRESS);
+                    // const file = File.fromPath(sourceImagePath);
+                    // await file.copy(actualSourceImagePath);
+                    attributes.sourceImagePath = actualSourceImagePath;
+                } else if (sourceImagePath) {
                     let baseName = sourceImagePath
                         .split('/')
                         .slice(-1)[0]
@@ -276,7 +294,6 @@ export class OCRDocument extends Observable implements Document {
         }
         const images = cropDocument(editingImage, [page.crop], transforms);
 
-        console.log('updatePageTransforms', page.crop, transforms, images[0]);
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         if (__IOS__) {
@@ -289,7 +306,8 @@ export class OCRDocument extends Observable implements Document {
         await this.updatePage(
             pageIndex,
             {
-                transforms
+                transforms,
+                size: File.fromPath(croppedImagePath).size
             },
             true
         );
@@ -313,6 +331,7 @@ export interface Page {
     scale: number;
     width: number;
     height: number;
+    size: number;
     sourceImagePath: string;
     imagePath: string;
 
@@ -322,6 +341,7 @@ export interface Page {
 export interface PageData extends ImageConfig, Partial<Page> {
     bitmap?;
     image?;
+    sourceImage?;
 }
 
 export class OCRPage extends Observable implements Page {
@@ -345,6 +365,7 @@ export class OCRPage extends Observable implements Page {
     pageIndex: number;
     width: number;
     height: number;
+    size: number;
     sourceImagePath: string;
     imagePath: string;
 

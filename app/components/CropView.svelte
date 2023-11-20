@@ -3,6 +3,9 @@
     import { ImageSource, TouchGestureEventData, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { colors } from '~/variables';
+    let { colorPrimary } = $colors;
+    // technique for only specific properties to get updated on store change
+    $: ({ colorPrimary } = $colors);
 
     const padding = 20;
     let canvasView: NativeViewElementNode<CanvasView>;
@@ -15,7 +18,7 @@
     let closestQuadIndex = -1;
     let closestCornerQuadIndex = -1;
     const cornersPaint = new Paint();
-    cornersPaint.color = $colors.colorPrimaryContainer;
+    cornersPaint.color = colorPrimary;
     cornersPaint.setStrokeWidth(14);
     cornersPaint.style = Style.STROKE;
     const shaderPaint = new Paint();

@@ -32,6 +32,9 @@
     let filteredOptions: OptionType[] = null;
     let filter: string = null;
 
+    // technique for only specific properties to get updated on store change
+    $: ({ colorOutlineVariant, colorOnSurface, colorOutline } = $colors);
+
     function updateFiltered(filter) {
         if (filter) {
             filteredOptions = options.filter((d) => d.name.indexOf(filter) !== -1);
@@ -79,7 +82,7 @@
 <gesturerootview columns={containerColumns} rows="auto">
     <gridlayout {backgroundColor} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
         {#if showFilter}
-            <gridlayout borderColor={$colors.colorOutline} margin="10 10 0 10">
+            <gridlayout borderColor={colorOutline} margin="10 10 0 10">
                 <textfield
                     autocapitalizationType="none"
                     backgroundColor="transparent"
@@ -110,11 +113,11 @@
                 <checkbox checked={item.value} text={item.name} on:checkedChange={(e) => onCheckBox(item, e.value)} />
             </Template>
             <Template let:item>
-                <canvaslabel color={item.color || $colors.colorOnSurface} paddingLeft={16} paddingRight={16} rippleColor={item.color || $colors.colorOnSurface} on:tap={(event) => onTap(item, event)}>
+                <canvaslabel color={item.color || colorOnSurface} paddingLeft={16} paddingRight={16} rippleColor={item.color || colorOnSurface} on:tap={(event) => onTap(item, event)}>
                     <cspan fontFamily={$fonts.mdi} fontSize={iconFontSize} text={item.icon} textAlignment="left" verticalAlignment="middle" visibility={item.icon ? 'visible' : 'hidden'} />
                     <cspan {fontSize} {fontWeight} paddingLeft={item.icon ? 48 : 0} text={item.name} textAlignment="left" verticalAlignment="middle" />
                     {#if showBorders}
-                        <line color={$colors.colorOutlineVariant} height={1} startX={20} startY={0} stopX="100%" stopY={0} strokeWidth={1} verticalAlignment="bottom" />
+                        <line color={colorOutlineVariant} height={1} startX={20} startY={0} stopX="100%" stopY={0} strokeWidth={1} verticalAlignment="bottom" />
                     {/if}
                 </canvaslabel>
             </Template>
