@@ -12,7 +12,7 @@ export async function lock(context: WebDAVClientContext, pathStr: string, option
     const { refreshToken, timeout = DEFAULT_TIMEOUT } = options;
     const headers: Headers = {
         Accept: 'text/plain,application/xml',
-        Timeout: timeout
+        Timeout: timeout + ''
     };
     if (refreshToken) {
         headers.If = refreshToken;

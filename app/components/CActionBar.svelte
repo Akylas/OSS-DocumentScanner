@@ -1,12 +1,10 @@
 <script lang="ts">
-    import { Color, CoreTypes } from '@nativescript/core';
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from 'svelte-native';
+    import { fade } from '~/utils/svelte/ui';
     import { showError } from '~/utils/error';
-    import { asSvelteTransition } from 'svelte-native/transitions';
     export let title: string;
-    // export let showLogo = false;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;
     export let forceCanGoBack: boolean = false;
@@ -44,17 +42,10 @@
     }
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
-
-    function fade(node, { delay = 0, duration = 400, easing = CoreTypes.AnimationCurve.easeOut }) {
-        const opacity = node.nativeView.opacity;
-        return asSvelteTransition(node, delay, duration, easing, (t) => ({
-            opacity: t * opacity
-        }));
-    }
 </script>
 
-<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 200 }}>
-    <label class={'actionBarTitle ' + clazz} col={1} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} />
+<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 300 }}>
+    <label class={'actionBarTitle ' + clazz} col={1} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} {...$$restProps?.titleProps} />
     <!-- {#if showLogo && !title}
         <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
     {/if} -->

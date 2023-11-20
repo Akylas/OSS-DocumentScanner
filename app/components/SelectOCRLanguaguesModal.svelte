@@ -5,15 +5,16 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { getLocaleDisplayName, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
-    import { colors, fonts, widgetBackgroundColor } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import SearchCollectionView from './SearchCollectionView.svelte';
     import { ocrService } from '~/services/ocr';
     import MiniSearch from '~/utils/minisearch';
     import { Template } from 'svelte-native/components';
+    // technique for only specific properties to get updated on store change
+    $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 
     let textField: NativeViewElementNode<TextField>;
     let collectionView: SearchCollectionView;
-    let searchAsTypeTimer: NodeJS.Timeout;
     // let currentSearchText: string;
     export let width = 300;
     export let height = 50;
@@ -115,7 +116,7 @@
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
 <!-- <gesturerootview columns="auto" rows="auto"> -->
 <gesturerootview columns="auto">
-    <gridlayout backgroundColor={$widgetBackgroundColor} borderRadius={8} {elevation} margin={margin || elevation + 2} rows="auto,340" {width}>
+    <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} margin={margin || elevation + 2} rows="auto,340" {width}>
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
         </CActionBar> -->
@@ -133,7 +134,7 @@
             on:loaded={focus} />
         <collectionview bind:this={collectionView} {items} row={1} rowHeight={56}>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" padding={16} rippleColor={$colors.colorPrimary} on:tap={() => close(item)}>
+                <gridlayout columns="auto,*,auto" padding={16} rippleColor={colorPrimary} on:tap={() => close(item)}>
                     <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapsed'} />
                     <label col={1} fontSize={17} text={item.name} verticalTextAlignment="middle" />
                     <label col={2} fontFamily={$fonts.mdi} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapsed'} />

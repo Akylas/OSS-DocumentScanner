@@ -19,12 +19,6 @@
     let topView: NativeViewElementNode<View>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let rotableImageView: RotableImageView;
-    // const cornersPaint = new Paint();
-    // cornersPaint.color = $colors.colorPrimaryContainer;
-    // cornersPaint.setStrokeWidth(14);
-    // cornersPaint.style = Style.STROKE;
-    // const shaderPaint = new Paint();
-    // shaderPaint.style = Style.FILL;
 
     const dispatch = createEventDispatcher<{
         finished: null;

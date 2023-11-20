@@ -12,7 +12,10 @@
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { colors, fonts, textColor } from '~/variables';
+    import { colors, fonts } from '~/variables';
+
+    // technique for only specific properties to get updated on store change
+    $: ({ colorPrimary, colorOnSurface, colorOnPrimary, colorOutline } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
     let downloaded = ocrService.downloadedLanguages;
@@ -67,13 +70,13 @@
 </script>
 
 <gesturerootview rows="auto">
-    <stacklayout padding={10} rows="auto,auto">
-        <label fontSize={18} fontWeight="bold" marginBottom={10} text={lc('quality')} />
+    <stacklayout padding={16} rows="auto,auto">
+        <label color={colorPrimary} fontSize={20} fontWeight="bold" marginBottom={16} text={lc('quality')} />
         <stacklayout orientation="horizontal">
             {#each qualities as quality}
                 <gridlayout
-                    backgroundColor={dataType === quality ? $colors.colorPrimary : undefined}
-                    borderColor={$textColor}
+                    backgroundColor={dataType === quality ? colorPrimary : undefined}
+                    borderColor={colorOutline}
                     borderRadius={8}
                     borderWidth={dataType === quality ? 0 : 1}
                     columns="auto,auto"
@@ -81,20 +84,34 @@
                     margin={4}
                     paddingLeft={dataType === quality ? 8 : 12}
                     paddingRight={12}
+                    rippleColor={colorPrimary}
                     on:tap={() => setDataType(quality)}>
-                    <label fontFamily={$fonts.mdi} fontSize={16} marginRight={4} text="mdi-check" verticalAlignment="middle" visibility={dataType === quality ? 'visible' : 'collapse'} />
-                    <label col={1} fontSize={14} fontWeight={dataType === quality ? 'bold' : 'normal'} text={lc(quality)} verticalAlignment="middle" />
+                    <label
+                        color={dataType === quality ? colorOnPrimary : colorOnSurface}
+                        fontFamily={$fonts.mdi}
+                        fontSize={16}
+                        marginRight={4}
+                        text="mdi-check"
+                        verticalAlignment="middle"
+                        visibility={dataType === quality ? 'visible' : 'collapse'} />
+                    <label
+                        col={1}
+                        color={dataType === quality ? colorOnPrimary : colorOnSurface}
+                        fontSize={14}
+                        fontWeight={dataType === quality ? 'bold' : 'normal'}
+                        text={lc(quality)}
+                        verticalAlignment="middle" />
                 </gridlayout>
             {/each}
         </stacklayout>
-        <gridlayout columns="*,auto" marginBottom={10} marginTop={15} rows="auto">
-            <label fontSize={18} fontWeight="bold" text={lc('languages')} verticalAlignment="middle" />
+        <gridlayout columns="*,auto" marginBottom={16} marginTop={15} rows="auto">
+            <label color={colorPrimary} fontSize={20} fontWeight="bold" text={lc('languages')} verticalAlignment="middle" />
             <mdbutton class="icon-btn" col={1} padding={0} text="mdi-plus" variant="text" on:tap={addLanguages} />
         </gridlayout>
         <wraplayout row={1}>
             {#each languages as language}
                 <gridlayout
-                    borderColor={$textColor}
+                    borderColor={colorOutline}
                     borderRadius={8}
                     borderWidth={1}
                     columns="auto,auto,auto"
@@ -113,7 +130,7 @@
                     <label col={1} fontSize={14} paddingBottom={2} text={ocrService.localizedLanguage(language)} verticalAlignment="middle" />
                     <mdbutton
                         col={2}
-                        color={$textColor}
+                        color={colorOnSurface}
                         fontFamily={$fonts.mdi}
                         fontSize={16}
                         marginLeft={4}

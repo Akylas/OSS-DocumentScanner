@@ -26,6 +26,9 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
 
+    // technique for only specific properties to get updated on store change
+    $: ({ colorPrimary } = $colors);
+
     const touchAnimationShrink: TouchAnimationOptions = {
         down: {
             scale: { x: 0.9, y: 0.9 },
@@ -70,7 +73,6 @@
 
     const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
-
 
     // interface Option {
     //     icon: string;
@@ -163,15 +165,16 @@
     // let quads;
     let currentQuad;
 
-    async function processAndAddImage(imagePath) {
-        if (!File.exists(imagePath)) {
-            console.error('cant find image', imagePath);
-            return;
-        }
+    async function processAndAddImage(image) {
+        // if (!File.exists(imagePath)) {
+        //     console.error('cant find image', imagePath);
+        //     return;
+        // }
         try {
             stopPreview();
             showLoading(l('computing'));
-            editingImage = await loadImage(imagePath);
+            // editingImage = await loadImage(imagePath);
+            editingImage = new ImageSource(image);
             let quads = getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
@@ -194,14 +197,14 @@
                 });
             }
             if (quads?.length) {
-                await addCurrentImageToDocument(imagePath, quads);
+                await addCurrentImageToDocument(image, quads);
             }
         } catch (err) {
             console.error(err, err.stack);
             showError(err);
-            startPreview();
         } finally {
             takingPicture = false;
+            startPreview();
             hideLoading();
         }
     }
@@ -217,13 +220,13 @@
             // const test = available[0];
             // console.log('max size', test.width, test.height);
             showLoading(l('capturing'));
-            const file: File = await cameraPreview.nativeView.takePicture({
-                // savePhotoToDisk: true,
+            const { image, info } = await cameraPreview.nativeView.takePicture({
+                savePhotoToDisk: false,
                 // pictureSize: { width: test.width, height: test.height },
-                captureMode: 0
+                captureMode: 1
                 // captureMode: batchMode ? 1 : 0
             });
-            await processAndAddImage(file.path);
+            await processAndAddImage(image);
             if (!batchMode) {
                 await saveCurrentDocument();
             }
@@ -267,6 +270,10 @@
         // switchTorch();
     });
     onDestroy(() => {
+        clearImages();
+        document = null;
+        croppedImageRotation = 0;
+        nbPages = 0;
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -339,11 +346,6 @@
                 if (!startOnCam) {
                     closeModal(document);
                 }
-                clearImages();
-                document = null;
-                croppedImageRotation = 0;
-                nbPages = 0;
-                pages = new ObservableArray([]);
             }
         } catch (error) {
             showError(error);
@@ -375,7 +377,7 @@
         croppedImagePath = null;
     }
 
-    async function addCurrentImageToDocument(sourceImagePath, quads) {
+    async function addCurrentImageToDocument(sourceImage, quads) {
         try {
             if (!editingImage) {
                 return;
@@ -391,12 +393,14 @@
                     crop: quads[index],
                     colorType,
                     transforms: strTransforms,
-                    sourceImagePath,
+                    sourceImage,
                     width: __ANDROID__ ? image.getWidth() : image.size.width,
                     height: __ANDROID__ ? image.getHeight() : image.size.height,
                     rotation: editingImage.rotationAngle
                 });
             }
+
+            //TODO:
             if (!document) {
                 document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
             } else {
@@ -554,7 +558,7 @@
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
         <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
-        <cropview bind:this={cropView} colors={[$colors.colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
+        <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
             <mdbutton class="actionBarButton" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
@@ -566,7 +570,7 @@
             <gridlayout>
                 <stacklayout horizontalAlignment="left" verticalAlignment="center">
                     <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
-                    <mdbutton class="icon-btn" color={torchEnabled ? $colors.colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
+                    <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
                     <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
                 </stacklayout>
                 <mdbutton
@@ -614,7 +618,7 @@
                 row={1}
                 verticalAlignment="bottom"
                 width={90}>
-                <gridlayout backgroundColor={$colors.colorPrimary} borderRadius="50%" height={74} touchAnimation={touchAnimationShrink} width={74} on:tap={takePicture} />
+                <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={74} touchAnimation={touchAnimationShrink} width={74} on:tap={takePicture} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
             <!-- <mdbutton

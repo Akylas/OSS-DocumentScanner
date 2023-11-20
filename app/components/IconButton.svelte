@@ -6,6 +6,9 @@
 </script>
 
 <script lang="ts">
+    // technique for only specific properties to get updated on store change
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+
     export let isVisible = true;
     export let isHidden = false;
     export let white = false;
@@ -15,7 +18,7 @@
     export let isSelected = false;
     export let text = null;
     export let fontFamily = $fonts.mdi;
-    export let selectedColor = white ? 'white' : $colors.colorPrimary;
+    export let selectedColor = white ? 'white' : colorPrimary;
     export let color = null;
     export let onLongPress: Function = null;
     export let fontSize = 0;
@@ -32,7 +35,7 @@
 
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
-    $: actualColor = color || (!isEnabled || gray ? $colors.colorOnSurfaceVariant : $colors.colorOnSurface);
+    $: actualColor = color || (!isEnabled || gray ? colorOnSurfaceVariant : colorOnSurface);
     $: actualLongPress =
         onLongPress || tooltip
             ? (event) => {

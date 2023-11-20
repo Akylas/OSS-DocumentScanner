@@ -286,7 +286,7 @@ module.exports = (env, params = {}) => {
                         }
                     }
                 ])
-        },
+        }
         // {
         //     test: /\.module\.scss$/,
         //     use: [

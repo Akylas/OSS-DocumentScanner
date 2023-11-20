@@ -17,6 +17,7 @@
     import CropView from '~/components/CropView.svelte';
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
     import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { ocrService } from '~/services/ocr';
@@ -26,6 +27,9 @@
     import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
+
+    // technique for only specific properties to get updated on store change
+    $: ({ colorPrimary } = $colors);
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -394,11 +398,15 @@
             showError(error);
         }
     }
+    function refreshPager() {
+        pager?.nativeView?.refresh();
+    }
+    onThemeChanged(refreshPager);
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,auto">
-        <CActionBar title={document.name}>
+    <gridlayout rows="auto,*,auto,auto,auto">
+        <CActionBar title={document.name} titleProps={{ autoFontSize: true }}>
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
@@ -410,11 +418,11 @@
                 </gridlayout>
             </Template>
         </pager>
-        <label fontSize={14} horizontalAlignment="left" padding={10} row={1} text={currentItemSubtitle} verticalAlignment="bottom" />
+        <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
         <mdbutton
             class="icon-btn"
             horizontalAlignment="right"
-            row={1}
+            row={2}
             text="mdi-share-variant"
             variant="text"
             verticalAlignment="bottom"
@@ -424,38 +432,22 @@
             class="icon-btn"
             horizontalAlignment="right"
             marginRight={40}
-            row={1}
+            row={2}
             text="mdi-format-textbox"
             variant="text"
             verticalAlignment="bottom"
             visibility={currentItemOCRData ? 'visible' : 'hidden'}
             on:tap={() => showCurrentOCRData()} />
 
-        <stacklayout orientation="horizontal" row={2}>
+        <stacklayout orientation="horizontal" row={3}>
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
-            <checkbox
-                checked={$enhanced}
-                fillColor={$colors.colorPrimary}
-                marginLeft={4}
-                onCheckColor="white"
-                onTintColor={$colors.colorPrimary}
-                text={lc('enhance')}
-                verticalAlignment="middle"
-                on:checkedChange={(e) => ($enhanced = e.value)} />
-            <checkbox
-                checked={$whitepaper}
-                fillColor={$colors.colorPrimary}
-                marginLeft={4}
-                onCheckColor="white"
-                onTintColor={$colors.colorPrimary}
-                text={lc('whitepaper')}
-                verticalAlignment="middle"
-                on:checkedChange={(e) => ($whitepaper = e.value)} />
+            <checkbox checked={$enhanced} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => ($enhanced = e.value)} />
+            <checkbox checked={$whitepaper} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => ($whitepaper = e.value)} />
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
-        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={3}>
+        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
                 <gridlayout id={item.text} padding={4} rows="*,25" on:tap={applyImageTransform(item)}>
                     <image
@@ -469,7 +461,7 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <gridlayout backgroundColor="black" row={1} rowSpan={3} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
+        <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
             <CropView {editingImage} bind:quadChanged bind:quads />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
         </gridlayout>

@@ -51,45 +51,44 @@ export function createUnregisterGlobalEventListener(eventName: string) {
 
 export const colors = writable({
     colorPrimary: '',
-    colorPrimaryContainer: '',
     colorOnPrimary: '',
+    colorPrimaryContainer: '',
     colorOnPrimaryContainer: '',
     colorSecondary: '',
-    colorSecondaryContainer: '',
     colorOnSecondary: '',
+    colorSecondaryContainer: '',
+    colorOnSecondaryContainer: '',
     colorTertiary: '',
-    colorTertiaryContainer: '',
     colorOnTertiary: '',
-    colorBackground: '',
-    colorOnBackground: '',
+    colorTertiaryContainer: '',
+    colorOnTertiaryContainer: '',
     colorError: '',
     colorOnError: '',
+    colorErrorContainer: '',
+    colorOnErrorContainer: '',
     colorOutline: '',
     colorOutlineVariant: '',
+    colorBackground: '',
+    colorOnBackground: '',
     colorSurface: '',
     colorOnSurface: '',
-    colorOnSurfaceInverse: '',
-    colorOnSurfaceDisabled: '',
     colorOnSurfaceVariant: '',
+    colorSurfaceInverse: '',
+    colorOnSurfaceInverse: '',
+    colorPrimaryInverse: '',
     colorSurfaceContainer: '',
+    colorSurfaceBright: '',
+    colorSurfaceDim: '',
+    colorSurfaceContainerLow: '',
+    colorSurfaceContainerLowest: '',
+    colorSurfaceContainerHigh: '',
+    colorSurfaceContainerHighest: '',
+    colorOnSurfaceDisabled: '',
     popupMenuBackground: ''
 });
 export const fonts = writable({
     mdi: ''
 });
-// export const colorPrimary = writable('');
-// export const colorOnPrimary = writable('');
-// export const colorSecondary = writable('');
-// export const colorSecondaryContainer = writable('');
-// export const colorBackground = writable('');
-// export const colorOnBackground = writable('');
-// export const colorOnError = writable('');
-
-// export const darkColor = writable(locals.darkColor);
-// export const textColorDark = locals.textColorDark;
-// export const textColorLight = locals.textColorLight;
-// export const backgroundColor = writable('');
-// export const mdiFontFamily: string = locals.mdiFontFamily;
 let innerStatusBarHeight = 20;
 export const statusBarHeight = writable(innerStatusBarHeight);
 export const actionBarButtonHeight = writable(0);
@@ -136,7 +135,7 @@ const onInitRootView = function () {
         // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
         Application.off('initRootView', onInitRootView);
         DEV_LOG && console.log('initRootView');
-        getRealThemeAndUpdateColors();
+        // getRealThemeAndUpdateColors();
     }, 0);
 };
 Application.on('initRootView', onInitRootView);
@@ -171,7 +170,8 @@ export function updateThemeColors(theme: string, force = false) {
             rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
         });
         currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
-        // console.log('colors', currentColors);
+        rootViewStyle?.setUnscopedCssVariable('--colorOnSurfaceDisabled', currentColors.colorOnSurfaceDisabled);
+        console.log('colors', currentColors.colorSurfaceContainerHigh, currentColors);
         colors.set(currentColors);
         rootView?._onCssStateChange();
     } else {
@@ -199,5 +199,4 @@ export function updateThemeColors(theme: string, force = false) {
         colors.set(currentColors);
         rootView?._onCssStateChange();
     }
-
 }

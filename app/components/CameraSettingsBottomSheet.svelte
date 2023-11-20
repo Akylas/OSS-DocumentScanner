@@ -10,6 +10,9 @@
     import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
     import { colors } from '~/variables';
 
+    // technique for only specific properties to get updated on store change
+    $: ({ colorPrimary } = $colors);
+
     export let transforms = [];
     export let colorType;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -39,31 +42,15 @@
         refreshCollectionView();
     }
     function getBackgroundColor(item) {
-        const result = colorType === item.colorType ? new Color($colors.colorPrimary).setAlpha(100).hex : undefined;
+        const result = colorType === item.colorType ? new Color(colorPrimary).setAlpha(100).hex : undefined;
         return result;
     }
 </script>
 
 <gesturerootview rows="auto,auto">
-    <stacklayout horizontalAlignment="right" orientation="horizontal" paddingRight="5">
-        <checkbox
-            checked={transforms.indexOf('enhance') !== -1}
-            fillColor={$colors.colorPrimary}
-            marginLeft={4}
-            onCheckColor="white"
-            onTintColor={$colors.colorPrimary}
-            text={lc('enhance')}
-            verticalAlignment="middle"
-            on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
-        <checkbox
-            checked={transforms.indexOf('whitepaper') !== -1}
-            fillColor={$colors.colorPrimary}
-            marginLeft={4}
-            onCheckColor="white"
-            onTintColor={$colors.colorPrimary}
-            text={lc('whitepaper')}
-            verticalAlignment="middle"
-            on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />
+    <stacklayout horizontalAlignment="right" orientation="horizontal" padding="16">
+        <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
+        <checkbox checked={transforms.indexOf('whitepaper') !== -1} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />
         <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
     </stacklayout>
     <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
