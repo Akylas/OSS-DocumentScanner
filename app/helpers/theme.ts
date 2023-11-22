@@ -141,7 +141,7 @@ function getSystemAppearance() {
     return Application.systemAppearance;
 }
 
-function getRealTheme(theme) {
+export function getRealTheme(theme) {
     DEV_LOG && console.log('getRealTheme', theme);
     if (theme === 'auto') {
         try {

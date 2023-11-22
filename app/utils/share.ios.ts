@@ -38,7 +38,7 @@ export async function share(content: Content, options: Options = {}) {
             if (error) {
                 reject(error);
             } else if (completed || activityType == null) {
-                resolve(kCFBooleanTrue);
+                resolve(true);
             }
         };
 

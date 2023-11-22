@@ -1,20 +1,19 @@
 <script lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
+    import { AWebView } from '@nativescript-community/ui-webview';
+    import { Page } from '@nativescript/core';
     import { OCRData } from 'plugin-nativeprocessor';
-    import CActionBar from './CActionBar.svelte';
-    import { ImageSource, Page, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { Canvas, CanvasView, ColorMatrixColorFilter, Matrix, Paint } from '@nativescript-community/ui-canvas';
-    import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
     import { showError } from '~/utils/error';
+    import CActionBar from './CActionBar.svelte';
 
     export let ocrData: OCRData;
     export let imagePath: string;
-    export let image: ImageSource;
-    export let rotation: number;
-    export let colorMatrix: number[];
-    export let imageWidth: number;
-    export let imageHeight: number;
+    // export let image: ImageSource;
+    // export let rotation: number;
+    // export let colorMatrix: number[];
+    // export let imageWidth: number;
+    // export let imageHeight: number;
     let webView: NativeViewElementNode<AWebView>;
 
     // console.log('ocrData', JSON.stringify(ocrData));
@@ -183,7 +182,7 @@
     // }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="black">
+<page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarStyle="dark">
     <gridlayout rows="auto,*">
         <!-- <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
             <absolutelayout
@@ -213,6 +212,7 @@
                 {/if}
             </absolutelayout>
         </absolutelayout> -->
+        <!-- svelte-ignore missing-declaration -->
         <awebview
             bind:this={webView}
             backgroundColor="black"
@@ -226,8 +226,8 @@
             on:loadFinished={onWebViewLoadFinished} />
 
         <textview backgroundColor="#000000cc" color="white" editable={false} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
-        <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
-            <mdbutton class="actionBarButton" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null}>
+            <mdbutton class="actionBarButton" color="white" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
         </CActionBar>
     </gridlayout>
 </page>

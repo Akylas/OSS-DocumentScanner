@@ -38,11 +38,11 @@
 
     export let document: OCRDocument;
     let collectionView: NativeViewElementNode<CollectionView>;
-    let items: ObservableArray<Item> = null;
+    // let items: ObservableArray<Item> = null;
 
     // $: {
     const pages = document.getObservablePages();
-    items = pages.map((page, index) => ({ selected: false, page, index })) as any as ObservableArray<Item>;
+    let items = pages.map((page, index) => ({ selected: false, page, index })) as any as ObservableArray<Item>;
     // pages.on('change', (event)=>{
     //     switch(event.action) {
     //         case ChangeType.Splice:
@@ -275,6 +275,7 @@
         items.setItem(index, { selected: current.selected, page, index: current.index });
         if (!!event.imageUpdated) {
             const imageView = getImageView(index);
+            DEV_LOG && console.log('updating view  image uri', imageView);
             imageView?.updateImageUri();
         }
     }
@@ -325,17 +326,22 @@
 
 <page id="pdfView" actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : document.name} titleProps={{ autoFontSize: true }}>
+        <CActionBar
+            forceCanGoBack={nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : null}
+            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
         </CActionBar>
 
         <collectionview
-        id="edit"
             bind:this={collectionView}
+            id="edit"
             colWidth="50%"
             {items}
             reorderEnabled={true}
+            autoReloadItemOnLayout={true}
             row={1}
             rowHeight={itemHeight}
             on:itemReordered={onItemReordered}

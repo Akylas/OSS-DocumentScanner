@@ -136,7 +136,7 @@ export class OCRDocument extends Observable implements Document {
                     //     .slice(-1)[0]
                     //     .replace(/%[a-zA-Z\d]{2}/, '');
                     // if (!baseName.endsWith(IMG_FORMAT)) {
-                        const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
+                    const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
                     // }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
 
@@ -269,12 +269,12 @@ export class OCRDocument extends Observable implements Document {
         const image = images[0];
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
-        if (__IOS__) {
-            // TODO: fix why do we need to clear the whole cache? wrong cache key?
-            getImagePipeline().clearCaches();
-        } else {
-            getImagePipeline().evictFromCache(croppedImagePath);
-        }
+        // if (__IOS__) {
+        //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
+        //     getImagePipeline().clearCaches();
+        // } else {
+        //     getImagePipeline().evictFromCache(croppedImagePath);
+        // }
         await this.updatePage(
             pageIndex,
             {
@@ -296,13 +296,12 @@ export class OCRDocument extends Observable implements Document {
 
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
-        if (__IOS__) {
-            // TODO: fix why do we need to clear the whole cache
-            // transformers change the key so we cant simply use the url as a key
-            getImagePipeline().clearCaches();
-        } else {
-            getImagePipeline().evictFromCache(croppedImagePath);
-        }
+        // if (__IOS__) {
+        //     // transformers change the key so we cant simply use the url as a key
+        //     getImagePipeline().clearCaches();
+        // } else {
+        //     getImagePipeline().evictFromCache(croppedImagePath);
+        // }
         await this.updatePage(
             pageIndex,
             {

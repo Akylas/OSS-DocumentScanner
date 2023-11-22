@@ -71,3 +71,6 @@ dist
 .history
 /app/assets/peakfinder/webapp.js
 /.vscode/settings.json
+
+
+tesseract/ios/**

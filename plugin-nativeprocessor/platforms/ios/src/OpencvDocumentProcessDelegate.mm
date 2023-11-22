@@ -1,7 +1,8 @@
 
 #import "OpencvDocumentProcessDelegate.h"
 #import <opencv2/opencv.hpp>
-#import "src/include/DocumentDetector.h"
+#import <DocumentDetector.h>
+#import <DocumentOCR.h>
 #import <QuartzCore/QuartzCore.h>
 
 @implementation OpencvDocumentProcessDelegate
@@ -306,7 +307,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
         detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd);
       }
     }
-  
+    
     [images addObject:MatToUIImage(dstBitmapMat)];
   };
   return images;
@@ -347,5 +348,35 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 - (void)cameraView:(NSCameraView *)cameraView renderToCustomContextWithImageBuffer:(CVPixelBufferRef)imageBuffer onQueue:(dispatch_queue_t)queue {
   // we do nothing here
 }
-
++(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    @try {
+      cv::Mat srcBitmapMat;
+      UIImageToMat(image, srcBitmapMat);
+      std::optional<std::function<void(int)>> progressLambda = [&](int progress)
+      {
+        [delegate onProgress:progress];
+      };
+      
+      std::string result = detector::DocumentOCR::detectText(srcBitmapMat, std::string([options UTF8String]), progressLambda);
+      
+      dispatch_async(dispatch_get_main_queue(), ^(void) {
+        [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
+        
+      });
+    }
+    @catch (NSException *exception) {
+      NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+      
+      [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+      [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+      NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+      dispatch_async(dispatch_get_main_queue(), ^(void) {
+        [delegate onComplete:nil error:err];
+        
+      });
+    }
+    
+  });
+}
 @end

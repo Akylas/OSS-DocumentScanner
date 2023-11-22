@@ -238,11 +238,11 @@
                 props: {
                     ocrData: items.getItem(currentIndex).ocrData,
                     imagePath: item.imagePath,
-                    image: editingImage || (await loadImage(item.imagePath)),
-                    imageWidth: item.width,
-                    imageHeight: item.height,
-                    rotation: item.rotation,
-                    colorMatrix: getColorMatrix(item.colorType)
+                    // image: editingImage || (await loadImage(item.imagePath)),
+                    // imageWidth: item.width,
+                    // imageHeight: item.height,
+                    // // rotation: item.rotation,
+                    // colorMatrix: getColorMatrix(item.colorType)
                 }
             });
         } catch (error) {
@@ -317,7 +317,7 @@
     }
 
     function updateImageUris() {
-        getCurrentImageView().updateImageUri();
+        getCurrentImageView()?.updateImageUri();
         collectionView?.nativeView.eachChild((c) => {
             c.getViewById<Img>('imageView')?.updateImageUri();
             return true;
@@ -406,7 +406,7 @@
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,auto,auto">
-        <CActionBar title={document.name} titleProps={{ autoFontSize: true }}>
+        <CActionBar title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
@@ -414,7 +414,7 @@
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
-                    <RotableImageView id={'imageView'} {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
+                    <RotableImageView id="imageView" {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
                 </gridlayout>
             </Template>
         </pager>

@@ -371,6 +371,7 @@
                 view: OptionSelect,
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
+                hideArrow: true,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
                 props: {
                     width: 200,
@@ -492,7 +493,7 @@
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
                         width={114} />
-                    <canvaslabel col={1} paddingLeft={16}>
+                    <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
                             <cspan fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
                             <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
@@ -508,8 +509,17 @@
         </collectionView>
         {#if showNoDocument}
             <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
-                <lottie bind:this={lottieView} autoPlay={true} keyPathColors={{ '**': colorPrimaryContainer }} loop={true} marginBottom={20} src="~/assets/lottie/scanning.lottie" width="80%" />
-                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" verticalAlignment="bottom" width="80%" />
+                <lottie
+                    bind:this={lottieView}
+                    autoPlay={true}
+                    keyPathColors={{
+                        '**': new Color(colorPrimaryContainer).setAlpha(100)
+                    }}
+                    loop={true}
+                    marginBottom={20}
+                    src="~/assets/lottie/scanning.lottie"
+                    width="80%" />
+                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} verticalAlignment="bottom" width="80%" />
             </gridlayout>
         {/if}
         {#if showActionButton}

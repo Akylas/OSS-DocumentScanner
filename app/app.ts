@@ -13,17 +13,16 @@ import { Application, Trace } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import { get } from 'svelte/store';
 import { NestedScrollView } from '~/NestedScrollView';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
-import { colors } from '~/variables';
 import { ocrService } from './services/ocr';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+import { ImageViewTraceCategory } from '@nativescript-community/ui-image';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -34,7 +33,6 @@ try {
     installUIMixins();
     overrideSpanAndFormattedString();
 
-    // registerNativeViewElement('absolutelayoutwithmatrix', () => AbsoluteLayoutWithMatrix);
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
     registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
@@ -42,29 +40,19 @@ try {
     registerElement('Page', () => new PageElement());
     registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
     registerNativeViewElement('ScrollView', () => NestedScrollView as any);
-    // registerNativeViewElement('DualScrollView', () => DualScrollView as any);
     registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
-    // registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
     registerNativeViewElement('Switch', () => require('@nativescript-community/ui-material-switch').Switch);
-    // registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
     registerNativeViewElement('Span', () => require('@nativescript/core').Span);
     registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
 
     registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
     registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
-    // registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button);
     registerNativeViewElement('activityIndicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
     registerNativeViewElement('progress', () => require('@nativescript-community/ui-material-progress').Progress);
-    // registerNativeViewElement('tabs', () => require('@nativescript-community/ui-material-tabs').Tabs);
-    // registerNativeViewElement('tabStrip', () => require('@nativescript-community/ui-material-tabs').TabStrip);
-    // registerNativeViewElement('tabStripItem', () => require('@nativescript-community/ui-material-tabs').TabStripItem);
-    // registerNativeViewElement('tabContentItem', () => require('@nativescript-community/ui-material-tabs').TabContentItem);
     registerNativeViewElement('label', () => Label);
-    // registerNativeViewElement('image', () => require('@nativescript/core').Image);
     registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
     registerNativeViewElement('zoomimage', () => require('@nativescript-community/ui-zoomimage').ZoomImg);
-    // registerNativeViewElement('pullrefresh', () => require('nativescript-akylas-pulltorefresh').PullToRefresh);
     registerNativeViewElement('canvasView', () => require('@nativescript-community/ui-canvas').CanvasView);
     registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes/line').default);
     registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
@@ -73,7 +61,6 @@ try {
     registerNativeViewElement('cameraView', () => require('@nativescript-community/ui-cameraview').CameraView);
     registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
     registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
-    // registerNativeViewElement('settingLabelIcon', () => require('./SettingLabelIcon.svelte').default);
     registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
     registerNativeViewElement('lottie', () => require('@nativescript-community/ui-lottie').LottieView);
 
@@ -82,7 +69,7 @@ try {
     startSentry();
     initialize();
 
-    // Trace.addCategories(Trace.categories.NativeLifecycle);
+    // Trace.addCategories(Trace.categories.Animation);
     // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
     // Trace.enable();
@@ -120,12 +107,6 @@ try {
         //  ocrService.stop();
         documentsService.stop();
     });
-
-    if (__IOS__) {
-        const currentColors = get(colors);
-        themer.setPrimaryColor(currentColors.colorPrimary);
-        themer.setAccentColor(currentColors.colorPrimary);
-    }
 
     themer.createShape('round', {
         cornerFamily: 'rounded' as any,

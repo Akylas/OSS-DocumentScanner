@@ -3,28 +3,30 @@
 
 .ns-root {
 
-    --colorPrimary: #51AE5B;
+    --colorPrimary: #006E25;
     --colorOnPrimary: #ffffff;
-    --colorPrimaryContainer: #51AE5B;
-    --colorOnPrimaryContainer: #ffffff;
-    --colorSecondary: #5492e7;
-    --colorOnSecondary: #C2C9BD;
+    --colorPrimaryContainer: #98F89C;
+    --colorOnPrimaryContainer: #002106;
+    --colorSecondary: #526350;
+    --colorOnSecondary: #FFFFFF;
     --colorSecondaryContainer: #D5E8D0;
-    --colorOnSecondaryContainer: #D5E8D0;
-    --colorTertiary: #5492e7;
-    --colorOnTertiary: #C2C9BD;
-    --colorTertiaryContainer: #D5E8D0;
-    --colorOnTertiaryContainer: #D5E8D0;
+    --colorOnSecondaryContainer: #101F10;
+    --colorTertiary: #39656B;
+    --colorOnTertiary: #FFFFFF;
+    --colorTertiaryContainer: #BCEBF2;
+    --colorOnTertiaryContainer: #001F23;
     --colorBackground: #FCFDF7;
     --colorOnBackground: #1A1C19;
     --colorError: #BA1A1A;
     --colorOnError: #FFFFFF;
-    --colorOutline: #8C9388;
+    --colorErrorContainer: #FFDAD6;
+    --colorOutline: #72796F;
     --colorOutlineVariant: #C2C9BD;
-    --colorOnSurface: black;
     --colorOnSurfaceDisabled: #00000055;
-    --colorOnSurfaceVariant: #C2C9BD;
+    --colorSurfaceVariant: #DEE5D9;
+    --colorOnSurfaceVariant: #424940;
     --colorSurface: #F9FAF4;
+    --colorOnSurface: #1A1C19;
     --colorOnSurfaceInverse: #000000;
     --colorSurfaceContainer: #C2C9BD;
     --popupMenuBackground: #C2C9BD;
@@ -134,7 +136,6 @@ page {
 
     width: 48;
     height: 48;
-    border-radius: 50%;
     font-size: 24;
     margin: 0;
     padding: 0;
