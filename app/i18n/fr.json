@@ -5,8 +5,12 @@
   },
   "auto": "auto",
   "bug_report_sent": "rapport de bug envoyé",
+  "capturing": "capturing",
+  "confirm_delete_documents": "",
   "english": "english",
+  "exporting": "exporting",
   "french": "french",
+  "image_import": "import image",
   "ios": {
     "info": {
       "plist": {
@@ -17,6 +21,7 @@
   },
   "language": "language",
   "nb_pages": "%1$s pages",
+  "no_document_found": "no document found",
   "ok": "OK",
   "preferences": "préférences",
   "review_application": "noter l'application",

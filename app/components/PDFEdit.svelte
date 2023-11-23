@@ -106,7 +106,7 @@
         const item = items.getItem(currentIndex);
         currentItemSubtitle = `${item.width} x ${item.height}`;
         currentSelectedImagePath = item.getImagePath();
-        currentSelectedImageRotation = item.rotation;
+        currentSelectedImageRotation = item.rotation || 0;
         currentItemOCRData = item.ocrData;
         const transforms = item.transforms?.split(',') || [];
         $whitepaper = transforms.indexOf('whitepaper') !== -1;
@@ -170,18 +170,20 @@
     function applyRotation(newRotation) {
         getCurrentImageView().notify({ eventName: 'rotateAnimated', rotation: newRotation });
     }
+    function getCurrentRotation() {
+        const current = items.getItem(currentIndex);
+        return current.rotation && !isNaN(current.rotation) ? current.rotation : 0;
+    }
     async function rotateImageLeft() {
         try {
-            const current = items.getItem(currentIndex);
-            applyRotation((current.rotation ?? 0) - 90);
+            applyRotation(getCurrentRotation() - 90);
         } catch (error) {
             showError(error);
         }
     }
     async function rotateImageRight() {
         try {
-            const current = items.getItem(currentIndex);
-            applyRotation((current.rotation ?? 0) + 90);
+            applyRotation(getCurrentRotation() + 90);
         } catch (error) {
             showError(error);
         }
@@ -237,7 +239,7 @@
                 fullscreen: true,
                 props: {
                     ocrData: items.getItem(currentIndex).ocrData,
-                    imagePath: item.imagePath,
+                    imagePath: item.imagePath
                     // image: editingImage || (await loadImage(item.imagePath)),
                     // imageWidth: item.width,
                     // imageHeight: item.height,

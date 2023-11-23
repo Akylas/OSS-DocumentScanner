@@ -58,8 +58,8 @@
     }
     function getSubtitle(item) {
         switch (item.id) {
-            case 'token':
-                return item.value || lc('click_to_set_key');
+            // case 'token':
+            //     return item.value || lc('click_to_set_key');
             default:
                 return item.description || '';
         }

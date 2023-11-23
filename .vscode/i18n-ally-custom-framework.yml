@@ -3,7 +3,6 @@
 languageIds:
   - svelte
   - typescript
-  - javascript
 
 # An Array of regex to find the keys usage. **The key should captured in the first match group**.
 # You should unescape regex string in order to fit in YAML file
