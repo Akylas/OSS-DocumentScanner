@@ -48,7 +48,7 @@ yarn-error.log*
 .yarn
 yarn.lock
 tmp/
-typings/
+# typings/
 opencv/android/*
 !opencv/android/README.md
 tesseract/android/*
