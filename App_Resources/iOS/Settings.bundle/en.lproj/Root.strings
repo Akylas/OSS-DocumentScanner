@@ -21,6 +21,7 @@
 "system" = "system";
 "successful" = "successful";
 "start_on_cam" = "start on camera";
+"start" = "start";
 "spanish" = "spanish";
 "source_code_desc" = "get the source code of the application on github";
 "source_code" = "source code";
@@ -42,6 +43,7 @@
 "search_location" = "search location";
 "search_city" = "search";
 "search" = "search";
+"saving" = "saving";
 "save" = "save";
 "russian" = "Russian";
 "review_application" = "review application";
@@ -55,6 +57,7 @@
 "rain_flood" = "rain/flood";
 "rain" = "rain";
 "quit" = "quit";
+"quality" = "quality";
 "provider.title" = "provider";
 "provider.openweathermap" = "OpenWeatherMap";
 "provider.openmeteo" = "Open-Meteo";
@@ -154,7 +157,11 @@
 "delete_page" = "delete";
 "delete" = "delete";
 "dark_mode" = "dark mode";
+"dark" = "dark";
+"confirm_delete_pages" = "are you sure you want to delete those %1$@ pages?";
 "confirm_delete_page" = "are you sure you want to delete page %1$@?";
+"confirm_delete_documents" = "are you sure you want to delete those %1$@ documents?";
+"confirm_delete" = "are you sure you want to delete this document?";
 "computing" = "computing...";
 "coastal_flooding" = "coastal_flooding";
 "cloudy" = "cloudy";
@@ -178,3 +185,6 @@
 "absolute_vigilance" = "absolute vigilance";
 "about_to_quit" = "the app is about to close because it does not have an API Key";
 "about" = "about";
+"no_document_found" = "no_document_found";
+"image_import" = "image_import";
+"capturing" = "capturing";
