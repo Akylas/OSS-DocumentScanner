@@ -74,3 +74,4 @@ dist
 
 tesseract/ios/**
 *.framework
+/typings/x86_64
