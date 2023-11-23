@@ -351,6 +351,7 @@ export class DocumentsService extends Observable {
         const start = Date.now();
         if (__ANDROID__) {
             // const pdfDocument = new android.graphics.pdf.PdfDocument();
+            //@ts-ignore
             const pdfDocument = new com.tom_roush.pdfbox.pdmodel.PDDocument();
             const pages = document.pages;
             let page: OCRPage;
@@ -367,7 +368,9 @@ export class DocumentsService extends Observable {
                 width *= page.scale;
                 height *= page.scale;
                 // const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
+                //@ts-ignore
                 const pdfpage = new com.tom_roush.pdfbox.pdmodel.PDPage(new com.tom_roush.pdfbox.pdmodel.common.PDRectangle(0, 0, width * page.scale, height * page.scale));
+                //@ts-ignore
                 const contentStream = new com.tom_roush.pdfbox.pdmodel.PDPageContentStream(pdfDocument, pdfpage);
                 // const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = new Canvas(width * page.scale, height * page.scale);
@@ -385,6 +388,7 @@ export class DocumentsService extends Observable {
                 pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
                 const actualBitmap = pageCanvas.getImage();
 
+                //@ts-ignore
                 const ximage = com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory.createFromImage(pdfDocument, actualBitmap, 0.75, 72);
                 // You may want to call PDPage.getCropBox() in order to place your image
                 // somewhere inside this page rect with (x, y) and (width, height).

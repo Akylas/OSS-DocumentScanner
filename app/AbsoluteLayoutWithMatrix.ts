@@ -5,10 +5,12 @@ export const matrixProperty = new Property<AbsoluteLayoutWithMatrix, Matrix>({ n
 export class AbsoluteLayoutWithMatrix extends AbsoluteLayout {
     createNativeView() {
         if (__ANDROID__) {
+            //@ts-ignore
             const view = new com.akylas.documentscanner.AbsoluteLayoutWithMatrix(this._context);
             view.setStaticTransformationsEnabled(true);
             return view;
         } else if (__IOS__) {
+            //@ts-ignore
             return NSCropView.alloc().init();
         }
         return null;
@@ -26,6 +28,7 @@ export class AbsoluteLayoutWithMatrix extends AbsoluteLayout {
     }
     [matrixProperty.setNative](value: Matrix) {
         if (__ANDROID__) {
+            //@ts-ignore
             const nativeView = this.nativeViewProtected as com.akylas.documentscanner.AbsoluteLayoutWithMatrix;
             nativeView.setChildrenMatrix(value as any);
             for (let index = 0; index < nativeView.getChildCount(); index++) {
