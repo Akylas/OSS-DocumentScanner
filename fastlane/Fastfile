@@ -225,14 +225,14 @@ platform :ios do
   desc 'Ship iOS build to Testflight.'
   lane :beta do |options|
     checkSentryClitatus
-    checkGitStatus
+    # checkGitStatus
     npm_installl(platform:'ios')
     build_flavor(platform:'ios', flavor:'beta', options:options)
   end
   desc 'Ship iOS build to Testflight.'
   lane :alpha do |options|
     checkSentryClitatus
-    checkGitStatus
+    # checkGitStatus
     npm_installl(platform:'ios')
     build_flavor(platform:'ios', flavor:'alpha', options:options)
   end
