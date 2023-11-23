@@ -52,5 +52,7 @@
     <string>Description text goes here</string>
     <key>NSCameraUsageDescription</key>
     <string>Description text goes here</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
   </dict>
 </plist>
