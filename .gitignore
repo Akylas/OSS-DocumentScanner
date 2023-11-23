@@ -73,3 +73,4 @@ dist
 /.vscode/settings.json
 
 tesseract/ios/**
+*.framework
