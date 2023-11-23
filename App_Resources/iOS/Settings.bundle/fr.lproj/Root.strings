@@ -15,10 +15,15 @@
 "review_application" = "noter l'application";
 "preferences" = "préférences";
 "ok" = "OK";
+"no_document_found" = "no document found";
 "nb_pages" = "%1$@ pages";
 "language" = "language";
+"image_import" = "import image";
 "french" = "french";
+"exporting" = "exporting";
 "english" = "english";
+"confirm_delete_documents" = "";
+"capturing" = "capturing";
 "bug_report_sent" = "rapport de bug envoyé";
 "auto" = "auto";
 "app.name" = "OSS Document Scanner";
@@ -38,6 +43,7 @@
 "test" = "test";
 "system" = "system";
 "successful" = "successful";
+"start" = "start";
 "spanish" = "spanish";
 "source_code_desc" = "get the source code of the application on github";
 "snow_shower" = "snow shower";
@@ -53,6 +59,7 @@
 "search_location" = "search location";
 "search_city" = "search";
 "search" = "search";
+"saving" = "saving";
 "save" = "save";
 "russian" = "Russian";
 "restart_app" = "restart the app";
@@ -65,6 +72,7 @@
 "rain_flood" = "rain/flood";
 "rain" = "rain";
 "quit" = "quit";
+"quality" = "quality";
 "provider.title" = "provider";
 "provider.openweathermap" = "OpenWeatherMap";
 "provider.openmeteo" = "Open-Meteo";
@@ -137,7 +145,6 @@
 "favorites" = "favorites";
 "failed" = "failed";
 "extreme_cold" = "extreme cold";
-"exporting" = "exporting";
 "export_settings_desc" = "export all AlpiMaps settings so that you can import them later";
 "export_settings" = "export settings";
 "expires" = "expires";
@@ -158,7 +165,10 @@
 "delete_page" = "delete";
 "delete" = "delete";
 "dark_mode" = "dark mode";
+"dark" = "dark";
+"confirm_delete_pages" = "are you sure you want to delete those %1$@ pages?";
 "confirm_delete_page" = "are you sure you want to delete page %1$@?";
+"confirm_delete" = "are you sure you want to delete this document?";
 "computing" = "computing...";
 "coastal_flooding" = "coastal_flooding";
 "cloudy" = "cloudy";
