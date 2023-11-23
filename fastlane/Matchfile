@@ -5,5 +5,5 @@ git_branch "akylas"
 app_identifier "com.akylas.documentscanner"
 username "martin.guillon@akylas.fr"  # Your Apple Developer Portal username
 
-team_id('1469488')
+team_id('3UUB5NM43K')
 team_name('Akylas')
