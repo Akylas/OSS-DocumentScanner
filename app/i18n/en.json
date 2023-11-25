@@ -32,8 +32,8 @@
   "ios": {
     "info": {
       "plist": {
-        "NSCameraUsageDescription": "Description text goes here",
-        "NSPhotoLibraryUsageDescription": "Description text goes here"
+        "NSCameraUsageDescription": "Camera is used to scan your documents",
+        "NSPhotoLibraryUsageDescription": "Import images to scan them"
       }
     }
   },
@@ -53,8 +53,6 @@
   "password": "password",
   "password_not_saved": "the password in not saved",
   "preferences": "preferences",
-  "provider": {
-  },
   "quality": "quality",
   "remote_folder": "remote folder",
   "remote_folder_desc": "remote folder to sync the data from and to",
@@ -68,8 +66,6 @@
   "select_on_map": "select on a map",
   "selected": "%1$s selected",
   "server_address": "server address",
-  "settings": {
-  },
   "share_application": "share application",
   "source_code": "source code",
   "start": "start",
