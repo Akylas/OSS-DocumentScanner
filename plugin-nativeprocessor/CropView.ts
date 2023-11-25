@@ -42,7 +42,11 @@ export class CropView extends View {
         }
     }
     [strokeWidthProperty.setNative](value: number) {
-        this.nativeViewProtected.linePaint.setStrokeWidth(Utils.layout.toDevicePixels(value));
+        if (__ANDROID__) {
+            this.nativeViewProtected.linePaint.setStrokeWidth(Utils.layout.toDevicePixels(value));
+        } else {
+            this.nativeViewProtected.strokeWidth = Utils.layout.toDevicePixels(value);
+        }
     }
     [fillAlphaProperty.setNative](value: number) {
         if (__ANDROID__) {
@@ -50,6 +54,8 @@ export class CropView extends View {
             paint.style = Style.FILL;
             paint.setAlpha(value);
             this.nativeViewProtected.fillPaint = paint['getNative']();
+        } else {
+            this.nativeViewProtected.fillAlpha = value;
         }
     }
 }

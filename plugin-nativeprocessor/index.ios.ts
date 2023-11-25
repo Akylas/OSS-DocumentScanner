@@ -7,11 +7,14 @@ class OCRDelegateDelegateImpl extends NSObject implements OCRDelegate {
     resolve;
     reject;
     progress;
-    onCompleteError(result: string, error): void {
+    onCompleteError(result: any, error): void {
         if (error) {
             this.reject(error);
         } else {
-            this.resolve(result ? JSON.parse(result) : null);
+            if (typeof result === 'string') {
+                this.resolve(result ? JSON.parse(result) : null);
+            }
+            this.resolve(result);
         }
     }
     onProgress(progress: number): void {
@@ -27,18 +30,44 @@ class OCRDelegateDelegateImpl extends NSObject implements OCRDelegate {
     }
 }
 
-export function cropDocument(editingImage: ImageSource, quads, transforms = '') {
-    // nImages is a NSArray
-    const nImages = OpencvDocumentProcessDelegate.cropDocumentQuadsTransforms(editingImage.ios, JSON.stringify(quads), transforms);
-    const images = [];
-    for (let index = 0; index < nImages.count; index++) {
-        images[index] = nImages.objectAtIndex(index);
-    }
-    return images;
+export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
+    return new Promise<any[]>((resolve, reject) => {
+        try {
+            // nImages is a NSArray
+            OpencvDocumentProcessDelegate.cropDocumentQuadsTransformsDelegate(
+                editingImage.ios,
+                JSON.stringify(quads),
+                transforms,
+                OCRDelegateDelegateImpl.initWithResolveReject(
+                    (nImages) => {
+                        const images = [];
+                        for (let index = 0; index < nImages.count; index++) {
+                            images[index] = nImages.objectAtIndex(index);
+                        }
+                        resolve(images);
+                    },
+                    reject,
+                    null
+                )
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
-export function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): [number, number][][] {
-    const corners = OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotation(editingImage.ios, resizeThreshold, imageRotation);
-    return corners ? JSON.parse(corners) : [];
+export async function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): Promise<[number, number][][]> {
+    return new Promise((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(
+                editingImage.ios,
+                resizeThreshold,
+                imageRotation,
+                OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, null)
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
 
 export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {

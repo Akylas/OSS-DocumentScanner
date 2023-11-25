@@ -234,7 +234,7 @@ export class SyncService extends Observable {
                     // check if we need to recreate the image
                     if (pageTooUpdate.crop || pageTooUpdate.transforms) {
                         const editingImage = await loadImage(localPage.sourceImagePath);
-                        const images = cropDocument(editingImage, [pageTooUpdate.crop]);
+                        const images = await cropDocument(editingImage, [pageTooUpdate.crop]);
 
                         await new ImageSource(images[0]).saveToFileAsync(localPage.imagePath, IMG_FORMAT, IMG_COMPRESS);
                         recycleImages(editingImage, images);
