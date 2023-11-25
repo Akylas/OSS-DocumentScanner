@@ -368,9 +368,7 @@ export class DocumentsService extends Observable {
                 width *= page.scale;
                 height *= page.scale;
                 // const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
-                //@ts-ignore
                 const pdfpage = new com.tom_roush.pdfbox.pdmodel.PDPage(new com.tom_roush.pdfbox.pdmodel.common.PDRectangle(0, 0, width * page.scale, height * page.scale));
-                //@ts-ignore
                 const contentStream = new com.tom_roush.pdfbox.pdmodel.PDPageContentStream(pdfDocument, pdfpage);
                 // const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = new Canvas(width * page.scale, height * page.scale);
