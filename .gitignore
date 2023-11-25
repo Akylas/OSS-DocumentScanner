@@ -17,6 +17,7 @@ e2e/**/*.js
 /fastlane/report.xml
 /gpx
 /dist
+/vendor
 build
 .cxx
 /Gemfile.lock
