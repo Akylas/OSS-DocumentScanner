@@ -14,7 +14,7 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} statusBarStyle="dark">
+<page bind:this={page}  id="modalImport" actionBarHidden={true} statusBarStyle="dark">
     <gridlayout backgroundColor="black" rows="auto,*,auto">
         <CropView {editingImage} rowSpan={2} bind:quads />
         <mdbutton class="fab" color="white" elevation={0} horizontalAlignment="center" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onTapFinish} />

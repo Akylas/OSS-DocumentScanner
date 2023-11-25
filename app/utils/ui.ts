@@ -359,17 +359,20 @@ export async function importAndScanImage(document?: OCRDocument) {
             .present()
             .catch((err) => null);
         console.log('importAndScanImage', selection);
+        if (__IOS__) {
+            //we need to wait a bit or the presenting controller
+            // is still the image picker and will mix things up
+            await timeout(500);
+        }
         if (selection?.length) {
-            if (__ANDROID__) {
-                await showLoading(l('computing'));
-            }
+            await showLoading(l('computing'));
             const sourceImagePath = selection[0].path;
             editingImage = await loadImage(sourceImagePath);
 
             if (!editingImage) {
                 throw new Error('failed to read imported image');
             }
-            let quads = getJSONDocumentCorners(editingImage, 300, 0);
+            let quads = await getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
                 quads.push([
@@ -380,9 +383,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                 ]);
             }
             if (quads?.length) {
-                if (__IOS__) {
-                    await timeout(100);
-                }
+                console.log('ModalImportImage');
                 const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
                 quads = await showModal({
                     page: ModalImportImage,
@@ -394,7 +395,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                     }
                 });
                 if (quads) {
-                    const images = cropDocument(editingImage, quads);
+                    const images = await cropDocument(editingImage, quads);
 
                     if (images?.length) {
                         const pagesToAdd: PageData[] = [];

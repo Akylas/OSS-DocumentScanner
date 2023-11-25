@@ -23,6 +23,7 @@
     import PageIndicator from './PageIndicator.svelte';
     import { filesize } from 'filesize';
     import { onThemeChanged } from '~/helpers/theme';
+    import { request } from '@nativescript-community/perms';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -82,6 +83,7 @@
     }
     async function addPages() {
         try {
+            await request('camera');
             document = await showModal({
                 page: Camera,
                 fullscreen: true,
@@ -273,9 +275,9 @@
         const current = items.getItem(index);
         const page = document.getObservablePages().getItem(index);
         items.setItem(index, { selected: current.selected, page, index: current.index });
+        DEV_LOG && console.log('view onDocumentPageUpdated', index, event.imageUpdated);
         if (!!event.imageUpdated) {
             const imageView = getImageView(index);
-            DEV_LOG && console.log('updating view  image uri', imageView);
             imageView?.updateImageUri();
         }
     }
