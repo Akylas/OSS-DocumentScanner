@@ -5,7 +5,7 @@
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { lc } from '~/helpers/locale';
-    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
     import IconButton from './IconButton.svelte';
     export interface OptionType {

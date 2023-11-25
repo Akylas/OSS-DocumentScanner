@@ -1,131 +1,200 @@
 fastlane documentation
-================
+----
+
 # Installation
 
 Make sure you have the latest version of the Xcode command line tools installed:
 
-```
+```sh
 xcode-select --install
 ```
 
-Install _fastlane_ using
-```
-[sudo] gem install fastlane -NV
-```
-or alternatively using `brew cask install fastlane`
+For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
 
 # Available Actions
+
 ### test
-```
-fastlane test
-```
-test lane
-### checkGitStatus
-```
-fastlane checkGitStatus
-```
-Check Git Status
-### tns_install
-```
-fastlane tns_install
-```
-Ensure deps are installed
-### prepare
-```
-fastlane prepare
-```
-Prepare the application.
-### build_flavor
-```
-fastlane build_flavor
+
+```sh
+[bundle exec] fastlane test
 ```
 
-### sentry_upload_sourcemaps
+test lane
+
+### checkGitStatus
+
+```sh
+[bundle exec] fastlane checkGitStatus
 ```
-fastlane sentry_upload_sourcemaps
+
+Check Git Status
+
+### checkSentryClitatus
+
+```sh
+[bundle exec] fastlane checkSentryClitatus
 ```
+
+Check Sentry Cli Status
+
+### npm_installl
+
+```sh
+[bundle exec] fastlane npm_installl
+```
+
+Ensure deps are installed
+
+### prepare
+
+```sh
+[bundle exec] fastlane prepare
+```
+
+Prepare the application.
+
+### build_flavor
+
+```sh
+[bundle exec] fastlane build_flavor
+```
+
+
 
 ### get_changelog
+
+```sh
+[bundle exec] fastlane get_changelog
 ```
-fastlane get_changelog
-```
+
 
 
 ----
+
 
 ## iOS
-### ios registerDevice
-```
-fastlane ios registerDevice
-```
-Register device
+
 ### ios sentry_upload
-```
-fastlane ios sentry_upload
-```
-Upload Dsyms to Sentry
-### ios upload_store
-```
-fastlane ios upload_store
+
+```sh
+[bundle exec] fastlane ios sentry_upload
 ```
 
+Upload Dsyms to Sentry
+
+### ios upload_store
+
+```sh
+[bundle exec] fastlane ios upload_store
+```
+
+
+
 ### ios certificates
+
+```sh
+[bundle exec] fastlane ios certificates
 ```
-fastlane ios certificates
-```
+
 Fetch certificates and provisioning profiles
+
 ### ios build
+
+```sh
+[bundle exec] fastlane ios build
 ```
-fastlane ios build
-```
+
 Build the iOS application.
+
 ### ios beta
+
+```sh
+[bundle exec] fastlane ios beta
 ```
-fastlane ios beta
-```
+
 Ship iOS build to Testflight.
+
 ### ios alpha
+
+```sh
+[bundle exec] fastlane ios alpha
 ```
-fastlane ios alpha
-```
+
 Ship iOS build to Testflight.
 
 ----
 
+
 ## Android
+
 ### android sentry_upload
+
+```sh
+[bundle exec] fastlane android sentry_upload
 ```
-fastlane android sentry_upload
-```
+
 Upload  to Sentry
+
 ### android write_changelog
+
+```sh
+[bundle exec] fastlane android write_changelog
 ```
-fastlane android write_changelog
-```
+
+
 
 ### android upload_store
-```
-fastlane android upload_store
+
+```sh
+[bundle exec] fastlane android upload_store
 ```
 
+
+
 ### android build
+
+```sh
+[bundle exec] fastlane android build
 ```
-fastlane android build
-```
+
 Build the Android application.
+
+### android github
+
+```sh
+[bundle exec] fastlane android github
+```
+
+Ship to Github.
+
+### android fdroid
+
+```sh
+[bundle exec] fastlane android fdroid
+```
+
+build for fdroid.
+
 ### android beta
+
+```sh
+[bundle exec] fastlane android beta
 ```
-fastlane android beta
-```
+
 Ship to Android Playstore Beta.
+
 ### android alpha
+
+```sh
+[bundle exec] fastlane android alpha
 ```
-fastlane android alpha
-```
+
 Ship to Android Playstore Alpha.
 
 ----
 
-This README.md is auto-generated and will be re-generated every time [fastlane](https://fastlane.tools) is run.
-More information about fastlane can be found on [fastlane.tools](https://fastlane.tools).
-The documentation of fastlane can be found on [docs.fastlane.tools](https://docs.fastlane.tools).
+This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
+
+More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
+
+The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).

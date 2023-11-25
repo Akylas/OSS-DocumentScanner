@@ -15,7 +15,7 @@
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { getColorMatrix, hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { getColorMatrix, hideLoading, importAndScanImage, showLoading, timeout } from '~/utils/ui';
     import { colors } from '~/variables';
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
@@ -175,7 +175,7 @@
             showLoading(l('computing'));
             // editingImage = await loadImage(imagePath);
             editingImage = new ImageSource(image);
-            let quads = getJSONDocumentCorners(editingImage, 300, 0);
+            let quads = await getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
                 const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
@@ -293,20 +293,28 @@
             document = null;
         }
     }
+    let previewStarted = true;
     function startPreview() {
-        cameraPreview?.nativeView.startPreview();
+        if (!previewStarted) {
+            previewStarted = true;
+            console.log('startPreview');
+            cameraPreview?.nativeView.startPreview();
+        }
     }
     function stopPreview() {
-        cameraPreview?.nativeView.stopPreview();
-        if (cropView?.nativeView) {
-            cropView.nativeView.quads = null;
+        if (previewStarted) {
+            previewStarted = false;
+            console.log('stopPreview');
+            cameraPreview?.nativeView.stopPreview();
+            if (cropView?.nativeView) {
+                cropView.nativeView.quads = null;
+            }
         }
     }
     function onNavigatedTo() {
         DEV_LOG && console.log('onNavigatedTo', !!cameraPreview);
         (async () => {
             try {
-                await request('camera');
                 startPreview();
             } catch (error) {
                 console.error(error, error.stack);
@@ -384,7 +392,7 @@
             }
             const strTransforms = transforms.join(',');
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
-            let images = cropDocument(editingImage, quads, strTransforms);
+            let images = await cropDocument(editingImage, quads, strTransforms);
             const pagesToAdd: PageData[] = [];
             for (let index = 0; index < images.length; index++) {
                 const image = images[index];
@@ -502,7 +510,7 @@
                 processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(Utils.android.getApplicationContext(), cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             } else {
-                processor = (OpencvDocumentProcessDelegate.alloc() as OpencvDocumentProcessDelegate).initWithCropView(cropView.nativeView.nativeViewProtected);
+                processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             }
             // if (documentsService.started) {
@@ -529,6 +537,7 @@
 
     function toggleEditing() {
         editing = !editing;
+        console.log('toggleEditing');
         if (torchEnabled) {
             setTorchEnabled(!editing);
         }
@@ -555,7 +564,7 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
+<page id="camera" bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
         <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
@@ -618,7 +627,15 @@
                 row={1}
                 verticalAlignment="bottom"
                 width={90}>
-                <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={74} touchAnimation={touchAnimationShrink} width={74} on:tap={takePicture} />
+                <gridlayout
+                    backgroundColor={colorPrimary}
+                    borderRadius="50%"
+                    height={74}
+                    horizontalAlignment="center"
+                    ignoreTouchAnimation={false}
+                    touchAnimation={touchAnimationShrink}
+                    width={74}
+                    on:tap={takePicture} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
             <!-- <mdbutton

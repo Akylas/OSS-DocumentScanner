@@ -1,7 +1,6 @@
 #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
 #include <tesseract/ocrclass.h>
-#include <android/log.h>
 
 using namespace std;
 using namespace cv;

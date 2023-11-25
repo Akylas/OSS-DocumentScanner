@@ -48,17 +48,17 @@
         if (recrop) {
             // let s see if quads changed and update image
             if (quadChanged) {
-                const images = cropDocument(editingImage, [quad]);
+                const images = await cropDocument(editingImage, [quad]);
                 await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
                 recycleImages(images);
 
                 //we remove from cache so that everything gets updated
-                if (__IOS__) {
-                    // TODO: fix why do we need to clear the whole cache? wrong cache key?
-                    getImagePipeline().clearCaches();
-                } else {
-                    getImagePipeline().evictFromCache(croppedImagePath);
-                }
+                // if (__IOS__) {
+                //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
+                //     getImagePipeline().clearCaches();
+                // } else {
+                //     getImagePipeline().evictFromCache(croppedImagePath);
+                // }
                 croppedImagePath = croppedImagePath;
                 const views = querySelectorAll(topView.nativeView, 'imageRotation');
                 views.forEach((view) => (view as Img).updateImageUri());
@@ -122,5 +122,5 @@
             </Template>
         </collectionview>
     </gridlayout>
-    <mdbutton class="fab" elevation={0} horizontalAlignment="center"  row={2} text="mdi-check" variant="text" verticalAlignment="bottom" on:tap={onTapFinish} />
+    <mdbutton class="fab" elevation={0} horizontalAlignment="center" row={2} text="mdi-check" variant="text" verticalAlignment="bottom" on:tap={onTapFinish} />
 </gridlayout>

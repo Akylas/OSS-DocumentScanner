@@ -94,6 +94,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     }
 
     async createPage(page: OCRPage) {
+        console.log('createPage', page);
         const createdDate = Date.now();
         return this.create({
             id: page.id,
@@ -104,7 +105,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             width: page.width,
             height: page.height,
             size: page.size,
-            rotation: page.rotation ?? 0,
+            rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
             scale: page.scale ?? 1,
             imagePath: page.imagePath,
             colorType: page.colorType,
@@ -350,6 +351,7 @@ export class DocumentsService extends Observable {
         const start = Date.now();
         if (__ANDROID__) {
             // const pdfDocument = new android.graphics.pdf.PdfDocument();
+            //@ts-ignore
             const pdfDocument = new com.tom_roush.pdfbox.pdmodel.PDDocument();
             const pages = document.pages;
             let page: OCRPage;
@@ -366,7 +368,9 @@ export class DocumentsService extends Observable {
                 width *= page.scale;
                 height *= page.scale;
                 // const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(width * page.scale, height * page.scale, index + 1).create();
+                //@ts-ignore
                 const pdfpage = new com.tom_roush.pdfbox.pdmodel.PDPage(new com.tom_roush.pdfbox.pdmodel.common.PDRectangle(0, 0, width * page.scale, height * page.scale));
+                //@ts-ignore
                 const contentStream = new com.tom_roush.pdfbox.pdmodel.PDPageContentStream(pdfDocument, pdfpage);
                 // const pdfpage = pdfDocument.startPage(pageInfo);
                 const pageCanvas = new Canvas(width * page.scale, height * page.scale);
@@ -384,6 +388,7 @@ export class DocumentsService extends Observable {
                 pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
                 const actualBitmap = pageCanvas.getImage();
 
+                //@ts-ignore
                 const ximage = com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory.createFromImage(pdfDocument, actualBitmap, 0.75, 72);
                 // You may want to call PDPage.getCropBox() in order to place your image
                 // somewhere inside this page rect with (x, y) and (width, height).
@@ -401,6 +406,54 @@ export class DocumentsService extends Observable {
             pdfDocument.close();
             DEV_LOG && console.log('pdfFile', java.nio.file.Files.size(newFile.toPath()), Date.now() - start, 'ms');
             return pdfFile;
+        } else {
+            const pdfData = NSMutableData.alloc().init();
+            UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);
+            const pages = document.pages;
+            let page: OCRPage;
+            let imagePath: string;
+            for (let index = 0; index < pages.length; index++) {
+                page = pages[index];
+                imagePath = page.getImagePath();
+                let width = page.width;
+                let height = page.height;
+                if (page.rotation % 180 !== 0) {
+                    width = page.height;
+                    height = page.width;
+                }
+                width *= page.scale;
+                height *= page.scale;
+                const pageRect = CGRectMake(0, 0, width, height);
+                UIGraphicsBeginPDFPageWithInfo(pageRect, null);
+                const context = UIGraphicsGetCurrentContext();
+                const canvas = new Canvas(0, 0);
+                canvas['setContext'](context, width, height);
+                const imageSource = await loadImage(imagePath);
+                let toDraw = imageSource;
+                if (page.colorType || page.colorMatrix || page.rotation || page.scale !== 1) {
+                    let bitmapPaint: Paint = null;
+                    if (page.colorType || page.colorMatrix) {
+                        if (!bitmapPaint) {
+                            bitmapPaint = new Paint();
+                        }
+                        bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
+                    }
+                    const pageCanvas = new Canvas(width * page.scale, height * page.scale);
+                    pageCanvas.translate(width / 2, height / 2);
+                    pageCanvas.rotate(page.rotation, 0, 0);
+                    pageCanvas.scale(page.scale, -page.scale, 0, 0);
+                    pageCanvas.drawBitmap(imageSource.ios, -page.width / 2, -page.height / 2, bitmapPaint);
+                    toDraw = pageCanvas.getImage();
+                }
+                canvas.drawBitmap(toDraw, 0, 0, null);
+            }
+            UIGraphicsEndPDFContext();
+            const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
+            await pdfFile.write(pdfData);
+            DEV_LOG && console.log('pdfFile', pdfFile.size, pdfFile.path, Date.now() - start, 'ms');
+            return pdfFile;
+            // UIGraphicsBeginPDFPage();
+            // const pdfContext = UIGraphicsGetCurrentContext();
         }
     }
 }

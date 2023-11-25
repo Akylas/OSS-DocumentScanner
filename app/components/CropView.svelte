@@ -121,11 +121,7 @@
     }
 
     function getRotation() {
-        if (__IOS__) {
-            return rotation;
-        } else {
-            return rotation || editingImage.rotationAngle;
-        }
+        return rotation || editingImage.rotationAngle || 0;
     }
     function updateMatrix(canvas = canvasView, image = editingImage) {
         try {

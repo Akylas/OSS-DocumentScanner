@@ -5,7 +5,7 @@
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleVersion</key>
-    <string>17</string>
+    <string>3</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
@@ -15,7 +15,7 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>NS Weather</string>
+    <string>OSS Document Scanner</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
@@ -43,16 +43,16 @@
       <string>UIInterfaceOrientationLandscapeLeft</string>
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>'NS Weather' uses your GPS location to display your weather</string>
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
       <true/>
     </dict>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Description text goes here</string>
+    <string>Import images to scan them</string>
     <key>NSCameraUsageDescription</key>
-    <string>Description text goes here</string>
+    <string>Camera is used to scan your documents</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
   </dict>
 </plist>

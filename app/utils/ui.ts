@@ -167,112 +167,89 @@ export const ColorMatricesTypes = Object.keys(ColorMatrices).sort((a, b) => {
     return a.localeCompare(b);
 });
 export type ColorMatricesType = string;
-// export type ColorMatricesType = keyof typeof ColorMatricesTypes;
 
 export function getColorMatrix(type: string, ...args): number[] {
     return (ColorMatrices[type] as Function)?.apply(ColorMatrices, args);
-    // switch (color) {
-    //     case ColorType.BLACK_WHITE:
-    //         return IMAGE_FILTERS.bw(value);
-    //     case ColorType.GRAY:
-    //         return IMAGE_FILTERS.grayscale;
-    //     case ColorType.NIGHT_VISION:
-    //         return IMAGE_FILTERS.nightVision;
-    //     case ColorType.POLAROID:
-    //         return IMAGE_FILTERS.polaroid;
-    //     default:
-    //         return 0 as any;
-    // }
 }
 
-function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues, stopValues, fraction) {
-    const currentValues = [];
-    for (let i = 0; i < 9; i++) {
-        currentValues[i] = (1 - fraction) * startValues[i] + fraction * stopValues[i];
-    }
-    outMatrix.setValues(currentValues);
-}
+// function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues, stopValues, fraction) {
+//     const currentValues = [];
+//     for (let i = 0; i < 9; i++) {
+//         currentValues[i] = (1 - fraction) * startValues[i] + fraction * stopValues[i];
+//     }
+//     outMatrix.setValues(currentValues);
+// }
 
-export async function setImageRotation(imageView: Image, rotation, duration?: number) {
-    // let currentMatrix = new android.graphics.Matrix()
-    // let values =  Array.create('float', 9);currentMatrix.getValues(values)
-    // console.log('values', values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8])
+// export async function setImageRotation(imageView: Image, rotation, duration?: number) {
 
-    // currentMatrix.postRotate(rotation)
-    // currentMatrix.getValues(values)
-    // console.log('values2', values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8])
-    // setImageMatrix(imageView, values, duration);
+//     const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
+//     if (scaleType['setImageRotation']) {
+//         scaleType['setImageRotation'](rotation);
+//         (imageView.nativeViewProtected as android.widget.ImageView).invalidate();
+//     }
+// }
+// export async function setImageMatrix(imageView: Image, values: number[], duration?: number) {
+//     if (duration) {
+//         return new Promise<void>((resolve, reject) => {
+//             try {
+//                 const currentAnimator = imageView['matrixAnimator'];
+//                 if (currentAnimator) {
+//                     currentAnimator.cancel();
+//                     currentAnimator.removeAllUpdateListeners();
+//                     currentAnimator.removeAllListeners();
+//                     imageView['matrixAnimator'] = null;
+//                 }
+//                 const arr = Array.create('float', 2);
+//                 arr[0] = 0;
+//                 arr[1] = 1;
+//                 const valueAnimator = android.animation.ValueAnimator.ofFloat(arr);
+//                 const startValues = Array.create('float', 9);
+//                 (imageView.nativeViewProtected as android.widget.ImageView).getImageMatrix().getValues(startValues);
+//                 const currentMatrix = new android.graphics.Matrix();
+//                 valueAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+//                 valueAnimator.setDuration(duration);
+//                 valueAnimator.addUpdateListener(
+//                     new android.animation.ValueAnimator.AnimatorUpdateListener({
+//                         onAnimationUpdate(valueAnimator) {
+//                             calculateInterpolation(currentMatrix, startValues, values, valueAnimator.getAnimatedValue());
+//                             (imageView.nativeViewProtected as android.widget.ImageView).setImageMatrix(currentMatrix);
+//                         }
+//                     })
+//                 );
+//                 valueAnimator.addListener(
+//                     new android.animation.Animator.AnimatorListener({
+//                         onAnimationStart() {},
+//                         onAnimationRepeat() {},
+//                         onAnimationCancel(animation) {
+//                             imageView['matrixAnimator'] = null;
+//                         },
 
-    const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
-    if (scaleType['setImageRotation']) {
-        scaleType['setImageRotation'](rotation);
-        (imageView.nativeViewProtected as android.widget.ImageView).invalidate();
-    }
-}
-export async function setImageMatrix(imageView: Image, values: number[], duration?: number) {
-    if (duration) {
-        return new Promise<void>((resolve, reject) => {
-            try {
-                const currentAnimator = imageView['matrixAnimator'];
-                if (currentAnimator) {
-                    currentAnimator.cancel();
-                    currentAnimator.removeAllUpdateListeners();
-                    currentAnimator.removeAllListeners();
-                    imageView['matrixAnimator'] = null;
-                }
-                const arr = Array.create('float', 2);
-                arr[0] = 0;
-                arr[1] = 1;
-                const valueAnimator = android.animation.ValueAnimator.ofFloat(arr);
-                const startValues = Array.create('float', 9);
-                (imageView.nativeViewProtected as android.widget.ImageView).getImageMatrix().getValues(startValues);
-                const currentMatrix = new android.graphics.Matrix();
-                valueAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
-                valueAnimator.setDuration(duration);
-                valueAnimator.addUpdateListener(
-                    new android.animation.ValueAnimator.AnimatorUpdateListener({
-                        onAnimationUpdate(valueAnimator) {
-                            calculateInterpolation(currentMatrix, startValues, values, valueAnimator.getAnimatedValue());
-                            (imageView.nativeViewProtected as android.widget.ImageView).setImageMatrix(currentMatrix);
-                        }
-                    })
-                );
-                valueAnimator.addListener(
-                    new android.animation.Animator.AnimatorListener({
-                        onAnimationStart() {},
-                        onAnimationRepeat() {},
-                        onAnimationCancel(animation) {
-                            imageView['matrixAnimator'] = null;
-                        },
-
-                        onAnimationEnd(animation) {
-                            resolve();
-                            imageView['matrixAnimator'] = null;
-                        }
-                    })
-                );
-                imageView['matrixAnimator'] = valueAnimator;
-                valueAnimator.start();
-            } catch (error) {
-                reject(error);
-            }
-        });
-    } else {
-        const matrix = new android.graphics.Matrix();
-        const arr = Array.create('float', values.length);
-        for (let index = 0; index < values.length; index++) {
-            console.log('arr', index, values[index]);
-            arr[index] = values[index];
-        }
-        matrix.setValues(arr);
-        const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
-        if (scaleType['setImageMatrix']) {
-            scaleType['setImageMatrix'](matrix)(imageView.nativeViewProtected as android.widget.ImageView).invalidate();
-        }
-        // (imageView.nativeViewProtected as android.widget.ImageView).setScaleType(android.widget.ImageView.ScaleType.MATRIX);
-        // (imageView.nati.veViewProtected as android.widget.ImageView).setImageMatrix(matrix);
-    }
-}
+//                         onAnimationEnd(animation) {
+//                             resolve();
+//                             imageView['matrixAnimator'] = null;
+//                         }
+//                     })
+//                 );
+//                 imageView['matrixAnimator'] = valueAnimator;
+//                 valueAnimator.start();
+//             } catch (error) {
+//                 reject(error);
+//             }
+//         });
+//     } else {
+//         const matrix = new android.graphics.Matrix();
+//         const arr = Array.create('float', values.length);
+//         for (let index = 0; index < values.length; index++) {
+//             console.log('arr', index, values[index]);
+//             arr[index] = values[index];
+//         }
+//         matrix.setValues(arr);
+//         const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
+//         if (scaleType['setImageMatrix']) {
+//             scaleType['setImageMatrix'](matrix)(imageView.nativeViewProtected as android.widget.ImageView).invalidate();
+//         }
+//     }
+// }
 
 // const worker = new Worker('~/workers/ImageWorker');
 // const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
@@ -381,15 +358,21 @@ export async function importAndScanImage(document?: OCRDocument) {
             // on android pressing the back button will trigger an error which we dont want
             .present()
             .catch((err) => null);
+        console.log('importAndScanImage', selection);
+        if (__IOS__) {
+            //we need to wait a bit or the presenting controller
+            // is still the image picker and will mix things up
+            await timeout(500);
+        }
         if (selection?.length) {
-            showLoading(l('computing'));
+            await showLoading(l('computing'));
             const sourceImagePath = selection[0].path;
             editingImage = await loadImage(sourceImagePath);
 
             if (!editingImage) {
                 throw new Error('failed to read imported image');
             }
-            let quads = getJSONDocumentCorners(editingImage, 300, 0);
+            let quads = await getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
                 quads.push([
@@ -400,9 +383,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                 ]);
             }
             if (quads?.length) {
-                if (__IOS__) {
-                    await timeout(500);
-                }
+                console.log('ModalImportImage');
                 const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
                 quads = await showModal({
                     page: ModalImportImage,
@@ -414,7 +395,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                     }
                 });
                 if (quads) {
-                    const images = cropDocument(editingImage, quads);
+                    const images = await cropDocument(editingImage, quads);
 
                     if (images?.length) {
                         const pagesToAdd: PageData[] = [];
@@ -428,7 +409,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                                 height: __ANDROID__ ? image.getHeight() : image.size.height,
                                 rotation: editingImage.rotationAngle
                             });
-                            DEV_LOG && console.log('added page', image.getWidth(), image.getHeight());
+                            DEV_LOG && console.log('added page', pagesToAdd[pagesToAdd.length - 1]);
                         }
                         if (document) {
                             await document.addPages(pagesToAdd);

@@ -48,7 +48,7 @@ yarn-error.log*
 .yarn
 yarn.lock
 tmp/
-typings/
+# typings/
 opencv/android/*
 !opencv/android/README.md
 tesseract/android/*
@@ -61,7 +61,7 @@ tesseract/android/*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-/.sentryclirc
+.sentryclirc
 pnpm-lock.yaml
 /fastlane/report.xml
 *.zip
@@ -71,3 +71,7 @@ dist
 .history
 /app/assets/peakfinder/webapp.js
 /.vscode/settings.json
+
+tesseract/ios/**
+*.framework
+/typings/x86_64
