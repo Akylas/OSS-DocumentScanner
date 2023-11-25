@@ -1,13 +1,13 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img } from '@nativescript-community/ui-image';
+    import { EventData, Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { File, ImageSource, ObservableArray, Page, path } from '@nativescript/core';
+    import { File, ImageSource, ObservableArray, Page, View, path } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -24,7 +24,7 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { notifyWhenChanges } from '~/utils/svelte/store';
-    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, timeout, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
 
@@ -71,6 +71,7 @@
             }
             showLoading({ text: l('ocr_computing', 0), progress: 0 });
             const ocrData = await ocrService.ocrPage(document, currentIndex, (progress: number) => {
+                console.log('ocrPage progress', progress);
                 updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
             });
             if (ocrData) {
@@ -135,13 +136,17 @@
             if (newRotation === undefined) {
                 return;
             }
-            await document.updatePage(currentIndex, {
-                rotation: newRotation % 360
-            });
+            await document.updatePage(
+                currentIndex,
+                {
+                    rotation: newRotation % 360
+                },
+                __IOS__
+            );
 
             currentSelectedImageRotation = item.rotation;
-            items.setItem(currentIndex, item);
-            refreshCollectionView();
+            console.log('onImageRotated', currentSelectedImageRotation);
+            // items.setItem(currentIndex, item);
         } catch (error) {
             showError(error);
         }
@@ -223,6 +228,28 @@
                 const file = File.fromPath(imagePath);
                 const destinationPath = path.join(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), file.name);
                 await (await ImageSource.fromFile(imagePath)).saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+            } catch (error) {
+                showError(error);
+            }
+        } else {
+            try {
+                const imagePath = items.getItem(currentIndex).imagePath;
+                const imageSource = await ImageSource.fromFile(imagePath);
+                await new Promise<void>((resolve, reject) => {
+                    PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
+                        () => {
+                            PHAssetChangeRequest.creationRequestForAssetFromImage(imageSource.ios);
+                        },
+                        (success, err) => {
+                            if (success) {
+                                resolve();
+                            } else {
+                                reject(err);
+                            }
+                        }
+                    );
+                });
+                showSnack({ message: l('image_saved_gallery') });
             } catch (error) {
                 showError(error);
             }
@@ -318,13 +345,11 @@
         });
     }
 
-    function updateImageUris() {
-        getCurrentImageView()?.updateImageUri();
-        collectionView?.nativeView.eachChild((c) => {
-            c.getViewById<Img>('imageView')?.updateImageUri();
-            return true;
-        });
-        // refreshCollectionView();
+    async function updateImageUris() {
+        DEV_LOG && console.log('updateImageUris');
+        await getCurrentImageView()?.updateImageUri();
+        collectionView?.nativeView.eachChildAsync((c: View) => c.getViewById<Img>('imageView')?.updateImageUri());
+        refreshCollectionView();
     }
 
     const filters = ColorMatricesTypes.map((k) => ({
@@ -344,18 +369,16 @@
             const currentTransforms = page.transforms?.split(',') || [];
             if (value) {
                 if (currentTransforms.indexOf(type) === -1) {
-                    showLoading(l('computing'));
+                    await showLoading(l('computing'));
                     currentTransforms.push(type);
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
-                    updateImageUris();
                 }
             } else {
                 const index = currentTransforms.indexOf(type);
                 if (index !== -1) {
-                    showLoading(l('computing'));
+                    await showLoading(l('computing'));
                     currentTransforms.splice(index, 1);
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
-                    updateImageUris();
                 }
             }
         } catch (error) {
@@ -366,6 +389,22 @@
         }
     }
 
+    async function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
+        if (event.object !== document) {
+            return;
+        }
+        const index = event.pageIndex;
+        if (index === currentIndex) {
+            DEV_LOG && console.log('edit onDocumentPageUpdated', index, event.imageUpdated);
+            // TODO: fix the pager something is wrong if we
+            if (!!event.imageUpdated) {
+                await updateImageUris();
+            } else {
+                items.setItem(index, items.getItem(index));
+                refreshCollectionView();
+            }
+        }
+    }
     onMount(() => {
         notifyWhenChanges(enhanced, (value) => {
             updateTransform(value, enhanced, 'enhance');
@@ -375,7 +414,10 @@
         });
         // $:
 
-        // $: updateTransform($whitepaper, whitepaper, 'whitepaper');
+        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
+    });
+    onDestroy(() => {
+        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
     });
 
     function refreshCollectionView() {
@@ -401,6 +443,7 @@
         }
     }
     function refreshPager() {
+        console.log('refreshPager');
         pager?.nativeView?.refresh();
     }
     onThemeChanged(refreshPager);
@@ -408,11 +451,6 @@
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,auto,auto">
-        <CActionBar title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
-            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
-        </CActionBar>
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
@@ -467,5 +505,10 @@
             <CropView {editingImage} bind:quadChanged bind:quads />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
         </gridlayout>
+        <CActionBar title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
+            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
+            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
+        </CActionBar>
     </gridlayout>
 </page>

@@ -4,6 +4,7 @@
     import { closeModal, goBack } from 'svelte-native';
     import { fade } from '~/utils/svelte/ui';
     import { showError } from '~/utils/error';
+    import { Application } from '@akylas/nativescript';
     export let title: string;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;
@@ -22,7 +23,7 @@
     });
     function onMenuIcon() {
         try {
-            if (onGoBack) {
+            if (onGoBack) { 
                 onGoBack();
             } else if (modalWindow) {
                 closeModal(undefined);
