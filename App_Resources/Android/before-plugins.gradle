@@ -17,6 +17,6 @@ ext {
     androidXPreferenceVersion = "1.2.1"
     okHttpVersion = "4.12.0"
     frescoVersion = "3.1.0"
-    lottieVersion = "6.1.0"
+    lottieVersion = "6.2.0"
     ndkVersion = "25.2.9519653"
 }
