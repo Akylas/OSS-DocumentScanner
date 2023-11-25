@@ -18,7 +18,7 @@
         "url": "https://github.com/Akylas/com.akylas.documentscanner/issues"
     },
     "dependencies": {
-        "@akylas/kiss-orm": "2.1.3",
+        "@akylas/kiss-orm": "2.1.4",
         "@akylas/nativescript": "8.5.10",
         "@akylas/panzoom": "4.6.0",
         "@mdi/font": "7.3.67",
