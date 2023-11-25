@@ -351,7 +351,6 @@ export class DocumentsService extends Observable {
         const start = Date.now();
         if (__ANDROID__) {
             // const pdfDocument = new android.graphics.pdf.PdfDocument();
-            //@ts-ignore
             const pdfDocument = new com.tom_roush.pdfbox.pdmodel.PDDocument();
             const pages = document.pages;
             let page: OCRPage;
@@ -386,7 +385,6 @@ export class DocumentsService extends Observable {
                 pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
                 const actualBitmap = pageCanvas.getImage();
 
-                //@ts-ignore
                 const ximage = com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory.createFromImage(pdfDocument, actualBitmap, 0.75, 72);
                 // You may want to call PDPage.getCropBox() in order to place your image
                 // somewhere inside this page rect with (x, y) and (width, height).
