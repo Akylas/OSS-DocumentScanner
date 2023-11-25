@@ -1,9 +1,9 @@
 import { HttpsResponse, HttpsResponseLegacy } from '@nativescript-community/https';
 import { File } from '@nativescript/core';
-import { HTTPSOptions, Headers } from '~/services/api';
+import type { HTTPSOptions, Headers } from '~/services/api';
 
 export type AuthHeader = string;
-export { Headers };
+export type { Headers };
 
 export enum AuthType {
     Digest = 'digest',
