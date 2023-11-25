@@ -89,11 +89,6 @@
             view: ActionSheet,
             props: {
                 options: [
-                    // {
-                    //     icon: 'mdi-map',
-                    //     id: 'select_on_map',
-                    //     text: l('select_on_map')
-                    // },
                     {
                         icon: 'mdi-cogs',
                         id: 'preferences',
@@ -564,7 +559,7 @@
     }
 </script>
 
-<page id="camera" bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
+<page bind:this={page} id="camera" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
         <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
