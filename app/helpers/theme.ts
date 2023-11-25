@@ -133,27 +133,27 @@ export function applyTheme(theme: Themes) {
     }
 }
 
-function getSystemAppearance() {
+function getSystemAppearance(): 'dark' | 'light' {
     if (typeof Application.systemAppearance === 'function') {
         return Application.systemAppearance();
     }
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    return Application.systemAppearance;
+    return Application.systemAppearance as any;
 }
 
-export function getRealTheme(theme) {
-    DEV_LOG && console.log('getRealTheme', theme);
-    if (theme === 'auto') {
+export function getRealTheme(th = theme) {
+    DEV_LOG && console.log('getRealTheme', th);
+    if (th === 'auto') {
         try {
-            theme = getSystemAppearance();
-            if (autoDarkToBlack && theme === 'dark') {
-                theme = 'black';
+            th = getSystemAppearance();
+            if (autoDarkToBlack && th === 'dark') {
+                th = 'black';
             }
         } catch (err) {
             console.error('getRealTheme', err, err.stack);
         }
     }
-    return theme;
+    return th;
 }
 
 export function getRealThemeAndUpdateColors() {

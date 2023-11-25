@@ -31,12 +31,14 @@
     import { fade } from '~/utils/svelte/ui';
     import PageIndicator from './PageIndicator.svelte';
     import { filesize } from 'filesize';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { log } from 'console';
     import { request } from '@nativescript-community/perms';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 100;
+
+    const lottieAlpha = __IOS__ ? 100 : 255;
 
     interface Item {
         doc: OCRDocument;
@@ -144,8 +146,19 @@
         DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
     // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorOnBackground, colorSurfaceContainerLow, colorOnSecondary, colorSurfaceContainer, colorOnSurfaceVariant, colorOutline, colorSurface, colorPrimaryContainer } =
-        $colors);
+    let colorPrimaryContainer = $colors.colorPrimaryContainer;
+    $: ({
+        colorSurfaceContainerHigh,
+        colorOnBackground,
+        colorSurfaceContainerLow,
+        colorOnSecondary,
+        colorSurfaceContainer,
+        colorOnSurfaceVariant,
+        colorOutline,
+        colorSurface,
+        colorPrimaryContainer,
+        colorOnPrimaryContainer
+    } = $colors);
 
     onMount(() => {
         if (__ANDROID__) {
@@ -477,6 +490,22 @@
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
+
+    // let lottieLightColor = new Color(colorPrimaryContainer);
+    // const
+    let lottieDarkFColor;
+    let lottieLightColor;
+    $: {
+        if (colorPrimaryContainer) {
+            lottieDarkFColor = new Color(colorPrimaryContainer);
+            const realTheme = getRealTheme();
+            if (realTheme === 'light') {
+                lottieLightColor = new Color(colorPrimaryContainer).darken(10);
+            } else {
+                lottieLightColor = new Color(colorPrimaryContainer).lighten(10);
+            }
+        }
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
@@ -523,7 +552,10 @@
                     bind:this={lottieView}
                     autoPlay={true}
                     keyPathColors={{
-                        '**': new Color(colorPrimaryContainer).setAlpha(100)
+                        'background|**': lottieDarkFColor,
+                        'full|**': lottieLightColor,
+                        'scanner|**': lottieLightColor,
+                        'lines|**': lottieDarkFColor
                     }}
                     loop={true}
                     marginBottom={20}
