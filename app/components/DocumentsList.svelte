@@ -33,6 +33,7 @@
     import { filesize } from 'filesize';
     import { onThemeChanged } from '~/helpers/theme';
     import { log } from 'console';
+    import { request } from '@nativescript-community/perms';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 100;
@@ -132,8 +133,7 @@
             if (index >= 0) {
                 documents.setItem(index, documents.getItem(index));
                 if (!!event.imageUpdated) {
-                    const imageView = getImageView(index);
-                    imageView?.updateImageUri();
+                    getImageView(index)?.updateImageUri();
                 }
             }
         }
@@ -144,7 +144,8 @@
         DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
     // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorSurfaceContainerLow, colorOnSecondary, colorSurfaceContainer, colorOnSurfaceVariant, colorOutline, colorSurface, colorPrimaryContainer } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorOnBackground, colorSurfaceContainerLow, colorOnSecondary, colorSurfaceContainer, colorOnSurfaceVariant, colorOutline, colorSurface, colorPrimaryContainer } =
+        $colors);
 
     onMount(() => {
         if (__ANDROID__) {
@@ -175,6 +176,7 @@
 
     async function onStartCam() {
         try {
+            const result = await request('camera');
             const document = await showModal({
                 page: Camera,
                 fullscreen: true
@@ -227,7 +229,6 @@
             if (!doc) {
                 return;
             }
-            await timeout(10);
             const component = (await import('~/components/PDFEdit.svelte')).default;
             navigate({
                 page: component,
@@ -311,7 +312,7 @@
                 const component = (await import('~/components/PDFView.svelte')).default;
                 navigate({
                     page: component,
-                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
+                    transition: SharedTransition.custom(new PageTransition(300, null, 10)),
                     props: {
                         document: item.doc
                     }
@@ -371,6 +372,8 @@
                 view: OptionSelect,
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
+                transparent: true,
+                hideArrow: true,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
                 props: {
                     width: 200,
@@ -407,10 +410,18 @@
             showError(error);
         }
     }
+    async function showSettings() {
+        try {
+            const Settings = (await import('~/components/Settings.svelte')).default;
+            navigate({ page: Settings });
+        } catch (error) {
+            showError(error);
+        }
+    }
     async function syncDocuments() {
         try {
             if (!syncEnabled) {
-                return;
+                return showSyncSettings();
             }
             await syncService.syncDocuments(true);
         } catch (error) {
@@ -492,9 +503,9 @@
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
                         width={114} />
-                    <canvaslabel col={1} paddingLeft={16}>
+                    <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
-                            <cspan fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
+                            <cspan color={colorOnBackground} fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
                             <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
                         </cgroup>
 
@@ -508,12 +519,21 @@
         </collectionView>
         {#if showNoDocument}
             <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
-                <lottie bind:this={lottieView} autoPlay={true} keyPathColors={{ '**': colorPrimaryContainer }} loop={true} marginBottom={20} src="~/assets/lottie/scanning.lottie" width="80%" />
-                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" verticalAlignment="bottom" width="80%" />
+                <lottie
+                    bind:this={lottieView}
+                    autoPlay={true}
+                    keyPathColors={{
+                        '**': new Color(colorPrimaryContainer).setAlpha(100)
+                    }}
+                    loop={true}
+                    marginBottom={20}
+                    src="~/assets/lottie/scanning.lottie"
+                    width="80%" />
+                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} verticalAlignment="bottom" width="80%" />
             </gridlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout horizontalAlignment="right" row={1} verticalAlignment="bottom">
+            <stacklayout horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
                 <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>
@@ -528,7 +548,7 @@
                 variant="text"
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showOptions} />
         </CActionBar>
         <!-- {#if nbSelected > 0} -->
         {#if nbSelected > 0}

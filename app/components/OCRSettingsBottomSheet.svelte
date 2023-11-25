@@ -120,6 +120,7 @@
                     paddingLeft={downloaded.indexOf(language) !== -1 ? 8 : 12}
                     paddingRight={8}>
                     <label
+                        color={colorOnSurface}
                         fontFamily={$fonts.mdi}
                         fontSize={16}
                         marginRight={4}

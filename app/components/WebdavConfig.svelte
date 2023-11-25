@@ -3,7 +3,7 @@
     import { colors } from '~/variables';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
-    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     // technique for only specific properties to get updated on store change
     $: ({ colorError, colorSecondary, colorOnError } = $colors);
 

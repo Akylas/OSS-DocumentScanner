@@ -136,7 +136,7 @@ export class OCRDocument extends Observable implements Document {
                     //     .slice(-1)[0]
                     //     .replace(/%[a-zA-Z\d]{2}/, '');
                     // if (!baseName.endsWith(IMG_FORMAT)) {
-                        const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
+                    const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
                     // }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
 
@@ -195,7 +195,7 @@ export class OCRDocument extends Observable implements Document {
             const removedPage = removed[index];
             await docData.getFolder(removedPage.id).remove();
         }
-        documentsService.notify({ eventName: 'documentPageDeleted', object: this, pageIndex });
+        documentsService.notify({ eventName: 'documentPageDeleted', object: this as any, pageIndex });
         return this;
     }
 
@@ -234,18 +234,18 @@ export class OCRDocument extends Observable implements Document {
     onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
         page.notify({ eventName: 'updated', object: page });
         this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
-        documentsService.notify({ eventName: 'documentPageUpdated', object: this, pageIndex, imageUpdated });
+        documentsService.notify({ eventName: 'documentPageUpdated', object: this as any, pageIndex, imageUpdated });
     }
     #_observablesListeners: Function[] = [];
     getObservablePages() {
         if (!this.#observables) {
             const pages = this.pages;
             this.#observables = new ObservableArray(pages);
-            const handler = (event: EventData & { pageIndex: number }) => {
-                this.#observables.setItem(event.pageIndex, this.#observables.getItem(event.pageIndex));
-            };
-            this.#_observablesListeners.push(handler);
-            this.on('pageUpdated', handler);
+            // const handler = (event: EventData & { pageIndex: number }) => {
+            //     this.#observables.setItem(event.pageIndex, this.#observables.getItem(event.pageIndex));
+            // };
+            // this.#_observablesListeners.push(handler);
+            // this.on('pageUpdated', handler);
         }
         return this.#observables;
     }
@@ -265,16 +265,16 @@ export class OCRDocument extends Observable implements Document {
 
     async updatePageCrop(pageIndex: number, quad: any, editingImage: ImageSource) {
         const page = this.pages[pageIndex];
-        const images = cropDocument(editingImage, [quad], page.transforms || '');
+        const images = await cropDocument(editingImage, [quad], page.transforms || '');
         const image = images[0];
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
-        if (__IOS__) {
-            // TODO: fix why do we need to clear the whole cache? wrong cache key?
-            getImagePipeline().clearCaches();
-        } else {
-            getImagePipeline().evictFromCache(croppedImagePath);
-        }
+        // if (__IOS__) {
+        //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
+        //     getImagePipeline().clearCaches();
+        // } else {
+        //     getImagePipeline().evictFromCache(croppedImagePath);
+        // }
         await this.updatePage(
             pageIndex,
             {
@@ -292,17 +292,11 @@ export class OCRDocument extends Observable implements Document {
         if (!editingImage) {
             editingImage = await loadImage(page.sourceImagePath);
         }
-        const images = cropDocument(editingImage, [page.crop], transforms);
+        const images = await cropDocument(editingImage, [page.crop], transforms);
 
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
-        if (__IOS__) {
-            // TODO: fix why do we need to clear the whole cache
-            // transformers change the key so we cant simply use the url as a key
-            getImagePipeline().clearCaches();
-        } else {
-            getImagePipeline().evictFromCache(croppedImagePath);
-        }
+        DEV_LOG && console.log('update image', croppedImagePath);
         await this.updatePage(
             pageIndex,
             {

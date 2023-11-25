@@ -3,7 +3,7 @@ import { Application, Device, EventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { colors, createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
 import { lc } from '~/helpers/locale';
 import { get, writable } from 'svelte/store';
@@ -141,7 +141,7 @@ function getSystemAppearance() {
     return Application.systemAppearance;
 }
 
-function getRealTheme(theme) {
+export function getRealTheme(theme) {
     DEV_LOG && console.log('getRealTheme', theme);
     if (theme === 'auto') {
         try {

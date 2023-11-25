@@ -38,7 +38,7 @@ This app uses opencv and tesseract. I did not include the libraries because ther
 #### OpenCV
 
 * **Android**:
-You can download Opencv 4.8.0 for android [here](https://github.com/opencv/opencv/releases/download/4.8.0/opencv-4.8.0-android-sdk.zip).
+You can download Opencv 4.8.0 for android [here](https://github.com/nihui/opencv-mobile/releases/latest/download/opencv-mobile-4.8.1-apple.zip).
 Then place the necessary libs/includes in the `opencv/android` at the root of this repo like shown here:
 ![opencv directory structure](images/opencv_structure.png)
 
@@ -58,7 +58,10 @@ It is a bit trickier for Tesseract as we need to compile it
     - copy the static libs and the includes(in `tesseract4android/src/main/cpp/tesseract/src/include`) in the `tesseract/android` at the root of this repo like shown here:
 ![opencv directory structure](images/tesseract_structure.png)
 
-* **iOS**: No instruction yet
+* **iOS**:
+    - clone [https://github.com/Akylas/TesseractBuild](https://github.com/Akylas/TesseractBuild)
+    - build with `./Scripts/Build_All.sh`
+    - copy everything from `Root` to the `tesseract/ios` at the root of this repo
 
 #### Yarn
 
