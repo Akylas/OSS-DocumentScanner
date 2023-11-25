@@ -18,8 +18,8 @@ declare namespace com {
             }
             export namespace CustomImageAnalysisCallback {
                 export class Companion {
-                    public static getJSONDocumentCorners(...args): string;
-                    public static cropDocument(...args): any[];
+                    public static getJSONDocumentCorners(...args): void;
+                    public static cropDocument(...args): void;
                     public static ocrDocument(...args): void;
                 }
 

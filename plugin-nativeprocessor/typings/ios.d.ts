@@ -17,6 +17,8 @@ declare class NSCropView extends UIView {
 
     colors: NSArray<any>;
 
+    fillAlpha: number;
+
     image: UIImage;
 
     imageSize: CGSize;
@@ -26,26 +28,25 @@ declare class NSCropView extends UIView {
     strokeWidth: number;
 }
 
-declare class OCRDelegate extends NSObject {
-    static alloc(): OCRDelegate; // inherited from NSObject
-
-    static new(): OCRDelegate; // inherited from NSObject
-
-    onCompleteError(result: string, error: NSError): void;
+interface OCRDelegate {
+    onCompleteError(result: NSObject, error: NSError): void;
 
     onProgress(progress: number): void;
 }
+declare let OCRDelegate: {
+    prototype: OCRDelegate;
+};
 
 declare class OpencvDocumentProcessDelegate extends NSObject {
     static alloc(): OpencvDocumentProcessDelegate; // inherited from NSObject
 
-    static cropDocumentQuads(image: UIImage, quads: string): NSArray<any>;
+    static cropDocumentQuadsDelegate(image: UIImage, quads: string, delegate: OCRDelegate): void;
 
-    static cropDocumentQuadsTransforms(image: UIImage, quads: string, transforms: string): NSArray<any>;
+    static cropDocumentQuadsTransformsDelegate(image: UIImage, quads: string, transforms: string, delegate: OCRDelegate): void;
 
     static findDocumentCornersShrunkImageHeightImageRotation(image: UIImage, shrunkImageHeight: number, imageRotation: number): NSArray<any>;
 
-    static getJSONDocumentCornersShrunkImageHeightImageRotation(image: UIImage, shrunkImageHeight: number, imageRotation: number): string;
+    static getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(image: UIImage, shrunkImageHeight: number, imageRotation: number, delegate: OCRDelegate): void;
 
     static new(): OpencvDocumentProcessDelegate; // inherited from NSObject
 

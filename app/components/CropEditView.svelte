@@ -48,7 +48,7 @@
         if (recrop) {
             // let s see if quads changed and update image
             if (quadChanged) {
-                const images = cropDocument(editingImage, [quad]);
+                const images = await cropDocument(editingImage, [quad]);
                 await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
                 recycleImages(images);
 

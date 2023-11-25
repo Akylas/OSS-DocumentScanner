@@ -7,5 +7,6 @@
 @property (strong, nonatomic, retain) UIImage*  image;
 @property (nonatomic, assign) CGSize  imageSize;
 @property (nonatomic, assign) CGFloat  strokeWidth;
+@property (nonatomic, assign) CGFloat  fillAlpha;
 @end
 

@@ -7,6 +7,7 @@
   self =  [super initWithFrame:frame];
   self.backgroundColor = UIColor.clearColor;
   self.opaque = NO;
+  self.fillAlpha = 0;
   self.colors = [NSArray arrayWithObjects:[UIColor blueColor]];
   return self;
 }
@@ -46,8 +47,14 @@
         CGContextAddLineToPoint(context, point.x * ratio, point.y * ratio); //start at this point
       }];
       CGContextAddLineToPoint(context, startPoint.x * ratio, startPoint.y * ratio); //start at this point
+      CGContextStrokePath(context);
+
+      if (self.fillAlpha > 0) {
+        CGContextSetFillColorWithColor(context, ([((UIColor*)[self.colors objectAtIndex:( idx % [self.colors count] )]) colorWithAlphaComponent:self.fillAlpha/255]).CGColor);
+        CGContextFillPath(context);
+
+      }
     }];
-    CGContextStrokePath(context);
   }
 }
 
