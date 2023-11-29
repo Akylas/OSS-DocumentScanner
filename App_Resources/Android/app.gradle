@@ -10,7 +10,6 @@ android {
   def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
   defaultConfig {  
     multiDexEnabled false
-    applicationId "com.akylas.documentscanner"
     minSdkVersion 21
     versionCode 1
     versionName "1.0.0"
@@ -135,7 +134,7 @@ task createProguard {
     doLast {
         exec {
             workingDir "$USER_PROJECT_ROOT"
-            commandLine 'node', 'scripts/createProguard.js'
+            commandLine 'node', "scripts/createProguard.js", "${rootDir}"
         }
     }
 }
