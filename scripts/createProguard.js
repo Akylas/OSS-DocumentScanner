@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const buildToolsPath = path.join('platforms', 'android', 'build-tools');
+const buildToolsPath = path.join(process.argv[2], 'build-tools');
 const whitelist = fs.readFileSync(path.join(buildToolsPath, 'whitelist.mdg'), { encoding: 'utf-8' });
 const whitelistfilteredLines = [...new Set(whitelist.split('\n'))].filter((l) => l.length > 0 && !l.startsWith('//'));
 const blacklist = fs.readFileSync(path.join(buildToolsPath, 'blacklist.mdg'), { encoding: 'utf-8' });
