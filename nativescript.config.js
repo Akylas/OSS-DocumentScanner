@@ -1,7 +1,8 @@
 module.exports = {
     ignoredNativeDependencies: ['@nativescript-community/sentry'],
-    id: 'com.akylas.documentscanner',
-    appResourcesPath: 'App_Resources',
+    id: process.env['APP_ID'] || 'com.akylas.documentscanner',
+    appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources',
+    buildPath: process.env['APP_BUILD_PATH'] || 'platforms',
     webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
     android: {

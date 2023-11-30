@@ -1,1 +1,6 @@
 include ':nativeprocessor'
+include ':ui-camera'
+include ':widgets-release'
+include ':app'
+project(':ui-camera').projectDir = new File("/home/mguillon/dev/nativescript/ui-cameraview/src-native/android/ui-camera")
+project(':widgets-release').projectDir = new File("/home/mguillon/dev/nativescript/NativeScript/packages/ui-mobile-base/android/widgets")

@@ -20,6 +20,7 @@ e2e/**/*.js
 /vendor
 build
 .cxx
+build*
 /Gemfile.lock
 firmware
 firmwares
@@ -54,6 +55,7 @@ opencv/android/*
 !opencv/android/README.md
 tesseract/android/*
 !tesseract/android/README.md
+zxingcpp    
 
 
 # Visual Studio Code

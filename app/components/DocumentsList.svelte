@@ -580,7 +580,7 @@
                 variant="text"
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
-            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showOptions} />
+            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showSettings} />
         </CActionBar>
         <!-- {#if nbSelected > 0} -->
         {#if nbSelected > 0}
