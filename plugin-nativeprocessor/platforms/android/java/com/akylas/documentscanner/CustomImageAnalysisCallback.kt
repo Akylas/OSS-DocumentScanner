@@ -4,27 +4,28 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
-import android.graphics.PointF
+import android.util.Log
 import androidx.camera.core.ImageProxy
-import com.akylas.documentscanner.models.Quad
-import com.nativescript.cameraview.BitmapUtils
+import com.akylas.documentscanner.extensions.toBitmap
 import com.nativescript.cameraview.ImageAnalysisCallback
 import com.nativescript.cameraview.ImageAsyncProcessor
 import java.util.*
 import kotlin.concurrent.thread
 import org.json.JSONArray
+import kotlin.math.max
 
 class CustomImageAnalysisCallback
 @JvmOverloads
 constructor(private val context: Context, private val cropView: CropView? = null) :
     ImageAnalysisCallback {
 
-    var previewResizeThreshold = 300.0
+    var previewResizeThreshold = 200.0
 
-    interface OCRDocumentCallback {
+    interface FunctionCallback {
         fun onResult(e: Exception?, result: Any?)
     }
-    interface OCRDocumentProgress {
+
+    interface FunctionCallbackProgress {
         fun onProgress(progress: Int)
     }
 
@@ -41,23 +42,36 @@ constructor(private val context: Context, private val cropView: CropView? = null
             imageRotation: Int
         ): Vector<Vector<Point>>
 
+        private external fun nativeScanAndQRCode(
+            srcBitmap: Bitmap,
+            shrunkImageHeight: Int,
+            imageRotation: Int,
+            options: String,
+        ): String
+
         private external fun nativeCrop(
             srcBitmap: Bitmap,
             points: String,
             transforms: String,
             outBitmap: Bitmap
         )
+
         private external fun nativeOCR(
             srcBitmap: Bitmap,
             options: String,
-            progress: OCRDocumentProgress?
+            progress: FunctionCallbackProgress?
+        ): String
+
+        private external fun nativeQRCodeRead(
+            srcBitmap: Bitmap,
+            options: String,
         ): String
 
         /**
          * @property cropperOffsetWhenCornersNotFound if we can't find document corners, we
          * set corners to image size with a slight margin
          */
-        private const val cropperOffsetWhenCornersNotFound = 100.0
+        private const val cropperOffsetWhenCornersNotFound = 100
 
         init {
             try {
@@ -77,9 +91,9 @@ constructor(private val context: Context, private val cropView: CropView? = null
         @JvmOverloads
         fun ocrDocument(
             image: Bitmap,
-            callback: OCRDocumentCallback,
+            callback: FunctionCallback,
             options: String = "",
-            progress: OCRDocumentProgress? = null,
+            progress: FunctionCallbackProgress? = null,
         ) {
             thread(start = true) {
                 try {
@@ -89,6 +103,37 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 }
             }
         }
+
+        /**
+         * take a photo with a document, and find the document's corners
+         *
+         * @param image a photo with a document
+         * @return a list with document corners (top left, top right, bottom right, bottom
+         * left)
+         */
+        @JvmOverloads
+        fun readQRCode(
+            image: Bitmap,
+            callback: FunctionCallback,
+            options: String = "",
+        ) {
+            thread(start = true) {
+                try {
+                    callback.onResult(null, nativeQRCodeRead(image, options))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
+        }
+        @JvmOverloads
+        fun readQRCodeSync(
+            image: Bitmap,
+            callback: FunctionCallback,
+            options: String = "",
+        ): String {
+            return nativeQRCodeRead(image, options)
+        }
+
         /**
          * take a photo with a document, and find the document's corners
          *
@@ -99,94 +144,43 @@ constructor(private val context: Context, private val cropView: CropView? = null
         @JvmOverloads
         fun getJSONDocumentCorners(
             image: Bitmap,
-            callback: OCRDocumentCallback,
+            callback: FunctionCallback,
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0
         ) {
             thread(start = true) {
                 try {
-                    callback.onResult(null, nativeScanJSON(image, shrunkImageHeight.toInt(), imageRotation))
+                    callback.onResult(
+                        null,
+                        nativeScanJSON(image, shrunkImageHeight.toInt(), imageRotation)
+                    )
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 }
             }
         }
-
-        fun quadsFromJSONString(str: String): List<Quad> {
-            val jsonArray = JSONArray(str)
-            val listdata = ArrayList<Quad>()
+        fun pointsFromJSONArray(jsonArray: JSONArray): MutableList<List<Point>> {
+//             val start = System.nanoTime()
+            val list = mutableListOf<List<Point>>()
             for (i in 0 until jsonArray.length()) {
-                val subJsonArray = jsonArray.getJSONArray(i)
-                listdata.add(
-                    Quad(
-                        PointF(
-                            subJsonArray.getJSONArray(
-                                0
-                            )
-                                .getDouble(
-                                    0
-                                )
-                                .toFloat(),
-                            subJsonArray.getJSONArray(
-                                0
-                            )
-                                .getDouble(
-                                    1
-                                )
-                                .toFloat()
-                        ),
-                        PointF(
-                            subJsonArray.getJSONArray(
-                                1
-                            )
-                                .getDouble(
-                                    0
-                                )
-                                .toFloat(),
-                            subJsonArray.getJSONArray(
-                                1
-                            )
-                                .getDouble(
-                                    1
-                                )
-                                .toFloat()
-                        ),
-                        PointF(
-                            subJsonArray.getJSONArray(
-                                2
-                            )
-                                .getDouble(
-                                    0
-                                )
-                                .toFloat(),
-                            subJsonArray.getJSONArray(
-                                2
-                            )
-                                .getDouble(
-                                    1
-                                )
-                                .toFloat()
-                        ),
-                        PointF(
-                            subJsonArray.getJSONArray(
-                                3
-                            )
-                                .getDouble(
-                                    0
-                                )
-                                .toFloat(),
-                            subJsonArray.getJSONArray(
-                                3
-                            )
-                                .getDouble(
-                                    1
-                                )
-                                .toFloat()
-                        )
-                    )
-                )
+                var value = jsonArray[i] as JSONArray
+                list.add(pointFromJSONArray(value))
             }
-            return listdata
+//             Log.d("JS", "pointsFromJSONString ${(System.nanoTime() - start) / 1000000}ms");
+            return list
+        }
+        fun pointFromJSONArray(jsonArray: JSONArray, scale: Float = 1.0f): List<Point> {
+                val list = mutableListOf<Point>()
+                for (i in 0 until jsonArray.length()) {
+                    var value2 = jsonArray[i] as JSONArray
+
+                    list.add(Point(((value2[0] as Int) * scale).toInt(), ((value2[1] as Int) * scale).toInt()))
+                }
+            return list
+        }
+
+        fun pointsFromJSONString(str: String): List<List<Point>> {
+            return pointsFromJSONArray(JSONArray(str))
         }
 
         /**
@@ -226,45 +220,25 @@ constructor(private val context: Context, private val cropView: CropView? = null
             imageRotation: Int = 0,
             returnDefault: Boolean = true
         ): List<List<Point>>? {
-            val cornerPoints: List<List<Point>>? =
-                findDocumentCorners(photo, shrunkImageHeight, imageRotation)
+//            val cornerPoints: List<List<Point>>? =  pointsFromJSONString(nativeScanJSON(photo, shrunkImageHeight.toInt(), imageRotation))
+            val cornerPoints: List<List<Point>>? =  nativeScan(photo, shrunkImageHeight.toInt(), imageRotation)
             // if cornerPoints is null then default the corners to the photo bounds with
             // a margin
             val default =
                 if (returnDefault)
                     listOf(
+                        Point(cropperOffsetWhenCornersNotFound, cropperOffsetWhenCornersNotFound),
                         Point(
+                            photo.width - cropperOffsetWhenCornersNotFound,
                             cropperOffsetWhenCornersNotFound
-                                .toInt(),
-                            cropperOffsetWhenCornersNotFound
-                                .toInt()
                         ),
                         Point(
-                            (photo.width
-                                .toDouble() -
-                                    cropperOffsetWhenCornersNotFound)
-                                .toInt(),
-                            cropperOffsetWhenCornersNotFound
-                                .toInt()
+                            cropperOffsetWhenCornersNotFound,
+                            photo.height - cropperOffsetWhenCornersNotFound
                         ),
                         Point(
-                            cropperOffsetWhenCornersNotFound
-                                .toInt(),
-                            (photo.height
-                                .toDouble() -
-                                    cropperOffsetWhenCornersNotFound
-                                        .toInt())
-                                .toInt()
-                        ),
-                        Point(
-                            (photo.width
-                                .toDouble() -
-                                    cropperOffsetWhenCornersNotFound)
-                                .toInt(),
-                            (photo.height
-                                .toDouble() -
-                                    cropperOffsetWhenCornersNotFound)
-                                .toInt()
+                            photo.width - cropperOffsetWhenCornersNotFound,
+                            photo.height - cropperOffsetWhenCornersNotFound
                         )
                     )
                 else null
@@ -276,37 +250,21 @@ constructor(private val context: Context, private val cropView: CropView? = null
         fun cropDocument(
             bitmap: Bitmap,
             quads: String,
-            callback: OCRDocumentCallback,
+            callback: FunctionCallback,
             transforms: String = ""
         ) {
             thread(start = true) {
                 try {
                     val bitmaps = arrayListOf<Bitmap>()
-                    quadsFromJSONString(quads).forEachIndexed { index, quad ->
+                    pointsFromJSONString(quads).forEachIndexed { index, points ->
                         // convert corners from image preview coordinates to original photo
                         // coordinates
                         // (original image is probably bigger than the preview image)
                         // convert output image matrix to bitmap
                         val cropWidth =
-                            ((quad.topLeftCorner.distance(
-                                quad.topRightCorner
-                            ) +
-                                    quad.bottomLeftCorner
-                                        .distance(
-                                            quad.bottomRightCorner
-                                        )) /
-                                    2)
-                                .toInt()
+                            ((points[0].distance(points[1]) + points[2].distance(points[3])) / 2).toInt()
                         val cropHeight =
-                            ((quad.bottomLeftCorner.distance(
-                                quad.topLeftCorner
-                            ) +
-                                    quad.bottomRightCorner
-                                        .distance(
-                                            quad.topRightCorner
-                                        )) /
-                                    2)
-                                .toInt()
+                            ((points[3].distance(points[0]) + points[2].distance(points[1])) / 2).toInt()
 
                         val cropBitmap =
                             Bitmap.createBitmap(
@@ -331,6 +289,7 @@ constructor(private val context: Context, private val cropView: CropView? = null
         }
     }
 
+
     @SuppressLint("UnsafeOptInUsageError")
     override fun process(
         imageProxy: ImageProxy,
@@ -342,43 +301,71 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 processor.finished()
                 return
             }
+             val start = System.nanoTime()
             val image = imageProxy.image!!
-            val previewBitmap = BitmapUtils.getBitmap(context, imageProxy)
-            val pointsList: List<List<Point>>? =
-                getDocumentCorners(
-                    previewBitmap,
-                    previewResizeThreshold,
-                    info.rotationDegrees,
-                    false
-                )
+            val previewBitmap = imageProxy.toBitmap(context)
+            if (previewBitmap == null) {
+                processor.finished()
+                return
+            }
+//            val result = nativeScanAndQRCode(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees, "");
+//            val jsonRes = JSONObject(result)
+//            var pointsList: MutableList<List<Point>>? =  pointsFromJSONArray(jsonRes.getJSONArray("points"))
+//
+//
+//            val qrcodeRes = jsonRes.getJSONArray("qrcodes")
+//            if (pointsList != null && pointsList.size > 0 && qrcodeRes.length() > 0) {
+//                val qrcode =qrcodeRes.getJSONObject(0)
+//                pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position"),
+//                    jsonRes.getDouble("resizeScale").toFloat()
+//                ))
+//            }
+            val result = nativeScanJSON(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees);
+             var pointsList: MutableList<List<Point>>? =  pointsFromJSONArray(JSONArray(result))
+//            val pointsList: List<List<Point>>? =
+//                getDocumentCorners(
+//                    previewBitmap,
+//                    previewResizeThreshold,
+//                    info.rotationDegrees,
+//                    false
+//                )
+            Log.d("JS", "getDocumentCorners ${(System.nanoTime() - start) /1000000}ms");
             if (pointsList != null) {
-                val photoHeight: Int =
-                    if (info.rotationDegrees == 180 ||
-                        info.rotationDegrees ==
-                        0
-                    ) {
-                        image.height
-                    } else {
-                        image.width
-                    }
-                val ratio = cropView.height.toFloat() / photoHeight.toFloat()
-                val quads =
-                    pointsList.map { points ->
-                        points
-                            .sortedBy { it.y }
-                            .chunked(2)
-                            .map {
-                                it.sortedBy { point
-                                    ->
-                                    point.x
-                                }
-                            }
-                            .flatten()
-                    }
-                cropView.quads =
-                    quads.map { points -> Quad(points) }.map { quad ->
-                        quad.applyRatio(ratio)
-                    }
+
+//                val ratio = cropView.height.toFloat() / photoHeight.toFloat()
+//                val quads =
+//                    pointsList.map { points ->
+//                        points
+//                            .sortedBy { it.y }
+//                            .chunked(2)
+//                            .map {
+//                                it.sortedBy { point
+//                                    ->
+//                                    point.x
+//                                }
+//                            }
+//                            .flatten()
+//                    }
+
+                if (info.rotationDegrees == 180 ||
+                    info.rotationDegrees ==
+                    0
+                ) {
+
+                    cropView.imageWidth = image.width
+                    cropView.imageHeight = image.height
+                } else {
+
+                    cropView.imageWidth = image.height
+                    cropView.imageHeight = image.width
+                }
+                val scaleX = cropView.height.toFloat() / image.width.toFloat()
+                val scaleY = cropView.width.toFloat() / image.height.toFloat()
+                cropView.scale = max(scaleX, scaleY)
+                cropView.quads = pointsList
+//                    quads.map { points -> Quad(points) }.map { quad ->
+//                        quad.applyRatio(ratio)
+//                    }
             } else {
                 cropView.quads = null
             }

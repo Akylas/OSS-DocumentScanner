@@ -6,15 +6,6 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
- * converts an OpenCV point to Android point
- *
- * @return Android point
- */
-fun Point.toPointF(): PointF {
-    return PointF(x.toFloat(), y.toFloat())
-}
-
-/**
  * calculates the distance between 2 OpenCV points
  *
  * @param point the 2nd OpenCV point

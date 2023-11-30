@@ -22,7 +22,7 @@
     import CropEditView from './CropEditView.svelte';
     import DocumentsList from './DocumentsList.svelte';
     import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import { cropDocument, detectQRCode, getJSONDocumentCorners } from 'plugin-nativeprocessor';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
 
@@ -388,6 +388,9 @@
             const strTransforms = transforms.join(',');
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
             let images = await cropDocument(editingImage, quads, strTransforms);
+            // const start = Date.now();
+            // const qrCode = await detectQRCode(images[0], {});
+            // console.log('detected qrcode', qrCode, Date.now() - start, 'ms');
             const pagesToAdd: PageData[] = [];
             for (let index = 0; index < images.length; index++) {
                 const image = images[index];
@@ -508,6 +511,7 @@
                 processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             }
+            processor['previewResizeThreshold'] = ApplicationSettings.getNumber('previewResizeThreshold', 200);
             // if (documentsService.started) {
             //     processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
             //     // toggleEditing();

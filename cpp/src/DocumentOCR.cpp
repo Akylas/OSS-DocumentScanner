@@ -1,6 +1,7 @@
 #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
 #include <tesseract/ocrclass.h>
+#include <Utils.h>
 
 using namespace std;
 using namespace cv;
@@ -118,15 +119,6 @@ JSONCONS_ALL_MEMBER_TRAITS(cv::Rect, x, y, width, height);
 JSONCONS_N_MEMBER_TRAITS(DocumentOCR::OCRData, 0, fontWeight, text, confidence, fontFamily, fontStyle, textDecoration, fontSize, box);
 JSONCONS_ALL_MEMBER_TRAITS(DocumentOCR::OCRResult, text, blocks, imageWidth, imageHeight);
 
-double contoursApproxEpsilonFactor = 0.02;
-
-// comparison function object
-bool compareContourAreas(std::vector<cv::Point> contour1, std::vector<cv::Point> contour2)
-{
-    double i = fabs(contourArea(cv::Mat(contour1)));
-    double j = fabs(contourArea(cv::Mat(contour2)));
-    return (i > j);
-}
 
 float getYSortValue(const Rect &a)
 {

@@ -21,13 +21,14 @@ declare namespace com {
                     public static getJSONDocumentCorners(...args): void;
                     public static cropDocument(...args): void;
                     public static ocrDocument(...args): void;
+                    public static readQRCode(...args): void;
                 }
 
-                export class OCRDocumentCallback {
+                export class FunctionCallback {
                     onResult(e, result);
                     constructor(args: { onResult: (e, result) => void });
                 }
-                export class OCRDocumentProgress {
+                export class FunctionProgress {
                     onProgress(p);
                     constructor(args: { onProgress: (p) => void });
                 }

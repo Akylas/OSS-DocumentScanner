@@ -76,6 +76,16 @@
                 description: getThemeDisplayName(),
                 title: lc('theme.title')
             },
+
+            {
+                id: 'setting',
+                key: 'previewResizeThreshold',
+                title: lc('preview_resize_threshold'),
+                description: lc('preview_resize_threshold_desc'),
+                // default: ApplicationSettings.getNumber('previewResizeThreshold', 200),
+                rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', 200),
+                type: 'prompt'
+            },
             {
                 id: 'webdav',
                 rightValue: () => (syncService.enabled ? lc('enabled') : lc('disabled')),
@@ -258,6 +268,7 @@
                     if (item.type === 'prompt') {
                         const result = await prompt({
                             title: getTitle(item),
+                            message: getSubtitle(item),
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,

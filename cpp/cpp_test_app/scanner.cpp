@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <vector>
 #include <DocumentDetector.h>
-#include <DocumentOCR.h>
+// #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
 
 using namespace cv;
@@ -125,6 +125,20 @@ int cannyThreshold2 = docDetector.cannyThreshold2;
 int morphologyAnchorSize = docDetector.morphologyAnchorSize;
 int dilateAnchorSize = docDetector.dilateAnchorSize;
 int gaussianBlur = docDetector.gaussianBlur;
+int medianBlurValue = docDetector.medianBlurValue;
+int bilateralFilterValue = docDetector.bilateralFilterValue;
+int dilateAnchorSizeBefore = docDetector.dilateAnchorSizeBefore;
+int houghLinesThreshold = docDetector.houghLinesThreshold;
+int houghLinesMinLineLength = docDetector.houghLinesMinLineLength;
+int houghLinesMaxLineGap = docDetector.houghLinesMaxLineGap;
+int thresh = docDetector.thresh;
+int threshMax = docDetector.threshMax;
+int adapThresholdBlockSize = docDetector.adapThresholdBlockSize; // 391
+int adapThresholdC = docDetector.adapThresholdBlockSize;         // 53
+int gammaCorrection = docDetector.gammaCorrection * 10;         // 53
+int shouldNegate = docDetector.shouldNegate;         // 53
+int useChannel = docDetector.useChannel;         // 53
+
 int whitepaper = 0;
 int enhance = 0;
 int toon = 0;
@@ -137,8 +151,6 @@ int imageIndex = 0;
 int dogKSize = 15;
 int dogSigma1 = 100.0;
 int dogSigma2 = 0.0;
-int adapThresholdBlockSize = 339; // 391
-int adapThresholdC = 47;          // 53
 
 bool tesseractDemo = true;
 int actualTesseractDetect = 1;
@@ -147,6 +159,55 @@ int desseractDetectContours = 1;
 int textDetectDilate = 40; // 0
 int textDetect1 = 70;      // 34
 int textDetect2 = 4;       // 12
+
+// inline uchar reduceVal(const uchar val)
+// {
+//     if (val < 64) return 0;
+//     if (val < 128) return 64;
+//     return 255;
+// }
+
+inline uchar reduceVal(const uchar val)
+{
+    if (val < 192) return uchar(val / 64.0 + 0.5) * 64;
+    return 255;
+}
+void processColors(Mat& img)
+{
+    uchar* pixelPtr = img.data;
+    for (int i = 0; i < img.rows; i++)
+    {
+        for (int j = 0; j < img.cols; j++)
+        {
+            const int pi = i*img.cols*3 + j*3;
+            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
+            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
+            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+        }
+    }
+}
+
+cv::Mat quantizeImage(const cv::Mat& inImage, int numBits)
+{
+    cv::Mat retImage = inImage.clone();
+
+    uchar maskBit = 0xFF;
+
+    // keep numBits as 1 and (8 - numBits) would be all 0 towards the right
+    maskBit = maskBit << (8 - numBits);
+
+    for(int j = 0; j < retImage.rows; j++)
+        for(int i = 0; i < retImage.cols; i++)
+        {
+            cv::Vec3b valVec = retImage.at<cv::Vec3b>(j, i);
+            valVec[0] = valVec[0] & maskBit;
+            valVec[1] = valVec[1] & maskBit;
+            valVec[2] = valVec[2] & maskBit;
+            retImage.at<cv::Vec3b>(j, i) = valVec;
+        }
+
+        return retImage;
+}
 
 cv::Mat adaptiveThresholdColor(const cv::Mat &image)
 {
@@ -219,74 +280,7 @@ void setImagesFromFolder(string dirPath)
     {
         images.push_back(entry.path());
     }
-    // images = new std::string[result.size()];
-    // std::copy(result.begin(), result.end(), images);
 }
-
-// bool isRepetitive(const string &s)
-// {
-//     int count = 0;
-//     for (int i = 0; i < (int)s.size(); i++)
-//     {
-//         if ((s[i] == 'i') ||
-//             (s[i] == 'l') ||
-//             (s[i] == 'I'))
-//             count++;
-//     }
-//     if (count > ((int)s.size() + 1) / 2)
-//     {
-//         return true;
-//     }
-//     return false;
-// }
-
-// void er_draw(vector<Mat> &channels, vector<vector<cv::text::ERStat>> &regions, vector<Vec2i> group, Mat &segmentation)
-// {
-//     for (int r = 0; r < (int)group.size(); r++)
-//     {
-//         cv::text::ERStat er = regions[group[r][0]][group[r][1]];
-//         if (er.parent != NULL) // deprecate the root region
-//         {
-//             int newMaskVal = 255;
-//             int flags = 4 + (newMaskVal << 8) + FLOODFILL_FIXED_RANGE + FLOODFILL_MASK_ONLY;
-//             floodFill(channels[group[r][0]], segmentation, Point(er.pixel % channels[group[r][0]].cols, er.pixel / channels[group[r][0]].cols),
-//                       Scalar(255), 0, Scalar(er.level), Scalar(0), flags);
-//         }
-//     }
-// }
-
-// cv::Mat resizeImageToThreshold(const cv::Mat &image, int resizeThreshold, int borderSize)
-// {
-//     // add borders to image
-//     if (resizeThreshold <= 0)
-//     {
-//         return image;
-//     }
-//     int width = image.cols;
-//     int height = image.rows;
-//     int minSize = min(width, height);
-//     if (minSize > resizeThreshold)
-//     {
-//         float resizeScale = 1.0f * minSize / resizeThreshold;
-//         width = static_cast<int>(width / resizeScale);
-//         height = static_cast<int>(height / resizeScale);
-//         Size size(width, height);
-//         cv::Mat resizedBitmap(size, image.type());
-//         resize(image, resizedBitmap, size);
-//         if (borderSize > 0)
-//         {
-//             copyMakeBorder(resizedBitmap, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
-//         }
-//         return resizedBitmap;
-//     }
-//     if (borderSize > 0)
-//     {
-//         Mat resizedBitmap;
-//         copyMakeBorder(image, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
-//         return resizedBitmap;
-//     }
-//     return image;
-// }
 
 void preprocess_ocr(const Mat &image, const Mat &rgb)
 {
@@ -294,278 +288,26 @@ void preprocess_ocr(const Mat &image, const Mat &rgb)
     cv::adaptiveThreshold(rgb, rgb, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 197, 48);
 }
 
-// struct OCRData
-// {
-//     cv::Rect box;
-//     string text;
-//     float confidence;
-//     std::optional<std::string> font_name;
-//     std::optional<bool> bold;
-//     std::optional<bool> italic;
-//     std::optional<bool> underlined;
-//     std::optional<bool> monospace;
-//     std::optional<bool> serif;
-//     std::optional<bool> smallcaps;
-//     std::optional<int> pointsize;
-//     std::optional<int> font_id;
-// };
-// struct OCRResult
-// {
-//     string text;
-//     std::vector<OCRData> blocks;
-// };
-
-// JSONCONS_ALL_MEMBER_TRAITS(cv::Rect, x, y, width, height);
-// JSONCONS_N_MEMBER_TRAITS(OCRData, 0, box, text, confidence,
-//                          font_name, bold, italic, underlined, pointsize);
-// JSONCONS_ALL_MEMBER_TRAITS(OCRResult, text, blocks);
-
-// double contoursApproxEpsilonFactor = 0.02;
-// comparison function object
-// bool compareContourAreas(std::vector<cv::Point> contour1, std::vector<cv::Point> contour2)
-// {
-//     double i = fabs(contourArea(cv::Mat(contour1)));
-//     double j = fabs(contourArea(cv::Mat(contour2)));
-//     return (i > j);
-// }
-
-// float getYSortValue(const Rect &a)
-// {
-//     return (round((a.y + a.height / 2) / 100) * 10000);
-// }
-// float getSorkKeyTopToBottomLeftToRight(const Rect &a)
-// {
-//     return (getYSortValue(a) + a.x);
-// }
-
-// bool rectComparatorYThenX(const Rect &a, const Rect &b)
-// {
-//     return getSorkKeyTopToBottomLeftToRight(a) < getSorkKeyTopToBottomLeftToRight(b);
-// }
-// void detect_text(const Mat &image, const Mat &out_img)
-// {
-//     double t_r = (double)getTickCount();
-//     cout << "TIME_OCR_INITIALIZATION = " << ((double)getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
-//     std::vector<cv::Rect> boundRects;
-//     cv::Mat img_gray, img_sobel, img_threshold, element;
-//     cvtColor(image, img_sobel, COLOR_BGR2GRAY);
-//     cv::adaptiveThreshold(img_sobel, img_sobel, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, adapThresholdBlockSize, adapThresholdC);
-
-//     int imageWidth = img_sobel.size().width;
-//     int imageHeight = img_sobel.size().height;
-//     double resizeScale = (double)image.size().width / imageWidth;
-
-//     if (desseractDetectContours == 1)
-//     {
-//         vector<Vec4i> hierarchy;
-//         std::vector<std::vector<cv::Point>> contours;
-//         std::vector<cv::Point> contours_poly;
-//         std::vector<cv::Point> contour;
-//         element = getStructuringElement(cv::MORPH_RECT, cv::Size(textDetect1, textDetect2));
-//         cv::morphologyEx(img_sobel, img_threshold, MORPH_CLOSE, element); // Does the trick
-
-//         imshow("Detect", img_sobel);
-//         if (textDetectDilate > 0)
-//         {
-//             element = getStructuringElement(cv::MORPH_RECT, cv::Size(textDetectDilate, textDetectDilate));
-//             cv::dilate(img_threshold, img_threshold, element, cv::Point(-1, -1), 1); // Does the trick
-//         }
-//         // img_threshold = resizeImageToThreshold(img_threshold, 1500, 0);
-//         cv::findContours(img_threshold, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-//         if (contours.size() > 0)
-//         {
-
-//             std::sort(contours.begin(), contours.end(), compareContourAreas);
-//             for (int i = 0; i < contours.size(); i++)
-//             {
-//                 contour = contours[i];
-//                 if (contour.size() > 200)
-//                 {
-//                     double epsilon = cv::arcLength(contour, true) * contoursApproxEpsilonFactor;
-//                     cv::approxPolyDP(cv::Mat(contour), contours_poly, 3, true);
-//                     cv::Rect appRect(boundingRect(cv::Mat(contours_poly)));
-//                     appRect.x *= resizeScale;
-//                     appRect.y *= resizeScale;
-//                     appRect.width *= resizeScale;
-//                     appRect.height *= resizeScale;
-//                     if (appRect.width < 0.9 * imageWidth && appRect.height < 0.9 * imageHeight)
-//                     {
-//                         boundRects.push_back(appRect);
-//                         cv::rectangle(out_img, appRect, cv::Scalar(0, 255, 0), 3);
-//                     }
-//                 }
-//             }
-//             std::sort(boundRects.begin(), boundRects.end(), rectComparatorYThenX);
-//         }
-//         else
-//         {
-//             boundRects.push_back(cv::Rect(0, 0, imageWidth, imageHeight));
-//         }
-//     }
-//     else
-//     {
-//         boundRects.push_back(cv::Rect(0, 0, imageWidth, imageHeight));
-//     }
-
-//     bitwise_not(img_sobel, img_sobel);
-//     if (actualTesseractDetect == 0)
-//     {
-//         return;
-//     }
-
-//     tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
-//     api->Init("/home/mguillon/Downloads/tesseract/best", "fra");
-//     api->SetPageSegMode(tesseract::PSM_AUTO);
-//     api->SetVariable("user_defined_dpi", "300");
-//     string fullText = "";
-//     float scale_img = 600.f / image.rows;
-//     float scale_font = (float)(2 - scale_img) / 1.4f;
-//     vector<OCRData> ocr_data;
-//     Rect lastBoundRect;
-//     for (int i = 0; i < boundRects.size(); i++)
-//     {
-//         Mat group_img = Mat::zeros(image.rows + 2, image.cols + 2, CV_8UC1);
-//         img_sobel(boundRects[i]).copyTo(group_img);
-//         copyMakeBorder(group_img, group_img, 15, 15, 15, 15, BORDER_CONSTANT, Scalar(255));
-//         api->SetImage(group_img.data, group_img.size().width, group_img.size().height, group_img.channels(), group_img.step1());
-//         api->Recognize(0);
-//         tesseract::ResultIterator *ri = api->GetIterator();
-//         tesseract::PageIteratorLevel level = tesseract::RIL_PARA;
-//         if (ri != 0)
-//         {
-//             do
-//             {
-//                 const char *word = ri->GetUTF8Text(level);
-//                 if (word == NULL)
-//                     continue;
-
-//                 OCRData data;
-//                 float conf = ri->Confidence(level);
-//                 string stdWord = (string(word));
-//                 int wordSize = stdWord.size();
-//                 if ((wordSize < 2) || (conf < 51) ||
-//                     ((wordSize == 2) && (stdWord[0] == stdWord[1])) ||
-//                     ((wordSize < 4) && (conf < 60)) ||
-//                     isRepetitive(stdWord))
-//                     continue;
-
-//                 int x1, y1, x2, y2;
-//                 ri->BoundingBox(level, &x1, &y1, &x2, &y2);
-//                 trim(stdWord);
-//                 if (desseractDetectContours == 1)
-//                 {
-//                     stdWord.erase(std::remove(stdWord.begin(), stdWord.end(), '\n'), stdWord.end());
-//                 }
-//                 if (!lastBoundRect.empty())
-//                 {
-//                     float lastYSortValue = getYSortValue(lastBoundRect);
-//                     float ySortValue = getYSortValue(boundRects[i]);
-//                     if (ySortValue == lastYSortValue)
-//                     {
-//                         fullText += " " + stdWord;
-//                     }
-//                     else
-//                     {
-//                         fullText += "\n" + stdWord;
-//                     }
-//                 }
-//                 else
-//                 {
-//                     fullText += stdWord;
-//                 }
-//                 bool bold;
-//                 bool italic;
-//                 bool underlined;
-//                 bool monospace;
-//                 bool serif;
-//                 bool smallcaps;
-//                 int pointsize;
-//                 int font_id;
-//                 const char *font_name =
-//                     ri->WordFontAttributes(&bold, &italic, &underlined, &monospace,
-//                                            &serif, &smallcaps, &pointsize, &font_id);
-//                 if (font_name != 0)
-//                 {
-//                     data.font_name = string(font_name);
-//                 }
-//                 data.text = stdWord;
-//                 data.box = Rect(x1, y1, x2 - x1, y2 - y1);
-
-//                 data.box.x += boundRects[i].x - 15;
-//                 data.box.y += boundRects[i].y - 15;
-//                 data.confidence = conf;
-//                 data.pointsize = pointsize;
-//                 if (bold)
-//                 {
-//                     data.bold = bold;
-//                 }
-//                 if (italic)
-//                 {
-//                     data.italic = italic;
-//                 }
-//                 if (underlined)
-//                 {
-//                     data.underlined = underlined;
-//                 }
-//                 if (smallcaps)
-//                 {
-//                     data.smallcaps = smallcaps;
-//                 }
-//                 ocr_data.push_back(data);
-
-//                 delete[] word;
-//             } while (ri->Next(level));
-//             delete ri;
-//         }
-//         lastBoundRect = boundRects[i];
-//     }
-
-//     for (int j = 0; j < (int)ocr_data.size(); j++)
-//     {
-//         OCRData data = ocr_data[j];
-//         rectangle(out_img, data.box.tl(), data.box.br(), Scalar(255, 0, 255), 3);
-//         Size word_size = getTextSize(data.text, FONT_HERSHEY_SIMPLEX, (double)scale_font, (int)(3 * scale_font), NULL);
-//         rectangle(out_img, data.box.tl() - Point(3, word_size.height + 3), data.box.tl() + Point(word_size.width, 0), Scalar(255, 0, 255), -1);
-//         putText(out_img, data.text, data.box.tl() - Point(1, 1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255, 255, 255), (int)(3 * scale_font));
-//     }
-//     OCRResult result;
-//     result.text = fullText;
-//     result.blocks = ocr_data;
-//     api->Clear();
-//     std::string s;
-//     encode_json(result, s, jsoncons::indenting::no_indent);
-//     cout << s << endl;
-//     cout << "TIME_OCR = " << ((double)getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
-// }
-
-void detectTextOrientation(const cv::Mat &image)
-{
-    tesseract::Orientation orientation;
-    tesseract::WritingDirection direction;
-    tesseract::TextlineOrder order;
-    float deskew_angle;
-    tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
-    api->Init(NULL, "eng");
-    api->SetPageSegMode(tesseract::PSM_AUTO_OSD);
-    api->SetImage(image.data, image.size().width, image.size().height, image.channels(), image.step1());
-    api->Recognize(0);
-
-    tesseract::PageIterator *it = api->AnalyseLayout();
-    it->Orientation(&orientation, &direction, &order, &deskew_angle);
-    printf("Orientation: %d;\nWritingDirection: %d\nTextlineOrder: %d\n"
-           "Deskew angle: %.4f\n",
-           orientation, direction, order, deskew_angle);
-    api->End();
-    delete api;
-}
-
 void updateImage()
 {
     docDetector.cannyThreshold1 = cannyThreshold1;
     docDetector.cannyThreshold2 = cannyThreshold2;
     docDetector.dilateAnchorSize = dilateAnchorSize;
-    docDetector.morphologyAnchorSize = std::max(morphologyAnchorSize, 3);
-    if (gaussianBlur % 2 == 0)
+    docDetector.dilateAnchorSizeBefore = dilateAnchorSizeBefore;
+    docDetector.dilateAnchorSizeBefore = dilateAnchorSizeBefore;
+    docDetector.houghLinesThreshold = houghLinesThreshold;
+    docDetector.houghLinesMinLineLength = houghLinesMinLineLength;
+    docDetector.houghLinesMaxLineGap = houghLinesMaxLineGap;
+    docDetector.adapThresholdBlockSize = adapThresholdBlockSize;
+    docDetector.adapThresholdC = adapThresholdC;
+    docDetector.morphologyAnchorSize = morphologyAnchorSize;
+    docDetector.shouldNegate = shouldNegate;
+    docDetector.useChannel = useChannel;
+    docDetector.bilateralFilterValue = bilateralFilterValue;
+    docDetector.thresh = thresh;
+    docDetector.threshMax = threshMax;
+    docDetector.gammaCorrection = gammaCorrection / 10.0;
+    if (gaussianBlur > 0 && gaussianBlur % 2 == 0)
     {
         docDetector.gaussianBlur = gaussianBlur + 1;
     }
@@ -573,7 +315,17 @@ void updateImage()
     {
         docDetector.gaussianBlur = gaussianBlur;
     }
-    vector<vector<cv::Point>> pointsList = docDetector.scanPoint(edged);
+    if (medianBlurValue > 0 && medianBlurValue % 2 == 0)
+    {
+        docDetector.medianBlurValue = medianBlurValue + 1;
+    }
+    else
+    {
+        docDetector.medianBlurValue = medianBlurValue;
+    }
+    docDetector.image = image;
+    resizedImage = docDetector.resizeImageMax();
+    vector<vector<cv::Point>> pointsList = docDetector.scanPoint(edged, resizedImage, true);
 
     for (size_t i = 0; i < pointsList.size(); i++)
     {
@@ -596,62 +348,67 @@ void updateImage()
         }
         if (toon == 1)
         {
-            cv::stylization(warped, warped, 60, 0.07);
+            // warped = quantizeImage(warped, 2);
+            processColors(warped);
+            // cv::stylization(warped, warped, 60, 0.07);
         }
     }
     else
     {
         warped = Mat();
     }
+    imshow("SourceImage", resizedImage);
     imshow("Edges", edged);
     if (!warped.empty())
     {
 
-        if (tesseractDemo)
-        {
-            // warped = resizeImageToThreshold(warped, 500, 0);
-            // Mat toTest;
-            // preprocess_ocr(warped, toTest);
-            // cvtColor(warped, toTest, COLOR_BGR2GRAY);
-            // tesseractTest(warped, warped);
-            // detectTextOrientation(toTest);
-            // Mat res;
-            detector::DocumentOCR::DetectOptions options;
-            options.dataPath = "/home/mguillon/Downloads/tesseract/best";
-            options.language = "fra";
-            options.adapThresholdBlockSize = adapThresholdBlockSize;
-            options.adapThresholdC = adapThresholdC;
-            options.desseractDetectContours = desseractDetectContours;
-            options.tesseractDemo = tesseractDemo;
-            options.actualTesseractDetect = actualTesseractDetect;
-            options.textDetectDilate = textDetectDilate;
-            options.textDetect1 = textDetect1;
-            options.textDetect2 = textDetect2;
-            double t_r = (double)getTickCount();
-            std::optional<detector::DocumentOCR::OCRResult> result = detector::DocumentOCR::detectTextImpl(warped, warped, options);
-            cout << "TIME_OCR = " << ((double)getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
-            if (result != std::nullopt)
-            {
-                float scale_img = 600.f / warped.rows;
-                float scale_font = (float)(2 - scale_img) / 1.4f;
-                auto ocrResult = *std::move(result);
-                for (int j = 0; j < ocrResult.blocks.size(); j++)
-                {
-                    detector::DocumentOCR::OCRData data = ocrResult.blocks[j];
-                    rectangle(warped, data.box.tl(), data.box.br(), Scalar(255, 0, 255), 3);
-                    Size word_size = getTextSize(data.text, FONT_HERSHEY_SIMPLEX, (double)scale_font, (int)(3 * scale_font), NULL);
-                    rectangle(warped, data.box.tl() - Point(3, word_size.height + 3), data.box.tl() + Point(word_size.width, 0), Scalar(255, 0, 255), -1);
-                    putText(warped, data.text, data.box.tl() - Point(1, 1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255, 255, 255), (int)(3 * scale_font));
-                }
-            }
-            // detect_text(warped, warped);
-        }
+        // if (tesseractDemo)
+        // {
+        //     // warped = resizeImageToThreshold(warped, 500, 0);
+        //     // Mat toTest;
+        //     // preprocess_ocr(warped, toTest);
+        //     // cvtColor(warped, toTest, COLOR_BGR2GRAY);
+        //     // tesseractTest(warped, warped);
+        //     // detectTextOrientation(toTest);
+        //     // Mat res;
+        //     detector::DocumentOCR::DetectOptions options;
+        //     options.dataPath = "/home/mguillon/Downloads/tesseract/best";
+        //     options.language = "fra";
+        //     options.adapThresholdBlockSize = adapThresholdBlockSize;
+        //     options.adapThresholdC = adapThresholdC;
+        //     options.desseractDetectContours = desseractDetectContours;
+        //     options.tesseractDemo = tesseractDemo;
+        //     options.actualTesseractDetect = actualTesseractDetect;
+        //     options.textDetectDilate = textDetectDilate;
+        //     options.textDetect1 = textDetect1;
+        //     options.textDetect2 = textDetect2;
+        //     double t_r = (double)getTickCount();
+        //     std::optional<detector::DocumentOCR::OCRResult> result = detector::DocumentOCR::detectTextImpl(warped, warped, options, std::nullopt);
+        //     cout << "TIME_OCR = " << ((double)getTickCount() - t_r) * 1000 / getTickFrequency() << endl;
+        //     if (result != std::nullopt)
+        //     {
+        //         float scale_img = 600.f / warped.rows;
+        //         float scale_font = (float)(2 - scale_img) / 1.4f;
+        //         auto ocrResult = *std::move(result);
+        //         for (int j = 0; j < ocrResult.blocks.size(); j++)
+        //         {
+        //             detector::DocumentOCR::OCRData data = ocrResult.blocks[j];
+        //             rectangle(warped, data.box.tl(), data.box.br(), Scalar(255, 0, 255), 3);
+        //             Size word_size = getTextSize(data.text, FONT_HERSHEY_SIMPLEX, (double)scale_font, (int)(3 * scale_font), NULL);
+        //             rectangle(warped, data.box.tl() - Point(3, word_size.height + 3), data.box.tl() + Point(word_size.width, 0), Scalar(255, 0, 255), -1);
+        //             putText(warped, data.text, data.box.tl() - Point(1, 1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255, 255, 255), (int)(3 * scale_font));
+        //         }
+        //     }
+        //     // detect_text(warped, warped);
+        // }
 
         imshow("Warped", warped);
     }
     else
     {
-        destroyWindow("Warped");
+        // destroyWindow("Warped");
+        // namedWindow("Warped", WINDOW_KEEPRATIO);
+        // moveWindow("Warped", 900, 100);
     }
 }
 void updateSourceImage()
@@ -664,7 +421,7 @@ void updateSourceImage()
 }
 void on_trackbar(int, void *)
 {
-    if (adapThresholdBlockSize % 2 == 0)
+    if (adapThresholdBlockSize > 0 && adapThresholdBlockSize % 2 == 0)
     {
         adapThresholdBlockSize = adapThresholdBlockSize + 1;
     }
@@ -686,39 +443,66 @@ int main(int argc, char **argv)
     const char *dirPath = argv[1];
 
     setImagesFromFolder(dirPath);
-    namedWindow("SourceImage", 0);
+    namedWindow("SourceImage", WINDOW_KEEPRATIO);
     resizeWindow("SourceImage", 600, 400);
-    namedWindow("Edges");
-    moveWindow("Edges", 100, 400);
+    moveWindow("SourceImage", 550, 500);
+    namedWindow("Options", 0);
+    resizeWindow("Options", 450, 400);
+    namedWindow("HoughLinesP", WINDOW_KEEPRATIO);
+    resizeWindow("HoughLinesP", 400, 300);
+    moveWindow("HoughLinesP", 1200, 600);
+    namedWindow("Edges", WINDOW_KEEPRATIO);
+    resizeWindow("Edges", 600, 400);
+    moveWindow("Edges", 550, 0);
 
     namedWindow("Warped", WINDOW_KEEPRATIO);
-    moveWindow("Warped", 900, 100);
-    resizeWindow("Warped", 600, 600);
+    moveWindow("Warped", 1200, 0);
+    resizeWindow("Warped", 400, 400);
 
     // namedWindow("Detect", WINDOW_KEEPRATIO);
     // moveWindow("Detect", 1400, 100);
     // resizeWindow("Detect", 600, 600);
     updateSourceImage();
-    createTrackbar("image:", "SourceImage", &imageIndex, std::size(images) - 1, on_trackbar_image);
-    // createTrackbar("gaussianBlur:", "SourceImage", &gaussianBlur, 20, on_trackbar);
-    // createTrackbar("morphologyAnchorSize:", "SourceImage", &morphologyAnchorSize, 20, on_trackbar);
-    // createTrackbar("cannyThreshold1:", "SourceImage", &cannyThreshold1, 255, on_trackbar);
-    // createTrackbar("cannyThreshold2:", "SourceImage", &cannyThreshold2, 255, on_trackbar);
-    // createTrackbar("dilateAnchorSize:", "SourceImage", &dilateAnchorSize, 20, on_trackbar);
-    createTrackbar("actualTesseractDetect:", "SourceImage", &actualTesseractDetect, 1, on_trackbar);
-    createTrackbar("textDetect1:", "SourceImage", &textDetect1, 100, on_trackbar);
-    createTrackbar("textDetect2:", "SourceImage", &textDetect2, 100, on_trackbar);
-    createTrackbar("textDetectDilate:", "SourceImage", &textDetectDilate, 100, on_trackbar);
-    createTrackbar("desseractDetectContours:", "SourceImage", &desseractDetectContours, 1, on_trackbar);
-    createTrackbar("whitepaper:", "SourceImage", &whitepaper, 1, on_trackbar);
-    createTrackbar("enhance details:", "SourceImage", &enhance, 1, on_trackbar);
-    createTrackbar("stylization:", "SourceImage", &toon, 1, on_trackbar);
+    createTrackbar("image:", "Options", &imageIndex, std::size(images) - 1, on_trackbar_image);
+    createTrackbar("useChannel:", "Options", &useChannel, 3, on_trackbar);
+    createTrackbar("bilateralFilter:", "Options", &bilateralFilterValue, 200, on_trackbar);
+    createTrackbar("gaussianBlur:", "Options", &gaussianBlur, 200, on_trackbar);
+    createTrackbar("medianBlurValue:", "Options", &medianBlurValue, 200, on_trackbar);
+    createTrackbar("morphologyAnchorSize:", "Options", &morphologyAnchorSize, 20, on_trackbar);
+    createTrackbar("cannyThreshold1:", "Options", &cannyThreshold1, 255, on_trackbar);
+    createTrackbar("cannyThreshold2:", "Options", &cannyThreshold2, 255, on_trackbar);
+    createTrackbar("dilateAnchorSizeBefore:", "Options", &dilateAnchorSizeBefore, 20, on_trackbar);
+    createTrackbar("dilateAnchorSize:", "Options", &dilateAnchorSize, 20, on_trackbar);
+    createTrackbar("gammaCorrection:", "Options", &gammaCorrection, 200, on_trackbar);
+    createTrackbar("thresh:", "Options", &thresh, 300, on_trackbar);
+    createTrackbar("threshMax:", "Options", &threshMax, 300, on_trackbar);
+    // createTrackbar("actualTesseractDetect:", "SourceImage", &actualTesseractDetect, 1, on_trackbar);
+    // createTrackbar("textDetect1:", "SourceImage", &textDetect1, 100, on_trackbar);
+    // createTrackbar("textDetect2:", "SourceImage", &textDetect2, 100, on_trackbar);
+    // createTrackbar("textDetectDilate:", "SourceImage", &textDetectDilate, 100, on_trackbar);
+    // createTrackbar("desseractDetectContours:", "SourceImage", &desseractDetectContours, 1, on_trackbar);
+    // createTrackbar("whitepaper:", "SourceImage", &whitepaper, 1, on_trackbar);
+    createTrackbar("negate:", "Options", &shouldNegate, 1, on_trackbar);
+    createTrackbar("toon:", "Options", &toon, 1, on_trackbar);
+    createTrackbar("adapThresholdBlockSize:", "Options", &adapThresholdBlockSize, 500, on_trackbar);
+    createTrackbar("adapThresholdC:", "Options", &adapThresholdC, 500, on_trackbar);
+    // createTrackbar("enhance details:", "SourceImage", &enhance, 1, on_trackbar);
+    // createTrackbar("stylization:", "SourceImage", &toon, 1, on_trackbar);
     // createTrackbar("dogKSize:", "SourceImage", &dogKSize, 30, on_trackbar);
     // createTrackbar("dogSigma1:", "SourceImage", &dogSigma1, 200, on_trackbar);
     // createTrackbar("dogSigma2:", "SourceImage", &dogSigma2, 200, on_trackbar);
-    createTrackbar("adapThresholdBlockSize:", "SourceImage", &adapThresholdBlockSize, 500, on_trackbar);
-    createTrackbar("adapThresholdC:", "SourceImage", &adapThresholdC, 500, on_trackbar);
-    waitKey(0);
+    // createTrackbar("houghLinesThreshold:", "Options", &houghLinesThreshold, 500, on_trackbar);
+    // createTrackbar("houghLinesMinLineLength:", "Options", &houghLinesMinLineLength, 500, on_trackbar);
+    // createTrackbar("houghLinesMaxLineGap:", "Options", &houghLinesMaxLineGap, 500, on_trackbar);
+    int k;
+    while (true)
+    {
+       k = waitKey(0);
+       if (k == 27) {
+        break;
+       }
+    }
+    
     // edged.release();
     // warped.release();
 

@@ -31,9 +31,9 @@ android {
 		}
 	}
 
-	kotlin {
-		jvmToolchain(17)
-	}
+//	kotlin {
+//		jvmToolchain(17)
+//	}
 	compileOptions {
 		sourceCompatibility JavaVersion.VERSION_17
 		targetCompatibility JavaVersion.VERSION_17
@@ -103,7 +103,7 @@ artifacts {
 
 dependencies {
     implementation "androidx.annotation:annotation:1.1.0"
-	implementation(name:'ui_cameraview', ext:'aar')
+	implementation project(':ui-camera')
 
 	def camerax_version = "1.2.3"
 	implementation "androidx.camera:camera-core:${camerax_version}"
@@ -114,11 +114,19 @@ dependencies {
 	implementation "androidx.camera:camera-view:${camerax_version}"
 	implementation "androidx.camera:camera-extensions:${camerax_version}"
 }
+//repositories {
+//	mavenCentral()
+//	def pathToPlugin = "/home/mguillon/dev/nativescript/com.akylas.documentscanner/node_modules/@nativescript-community/ui-cameraview/platforms/android"
+//	flatDir {
+//		dirs(pathToPlugin)
+//	}
+//}
 
 
-repositories {
-	mavenCentral()
-	flatDir {
-		dirs("$rootDir/../../../node_modules/@nativescript-community/ui-cameraview/platforms/android")
-	}
-}
+//repositories {
+//	mavenCentral()
+//	def pathToPlugin  ="$rootDir/../../node_modules/@nativescript-community/ui-cameraview/platforms/android"
+//	flatDir {
+//		dirs(pathToPlugin)
+//	}
+//}
