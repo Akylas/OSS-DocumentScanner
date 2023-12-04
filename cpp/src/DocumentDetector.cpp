@@ -1,12 +1,13 @@
 #include <DocumentDetector.h>
 #include <WhitePaperTransform.h>
+#include <ColorSimplificationTransform.h>
 #include <Utils.h>
 #include <jsoncons/json.hpp>
 using namespace detector;
 using namespace cv;
 using namespace std;
 
-//JSONCONS_ALL_MEMBER_TRAITS(cv::Point, x, y);
+// JSONCONS_ALL_MEMBER_TRAITS(cv::Point, x, y);
 
 typedef std::pair<std::vector<cv::Point>, double> PointAndArea;
 DocumentDetector::DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation)
@@ -78,13 +79,14 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
             bool shouldIgnore = false;
             for (const cv::Point &p : approx)
             {
-                if (p.x < marge || p.x>= scaledWidth - marge || p.y < marge || p.y >= scaledHeight - marge)
+                if (p.x < marge || p.x >= scaledWidth - marge || p.y < marge || p.y >= scaledHeight - marge)
                 {
-                    shouldIgnore =true;
+                    shouldIgnore = true;
                     break;
                 }
             }
-            if (shouldIgnore) {
+            if (shouldIgnore)
+            {
                 continue;
             }
 
@@ -171,7 +173,6 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         image = resizedImage;
     }
 
-
     if (imageRotation != 0)
     {
         switch (imageRotation)
@@ -200,28 +201,29 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     cv::Mat dilateStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateAnchorSize, dilateAnchorSize));
     cv::Mat morphologyStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphologyAnchorSize, morphologyAnchorSize));
     int channelsCount = std::min(image.channels(), 3);
-    for (int i = channelsCount-1; i >= 0; i--)
+    for (int i = channelsCount - 1; i >= 0; i--)
     {
         //  std::printf("testing on channel %i %i\n", i, iterration);
         cv::extractChannel(temp1, temp2, i);
-        
-         Mat out;
-         // bilateralFilter is really slow so for now we dont use it
+
+        Mat out;
+        // bilateralFilter is really slow so for now we dont use it
         //  cv::bilateralFilter(temp2, out, 15, bilateralFilterValue, bilateralFilterValue);
-         cv::threshold(temp2, edged, thresh, threshMax, cv::THRESH_BINARY);
-         cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
-         cv::dilate(edged, edged, dilateStruct);
-         findSquares(edged, width, height, foundSquares, image, drawContours);
-         iterration++;
+        cv::threshold(temp2, edged, thresh, threshMax, cv::THRESH_BINARY);
+        cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
+        cv::dilate(edged, edged, dilateStruct);
+        findSquares(edged, width, height, foundSquares, image, drawContours);
+        iterration++;
         //  if (foundSquares.size() > 0) {
         //      // std::printf("breaking on threshold %i\n", foundSquares.size());
         //      break;
         //  }
-        
+
         // we test over all channels to find the best contour
         int t = 60;
-        while (t >= 10) {
-            cv::Canny(temp2, edged, t, t*2);
+        while (t >= 10)
+        {
+            cv::Canny(temp2, edged, t, t * 2);
             cv::dilate(edged, edged, dilateStruct);
             findSquares(edged, width, height, foundSquares, image, drawContours);
             // if (foundSquares.size() > 0) {
@@ -235,7 +237,7 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         //     break;
         // }
     }
-    
+
     // if (useChannel > 0 && (useChannel <= image.channels()))
     // {
     //     extractChannel(image, edged, useChannel - 1);
@@ -252,7 +254,6 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     //     bilateralFilter(edged, out, 15, bilateralFilterValue, bilateralFilterValue);
     //     out.copyTo(edged);
     // }
-
 
     // if (medianBlurValue > 0)
     // {
@@ -271,7 +272,6 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     //     std::printf("gaussianBlur %f\n", gaussianBlur);
     //     GaussianBlur(edged, edged, cv::Size(gaussianBlur, gaussianBlur), cannySigmaX);
     // }
-
 
     // if (thresh > 0 && threshMax > 0)
     // {
@@ -388,10 +388,8 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     return vector<vector<Point>>();
 }
 
-
-
 Mat DocumentDetector::resizeImageToSize(int size)
-{ 
+{
 
     int width = image.cols;
     int height = image.rows;
@@ -442,33 +440,84 @@ Mat DocumentDetector::resizeImageMax()
     int maxSize = max(width, height);
     return resizeImageToSize(maxSize);
 }
-auto splitString(std::string in, char sep)
+// auto splitString(std::string in, char sep)
+// {
+//     std::vector<std::string> r;
+//     r.reserve(std::count(in.begin(), in.end(), sep) + 1); // optional
+//     for (auto p = in.begin();; ++p)
+//     {
+//         auto q = p;
+//         p = std::find(p, in.end(), sep);
+//         r.emplace_back(q, p);
+//         if (p == in.end())
+//             return r;
+//     }
+// }
+
+void splitString(const string &str, const string &delimiters, vector<string> &tokens)
 {
-    std::vector<std::string> r;
-    r.reserve(std::count(in.begin(), in.end(), sep) + 1); // optional
-    for (auto p = in.begin();; ++p)
+    // Skip delimiters at beginning.
+    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    // Find first "non-delimiter".
+    string::size_type pos = str.find_first_of(delimiters, lastPos);
+
+    while (string::npos != pos || string::npos != lastPos)
     {
-        auto q = p;
-        p = std::find(p, in.end(), sep);
-        r.emplace_back(q, p);
-        if (p == in.end())
-            return r;
+        // Found a token, add it to the vector.
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        // Skip delimiters.  Note the "not_of"
+        lastPos = str.find_first_not_of(delimiters, pos);
+        // Find next "non-delimiter"
+        pos = str.find_first_of(delimiters, lastPos);
     }
 }
 
-void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms)
+void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool useRGB)
 {
-    std::vector<std::string> transformArray = splitString(transforms, ',');
+    // cout << "applyTransforms = " << transforms << endl;
+    std::vector<std::string> transformArray;
+    splitString(transforms, ",", transformArray);
     for (size_t i = 0; i < transformArray.size(); i++)
     {
         std::string transform = transformArray[i];
-        if (transform == "whitepaper")
+        if (transform.starts_with("whitepaper"))
         {
             whiteboardEnhance(srcMat, srcMat);
         }
-        else if (transform == "enhance")
+        else if (transform.starts_with("enhance"))
         {
             cv::detailEnhance(srcMat, srcMat, 10, 0.15);
+        }
+        else if (transform.starts_with("color"))
+        {
+            int resizeThreshold = 100;
+            int colorsFilterDistanceThreshold = 20;
+            int distanceThreshold = 40;
+            ColorSpace colorSpace = ColorSpace::HSV;
+            ColorSpace paletteColorSpace = ColorSpace::BGR;
+            int paletteNbColors = 5;
+            std::vector<std::string> options;
+            splitString(transform, "_", options);
+            if (options.size() > 1)
+            {
+                resizeThreshold = std::stoi(options[1]);
+
+                if (options.size() > 2)
+                {
+                    distanceThreshold = std::stoi(options[2]);
+
+                    if (options.size() > 3)
+                    {
+                        paletteNbColors = std::stoi(options[3]);
+
+                        if (options.size() > 4)
+                        {
+                            colorSpace = (ColorSpace)std::stoi(options[4]); 
+                        }
+                    }
+                }
+            }
+            colorSimplificationTransform(srcMat, srcMat, useRGB, resizeThreshold, colorsFilterDistanceThreshold, distanceThreshold, paletteNbColors, colorSpace, paletteColorSpace);
         }
     }
 }

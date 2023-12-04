@@ -12,17 +12,33 @@ import com.nativescript.cameraview.ImageAsyncProcessor
 import java.util.*
 import kotlin.concurrent.thread
 import org.json.JSONArray
+import org.json.JSONObject
+import java.nio.ByteBuffer
 import kotlin.math.max
 
 class CustomImageAnalysisCallback
 @JvmOverloads
-constructor(private val context: Context, private val cropView: CropView? = null) :
+constructor(
+    private val context: Context, private val cropView: CropView? = null,
+    private val onQRCode: OnQRCode? = null
+    /*, private val onTestBitmap: OnTestBitmap? = null*/
+) :
     ImageAnalysisCallback {
 
     var previewResizeThreshold = 200.0
+    var detectQRCode = false
+    var detectQRCodeOptions = "{\"resizeThreshold\":500}"
 
     interface FunctionCallback {
         fun onResult(e: Exception?, result: Any?)
+    }
+
+    interface OnTestBitmap {
+        fun onTestBitmap(bitmap: Bitmap)
+    }
+
+    interface OnQRCode {
+        fun onQRCode(text: String, format: String)
     }
 
     interface FunctionCallbackProgress {
@@ -36,6 +52,33 @@ constructor(private val context: Context, private val cropView: CropView? = null
             imageRotation: Int
         ): String
 
+        private external fun nativeBufferScanJSON(
+            width: Int,
+            height: Int,
+            chromaPixelStride: Int,
+            buffer1: ByteBuffer,
+            rowStride1: Int,
+            buffer2: ByteBuffer,
+            rowStride2: Int,
+            buffer3: ByteBuffer,
+            rowStride3: Int,
+            shrunkImageHeight: Int,
+            imageRotation: Int
+        ): String
+
+        private external fun testImageProxyToBitmap(
+            width: Int,
+            height: Int,
+            chromaPixelStride: Int,
+            buffer1: ByteBuffer,
+            rowStride1: Int,
+            buffer2: ByteBuffer,
+            rowStride2: Int,
+            buffer3: ByteBuffer,
+            rowStride3: Int,
+            outBitmap: Bitmap
+        )
+
         private external fun nativeScan(
             srcBitmap: Bitmap,
             shrunkImageHeight: Int,
@@ -48,11 +91,25 @@ constructor(private val context: Context, private val cropView: CropView? = null
             imageRotation: Int,
             options: String,
         ): String
+        private external fun nativeColorPalette(
+            srcBitmap: Bitmap,
+            shrunkImageHeight: Int,
+            colorsFilterDistanceThreshold: Int,
+        ): String
 
         private external fun nativeCrop(
             srcBitmap: Bitmap,
             points: String,
             transforms: String,
+            outBitmap: Bitmap
+        )
+
+        private external fun nativeGenerateQRCode(
+            text: String,
+            format: String,
+            width: Int,
+            height: Int,
+            options: String,
             outBitmap: Bitmap
         )
 
@@ -64,6 +121,15 @@ constructor(private val context: Context, private val cropView: CropView? = null
 
         private external fun nativeQRCodeRead(
             srcBitmap: Bitmap,
+            options: String,
+        ): String
+
+        private external fun nativeQRCodeReadBuffer(
+            width: Int,
+            height: Int,
+            rotation: Int,
+            buffer1: ByteBuffer,
+            rowStride1: Int,
             options: String,
         ): String
 
@@ -81,13 +147,6 @@ constructor(private val context: Context, private val cropView: CropView? = null
             }
         }
 
-        /**
-         * take a photo with a document, and find the document's corners
-         *
-         * @param image a photo with a document
-         * @return a list with document corners (top left, top right, bottom right, bottom
-         * left)
-         */
         @JvmOverloads
         fun ocrDocument(
             image: Bitmap,
@@ -104,13 +163,6 @@ constructor(private val context: Context, private val cropView: CropView? = null
             }
         }
 
-        /**
-         * take a photo with a document, and find the document's corners
-         *
-         * @param image a photo with a document
-         * @return a list with document corners (top left, top right, bottom right, bottom
-         * left)
-         */
         @JvmOverloads
         fun readQRCode(
             image: Bitmap,
@@ -125,22 +177,59 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 }
             }
         }
+
+        @JvmOverloads
+        fun generateQRCode(
+            text: String,
+            format: String,
+            width: Int,
+            height: Int,
+            callback: FunctionCallback,
+            options: String = "",
+        ) {
+            thread(start = true) {
+                try {
+                    val result = Bitmap.createBitmap(
+                        width,
+                        height,
+                        Bitmap.Config.ARGB_8888
+                    )
+                    nativeGenerateQRCode(text, format, width, height, options, result)
+                    callback.onResult(
+                        null,
+                        result
+                    )
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
+        }
+
+        @JvmOverloads
+        fun generateQRCodeSync(
+            text: String,
+            format: String,
+            width: Int,
+            height: Int,
+            options: String = "",
+        ): Bitmap {
+            val result = Bitmap.createBitmap(
+                width,
+                height,
+                Bitmap.Config.ARGB_8888
+            )
+            nativeGenerateQRCode(text, format, width, height, options, result)
+            return result
+        }
+
         @JvmOverloads
         fun readQRCodeSync(
             image: Bitmap,
-            callback: FunctionCallback,
             options: String = "",
         ): String {
             return nativeQRCodeRead(image, options)
         }
 
-        /**
-         * take a photo with a document, and find the document's corners
-         *
-         * @param image a photo with a document
-         * @return a list with document corners (top left, top right, bottom right, bottom
-         * left)
-         */
         @JvmOverloads
         fun getJSONDocumentCorners(
             image: Bitmap,
@@ -159,23 +248,46 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 }
             }
         }
+        @JvmOverloads
+        fun getColorPalette(
+            image: Bitmap,
+            callback: FunctionCallback,
+            shrunkImageHeight: Double = 500.0,
+            colorsFilterDistanceThreshold: Int = 0
+        ) {
+            thread(start = true) {
+                try {
+                    callback.onResult(
+                        null,
+                        nativeColorPalette(image, shrunkImageHeight.toInt(), colorsFilterDistanceThreshold)
+                    )
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
+        }
+
         fun pointsFromJSONArray(jsonArray: JSONArray): MutableList<List<Point>> {
-//             val start = System.nanoTime()
             val list = mutableListOf<List<Point>>()
             for (i in 0 until jsonArray.length()) {
                 var value = jsonArray[i] as JSONArray
                 list.add(pointFromJSONArray(value))
             }
-//             Log.d("JS", "pointsFromJSONString ${(System.nanoTime() - start) / 1000000}ms");
             return list
         }
-        fun pointFromJSONArray(jsonArray: JSONArray, scale: Float = 1.0f): List<Point> {
-                val list = mutableListOf<Point>()
-                for (i in 0 until jsonArray.length()) {
-                    var value2 = jsonArray[i] as JSONArray
 
-                    list.add(Point(((value2[0] as Int) * scale).toInt(), ((value2[1] as Int) * scale).toInt()))
-                }
+        fun pointFromJSONArray(jsonArray: JSONArray, scale: Float = 1.0f): List<Point> {
+            val list = mutableListOf<Point>()
+            for (i in 0 until jsonArray.length()) {
+                var value2 = jsonArray[i] as JSONArray
+
+                list.add(
+                    Point(
+                        ((value2[0] as Int) * scale).toInt(),
+                        ((value2[1] as Int) * scale).toInt()
+                    )
+                )
+            }
             return list
         }
 
@@ -205,14 +317,6 @@ constructor(private val context: Context, private val cropView: CropView? = null
             return null
         }
 
-        /**
-         * Pass in a photo of a document, and get back 4 corner points (top left, top right,
-         * bottom right, bottom left). This tries to detect document corners, but falls back
-         * to photo corners with slight margin in case we can't detect document corners.
-         *
-         * @param photo the original photo with a rectangular document
-         * @return a List of 4 OpenCV points (document corners)
-         */
         @JvmOverloads
         fun getDocumentCorners(
             photo: Bitmap,
@@ -220,8 +324,8 @@ constructor(private val context: Context, private val cropView: CropView? = null
             imageRotation: Int = 0,
             returnDefault: Boolean = true
         ): List<List<Point>>? {
-//            val cornerPoints: List<List<Point>>? =  pointsFromJSONString(nativeScanJSON(photo, shrunkImageHeight.toInt(), imageRotation))
-            val cornerPoints: List<List<Point>>? =  nativeScan(photo, shrunkImageHeight.toInt(), imageRotation)
+            val cornerPoints: List<List<Point>>? =
+                nativeScan(photo, shrunkImageHeight.toInt(), imageRotation)
             // if cornerPoints is null then default the corners to the photo bounds with
             // a margin
             val default =
@@ -249,14 +353,14 @@ constructor(private val context: Context, private val cropView: CropView? = null
         @JvmOverloads
         fun cropDocument(
             bitmap: Bitmap,
-            quads: String,
+            quads:  List<List<Point>>,
             callback: FunctionCallback,
             transforms: String = ""
         ) {
             thread(start = true) {
                 try {
                     val bitmaps = arrayListOf<Bitmap>()
-                    pointsFromJSONString(quads).forEachIndexed { index, points ->
+                    quads.forEachIndexed { index, points ->
                         // convert corners from image preview coordinates to original photo
                         // coordinates
                         // (original image is probably bigger than the preview image)
@@ -287,8 +391,51 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 }
             }
         }
+
+        @JvmOverloads
+        fun cropDocument(
+            bitmap: Bitmap,
+            quads: String,
+            callback: FunctionCallback,
+            transforms: String = ""
+        ) {
+            thread(start = true) {
+                try {
+                    val bitmaps = arrayListOf<Bitmap>()
+                    val jsonArray = JSONArray(quads)
+                    pointsFromJSONArray(jsonArray).forEachIndexed { index, points ->
+                        // convert corners from image preview coordinates to original photo
+                        // coordinates
+                        // (original image is probably bigger than the preview image)
+                        // convert output image matrix to bitmap
+                        val cropWidth =
+                            ((points[0].distance(points[1]) + points[2].distance(points[3])) / 2).toInt()
+                        val cropHeight =
+                            ((points[3].distance(points[0]) + points[2].distance(points[1])) / 2).toInt()
+
+                        val cropBitmap =
+                            Bitmap.createBitmap(
+                                cropWidth,
+                                cropHeight,
+                                Bitmap.Config.ARGB_8888
+                            )
+                        nativeCrop(
+                            bitmap,
+                            jsonArray.getJSONArray(index).toString(),
+                            transforms,
+                            cropBitmap
+                        )
+                        bitmaps.add(cropBitmap)
+                    }
+                    callback.onResult(null, bitmaps.toArray())
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
+        }
     }
 
+    var testBitmap: Bitmap? = null
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun process(
@@ -301,13 +448,18 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 processor.finished()
                 return
             }
-             val start = System.nanoTime()
             val image = imageProxy.image!!
-            val previewBitmap = imageProxy.toBitmap(context)
-            if (previewBitmap == null) {
-                processor.finished()
-                return
-            }
+            val planes = image.planes
+            val chromaPixelStride = planes[1].pixelStride
+            val start = System.nanoTime()
+//            val previewBitmap = imageProxy.toBitmap(context)
+//            if (onTestBitmap != null) {
+//                onTestBitmap.onTestBitmap(previewBitmap!!)
+//            }
+//            if (previewBitmap == null) {
+//                processor.finished()
+//                return
+//            }
 //            val result = nativeScanAndQRCode(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees, "");
 //            val jsonRes = JSONObject(result)
 //            var pointsList: MutableList<List<Point>>? =  pointsFromJSONArray(jsonRes.getJSONArray("points"))
@@ -320,8 +472,50 @@ constructor(private val context: Context, private val cropView: CropView? = null
 //                    jsonRes.getDouble("resizeScale").toFloat()
 //                ))
 //            }
-            val result = nativeScanJSON(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees);
-             var pointsList: MutableList<List<Point>>? =  pointsFromJSONArray(JSONArray(result))
+
+//            if (testBitmap != null) {
+//                testBitmap!!.recycle()
+//
+//            }
+//            testBitmap =
+//                Bitmap.createBitmap(
+//                    image.width, image.height,
+//                    Bitmap.Config.ARGB_8888
+//                )
+//            testImageProxyToBitmap(image.width, image.height, chromaPixelStride, planes[0].buffer,
+//                planes[0].rowStride, planes[1].buffer,
+//                planes[1].rowStride, planes[2].buffer,
+//                planes[2].rowStride, testBitmap!!)
+//            if (onTestBitmap != null) {
+//                onTestBitmap.onTestBitmap(testBitmap!!)
+//            }
+            val result = nativeBufferScanJSON(
+                image.width, image.height, chromaPixelStride, planes[0].buffer,
+                planes[0].rowStride, planes[1].buffer,
+                planes[1].rowStride, planes[2].buffer,
+                planes[2].rowStride, previewResizeThreshold.toInt(), info.rotationDegrees
+            );
+//            val result = nativeScanJSON(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees);
+            var pointsList: MutableList<List<Point>>? = pointsFromJSONArray(JSONArray(result))
+//            Log.d("JS", "getDocumentCorners ${(System.nanoTime() - start) / 1000000}ms");
+            if (detectQRCode) {
+                val qrcodeResult = nativeQRCodeReadBuffer(
+                    image.width, image.height, info.rotationDegrees, planes[0].buffer,
+                    planes[0].rowStride, detectQRCodeOptions
+                )
+//                Log.d("JS", "detectQRCode ${(System.nanoTime() - start) / 1000000}ms");
+                val qrcode = JSONArray(qrcodeResult)
+                if (qrcode.length() > 0) {
+                    val qrcode = qrcode.getJSONObject(0)
+                    if (pointsList == null) {
+                        pointsList = mutableListOf<List<Point>>();
+                    }
+                    pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
+                    onQRCode?.onQRCode(qrcode.getString("text"), qrcode.getString("format"))
+//                    Log.d("JS", "onQRCode ${(System.nanoTime() - start) / 1000000}ms");
+                }
+            }
+
 //            val pointsList: List<List<Point>>? =
 //                getDocumentCorners(
 //                    previewBitmap,
@@ -329,24 +523,7 @@ constructor(private val context: Context, private val cropView: CropView? = null
 //                    info.rotationDegrees,
 //                    false
 //                )
-            Log.d("JS", "getDocumentCorners ${(System.nanoTime() - start) /1000000}ms");
             if (pointsList != null) {
-
-//                val ratio = cropView.height.toFloat() / photoHeight.toFloat()
-//                val quads =
-//                    pointsList.map { points ->
-//                        points
-//                            .sortedBy { it.y }
-//                            .chunked(2)
-//                            .map {
-//                                it.sortedBy { point
-//                                    ->
-//                                    point.x
-//                                }
-//                            }
-//                            .flatten()
-//                    }
-
                 if (info.rotationDegrees == 180 ||
                     info.rotationDegrees ==
                     0
@@ -363,14 +540,11 @@ constructor(private val context: Context, private val cropView: CropView? = null
                 val scaleY = cropView.width.toFloat() / image.height.toFloat()
                 cropView.scale = max(scaleX, scaleY)
                 cropView.quads = pointsList
-//                    quads.map { points -> Quad(points) }.map { quad ->
-//                        quad.applyRatio(ratio)
-//                    }
             } else {
                 cropView.quads = null
             }
             cropView.invalidate()
-            previewBitmap.recycle()
+//            previewBitmap.recycle()
             processor.finished()
         } catch (exception: Exception) {
             exception.printStackTrace()

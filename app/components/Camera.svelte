@@ -20,9 +20,8 @@
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
     import CropEditView from './CropEditView.svelte';
-    import DocumentsList from './DocumentsList.svelte';
     import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { cropDocument, detectQRCode, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import { QRCodeData, cropDocument, detectQRCode, getJSONDocumentCorners } from 'plugin-nativeprocessor';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
 
@@ -80,7 +79,33 @@
     //     text: string;
     // }
     async function showDocumentsList() {
-        return navigate({ page: DocumentsList });
+        if (CARD_APP) {
+            const CardsList = (await import('~/components/CardsList.svelte')).default;
+            return navigate({ page: CardsList });
+        } else {
+            const DocumentsList = (await import('~/components/DocumentsList.svelte')).default;
+            return navigate({ page: DocumentsList });
+        }
+    }
+
+    async function goToView(doc: OCRDocument) {
+        if (CARD_APP) {
+            const page = (await import('~/components/CardView.svelte')).default;
+            return navigate({
+                page,
+                props: {
+                    document: doc
+                }
+            });
+        } else {
+            const page = (await import('~/components/DocumentView.svelte')).default;
+            return navigate({
+                page,
+                props: {
+                    document: doc
+                }
+            });
+        }
     }
 
     async function showOptions() {
@@ -115,13 +140,7 @@
                 case 'image_import':
                     try {
                         const doc = await importAndScanImage();
-                        const page = (await import('~/components/PDFView.svelte')).default;
-                        navigate({
-                            page,
-                            props: {
-                                document: doc
-                            }
-                        });
+                        await goToView(doc);
                     } catch (err) {
                         console.error(err);
                     }
@@ -173,7 +192,7 @@
             let quads = await getJSONDocumentCorners(editingImage, 300, 0);
 
             if (quads.length === 0) {
-                const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
+                const ModalImportImage = (await import('~/components/ModalImportImage.svelte')).default;
                 quads = await showModal({
                     page: ModalImportImage,
                     animated: true,
@@ -332,15 +351,7 @@
                 if (newDocument) {
                     documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
                     if (startOnCam) {
-                        // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
-                        const page = (await import('~/components/PDFView.svelte')).default;
-                        navigate({
-                            page,
-                            // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
-                            props: {
-                                document
-                            }
-                        });
+                        await goToView(document);
                     } else {
                         // we should already be in edit so closing should go back there
                     }
@@ -388,6 +399,10 @@
             const strTransforms = transforms.join(',');
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
             let images = await cropDocument(editingImage, quads, strTransforms);
+            let qrcode;
+            if (CARD_APP) {
+                qrcode = await detectQRCode(images[0], { resizeThreshold: 900 });
+            }
             // const start = Date.now();
             // const qrCode = await detectQRCode(images[0], {});
             // console.log('detected qrcode', qrCode, Date.now() - start, 'ms');
@@ -398,6 +413,7 @@
                     image,
                     crop: quads[index],
                     colorType,
+                    qrcode,
                     transforms: strTransforms,
                     sourceImage,
                     width: __ANDROID__ ? image.getWidth() : image.size.width,

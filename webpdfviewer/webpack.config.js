@@ -10,12 +10,15 @@ const ASSETS_FOLDER = path.resolve(__dirname, 'public/');
 
 const ENTRY = path.resolve(SRC_FOLDER, 'main.ts');
 module.exports = (env, params = {}) => ({
+    mode: !!env.production ? 'production' : 'development',
     entry: ENTRY,
+    stats: 'none',
     resolve: {
+        conditionNames: ['svelte'],
         alias: {
             // svelte: path.resolve(__dirname, '../node_modules/svelte')
         },
-        extensions: ['.mjs', '.js', '.ts', '.svelte'],
+        extensions: ['.mjs', '.js', '`.ts', '.svelte'],
         mainFields: ['svelte', 'browser', 'module', 'main']
         // plugins: [
         //     new PathsPlugin({
@@ -41,7 +44,7 @@ module.exports = (env, params = {}) => ({
                 loader: 'svelte-loader',
                 options: {
                     preprocess: sveltePreprocess(),
-                    hotReload: true,
+                    hotReload: true
                     // hotOptions: {
                     //     noPreserveState: true,
                     //     noReload: false,

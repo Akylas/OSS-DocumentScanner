@@ -5,7 +5,7 @@ const whitelist = fs.readFileSync(path.join(buildToolsPath, 'whitelist.mdg'), { 
 const whitelistfilteredLines = [...new Set(whitelist.split('\n'))].filter((l) => l.length > 0 && !l.startsWith('//'));
 const blacklist = fs.readFileSync(path.join(buildToolsPath, 'blacklist.mdg'), { encoding: 'utf-8' });
 const blacklistfilteredLines = [...new Set(blacklist.split('\n'))].filter((l) => l.length > 0 && !l.startsWith('//'));
-const proguard_blacklist = require(path.join('../App_Resources','Android', 'native-api-usage.json')).proguard_blacklist;
+const proguard_blacklist = require(path.join( process.argv[3],'Android', 'native-api-usage.json')).proguard_blacklist;
 
 function getIdentifier(l) {
     let identifier = l;

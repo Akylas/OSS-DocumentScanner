@@ -28,7 +28,7 @@
     export let height: number | string = 350;
     export let fontSize = 16;
     export let iconFontSize = 16;
-    export let onCheckBox: (item, value) => void = null;
+    export let onCheckBox: (item, value, e) => void = null;
     let filteredOptions: OptionType[] = null;
     let filter: string = null;
 
@@ -110,7 +110,7 @@
         {/if}
         <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} paddingBottom={8} paddingTop={8} row={1} {rowHeight}>
             <Template key="checkbox" let:item>
-                <checkbox checked={item.value} text={item.name} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                <checkbox checked={item.value} text={item.name} on:checkedChange={(e) => onCheckBox(item, e.value, e)} />
             </Template>
             <Template let:item>
                 <canvaslabel color={item.color || colorOnSurface} paddingLeft={16} paddingRight={16} rippleColor={item.color || colorOnSurface} on:tap={(event) => onTap(item, event)}>

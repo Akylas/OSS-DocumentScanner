@@ -1,3 +1,5 @@
+import { Color } from '@nativescript/core';
+
 export * from './index.android';
 export interface OCRData {
     text: string;
@@ -15,6 +17,13 @@ export interface OCRData {
     imageHeight: number;
 }
 
+export interface QRCodeSingleData {
+    text: string;
+    position: [number, number][];
+    format: string;
+}
+export type QRCodeData = QRCodeSingleData[];
+
 export interface DetectOptions {
     adapThresholdBlockSize: number; // 391
     adapThresholdC: number; // 53
@@ -31,4 +40,14 @@ export interface DetectOptions {
     pageSegMode: number;
     iteratorLevel: number;
     oem: number;
+}
+
+export interface DetectQRCodeOptions {
+    resizeThreshold?: number;
+}
+
+export interface GenerateQRCodeOptions {
+    margin?: number;
+    frontColor?: string | Color;
+    backColor?: string | Color;
 }

@@ -186,23 +186,25 @@
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
-
+    async function goToView(doc: OCRDocument) {
+        const page = (await import('~/components/DocumentView.svelte')).default;
+        return navigate({
+            page,
+            transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
+            props: {
+                document: doc
+            }
+        });
+    }
     async function onStartCam() {
         try {
             const result = await request('camera');
-            const document = await showModal({
+            const document: OCRDocument = await showModal({
                 page: Camera,
                 fullscreen: true
             });
             if (document) {
-                const PDFView = (await import('~/components/PDFView.svelte')).default;
-                navigate({
-                    page: PDFView,
-                    transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300)) : undefined,
-                    props: {
-                        document
-                    }
-                });
+                await goToView(document);
             }
             // const documentScanner = new DocumentScanner({
             //     showColorFilters: false,
@@ -218,7 +220,7 @@
             //     document.save();
             //     documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
             //     // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
-            //     const PDFView = (await import('~/components/PDFView.svelte')).default;
+            //     const PDFView = (await import('~/components/DocumentView.svelte')).default;
             //     navigate({
             //         page: PDFView,
             //         transition: SharedTransition.custom(new PageTransition(300)),
@@ -242,7 +244,7 @@
             if (!doc) {
                 return;
             }
-            const component = (await import('~/components/PDFEdit.svelte')).default;
+            const component = (await import('~/components/DocumentEdit.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -322,14 +324,7 @@
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else {
-                const component = (await import('~/components/PDFView.svelte')).default;
-                navigate({
-                    page: component,
-                    transition: SharedTransition.custom(new PageTransition(300, null, 10)),
-                    props: {
-                        document: item.doc
-                    }
-                });
+                await goToView(item.doc);
             }
         } catch (error) {
             showError(error);
@@ -511,7 +506,7 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} id="edit" items={documents} row={1} rowHeight={150}>
+        <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={150}>
             <Template let:item>
                 <!-- TODO: make this a canvas -->
                 <gridlayout

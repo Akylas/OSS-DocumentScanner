@@ -1,0 +1,12 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:gravity="fill">
+    <!-- <item>
+        <bitmap android:gravity="fill" android:src="@drawable/background" />
+    </item> -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/seed" />
+        </shape>
+    </item>
+    <item android:gravity="center"  android:drawable="@drawable/ic_launcher_foreground" android:height="400dp" android:width="400dp">
+    </item>
+</layer-list>

@@ -11,6 +11,10 @@
 #include <filesystem>
 #include <vector>
 #include <DocumentDetector.h>
+#include <ColorSimplificationTransform.h>
+
+#include <Utils.h>
+#include <stack>
 // #include <DocumentOCR.h>
 #include <jsoncons/json.hpp>
 
@@ -135,18 +139,26 @@ int thresh = docDetector.thresh;
 int threshMax = docDetector.threshMax;
 int adapThresholdBlockSize = docDetector.adapThresholdBlockSize; // 391
 int adapThresholdC = docDetector.adapThresholdBlockSize;         // 53
-int gammaCorrection = docDetector.gammaCorrection * 10;         // 53
-int shouldNegate = docDetector.shouldNegate;         // 53
-int useChannel = docDetector.useChannel;         // 53
+int gammaCorrection = docDetector.gammaCorrection * 10;          // 53
+int shouldNegate = docDetector.shouldNegate;                     // 53
+int useChannel = docDetector.useChannel;                         // 53
 
 int whitepaper = 0;
 int enhance = 0;
-int toon = 0;
+int enhanceAfter = 0;
+int process1 = 0;
+int colors = 0;
 Mat edged;
 Mat warped;
 Mat image;
 Mat resizedImage;
 int imageIndex = 0;
+int colorsResizeThreshold = 100;
+int distanceThreshold = 40;
+int colorsFilterDistanceThreshold = 20;
+int colorSpace = 0;
+int paletteColorSpace = 2;
+int paletteNbColors = 5;
 
 int dogKSize = 15;
 int dogSigma1 = 100.0;
@@ -160,115 +172,38 @@ int textDetectDilate = 40; // 0
 int textDetect1 = 70;      // 34
 int textDetect2 = 4;       // 12
 
-// inline uchar reduceVal(const uchar val)
-// {
-//     if (val < 64) return 0;
-//     if (val < 128) return 64;
-//     return 255;
-// }
-
 inline uchar reduceVal(const uchar val)
 {
-    if (val < 192) return uchar(val / 64.0 + 0.5) * 64;
+    if (val > 128)
+        return 255;
+    // if (val > 50) return 128;
+    return val;
+}
+
+inline uchar reduceVal2(const uchar val)
+{
+    if (val < 64)
+        return 0;
+    if (val < 128)
+        return 64;
     return 255;
 }
-void processColors(Mat& img)
+void processColors(Mat &img)
 {
-    uchar* pixelPtr = img.data;
-    for (int i = 0; i < img.rows; i++)
+    Mat dest;
+    cvtColor(img, dest, COLOR_BGR2HLS);
+    uchar *pixelPtr = dest.data;
+    for (int i = 0; i < dest.rows; i++)
     {
-        for (int j = 0; j < img.cols; j++)
+        for (int j = 0; j < dest.cols; j++)
         {
-            const int pi = i*img.cols*3 + j*3;
-            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+            const int pi = i * dest.cols * 3 + j * 3;
+            // pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
+            // pixelPtr[pi + 1] = reduceVal2(pixelPtr[pi + 1]); // G
+            pixelPtr[pi + 2] = reduceVal2(pixelPtr[pi + 2]); // R
         }
     }
-}
-
-cv::Mat quantizeImage(const cv::Mat& inImage, int numBits)
-{
-    cv::Mat retImage = inImage.clone();
-
-    uchar maskBit = 0xFF;
-
-    // keep numBits as 1 and (8 - numBits) would be all 0 towards the right
-    maskBit = maskBit << (8 - numBits);
-
-    for(int j = 0; j < retImage.rows; j++)
-        for(int i = 0; i < retImage.cols; i++)
-        {
-            cv::Vec3b valVec = retImage.at<cv::Vec3b>(j, i);
-            valVec[0] = valVec[0] & maskBit;
-            valVec[1] = valVec[1] & maskBit;
-            valVec[2] = valVec[2] & maskBit;
-            retImage.at<cv::Vec3b>(j, i) = valVec;
-        }
-
-        return retImage;
-}
-
-cv::Mat adaptiveThresholdColor(const cv::Mat &image)
-{
-    // Split the image into its color channels
-    // std::vector<cv::Mat> channels;
-    // cv::split(image, channels);
-
-    // // Apply adaptive thresholding to each color channel
-    // cv::Mat thresholded_b, thresholded_g, thresholded_r;
-    // cv::adaptiveThreshold(channels[0], thresholded_b, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, adapThresholdBlockSize, adapThresholdC);
-    // cv::adaptiveThreshold(channels[1], thresholded_g, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, adapThresholdBlockSize, adapThresholdC);
-    // cv::adaptiveThreshold(channels[2], thresholded_r, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, adapThresholdBlockSize, adapThresholdC);
-
-    // // Merge the thresholded color channels back together
-    // std::vector<cv::Mat> thresholded_channels = {thresholded_b, thresholded_g, thresholded_r};
-    // cv::Mat thresholded_image;
-    // cv::merge(thresholded_channels, thresholded_image);
-
-    // Create an output image with the same size and type as the input
-    cv::Mat output = image.clone();
-
-    // Define a neighborhood size
-    int neighborhoodSize = 4;
-
-    for (int y = 0; y < image.rows; y++)
-    {
-        for (int x = 0; x < image.cols; x++)
-        {
-            // Get the center pixel color
-            cv::Vec3b centerColor = image.at<cv::Vec3b>(y, x);
-
-            // Initialize max color with the center color
-            cv::Vec3b maxColor = centerColor;
-
-            // Find the max color in the neighborhood
-            for (int ny = -neighborhoodSize; ny <= neighborhoodSize; ny++)
-            {
-                for (int nx = -neighborhoodSize; nx <= neighborhoodSize; nx++)
-                {
-                    int ny_new = y + ny;
-                    int nx_new = x + nx;
-
-                    if (ny_new >= 0 && ny_new < image.rows && nx_new >= 0 && nx_new < image.cols)
-                    {
-                        cv::Vec3b neighborColor = image.at<cv::Vec3b>(ny_new, nx_new);
-                        for (int i = 0; i < 3; i++)
-                        {
-                            maxColor[i] = std::max(maxColor[i], neighborColor[i]);
-                        }
-                    }
-                }
-            }
-
-            // Normalize the center color according to the max color
-            for (int i = 0; i < 3; i++)
-            {
-                output.at<cv::Vec3b>(y, x)[i] = static_cast<uchar>(static_cast<float>(centerColor[i]) / maxColor[i] * 255.0f);
-            }
-        }
-    }
-    return output;
+    cvtColor(dest, img, COLOR_HLS2BGR);
 }
 
 std::vector<string> images = {"/home/mguillon/Desktop/IMG_20230918_111703_632.jpg", "/home/mguillon/Desktop/IMG_20230918_111709_558.jpg", "/home/mguillon/Desktop/IMG_20230918_111717_906.jpg", "/home/mguillon/Desktop/IMG_20230918_111721_005.jpg", "/home/mguillon/Desktop/IMG_20230918_111714_873.jpg", "/home/mguillon/Desktop/IMG_20231004_092528_420.jpg", "/home/mguillon/Desktop/IMG_20231004_092535_158.jpg"};
@@ -346,10 +281,31 @@ void updateImage()
         {
             detector::DocumentDetector::applyTransforms(warped, "enhance");
         }
-        if (toon == 1)
+        // if (process1 == 1)
+        // {
+        //     // warped = quantizeImage(warped, 2);
+        //     processColors(warped);
+        //     // cv::stylization(warped, warped, 60, 0.07);
+        // }
+        if (colors == 1)
         {
-            // warped = quantizeImage(warped, 2);
-            processColors(warped);
+            std::stringstream stream;
+            stream << "colors_" << colorsResizeThreshold << "_" << colorsFilterDistanceThreshold << "_" << distanceThreshold << "_" << (colorSpace - 1);
+            // detector::DocumentDetector::applyTransforms(warped, stream.str());
+            std::vector<std::pair<Vec3b, float>> colors = colorSimplificationTransform(warped, warped, false, colorsResizeThreshold, colorsFilterDistanceThreshold, distanceThreshold, paletteNbColors, (ColorSpace)(colorSpace), (ColorSpace)(paletteColorSpace));
+            for (int index = 0; index < colors.size(); ++index)
+            {
+                auto color = colors.at(index).first;
+                auto rbgColor = ColorSpaceToBGR(color, (ColorSpace)(colorSpace));
+                std::stringstream stream;
+                stream << "\e[48;2;" << (int)rbgColor(2) << ";" << (int)rbgColor(1) << ";" << (int)rbgColor(0) << "m   \e[0m";
+                // ESC[48;2;⟨r⟩;⟨g⟩;⟨b⟩m
+                //     __android_log_print(ANDROID_LOG_INFO, "JS", "Color  Color %s Area: %f% %d\n", rgbSexString(HLStoBGR(color.first)).c_str(), 100.f * float(color.second) / n, colors.size());
+                cout  << stream.str()  << "Color: " << colors.size() << " - Hue: " << (int)color(0) << " - Lightness: " << (int)color(1) << " - Saturation: " << (int)color(2) << " " << BGRHexString(rbgColor) << " - Area: " << 100.f * (colors.at(index).second) << "%" << endl;
+                rectangle(warped, cv::Rect(index * 60, 0, 60, 60), Scalar(rbgColor(0), rbgColor(1), rbgColor(2)), -1);
+            }
+
+            // processColors2(warped);
             // cv::stylization(warped, warped, 60, 0.07);
         }
     }
@@ -457,7 +413,7 @@ int main(int argc, char **argv)
 
     namedWindow("Warped", WINDOW_KEEPRATIO);
     moveWindow("Warped", 1200, 0);
-    resizeWindow("Warped", 400, 400);
+    resizeWindow("Warped", 400, 600);
 
     // namedWindow("Detect", WINDOW_KEEPRATIO);
     // moveWindow("Detect", 1400, 100);
@@ -483,11 +439,19 @@ int main(int argc, char **argv)
     // createTrackbar("desseractDetectContours:", "SourceImage", &desseractDetectContours, 1, on_trackbar);
     // createTrackbar("whitepaper:", "SourceImage", &whitepaper, 1, on_trackbar);
     createTrackbar("negate:", "Options", &shouldNegate, 1, on_trackbar);
-    createTrackbar("toon:", "Options", &toon, 1, on_trackbar);
+    createTrackbar("enhance details:", "Warped", &enhance, 1, on_trackbar);
+    // createTrackbar("process1:", "Warped", &process1, 1, on_trackbar);
+    createTrackbar("colors:", "Warped", &colors, 1, on_trackbar);
+    createTrackbar("colorsResizeThreshold:", "Warped", &colorsResizeThreshold, 400, on_trackbar);
+    createTrackbar("colorsFilterDistanceThreshold:", "Warped", &colorsFilterDistanceThreshold, 180, on_trackbar);
+    createTrackbar("distanceThreshold:", "Warped", &distanceThreshold, 180, on_trackbar);
+    createTrackbar("colorSpace:", "Warped", &colorSpace, 3, on_trackbar);
+    createTrackbar("paletteColorSpace:", "Warped", &paletteColorSpace, 3, on_trackbar);
+    createTrackbar("paletteNbColors:", "Warped", &paletteNbColors, 8, on_trackbar);
+    // createTrackbar("enhance details after:", "Warped", &enhanceAfter, 1, on_trackbar);
     createTrackbar("adapThresholdBlockSize:", "Options", &adapThresholdBlockSize, 500, on_trackbar);
     createTrackbar("adapThresholdC:", "Options", &adapThresholdC, 500, on_trackbar);
-    // createTrackbar("enhance details:", "SourceImage", &enhance, 1, on_trackbar);
-    // createTrackbar("stylization:", "SourceImage", &toon, 1, on_trackbar);
+    // createTrackbar("stylization:", "Warped", &toon, 1, on_trackbar);
     // createTrackbar("dogKSize:", "SourceImage", &dogKSize, 30, on_trackbar);
     // createTrackbar("dogSigma1:", "SourceImage", &dogSigma1, 200, on_trackbar);
     // createTrackbar("dogSigma2:", "SourceImage", &dogSigma2, 200, on_trackbar);
@@ -497,12 +461,13 @@ int main(int argc, char **argv)
     int k;
     while (true)
     {
-       k = waitKey(0);
-       if (k == 27) {
-        break;
-       }
+        k = waitKey(0);
+        if (k == 27)
+        {
+            break;
+        }
     }
-    
+
     // edged.release();
     // warped.release();
 

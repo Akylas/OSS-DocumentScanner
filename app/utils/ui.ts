@@ -14,7 +14,7 @@ import ColorMatrices from './color_matrix';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { showModal } from 'svelte-native';
 import { loadImage, recycleImages } from './utils.common';
-import { cropDocument, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+import { cropDocument, detectQRCode, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { l, lc } from '~/helpers/locale';
 
@@ -373,7 +373,12 @@ export async function importAndScanImage(document?: OCRDocument) {
                 throw new Error('failed to read imported image');
             }
             let quads = await getJSONDocumentCorners(editingImage, 300, 0);
-
+            let qrcode;
+            if (CARD_APP) {
+                // try to get the qrcode to show it in the import screen
+                qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
+                console.log('qrcode', qrcode);
+            }
             if (quads.length === 0) {
                 quads.push([
                     [0, 0],
@@ -383,20 +388,25 @@ export async function importAndScanImage(document?: OCRDocument) {
                 ]);
             }
             if (quads?.length) {
-                console.log('ModalImportImage');
-                const ModalImportImage = require('~/components/ModalImportImage.svelte').default;
+                const ModalImportImage = (await import('~/components/ModalImportImage.svelte')).default;
                 quads = await showModal({
                     page: ModalImportImage,
                     animated: true,
                     fullscreen: true,
                     props: {
                         editingImage,
-                        quads
+                        quads,
+                        qrcode
                     }
                 });
                 if (quads) {
+                    console.log('about to cropDocument', quads);
                     const images = await cropDocument(editingImage, quads);
-
+                    let qrcode;
+                    if (CARD_APP) {
+                        qrcode = await detectQRCode(images[0], { resizeThreshold: 900 });
+                        console.log('qrcode1', qrcode);
+                    }
                     if (images?.length) {
                         const pagesToAdd: PageData[] = [];
                         for (let index = 0; index < images.length; index++) {
@@ -405,6 +415,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                                 image,
                                 crop: quads[index],
                                 sourceImagePath,
+                                qrcode,
                                 width: __ANDROID__ ? image.getWidth() : image.size.width,
                                 height: __ANDROID__ ? image.getHeight() : image.size.height,
                                 rotation: editingImage.rotationAngle

@@ -71,8 +71,12 @@ htmllabel {
     // }
 
     // white-space: normal;
-}
 
+    &:onTertiary {
+        color: var(--colorOnTertiary);
+    }
+}
+["#bbbbb7","#afb0ac","#627c2f","#758a44","#a6a88b","#8d9667","#4d661b","#a94c35"]
 // mdtextfield {
 //     color: black;
 //     // background-color: white;
@@ -129,6 +133,11 @@ page {
     &:disabled {
         color: var(--colorOutlineVariant);
         ripple-color: var(--colorOutlineVariant);
+    }
+
+    &:onTertiary {
+        color: var(--colorOnTertiary);
+        ripple-color: var(--colorOnTertiary);
     }
 
     color: var(--colorOnSurface);

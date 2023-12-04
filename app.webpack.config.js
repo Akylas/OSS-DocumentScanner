@@ -99,7 +99,7 @@ module.exports = (env, params = {}) => {
         keep_classnames_functionnames = false,
         startOnCam = false
     } = env;
-    console.log('env', env);
+    // console.log('env', env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || ['~/android/activity.android'];
@@ -138,6 +138,9 @@ module.exports = (env, params = {}) => {
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
+
+    config.resolve.conditionNames = config.resolve.conditionNames || [];
+    config.resolve.conditionNames.push('svelte');
 
     if (profile) {
         const StatsPlugin = require('stats-webpack-plugin');
@@ -180,6 +183,7 @@ module.exports = (env, params = {}) => {
     Object.assign(config.resolve.alias, {
         'kiss-orm': '@akylas/kiss-orm'
     });
+    const appId = nconfig.id;
     let appVersion;
     let buildNumber;
     if (platform === 'android') {
@@ -212,9 +216,10 @@ module.exports = (env, params = {}) => {
         'global.autoLoadPolyfills': false,
         'gVars.internalApp': false,
         TNS_ENV: JSON.stringify(mode),
-        __APP_ID__: `"${nconfig.id}"`,
+        __APP_ID__: `"${appId}"`,
         __APP_VERSION__: `"${appVersion}"`,
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
+        CARD_APP: appId === 'com.akylas.cardwallet',
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
@@ -225,11 +230,11 @@ module.exports = (env, params = {}) => {
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
         SUPPORT_URL: `"${package.bugs.url}"`,
-        STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
+        STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS
                 ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
-                : `market://details?id=${nconfig.id}`
+                : `market://details?id=${appId}`
         }"`,
         DEV_LOG: !!devlog,
         TEST_LOG: !!devlog || !!testlog
@@ -329,7 +334,7 @@ module.exports = (env, params = {}) => {
                 loader: 'string-replace-loader',
                 options: {
                     search: '__PACKAGE__',
-                    replace: nconfig.id,
+                    replace: appId,
                     flags: 'g'
                 }
             }
@@ -381,7 +386,7 @@ module.exports = (env, params = {}) => {
         })
     );
 
-    config.plugins.push(new SpeedMeasurePlugin());
+    // config.plugins.push(new SpeedMeasurePlugin());
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
@@ -516,7 +521,7 @@ module.exports = (env, params = {}) => {
                     release: appVersion,
                     urlPrefix: 'app:///',
                     rewrite: true,
-                    release: `${nconfig.id}@${appVersion}+${buildNumber}`,
+                    release: `${appId}@${appVersion}+${buildNumber}`,
                     dist: `${buildNumber}.${platform}`,
                     ignoreFile: '.sentrycliignore',
                     include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
@@ -575,7 +580,6 @@ module.exports = (env, params = {}) => {
             }
         })
     ];
+    return config;
     return [require('./webpdfviewer/webpack.config.js')(env), config];
-
-    // return config;
 };

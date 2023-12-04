@@ -1,0 +1,7 @@
+repositories {
+    google()
+    mavenCentral()
+}
+dependencies {
+    classpath 'androidx.baselineprofile:androidx.baselineprofile.gradle.plugin:1.2.0-alpha16'
+}
