@@ -1,0 +1,196 @@
+
+project.ext.abiCodes = ['armeabi':1, 'armeabi-v7a':2, 'arm64-v8a':3, 'x86':4, 'x86_64':5]
+def BUILD_TOOLS_PATH = "$rootDir/build-tools"
+
+apply plugin: "androidx.baselineprofile"
+apply plugin: "org.jetbrains.kotlin.android"
+
+android { 
+  // we only enable split if specified as an arg or if in debug and abiFilters is used(through cli)
+  def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
+  defaultConfig {  
+    multiDexEnabled false
+    minSdkVersion 21
+    versionCode 1
+    versionName "1.0.0"
+
+    if (project.hasProperty('resConfigs')) {
+      def resConfigs = project.findProperty('resConfigs')
+      reset()
+      include resConfigs.split(',')
+    } else {
+      resConfigs "en", "fr", "es"
+    }
+    ndk {
+      if (splitEnabled || project.hasProperty('abiFilters')) {
+        abiFilters.clear()
+        if (!splitEnabled && project.hasProperty('abiFilters')) {
+          abiFilters.addAll(project.findProperty('abiFilters').split(',').collect{it as String})
+        }
+      }
+    }
+  }
+  ndkVersion = project.ndkVersion
+  
+  kotlin {
+        jvmToolchain(17)
+  }
+  compileOptions {
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+  }
+  lintOptions {
+      // disable("LintError")
+      checkReleaseBuilds false
+      // Or, if you prefer, you can continue to check for errors in release builds,
+      // but continue the build even when errors are found:
+      abortOnError false
+  }
+  bundle {
+      language {
+          // We disable language split because we do not use
+          // runtime Google Play Service APIs and thus cannot dynamically
+          // request to download the language resources for a specific locale.
+          enableSplit = false
+      }
+  }
+  splits {
+      abi {
+          enable splitEnabled
+          if (project.hasProperty('abiFilters')) {
+            def abis = project.findProperty('abiFilters')
+            reset()
+            include abis.split(',')
+          }
+          universalApk project.hasProperty('universalApk')
+      }
+  }
+  
+  aaptOptions {
+    // Remove unwanted assets from pdfbox
+    ignoreAssetsPattern "!*.txt:!*.afm:!*LiberationSans-Regular.ttf:!cmap"
+  }  
+  buildTypes { // THIS CAUSES RELEASE MODE ERROR ON APP LAUNCH
+    release {
+      // Enables code shrinking, obfuscation, and optimization for only
+      // your project's release build type.
+      minifyEnabled true
+
+      // Enables resource shrinking, which is performed by the
+      // Android Gradle plugin.
+      shrinkResources true
+
+      // Disables PNG crunching for the release build type.
+      crunchPngs false
+
+
+      // Includes the default ProGuard rules files that are packaged with
+      // the Android Gradle plugin. To learn more, go to the section about
+      // R8 configuration files.
+      def absolutePathToAppResources = getAppResourcesPath()
+      proguardFiles getDefaultProguardFile(
+        'proguard-android-optimize.txt'),
+        "$BUILD_TOOLS_PATH/proguard-rules.pro"
+
+      debuggable false
+      jniDebuggable false
+      renderscriptDebuggable false
+    }
+    debug {
+      multiDexEnabled true;
+    }
+    benchmark {
+        initWith release
+        proguardFiles("../benchmark/benchmark-rules.pro")
+        signingConfig signingConfigs.debug
+        matchingFallbacks = ['release']
+        debuggable false
+    }
+  }  
+  packagingOptions {
+    pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+    pickFirst 'lib/arm64-v8a/libc++_shared.so'
+    pickFirst 'lib/x86_64/libc++_shared.so'
+    pickFirst 'lib/x86/libc++_shared.so'
+    // resources.excludes += "assets/com/tom_roush/fontbox/resources/cmap/*"
+
+  }
+  // flavorDimensions "stage"
+  // productFlavors {
+  //   dev {
+  //     dimension "stage"
+  //     versionNameSuffix "-dev"
+  //     resConfigs "en", "xxhdpi"
+  //   }
+  //   prod {
+  //     dimension "stage"
+  //     resConfigs "en", "fr", "es"
+  //   }
+  // }
+}
+
+task createProguard {
+    dependsOn 'buildMetadata'
+    doLast {
+        exec {
+            workingDir "$USER_PROJECT_ROOT"
+            commandLine 'node', "scripts/createProguard.js", "${rootDir}", "${getAppResourcesPath()}"
+        }
+    }
+}
+project.tasks.configureEach {
+    if (name =~ /buildMetadata/) {
+        it.finalizedBy(createProguard)
+    }
+    if (name =~ /minify(Debug|Release)WithR8/) {
+        it.dependsOn(createProguard)
+    }
+}
+
+android.applicationVariants.all { variant ->
+    if (project.hasProperty('splitEnabled')) {
+        if (variant.buildType.name == "debug") {
+            variant.outputs.each { output ->
+                output.versionNameOverride = android.defaultConfig.versionName + "." + variant.versionCode + "-dev";
+            }
+        } else {
+            variant.outputs.each { output ->
+                output.versionNameOverride = android.defaultConfig.versionName + "." + variant.versionCode;
+            }
+        }
+    }
+    // def rmfontbox = task("delete${variant.name}.fontbox", type: Delete) {
+    //     delete "${buildDir}/intermediates/assets/${variant.dirName}/com"
+    // }
+    // variant.mergeAssets.finalizedBy rmfontbox
+}
+
+dependencies {
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
+    def kotlinVersion = computeKotlinVersion()
+    // def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
+    // implementation "androidx.core:core-ktx:$androidxVersion"
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    constraints {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion") {
+            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
+        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion") {
+            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
+        }
+    }
+    implementation "androidx.profileinstaller:profileinstaller:1.3.1"
+    baselineProfile project(':benchmark')
+    // we remove uncessary deps from okhttp which make app too big (around 10mb added)
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0") {
+      exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15to18'
+      exclude group: 'org.bouncycastle', module: 'bcprov-jdk15to18'
+      exclude group: 'org.bouncycastle', module: 'bcutil-jdk15to18'
+    }
+    // implementation 'com.github.ultimate-deej:TwoWayNestedScrollView:0.1.1'
+		// implementation 'com.github.Akylas:AndroidPdfViewer:3.3.1'
+    }
+repositories {
+			mavenCentral()
+			maven { url 'https://jitpack.io' }
+}

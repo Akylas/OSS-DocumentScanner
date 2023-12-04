@@ -2,10 +2,13 @@
 /// <reference path="../node_modules/@nativescript/types-android/lib/android/android-declarations.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!UIKit.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Foundation.d.ts" />
-/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreGraphics.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!ObjectiveC.d.ts" />
-/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Photos.d.ts" />
 /// <reference path="../node_modules/@nativescript/core/global-types.d.ts" />
+
+// for nativeprocessor
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreGraphics.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Photos.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreImage.d.ts" />
 
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';
@@ -32,6 +35,7 @@ declare const START_ON_CAM: boolean;
 declare const NO_CONSOLE: boolean;
 declare const TEST_LOGS: boolean;
 declare const PRODUCTION: boolean;
+declare const CARD_APP: boolean;
 declare const SENTRY_ENABLED: boolean;
 declare const SENTRY_DSN: string;
 declare const SENTRY_PREFIX: string;
@@ -50,6 +54,7 @@ declare const __APP_BUILD_NUMBER__: string;
 namespace svelteNative.JSX {
     interface ViewAttributes {
         rippleColor?: string;
+        sharedTransitionTag?: string;
         verticalAlignment?: string;
         dynamicElevationOffset?: string | number;
         elevation?: string | number;
@@ -75,5 +80,7 @@ namespace svelteNative.JSX {
         lineBreak?: string;
         html?: string;
     }
+    interface PageAttributes {
+        statusBarColor?: string;
+    }
 }
-

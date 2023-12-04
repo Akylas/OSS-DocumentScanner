@@ -1,11 +1,12 @@
 <script lang="ts">
     import { BitmapShader, Canvas, CanvasView, Matrix, Paint, Style, TileMode } from '@nativescript-community/ui-canvas';
     import { ImageSource, TouchGestureEventData, Utils } from '@nativescript/core';
+    import { QRCodeData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { colors } from '~/variables';
-    let { colorPrimary } = $colors;
+    let { colorPrimary, colorSecondary } = $colors;
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorPrimary, colorSecondary } = $colors);
 
     const padding = 20;
     let canvasView: NativeViewElementNode<CanvasView>;
@@ -29,6 +30,7 @@
     let rotation = 0;
     export let quads;
     export let quadChanged = false;
+    export let qrcode: QRCodeData = null;
     let editingImageShader: BitmapShader;
     let mappedQuads;
 
@@ -86,16 +88,16 @@
                     const touchMoveXDistance = x - prevTouchPoint[0];
                     const touchMoveYDistance = y - prevTouchPoint[1];
 
-                    const newX = quad[closestCornerQuadIndex][0] + touchMoveXDistance;
-                    const newY = quad[closestCornerQuadIndex][1] + touchMoveYDistance;
+                    const newX = Math.round(quad[closestCornerQuadIndex][0] + touchMoveXDistance);
+                    const newY = Math.round(quad[closestCornerQuadIndex][1] + touchMoveYDistance);
                     const cornerNewPosition = getMatrixMappedPoint(inversedCurrentMatrix, [newX, newY]);
                     // console.log('cornerNewPosition', x, y, quad[closestCornerQuadIndex], newX, newY, cornerNewPosition);
                     // make sure the user doesn't drag the corner outside the image preview container
                     if (cornerNewPosition[0] >= 0 && cornerNewPosition[0] < editingImage.width && cornerNewPosition[1] >= 0 && cornerNewPosition[1] < editingImage.height) {
                         quad[closestCornerQuadIndex][0] = newX;
                         quad[closestCornerQuadIndex][1] = newY;
-                        quads[closestQuadIndex][closestCornerQuadIndex][0] = cornerNewPosition[0];
-                        quads[closestQuadIndex][closestCornerQuadIndex][1] = cornerNewPosition[1];
+                        quads[closestQuadIndex][closestCornerQuadIndex][0] = Math.round(cornerNewPosition[0]);
+                        quads[closestQuadIndex][closestCornerQuadIndex][1] = Math.round(cornerNewPosition[1]);
                         quadChanged = true;
                     }
                     prevTouchPoint = [x, y];
@@ -180,6 +182,7 @@
         canvas.concat(currentImageMatrix);
 
         canvas.drawBitmap(editingImage, 0, 0, null);
+        cornersPaint.color = colorPrimary;
 
         // canvas.restore();
         // canvas.concat(currentCropMatrix);
@@ -215,6 +218,20 @@
                         canvas.drawCircle(point[0], point[1], 10 / drawingRatio, cornersPaint);
                     }
                 }
+            }
+        }
+        if (qrcode?.length) {
+            cornersPaint.color = colorSecondary;
+            cornersPaint.strokeWidth = 4 / drawingRatio;
+            for (let index = 0; index < qrcode.length; index++) {
+                const corners = qrcode[index].position;
+                let currentCornerPoint = corners[0];
+                for (let index = 1; index < corners.length; index++) {
+                    const point = corners[index];
+                    canvas.drawLine(currentCornerPoint[0], currentCornerPoint[1], point[0], point[1], cornersPaint);
+                    currentCornerPoint = point;
+                }
+                canvas.drawLine(currentCornerPoint[0], currentCornerPoint[1], corners[0][0], corners[0][1], cornersPaint);
             }
         }
     }

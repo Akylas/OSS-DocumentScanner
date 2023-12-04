@@ -1,7 +1,14 @@
 ﻿{
   "about": "about",
-  "app": {
-    "name": "OSS Document Scanner"
+  "$com.akylas.cardwallet":{
+    "app": {
+      "name": "OSS Card Wallet"
+    }
+  },
+  "$com.akylas.documentscanner":{
+    "app": {
+      "name": "OSS Document Scanner"
+    }
   },
   "auto": "auto",
   "cancel": "cancel",

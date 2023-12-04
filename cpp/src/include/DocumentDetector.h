@@ -33,7 +33,7 @@ namespace detector {
         cv::Mat resizeImageMax();
         cv::Mat resizeImageToSize(int size);
 
-        static void applyTransforms(Mat &srcMat, std::string transforms);
+        static void applyTransforms(Mat &srcMat, std::string transforms, bool useRGB = false);
         cv::Mat image;
         cv::Mat resizedImage;
 

@@ -35,6 +35,13 @@
         app:srcCompat="@android:drawable/ic_dialog_email"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="800px"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <!--        <Button-->
     <!--            android:id="@+id/button_first"-->

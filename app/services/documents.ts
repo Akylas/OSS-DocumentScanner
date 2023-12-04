@@ -14,12 +14,12 @@ export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
     constructor(data) {
         super(data);
     }
-    static migrations = {
+    migrations = {
         // addGroupName: sql`ALTER TABLE Groups ADD COLUMN name TEXT`,
         // addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
     };
     async applyMigrations() {
-        const migrations = this.constructor.prototype.migrations;
+        const migrations = this.migrations;
         if (!migrations) {
             return;
         }
@@ -66,7 +66,17 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             model: OCRPage
         });
     }
-
+    migrations = Object.assign(
+        {
+            addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`
+        },
+        CARD_APP
+            ? {
+                  addQRCode: sql`ALTER TABLE Page ADD COLUMN qrcode TEXT`
+                  // addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
+              }
+            : {}
+    );
     async createTables() {
         await this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Page" (
@@ -97,20 +107,12 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         console.log('createPage', page);
         const createdDate = Date.now();
         return this.create({
-            id: page.id,
+            ...page,
             createdDate,
             modifiedDate: createdDate,
-            document_id: page.document_id,
-            pageIndex: page.pageIndex,
-            width: page.width,
-            height: page.height,
-            size: page.size,
             rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
             scale: page.scale ?? 1,
-            imagePath: page.imagePath,
-            colorType: page.colorType,
-            transforms: page.transforms,
-            sourceImagePath: page.sourceImagePath,
+            qrcode: page._qrcode || (JSON.stringify(page.qrcode) as any),
             crop: page._crop || (JSON.stringify(page.crop) as any),
             colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any),
             ocrData: page._ocrData || (JSON.stringify(page.ocrData) as any)
@@ -151,7 +153,9 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             _colorMatrix: other.colorMatrix,
             colorMatrix: other.colorMatrix ? JSON.parse(other.colorMatrix) : undefined,
             _ocrData: other.ocrData,
-            ocrData: other.ocrData ? JSON.parse(other.ocrData) : undefined
+            ocrData: other.ocrData ? JSON.parse(other.ocrData) : undefined,
+            _qrcode: other.qrcode,
+            qrcode: other.qrcode ? JSON.parse(other.qrcode) : undefined
         });
         return model;
     }

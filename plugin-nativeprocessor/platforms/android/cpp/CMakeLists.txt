@@ -13,7 +13,7 @@ set(OPENCV_LIB_DIR opencv/staticlibs/${ANDROID_ABI}/)
 set(OPENCV_3RD_LIB_DIR opencv/3rdparty/libs/${ANDROID_ABI}/)
 set(TESSERACT_LIB_DIR tesseract/staticlibs/${ANDROID_ABI}/)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-anon-enum-enum-conversion")
 
 include_directories(opencv/include

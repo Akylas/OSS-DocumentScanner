@@ -1,7 +1,7 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
-import { OCRData, cropDocument } from 'plugin-nativeprocessor';
+import { OCRData, QRCodeData, cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType, timeout } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils';
@@ -314,6 +314,7 @@ export interface Page {
     id: string;
     createdDate: number;
     modifiedDate?: number;
+    name?: string;
     document_id: string;
 
     transforms?: string;
@@ -330,6 +331,7 @@ export interface Page {
     imagePath: string;
 
     ocrData: OCRData;
+    qrcode: QRCodeData;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -342,6 +344,7 @@ export class OCRPage extends Observable implements Page {
     id: string;
     createdDate: number;
     modifiedDate?: number;
+    name?: string;
     document_id: string;
 
     colorType?: string;
@@ -365,6 +368,9 @@ export class OCRPage extends Observable implements Page {
 
     ocrData: OCRData;
     _ocrData: string;
+
+    qrcode: QRCodeData;
+    _qrcode: string;
 
     getImagePath() {
         return this.imagePath;

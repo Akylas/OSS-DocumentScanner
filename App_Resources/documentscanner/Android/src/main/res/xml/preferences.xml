@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ListPreference
+        app:entries="@array/langs"
+        app:entryValues="@array/langsValues"
+        app:key="language"
+        app:title="@string/language" />
+    <PreferenceCategory app:title="@string/settings.title">
+        <ListPreference
+        app:defaultValue="auto"
+        app:entries="@array/themes"
+        app:entryValues="@array/themesValues"
+        app:key="theme"
+        app:title="@string/theme.title" />
+        <SwitchPreference
+        app:defaultValue="false"
+        app:key="startOnCam"
+        app:title="@string/start_on_cam" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

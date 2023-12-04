@@ -1,7 +1,14 @@
 {
   "about": "à propos",
-  "app": {
-    "name": "OSS Document Scanner"
+  "$com.akylas.cardwallet":{
+    "app": {
+      "name": "OSS Card Wallet"
+    }
+  },
+  "$com.akylas.documentscanner":{
+    "app": {
+      "name": "OSS Document Scanner"
+    }
   },
   "auto": "auto",
   "cancel": "annuler",
@@ -22,7 +29,7 @@
   "english": "Anglais",
   "enhance": "Améliorer",
   "error": "erreur",
-  "export_settings": "Paramètres d &apos; exportation",
+  "export_settings": "Paramètres d'exportation ",
   "export_settings_desc": "exporter tous les paramètres AlpiMaps afin que vous puissiez les importer plus tard",
   "exporting": "exporting",
   "failed": "échoué",

@@ -22,6 +22,8 @@ declare namespace com {
                     public static cropDocument(...args): void;
                     public static ocrDocument(...args): void;
                     public static readQRCode(...args): void;
+                    public static generateQRCode(...args): void;
+                    public static generateQRCodeSync(...args): void;
                 }
 
                 export class FunctionCallback {

@@ -3,11 +3,12 @@
 #include <android_utils.h>
 #include <DocumentDetector.h>
 #include <DocumentOCR.h>
+#include <Utils.h>
 #include <jsoncons/json.hpp>
-#include <android/log.h>
-#include <android/log.h>
+#include <MultiFormatWriter.h>
 #include <ReadBarcode.h>
 #include <android/log.h>
+#include "BitMatrix.h"
 
 #define TAG "JS"
 using namespace std;
@@ -199,44 +200,76 @@ static jstring native_scan_qrcode(JNIEnv *env, jobject type, jobject srcBitmap, 
     encode_json(result, s, jsoncons::indenting::no_indent);
     return stringToJavaString(env, s);
 }
+static std::vector<std::vector<cv::Point>> native_scan_mat(Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation)
+{
+    detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation);
+    return docDetector.scanPoint();
+}
 static jobject native_scan(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation)
 {
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
-    detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation);
-    std::vector<std::vector<cv::Point>> scanPointsList = docDetector.scanPoint();
+    std::vector<std::vector<cv::Point>> scanPointsList = native_scan_mat(srcBitmapMat,shrunkImageHeight, imageRotation);
     jobject outerVector = pointsToJava(env, scanPointsList);
     srcBitmapMat.release();
     return outerVector;
+}
+
+static jobject native_scan_buffer(JNIEnv *env, jobject type, jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                       jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                       jint rowStride3, jint shrunkImageHeight, jint imageRotation)
+{
+    Mat srcBitmapMat;
+    buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
+    std::vector<std::vector<cv::Point>> scanPointsList = native_scan_mat(srcBitmapMat,shrunkImageHeight, imageRotation);
+    jobject outerVector = pointsToJava(env, scanPointsList);
+    srcBitmapMat.release();
+    return outerVector;
+}
+
+static void testImageProxyToBitmap(JNIEnv *env, jobject type, jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                      jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                      jint rowStride3, jobject out_bitmap) {
+    Mat srcBitmapMat;
+    buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
+    mat_to_bitmap(env, srcBitmapMat, out_bitmap);
+    srcBitmapMat.release();
+}
+static std::string native_scan_json_mat(Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation) {
+    detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation);
+    return docDetector.scanPointToJSON();
 }
 static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation)
 {
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
-    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
-    cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
-    detector::DocumentDetector docDetector(bgrData, shrunkImageHeight, imageRotation);
-    std::string scanPointsList = docDetector.scanPointToJSON();
-    // const int size = scanPointsList.size();
-    // jmethodID mid = env->GetMethodID(gPointInfo.jClassVector, "<init>", "()V");
-    // jmethodID addMethodID = env->GetMethodID(gPointInfo.jClassVector, "add", "(Ljava/lang/Object;)Z");
-    // jobject outerVector = env->NewObject(gPointInfo.jClassVector, mid);
-    // if (size > 0)
-    // {
-    //     for (int i = 0; i < size; ++i)
-    //     {
-    //         vector<Point> scanPoints = scanPointsList[i];
-    //         jobject innerVector = env->NewObject(gPointInfo.jClassVector, mid);
-    //         if (scanPoints.size() == 4)
-    //         {
-    //             for (int j = 0; j < 4; ++j)
-    //             {
-    //                 env->CallBooleanMethod(innerVector, addMethodID, createJavaPoint(env, scanPoints[j]));
-    //             }
-    //         }
-    //         env->CallBooleanMethod(outerVector, addMethodID, innerVector);
-    //     }
-    // }
+//    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
+//    cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
+    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
+    srcBitmapMat.release();
+    return stringToJavaString(env, scanPointsList);
+}
+static jstring native_color_palette(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint colorsFilterDistanceThreshold)
+{
+    Mat srcBitmapMat;
+    bitmap_to_mat(env, srcBitmap, srcBitmapMat);
+//    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
+//    cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
+    std::vector<std::pair<Vec3b, float>> colors = getPalette(srcBitmapMat, true, shrunkImageHeight, colorsFilterDistanceThreshold);
+    jsoncons::json j(jsoncons::json_array_arg);
+    for (int i = 0; i < colors.size(); ++i) {
+        j.push_back(rgbHexString(colors[i].first));
+    }
+    srcBitmapMat.release();
+    return stringToJavaString(env, j.to_string());
+}
+static jstring native_scan_json_buffer(JNIEnv *env, jobject type, jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                       jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                       jint rowStride3, jint shrunkImageHeight, jint imageRotation)
+{
+    Mat srcBitmapMat;
+    buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
+    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
     srcBitmapMat.release();
     return stringToJavaString(env, scanPointsList);
 }
@@ -259,10 +292,10 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring po
 {
     std::string points{jstringToString(env, points_)};
     jsoncons::json val = jsoncons::json::parse(points);
-    std::vector<int> leftTop = val[0].as<std::vector<int>>();
-    std::vector<int> rightTop = val[1].as<std::vector<int>>();
-    std::vector<int> rightBottom = val[2].as<std::vector<int>>();
-    std::vector<int> leftBottom = val[3].as<std::vector<int>>();
+    std::vector<double> leftTop = val[0].as<std::vector<double>>();
+    std::vector<double> rightTop = val[1].as<std::vector<double>>();
+    std::vector<double> rightBottom = val[2].as<std::vector<double>>();
+    std::vector<double> leftBottom = val[3].as<std::vector<double>>();
 
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
@@ -293,7 +326,7 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring po
     std::string transformsStd{jstringToString(env, transforms)};
     if (transformsStd.length() > 0)
     {
-        detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd);
+        detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd, false);
     }
     mat_to_bitmap(env, dstBitmapMat, outBitmap);
 }
@@ -302,12 +335,100 @@ JSONCONS_ENUM_TRAITS(ZXing::BarcodeFormat, None, Aztec, Codabar, Code39, Code93,
 //JSONCONS_ALL_GETTER_CTOR_TRAITS(ZXing::Position, topLeft, topRight, bottomRight, bottomLeft);
 JSONCONS_ALL_MEMBER_TRAITS(ZXing::PointI, x, y);
 JSONCONS_N_CTOR_GETTER_TRAITS(ZXing::Result, 1, text, format, ecLevel, orientation, isMirrored, isInverted, position);
+
+ZXing::Results ReadQRCode(JNIEnv *env, Mat &srcMat, jint rotation, jstring options_)
+{
+    auto hints = ZXing::DecodeHints().setFormats(ZXing::BarcodeFormat::Any).setMaxNumberOfSymbols(1);
+    std::string options{jstringToString(env, options_)};
+    double scale = 1.0f;
+    if (!options.empty()) {
+        jsoncons::json j = jsoncons::json::parse(options);
+
+        if (j.contains("tryHarder")) {
+            hints = hints.setTryHarder(j["tryHarder"].as<bool>());
+        }
+        if (j.contains("resizeThreshold")) {
+            double resizeThreshold = j["resizeThreshold"].as<double>();
+            int width = srcMat.cols;
+            int height = srcMat.rows;
+            int size = max(width, height);
+            if (size > resizeThreshold) {
+                scale = 1.0f * size / resizeThreshold;
+                Size size(width / scale, height / scale);
+                Mat resizedBitmap(size, CV_8UC3);
+                resize(srcMat, resizedBitmap, size);
+                srcMat.release();
+                srcMat  = resizedBitmap;
+            }
+        }
+    }
+    ZXing::Results results = ZXing::ReadBarcodes(ImageViewFromMat(srcMat).rotated(rotation), hints);
+    for (int i = 0; i < results.size(); ++i) {
+        auto position = results[i].position();
+        auto topLeft = position.topLeft();
+        auto topRight = position.topRight();
+        auto bottomRight = position.bottomRight();
+        auto bottomLeft = position.bottomLeft();
+        results[i].setPosition(ZXing::QuadrilateralI(ZXing::PointI(topLeft.x * scale, topLeft.y * scale),
+                                                     ZXing::PointI(topRight.x * scale, topRight.y * scale),
+                                                     ZXing::PointI(bottomRight.x * scale, bottomRight.y * scale),
+                                                     ZXing::PointI(bottomLeft.x * scale, bottomLeft.y * scale)));
+    }
+    return results;
+}
 static jstring native_qrcore_read(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_)
 {
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
-    auto hints = ZXing::DecodeHints().setFormats(ZXing::BarcodeFormat::Any).setMaxNumberOfSymbols(1);
-    ZXing::Results results = ZXing::ReadBarcodes(ImageViewFromMat(srcBitmapMat), hints);
+    ZXing::Results results = ReadQRCode(env, srcBitmapMat, 0, options_);
+    string s;
+    encode_json(results, s, jsoncons::indenting::no_indent);
+    return stringToJavaString(env, s);
+}
+
+static void generateQRCode(JNIEnv *env, jobject type, jstring text_, jstring format_, jint width, jint height, jstring options_, jobject outBitmap)
+{
+    std::string format{jstringToString(env, format_)};
+    auto writer = ZXing::MultiFormatWriter(ZXing::BarcodeFormatFromString(format));
+    std::string options{jstringToString(env, options_)};
+    if (!options.empty()) {
+        jsoncons::json j = jsoncons::json::parse(options);
+
+        if (j.contains("encoding")) {
+            writer = writer.setEncoding(ZXing::CharacterSetFromString(j["encoding"].as<string>()));
+        }
+        if (j.contains("ecclevel")) {
+            writer = writer.setEccLevel(j["ecclevel"].as<int>());
+        }
+        if (j.contains("margin")) {
+            writer = writer.setMargin(j["margin"].as<int>());
+        }
+    }
+    std::string text{jstringToString(env, text_)};
+    auto matrix = writer.encode(text, width, height);
+    auto bitmap = ToMatrix<uint8_t>(matrix);
+    const unsigned char *buffer = bitmap.data();
+    Mat resultMat(height,width,CV_8UC1,(unsigned char*)buffer);
+
+    // colorize the image
+    // Mat resultColor(height,width,CV_8UC4,Scalar(0,0,0,0));
+    // for(int r = 0; r < resultMat.rows; r++){
+    //     for(int c = 0; c < resultMat.cols; c++){
+    //         char currentColor = resultMat.at<uchar>(r, c);
+    //         if (currentColor == 0) {
+    //             resultColor.at<Vec4b>(r, c)[3] = 255;
+    //         }
+    //     }
+    // }
+    mat_to_bitmap(env, resultMat, outBitmap);
+}
+
+static jstring native_qrcore_read_buffer(JNIEnv *env, jobject type, jint width, jint height, jint rotation, jobject buffer1,
+                                          jint rowStride1, jstring options_)
+{
+    void *pixels = (env->GetDirectBufferAddress(buffer1));
+    Mat mat(cv::Size(width, height), CV_8UC1, pixels, rowStride1);
+    ZXing::Results results = ReadQRCode(env, mat, rotation, options_);
     string s;
     encode_json(results, s, jsoncons::indenting::no_indent);
     return stringToJavaString(env, s);
@@ -335,7 +456,20 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
 {
     return native_scan(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
 }
+
 extern "C" JNIEXPORT jobject JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeBufferScan(JNIEnv *env,
+                                                                                      jobject thiz,
+                                                                                            jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                                                                            jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                                                                            jint rowStride3,
+                                                                                      jint shrunk_image_height,
+                                                                                      jint image_rotation)
+{
+    return native_scan_buffer(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanAndQRCode(JNIEnv *env,
                                                                                       jobject thiz,
                                                                                       jobject src_bitmap,
@@ -353,6 +487,26 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
                                                                                           jint image_rotation)
 {
     return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeColorPalette(JNIEnv *env,
+                                                                                          jobject thiz,
+                                                                                          jobject src_bitmap,
+                                                                                          jint shrunk_image_height,
+                                                                                          jint colorsFilterDistanceThreshold)
+{
+    return native_color_palette(env, thiz, src_bitmap, shrunk_image_height, colorsFilterDistanceThreshold);
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeBufferScanJSON(JNIEnv *env,
+                                                                                          jobject thiz,
+                                                                                                jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                                                                                jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                                                                                jint rowStride3,
+                                                                                          jint shrunk_image_height,
+                                                                                          jint image_rotation)
+{
+    return native_scan_json_buffer(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -382,4 +536,31 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
                                                                                             jstring options)
 {
     return native_qrcore_read(env, thiz, src_bitmap, options);
+}
+
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeQRCodeReadBuffer(JNIEnv *env,
+                                                                                            jobject thiz,
+                                                                                                  jint width, jint height, jint rotation, jobject buffer1,
+                                                                                                  jint rowStride1,
+                                                                                            jstring options)
+{
+    return native_qrcore_read_buffer(env, thiz, width, height, rotation, buffer1, rowStride1, options);
+}
+
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_testImageProxyToBitmap(JNIEnv *env,
+                                                                                                jobject thiz,
+                                                                                                jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                                                                                jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                                                                                jint rowStride3,jobject out_bitmap)
+{
+    testImageProxyToBitmap(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, out_bitmap);
+}
+extern "C" JNIEXPORT void JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeGenerateQRCode(JNIEnv *env, jobject thiz, jstring text_, jstring format_, jint width, jint height, jstring options_, jobject outBitmap)
+{
+    generateQRCode(env, thiz, text_, format_, width, height, options_, outBitmap);
 }

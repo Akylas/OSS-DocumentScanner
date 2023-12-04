@@ -39,6 +39,16 @@
         const result = item.colorMatrix || getColorMatrix(item.colorType);
         return result;
     }
+
+    function getImageSrc(item) {
+        if (item.image) {
+            if (typeof item.image === 'function') {
+                return item.image();
+            }
+            return item.image;
+        }
+        return item.getImagePath?.();
+    }
 </script>
 
 {#if zoomable}
@@ -48,7 +58,7 @@
         colorMatrix={getItemColorMatrix(item)}
         imageRotation={item.rotation}
         maxZoom={10}
-        src={item.image || item.getImagePath?.()}
+        src={getImageSrc(item)}
         {stretch}
         on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)} />
 {:else}
@@ -57,7 +67,7 @@
         bind:this={SVImageView}
         colorMatrix={getItemColorMatrix(item)}
         imageRotation={item.rotation}
-        src={item.image || item.getImagePath?.()}
+        src={getImageSrc(item)}
         {stretch}
         on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)} />
 {/if}

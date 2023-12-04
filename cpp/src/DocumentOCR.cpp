@@ -88,7 +88,7 @@ cv::Mat resizeImageToThreshold(const cv::Mat &image, int resizeThreshold, int bo
     }
     int width = image.cols;
     int height = image.rows;
-    int minSize = min(width, height);
+    int minSize = max(width, height);
     if (minSize > resizeThreshold)
     {
         float resizeScale = 1.0f * minSize / resizeThreshold;
