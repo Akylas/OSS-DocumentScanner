@@ -1,0 +1,11 @@
+*Features*
+- *android:* animated scanner in preview chore: started to implement qrcode detection
+
+*Bug fixes*
+- correctly render rotated image while showing ocr data
+- status bar color fix for camera view and ocr data view
+- multiple fixes and improvements to document detection
+- *android:* fixed error while taking picture
+- *android:* scale ui with system font scale
+- allow to re order pages ( long press on the page indicator)
+- new UI for image transforms
