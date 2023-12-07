@@ -24,7 +24,9 @@ fastlaneOptions = packageJSON['fastlane'] || Hash.new
 # puts "packageJSON:"  + JSON.generate(packageJSON)
 puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 
-app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
+app_build_path = ENV["APP_BUILD_PATH"] || "build/documentscanner" # based on nativescript.config.js !!!
 
 desc 'test lane'
 lane :test do
@@ -43,7 +45,7 @@ lane :test do
         server_user: server_user,
         server_key: server_key,
         target_dir:  target_dir, 
-        file_paths: Dir.glob(File.expand_path("../platforms/android/app/build/outputs/apk/release/*.apk")),
+        file_paths: Dir.glob(File.expand_path(File.join("..", app_build_path, "android/app/build/outputs/apk/release/*.apk")),
       )
     end
 end
@@ -80,7 +82,7 @@ end
 desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
-  sh("rm", "-fr", "platforms/#{platform}")
+  sh("rm", "-fr", File.join(".", app_build_path, platform))
   sh("ns", "prepare", platform, "--release", "--env.adhoc")
 end
 
@@ -111,6 +113,8 @@ lane :build_flavor do |params|
 
   if (options[:sentry])
     sentry_create_release(
+      project_slug: sentry_project_slug,
+      app_identifier: app_identifier,
       sentry_cli_path: sentry_cli_path,
       version: sentry_version
     )
@@ -121,11 +125,13 @@ lane :build_flavor do |params|
   if (options[:sentry])
     sh("npm", "run", "sentry-set-commits", "#{sentry_version}")
     sentry_upload(
+      project_slug: sentry_project_slug,
+      app_identifier: app_identifier,
       sentry_cli_path: sentry_cli_path,
     )
   end
 
-  tag = "#{platform}/#{flavor}/#{version}/#{versionCode}";
+  tag = "#{app_identifier}/#{platform}/#{version}/#{versionCode}";
   changelog = get_changelog(platform:platform, flavor:flavor)
   if (platform == 'android')
     write_changelog(version:versionCode, changelog:changelog);
@@ -138,11 +144,11 @@ lane :build_flavor do |params|
     set_github_release(
       repository_name: repository_name,
       api_token: ENV["GH_TOKEN"],
-      name: "v#{version} Build #{versionCode}",
+      name: "#{app_identifier} v#{version} Build #{versionCode}",
       tag_name: tag,
       description: changelog,
       commitish: "master",
-      upload_assets: Dir.glob(File.expand_path("../platforms/android/app/build/outputs/apk/release/*.apk"))
+      upload_assets: Dir.glob(File.expand_path(File.join("..", app_build_path, "android/app/build/outputs/apk/release/*.apk")))
     )
   # when 'fdroid'
   #   if (fastlaneOptions['sftp'])
@@ -189,10 +195,14 @@ end
 platform :ios do
   desc 'Upload Dsyms to Sentry'
   lane :sentry_upload do 
-    sentry_upload_dsym
+    sentry_upload_dsym(
+      project_slug: sentry_project_slug,
+      app_identifier: app_identifier,
+    )
   end
   lane :upload_store  do |params| 
     upload_to_testflight(
+        app_identifier: app_identifier,
         changelog:params[:changelog],
         distribute_external: true,
         groups: [params[:flavor]],
@@ -218,7 +228,7 @@ platform :ios do
       build_ios_app(
         output_directory:"dist",
         scheme: $ios_scheme,
-        workspace: "./platforms/ios/#{$ios_scheme}.xcworkspace"
+        workspace: File.join(".", app_build_path, "ios/#{$ios_scheme}.xcworkspace")
       )
   end
 
@@ -251,7 +261,7 @@ platform :android do
       changelog = changelog[0..499]
     end
 
-    metadata_dir="metadata/android"
+    metadata_dir="metadata/#{app_identifier}/android"
     require 'fileutils'
     system 'mkdir', '-p', metadata_dir
     writeFileIfNotExist("#{metadata_dir}/fr-FR/changelogs/#{version}.txt", changelog)
@@ -266,15 +276,16 @@ platform :android do
       track = 'internal'
     end
     upload_to_play_store(
+      package_name: app_identifier,
       track: track,
       track_promote_to: track,
-      aab: './platforms/android/app/build/outputs/bundle/release/app-release.aab'
+      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
     )
   end
 
   desc 'Build the Android application.'
   lane :build do |params|
-    sh("rm", "-fr", "platforms/android")
+    sh("rm", "-fr", File.join(".", app_build_path, "android"))
     options = params[:options]
     puts "build flavor:"  + params[:flavor]
     puts "build options:"  + JSON.generate(options.to_json)
