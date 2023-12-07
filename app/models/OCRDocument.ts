@@ -1,7 +1,7 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
-import { OCRData, QRCodeData, cropDocument } from 'plugin-nativeprocessor';
+import { ColorPaletteData, OCRData, QRCodeData, cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType, timeout } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils';
@@ -27,6 +27,7 @@ export interface Document {
     name?: string;
     tags: string[];
     _synced: number;
+    pagesOrder: string[];
 }
 
 export class OCRDocument extends Observable implements Document {
@@ -36,6 +37,9 @@ export class OCRDocument extends Observable implements Document {
     name?: string;
     tags: string[];
     _synced: number;
+
+    pagesOrder: string[];
+    _pagesOrder?: string;
 
     #observables: ObservableArray<OCRPage>;
     pages: OCRPage[];
@@ -50,6 +54,7 @@ export class OCRDocument extends Observable implements Document {
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
         DEV_LOG && console.log('createDocument', doc);
         await doc.addPages(pagesData);
+        await doc.save();
         return doc;
     }
 
@@ -86,9 +91,9 @@ export class OCRDocument extends Observable implements Document {
             attributes.sourceImagePath = actualSourceImagePath;
         }
         // we add 1000 to each pageIndex so that we can reorder them
-        if (!attributes.pageIndex) {
-            attributes.pageIndex = index + 1000;
-        }
+        // if (!attributes.pageIndex) {
+        //     attributes.pageIndex = index + 1000;
+        // }
         const addedPage = await documentsService.pageRepository.createPage(attributes);
         // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
 
@@ -98,6 +103,7 @@ export class OCRDocument extends Observable implements Document {
         } else {
             this.pages = [addedPage];
         }
+        this.save();
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
@@ -159,7 +165,7 @@ export class OCRDocument extends Observable implements Document {
                     attributes.sourceImagePath = actualSourceImagePath;
                 }
                 // we add 1000 to each pageIndex so that we can reorder them
-                attributes.pageIndex = pages.length + 1000;
+                // attributes.pageIndex = pages.length + 1000;
                 // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
 
                 //using saved image to disk
@@ -171,12 +177,19 @@ export class OCRDocument extends Observable implements Document {
             } else {
                 this.pages = pages;
             }
+            this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
             }
             this.notify({ eventName: 'pagesAdded', pages });
         }
     }
+
+    // async updatePagesOrder() {
+    //     this.save({
+    //         pagesOrder: this.pages.map((p) => p.id)
+    //     });
+    // }
 
     async removeFromDisk() {
         const docData = documentsService.dataFolder.getFolder(this.id);
@@ -212,15 +225,15 @@ export class OCRDocument extends Observable implements Document {
     }
     async movePage(oldIndex: any, newIndex: any) {
         // first we need to find the new pageIndex
-        let pageIndex;
-        if (newIndex === 0) {
-            pageIndex = this.pages[0].pageIndex - 1;
-        } else {
-            pageIndex = this.pages[newIndex].pageIndex + 1;
-        }
-        await this.updatePage(oldIndex, {
-            pageIndex
-        });
+        // let pageIndex;
+        // if (newIndex === 0) {
+        //     pageIndex = this.pages[0].pageIndex - 1;
+        // } else {
+        //     pageIndex = this.pages[newIndex].pageIndex + 1;
+        // }
+        // await this.updatePage(oldIndex, {
+        //     pageIndex
+        // });
 
         const item = this.pages[oldIndex];
         this.pages.splice(oldIndex, 1);
@@ -230,6 +243,7 @@ export class OCRDocument extends Observable implements Document {
             this.#observables.splice(oldIndex, 1);
             this.#observables.splice(newIndex, 0, item);
         }
+        this.save();
     }
     onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
         page.notify({ eventName: 'updated', object: page });
@@ -250,7 +264,8 @@ export class OCRDocument extends Observable implements Document {
         return this.#observables;
     }
 
-    async save(data?: Partial<OCRDocument>, updateModifiedDate = true) {
+    async save(data: Partial<OCRDocument> = {}, updateModifiedDate = true) {
+        data.pagesOrder = this.pages.map((p) => p.id);
         await documentsService.documentRepository.update(this, data, updateModifiedDate);
         documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this });
     }
@@ -322,7 +337,7 @@ export interface Page {
     colorMatrix?: number[];
     rotation: number;
     crop: [number, number][];
-    pageIndex: number;
+    // pageIndex: number;
     scale: number;
     width: number;
     height: number;
@@ -332,6 +347,7 @@ export interface Page {
 
     ocrData: OCRData;
     qrcode: QRCodeData;
+    colors: ColorPaletteData;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -359,7 +375,7 @@ export class OCRPage extends Observable implements Page {
 
     transforms?: string;
 
-    pageIndex: number;
+    // pageIndex: number;
     width: number;
     height: number;
     size: number;
@@ -371,6 +387,9 @@ export class OCRPage extends Observable implements Page {
 
     qrcode: QRCodeData;
     _qrcode: string;
+
+    colors: ColorPaletteData;
+    _colors: string;
 
     getImagePath() {
         return this.imagePath;
