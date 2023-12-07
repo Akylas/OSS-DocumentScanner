@@ -45,7 +45,7 @@ lane :test do
         server_user: server_user,
         server_key: server_key,
         target_dir:  target_dir, 
-        file_paths: Dir.glob(File.expand_path(File.join("..", app_build_path, "android/app/build/outputs/apk/release/*.apk")),
+        file_paths: Dir.glob(File.expand_path(File.join("..", app_build_path, "android/app/build/outputs/apk/release/*.apk")))
       )
     end
 end
