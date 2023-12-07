@@ -27,6 +27,7 @@ puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
 app_build_path = ENV["APP_BUILD_PATH"] || "build/documentscanner" # based on nativescript.config.js !!!
+app_resources_path = ENV["APP_RESOURCES"] || "App_Resources/documentscanner" # based on nativescript.config.js !!!
 
 desc 'test lane'
 lane :test do
@@ -94,8 +95,8 @@ lane :build_flavor do |params|
   versionCode = ""
   
   Dir.chdir("..") do
-    version  =  sh("./node_modules/.bin/get-version", platform, "version").gsub(/\n/,'')
-    versionCode  =  sh("./node_modules/.bin/get-version", platform, "code").gsub(/\n/,'')
+    version  =  sh("./node_modules/.bin/get-version", platform, "version", app_resources_path).gsub(/\n/,'')
+    versionCode  =  sh("./node_modules/.bin/get-version", platform, "code", app_resources_path).gsub(/\n/,'')
   end
   
   # there we add the platform to the dist paramater. The idea is to have different dist for ios android
