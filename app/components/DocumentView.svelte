@@ -376,7 +376,7 @@
                     margin={8}
                     padding={10}
                     rippleColor={colorSurface}
-                    rows="*,40"
+                    rows={`*,${40 * $systemFontScale}`}
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
@@ -388,9 +388,8 @@
                         sharedTransitionTag={`document_${document.id}_${item.page.id}`}
                         stretch="aspectFit"
                         verticalAlignment="center" />
-                    <canvaslabel height="100%" padding="10 0 0 0" row={1}>
-                        <cspan fontSize={14} fontWeight="normal" paddingBottom={20} text={`${item.page.width} x ${item.page.height}`} textAlignment="right" verticalAlignment="bottom" />
-                        <cspan fontSize={14} fontWeight="normal" text={filesize(item.page.size)} textAlignment="right" verticalAlignment="bottom" />
+                    <canvaslabel fontSize={14 * $systemFontScale} height="100%" padding="10 0 0 0" row={1}>
+                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size)}`} textAlignment="right" verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
