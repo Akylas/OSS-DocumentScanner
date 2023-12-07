@@ -1,6 +1,6 @@
 import { request } from '@nativescript-community/perms';
 import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { Folder, ImageSource, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, Folder, ImageSource, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
@@ -9,6 +9,15 @@ import { getColorMatrix } from '~/utils/ui';
 import NSQLDatabase from './NSQLDatabase';
 import { loadImage, recycleImages } from '~/utils/utils';
 const sql = SqlQuery.createFromTemplateString;
+
+function cleanUndefined(obj) {
+    Object.keys(obj).forEach(function (key) {
+        if (typeof obj[key] === 'undefined') {
+            delete obj[key];
+        }
+    });
+    return obj;
+}
 
 export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
     constructor(data) {
@@ -23,17 +32,24 @@ export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
         if (!migrations) {
             return;
         }
-        const migrationKeys = Object.keys(migrations);
-        for (let index = 0; index < migrationKeys.length; index++) {
-            const key = migrationKeys[index];
-            try {
-                await this.database.migrate({
-                    [key]: migrations[key]
-                });
-            } catch (error) {
-                console.error(error);
-            }
+        const settingsKey = `SQLITE_${this.table}_migrations`;
+        const appliedMigrations = JSON.parse(ApplicationSettings.getString(settingsKey, '[]'));
+
+        const actualMigrations = { ...migrations };
+        for (let index = 0; index < appliedMigrations.length; index++) {
+            delete actualMigrations[appliedMigrations[index]];
         }
+
+        // const migrationKeys = Object.keys(migrations).filter((k) => appliedMigrations.indexOf(k) === -1);
+        // for (let index = 0; index < migrationKeys.length; index++) {
+        try {
+            await this.database.migrate(actualMigrations);
+            appliedMigrations.push(...Object.keys(actualMigrations));
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+        // }
+        ApplicationSettings.setString(settingsKey, JSON.stringify(appliedMigrations));
     }
 }
 
@@ -72,7 +88,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         },
         CARD_APP
             ? {
-                  addQRCode: sql`ALTER TABLE Page ADD COLUMN qrcode TEXT`
+                  addQRCode: sql`ALTER TABLE Page ADD COLUMN qrcode TEXT`,
+                  addColors: sql`ALTER TABLE Page ADD COLUMN colors TEXT`
                   // addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
               }
             : {}
@@ -83,7 +100,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             id TEXT PRIMARY KEY NOT NULL,
             createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
             modifiedDate NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
-            pageIndex INTEGER NOT NULL,
+            pageIndex INTEGER,
             colorType TEXT,
             colorMatrix TEXT,
             transforms TEXT,
@@ -107,15 +124,21 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         console.log('createPage', page);
         const createdDate = Date.now();
         return this.create({
-            ...page,
+            ...cleanUndefined(page),
             createdDate,
+            pageindex: -1, // we are stuck with this as we cant migrate to remove pageIndex
             modifiedDate: createdDate,
             rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
             scale: page.scale ?? 1,
-            qrcode: page._qrcode || (JSON.stringify(page.qrcode) as any),
             crop: page._crop || (JSON.stringify(page.crop) as any),
             colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any),
-            ocrData: page._ocrData || (JSON.stringify(page.ocrData) as any)
+            ocrData: page._ocrData || (JSON.stringify(page.ocrData) as any),
+            ...(CARD_APP
+                ? {
+                      qrcode: page._qrcode || (JSON.stringify(page.qrcode) as any),
+                      colors: page._colors || (JSON.stringify(page.colors) as any)
+                  }
+                : {})
         });
     }
     async update(page: OCRPage, data?: Partial<OCRPage>) {
@@ -154,8 +177,14 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             colorMatrix: other.colorMatrix ? JSON.parse(other.colorMatrix) : undefined,
             _ocrData: other.ocrData,
             ocrData: other.ocrData ? JSON.parse(other.ocrData) : undefined,
-            _qrcode: other.qrcode,
-            qrcode: other.qrcode ? JSON.parse(other.qrcode) : undefined
+            ...(CARD_APP
+                ? {
+                      _qrcode: other.qrcode,
+                      qrcode: other.qrcode ? JSON.parse(other.qrcode) : undefined,
+                      _colors: other.colors,
+                      colors: other.colors ? JSON.parse(other.colors) : undefined
+                  }
+                : {})
         });
         return model;
     }
@@ -176,7 +205,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
 
     async createTables() {
-        return Promise.all([
+        await Promise.all([
             this.database.query(sql`
             CREATE TABLE IF NOT EXISTS "Document" (
                 id TEXT PRIMARY KEY NOT NULL,
@@ -196,12 +225,17 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         );
     `)
         ]);
+        return this.applyMigrations();
     }
+
+    migrations = Object.assign({
+        addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`
+    });
 
     async createDocument(document: Document) {
         document.createdDate = document.modifiedDate = Date.now();
         document._synced = 0;
-        return this.create(document);
+        return this.create(cleanUndefined(document));
     }
 
     async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
@@ -272,29 +306,42 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         }
     }
 
-    async getPages(document: OCRDocument) {
-        return this.pagesRepository.search({ where: sql`document_id = ${document.id}`, orderBy: sql`pageIndex ASC` });
-    }
-
     async getItem(itemId: string) {
         const element = await this.get(itemId);
         return element;
     }
     async search(args: { postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
         const result = await super.search({ ...args /* , postfix: sql`d LEFT JOIN PAGE p on p.document_id = d.id` */ });
-        for (let index = 0; index < result.length; index++) {
-            const doc = result[index];
-            doc.pages = (await this.getPages(doc)) as any;
-        }
+        // for (let index = 0; index < result.length; index++) {
+        //     const doc = result[index];
+        //     doc.pages = (await this.getPages(doc)) as any;
+        // }
         return result;
     }
-
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<OCRDocument> {
-        const model = new OCRDocument(attributes.id);
-        Object.assign(model, {
-            ...attributes
+        const document = new OCRDocument(attributes.id);
+        Object.assign(document, {
+            ...attributes,
+            _pagesOrder: attributes.pagesOrder,
+            pagesOrder: attributes.pagesOrder ? JSON.parse(attributes.pagesOrder) : undefined
         });
-        return model;
+
+        let pages = await this.pagesRepository.search({ where: sql`document_id = ${document.id}` });
+        const pagesOrder = document.pagesOrder;
+        if (pagesOrder) {
+            pages = pages.sort(function (a, b) {
+                return pagesOrder.indexOf(a.id) - pagesOrder.indexOf(b.id);
+            });
+            document.pages = pages;
+        } else {
+            // pagesOrder was not existing before let s create it.
+            pages = pages.sort(function (a, b) {
+                return a['pageIndex'] - b['pageIndex'];
+            });
+            document.pages = pages;
+            document.save();
+        }
+        return document;
     }
 }
 

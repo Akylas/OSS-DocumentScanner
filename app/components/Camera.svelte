@@ -21,7 +21,7 @@
     import CActionBar from './CActionBar.svelte';
     import CropEditView from './CropEditView.svelte';
     import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { QRCodeData, cropDocument, detectQRCode, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import { QRCodeData, cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners, getJSONDocumentCornersAndImage } from 'plugin-nativeprocessor';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
 
@@ -189,8 +189,8 @@
             showLoading(l('computing'));
             // editingImage = await loadImage(imagePath);
             editingImage = new ImageSource(image);
+            // eslint-disable-next-line prefer-const
             let quads = await getJSONDocumentCorners(editingImage, 300, 0);
-
             if (quads.length === 0) {
                 const ModalImportImage = (await import('~/components/ModalImportImage.svelte')).default;
                 quads = await showModal({
@@ -236,6 +236,7 @@
             showLoading(l('capturing'));
             const { image, info } = await cameraPreview.nativeView.takePicture({
                 savePhotoToDisk: false,
+                // returnImageProxy: true,
                 // pictureSize: { width: test.width, height: test.height },
                 captureMode: 1
                 // captureMode: batchMode ? 1 : 0
@@ -400,8 +401,10 @@
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
             let images = await cropDocument(editingImage, quads, strTransforms);
             let qrcode;
+            let colors;
             if (CARD_APP) {
-                qrcode = await detectQRCode(images[0], { resizeThreshold: 900 });
+                [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
+                DEV_LOG && console.log('qrcode and colors', qrcode, colors);
             }
             // const start = Date.now();
             // const qrCode = await detectQRCode(images[0], {});
@@ -413,6 +416,7 @@
                     image,
                     crop: quads[index],
                     colorType,
+                    colors,
                     qrcode,
                     transforms: strTransforms,
                     sourceImage,
