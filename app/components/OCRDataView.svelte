@@ -9,6 +9,7 @@
 
     export let ocrData: OCRData;
     export let imagePath: string;
+    export let rotation: number = 0;
     // export let image: ImageSource;
     // export let rotation: number;
     // export let colorMatrix: number[];
@@ -19,7 +20,7 @@
     // console.log('ocrData', JSON.stringify(ocrData));
     function onWebViewLoadFinished() {
         try {
-            webView?.nativeView.executeJavaScript(`document.updateOCRData('${imagePath}', ${JSON.stringify(ocrData)})`);
+            webView?.nativeView.executeJavaScript(`document.updateOCRData('${imagePath}', ${rotation}, ${JSON.stringify(ocrData)})`);
         } catch (error) {
             showError(error);
         }
@@ -182,7 +183,7 @@
     // }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarStyle="dark">
+<page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarColor="black" statusBarStyle="dark">
     <gridlayout rows="auto,*">
         <!-- <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
             <absolutelayout
