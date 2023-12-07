@@ -10,19 +10,23 @@
     import Panzoom, { type PanzoomObject } from '@akylas/panzoom';
     // import { onMount } from 'svelte';
     let imgPath: string;
+    let rotation: number = 0;
     let ocrData: any;
     let panzoom: PanzoomObject;
     let img = HTMLImageElement;
     let imageWidth: number;
     let imageHeight: number;
+    let deltaX = 0;
+    let deltaY = 0;
     function initPanzoom(node: any) {
         //@ts-ignore
         panzoom = Panzoom(node, { cursor: 'default', contain: 'aspectfit', excludeClass: 'label' });
         node.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
     }
-    export function updateOCRData(imagePath: string, data: any) {
-        imgPath = imagePath;
+    export function updateOCRData(imagePath: string, ro, data: any) {
+        rotation = ro;
         ocrData = data;
+        imgPath = imagePath;
     }
 
     //@ts-ignore
@@ -30,9 +34,25 @@
 
     function onImageLoaded() {
         if (img) {
-            imageWidth = img.width;
-            imageHeight = img.height;
-            const scale = Math.min(document.body.clientWidth / img.width, document.body.clientHeight / img.height);
+            //@ts-ignore
+            const imgWidth = img.width;
+            //@ts-ignore
+            const imgHeight = img.height;
+            if (rotation % 180 !== 0) {
+                imageWidth = imgHeight;
+                imageHeight = imgWidth;
+                if (imgWidth > imgHeight) {
+                    deltaX = (imgHeight - imgWidth) / 2;
+                    deltaY = -deltaX;
+                } else {
+                    deltaX = -(imgWidth - imgHeight) / 2;
+                    deltaY = -deltaX;
+                }
+            } else {
+                imageWidth = imgWidth;
+                imageHeight = imgHeight;
+            }
+            const scale = Math.min(document.body.clientWidth / imageWidth, document.body.clientHeight / imageHeight);
             panzoom.setOptions({ minScale: scale });
             panzoom.zoom(scale);
             // the pan is there to fix the original position which is wrong
@@ -96,8 +116,14 @@
 </script>
 
 <div style="width:100%;height:100%;padding:0;margin:0;">
-    <div style:width={imageWidth + 'px'} style:height={imageHeight + 'px'} use:initPanzoom>
-        <img bind:this={img} style:position="absolute" alt="test" src={imgPath} on:load={onImageLoaded} />
+    <div style:width={imageWidth + 'px'} style:height={imageHeight + 'px'} style:background-color="red" use:initPanzoom>
+        <img
+            bind:this={img}
+            style:position="absolute"
+            style:transform={rotation !== 0 ? `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)` : null}
+            alt="test"
+            src={imgPath}
+            on:load={onImageLoaded} />
         {#if ocrData}
             {#each ocrData.blocks as block}
                 <div
