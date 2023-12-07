@@ -87,7 +87,8 @@ namespace detector {
                 double scaledHeight,
                 std::vector<std::pair<std::vector<cv::Point>, double>> &squares,
                 cv::Mat drawimage,
-                bool drawContours);
+                bool drawContours,
+                float weight  = 1.0);
 
         cv::Mat preprocessedImage(cv::Mat &image, int cannyValue, int blurValue);
 

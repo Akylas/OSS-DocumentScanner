@@ -262,17 +262,17 @@ void updateImage()
     resizedImage = docDetector.resizeImageMax();
     vector<vector<cv::Point>> pointsList = docDetector.scanPoint(edged, resizedImage, true);
 
-    for (size_t i = 0; i < pointsList.size(); i++)
-    {
-        vector<cv::Point> orderedPoints;
-        orderPoints(pointsList[i], orderedPoints);
-    }
+    // for (size_t i = 0; i < pointsList.size(); i++)
+    // {
+    //     vector<cv::Point> orderedPoints;
+    //     orderPoints(pointsList[i], orderedPoints);
+    // }
 
     if (pointsList.size() > 0)
     {
-        vector<cv::Point> orderedPoints;
-        orderPoints(pointsList[0], orderedPoints);
-        warped = cropAndWarp(image, orderedPoints);
+        // vector<cv::Point> orderedPoints;
+        // orderPoints(pointsList[0], orderedPoints);
+        warped = cropAndWarp(image, pointsList[0]);
         if (whitepaper == 1)
         {
             detector::DocumentDetector::applyTransforms(warped, "whitepaper");

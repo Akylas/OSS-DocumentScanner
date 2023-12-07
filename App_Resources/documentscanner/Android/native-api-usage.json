@@ -10,7 +10,7 @@
         "com.akylas.documentscanner:AbsoluteLayoutWithMatrix",
         "com.akylas.documentscanner:CustomImageAnalysisCallback",
         "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallback",
-        "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionProgress",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallbackProgress",
         "com.akylas.documentscanner:CustomImageAnalysisCallback.Companion",
         "androidx.appcompat.app:AppCompatDelegate",
         "androidx.core.os:LocaleListCompat",

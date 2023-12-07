@@ -9,6 +9,8 @@
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreGraphics.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Photos.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreImage.d.ts" />
+/// <reference path="../node_modules/@nativescript-community/ui-cameraview/typings/androidx.camera.d.ts" />
+/// <reference path="../node_modules/@nativescript-community/ui-cameraview/typings/android.d.ts" />
 
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';

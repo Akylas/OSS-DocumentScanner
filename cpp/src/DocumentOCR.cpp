@@ -141,6 +141,21 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
     std::vector<cv::Rect> boundRects;
     cv::Mat img_gray, img_sobel, img_threshold, element;
     cvtColor(image, img_sobel, COLOR_BGR2GRAY);
+     if (options.rotation != 0)
+    {
+        switch (options.rotation)
+        {
+        case 90:
+            rotate(img_sobel, img_sobel, ROTATE_90_CLOCKWISE);
+            break;
+        case 180:
+            rotate(img_sobel, img_sobel, ROTATE_180);
+            break;
+        default:
+            rotate(img_sobel, img_sobel, ROTATE_90_COUNTERCLOCKWISE);
+            break;
+        }
+    }
     cv::adaptiveThreshold(img_sobel, img_sobel, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C,
                           cv::THRESH_BINARY_INV, options.adapThresholdBlockSize, options.adapThresholdC);
 
@@ -411,6 +426,11 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson,
         if (j.contains("oem"))
         {
             options.oem = j["oem"].as<int>();
+        }
+
+        if (j.contains("rotation"))
+        {
+            options.rotation = j["rotation"].as<int>();
         }
 
         if (j.contains("pageSegMode"))

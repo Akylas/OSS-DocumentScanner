@@ -69,6 +69,26 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         }
     });
 }
+export async function getJSONDocumentCornersAndImage(image: UIImage, processor: any, resizeThreshold = 300, imageRotation = 0): Promise<[UIImage, [number, number][][]]> {
+    return new Promise((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(
+                image,
+                resizeThreshold,
+                imageRotation,
+                OCRDelegateDelegateImpl.initWithResolveReject(
+                    (res) => {
+                        resolve([image, res]);
+                    },
+                    reject,
+                    null
+                )
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
 
 export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
     return new Promise<OCRData>((resolve, reject) => {

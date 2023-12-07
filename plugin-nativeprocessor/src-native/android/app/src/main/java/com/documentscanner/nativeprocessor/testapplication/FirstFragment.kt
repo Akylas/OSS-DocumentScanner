@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.ImageProxy
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -18,6 +19,7 @@ import com.documentscanner.nativeprocessor.testapplication.databinding.FragmentF
 import com.google.android.material.snackbar.Snackbar
 import com.nativescript.cameraview.CameraEventListener
 import com.nativescript.cameraview.ImageAnalysis
+import com.nativescript.cameraview.ImageAsyncProcessor
 import java.io.File
 import kotlin.jvm.functions.FunctionN
 
@@ -156,8 +158,72 @@ class FirstFragment : Fragment() {
             ) {
                 Log.d(
                     "CameraView",
-                    "onCameraPhotoImage: " + ((System.nanoTime() - photoTime) / 1000000) + "ms"
+                    "onCameraPhotoImage: " + image?.byteCount + " " + ((System.nanoTime() - photoTime) / 1000000) + "ms"
                 )
+                if (image != null) {
+                    CustomImageAnalysisCallback.getJSONDocumentCorners(
+                        image,
+                        object : CustomImageAnalysisCallback.FunctionCallback {
+                            override fun onResult(e: Exception?, result: Any?) {
+                                if (e != null) {
+                                    Log.e(
+                                        "CameraView",
+                                        "getJSONDocumentCornersAndImage: " + e
+                                    )
+                                } else {
+                                    Log.d(
+                                        "CameraView",
+                                        "getJSONDocumentCornersAndImage: " + result
+                                    )
+                                    CustomImageAnalysisCallback.cropDocument(
+                                        image,
+                                        result as String,
+                                        object : CustomImageAnalysisCallback.FunctionCallback {
+                                            override fun onResult(e: Exception?, result: Any?) {
+                                                if ((result as Array<Any>).size > 0) {
+
+                                                    activity.runOnUiThread(Runnable {
+                                                        binding.imageView.setImageBitmap((result as Array<Any>)[0] as Bitmap)
+                                                    })
+                                                }
+                                            }
+                                        },
+                                        ""
+                                    )
+                                }
+                            }
+                        },
+                        200.0
+                    )
+                }
+            }
+
+            override fun onCameraPhotoImageProxy(
+                image: ImageProxy,
+                processor: ImageAsyncProcessor
+            ) {
+                Log.d(
+                    "CameraView",
+                    "onCameraPhotoImageProxy: " + ((System.nanoTime() - photoTime) / 1000000) + "ms"
+                )
+                processor.finished()
+//                CustomImageAnalysisCallback.getJSONDocumentCornersAndImage(image, processor, object: CustomImageAnalysisCallback.FunctionCallback{
+//                    override fun onResult(e: Exception?, result: Any?) {
+//                        if (e!=null) {
+//                            Log.e(
+//                                "CameraView",
+//                                "getJSONDocumentCornersAndImage: " + e
+//                            )
+//                        } else {
+//                            Log.d(
+//                                "CameraView",
+//                                "getJSONDocumentCornersAndImage: " + result
+//                            )
+//                            activity.runOnUiThread(Runnable {
+//                                binding.imageView.setImageBitmap((result as HashMap<String,Any>).get("image") as Bitmap)
+//                            })
+//                        }
+//                    }}, 200.0)
             }
 
             override fun onCameraVideo(file: File?) {
@@ -188,45 +254,77 @@ class FirstFragment : Fragment() {
         ) { uri ->
             uri?.let { fileUri ->
                 var bitmap: Bitmap? =
-                    MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), fileUri)
+                    MediaStore.Images.Media.getBitmap(
+                        requireActivity().getContentResolver(),
+                        fileUri
+                    )
                 if (bitmap != null) {
-                    CustomImageAnalysisCallback.getJSONDocumentCorners(bitmap,object: CustomImageAnalysisCallback.FunctionCallback{
-                        override fun onResult(e: Exception?, result: Any?) {
-                            if (result is String && result.isNotEmpty()) {
+                    CustomImageAnalysisCallback.getJSONDocumentCorners(
+                        bitmap,
+                        object : CustomImageAnalysisCallback.FunctionCallback {
+                            override fun onResult(e: Exception?, result: Any?) {
+                                if (result is String && result.isNotEmpty()) {
 
 
-                                CustomImageAnalysisCallback.cropDocument(bitmap, result, object: CustomImageAnalysisCallback.FunctionCallback{
-                                    override fun onResult(e: Exception?, result: Any?) {
-                                        if (result is Array<*> && result.isNotEmpty()) {
-                                            activity.runOnUiThread(Runnable {
-                                                binding.imageView.setImageBitmap(result.get(0) as Bitmap?)
-                                            })
-                                            (result.get(0) as Bitmap?)?.let {
-                                                var builder = Palette.Builder(it)
-                                                builder.generate {
-                                                    if (it != null) {
-                                                        Log.d("JS", "android Palette " + it.swatches.map { it.toString() })
+                                    CustomImageAnalysisCallback.cropDocument(
+                                        bitmap,
+                                        result,
+                                        object : CustomImageAnalysisCallback.FunctionCallback {
+                                            override fun onResult(e: Exception?, result: Any?) {
+                                                if (result is Array<*> && result.isNotEmpty()) {
+                                                    activity.runOnUiThread(Runnable {
+                                                        binding.imageView.setImageBitmap(
+                                                            result.get(
+                                                                0
+                                                            ) as Bitmap?
+                                                        )
+                                                    })
+                                                    (result.get(0) as Bitmap?)?.let {
+                                                        var builder = Palette.Builder(it)
+                                                        builder.generate {
+                                                            if (it != null) {
+                                                                Log.d(
+                                                                    "JS",
+                                                                    "android Palette " + it.swatches.map { it.toString() })
+                                                            }
+                                                        }
+                                                        CustomImageAnalysisCallback.getColorPalette(
+                                                            it,
+                                                            object :
+                                                                CustomImageAnalysisCallback.FunctionCallback {
+                                                                override fun onResult(
+                                                                    e: Exception?,
+                                                                    result: Any?
+                                                                ) {
+                                                                    Log.d(
+                                                                        "JS",
+                                                                        "getColorPalette " + result
+                                                                    )
+                                                                }
+                                                            },
+                                                            200.0,
+                                                            20
+                                                        )
                                                     }
                                                 }
-                                                CustomImageAnalysisCallback.getColorPalette(it, object: CustomImageAnalysisCallback.FunctionCallback{
-                                                    override fun onResult(e: Exception?, result: Any?) {
-                                                        Log.d("JS", "getColorPalette " + result)
-                                                    }                                    }, 200.0, 20)
                                             }
-                                        }
-                                    }
-                                }, "")
+                                        },
+                                        ""
+                                    )
+                                }
                             }
-                        }
-                    }, 300.0 )
+                        },
+                        300.0
+                    )
                 }
             }
         }
 
         binding.fab.setOnClickListener { view ->
             photoTime = System.nanoTime()
-//            binding.cameraView.takePhoto("{\"savePhotoToDisk\":false}")
-            launcher.launch(arrayOf("image/*"))
+            binding.cameraView.takePhoto("{\"savePhotoToDisk\":false, \"returnImageProxy\":false}")
+
+//            launcher.launch(arrayOf("image/*"))
         }
     }
 

@@ -24,13 +24,15 @@ declare namespace com {
                     public static readQRCode(...args): void;
                     public static generateQRCode(...args): void;
                     public static generateQRCodeSync(...args): void;
+                    public static getColorPalette(...args): void;
+                    public static getJSONDocumentCornersAndImage(...args): void;
                 }
 
                 export class FunctionCallback {
                     onResult(e, result);
                     constructor(args: { onResult: (e, result) => void });
                 }
-                export class FunctionProgress {
+                export class FunctionCallbackProgress {
                     onProgress(p);
                     constructor(args: { onProgress: (p) => void });
                 }

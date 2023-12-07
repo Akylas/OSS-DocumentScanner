@@ -46,7 +46,7 @@ bool sortByArea(PointAndArea contour1, PointAndArea contour2)
     return (contour1.second > contour2.second);
 }
 void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double scaledHeight,
-                                   std::vector<std::pair<std::vector<cv::Point>, double>> &squares, cv::Mat drawImage, bool drawContours)
+                                   std::vector<std::pair<std::vector<cv::Point>, double>> &squares, cv::Mat drawImage, bool drawContours, float weight)
 {
     int marge = static_cast<int>(scaledWidth * 0.01);
     // Contours search
@@ -93,22 +93,27 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
             // const double area = std::abs(contourArea(approx));
             if (area > scaledWidth / areaScaleMinFactor * (scaledHeight / areaScaleMinFactor))
             {
+
+
                 double maxCosine = 0.0;
                 double minCosine = 100.0;
-                for (int j = 2; j < 5; j++)
+                double meanCosine = 0;
+                for (int j = 2; j < 6; j++)
                 {
-                    double cosine = std::abs(angle(approx[j % 4], approx[j - 2], approx[j - 1]));
+                    double cosine = std::abs(angle(approx[j % 4], approx[j - 2], approx[(j - 1) % 4]));
                     maxCosine = std::max(maxCosine, cosine);
                     minCosine = std::min(minCosine, cosine);
+                    meanCosine+=cosine;
                 }
                 // Selection of quadrilaterals with large enough angles
                 // std::printf("found contour %f %zu %f %f\n", area, approx.size(), minCosine, maxCosine);
-                if (maxCosine < 0.2)
+                if (maxCosine < 0.3)
                 {
-                    squares.push_back(std::pair<std::vector<cv::Point>, double>(approx, area));
+                    // we give more weight for low cosinus (closer to 90d angles)
+                    squares.push_back(std::pair<std::vector<cv::Point>, double>(approx, area*weight*(1-meanCosine)));
                     if (drawContours)
                     {
-                        cv::drawContours(drawImage, approxs, -1, Scalar(0, 255, 0), 3);
+                        cv::drawContours(drawImage, approxs, -1, Scalar(0, 255, 0), 1);
                     }
                 }
             }
@@ -201,6 +206,9 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     cv::Mat dilateStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateAnchorSize, dilateAnchorSize));
     cv::Mat morphologyStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphologyAnchorSize, morphologyAnchorSize));
     int channelsCount = std::min(image.channels(), 3);
+    // cvtColor(temp1, temp2, COLOR_BGR2GRAY);
+    // we give more weight to contours found with threshod then with higher canny
+    float weight = 30;
     for (int i = channelsCount - 1; i >= 0; i--)
     {
         //  std::printf("testing on channel %i %i\n", i, iterration);
@@ -208,16 +216,12 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
 
         Mat out;
         // bilateralFilter is really slow so for now we dont use it
-        //  cv::bilateralFilter(temp2, out, 15, bilateralFilterValue, bilateralFilterValue);
+         cv::bilateralFilter(temp2, out, 15, bilateralFilterValue, bilateralFilterValue);
         cv::threshold(temp2, edged, thresh, threshMax, cv::THRESH_BINARY);
         cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
         cv::dilate(edged, edged, dilateStruct);
-        findSquares(edged, width, height, foundSquares, image, drawContours);
+        findSquares(edged, width, height, foundSquares, image, drawContours, (weight--)/100);
         iterration++;
-        //  if (foundSquares.size() > 0) {
-        //      // std::printf("breaking on threshold %i\n", foundSquares.size());
-        //      break;
-        //  }
 
         // we test over all channels to find the best contour
         int t = 60;
@@ -225,17 +229,12 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         {
             cv::Canny(temp2, edged, t, t * 2);
             cv::dilate(edged, edged, dilateStruct);
-            findSquares(edged, width, height, foundSquares, image, drawContours);
-            // if (foundSquares.size() > 0) {
-            //     // std::printf("breaking on canny %i %i\n", t, foundSquares.size());
-            //     break;
-            // }
+            findSquares(edged, width, height, foundSquares, image, drawContours, (weight--)/100);
+
             iterration++;
             t -= 10;
+            // break;
         }
-        // if (foundSquares.size() > 0) {
-        //     break;
-        // }
     }
 
     // if (useChannel > 0 && (useChannel <= image.channels()))
