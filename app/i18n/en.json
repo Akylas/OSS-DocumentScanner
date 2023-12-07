@@ -1,18 +1,20 @@
 ﻿{
-  "about": "about",
-  "$com.akylas.cardwallet":{
+  "$com.akylas.cardwallet": {
     "app": {
       "name": "OSS Card Wallet"
     }
   },
-  "$com.akylas.documentscanner":{
+  "$com.akylas.documentscanner": {
     "app": {
       "name": "OSS Document Scanner"
     }
   },
+  "about": "about",
   "auto": "auto",
   "cancel": "cancel",
   "capturing": "capturing",
+  "color": "color",
+  "color_desc": "improve colors and reduce unwanted color shades",
   "computing": "computing...",
   "confirm_delete": "are you sure you want to delete this document?",
   "confirm_delete_documents": "are you sure you want to delete those %1$s documents?",
@@ -28,6 +30,7 @@
   "enabled": "eabled",
   "english": "english",
   "enhance": "enhance",
+  "enhance_desc": "enhance features in image",
   "error": "error",
   "export_settings": "export settings",
   "export_settings_desc": "export all AlpiMaps settings so that you can import them later",
@@ -97,5 +100,6 @@
   "webdav_config": "webdav configuration",
   "webdav_sync": "webdav documents sync",
   "webdav_sync_desc": "enable webdav to sync your documents (backup)",
-  "whitepaper": "whitepaper"
+  "whitepaper": "whitepaper",
+  "whitepaper_desc": "improvement for whitepaper type documents"
 }
