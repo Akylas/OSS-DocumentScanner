@@ -14,7 +14,7 @@ import ColorMatrices from './color_matrix';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { showModal } from 'svelte-native';
 import { loadImage, recycleImages } from './utils.common';
-import { cropDocument, detectQRCode, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { l, lc } from '~/helpers/locale';
 
@@ -377,7 +377,6 @@ export async function importAndScanImage(document?: OCRDocument) {
             if (CARD_APP) {
                 // try to get the qrcode to show it in the import screen
                 qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
-                console.log('qrcode', qrcode);
             }
             if (quads.length === 0) {
                 quads.push([
@@ -403,9 +402,10 @@ export async function importAndScanImage(document?: OCRDocument) {
                     console.log('about to cropDocument', quads);
                     const images = await cropDocument(editingImage, quads);
                     let qrcode;
+                    let colors;
                     if (CARD_APP) {
-                        qrcode = await detectQRCode(images[0], { resizeThreshold: 900 });
-                        console.log('qrcode1', qrcode);
+                        [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
+                        DEV_LOG && console.log('qrcode and colors', qrcode, colors);
                     }
                     if (images?.length) {
                         const pagesToAdd: PageData[] = [];
@@ -415,10 +415,15 @@ export async function importAndScanImage(document?: OCRDocument) {
                                 image,
                                 crop: quads[index],
                                 sourceImagePath,
-                                qrcode,
                                 width: __ANDROID__ ? image.getWidth() : image.size.width,
                                 height: __ANDROID__ ? image.getHeight() : image.size.height,
-                                rotation: editingImage.rotationAngle
+                                rotation: editingImage.rotationAngle,
+                                ...(CARD_APP
+                                    ? {
+                                          qrcode,
+                                          colors
+                                      }
+                                    : {})
                             });
                             DEV_LOG && console.log('added page', pagesToAdd[pagesToAdd.length - 1]);
                         }
