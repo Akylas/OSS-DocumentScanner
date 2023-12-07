@@ -14,7 +14,9 @@
 
     export let startPageIndex: number = 0;
     export let backgroundColor = 'black';
-    export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; margin? }[];
+    export let statusBarStyle: any = 'dark';
+    export let actionBarStyle: any = backgroundColor === 'black' ? 'black' : '';
+    export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; margin?; imageRotation? }[];
     let pager: NativeViewElementNode<Pager>;
 
     let currentIndex = startPageIndex;
@@ -68,16 +70,17 @@
     }
 </script>
 
-<page actionBarHidden={true} {backgroundColor} statusBarStyle="light">
+<page actionBarHidden={true} {backgroundColor} statusBarColor={backgroundColor} {statusBarStyle}>
     <gridlayout rows="auto,*">
         <pager bind:this={pager} items={images} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
                     <RotableImageView id="imageView" {item} margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} zoomable={true} />
+                    <label fontSize={30} fontWeight="bold" text={item.subtitle} textAlignment="center" verticalAlignment="bottom" visibility={item.subtitle ? 'visible' : 'hidden'}  sharedTransitionTag={item.labelSharedTransitionTag}/>
                 </gridlayout>
             </Template>
         </pager>
 
-        <CActionBar backgroundColor="transparent" titleProps={{ autoFontSize: true, padding: 0 }}></CActionBar>
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState={actionBarStyle} titleProps={{ autoFontSize: true, padding: 0 }} />
     </gridlayout>
 </page>
