@@ -2,7 +2,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { LottieView } from '@nativescript-community/ui-lottie';
-    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -25,7 +25,8 @@
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
     import { Img } from '@nativescript-community/ui-image';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
+    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { fade } from '~/utils/svelte/ui';
@@ -48,7 +49,7 @@
     let nbDocuments: number = 0;
     let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
-    let collectionView: NativeViewElementNode<CollectionView>;
+    let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     let lottieView: NativeViewElementNode<LottieView>;
 
     let syncEnabled = syncService.enabled;
@@ -61,7 +62,7 @@
             syncEnabled = syncService.enabled;
             DEV_LOG && console.log('syncEnabled', syncEnabled);
             const r = await documentsService.documentRepository.search({
-                orderBy: SqlQuery.createFromTemplateString`id DESC`
+                orderBy: CARD_APP ? SqlQuery.createFromTemplateString`id ASC` : SqlQuery.createFromTemplateString`id DESC`
                 // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
             });
             // const r = await OCRDocument.find({
@@ -89,11 +90,12 @@
         console.log('updateNoDocument', showNoDocument);
     }
     function onDocumentAdded(event: EventData & { doc }) {
-        documents.unshift({
+        documents[CARD_APP ? 'push' : 'unshift']({
             doc: event.doc,
             selected: false
         } as Item);
         updateNoDocument();
+        collectionView?.nativeElement.scrollToIndex(documents.length - 1, true, SnapPosition.END);
         DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
     function onDocumentUpdated(event: EventData & { doc }) {
@@ -148,6 +150,7 @@
     // technique for only specific properties to get updated on store change
     let colorPrimaryContainer = $colors.colorPrimaryContainer;
     $: ({
+        colorBackground,
         colorSurfaceContainerHigh,
         colorOnBackground,
         colorSurfaceContainerLow,
@@ -246,13 +249,13 @@
             if (!doc) {
                 return;
             }
-            const component = (await import('~/components/DocumentEdit.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    document: doc
-                }
-            });
+            // const component = (await import('~/components/DocumentEdit.svelte')).default;
+            // navigate({
+            //     page: component,
+            //     props: {
+            //         document: doc
+            //     }
+            // });
         } catch (error) {
             showError(error);
         }
@@ -268,6 +271,7 @@
     }
     let nbSelected = 0;
     function selectItem(item: Item) {
+        console.log('selectItem');
         if (!item.selected) {
             documents.some((d, index) => {
                 if (d === item) {
@@ -280,6 +284,7 @@
         }
     }
     function unselectItem(item: Item) {
+        console.log('unselectItem');
         if (item.selected) {
             documents.some((d, index) => {
                 if (d === item) {
@@ -314,6 +319,130 @@
             unselectItem(item);
         } else {
             selectItem(item);
+        }
+    }
+    async function showImages(item: Item) {
+        const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
+        const doc = item.doc;
+        navigate({
+            page: component,
+            // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
+            props: {
+                images: doc.pages.map((page, index) => ({
+                    sharedTransitionTag: `document_${doc.id}_${page.id}`,
+                    name: page.name || doc.name,
+                    image: page.getImagePath(),
+                    ...page
+                })),
+                startPageIndex: 0
+            }
+        });
+    }
+    function animateCards(animOptions, startIndex, endIndex = -1) {
+        let index = startIndex;
+        const startView = collectionView?.nativeElement.getViewForItemAtIndex(startIndex);
+
+        let foundFirst = false;
+        collectionView?.nativeElement.eachChild((child: View) => {
+            if (foundFirst) {
+                if (endIndex === -1 || index <= endIndex) {
+                    child.animate(animOptions);
+                    index++;
+                }
+            } else {
+                if (child === startView) {
+                    foundFirst = true;
+                }
+            }
+            return true;
+        });
+    }
+    function translateCards(startIndex, endIndex = -1) {
+        animateCards(
+            {
+                duration: 100,
+                translate: {
+                    x: 0,
+                    y: 160
+                }
+            },
+            startIndex,
+            endIndex
+        );
+    }
+    function hideCards(startIndex, endIndex = -1) {
+        animateCards(
+            {
+                duration: 100,
+                translate: {
+                    x: 0,
+                    y: 0
+                }
+            },
+            startIndex,
+            endIndex
+        );
+    }
+    // let menuShowingIndex = -1;
+    // let ignoreNextClose = false;
+    function onFullCardItemTouch(item: Item, event) {
+        const index = documents.findIndex((d) => d.doc.id === item.doc.id);
+        handleTouchAction(index, event);
+    }
+    function handleTouchAction(index, event) {
+        // console.info('handleTouchAction', index, event.action);
+        // switch (event.action) {
+        //     case 'move':
+        //         return;
+        //     case 'down':
+        //         if (menuShowingIndex !== -1) {
+        //             // there is going to be a close event from the opened menu let s ignore it
+        //             ignoreNextClose = true;
+        //         }
+        //         if (menuShowingIndex === -1) {
+        //             translateCards(index);
+        //         } else if (menuShowingIndex < index) {
+        //             hideCards(menuShowingIndex, index - 1);
+        //             translateCards(index);
+        //         } else if (menuShowingIndex > index) {
+        //             translateCards(index, menuShowingIndex);
+        //         }
+        //         menuShowingIndex = index;
+        //         break;
+        //     case 'up':
+        //     case 'cancel':
+        //         if (ignoreNextClose) {
+        //             ignoreNextClose = false;
+        //             return;
+        //         }
+        //         hideCards(index);
+        //         menuShowingIndex = -1;
+        //         break;
+        // }
+    }
+    function onItemTouch(item: Item, event) {
+        // const index = documents.findIndex((d) => d.doc.id === item.doc.id);
+        switch (event.action) {
+            case 'down':
+                (event.object as View).animate({
+                    duration: 100,
+                    translate: {
+                        x: 0,
+                        y: -40
+                    }
+                });
+                break;
+
+            case 'up':
+            case 'cancel':
+                (event.object as View).animate({
+                    duration: 100,
+                    translate: {
+                        x: 0,
+                        y: 0
+                    }
+                });
+                break;
         }
     }
     async function onItemTap(item: Item) {
@@ -405,11 +534,15 @@
             if (result) {
                 switch (result.id) {
                     case 'layout':
+                        console.log('closeCurrentMenu');
+                        await collectionView?.nativeElement.closeCurrentMenu();
+                        console.log('closeCurrentMenu done');
                         if (viewStyle === 'default') {
                             viewStyle = 'fullcard';
                         } else {
                             viewStyle = 'default';
                         }
+                        ApplicationSettings.setString('cardViewStyle', viewStyle);
                         collectionView?.nativeView.refresh();
                         break;
                     case 'about':
@@ -511,7 +644,27 @@
             }
         }
     }
-    let viewStyle: string = 'default';
+    let viewStyle: string = ApplicationSettings.getString('cardViewStyle', 'default');
+
+    function fullCardDrawerTranslationFunction(side, width, value, delta, progress) {
+        const result = {
+            mainContent: {
+                translateX: side === 'right' ? -delta : delta
+            },
+            rightDrawer: {
+                translateX: width + (side === 'right' ? -delta : delta)
+            },
+            leftDrawer: {
+                translateX: (side === 'right' ? -delta : delta) - width
+            },
+            backDrop: {
+                translateX: side === 'right' ? -delta : delta,
+                opacity: progress * 0.01
+            }
+        };
+
+        return result;
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
@@ -519,23 +672,41 @@
         <!-- {/if} -->
         <collectionView
             bind:this={collectionView}
-            itemIdGenerator={(_item, index) => index}
-            itemOverlap={viewStyle === 'fullcard' ? '-180 0 0 0' : null}
+            itemOverlap={viewStyle === 'fullcard' ? '-180 0 0 0' : '-30 0 0 0'}
             itemTemplateSelector={() => viewStyle}
             items={documents}
             row={1}
-            rowHeight={viewStyle === 'fullcard' ? itemHeight : 120}>
+            rowHeight={viewStyle === 'fullcard' ? itemHeight : 150}
+            swipeMenuId="swipeMenu"
+            on:swipeMenuClose={(e) => handleTouchAction(e.index, { action: 'up' })}>
             <Template let:item>
                 <!-- TODO: make this a canvas -->
-                <absolutelayout height="100%">
-                    <gridlayout height={itemHeight} width="100%">
-                        <gridlayout borderRadius={12} boxShadow="1 1 8 rgba(0, 0, 0, 0.8)" margin="20 24 0 24" on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}>
+                <absolutelayout height="150">
+                    <swipemenu
+                        id="swipeMenu"
+                        height={itemHeight}
+                        openAnimationDuration={100}
+                        rightSwipeDistance={0}
+                        startingSide={item.startingSide}
+                        translationFunction={fullCardDrawerTranslationFunction}
+                        width="100%">
+                        <gridlayout
+                            prop:mainContent
+                            backgroundColor={item.doc.pages[0].colors?.[0]}
+                            borderRadius={12}
+                            boxShadow="0 0 8 rgba(0, 0, 0, 0.8)"
+                            margin="50 24 0 24"
+                            rippleColor={colorSurface}
+                            on:touch={(e) => onItemTouch(item, e)}
+                            on:tap={() => onItemTap(item)}
+                            on:longPress={(e) => onItemLongPress(item, e)}>
                             <RotableImageView
                                 id="imageView"
                                 borderRadius={12}
+                                decodeHeight={300}
+                                decodeWidth={(screenWidthDips - 2 * rowMargin) * 2}
                                 fadeDuration={100}
                                 item={item.doc.pages[0]}
-                                rippleColor={colorSurface}
                                 sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                                 stretch="aspectFill" />
                             <gridlayout style="z-index:10;" margin="10 20 0 0">
@@ -543,28 +714,47 @@
                                 <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                             </gridlayout>
                         </gridlayout>
-                    </gridlayout>
-                    <absolutelayout backgroundColor="red" boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top={120} width="100%" />
+                        <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
+                    </swipemenu>
+                    <absolutelayout boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top={150} width="100%" />
                 </absolutelayout>
             </Template>
             <Template key="fullcard" let:item>
                 <!-- TODO: make this a canvas -->
-                <gridlayout on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}
-                    >/
-                    <RotableImageView
-                        id="imageView"
+                <swipemenu
+                    id="swipeMenu"
+                    openAnimationDuration={100}
+                    rightSwipeDistance={0}
+                    startingSide={item.startingSide}
+                    translationFunction={fullCardDrawerTranslationFunction}
+                    on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
+                    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
+                    <gridlayout
+                        prop:mainContent
+                        backgroundColor={item.doc.pages[0].colors?.[0]}
                         borderRadius={12}
-                        elevation={10}
-                        fadeDuration={100}
-                        item={item.doc.pages[0]}
+                        dynamicElevationOffset={3}
+                        elevation={6}
                         margin="16 16 16 16"
-                        rippleColor={colorSurface}
-                        sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
-                        stretch="aspectFill" />
-                    <gridlayout style="z-index:10;" margin="10 20 0 0">
-                        <SelectedIndicator selected={item.selected} />
-                        <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                        on:tap={() => onItemTap(item)}
+                        on:longPress={(e) => onItemLongPress(item, e)}>
+                        <RotableImageView
+                            id="imageView"
+                            borderRadius={12}
+                            decodeHeight={300}
+                            decodeWidth={(screenWidthDips - 2 * rowMargin) * 2}
+                            fadeDuration={100}
+                            item={item.doc.pages[0]}
+                            sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
+                            stretch="aspectFill" />
+                        <gridlayout style="z-index:10;" margin="10 20 0 0">
+                            <SelectedIndicator selected={item.selected} />
+                            <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                        </gridlayout>
                     </gridlayout>
+
+                    <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
+
                     <!-- <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
                             <cspan color={colorOnBackground} fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
@@ -574,7 +764,7 @@
                         <cspan color={colorOnSurfaceVariant} fontSize={14} paddingBottom={0} text={getSize(item)} verticalAlignment="bottom" />
                     </canvaslabel> -->
                     <!-- <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} /> -->
-                </gridlayout>
+                </swipemenu>
             </Template>
         </collectionView>
         {#if showNoDocument}

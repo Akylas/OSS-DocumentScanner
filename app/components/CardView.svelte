@@ -33,10 +33,8 @@
     const itemHeight = (colWidth - 2 * rowMargin) * 0.584 + 2 * rowMargin;
 
     const qrcodeColorMatrix = [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
-    let statusBarStyle: 'light' | 'dark';
     // technique for only specific properties to get updated on store change
     $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurfaceVariant } = $colors);
-    $: statusBarStyle = new Color(colorTertiary).isDark() ? 'dark' : 'light';
     interface Item {
         page: OCRPage;
         selected: boolean;
@@ -44,6 +42,9 @@
     }
 
     export let document: OCRDocument;
+    const topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
+    const statusBarStyle = new Color(topBackgroundColor).isDark() ? 'dark' : 'light';
+    const defaultVisualState = statusBarStyle === 'dark' ? 'black' : null;
 
     const qrcodes: QRCodeData = document.pages.reduce((acc, page) => acc.concat(page.qrcode || []), []);
     let currentQRCodeImage: ImageSource;
@@ -370,6 +371,7 @@
                         name: pages.getItem(index).pageIndex,
                         subtitle: qrcode.text,
                         sharedTransitionTag: 'qrcode' + index,
+                        labelSharedTransitionTag: 'qrcodelabel' + index,
                         colorMatrix: qrcodeColorMatrix,
                         margin: 30,
                         image: () => generateQRCodeImage(qrcode.text, qrcode.format, screenWidthPixels, screenWidthPixels)
@@ -383,18 +385,18 @@
     }
 </script>
 
-<page id="pdfView" actionBarHidden={true} statusBarColor={colorTertiary} {statusBarStyle}>
-    <gridlayout backgroundColor={colorTertiary} rows="auto,auto,*">
+<page id="cardview" actionBarHidden={true} statusBarColor={topBackgroundColor} {statusBarStyle}>
+    <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
         <CActionBar
             backgroundColor="transparent"
-            buttonsDefaultVisualState="onTertiary"
+            buttonsDefaultVisualState={defaultVisualState}
             forceCanGoBack={nbSelected > 0}
-            labelsDefaultVisualState="onTertiary"
+            labelsDefaultVisualState={defaultVisualState}
             onGoBack={nbSelected ? unselectAll : null}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" defaultVisualState="onTertiary" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
-            <mdbutton class="actionBarButton" defaultVisualState="onTertiary" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
+            <mdbutton class="actionBarButton" {defaultVisualState} text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
+            <mdbutton class="actionBarButton" {defaultVisualState} text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
         </CActionBar>
 
         <collectionview
@@ -404,14 +406,14 @@
             {colWidth}
             height={itemHeight}
             {items}
+            orientation="horizontal"
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:item>
-                <gridlayout borderRadius={12} elevation={2} margin={8} rippleColor={colorSurface} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}
-                    >/
+                <gridlayout borderRadius={12} elevation={2} margin={8} rippleColor={colorSurface} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}>
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
@@ -431,16 +433,18 @@
             </Template>
         </collectionview>
         <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" padding={16} row={2} rows="auto,auto,*">
-            <image
-                colorMatrix={qrcodeColorMatrix}
-                height={screenWidthDips * 0.4}
-                sharedTransitionTag={'qrcode' + currentQRCodeIndex}
-                src={currentQRCodeImage}
-                stretch="aspectFit"
-                verticalAlignment="top"
-                width="100%"
-                on:tap={onQRCodeTap} />
-            <label fontSize={30} fontWeight="bold" row={1} text={currentQRCode?.text} textAlignment="center" />
+            <stacklayout visibility={currentQRCode ? 'visible' : 'hidden'}>
+                <image
+                    colorMatrix={qrcodeColorMatrix}
+                    height={screenWidthDips * 0.4}
+                    sharedTransitionTag={'qrcode' + currentQRCodeIndex}
+                    src={currentQRCodeImage}
+                    stretch="aspectFit"
+                    verticalAlignment="top"
+                    width="100%"
+                    on:tap={onQRCodeTap} />
+                <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + currentQRCodeIndex} text={currentQRCode?.text} textAlignment="center" />
+            </stacklayout>
             <stacklayout horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom">
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
                 <mdbutton class="fab" text="mdi-plus" on:tap={addPages} />
