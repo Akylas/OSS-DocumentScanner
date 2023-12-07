@@ -9,7 +9,8 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, Trace } from '@nativescript/core';
+import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
+import { Application, Trace, Utils } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
@@ -66,9 +67,9 @@ try {
 
     PagerElement.register();
     CollectionViewElement.register();
+    SwipeMenuElement.register();
     startSentry();
     initialize();
-
     // Trace.addCategories(Trace.categories.Animation);
     // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
@@ -77,6 +78,7 @@ try {
     let launched = false;
     async function start() {
         try {
+            DEV_LOG && console.log('start');
             await syncService.start();
             await ocrService.start();
             await documentsService.start();
@@ -91,21 +93,28 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
+        DEV_LOG && console.log('launchEvent');
         startThemeHelper();
         launched = true;
         start();
     });
     Application.on(Application.resumeEvent, () => {
         if (!launched) {
+            DEV_LOG && console.log('resume');
             launched = true;
             start();
         }
     });
     Application.on(Application.exitEvent, () => {
+        DEV_LOG && console.log('exit');
         launched = false;
         //  syncService.stop();
         //  ocrService.stop();
-        documentsService.stop();
+        try {
+            documentsService.stop();
+        } catch (error) {
+            console.error(error, error.stack);
+        }
     });
 
     themer.createShape('round', {
