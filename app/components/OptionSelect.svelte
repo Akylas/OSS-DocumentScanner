@@ -1,11 +1,12 @@
 <script context="module" lang="ts">
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
-    import { File, Utils } from '@nativescript/core';
+    import { File, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { lc } from '~/helpers/locale';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
     import IconButton from './IconButton.svelte';
     export interface OptionType {
@@ -16,18 +17,20 @@
 </script>
 
 <script lang="ts">
+    import ListItem from './ListItem.svelte';
+
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
     export let rowHeight = 72;
     export let width: string | number = '*';
     export let containerColumns: string = '*';
-    export let fontWeight = 'normal';
+    export let fontWeight = 'bold';
     export let options: OptionType[];
     export let onClose = null;
     export let height: number | string = 350;
     export let fontSize = 16;
-    export let iconFontSize = 16;
+    export let iconFontSize = 24;
     export let onCheckBox: (item, value, e) => void = null;
     let filteredOptions: OptionType[] = null;
     let filter: string = null;
@@ -50,7 +53,11 @@
         (onClose || closeBottomSheet)(value);
     }
 
-    async function onTap(item: OptionType, args) {
+    async function onTap(item: OptionType, event) {
+        while (event.detail) {
+            event = event.detail;
+        }
+        console.log('onTap', item, Object.keys(event));
         if (item.isPick) {
             try {
                 const result = await openFilePicker({
@@ -67,6 +74,9 @@
             } catch (err) {
                 close(null);
             }
+        } else if (item.type === 'checkbox') {
+            const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+            checkboxView.checked = !checkboxView.checked;
         } else {
             close(item);
         }
@@ -110,16 +120,32 @@
         {/if}
         <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} paddingBottom={8} paddingTop={8} row={1} {rowHeight}>
             <Template key="checkbox" let:item>
-                <checkbox checked={item.value} text={item.name} on:checkedChange={(e) => onCheckBox(item, e.value, e)} />
+                <ListItem
+                    color={item.color}
+                    columns="*,auto"
+                    {fontSize}
+                    {fontWeight}
+                    {iconFontSize}
+                    leftIcon={item.icon}
+                    showBottomLine={showBorders}
+                    subtitle={item.subtitle}
+                    title={item.name}
+                    on:tap={(event) => onTap(item, event)}>
+                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e.value, e)} />
+                </ListItem>
             </Template>
             <Template let:item>
-                <canvaslabel color={item.color || colorOnSurface} paddingLeft={16} paddingRight={16} rippleColor={item.color || colorOnSurface} on:tap={(event) => onTap(item, event)}>
-                    <cspan fontFamily={$fonts.mdi} fontSize={iconFontSize} text={item.icon} textAlignment="left" verticalAlignment="middle" visibility={item.icon ? 'visible' : 'hidden'} />
-                    <cspan {fontSize} {fontWeight} paddingLeft={item.icon ? 48 : 0} text={item.name} textAlignment="left" verticalAlignment="middle" />
-                    {#if showBorders}
-                        <line color={colorOutlineVariant} height={1} startX={20} startY={0} stopX="100%" stopY={0} strokeWidth={1} verticalAlignment="bottom" />
-                    {/if}
-                </canvaslabel>
+                <ListItem
+                    color={item.color}
+                    {fontSize}
+                    {fontWeight}
+                    {iconFontSize}
+                    leftIcon={item.icon}
+                    showBottomLine={showBorders}
+                    subtitle={item.subtitle}
+                    title={item.name}
+                    on:tap={(event) => onTap(item, event)}>
+                </ListItem>
             </Template>
         </collectionView>
     </gridlayout>

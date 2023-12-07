@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { colors, fonts } from '~/variables';
+    import { colors, fonts, systemFontScale } from '~/variables';
     export let text: string;
     // technique for only specific properties to get updated on store change
     $: ({ colorOnPrimary, colorPrimary } = $colors);
@@ -11,13 +11,14 @@
     color={colorOnPrimary}
     fontSize={14}
     fontWeight="bold"
-    height={20}
+    height={20 * $systemFontScale}
     horizontalAlignment="left"
-    paddingLeft={6}
-    paddingRight={6}
+    paddingLeft={6 * $systemFontScale}
+    paddingRight={6 * $systemFontScale}
     rowSpan={2}
     {text}
     textAlignment="center"
     verticalAlignment="bottom"
     verticalTextAlignment="center"
+    on:longPress
     {...$$restProps} />

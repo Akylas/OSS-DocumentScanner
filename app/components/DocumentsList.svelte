@@ -2,7 +2,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { LottieView } from '@nativescript-community/ui-lottie';
-    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition, Utils } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -21,7 +21,7 @@
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { importAndScanImage, timeout } from '~/utils/ui';
-    import { colors, screenWidthDips } from '~/variables';
+    import { colors, screenWidthDips, systemFontScale } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
     import { Img } from '@nativescript-community/ui-image';
@@ -161,6 +161,7 @@
     } = $colors);
 
     onMount(() => {
+        DEV_LOG && console.log('mount');
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -174,6 +175,7 @@
         // refresh();
     });
     onDestroy(() => {
+        DEV_LOG && console.log('destroy');
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -331,6 +333,7 @@
         }
     }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
+        DEV_LOG && console.log('onAndroidBackButton', nbSelected);
         if (__ANDROID__) {
             if (nbSelected > 0) {
                 data.cancel = true;
@@ -506,7 +509,7 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={150}>
+        <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={150 * $systemFontScale}>
             <Template let:item>
                 <!-- TODO: make this a canvas -->
                 <gridlayout
@@ -526,14 +529,15 @@
                         item={item.doc.pages[0]}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
+                        verticalAlignment="center"
                         width={114} />
-                    <canvaslabel col={1} padding="16 0 0 16">
+                    <canvaslabel col={1} fontSize={14 * $systemFontScale} paddingLeft={16}>
                         <cgroup>
-                            <cspan color={colorOnBackground} fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
-                            <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
+                            <cspan color={colorOnBackground} fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
+                            <cspan color={colorOnSurfaceVariant} lineHeight={26 * $systemFontScale} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
                         </cgroup>
 
-                        <cspan color={colorOnSurfaceVariant} fontSize={14} paddingBottom={0} text={getSize(item)} verticalAlignment="bottom" />
+                        <cspan color={colorOnSurfaceVariant} text={getSize(item)} verticalAlignment="bottom" />
                     </canvaslabel>
                     <SelectedIndicator selected={item.selected} />
                     <SyncIndicator rowSpan={2} selected={item.doc._synced === 1} visible={syncEnabled} />

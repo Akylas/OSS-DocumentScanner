@@ -100,6 +100,7 @@ export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
+export const systemFontScale = writable(1);
 
 const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
@@ -119,6 +120,7 @@ const onInitRootView = function () {
                 actionBarHeight.set(nActionBarHeight);
             }
             const resources = Utils.android.getApplicationContext().getResources();
+            systemFontScale.set(resources.getConfiguration().fontScale);
             const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
             let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
             if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
@@ -167,9 +169,13 @@ export function updateThemeColors(theme: string, force = false) {
     if (!rootViewStyle) {
         return;
     }
+    // rootViewStyle?.setUnscopedCssVariable('--systemFontScale', systemFontScale + '');
     if (__ANDROID__) {
         const nUtils = com.akylas.documentscanner.Utils;
         const activity = Application.android.startActivity;
+        Utils.android.getApplicationContext().getResources();
+        // we also update system font scale so that our UI updates correcly
+        systemFontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
         Object.keys(currentColors).forEach((c) => {
             if (c.endsWith('Disabled')) {
                 return;
