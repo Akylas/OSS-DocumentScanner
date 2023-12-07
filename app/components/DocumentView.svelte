@@ -19,7 +19,7 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
-    import { colors, fonts, screenWidthDips } from '~/variables';
+    import { colors, fonts, screenWidthDips, systemFontScale } from '~/variables';
     import PageIndicator from './PageIndicator.svelte';
     import { filesize } from 'filesize';
     import { onThemeChanged } from '~/helpers/theme';
@@ -170,6 +170,11 @@
         //     });
         // refresh();
     }
+
+    function startDragging(item: Item) {
+        const index = items.findIndex((p) => p.page === item.page);
+        collectionView?.nativeElement.startDragging(index);
+    }
     let ignoreTap = false;
     function onItemLongPress(item: Item, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
@@ -312,6 +317,7 @@
         (e.view as ContentView).content.opacity = 1;
         try {
             await document.movePage(e.index, e.data.targetIndex);
+            collectionView?.nativeView?.refreshVisibleItems();
         } catch (error) {
             showError(error);
         }
@@ -348,7 +354,7 @@
             rowHeight={itemHeight}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
-            <Template let:item>
+            <Template let:index let:item>
                 <!-- <gridlayout
                     backgroundColor={colorSurfaceContainer}
                     borderColor={colorOutline}
@@ -394,7 +400,7 @@
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator rowSpan={2} text={item.index + 1} />
+                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
                 </gridlayout>
             </Template>
         </collectionview>
