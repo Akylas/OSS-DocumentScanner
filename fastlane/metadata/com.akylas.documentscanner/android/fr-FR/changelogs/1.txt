@@ -1,0 +1,14 @@
+*Features*
+- added webdav support added enhance and whitepaper filters a ton of fixes and improvements
+- added webdav support added enhance and whitepaper filters a ton of fixes and improvements
+- working on tesseract progress
+- working on tesseract progress
+- download ocr data if needed on ocr request fix: rewrote ocr data view
+- download ocr data if needed on ocr request fix: rewrote ocr data view
+- ocr settings gui
+- ocr settings gui
+
+*Bug fixes*
+- bunch of fixes
+- bunch of fixes
+- prevent in
