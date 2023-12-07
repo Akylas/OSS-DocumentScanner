@@ -184,11 +184,11 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         super.onDraw(canvas)
         val actualQuads = if (animationQuads != null)   animationQuads else  mQuads;
         if (actualQuads !== null) {
-            val verticalOffset = ((canvas.height - imageHeight*scale) / 2).toFloat()
-            val horizontalOffset = ((canvas.width - imageWidth*scale) / 2).toFloat()
+            val verticalOffset = ((canvas.height - imageHeight*scale) / 2)
+            val horizontalOffset = ((canvas.width - imageWidth*scale) / 2)
 
             canvas.translate(horizontalOffset, verticalOffset)
-            canvas.scale(scale, scale, (canvas.width/2).toFloat(), (canvas.height/2).toFloat())
+            canvas.scale(scale, scale)
             actualQuads!!.forEachIndexed { index, quad ->
                 linePaint.color = colors[index.mod(colors.size)]
 

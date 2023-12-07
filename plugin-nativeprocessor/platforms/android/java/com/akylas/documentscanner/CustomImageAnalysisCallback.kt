@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
 import android.util.Log
+import androidx.camera.core.ImageInfo
 import androidx.camera.core.ImageProxy
 import com.akylas.documentscanner.extensions.toBitmap
 import com.nativescript.cameraview.ImageAnalysisCallback
@@ -52,6 +53,31 @@ constructor(
             imageRotation: Int
         ): String
 
+//        private external fun nativeScanJSONFromProxy(
+//            width: Int,
+//            height: Int,
+//            chromaPixelStride: Int,
+//            buffer1: ByteBuffer,
+//            rowStride1: Int,
+//            buffer2: ByteBuffer,
+//            rowStride2: Int,
+//            buffer3: ByteBuffer,
+//            rowStride3: Int,
+//            shrunkImageHeight: Int,
+//            imageRotation: Int,
+//            outBitmap: Bitmap
+//        ): String
+//
+//        private external fun nativeScanJSONFromProxyOnePlane(
+//            width: Int,
+//            height: Int,
+//            buffer1: ByteBuffer,
+//            rowStride1: Int,
+//            shrunkImageHeight: Int,
+//            imageRotation: Int,
+//            outBitmap: Bitmap
+//        ): String
+
         private external fun nativeBufferScanJSON(
             width: Int,
             height: Int,
@@ -91,10 +117,12 @@ constructor(
             imageRotation: Int,
             options: String,
         ): String
+
         private external fun nativeColorPalette(
             srcBitmap: Bitmap,
             shrunkImageHeight: Int,
             colorsFilterDistanceThreshold: Int,
+            colorPalette: Int,
         ): String
 
         private external fun nativeCrop(
@@ -239,6 +267,9 @@ constructor(
         ) {
             thread(start = true) {
                 try {
+                    if (image.byteCount == 0) {
+                        throw Exception("getJSONDocumentCorners: null data bitmap")
+                    }
                     callback.onResult(
                         null,
                         nativeScanJSON(image, shrunkImageHeight.toInt(), imageRotation)
@@ -248,18 +279,76 @@ constructor(
                 }
             }
         }
+
+//        @SuppressLint("UnsafeOptInUsageError")
+//        @JvmOverloads
+//        fun getJSONDocumentCornersAndImage(
+//            imageProxy: ImageProxy,
+//            processor: ImageAsyncProcessor,
+//            callback: FunctionCallback,
+//            shrunkImageHeight: Double = 500.0,
+//            imageRotation: Int = 0
+//        ) {
+//            thread(start = true) {
+//                try {
+//                    val image = imageProxy.image!!
+//                    val planes = image.planes
+//                    val outBitmap =
+//                        Bitmap.createBitmap(
+//                            image.width,
+//                            image.height,
+//                            Bitmap.Config.ARGB_8888
+//                        )
+//
+//                    val corners = if (planes.size> 1) nativeScanJSONFromProxy(
+//                        image.width,
+//                        image.height,
+//                        planes[1].pixelStride,
+//                        planes[0].buffer,
+//                        planes[0].rowStride,
+//                        planes[1].buffer,
+//                        planes[1].rowStride,
+//                        planes[2].buffer,
+//                        planes[2].rowStride,
+//                        shrunkImageHeight.toInt(),
+//                        if (imageRotation != 0) imageRotation else imageProxy.imageInfo.rotationDegrees,
+//                        outBitmap
+//                    ) else nativeScanJSONFromProxyOnePlane(image.width,
+//                        image.height,
+//                        planes[0].buffer,
+//                        planes[0].rowStride,
+//                        shrunkImageHeight.toInt(),
+//                        if (imageRotation != 0) imageRotation else imageProxy.imageInfo.rotationDegrees,
+//                        outBitmap)
+//                    processor.finished()
+//                    callback.onResult(
+//                        null,
+//                        mapOf("corners" to corners, "image" to outBitmap)
+//                    )
+//                } catch (e: Exception) {
+//                    callback.onResult(e, null)
+//                }
+//            }
+//        }
+
         @JvmOverloads
         fun getColorPalette(
             image: Bitmap,
             callback: FunctionCallback,
             shrunkImageHeight: Double = 500.0,
-            colorsFilterDistanceThreshold: Int = 0
+            colorsFilterDistanceThreshold: Int = 0,
+            colorPalette: Int = 0
         ) {
             thread(start = true) {
                 try {
                     callback.onResult(
                         null,
-                        nativeColorPalette(image, shrunkImageHeight.toInt(), colorsFilterDistanceThreshold)
+                        nativeColorPalette(
+                            image,
+                            shrunkImageHeight.toInt(),
+                            colorsFilterDistanceThreshold,
+                            colorPalette
+                        )
                     )
                 } catch (e: Exception) {
                     callback.onResult(e, null)
@@ -353,7 +442,7 @@ constructor(
         @JvmOverloads
         fun cropDocument(
             bitmap: Bitmap,
-            quads:  List<List<Point>>,
+            quads: List<List<Point>>,
             callback: FunctionCallback,
             transforms: String = ""
         ) {

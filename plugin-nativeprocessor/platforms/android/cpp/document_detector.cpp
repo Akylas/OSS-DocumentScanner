@@ -249,16 +249,16 @@ static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, ji
     srcBitmapMat.release();
     return stringToJavaString(env, scanPointsList);
 }
-static jstring native_color_palette(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint colorsFilterDistanceThreshold)
+static jstring native_color_palette(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint colorsFilterDistanceThreshold, jint colorPalette)
 {
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
 //    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
 //    cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
-    std::vector<std::pair<Vec3b, float>> colors = getPalette(srcBitmapMat, true, shrunkImageHeight, colorsFilterDistanceThreshold);
+    std::vector<std::pair<Vec3b, float>> colors = getPalette(srcBitmapMat, true, shrunkImageHeight, colorsFilterDistanceThreshold, -1, true, (ColorSpace)colorPalette);
     jsoncons::json j(jsoncons::json_array_arg);
     for (int i = 0; i < colors.size(); ++i) {
-        j.push_back(rgbHexString(colors[i].first));
+        j.push_back(BGRHexString(colors[i].first));
     }
     srcBitmapMat.release();
     return stringToJavaString(env, j.to_string());
@@ -273,6 +273,29 @@ static jstring native_scan_json_buffer(JNIEnv *env, jobject type, jint width, ji
     srcBitmapMat.release();
     return stringToJavaString(env, scanPointsList);
 }
+static jstring native_scan_json_buffer_with_image(JNIEnv *env, jobject type, jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                       jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                       jint rowStride3, jint shrunkImageHeight, jint imageRotation, jobject outBitmap)
+{
+    Mat srcBitmapMat;
+    buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
+    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
+    mat_to_bitmap(env, srcBitmapMat, outBitmap);
+    srcBitmapMat.release();
+    return stringToJavaString(env, scanPointsList);
+}
+//static jstring native_scan_json_buffer_with_image_one_plane(JNIEnv *env, jobject type, jint width, jint height, jobject buffer1,
+//                                       jint rowStride1, jint shrunkImageHeight, jint imageRotation, jobject outBitmap)
+//{
+//    const char *pixels = static_cast<const char *>(env->GetDirectBufferAddress(buffer1));
+//    vector<uchar> jpgbytes(pixels, pixels+rowStride1);
+//    Mat srcBitmapMat = imdecode(jpgbytes, 0);
+////    Mat srcBitmapMat(cv::Size(width, height), CV_8UC1, pixels, rowStride1);
+//    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
+//    mat_to_bitmap(env, srcBitmapMat, outBitmap);
+//    srcBitmapMat.release();
+//    return stringToJavaString(env, scanPointsList);
+//}
 
 static vector<Point> pointsToNative(JNIEnv *env, jobjectArray points_)
 {
@@ -489,13 +512,37 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
     return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
 }
 extern "C" JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxy(JNIEnv *env,
+                                                                                          jobject thiz,
+                                                                                        jint width, jint height, jint chromaPixelStride, jobject buffer1,
+                                                                                        jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+                                                                                        jint rowStride3,
+                                                                                          jint shrunk_image_height,
+                                                                                          jint image_rotation,
+                                                                                                    jobject out_bitmap)
+{
+    return native_scan_json_buffer_with_image(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation, out_bitmap);
+}
+//extern "C" JNIEXPORT jstring JNICALL
+//Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxyOnePlane(JNIEnv *env,
+//                                                                                          jobject thiz,
+//                                                                                        jint width, jint height, jobject buffer1,
+//                                                                                        jint rowStride1,
+//                                                                                          jint shrunk_image_height,
+//                                                                                          jint image_rotation,
+//                                                                                                    jobject out_bitmap)
+//{
+//    return native_scan_json_buffer_with_image_one_plane(env, thiz, width, height, buffer1, rowStride1, shrunk_image_height, image_rotation, out_bitmap);
+//}
+extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeColorPalette(JNIEnv *env,
                                                                                           jobject thiz,
                                                                                           jobject src_bitmap,
                                                                                           jint shrunk_image_height,
-                                                                                          jint colorsFilterDistanceThreshold)
+                                                                                          jint colorsFilterDistanceThreshold,
+                                                                                          jint colorPalette)
 {
-    return native_color_palette(env, thiz, src_bitmap, shrunk_image_height, colorsFilterDistanceThreshold);
+    return native_color_palette(env, thiz, src_bitmap, shrunk_image_height, colorsFilterDistanceThreshold, colorPalette);
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeBufferScanJSON(JNIEnv *env,

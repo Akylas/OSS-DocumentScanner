@@ -35,6 +35,8 @@ namespace detector {
                 int imageHeight;
             };
             struct DetectOptions {
+
+                int rotation = 0;
                 int adapThresholdBlockSize = 339; // 391
                 int adapThresholdC = 47;          // 53
 
