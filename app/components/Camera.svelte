@@ -579,15 +579,15 @@
     }
 </script>
 
-<page bind:this={page} id="camera" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
+<page bind:this={page} id="camera" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout rows="auto,*">
         <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
-        <CActionBar backgroundColor="transparent" modalWindow={true} title={null}>
-            <mdbutton class="actionBarButton" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showOptions} />
-            <mdbutton class="actionBarButton" text="mdi-tune" variant="text" visibility={startOnCam ? 'collapsed' : 'visible'} on:tap={showCameraSettings} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
+            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-dots-vertical" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showOptions} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-tune" variant="text" visibility={startOnCam ? 'collapsed' : 'visible'} on:tap={showCameraSettings} />
         </CActionBar>
 
         <gridlayout padding="10" row={1} rows="*,auto">
