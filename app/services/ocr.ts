@@ -238,6 +238,7 @@ export class OCRService extends Observable {
                 {
                     dataPath: this.currentDataPath,
                     language: this.mLanguages,
+                    rotation: page.rotation,
                     // oem: 0,
                     detectContours: 0
                 },
