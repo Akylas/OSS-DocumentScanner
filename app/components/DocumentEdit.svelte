@@ -26,10 +26,10 @@
     import { notifyWhenChanges } from '~/utils/svelte/store';
     import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, timeout, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { colors } from '~/variables';
+    import { colors, systemFontScale } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -50,9 +50,9 @@
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
     let currentSelectedImagePath = firstItem.getImagePath();
     let currentSelectedImageRotation = firstItem.rotation || 0;
-    const transforms = firstItem.transforms?.split(',') || [];
-    const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
-    const enhanced = writable(transforms.indexOf('enhance') !== -1);
+    let transforms = firstItem.transforms?.split(',') || [];
+    // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
+    // const enhanced = writable(transforms.indexOf('enhance') !== -1);
     async function savePDF() {
         try {
             showLoading(l('exporting'));
@@ -71,7 +71,6 @@
             }
             showLoading({ text: l('ocr_computing', 0), progress: 0 });
             const ocrData = await ocrService.ocrPage(document, currentIndex, (progress: number) => {
-                console.log('ocrPage progress', progress);
                 updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
             });
             if (ocrData) {
@@ -109,9 +108,9 @@
         currentSelectedImagePath = item.getImagePath();
         currentSelectedImageRotation = item.rotation || 0;
         currentItemOCRData = item.ocrData;
-        const transforms = item.transforms?.split(',') || [];
-        $whitepaper = transforms.indexOf('whitepaper') !== -1;
-        $enhanced = transforms.indexOf('enhance') !== -1;
+        transforms = item.transforms?.split(',') || [];
+        // $whitepaper = transforms.indexOf('whitepaper') !== -1;
+        // $enhanced = transforms.indexOf('enhance') !== -1;
         console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
         refreshCollectionView();
     }
@@ -193,29 +192,41 @@
             showError(error);
         }
     }
-    async function showEnhancements() {
+    async function showEnhancements(event) {
         try {
             const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            await showBottomSheet({
+            console.log('showEnhancements', transforms);
+
+            function getData(transformId) {
+                const value = transforms.indexOf(transformId) !== -1;
+                return { type: 'checkbox', id: transformId, value, data: value };
+            }
+            await showPopover({
                 view: OptionSelect,
-                disableDimBackground: true,
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                // disableDimBackground: true,
                 props: {
-                    rowHeight: 58,
-                    height: 200,
+                    borderRadius: 10,
+                    elevation: 4,
+                    margin: 4,
+                    backgroundColor: colorSurfaceContainer,
+                    rowHeight: 58 * $systemFontScale,
+                    height: 58 * 3 * $systemFontScale + 8,
                     options: [
-                        { type: 'checkbox', name: lc('enhance'), id: 'enhance', value: transforms.indexOf('enhance') !== -1 },
-                        { type: 'checkbox', name: lc('whitepaper'), id: 'whitepaper', data: $whitepaper, value: transforms.indexOf('whitepaper') !== -1 },
-                        { type: 'checkbox', name: lc('color'), data: $enhanced, id: 'color', value: transforms.indexOf('color') !== -1 }
+                        { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
+                        { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },
+                        { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
                     ],
                     onCheckBox(item, value, e) {
                         if (updatingTransform) {
                             e.checked = !value;
                             return;
                         }
-                        updateTransform(value, null, item.id + '_100');
+                        updateTransform(value, null, item.id);
                     }
-                },
-                trackingScrollView: 'collectionView'
+                }
+                // trackingScrollView: 'collectionView'
             });
         } catch (error) {
             showError(error);
@@ -294,11 +305,11 @@
                 fullscreen: true,
                 props: {
                     ocrData: items.getItem(currentIndex).ocrData,
-                    imagePath: item.imagePath
+                    imagePath: item.imagePath,
                     // image: editingImage || (await loadImage(item.imagePath)),
                     // imageWidth: item.width,
                     // imageHeight: item.height,
-                    // // rotation: item.rotation,
+                    rotation: item.rotation
                     // colorMatrix: getColorMatrix(item.colorType)
                 }
             });
@@ -409,6 +420,7 @@
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
                 }
             }
+            transforms = currentTransforms;
         } catch (error) {
             showError(error);
         } finally {
@@ -434,13 +446,12 @@
         }
     }
     onMount(() => {
-        notifyWhenChanges(enhanced, (value) => {
-            updateTransform(value, enhanced, 'enhance');
-        });
-        notifyWhenChanges(whitepaper, (value) => {
-            updateTransform(value, whitepaper, 'whitepaper');
-        });
-        // $:
+        // notifyWhenChanges(enhanced, (value) => {
+        //     updateTransform(value, enhanced, 'enhance');
+        // });
+        // notifyWhenChanges(whitepaper, (value) => {
+        //     updateTransform(value, whitepaper, 'whitepaper');
+        // });
 
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
     });
@@ -511,9 +522,9 @@
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
-            <mdbutton class="icon-btn" text="mdi-auto-fix" variant="text" on:tap={() => showEnhancements()} />
-            <checkbox checked={$enhanced} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => ($enhanced = e.value)} />
-            <checkbox checked={$whitepaper} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => ($whitepaper = e.value)} />
+            <mdbutton class="icon-btn" text="mdi-auto-fix" variant="text" on:tap={showEnhancements} />
+            <!-- <checkbox checked={$enhanced} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => ($enhanced = e.value)} /> -->
+            <!-- <checkbox checked={$whitepaper} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => ($whitepaper = e.value)} /> -->
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
