@@ -1,0 +1,3 @@
+<p>The <i>OSS Document Scanner</i> is an Open Source app to scan all your documents. You either scan using your camera or by importing an image. The app will automatically detect you document within the photo and will crop the image.</p>
+<p>Once the document is created you can detect text within the document using OCR.</p>
+<p>You can also share your document as a PDF. If you want you can synchronize the app data with a webdav server (like nextloud) to never loose anything!</p>
