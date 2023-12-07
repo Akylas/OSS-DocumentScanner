@@ -580,6 +580,6 @@ module.exports = (env, params = {}) => {
             }
         })
     ];
-    return config;
+    // return config;
     return [require('./webpdfviewer/webpack.config.js')(env), config];
 };
