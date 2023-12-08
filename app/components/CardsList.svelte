@@ -2,7 +2,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { LottieView } from '@nativescript-community/ui-lottie';
-    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -21,7 +21,7 @@
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
     import { importAndScanImage, timeout } from '~/utils/ui';
-    import { colors, screenWidthDips } from '~/variables';
+    import { colors, screenHeightDips, screenWidthDips } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
     import { Img } from '@nativescript-community/ui-image';
@@ -36,10 +36,10 @@
     import { log } from 'console';
     import { request } from '@nativescript-community/perms';
 
+    const orientation = Application.orientation();
     const rowMargin = 8;
-    const itemHeight = (screenWidthDips - 2 * rowMargin) * 0.584 + 2 * rowMargin;
-
-    const lottieAlpha = __IOS__ ? 100 : 255;
+    const itemWidth = (orientation === 'landscape' ? screenHeightDips : screenWidthDips) - 2 * rowMargin;
+    const itemHeight = itemWidth * 0.584 + 2 * rowMargin;
 
     interface Item {
         doc: OCRDocument;
@@ -249,13 +249,13 @@
             if (!doc) {
                 return;
             }
-            // const component = (await import('~/components/DocumentEdit.svelte')).default;
-            // navigate({
-            //     page: component,
-            //     props: {
-            //         document: doc
-            //     }
-            // });
+            const component = (await import('~/components/DocumentEdit.svelte')).default;
+            navigate({
+                page: component,
+                props: {
+                    document: doc
+                }
+            });
         } catch (error) {
             showError(error);
         }
@@ -337,6 +337,7 @@
                 startPageIndex: 0
             }
         });
+        collectionView?.nativeElement.closeCurrentMenu();
     }
     function animateCards(animOptions, startIndex, endIndex = -1) {
         let index = startIndex;
@@ -703,8 +704,8 @@
                             <RotableImageView
                                 id="imageView"
                                 borderRadius={12}
-                                decodeHeight={300}
-                                decodeWidth={(screenWidthDips - 2 * rowMargin) * 2}
+                                decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
+                                decodeWidth={Utils.layout.toDevicePixels(itemWidth) * 0.584}
                                 fadeDuration={100}
                                 item={item.doc.pages[0]}
                                 sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
@@ -741,8 +742,8 @@
                         <RotableImageView
                             id="imageView"
                             borderRadius={12}
-                            decodeHeight={300}
-                            decodeWidth={(screenWidthDips - 2 * rowMargin) * 2}
+                            decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
+                            decodeWidth={Utils.layout.toDevicePixels(itemWidth) * 0.584}
                             fadeDuration={100}
                             item={item.doc.pages[0]}
                             sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}

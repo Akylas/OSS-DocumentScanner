@@ -26,7 +26,10 @@
     import PageIndicator from './PageIndicator.svelte';
     import { QRCodeData, QRCodeSingleData, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { releaseImage } from '@nativescript-community/ui-canvas';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     export const screenWidthPixels = Screen.mainScreen.widthPixels;
+    export const screenHeightPixels = Screen.mainScreen.heightPixels;
 
     const rowMargin = 8;
     const colWidth = screenWidthDips / 2;
@@ -46,23 +49,10 @@
     const statusBarStyle = new Color(topBackgroundColor).isDark() ? 'dark' : 'light';
     const defaultVisualState = statusBarStyle === 'dark' ? 'black' : null;
 
-    const qrcodes: QRCodeData = document.pages.reduce((acc, page) => acc.concat(page.qrcode || []), []);
+    let qrcodes: QRCodeData;
     let currentQRCodeImage: ImageSource;
     let currentQRCode: QRCodeSingleData;
     const currentQRCodeIndex = 0;
-    if (qrcodes.length) {
-        currentQRCode = qrcodes[currentQRCodeIndex];
-        generateQRCodeImage(currentQRCode.text, currentQRCode.format, screenWidthPixels, screenWidthPixels * 0.4)
-            .then((result) => {
-                const oldImage = currentQRCodeImage;
-                console.log('generateQRCodeImage done', result);
-                currentQRCodeImage = result;
-                if (oldImage) {
-                    releaseImage(oldImage);
-                }
-            })
-            .catch(showError);
-    }
     let collectionView: NativeViewElementNode<CollectionView>;
     // let items: ObservableArray<Item> = null;
 
@@ -87,6 +77,24 @@
     //         console.log('onImageUpdated', event.data.index, document, data);
     //         document.pages.setItem(index, data);
     //     }
+
+    function updateQRCodes() {
+        qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode || []), []);
+
+        if (qrcodes.length) {
+            currentQRCode = qrcodes[currentQRCodeIndex];
+            generateQRCodeImage(currentQRCode.text, currentQRCode.format, screenWidthPixels, screenWidthPixels * 0.4)
+                .then((result) => {
+                    const oldImage = currentQRCodeImage;
+                    currentQRCodeImage = result;
+                    if (oldImage) {
+                        releaseImage(oldImage);
+                    }
+                })
+                .catch(showError);
+        }
+    }
+    updateQRCodes();
     async function saveDocument() {
         try {
             showLoading(l('saving'));
@@ -122,6 +130,7 @@
                     document
                 }
             });
+            updateQRCodes();
         } catch (error) {
             showError(error);
         }
@@ -338,6 +347,10 @@
     });
     // onThemeChanged(refreshCollectionView);
 
+    function startDragging(item: Item) {
+        const index = items.findIndex((p) => p.page === item.page);
+        collectionView?.nativeElement.startDragging(index);
+    }
     async function onItemReordered(e) {
         (e.view as ContentView).content.opacity = 1;
         try {
@@ -372,8 +385,9 @@
                 // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                 props: {
                     backgroundColor: 'white',
+                    statusBarStyle: 'light',
                     images: qrcodes.map((qrcode, index) => ({
-                        name: pages.getItem(index).pageIndex,
+                        name: pages.getItem(index).name || document.name,
                         subtitle: qrcode.text,
                         sharedTransitionTag: 'qrcode' + index,
                         labelSharedTransitionTag: 'qrcodelabel' + index,
@@ -422,23 +436,22 @@
             rowHeight={itemHeight}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
-            <Template let:item>
-                <gridlayout borderRadius={12} elevation={2} margin={8} rippleColor={colorSurface} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView
-                        id="imageView"
-                        borderRadius={12}
-                        horizontalAlignment="center"
-                        item={item.page}
-                        sharedTransitionTag={`document_${document.id}_${item.page.id}`}
-                        stretch="aspectFill"
-                        verticalAlignment="center"
-                        width="100%" />
+            <Template let:index let:item>
+                <gridlayout
+                    backgroundColor={item.page.colors?.[0]}
+                    borderRadius={12}
+                    elevation={6}
+                    margin={12}
+                    rippleColor={colorSurface}
+                    on:tap={() => onItemTap(item)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    <RotableImageView id="imageView" borderRadius={12} item={item.page} sharedTransitionTag={`document_${document.id}_${item.page.id}`} stretch="aspectFill" width="100%" />
                     <!-- <canvaslabel height="100%" padding="10 0 0 0">
                         <cspan fontSize={14} fontWeight="normal" paddingBottom={20} text={`${item.page.width} x ${item.page.height}`} textAlignment="right" verticalAlignment="bottom" />
                         <cspan fontSize={14} fontWeight="normal" text={filesize(item.page.size)} textAlignment="right" verticalAlignment="bottom" />
                     </canvaslabel> -->
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <!-- <PageIndicator rowSpan={2} text={item.index + 1} /> -->
+                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
                 </gridlayout>
             </Template>
         </collectionview>
