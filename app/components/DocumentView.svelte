@@ -24,6 +24,8 @@
     import { filesize } from 'filesize';
     import { onThemeChanged } from '~/helpers/theme';
     import { request } from '@nativescript-community/perms';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -71,12 +73,17 @@
             showError(err);
         }
     }
-    async function savePDF() {
+    async function showPDFPopover(event) {
         try {
-            showLoading(l('exporting'));
-            const file = await documentsService.exportPDF(document);
-            hideLoading();
-            openFile(file.path);
+            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            await showPopover({
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                props: {
+                    document
+                }
+            });
         } catch (err) {
             showError(err);
         }
@@ -339,7 +346,7 @@
             onGoBack={nbSelected ? unselectAll : null}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
+            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
         </CActionBar>
 
