@@ -378,8 +378,13 @@
                         sharedTransitionTag: 'qrcode' + index,
                         labelSharedTransitionTag: 'qrcodelabel' + index,
                         colorMatrix: qrcodeColorMatrix,
-                        margin: 30,
-                        image: () => generateQRCodeImage(qrcode.text, qrcode.format, screenWidthPixels, screenWidthPixels)
+                        margin: '0 10 0 10',
+                        image: (orientation) => {
+                            if (orientation === 'landscape') {
+                                return generateQRCodeImage(qrcode.text, qrcode.format, screenHeightPixels, screenWidthPixels);
+                            }
+                            return generateQRCodeImage(qrcode.text, qrcode.format, screenWidthPixels, screenWidthPixels);
+                        }
                     })),
                     startPageIndex: 0
                 }
