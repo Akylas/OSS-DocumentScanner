@@ -84,5 +84,6 @@ namespace svelteNative.JSX {
     }
     interface PageAttributes {
         statusBarColor?: string;
+        screenOrientation?: string;
     }
 }
