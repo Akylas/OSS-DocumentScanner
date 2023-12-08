@@ -1,6 +1,6 @@
 import { request } from '@nativescript-community/perms';
 import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { ApplicationSettings, Folder, ImageSource, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, File, Folder, ImageSource, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
@@ -398,7 +398,7 @@ export class DocumentsService extends Observable {
         // doc.save();
     }
 
-    async exportPDF(document: OCRDocument) {
+    async exportPDF(document: OCRDocument, folder = knownFolders.temp().path, filename = Date.now() + '') {
         const start = Date.now();
         if (__ANDROID__) {
             // const pdfDocument = new android.graphics.pdf.PdfDocument();
@@ -444,14 +444,14 @@ export class DocumentsService extends Observable {
                 pdfDocument.addPage(pdfpage);
                 recycleImages(imageSource, actualBitmap);
             }
-            const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
+            const pdfFile = Folder.fromPath(folder).getFile(filename);
             const newFile = new java.io.File(pdfFile.path);
             pdfDocument.save(newFile);
             pdfDocument.close();
             // const fos = new java.io.FileOutputStream(newFile);
             // pdfDocument.writeTo(fos);
             pdfDocument.close();
-            DEV_LOG && console.log('pdfFile', java.nio.file.Files.size(newFile.toPath()), Date.now() - start, 'ms');
+            DEV_LOG && console.log('pdfFile', folder, filename, pdfFile.size, pdfFile.path, File.exists(path.join(folder, filename)), Date.now() - start, 'ms');
             return pdfFile;
         } else {
             const pdfData = NSMutableData.alloc().init();
@@ -495,9 +495,12 @@ export class DocumentsService extends Observable {
                 canvas.drawBitmap(toDraw, 0, 0, null);
             }
             UIGraphicsEndPDFContext();
-            const pdfFile = knownFolders.temp().getFile(Date.now() + '.pdf');
+            if (!filename.endsWith('.pdf')) {
+                filename += '.pdf';
+            }
+            const pdfFile = Folder.fromPath(folder).getFile(filename);
             await pdfFile.write(pdfData);
-            DEV_LOG && console.log('pdfFile', pdfFile.size, pdfFile.path, Date.now() - start, 'ms');
+            DEV_LOG && console.log('pdfFile', folder, filename, pdfFile.size, pdfFile.path, File.exists(path.join(folder, filename)), Date.now() - start, 'ms');
             return pdfFile;
             // UIGraphicsBeginPDFPage();
             // const pdfContext = UIGraphicsGetCurrentContext();

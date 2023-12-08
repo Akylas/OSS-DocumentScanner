@@ -53,12 +53,17 @@
     let transforms = firstItem.transforms?.split(',') || [];
     // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     // const enhanced = writable(transforms.indexOf('enhance') !== -1);
-    async function savePDF() {
+    async function showPDFPopover(event) {
         try {
-            showLoading(l('exporting'));
-            const file = await documentsService.exportPDF(document);
-            hideLoading();
-            openFile(file.path);
+            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            await showPopover({
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                props: {
+                    document
+                }
+            });
         } catch (err) {
             showError(err);
         }
@@ -547,7 +552,7 @@
         </gridlayout>
         <CActionBar title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={savePDF} />
+            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
         </CActionBar>
     </gridlayout>
