@@ -220,7 +220,7 @@
                     ],
                     onCheckBox(item, value, e) {
                         if (updatingTransform) {
-                            e.checked = !value;
+                            e.object.checked = !value;
                             return;
                         }
                         updateTransform(value, null, item.id);

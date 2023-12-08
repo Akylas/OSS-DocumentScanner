@@ -53,6 +53,8 @@
         (onClose || closeBottomSheet)(value);
     }
 
+    let checkboxTapTimer;
+
     async function onTap(item: OptionType, event) {
         while (event.detail) {
             event = event.detail;
@@ -75,11 +77,21 @@
                 close(null);
             }
         } else if (item.type === 'checkbox') {
+            // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
             const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
-            checkboxView.checked = !checkboxView.checked;
+            checkboxTapTimer = setTimeout(() => {
+                checkboxView.checked = !checkboxView.checked;
+            }, 10);
         } else {
             close(item);
         }
+    }
+    function onCheckedChanged(item, event) {
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+        onCheckBox(item, event.value, event);
     }
     onDestroy(() => {
         blurTextField();
@@ -131,7 +143,7 @@
                     subtitle={item.subtitle}
                     title={item.name}
                     on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e.value, e)} />
+                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </ListItem>
             </Template>
             <Template let:item>
