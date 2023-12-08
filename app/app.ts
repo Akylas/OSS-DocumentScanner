@@ -70,7 +70,7 @@ try {
     SwipeMenuElement.register();
     startSentry();
     initialize();
-    // Trace.addCategories(Trace.categories.Animation);
+    // Trace.addCategories(Trace.categories.NativeLifecycle);
     // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
     // Trace.enable();
