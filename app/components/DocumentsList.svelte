@@ -161,7 +161,6 @@
     } = $colors);
 
     onMount(() => {
-        DEV_LOG && console.log('mount');
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -175,7 +174,6 @@
         // refresh();
     });
     onDestroy(() => {
-        DEV_LOG && console.log('destroy');
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }

@@ -191,7 +191,6 @@ export function updateThemeColors(theme: string, force = false) {
         });
         currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
         rootViewStyle?.setUnscopedCssVariable('--colorOnSurfaceDisabled', currentColors.colorOnSurfaceDisabled);
-        console.log('colors', currentColors);
     } else {
         Object.keys(currentColors).forEach((c) => {
             currentColors[c] = rootViewStyle.getCssVariable('--' + c);
@@ -233,7 +232,6 @@ export function updateThemeColors(theme: string, force = false) {
             currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(3).hex;
             currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(6).hex;
         }
-        console.log('colors', currentColors);
         currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
         Object.keys(currentColors).forEach((c) => {
             rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
