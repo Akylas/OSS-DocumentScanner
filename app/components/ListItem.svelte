@@ -27,16 +27,29 @@
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<gridlayout {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding={16}>
-    <canvaslabel col={mainCol} color={titleColor} on:draw={onDraw}>
-        <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $systemFontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
-        </cgroup>
-        <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
-            <cspan color={subtitleColor} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
-        </cgroup>
-        <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" visibility={showBottomLine ? 'visible' : 'hidden'} />
-    </canvaslabel>
-    <slot />
+
+
+<gridlayout>
+    <gridlayout {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding={16}>
+        <canvaslabel col={mainCol} color={titleColor} on:draw={onDraw}>
+            <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
+                <cspan
+                    fontFamily={leftIconFonFamily}
+                    fontSize={iconFontSize * $systemFontScale}
+                    paddingLeft="10"
+                    text={leftIcon}
+                    visibility={leftIcon ? 'visible' : 'hidden'}
+                    width={iconFontSize * 2} />
+            </cgroup>
+            <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
+                <cspan fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
+                <cspan color={subtitleColor} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
+            </cgroup>
+        </canvaslabel>
+        <slot />
+    </gridlayout>
+    <!-- TODO: refactor i dont like to have to create another gridlayout just for the line(padding issue) -->
+    <canvasView visibility={showBottomLine ? 'visible' : 'hidden'}>
+        <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" />
+    </canvasView>
 </gridlayout>
