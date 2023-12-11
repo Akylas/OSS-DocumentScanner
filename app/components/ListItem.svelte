@@ -3,10 +3,13 @@
     import { createEventDispatcher } from 'svelte';
     import { colors, fonts, systemFontScale } from '~/variables';
     const dispatch = createEventDispatcher();
-
+    let colorOutlineVariant = $colors.colorOutlineVariant;
+    let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
+    let colorPrimary = $colors.colorPrimary;
+    let colorOnSurface = $colors.colorOnSurface;
+    let colorOnSurfaceDisabled = $colors.colorOnSurfaceDisabled;
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface } = $colors);
-
+    $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors);
     export let showBottomLine: boolean = true;
     export let extraPaddingLeft: number = 0;
     export let iconFontSize: number = 24;
@@ -14,21 +17,22 @@
     export let fontWeight: string = null;
     export let subtitleFontSize: number = 14;
     export let title: string = null;
-    export let color: string = colorOnSurface;
+    export let titleColor: string = colorOnSurface;
     export let subtitleColor: string = colorOnSurfaceVariant;
     export let subtitle: string = null;
     export let leftIcon: string = null;
     export let columns: string = '*';
+    export let mainCol = 0;
     export let leftIconFonFamily: string = $fonts.mdi;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<gridlayout {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps}>
-    <canvaslabel padding={16} on:draw={onDraw}>
+<gridlayout {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding={16}>
+    <canvaslabel col={mainCol} color={titleColor} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
             <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $systemFontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
         </cgroup>
-        <cgroup {color} paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
+        <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
             <cspan fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
             <cspan color={subtitleColor} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
         </cgroup>
