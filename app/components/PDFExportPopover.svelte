@@ -93,5 +93,5 @@
     <!-- <ListItem height={58} subtitle={exportDirectory} title={lc('export_folder')} on:tap={pickExportFolder} /> -->
     <mdbutton row={1} text={lc('open')} on:tap={openPDF} />
     <mdbutton row={2} text={lc('export')} on:tap={exportPDF} />
-    <mdbutton row={3} text={lc('preview')} on:tap={openPDFPreview} />
+    <!-- <mdbutton row={3} text={lc('preview')} on:tap={openPDFPreview} /> -->
 </PopoverBackgroundView>
