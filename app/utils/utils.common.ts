@@ -39,12 +39,12 @@ export function recycleImages(...args) {
                 continue;
             }
             // this first test detect android native arrays
-            if (typeof arg === 'object' && arg.length > 0) {
+            if (Array.isArray(arg)) {
+                recycleImages(...arg);
+            } else if (typeof arg === 'object' && arg.length > 0) {
                 for (let j = 0; j < arg.length; j++) {
                     arg[j].recycle();
                 }
-            } else if (Array.isArray(arg)) {
-                recycleImages(arg);
             } else if (arg.android) {
                 arg.android.recycle();
             } else {
