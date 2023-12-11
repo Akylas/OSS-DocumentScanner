@@ -281,7 +281,7 @@ platform :android do
       package_name: app_identifier,
       track: track,
       track_promote_to: track,
-      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
+      aab: File.join("..", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
     )
   end
 
