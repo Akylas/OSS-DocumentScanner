@@ -282,7 +282,7 @@ platform :android do
       track: track,
       track_promote_to: track,
       json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
-      aab: File.join(". ", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
+      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
     )
   end
 
