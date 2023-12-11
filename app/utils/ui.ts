@@ -2,7 +2,7 @@
 import { request } from '@nativescript-community/perms';
 import { Label } from '@nativescript-community/ui-label';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
-import { AlertDialog } from '@nativescript-community/ui-material-dialogs';
+import { AlertDialog, alert } from '@nativescript-community/ui-material-dialogs';
 import { Image, ImageAsset, ImageSource, StackLayout, View } from '@nativescript/core';
 import { openUrl } from '@nativescript/core/utils';
 import * as imagepicker from '@nativescript/imagepicker';
@@ -26,7 +26,7 @@ export interface ComponentInstanceInfo {
     viewInstance: SvelteComponent;
 }
 
-export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: any): ComponentInstanceInfo {
+export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
     const dummy = createElement('fragment', window.document as any);
     const viewInstance = new viewSpec({ target: dummy, props });
     const element = dummy.firstElement() as NativeViewElementNode<View>;
@@ -449,5 +449,33 @@ export async function importAndScanImage(document?: OCRDocument) {
     } finally {
         hideLoading();
         recycleImages(editingImage);
+    }
+}
+
+export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<T>, props?: T) {
+    let componentInstanceInfo: ComponentInstanceInfo;
+    try {
+        componentInstanceInfo = resolveComponentElement(viewSpec, {
+            onClose: (result) => {
+                view.bindingContext.closeCallback(result);
+            },
+            onCheckBox(item, value, e) {
+                view.bindingContext.closeCallback(item);
+            },
+            trackingScrollView: 'collectionView',
+            ...props
+        });
+        const view: View = componentInstanceInfo.element.nativeView;
+        const result = await alert({
+            view,
+            okButtonText: lc('cancel')
+        });
+        return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        componentInstanceInfo.element.nativeElement._tearDownUI();
+        componentInstanceInfo.viewInstance.$destroy();
+        componentInstanceInfo = null;
     }
 }

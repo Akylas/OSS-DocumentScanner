@@ -8,7 +8,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
-    import { getThemeDisplayName, selectTheme } from '~/helpers/theme';
+    import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -18,6 +18,8 @@
     import { restartApp } from '~/utils/utils';
     import { syncService } from '~/services/sync';
 
+    let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
+    let colorOnSurface = $colors.colorOnSurface;
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
@@ -321,6 +323,12 @@
             console.error(error, error.stack);
         }
     }
+    function refreshCollectionView() {
+        console.log('refreshCollectionView');
+        collectionView?.nativeView?.refresh();
+    }
+    onThemeChanged(refreshCollectionView);
+    
 </script>
 
 <page actionBarHidden={true}>
@@ -347,7 +355,7 @@
                 <gridlayout columns="auto,*,auto" rippleColor={colorOnSurface} on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)}>
                     <label fontFamily={$fonts.mdi} fontSize={36} marginLeft="-10" text={item.icon} verticalAlignment="middle" visibility={!!item.icon ? 'visible' : 'hidden'} width={40} />
                     <stacklayout col={1} marginLeft="10" verticalAlignment="middle">
-                        <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
+                        <label color={colorOnSurface} fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
                         <label
                             color={colorOnSurfaceVariant}
                             fontSize={14}
