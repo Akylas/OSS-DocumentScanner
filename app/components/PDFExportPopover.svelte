@@ -26,6 +26,7 @@
             });
             if (result.folders.length) {
                 exportDirectory = result.folders[0];
+                ApplicationSettings.setString('pdf_export_directory',exportDirectory);
             }
         } catch (error) {
             showError(error);
@@ -71,8 +72,9 @@
     }
 </script>
 
-<PopoverBackgroundView rows="auto,auto,auto">
-    <ListItem height={58} subtitle={exportDirectory} title={lc('export_folder')} on:tap={pickExportFolder} />
+<PopoverBackgroundView rows="auto,auto,auto,auto">
+    <textfield variant="outline" hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} on:tap={pickExportFolder} />
+    <!-- <ListItem height={58} subtitle={exportDirectory} title={lc('export_folder')} on:tap={pickExportFolder} /> -->
     <mdbutton row={1} text={lc('open')} on:tap={openPDF} />
     <mdbutton row={2} text={lc('export')} on:tap={exportPDF} />
 </PopoverBackgroundView>
