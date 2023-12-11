@@ -1,6 +1,7 @@
 import Theme from '@nativescript-community/css-theme';
-import { Application, Device, EventData, Utils } from '@nativescript/core';
+import { Application, Device, EventData, Frame, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
+// import { showingDialogs } from '@nativescript-community/ui-material-dialogs';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -8,6 +9,7 @@ import { colors, createGlobalEventListener, globalObservable, updateThemeColors 
 import { lc } from '~/helpers/locale';
 import { get, writable } from 'svelte/store';
 import { SDK_VERSION } from '@nativescript/core/utils';
+import { showAlertOptionSelect } from '~/utils/ui';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black';
 
@@ -28,20 +30,9 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
             theme = 'black';
         }
         if (__ANDROID__) {
-            // const activity = Application.android.startActivity;
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity);
-            // try {
-            //     activity.getDelegate().applyDayNight();
-            // } catch (error) {
-            //     console.error(error, error.stack);
-            // }
-            // com.google.android.material.color.DynamicColors.applyIfAvailable(activity);
         }
-        // no need to do it on android as we re create the activity (if configChanges:uiMode is missing)
-        // if (__IOS__) {
         updateThemeColors(theme);
-        // }
-
         globalObservable.notify({ eventName: 'theme', data: { theme, colors: get(colors) } });
     }
 });
@@ -64,15 +55,18 @@ export function toggleTheme(autoDark = false) {
 export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark'];
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-        const result = await showBottomSheet<{ data; name }>({
-            parent: null,
-            view: OptionSelect,
-            props: {
-                title: lc('select_language'),
-                options: actions.map((k) => ({ name: getThemeDisplayName(k), data: k }))
-            },
-            trackingScrollView: 'collectionView'
+        const component = (await import('~/components/OptionSelect.svelte')).default;
+        const result = await showAlertOptionSelect(component, {
+            height: 230,
+            title: lc('select_language'),
+            options: actions
+                .map((k) => ({ name: getThemeDisplayName(k), data: k }))
+                .map((d) => ({
+                    ...d,
+                    boxType: 'circle',
+                    type: 'checkbox',
+                    value: theme === d.data
+                }))
         });
         if (result && actions.indexOf(result.data) !== -1) {
             setString('theme', result.data);
@@ -202,10 +196,13 @@ export function start() {
         applyTheme(newTheme);
         const realTheme = getRealTheme(newTheme);
         currentTheme.set(realTheme);
+        if (__ANDROID__) {
+            com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity);
+        }
         updateThemeColors(realTheme);
         setTimeout(() => {
             globalObservable.notify({ eventName: 'theme', data: { theme: realTheme, colors: get(colors) } });
-        }, 100);
+        }, 0);
         // if (__ANDROID__) {
         //     // we recreate the activity to get the change
         //     const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;

@@ -63,7 +63,7 @@ canvaslabel,
 htmllabel {
     // background-color: rgba(255, 0,0,0.2);
     // .ns-light & {
-    color: var(--onBackground);
+    color: var(--colorOnBackground);
 
     // }
     // .ns-dark &,
@@ -100,7 +100,6 @@ page {
         status-bar-style: dark;
     }
 }
-
 .actionBar {
     z-index: 0;
     border-radius: 0;

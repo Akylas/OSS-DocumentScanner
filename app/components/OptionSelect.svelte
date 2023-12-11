@@ -12,6 +12,8 @@
     export interface OptionType {
         name: string;
         isPick?: boolean;
+        boxType?: string;
+        type?: string;
         [k: string]: any;
     }
 </script>
@@ -91,7 +93,7 @@
             clearTimeout(checkboxTapTimer);
             checkboxTapTimer = null;
         }
-        onCheckBox(item, event.value, event);
+        onCheckBox?.(item, event.value, event);
     }
     onDestroy(() => {
         blurTextField();
@@ -134,16 +136,17 @@
             <Template key="checkbox" let:item>
                 <ListItem
                     color={item.color}
-                    columns="*,auto"
+                    columns="auto,*,auto"
                     {fontSize}
-                    {fontWeight}
+                    fontWeight={item.fontWeight || fontWeight}
                     {iconFontSize}
                     leftIcon={item.icon}
+                    mainCol={1}
                     showBottomLine={showBorders}
                     subtitle={item.subtitle}
                     title={item.name}
                     on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    <checkbox id="checkbox" boxType={item.boxType} checked={item.value} col={item.boxType === 'circle' ? 0 : 2} on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </ListItem>
             </Template>
             <Template let:item>
