@@ -299,9 +299,9 @@ platform :android do
         sh("npm", "run", "build.android.production.fdroid")
       end
     when 'alpha'
-      sh("npm", "run", "build.android.production", "--", "--env.reportall", "--env.testlog")
+      sh("npm", "run", "build.android.production", "--", "--aab", "--env.reportall", "--env.testlog")
     else
-      sh("npm", "run", "build.android.production")
+      sh("npm", "run", "build.android.production", "--", "--aab")
     end
   end
 
