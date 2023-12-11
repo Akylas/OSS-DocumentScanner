@@ -339,6 +339,33 @@
             }
         }
     }
+    async function fullscreenSelectedDocuments() {
+        const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
+        const selected: OCRDocument[] = [];
+        documents.forEach((d, index) => {
+            if (d.selected) {
+                selected.push(d.doc);
+            }
+        });
+        navigate({
+            page: component,
+            // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
+            props: {
+                images: selected.reduce((acc, doc) => {
+                    doc.pages.forEach((page) =>
+                        acc.push({
+                            // sharedTransitionTag: `document_${doc.id}_${page.id}`,
+                            name: page.name || doc.name,
+                            image: page.getImagePath(),
+                            ...page
+                        })
+                    );
+                    return acc;
+                }, []),
+                startPageIndex: 0
+            }
+        });
+    }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
             try {
@@ -531,7 +558,7 @@
                         width={114} />
                     <canvaslabel col={1} fontSize={14 * $systemFontScale} paddingLeft={16}>
                         <cgroup>
-                            <cspan color={colorOnBackground} fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
+                            <cspan fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
                             <cspan color={colorOnSurfaceVariant} lineHeight={26 * $systemFontScale} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
                         </cgroup>
 
@@ -583,6 +610,7 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)}>
                 <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+                <mdbutton class="actionBarButton" text="mdi-fullscreen" variant="text" on:tap={fullscreenSelectedDocuments} />
             </CActionBar>
         {/if}
     </gridlayout>
