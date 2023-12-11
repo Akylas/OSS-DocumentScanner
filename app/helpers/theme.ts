@@ -56,18 +56,24 @@ export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark'];
         const component = (await import('~/components/OptionSelect.svelte')).default;
-        const result = await showAlertOptionSelect(component, {
-            height: 230,
-            title: lc('select_language'),
-            options: actions
-                .map((k) => ({ name: getThemeDisplayName(k), data: k }))
-                .map((d) => ({
-                    ...d,
-                    boxType: 'circle',
-                    type: 'checkbox',
-                    value: theme === d.data
-                }))
-        });
+        const result = await showAlertOptionSelect(
+            component,
+            {
+                height: 200,
+                rowHeight: 56,
+                options: actions
+                    .map((k) => ({ name: getThemeDisplayName(k), data: k }))
+                    .map((d) => ({
+                        ...d,
+                        boxType: 'circle',
+                        type: 'checkbox',
+                        value: theme === d.data
+                    }))
+            },
+            {
+                title: lc('select_language')
+            }
+        );
         if (result && actions.indexOf(result.data) !== -1) {
             setString('theme', result.data);
         }

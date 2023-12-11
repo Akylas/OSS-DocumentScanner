@@ -2,8 +2,8 @@
 import { request } from '@nativescript-community/perms';
 import { Label } from '@nativescript-community/ui-label';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
-import { AlertDialog, alert } from '@nativescript-community/ui-material-dialogs';
-import { Image, ImageAsset, ImageSource, StackLayout, View } from '@nativescript/core';
+import { AlertDialog, MDCAlertControlerOptions, alert } from '@nativescript-community/ui-material-dialogs';
+import { AlertOptions, Image, ImageAsset, ImageSource, StackLayout, View } from '@nativescript/core';
 import { openUrl } from '@nativescript/core/utils';
 import * as imagepicker from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
@@ -452,7 +452,7 @@ export async function importAndScanImage(document?: OCRDocument) {
     }
 }
 
-export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<T>, props?: T) {
+export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<T>, props?: T, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
     let componentInstanceInfo: ComponentInstanceInfo;
     try {
         componentInstanceInfo = resolveComponentElement(viewSpec, {
@@ -468,7 +468,8 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
         const view: View = componentInstanceInfo.element.nativeView;
         const result = await alert({
             view,
-            okButtonText: lc('cancel')
+            okButtonText: lc('cancel'),
+            ...(options ? options : {})
         });
         return result;
     } catch (err) {

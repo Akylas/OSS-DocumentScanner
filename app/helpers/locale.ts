@@ -157,16 +157,22 @@ async function internalSelectLanguage() {
         const currentLanguage = getString('language', DEFAULT_LOCALE);
         const component = (await import('~/components/OptionSelect.svelte')).default;
 
-        return showAlertOptionSelect(component, {
-            title: lc('select_language'),
-            height: 230,
-            options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k), data: k }))).map((d) => ({
-                ...d,
-                boxType: 'circle',
-                type: 'checkbox',
-                value: currentLanguage === d.data
-            }))
-        });
+        return showAlertOptionSelect(
+            component,
+            {
+                height: 200,
+                rowHeight: 56,
+                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k), data: k }))).map((d) => ({
+                    ...d,
+                    boxType: 'circle',
+                    type: 'checkbox',
+                    value: currentLanguage === d.data
+                }))
+            },
+            {
+                title: lc('select_language')
+            }
+        );
     } catch (err) {
         showError(err);
     } finally {
