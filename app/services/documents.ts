@@ -501,7 +501,7 @@ export class DocumentsService extends Observable {
             const pdfFile = Folder.fromPath(folder).getFile(filename);
             await pdfFile.write(pdfData);
             DEV_LOG && console.log('pdfFile', folder, filename, pdfFile.size, pdfFile.path, File.exists(path.join(folder, filename)), Date.now() - start, 'ms');
-            return pdfFile;
+            return pdfFile.path;
             // UIGraphicsBeginPDFPage();
             // const pdfContext = UIGraphicsGetCurrentContext();
         }
