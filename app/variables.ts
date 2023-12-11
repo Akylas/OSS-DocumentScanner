@@ -245,5 +245,6 @@ export function updateThemeColors(theme: string, force = false) {
         themer.setOnSurfaceColor(currentColors.colorOnSurface);
     }
     colors.set(currentColors);
+    DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
 }
