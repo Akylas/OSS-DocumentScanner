@@ -61,7 +61,7 @@
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
                 props: {
-                    document
+                    documents: [document]
                 }
             });
         } catch (err) {
