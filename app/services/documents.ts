@@ -1,6 +1,6 @@
 import { request } from '@nativescript-community/perms';
 import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { ApplicationSettings, File, Folder, ImageSource, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, File, Folder, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
@@ -398,12 +398,15 @@ export class DocumentsService extends Observable {
         // doc.save();
     }
 
-    async exportPDF(document: OCRDocument, folder = knownFolders.temp().path, filename = Date.now() + '') {
+    async exportPDF(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '') {
         const start = Date.now();
+        const pages = documents.reduce((acc, doc) => {
+            acc.push(...doc.pages);
+            return acc;
+        }, []);
         if (__ANDROID__) {
             // const pdfDocument = new android.graphics.pdf.PdfDocument();
             const pdfDocument = new com.tom_roush.pdfbox.pdmodel.PDDocument();
-            const pages = document.pages;
             let page: OCRPage;
             let imagePath: string;
             for (let index = 0; index < pages.length; index++) {
@@ -444,19 +447,38 @@ export class DocumentsService extends Observable {
                 pdfDocument.addPage(pdfpage);
                 recycleImages(imageSource, actualBitmap);
             }
-            const pdfFile = Folder.fromPath(folder).getFile(filename);
+
+            const pdfFile = knownFolders.temp().getFile(filename);
             const newFile = new java.io.File(pdfFile.path);
             pdfDocument.save(newFile);
+            DEV_LOG && console.log('pdfFile', folder, filename, pdfFile.size, pdfFile.path, File.exists(path.join(folder, filename)), Date.now() - start, 'ms');
             pdfDocument.close();
+            if (folder !== pdfFile.parent.path) {
+                const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
+                const outfile = outdocument.createFile('application/pdf', filename);
+                console.log('outfile', outfile.getUri().toString());
+                await new Promise((resolve, reject) => {
+                    org.nativescript.widgets.Async.File.copy(
+                        pdfFile.path,
+                        outfile.getUri().toString(),
+                        new org.nativescript.widgets.Async.CompleteCallback({
+                            onComplete: resolve,
+                            onError: (err) => reject(new Error(err))
+                        }),
+                        Utils.android.getApplicationContext()
+                    );
+                });
+                return outfile.getUri().toString();
+            }
+
+            return pdfFile.path;
+            // const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(android.net.Uri.parse(outputPath));
+            // stream.write
             // const fos = new java.io.FileOutputStream(newFile);
             // pdfDocument.writeTo(fos);
-            pdfDocument.close();
-            DEV_LOG && console.log('pdfFile', folder, filename, pdfFile.size, pdfFile.path, File.exists(path.join(folder, filename)), Date.now() - start, 'ms');
-            return pdfFile;
         } else {
             const pdfData = NSMutableData.alloc().init();
             UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);
-            const pages = document.pages;
             let page: OCRPage;
             let imagePath: string;
             for (let index = 0; index < pages.length; index++) {
