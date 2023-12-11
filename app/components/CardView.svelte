@@ -3,10 +3,11 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { Application, Color, ContentView, EventData, ImageSource, ObservableArray, PageTransition, Screen, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
-    import { openFile } from '@nativescript/core/utils';
-    import { filesize } from 'filesize';
+    import { QRCodeData, QRCodeSingleData, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
@@ -22,12 +23,9 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { recycleImages } from '~/utils/utils.common';
     import { colors, screenWidthDips } from '~/variables';
     import PageIndicator from './PageIndicator.svelte';
-    import { QRCodeData, QRCodeSingleData, generateQRCodeImage } from 'plugin-nativeprocessor';
-    import { releaseImage } from '@nativescript-community/ui-canvas';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     export const screenWidthPixels = Screen.mainScreen.widthPixels;
     export const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -88,7 +86,7 @@
                     const oldImage = currentQRCodeImage;
                     currentQRCodeImage = result;
                     if (oldImage) {
-                        releaseImage(oldImage);
+                        recycleImages(oldImage);
                     }
                 })
                 .catch(showError);
