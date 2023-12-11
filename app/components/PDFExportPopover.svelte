@@ -37,9 +37,9 @@
         try {
             closePopover();
             showLoading(l('exporting'));
-            const file = await documentsService.exportPDF(document);
+            const filePath = await documentsService.exportPDF(document);
             hideLoading();
-            openFile(file.path);
+            openFile(filePath);
         } catch (error) {
             showError(error);
         }
@@ -53,7 +53,7 @@
                 defaultText: Date.now() + '.pdf',
                 hintText: lc('pdf_filename')
             });
-            if (result?.text?.length) {
+            if (result?.result && result?.text?.length) {
                 showLoading(l('exporting'));
                 DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
                 await documentsService.exportPDF(document, exportDirectory, result.text);
