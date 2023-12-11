@@ -10,6 +10,7 @@ import { installMixins, themer } from '@nativescript-community/ui-material-core'
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
+import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { Application, Trace, Utils } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { svelteNative } from 'svelte-native';
@@ -68,6 +69,7 @@ try {
     PagerElement.register();
     CollectionViewElement.register();
     SwipeMenuElement.register();
+    DrawerElement.register();
     startSentry();
     initialize();
     // Trace.addCategories(Trace.categories.NativeLifecycle);

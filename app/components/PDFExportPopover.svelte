@@ -12,12 +12,13 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { DismissReasons, SnackBarAction, showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showModal } from 'svelte-native';
 </script>
 
 <script lang="ts">
-    export let document: OCRDocument;
+    export let documents: OCRDocument[];
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-
+    DEV_LOG && console.log('exportDirectory', exportDirectory);
     async function pickExportFolder() {
         try {
             const result = await pickFolder({
@@ -26,7 +27,7 @@
             });
             if (result.folders.length) {
                 exportDirectory = result.folders[0];
-                ApplicationSettings.setString('pdf_export_directory',exportDirectory);
+                ApplicationSettings.setString('pdf_export_directory', exportDirectory);
             }
         } catch (error) {
             showError(error);
@@ -37,7 +38,7 @@
         try {
             closePopover();
             showLoading(l('exporting'));
-            const filePath = await documentsService.exportPDF(document);
+            const filePath = await documentsService.exportPDF(documents);
             hideLoading();
             openFile(filePath);
         } catch (error) {
@@ -56,9 +57,8 @@
             if (result?.result && result?.text?.length) {
                 showLoading(l('exporting'));
                 DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                await documentsService.exportPDF(document, exportDirectory, result.text);
+                const filePath = await documentsService.exportPDF(documents, exportDirectory, result.text);
                 hideLoading();
-                const filePath = path.join(exportDirectory, result.text);
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                 DEV_LOG && console.log('onSnack', onSnack);
                 if (onSnack.reason === 'action') {
@@ -70,11 +70,28 @@
             showError(error);
         }
     }
+    async function openPDFPreview() {
+        try {
+            closePopover();
+            const component = (await import('~/components/PDFPreview.svelte')).default;
+            await showModal({
+                page: component,
+                animated: true,
+                fullscreen: true,
+                props: {
+                    documents
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <PopoverBackgroundView rows="auto,auto,auto,auto">
-    <textfield variant="outline" hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} on:tap={pickExportFolder} />
+    <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
     <!-- <ListItem height={58} subtitle={exportDirectory} title={lc('export_folder')} on:tap={pickExportFolder} /> -->
     <mdbutton row={1} text={lc('open')} on:tap={openPDF} />
     <mdbutton row={2} text={lc('export')} on:tap={exportPDF} />
+    <mdbutton row={3} text={lc('preview')} on:tap={openPDFPreview} />
 </PopoverBackgroundView>
