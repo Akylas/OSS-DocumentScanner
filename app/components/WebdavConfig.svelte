@@ -22,7 +22,6 @@
             DEV_LOG && console.log('testConnection', { username, password, remoteURL, remoteFolder });
             testing = true;
             const result = await syncService.testConnection({ username, password, remoteURL, remoteFolder });
-            console.log('test', result);
             testConnectionSuccess = result ? 1 : -1;
         } catch (error) {
             console.error('error');
