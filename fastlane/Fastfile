@@ -133,7 +133,7 @@ lane :build_flavor do |params|
     )
   end
 
-  tag = "#{app_identifier}/#{platform}/#{version}/#{versionCode}";
+  tag = "#{app_identifier}/#{platform}/#{flavor}/#{version}/#{versionCode}";
   changelog = get_changelog(platform:platform, flavor:flavor)
   if (platform == 'android')
     write_changelog(version:versionCode, changelog:changelog);
@@ -281,7 +281,8 @@ platform :android do
       package_name: app_identifier,
       track: track,
       track_promote_to: track,
-      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
+      json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
+      aab: File.join(". ", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
     )
   end
 
