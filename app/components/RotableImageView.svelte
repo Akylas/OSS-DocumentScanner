@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { releaseImage } from '@nativescript-community/ui-canvas';
     import { Img } from '@nativescript-community/ui-image';
     import { ImageSource } from '@nativescript/core';
     import { createEventDispatcher, onDestroy } from 'svelte';
@@ -7,6 +6,7 @@
     import { OCRPage } from '~/models/OCRDocument';
     import { showError } from '~/utils/error';
     import { getColorMatrix } from '~/utils/ui';
+    import { recycleImages } from '~/utils/utils.common';
 
     const dispatch = createEventDispatcher();
     export let zoomable = false;
@@ -46,7 +46,7 @@
         if (imageToDestroy) {
             const toRelease = imageToDestroy;
             setTimeout(() => {
-                releaseImage(toRelease);
+                recycleImages(toRelease);
             }, 10);
             imageToDestroy = null;
         }
@@ -71,7 +71,7 @@
 
     onDestroy(() => {
         if (imageToDestroy) {
-            releaseImage(imageToDestroy);
+            recycleImages(imageToDestroy);
             imageToDestroy = null;
         }
     });
