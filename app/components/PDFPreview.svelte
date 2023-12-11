@@ -50,7 +50,6 @@
             if (view instanceof ContentView) {
                 view = view.content;
             }
-            console.log('test', view);
             (view as CanvasView)?.invalidate();
         }
     }
