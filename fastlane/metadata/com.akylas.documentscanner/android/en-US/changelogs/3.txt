@@ -9,4 +9,4 @@
 - multiple fixes and improvements to document detection
 - *android:* fixed error while taking picture
 - *android:* scale ui with system font scale
-- allow to re order pages ( long press on the
+- allow to re order pages long press on the
