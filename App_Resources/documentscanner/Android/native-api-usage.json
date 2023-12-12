@@ -25,7 +25,11 @@
         "com.tom_roush.pdfbox.pdmodel:PDPageContentStream",
         "com.tom_roush.pdfbox.pdmodel.graphics.image:JPEGFactory",
         "com.tom_roush.pdfbox.pdmodel.graphics.image:PDImageXObject",
-        "androidx.documentfile.provider:DocumentFile"
+        "androidx.documentfile.provider:DocumentFile",
+        "android.graphics.pdf:PdfDocument",
+        "android.graphics.pdf:PdfDocument.PageInfo",
+        "android.graphics.pdf:PdfDocument.PageInfo.Builder",
+        "android.graphics.pdf:PdfDocument.Page"
     ],
     "blacklist": [
         "org.ow2.asmdex*:*",
