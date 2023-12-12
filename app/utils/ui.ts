@@ -380,10 +380,10 @@ export async function importAndScanImage(document?: OCRDocument) {
             }
             if (quads.length === 0) {
                 quads.push([
-                    [0, 0],
-                    [editingImage.width - 100, 0],
+                    [100, 100],
+                    [editingImage.width - 100, 100],
                     [editingImage.width - 100, editingImage.height - 100],
-                    [0, editingImage.height - 100]
+                    [100, editingImage.height - 100]
                 ]);
             }
             if (quads?.length) {
