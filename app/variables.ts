@@ -75,6 +75,7 @@ export const colors = writable({
     colorOnSurface: '',
     colorSurfaceVariant: '',
     colorOnSurfaceVariant: '',
+    colorOnSurfaceVariant2: '',
     colorSurfaceInverse: '',
     colorOnSurfaceInverse: '',
     colorPrimaryInverse: '',
@@ -244,6 +245,7 @@ export function updateThemeColors(theme: string, force = false) {
         themer.setSurfaceColor(currentColors.colorSurface);
         themer.setOnSurfaceColor(currentColors.colorOnSurface);
     }
+    currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
     colors.set(currentColors);
     DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
