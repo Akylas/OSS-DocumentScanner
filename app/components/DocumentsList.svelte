@@ -332,7 +332,6 @@
         }
     }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        DEV_LOG && console.log('onAndroidBackButton', nbSelected);
         if (__ANDROID__) {
             if (nbSelected > 0) {
                 data.cancel = true;
