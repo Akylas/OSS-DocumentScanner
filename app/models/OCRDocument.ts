@@ -51,10 +51,11 @@ export class OCRDocument extends Observable implements Document {
 
     static async createDocument(name?: string, pagesData?: PageData[], setRaw = false) {
         const docId = Date.now() + '';
+        DEV_LOG && console.log('createDocument', docId);
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
-        DEV_LOG && console.log('createDocument', doc);
         await doc.addPages(pagesData);
-        await doc.save();
+        DEV_LOG && console.log('createDocument pages added');
+        await doc.save({}, false);
         return doc;
     }
 
@@ -103,7 +104,6 @@ export class OCRDocument extends Observable implements Document {
         } else {
             this.pages = [addedPage];
         }
-        this.save();
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
@@ -177,7 +177,7 @@ export class OCRDocument extends Observable implements Document {
             } else {
                 this.pages = pages;
             }
-            this.save();
+            // this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
             }
@@ -219,7 +219,7 @@ export class OCRDocument extends Observable implements Document {
             await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
-            await this.save();
+            await this.save({}, true);
             this.onPageUpdated(pageIndex, page, imageUpdated);
         }
     }
@@ -264,10 +264,11 @@ export class OCRDocument extends Observable implements Document {
         return this.#observables;
     }
 
-    async save(data: Partial<OCRDocument> = {}, updateModifiedDate = true) {
+    async save(data: Partial<OCRDocument> = {}, updateModifiedDate = false) {
+        DEV_LOG && console.log('OCRDocument save', new Error().stack);
         data.pagesOrder = this.pages.map((p) => p.id);
         await documentsService.documentRepository.update(this, data, updateModifiedDate);
-        documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this });
+        documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this, updateModifiedDate });
     }
 
     toString() {

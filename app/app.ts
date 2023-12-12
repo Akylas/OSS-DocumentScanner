@@ -111,9 +111,9 @@ try {
     Application.on(Application.exitEvent, () => {
         DEV_LOG && console.log('exit');
         launched = false;
-        //  syncService.stop();
         //  ocrService.stop();
         try {
+            syncService.stop();
             documentsService.stop();
         } catch (error) {
             console.error(error, error.stack);

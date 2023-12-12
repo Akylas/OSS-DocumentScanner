@@ -429,11 +429,10 @@ export async function importAndScanImage(document?: OCRDocument) {
                         }
                         if (document) {
                             await document.addPages(pagesToAdd);
-                            await document.save();
+                            await document.save({}, false);
                         } else {
                             document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-                            // TODO: do we need to save?
-                            // await document.save();
+                            DEV_LOG && console.log('documentAdded', document);
                             documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc: document });
                         }
                         recycleImages(images);

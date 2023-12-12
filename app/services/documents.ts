@@ -283,6 +283,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
         await super.update(document, toUpdate);
         Object.assign(document, toSave);
+        DEV_LOG && console.log('update doc', toSave, document._synced, new Error().stack);
         return document;
     }
     async addTag(document: OCRDocument, tagId: string) {
@@ -327,20 +328,23 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         });
 
         let pages = await this.pagesRepository.search({ where: sql`document_id = ${document.id}` });
-        const pagesOrder = document.pagesOrder;
-        if (pagesOrder) {
-            pages = pages.sort(function (a, b) {
-                return pagesOrder.indexOf(a.id) - pagesOrder.indexOf(b.id);
-            });
-            document.pages = pages;
-        } else {
-            // pagesOrder was not existing before let s create it.
-            pages = pages.sort(function (a, b) {
-                return a['pageIndex'] - b['pageIndex'];
-            });
-            document.pages = pages;
-            document.save();
+        if (pages.length) {
+            const pagesOrder = document.pagesOrder;
+            if (pagesOrder) {
+                pages = pages.sort(function (a, b) {
+                    return pagesOrder.indexOf(a.id) - pagesOrder.indexOf(b.id);
+                });
+                document.pages = pages;
+            } else {
+                // pagesOrder was not existing before let s create it.
+                pages = pages.sort(function (a, b) {
+                    return a['pageIndex'] - b['pageIndex'];
+                });
+                document.pages = pages;
+                await document.save({}, true);
+            }
         }
+
         return document;
     }
 }

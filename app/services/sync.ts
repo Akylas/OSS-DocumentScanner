@@ -45,6 +45,18 @@ export class SyncService extends Observable {
     get enabled() {
         return !!this.client;
     }
+    onDocumentAdded() {
+        // TODO: fast and dirty
+        DEV_LOG && console.log('SYNC', 'onDocumentAdded');
+        this.syncDocuments();
+    }
+    onDocumentUpdated(event) {
+        // TODO: fast and dirty
+        DEV_LOG && console.log('SYNC', 'onDocumentUpdated', event.updateModifiedDate);
+        if (event.updateModifiedDate !== false) {
+            this.syncDocuments();
+        }
+    }
     async start() {
         const configStr = ApplicationSettings.getString(SETTINGS_KEY);
         if (configStr) {
@@ -59,6 +71,8 @@ export class SyncService extends Observable {
             });
             DEV_LOG && console.log('SyncService', 'start', config);
             this.notify({ eventName: 'state', enabled: this.enabled });
+            documentsService.on('documentAdded', this.onDocumentAdded, this);
+            documentsService.on('documentUpdated', this.onDocumentUpdated, this);
         }
         // this.username = 'farfromrefuge';
         // this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
@@ -69,6 +83,10 @@ export class SyncService extends Observable {
         //     },
         //     authType: AuthType.None
         // });
+    }
+    stop() {
+        documentsService.off('documentAdded', this.onDocumentAdded, this);
+        documentsService.off('documentUpdated', this.onDocumentUpdated, this);
     }
 
     saveData({ remoteURL, username, password, remoteFolder }) {
@@ -141,11 +159,12 @@ export class SyncService extends Observable {
         }
     }
     async addDocumentToWebdav(document: OCRDocument) {
+        DEV_LOG && console.log('addDocumentToWebdav', document.id, document.pages);
         const docFolder = documentsService.dataFolder.getFolder(document.id);
         await this.sendFolderToWebDav(docFolder, path.join(this.remoteFolder, document.id));
         await this.client.putFileContents(path.join(this.remoteFolder, document.id, 'data.json'), document.toString());
         // mark the document as synced
-        document.save({ _synced: 1 });
+        return document.save({ _synced: 1 }, false);
     }
     async importDocumentFromWebdav(data: FileStat) {
         const dataJSON = JSON.parse(
@@ -163,7 +182,7 @@ export class SyncService extends Observable {
             page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
         });
         await doc.addPages(pages);
-        await doc.save();
+        await doc.save({}, true);
         await this.importFolderFromWebdav(data.filename, docDataFolder, ['data.json']);
         DEV_LOG && console.log('importFolderFromWebdav done');
         documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc });
@@ -178,9 +197,9 @@ export class SyncService extends Observable {
                 format: 'text'
             })
         ) as OCRDocument;
-        DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
         if (dataJSON.modifiedDate > document.modifiedDate) {
+            DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             let needsRemoteDocUpdate = false;
             const { pages: docPages, ...docProps } = document.toJSONObject();
             const { pages: remotePages, ...remoteProps } = dataJSON;
@@ -214,6 +233,7 @@ export class SyncService extends Observable {
                     missingRemotePage,
                     remotePages.findIndex((p) => p.id === missingRemotePage.id)
                 );
+                await document.save();
             }
             for (let index = 0; index < toBeSyncPages.length; index++) {
                 const remotePageToSync = toBeSyncPages[index];
@@ -263,12 +283,13 @@ export class SyncService extends Observable {
             }
             DEV_LOG && console.log('update document', toUpdate);
             // mark the document as synced
-            document.save({ _synced: 1, ...toUpdate });
+            await document.save({ _synced: 1, ...toUpdate });
 
             if (needsRemoteDocUpdate) {
                 await this.client.putFileContents(path.join(remoteDocPath, 'data.json'), document.toString());
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate) {
+            DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             const { pages: docPages, ...docProps } = document.toJSONObject();
             const { pages: remotePages, ...remoteProps } = dataJSON;
             const toUpdate = {};
@@ -292,9 +313,10 @@ export class SyncService extends Observable {
                 await this.client.deleteFile(path.join(remoteDocPath, removedRemotePage.id));
             }
             await this.client.putFileContents(path.join(remoteDocPath, 'data.json'), document.toString());
-            document.save({ _synced: 1 }, false);
+            return document.save({ _synced: 1 }, false);
         } else if (document._synced === 0) {
-            document.save({ _synced: 1 }, false);
+            DEV_LOG && console.log('syncDocumentOnWebdav just changing sync state');
+            return document.save({ _synced: 1 }, false);
         }
     }
     syncRunning = false;
@@ -305,12 +327,8 @@ export class SyncService extends Observable {
         this.syncRunning = true;
         this.notify({ eventName: 'syncState', state: 'running' });
         DEV_LOG && console.log('syncDocuments', bothWays);
-        const localDocuments = (await documentsService.documentRepository.search({})) as OCRDocument[];
-        DEV_LOG &&
-            console.log(
-                'localDocuments',
-                localDocuments.map((d) => d.id)
-            );
+        const localDocuments = await documentsService.documentRepository.search({});
+        DEV_LOG && console.log('localDocuments', localDocuments);
 
         if (bothWays) {
             await this.ensureRemoteFolder();
