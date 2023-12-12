@@ -19,8 +19,8 @@
 <a href="https://github.com/sponsors/farfromrefug">:heart: Sponsor</a>
 </div>
 <p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/farfromrefug/static/sponsors.svg">
-	<img src='https://cdn.jsdelivr.net/gh/farfromrefug/static/sponsors.svg'/>
+  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
+	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
   </a>
 </p>
 <hr>
