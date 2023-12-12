@@ -5,7 +5,7 @@
     import { showError } from '~/utils/error';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     // technique for only specific properties to get updated on store change
-    $: ({ colorError, colorSecondary, colorOnError } = $colors);
+    $: ({ colorError, colorSecondary, colorOnError, colorOnSurfaceVariant } = $colors);
 
     let remoteURL = syncService.remoteURL;
     let username = syncService.username;
@@ -90,7 +90,7 @@
                 {variant}
                 on:returnPress={testConnection}
                 on:textChange={(e) => (remoteFolder = e['value'])} />
-            <mdbutton class="icon-btn" horizontalAlignment="right" text="mdi-folder-open" variant="text" verticalAlignment="middle" />
+            <mdbutton class="icon-btn" color={colorOnSurfaceVariant} horizontalAlignment="right" text="mdi-folder-open" variant="text" verticalAlignment="middle" />
         </gridlayout>
         <gridlayout columns="*,*" row={4} rows="auto">
             <mdbutton text={lc('save')} verticalAlignment="middle" on:tap={save} />
