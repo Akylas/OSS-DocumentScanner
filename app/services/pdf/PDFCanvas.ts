@@ -75,7 +75,7 @@ export default class PDFCanvas {
         let dy = forExport ? 0 : pagerPagePaddingVertical;
         const nbItems = pages.length;
         const srcs = pages.map((page) => page.getImagePath());
-        console.log('drawPDFPage', w, h, nbItems, srcs);
+        // console.log('drawPDFPage', w, h, nbItems, srcs);
         const isLoading = srcs.some((src) => !this.imagesCache[src]);
         canvas.translate(dx, dy);
         const canvasRatio = w / h;
@@ -112,7 +112,7 @@ export default class PDFCanvas {
             }
 
             if (isLoading) {
-                canvas.drawText(lc('loading_images'), 0, 100, textPaint);
+                // canvas.drawText(lc('loading_images'), 0, 100, textPaint);
                 return;
             }
             if (page.rotation !== 0) {
@@ -148,18 +148,18 @@ export default class PDFCanvas {
                 availableHeight = h;
                 dx += (w - availableWidth) / 2;
             }
-            console.log('availableWidth', dx, dy, pagePadding, availableWidth, availableHeight);
+            // console.log('availableWidth', dx, dy, pagePadding, availableWidth, availableHeight);
             if (!forExport) {
                 canvas.drawRect(w / 2 - availableWidth / 2, h / 2 - availableHeight / 2, w / 2 + availableWidth / 2, h / 2 + availableHeight / 2, bgPaint);
             }
             if (isLoading) {
-                canvas.drawText(lc('loading_images'), 0, 100, textPaint);
+                // canvas.drawText(lc('loading_images'), 0, 100, textPaint);
                 return;
             }
             // compute space diivision
             let columns = nbItems > 2 ? 2 : 1;
             let rows = nbItems > 2 ? Math.ceil(nbItems / 2) : nbItems;
-            console.log('columns', columns, rows);
+            // console.log('columns', columns, rows);
             if (pdfOrientation === 'landscape') {
                 const temp = columns;
                 columns = rows;
@@ -172,7 +172,7 @@ export default class PDFCanvas {
             let ddy = 0;
             let toDrawWidth;
             let toDrawHeight;
-            console.log('rows', rows, columns, shared, widthPerColumn, widthPerRow);
+            // console.log('rows', rows, columns, shared, widthPerColumn, widthPerRow);
             let index = 0;
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < columns; j++) {

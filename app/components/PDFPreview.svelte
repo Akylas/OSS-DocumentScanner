@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-    import { ApplicationSettings, ContentView } from '@akylas/nativescript';
+    import { ApplicationSettings, ContentView, ObservableArray } from '@akylas/nativescript';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
@@ -27,7 +27,7 @@
     import { recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
 
-    $: ({ colorPrimary, colorSurface, colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorPrimary, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
     interface Item {
         pages: OCRPage[];
     }
@@ -41,15 +41,20 @@
     });
     // technique for only specific properties to get updated on store change
     export let documents: OCRDocument[];
-    pdfCanvas.updatePages(documents);
+    // pdfCanvas.updatePages(documents);
     let pager: NativeViewElementNode<Pager>;
-    let items = pdfCanvas.items;
+    let items: ObservableArray<{ pages: OCRPage[]; loading?: boolean }>;
     let currentPagerIndex = 0;
 
     const topBarHeight = 50;
 
     async function loadImagesForPage(pdfPageIndex) {
+        const item = items.getItem(pdfPageIndex);
+        item.loading = true;
+        items.setItem(pdfPageIndex, item);
         await pdfCanvas.loadImagesForPage(pdfPageIndex);
+        item.loading = false;
+        items.setItem(pdfPageIndex, item);
         if (currentPagerIndex === pdfPageIndex) {
             let view = pager?.nativeElement?.getChildView(pdfPageIndex);
             if (view instanceof ContentView) {
@@ -62,7 +67,7 @@
     // 10 / 3 => 3
     function refresh() {
         pdfCanvas.updatePages(documents);
-        items = pdfCanvas.items;
+        items = new ObservableArray(pdfCanvas.items);
         loadImagesForPage(currentPagerIndex);
         // onPageIndexChanged({ object: pager?.nativeElement });
     }
@@ -113,33 +118,43 @@
     }
 </script>
 
-<page id="pdfpreview" actionBarHidden={true} backgroundColor="#eff4f2">
-    <gridlayout columns="*,*" rows="auto,*,auto">
-        <drawer colSpan={2} row={1}>
-            <gridlayout rows="auto,*" prop:mainContent>
-                <gridlayout backgroundColor={colorSurface} columns="*,*" paddingBottom={5}>
+<page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh}>
+    <gridlayout rows="auto,*">
+        <drawer row={1}>
+            <gridlayout rows="auto,*,auto" prop:mainContent>
+                <gridlayout backgroundColor={colorSurface} columns="*,*" padding={5}>
                     <label color={colorOnSurface}>
                         <span text={lc('orientation') + ': '} />
-                        <span color={colorOnSurfaceVariant} text={pdfOrientation} />
+                        <span color={colorOnSurfaceVariant2} text={pdfOrientation} />
                     </label>
                     <label col={1} color={colorOnSurface}>
                         <span text={lc('format') + ': '} />
-                        <span color={colorOnSurfaceVariant} text={pdfFormat} />
+                        <span color={colorOnSurfaceVariant2} text={pdfFormat} />
                     </label>
                 </gridlayout>
+                <!-- <gridlayout row={1} rowSpan={2}> -->
                 <pager bind:this={pager} {items} orientation="vertical" peaking={50} row={1} selectedIndex={currentPagerIndex} on:selectedIndexChange={onPageIndexChanged}>
                     <Template let:item>
-                        <canvasView on:draw={(e) => drawPDFPage(item, e)} />
+                        <canvasView on:draw={(e) => drawPDFPage(item, e)}>
+                            <stacklayout horizontalAlignment="center" verticalAlignment="middle" visibility={item.loading !== false ? 'visible' : 'hidden'}>
+                                <label text={lc('images_loading')} />
+                                <activityindicator busy={true} />
+                            </stacklayout>
+                        </canvasView>
                     </Template>
                 </pager>
+                <!-- </gridlayout> -->
+
+                <!-- <blurview blurRadius={10} rowSpan={3} height={50}  verticalAlignment="bottom"/> -->
+                <gridlayout backgroundColor={colorSurfaceContainerHigh} columns="*,*" row={2}>
+                    <mdbutton text={lc('export')} on:tap={exportPDF} />
+                    <mdbutton col={1} text={lc('open')} />
+                </gridlayout>
             </gridlayout>
 
-            <gridlayout prop:topDrawer backgroundColor={colorSurface}> </gridlayout>
+            <gridlayout prop:topDrawer backgroundColor={colorSurface} height={200}> </gridlayout>
         </drawer>
 
-        <mdbutton row={2} text={lc('export')}  on:tap={exportPDF}/>
-        <mdbutton col={1} row={2} text={lc('open')} />
-
-        <CActionBar colSpan={2} modalWindow={true} title={lc('preview')}/>
+        <CActionBar modalWindow={true} title={lc('preview')} />
     </gridlayout>
 </page>
