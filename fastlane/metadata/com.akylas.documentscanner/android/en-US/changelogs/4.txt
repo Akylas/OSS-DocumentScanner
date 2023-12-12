@@ -1,0 +1,8 @@
+*Features*
+- allow to export pdf with preview and configuration
+
+*Bug fixes*
+- list items text not fully showing
+- when no document is found within the image a wrong default `quad` was presented
+- sync fix
+- wrong title for theme selection dialog
