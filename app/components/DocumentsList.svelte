@@ -155,6 +155,7 @@
         colorSurfaceContainer,
         colorOnSurfaceVariant,
         colorOutline,
+        colorOutlineVariant,
         colorSurface,
         colorPrimaryContainer,
         colorOnPrimaryContainer
@@ -556,7 +557,7 @@
                         stretch="aspectFill"
                         verticalAlignment="center"
                         width={114} />
-                    <canvaslabel col={1} fontSize={14 * $systemFontScale} paddingLeft={16}>
+                    <canvaslabel col={1} fontSize={14 * $systemFontScale} padding="4 0 6 16">
                         <cgroup>
                             <cspan fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
                             <cspan color={colorOnSurfaceVariant} lineHeight={26 * $systemFontScale} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
