@@ -18,13 +18,18 @@
 <div align="center">
 <a href="https://github.com/sponsors/farfromrefug">:heart: Sponsor</a>
 </div>
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/farfromrefug/static/sponsors.svg">
+	<img src='https://cdn.jsdelivr.net/gh/farfromrefug/static/sponsors.svg'/>
+  </a>
+</p>
 <hr>
 
 Open Source app to scan your documents.
 
 ## Screenshots
 
-| <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
+| <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
 
 ### Having issues, suggestions and feedback?
 
