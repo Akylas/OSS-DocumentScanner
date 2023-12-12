@@ -138,10 +138,6 @@
     ],
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript/webpack": "/home/mguillon/dev/nativescript/NativeScript/dist/packages/nativescript-webpack.tgz",
-        "@nativescript-community/systemui": "portal:../systemui/packages/systemui",
-        "@nativescript-community/ui-collectionview": "portal:../ui-collectionview/packages/collectionview",
-        "@nativescript-community/ui-cameraview": "portal:../ui-cameraview/packages/ui-cameraview",
-        "@nativescript-community/ui-pager": "portal:../ui-pager/packages/ui-pager"
+        "@nativescript/webpack": "../NativeScript/dist/packages/nativescript-webpack.tgz"
     }
 }

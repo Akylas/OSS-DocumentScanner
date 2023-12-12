@@ -24,7 +24,7 @@ Open Source app to scan your documents.
 
 ## Screenshots
 
-| <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
+| <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
 
 ### Having issues, suggestions and feedback?
 
@@ -67,3 +67,10 @@ It is a bit trickier for Tesseract as we need to compile it
 
 You need to use yarn with this project as it uses the `portal:` protocol for some dependencies.
 Note that the project has some `yarn link` for easy local dev for me. The best is for you to remove the `resolutions` part of the `package.json`
+
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
+	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
+  </a>
+</p>
