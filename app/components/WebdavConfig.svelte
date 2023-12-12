@@ -102,7 +102,7 @@
                     verticalAlignment="middle"
                     visibility={testing ? 'hidden' : 'visible'}
                     on:tap={testConnection} />
-                <activityindicator class="activity-indicator" busy={testing} height={20} horizontalAlignment="center" verticalAlignment="middle" visibility={testing ? 'visible' : 'hidden'} />
+                <activityindicator busy={testing} height={20} horizontalAlignment="center" verticalAlignment="middle" visibility={testing ? 'visible' : 'hidden'} />
             </gridlayout>
         </gridlayout>
     </stacklayout>
