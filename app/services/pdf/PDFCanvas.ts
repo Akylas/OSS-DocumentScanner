@@ -64,15 +64,15 @@ export default class PDFCanvas {
             this.drawPages(item.pages);
         });
     }
-    drawPages(pages: OCRPage[]) {
+    drawPages(pages: OCRPage[], forExport = false) {
         const { pagerPagePaddingHorizontal, pagerPagePaddingVertical, pdfFormat, dpi, pagePaddingPt, pdfOrientation, itemsPerPage } = this.options;
         const pagePadding = ptToPixel(pagePaddingPt, dpi);
         const canvas = this.canvas;
-        const w = canvas.getWidth() - 2 * pagerPagePaddingHorizontal;
-        const h = canvas.getHeight() - 2 * pagerPagePaddingVertical;
+        const w = canvas.getWidth() - 2 * (forExport ? 1 : pagerPagePaddingHorizontal);
+        const h = canvas.getHeight() - 2 * (forExport ? 1 : pagerPagePaddingVertical);
 
-        let dx = pagerPagePaddingHorizontal;
-        let dy = pagerPagePaddingVertical;
+        let dx = forExport ? 0 : pagerPagePaddingHorizontal;
+        let dy = forExport ? 0 : pagerPagePaddingVertical;
         const nbItems = pages.length;
         const srcs = pages.map((page) => page.getImagePath());
         console.log('drawPDFPage', w, h, nbItems, srcs);
@@ -107,7 +107,9 @@ export default class PDFCanvas {
             }
 
             canvas.translate(w / 2 - toDrawWidth / 2, h / 2 - toDrawHeight / 2);
-            canvas.drawRect(0, 0, toDrawWidth, toDrawHeight, bgPaint);
+            if (!forExport) {
+                canvas.drawRect(0, 0, toDrawWidth, toDrawHeight, bgPaint);
+            }
 
             if (isLoading) {
                 canvas.drawText(lc('loading_images'), 0, 100, textPaint);
@@ -130,7 +132,7 @@ export default class PDFCanvas {
             }
             canvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
         } else if (pdfFormat === 'a4') {
-            let a4Ratio = 210 / 297;
+            let a4Ratio = 595 / 842;
             if (pdfOrientation === 'landscape') {
                 a4Ratio = 1 / a4Ratio;
             }
@@ -147,7 +149,9 @@ export default class PDFCanvas {
                 dx += (w - availableWidth) / 2;
             }
             console.log('availableWidth', dx, dy, pagePadding, availableWidth, availableHeight);
-            canvas.drawRect(w / 2 - availableWidth / 2, h / 2 - availableHeight / 2, w / 2 + availableWidth / 2, h / 2 + availableHeight / 2, bgPaint);
+            if (!forExport) {
+                canvas.drawRect(w / 2 - availableWidth / 2, h / 2 - availableHeight / 2, w / 2 + availableWidth / 2, h / 2 + availableHeight / 2, bgPaint);
+            }
             if (isLoading) {
                 canvas.drawText(lc('loading_images'), 0, 100, textPaint);
                 return;

@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { Canvas, CanvasView, ColorMatrixColorFilter, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     let bitmapPaint: Paint;
     const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -8,19 +8,24 @@
 </script>
 
 <script lang="ts">
-    import { ContentView, ImageSource } from '@akylas/nativescript';
+    import { ApplicationSettings, ContentView } from '@akylas/nativescript';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
+    import { openFile } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import { lc } from '~/helpers/locale';
-    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { colors } from '~/variables';
-    import { getColorMatrix } from '~/utils/ui';
-    import PDFCanvas from '~/services/pdf/PDFCanvas';
     import { writable } from 'svelte/store';
+    import CActionBar from '~/components/CActionBar.svelte';
+    import { l, lc } from '~/helpers/locale';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import PDFCanvas from '~/services/pdf/PDFCanvas';
+    import PDFExportCanvas from '~/services/pdf/PDFExportCanvas.android';
+    import { showError } from '~/utils/error';
+    import { hideLoading, showLoading } from '~/utils/ui';
+    import { recycleImages } from '~/utils/utils.common';
+    import { colors } from '~/variables';
 
     $: ({ colorPrimary, colorSurface, colorOnSurface, colorOnSurfaceVariant } = $colors);
     interface Item {
@@ -77,6 +82,35 @@
         loadImagesForPage(currentPagerIndex);
     }
     refresh();
+
+    async function exportPDF() {
+        try {
+            const result = await prompt({
+                okButtonText: lc('ok'),
+                cancelButtonText: lc('cancel'),
+                defaultText: Date.now() + '.pdf',
+                hintText: lc('pdf_filename')
+            });
+            if (result?.result && result?.text?.length) {
+                showLoading(l('exporting'));
+                const exportDirectory = ApplicationSettings.getString(
+                    'pdf_export_directory',
+                    android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+                );
+                const exporter = new PDFExportCanvas();
+                const filePath = await exporter.export(documents, exportDirectory, result.text);
+                hideLoading();
+                const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
+                DEV_LOG && console.log('onSnack', onSnack);
+                if (onSnack.reason === 'action') {
+                    DEV_LOG && console.log('openFile', filePath);
+                    openFile(filePath);
+                }
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page id="pdfpreview" actionBarHidden={true} backgroundColor="#eff4f2">
@@ -103,9 +137,9 @@
             <gridlayout prop:topDrawer backgroundColor={colorSurface}> </gridlayout>
         </drawer>
 
-        <mdbutton row={2} text={lc('export')} />
+        <mdbutton row={2} text={lc('export')}  on:tap={exportPDF}/>
         <mdbutton col={1} row={2} text={lc('open')} />
 
-        <CActionBar colSpan={2} modalWindow={true} title={lc('preview')} />
+        <CActionBar colSpan={2} modalWindow={true} title={lc('preview')}/>
     </gridlayout>
 </page>
