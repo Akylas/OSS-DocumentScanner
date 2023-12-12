@@ -71,7 +71,7 @@ export async function selectTheme() {
                     }))
             },
             {
-                title: lc('select_language')
+                title: lc('select_theme')
             }
         );
         if (result && actions.indexOf(result.data) !== -1) {
