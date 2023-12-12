@@ -283,7 +283,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
         await super.update(document, toUpdate);
         Object.assign(document, toSave);
-        DEV_LOG && console.log('update doc', toSave, document._synced, new Error().stack);
+        // DEV_LOG && console.log('update doc', toSave, document._synced, new Error().stack);
         return document;
     }
     async addTag(document: OCRDocument, tagId: string) {
