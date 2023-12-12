@@ -26,7 +26,7 @@ fastlaneOptions = packageJSON['fastlane'] || Hash.new
 puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
-app_name = i18nEnJSON['$'+app_identifier]['app'['name']]
+app_name = i18nEnJSON['$'+app_identifier]['app']['name']
 sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
 app_build_path = ENV["APP_BUILD_PATH"] || "build/documentscanner" # based on nativescript.config.js !!!
 
