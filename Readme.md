@@ -18,11 +18,6 @@
 <div align="center">
 <a href="https://github.com/sponsors/farfromrefug">:heart: Sponsor</a>
 </div>
-<p align="center">
-  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
-	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
-  </a>
-</p>
 <hr>
 
 Open Source app to scan your documents.
@@ -72,3 +67,10 @@ It is a bit trickier for Tesseract as we need to compile it
 
 You need to use yarn with this project as it uses the `portal:` protocol for some dependencies.
 Note that the project has some `yarn link` for easy local dev for me. The best is for you to remove the `resolutions` part of the `package.json`
+
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
+	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
+  </a>
+</p>
