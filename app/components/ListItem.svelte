@@ -30,7 +30,7 @@
 
 
 <gridlayout>
-    <gridlayout {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding={16}>
+    <gridlayout {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
         <canvaslabel col={mainCol} color={titleColor} on:draw={onDraw}>
             <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
                 <cspan
