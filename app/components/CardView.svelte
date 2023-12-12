@@ -96,7 +96,7 @@
     async function saveDocument() {
         try {
             showLoading(l('saving'));
-            await document.save();
+            await document.save({}, true);
             hideLoading();
         } catch (err) {
             showError(err);

@@ -348,7 +348,7 @@
         try {
             DEV_LOG && console.log('saveCurrentDocument', newDocument, !!document);
             if (document) {
-                await document.save();
+                await document.save({}, false);
                 if (newDocument) {
                     documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
                     if (startOnCam) {

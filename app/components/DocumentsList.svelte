@@ -96,7 +96,7 @@
         updateNoDocument();
         DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
-    function onDocumentUpdated(event: EventData & { doc }) {
+    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         let index = -1;
         documents.some((d, i) => {
             if (d.doc.id === event.doc.id) {
@@ -104,9 +104,11 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onDocumentUpdated', event.doc, index);
+        DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc, index, event.doc.pages.length);
         if (index >= 0) {
-            documents.setItem(index, documents.getItem(index));
+            const item = documents.getItem(index);
+            item.doc = event.doc;
+            documents.setItem(index, item);
         }
     }
     function onDocumentsDeleted(event: EventData & { docs: OCRDocument[] }) {
@@ -565,7 +567,7 @@
                         <cspan color={colorOnSurfaceVariant} text={getSize(item)} verticalAlignment="bottom" />
                     </canvaslabel>
                     <SelectedIndicator selected={item.selected} />
-                    <SyncIndicator rowSpan={2} selected={item.doc._synced === 1} visible={syncEnabled} />
+                    <SyncIndicator col={1} selected={item.doc._synced === 1} visible={syncEnabled} />
                     <PageIndicator col={1} horizontalAlignment="right" text={item.doc.pages.length} />
                 </gridlayout>
             </Template>
