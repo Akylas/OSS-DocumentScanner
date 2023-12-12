@@ -116,6 +116,17 @@
             showError(error);
         }
     }
+    async function openPDF() {
+        try {
+            showLoading(l('exporting'));
+            const exporter = new PDFExportCanvas();
+            const filePath = await exporter.export(documents);
+            hideLoading();
+            openFile(filePath);
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh}>
@@ -148,7 +159,7 @@
                 <!-- <blurview blurRadius={10} rowSpan={3} height={50}  verticalAlignment="bottom"/> -->
                 <gridlayout backgroundColor={colorSurfaceContainerHigh} columns="*,*" row={2}>
                     <mdbutton text={lc('export')} on:tap={exportPDF} />
-                    <mdbutton col={1} text={lc('open')} />
+                    <mdbutton col={1} text={lc('open')} on:tap={openPDF} />
                 </gridlayout>
             </gridlayout>
 
