@@ -10,6 +10,7 @@ import { networkService } from './api';
 import { loadImage, recycleImages } from '~/utils/utils';
 import { cropDocument } from 'plugin-nativeprocessor';
 import { exists } from '~/webdav/operations/exists';
+import { debounce } from '@nativescript/core/utils';
 
 const SETTINGS_KEY = 'webdav_config';
 function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
@@ -199,7 +200,7 @@ export class SyncService extends Observable {
         ) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
         if (dataJSON.modifiedDate > document.modifiedDate) {
-            DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
+            // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             let needsRemoteDocUpdate = false;
             const { pages: docPages, ...docProps } = document.toJSONObject();
             const { pages: remotePages, ...remoteProps } = dataJSON;
@@ -289,7 +290,7 @@ export class SyncService extends Observable {
                 await this.client.putFileContents(path.join(remoteDocPath, 'data.json'), document.toString());
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate) {
-            DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
+            // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             const { pages: docPages, ...docProps } = document.toJSONObject();
             const { pages: remotePages, ...remoteProps } = dataJSON;
             const toUpdate = {};
@@ -302,7 +303,7 @@ export class SyncService extends Observable {
                 }
             });
             const { toBeAdded: missingRemotePages, toBeDeleted: removedRemotePages, union: toBeSyncPages } = findArrayDiffs(docPages as OCRPage[], remotePages, (a, b) => a.id === b.id);
-            DEV_LOG && console.log('document need to be synced FROM local!', toUpdate, missingRemotePages, removedRemotePages, toBeSyncPages);
+            DEV_LOG && console.log('document need to be synced FROM local!', toUpdate);
             for (let index = 0; index < missingRemotePages.length; index++) {
                 const missingRemotePage = missingRemotePages[index];
                 const pageDataFolder = docDataFolder.getFolder(missingRemotePage.id);
@@ -320,7 +321,7 @@ export class SyncService extends Observable {
         }
     }
     syncRunning = false;
-    async syncDocuments(bothWays = false) {
+    syncDocuments = debounce(async (bothWays = false) => {
         if (!networkService.connected || !this.client || this.syncRunning) {
             return;
         }
@@ -328,7 +329,11 @@ export class SyncService extends Observable {
         this.notify({ eventName: 'syncState', state: 'running' });
         DEV_LOG && console.log('syncDocuments', bothWays);
         const localDocuments = await documentsService.documentRepository.search({});
-        DEV_LOG && console.log('localDocuments', localDocuments);
+        DEV_LOG &&
+            console.log(
+                'localDocuments',
+                localDocuments.map((d) => d.id)
+            );
 
         if (bothWays) {
             await this.ensureRemoteFolder();
@@ -336,9 +341,21 @@ export class SyncService extends Observable {
 
             const { toBeAdded: missingLocalDocuments, toBeDeleted: missingRemoteDocuments, union: toBeSyncDocuments } = findArrayDiffs(localDocuments, remoteDocuments, (a, b) => a.id === b.basename);
 
-            DEV_LOG && console.log('missingRemoteDocuments', missingRemoteDocuments);
-            DEV_LOG && console.log('missingLocalDocuments', missingLocalDocuments);
-            DEV_LOG && console.log('toBeSyncDocuments', toBeSyncDocuments);
+            DEV_LOG &&
+                console.log(
+                    'missingRemoteDocuments',
+                    missingRemoteDocuments.map((d) => d.id)
+                );
+            DEV_LOG &&
+                console.log(
+                    'missingLocalDocuments',
+                    missingLocalDocuments.map((d) => d.basename)
+                );
+            DEV_LOG &&
+                console.log(
+                    'toBeSyncDocuments',
+                    toBeSyncDocuments.map((d) => d.id)
+                );
             for (let index = 0; index < missingRemoteDocuments.length; index++) {
                 await this.addDocumentToWebdav(missingRemoteDocuments[index]);
             }
@@ -359,9 +376,21 @@ export class SyncService extends Observable {
                     union: toBeSyncDocuments
                 } = findArrayDiffs(localDocuments, remoteDocuments, (a, b) => a.id === b.basename);
 
-                DEV_LOG && console.log('missingRemoteDocuments', missingRemoteDocuments);
-                DEV_LOG && console.log('missingLocalDocuments', missingLocalDocuments);
-                DEV_LOG && console.log('toBeSyncDocuments', toBeSyncDocuments);
+                DEV_LOG &&
+                    console.log(
+                        'missingRemoteDocuments',
+                        missingRemoteDocuments.map((d) => d.id)
+                    );
+                DEV_LOG &&
+                    console.log(
+                        'missingLocalDocuments',
+                        missingLocalDocuments.map((d) => d.basename)
+                    );
+                DEV_LOG &&
+                    console.log(
+                        'toBeSyncDocuments',
+                        toBeSyncDocuments.map((d) => d.id)
+                    );
                 for (let index = 0; index < missingRemoteDocuments.length; index++) {
                     await this.addDocumentToWebdav(missingRemoteDocuments[index]);
                 }
@@ -375,6 +404,6 @@ export class SyncService extends Observable {
         }
         this.syncRunning = false;
         this.notify({ eventName: 'syncState', state: 'finished' });
-    }
+    }, 1000);
 }
 export const syncService = new SyncService();
