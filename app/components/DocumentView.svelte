@@ -77,6 +77,7 @@
         try {
             const component = (await import('~/components/PDFExportPopover.svelte')).default;
             await showPopover({
+                backgroundColor: colorSurfaceContainer,
                 view: component,
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,

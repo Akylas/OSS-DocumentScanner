@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-    import { ApplicationSettings, ContentView, ObservableArray } from '@akylas/nativescript';
+    import { ApplicationSettings, ContentView, ObservableArray, knownFolders } from '@akylas/nativescript';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
@@ -21,7 +21,7 @@
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import PDFCanvas from '~/services/pdf/PDFCanvas';
-    import PDFExportCanvas from '~/services/pdf/PDFExportCanvas.android';
+    import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
@@ -100,7 +100,7 @@
                 showLoading(l('exporting'));
                 const exportDirectory = ApplicationSettings.getString(
                     'pdf_export_directory',
-                    android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+                    __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
                 );
                 const exporter = new PDFExportCanvas();
                 const filePath = await exporter.export(documents, exportDirectory, result.text);

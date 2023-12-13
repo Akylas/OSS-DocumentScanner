@@ -509,6 +509,7 @@
                 }
             ];
             const result: { icon: string; id: string; text: string } = await showPopover({
+                backgroundColor: colorSurfaceContainer,
                 view: OptionSelect,
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
