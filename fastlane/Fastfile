@@ -280,6 +280,7 @@ platform :android do
     upload_to_play_store(
       package_name: app_identifier,
       track: track,
+      metadata_path:File.join(".", "fastlane/metadata", app_identifier),
       track_promote_to: track,
       json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
       aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
