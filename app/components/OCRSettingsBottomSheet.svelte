@@ -27,6 +27,7 @@
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;
             const result: any = await showPopover({
+                backgroundColor: colorSurfaceContainer,
                 vertPos: VerticalPosition.ALIGN_BOTTOM,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
                 view: SearchModal,

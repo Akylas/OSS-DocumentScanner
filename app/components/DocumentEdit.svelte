@@ -57,6 +57,7 @@
         try {
             const component = (await import('~/components/PDFExportPopover.svelte')).default;
             await showPopover({
+                backgroundColor: colorSurfaceContainer,
                 view: component,
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
@@ -207,17 +208,20 @@
                 return { type: 'checkbox', id: transformId, value, data: value };
             }
             await showPopover({
+                backgroundColor: colorSurfaceContainer,
                 view: OptionSelect,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
                 // disableDimBackground: true,
                 props: {
+                    containerColumns:'auto',
                     borderRadius: 10,
                     elevation: 4,
                     margin: 4,
                     backgroundColor: colorSurfaceContainer,
                     rowHeight: 58 * $systemFontScale,
                     height: 58 * 3 * $systemFontScale + 8,
+                    width: 380,
                     options: [
                         { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
                         { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },

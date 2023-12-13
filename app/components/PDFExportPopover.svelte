@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { OCRDocument } from '~/models/OCRDocument';
     import PopoverBackgroundView from './PopoverBackgroundView.svelte';
-    import { ApplicationSettings, path } from '@nativescript/core';
+    import { ApplicationSettings, knownFolders, path } from '@nativescript/core';
     import ListItem from './ListItem.svelte';
     import { l, lc } from '~/helpers/locale';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
@@ -13,13 +13,18 @@
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { DismissReasons, SnackBarAction, showSnack } from '@nativescript-community/ui-material-snackbar';
     import { showModal } from 'svelte-native';
+    const isAndroid = __ANDROID__;
 </script>
 
 <script lang="ts">
     export let documents: OCRDocument[];
-    let exportDirectory = ApplicationSettings.getString('pdf_export_directory', android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+    let exportDirectory = ApplicationSettings.getString(
+        'pdf_export_directory',
+        __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
+    );
     DEV_LOG && console.log('exportDirectory', exportDirectory);
     async function pickExportFolder() {
+        DEV_LOG && console.log('pickExportFolder', exportDirectory);
         try {
             const result = await pickFolder({
                 multipleSelection: false,
@@ -36,7 +41,7 @@
 
     async function openPDF() {
         try {
-            closePopover();
+            await closePopover();
             showLoading(l('exporting'));
             const filePath = await documentsService.exportPDF(documents);
             hideLoading();
@@ -47,7 +52,7 @@
     }
     async function exportPDF() {
         try {
-            closePopover();
+            await closePopover();
             const result = await prompt({
                 okButtonText: lc('ok'),
                 cancelButtonText: lc('cancel'),
@@ -72,7 +77,7 @@
     }
     async function openPDFPreview() {
         try {
-            closePopover();
+            await closePopover();
             const component = (await import('~/components/PDFPreview.svelte')).default;
             await showModal({
                 page: component,
@@ -88,8 +93,10 @@
     }
 </script>
 
-<PopoverBackgroundView rows="auto,auto,auto,auto">
-    <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
+<PopoverBackgroundView rows="auto,auto,auto,auto" width={350}>
+    {#if isAndroid}
+        <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
+    {/if}
     <!-- <ListItem height={58} subtitle={exportDirectory} title={lc('export_folder')} on:tap={pickExportFolder} /> -->
     <mdbutton row={1} text={lc('open')} on:tap={openPDF} />
     <mdbutton row={2} text={lc('export')} on:tap={exportPDF} />

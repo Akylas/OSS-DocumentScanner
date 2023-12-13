@@ -9,7 +9,7 @@
     export let backgroundColor = colorSurfaceContainer;
 </script>
 
-<gesturerootview>
+<gesturerootview columns="auto" rows="auto">
     <gridlayout {backgroundColor} borderRadius={10} elevation={4} margin={4} padding="0 10 0 10" {...$$restProps}>
         <slot />
     </gridlayout>
