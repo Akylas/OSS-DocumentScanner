@@ -3,13 +3,16 @@
 <h1 align="center">Scan all your documents</h1>
 <p align="center">
   <a href="https://github.com/Akylas/com.akylas.documentscanner" alt="License"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
- <a href="https://github.com/Akylas/com.akylas.documentscanner/releases" alt="Release version"><img src="https://img.shields.io/github/v/release/com.akylas.documentscanner?color=ff5200"/></a>
+ <a href="https://github.com/Akylas/com.akylas.documentscanner/releases" alt="Release version"><img src="https://img.shields.io/github/downloads/akylas/com.akylas.documentscanner/total"/></a>
 <p align="center">
 <br>You can get the <a href="https://github.com/com.akylas.documentscanner/releases/latest">latest release on GitHub</a>
 </p>
 <div align="center">
-<!-- <a href="https://apt.izzysoft.de/packages/com.akylas.weather/"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80"></a>
-</div> -->
+<a href="https://apt.izzysoft.de/packages/com.akylas.documentscanner/"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80"></a>
+<a href='https://play.google.com/store/apps/details?id=com.akylas.documentscanner&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'  height="82"/></a>
+<br>
+<a href="https://testflight.apple.com/join/sxiV4ZKL"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
+</div>
 </div>
 <h2 align="center">Enjoying OSS Document Scanner?</h2>
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
