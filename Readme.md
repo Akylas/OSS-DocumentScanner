@@ -9,6 +9,9 @@
 </p>
 <div align="center">
 <a href="https://apt.izzysoft.de/packages/com.akylas.documentscanner/"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80"></a>
+<a href='https://play.google.com/store/apps/details?id=com.akylas.documentscanner&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'  height="82"/></a>
+<br>
+<a href="https://testflight.apple.com/join/sxiV4ZKL"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
 </div>
 </div>
 <h2 align="center">Enjoying OSS Document Scanner?</h2>
