@@ -3,7 +3,7 @@
 <h1 align="center">Scan all your documents</h1>
 <p align="center">
   <a href="https://github.com/Akylas/com.akylas.documentscanner" alt="License"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
- <a href="https://github.com/Akylas/com.akylas.documentscanner/releases" alt="Release version"><img src="https://img.shields.io/github/v/release/com.akylas.documentscanner?color=ff5200"/></a>
+ <a href="https://github.com/Akylas/com.akylas.documentscanner/releases" alt="Release version"><img src="https://img.shields.io/github/downloads/akylas/com.akylas.documentscanner/total"/></a>
 <p align="center">
 <br>You can get the <a href="https://github.com/com.akylas.documentscanner/releases/latest">latest release on GitHub</a>
 </p>
