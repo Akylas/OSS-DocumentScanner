@@ -20,7 +20,6 @@ e2e/**/*.js
 /vendor
 build
 .cxx
-build*
 /Gemfile.lock
 firmware
 firmwares
