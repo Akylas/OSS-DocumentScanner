@@ -26,7 +26,7 @@ fastlaneOptions = packageJSON['fastlane'] || Hash.new
 puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
-app_name = i18nEnJSON['$'+app_identifier]['app'['name']]
+app_name = i18nEnJSON['$'+app_identifier]['app']['name']
 sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
 app_build_path = ENV["APP_BUILD_PATH"] || "build/documentscanner" # based on nativescript.config.js !!!
 
@@ -280,6 +280,7 @@ platform :android do
     upload_to_play_store(
       package_name: app_identifier,
       track: track,
+      metadata_path:File.join(".", "fastlane/metadata", app_identifier),
       track_promote_to: track,
       json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
       aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
