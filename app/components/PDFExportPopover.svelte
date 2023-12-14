@@ -13,6 +13,7 @@
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { DismissReasons, SnackBarAction, showSnack } from '@nativescript-community/ui-material-snackbar';
     import { showModal } from 'svelte-native';
+    import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
     const isAndroid = __ANDROID__;
 </script>
 
@@ -43,7 +44,9 @@
         try {
             await closePopover();
             showLoading(l('exporting'));
-            const filePath = await documentsService.exportPDF(documents);
+            const exporter = new PDFExportCanvas();
+            const filePath = await exporter.export(documents);
+
             hideLoading();
             openFile(filePath);
         } catch (error) {
@@ -62,7 +65,8 @@
             if (result?.result && result?.text?.length) {
                 showLoading(l('exporting'));
                 DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                const filePath = await documentsService.exportPDF(documents, exportDirectory, result.text);
+                const exporter = new PDFExportCanvas();
+                const filePath = await exporter.export(documents, exportDirectory, result.text);
                 hideLoading();
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                 DEV_LOG && console.log('onSnack', onSnack);
