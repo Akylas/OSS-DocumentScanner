@@ -20,12 +20,12 @@
     }
 </script>
 
-<PopoverBackgroundView columns="auto,*,auto" rows="auto,auto">
+<PopoverBackgroundView columns="auto,*,auto" rows="auto,auto" {...$$restProps}>
     {#if icon}
-        <label class="icon-label" marginTop="0" text={icon} />
+        <label class="icon-label" marginTop={0} text={icon} />
     {/if}
     {#if title}
-        <label col={1} marginTop="0" text={title} verticalTextAlignment="center" />
+        <label col={1} text={title} verticalTextAlignment="center" />
     {/if}
     <label row={1} text={formatter(min)} textAlignment="center" verticalTextAlignment="center" />
     <label col={2} row={1} text={formatter(max)} textAlignment="center" verticalTextAlignment="center" />

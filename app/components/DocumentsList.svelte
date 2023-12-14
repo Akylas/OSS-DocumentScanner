@@ -77,6 +77,16 @@
                 }))
             );
             updateNoDocument();
+
+            const component = (await import('~/components/PDFPreview.svelte')).default;
+            await showModal({
+                page: component,
+                animated: true,
+                fullscreen: true,
+                props: {
+                    documents: [documents.getItem(0).doc]
+                }
+            });
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
             console.error(error);
@@ -415,19 +425,17 @@
                 hideArrow: true,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
                 props: {
-                    width: 200,
-                    fontSize: 16,
+                    borderRadius: 10,
+                    elevation: 4,
+                    margin: 4,
                     backgroundColor: colorSurfaceContainer,
-                    iconFontSize: 24,
-                    showBorders: false,
+                    width: 200,
                     rowHeight: 48,
                     height: options.length * 48 + 16,
                     fontWeight: 'normal',
                     containerColumns: 'auto',
                     onClose: closePopover,
                     margin: 4,
-                    borderRadius: 4,
-                    elevation: 3,
                     options
                 }
             });

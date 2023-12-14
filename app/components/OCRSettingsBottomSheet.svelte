@@ -15,7 +15,7 @@
     import { colors, fonts } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorOnSurface, colorOnPrimary, colorOutline } = $colors);
+    $: ({ colorPrimary, colorOnSurface, colorOnPrimary, colorOutline, colorSurfaceContainer } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
     let downloaded = ocrService.downloadedLanguages;
