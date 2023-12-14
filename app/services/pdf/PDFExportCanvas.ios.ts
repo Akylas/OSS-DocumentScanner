@@ -28,15 +28,15 @@ export default class PDFExportCanvas extends PDFCanvas {
     async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '') {
         const start = Date.now();
         const options = this.options;
-        if (options.pdfFormat === 'full') {
+        if (options.paper_size === 'full') {
             // we enforce 1 item per page
-            options.itemsPerPage = 1;
+            options.items_per_page = 1;
         }
         this.updatePages(documents);
         const pdfData = NSMutableData.alloc().init();
         const canvas = new Canvas(0, 0);
         UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);
-        if (options.pdfFormat === 'full') {
+        if (options.paper_size === 'full') {
             // in full we use pdfbox for now as
             // pdf are compressed
             let page: OCRPage;
@@ -78,7 +78,7 @@ export default class PDFExportCanvas extends PDFCanvas {
             const items = this.items;
             for (let index = 0; index < items.length; index++) {
                 let pageWidth, pageHeight;
-                switch (options.pdfFormat) {
+                switch (options.paper_size) {
                     case 'a5':
                         pageWidth = 420;
                         pageHeight = 595;
@@ -95,7 +95,7 @@ export default class PDFExportCanvas extends PDFCanvas {
                     default:
                         break;
                 }
-                if (options.pdfOrientation === 'landscape') {
+                if (options.orientation === 'landscape') {
                     const temp = pageWidth;
                     pageWidth = pageHeight;
                     pageHeight = temp;
