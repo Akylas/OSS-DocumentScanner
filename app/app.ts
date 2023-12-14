@@ -65,6 +65,7 @@ try {
     registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
     registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
     registerNativeViewElement('lottie', () => require('@nativescript-community/ui-lottie').LottieView);
+    registerNativeViewElement('pagerindicator', () => require('@nativescript-community/ui-pager-indicator').PagerIndicator);
     // registerNativeViewElement('blurview', () => require('@nativescript-community/ui-blurview').BlurView);
 
     PagerElement.register();

@@ -214,11 +214,11 @@
                 vertPos: VerticalPosition.ABOVE,
                 // disableDimBackground: true,
                 props: {
-                    containerColumns:'auto',
                     borderRadius: 10,
                     elevation: 4,
                     margin: 4,
                     backgroundColor: colorSurfaceContainer,
+                    containerColumns: 'auto',
                     rowHeight: 58 * $systemFontScale,
                     height: 58 * 3 * $systemFontScale + 8,
                     width: 380,

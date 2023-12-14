@@ -28,12 +28,12 @@ export default class PDFExportCanvas extends PDFCanvas {
     async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '') {
         const start = Date.now();
         const options = this.options;
-        if (options.pdfFormat === 'full') {
+        if (options.paper_size === 'full') {
             // we enforce 1 item per page
-            options.itemsPerPage = 1;
+            options.items_per_page = 1;
         }
         this.updatePages(documents);
-        if (options.pdfFormat === 'full') {
+        if (options.paper_size === 'full') {
             // in full we use pdfbox for now as
             // pdf are compressed
             const pdfDocument = new com.tom_roush.pdfbox.pdmodel.PDDocument();
@@ -69,6 +69,7 @@ export default class PDFExportCanvas extends PDFCanvas {
             pdfDocument.save(newFile);
             DEV_LOG && console.log('pdfFile', folder, filename, pdfFile.size, pdfFile.path, File.exists(path.join(folder, filename)), Date.now() - start, 'ms');
             pdfDocument.close();
+            recycleImages(Object.values(this.imagesCache));
             if (folder !== pdfFile.parent.path) {
                 const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
                 const outfile = outdocument.createFile('application/pdf', filename);
@@ -95,7 +96,7 @@ export default class PDFExportCanvas extends PDFCanvas {
             const items = this.items;
             for (let index = 0; index < items.length; index++) {
                 let pageWidth, pageHeight;
-                switch (options.pdfFormat) {
+                switch (options.paper_size) {
                     case 'a5':
                         pageWidth = 420;
                         pageHeight = 595;
@@ -112,7 +113,7 @@ export default class PDFExportCanvas extends PDFCanvas {
                     default:
                         break;
                 }
-                if (options.pdfOrientation === 'landscape') {
+                if (options.orientation === 'landscape') {
                     const temp = pageWidth;
                     pageWidth = pageHeight;
                     pageHeight = temp;
@@ -121,11 +122,13 @@ export default class PDFExportCanvas extends PDFCanvas {
                 const page = pdfDocument.startPage(pageInfo);
                 this.canvas['mNative'] = page.getCanvas();
                 const scale = Screen.mainScreen.scale;
+                DEV_LOG && console.log('export page', pageWidth, pageHeight, scale, index);
                 this.canvas.scale(scale, scale);
                 await this.loadImagesForPage(index);
                 this.drawPages(items[index].pages, true);
                 pdfDocument.finishPage(page);
             }
+            recycleImages(Object.values(this.imagesCache));
             if (folder.startsWith('content://')) {
                 const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
                 const outfile = outdocument.createFile('application/pdf', filename);
