@@ -180,8 +180,9 @@
     function onCanvasDraw({ canvas }: { canvas: Canvas }) {
         // canvas.save();
         canvas.concat(currentImageMatrix);
-
-        canvas.drawBitmap(editingImage, 0, 0, null);
+        if (editingImage) {
+            canvas.drawBitmap(editingImage, 0, 0, null);
+        }
         cornersPaint.color = colorPrimary;
 
         // canvas.restore();
