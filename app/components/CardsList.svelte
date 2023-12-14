@@ -517,19 +517,16 @@
                 hideArrow: true,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
                 props: {
-                    width: 200,
-                    fontSize: 16,
+                    borderRadius: 10,
+                    elevation: 4,
+                    margin: 4,
                     backgroundColor: colorSurfaceContainer,
-                    iconFontSize: 24,
-                    showBorders: false,
+                    width: 200,
                     rowHeight: 48,
                     height: options.length * 48 + 16,
                     fontWeight: 'normal',
                     containerColumns: 'auto',
                     onClose: closePopover,
-                    margin: 4,
-                    borderRadius: 4,
-                    elevation: 3,
                     options
                 }
             });
