@@ -35,7 +35,7 @@ declare const TNS_ENV: string;
 declare const DEV_LOG: boolean;
 declare const START_ON_CAM: boolean;
 declare const NO_CONSOLE: boolean;
-declare const TEST_LOGS: boolean;
+declare const TEST_LOG: boolean;
 declare const PRODUCTION: boolean;
 declare const CARD_APP: boolean;
 declare const SENTRY_ENABLED: boolean;
