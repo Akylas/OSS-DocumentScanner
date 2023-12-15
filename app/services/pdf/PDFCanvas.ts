@@ -23,7 +23,7 @@ function ptToPixel(value, dpi) {
 export default class PDFCanvas {
     canvas: Canvas;
     imagesCache: { [k: string]: ImageSource } = {};
-    items: { pages: OCRPage[] }[];
+    items: { pages: OCRPage[]; index; number }[];
     updatePages(documents: OCRDocument[]) {
         let { items_per_page } = this.options;
         if (this.options.paper_size === 'full') {
@@ -40,6 +40,7 @@ export default class PDFCanvas {
         const newItems = [];
         for (let index = 0; index < docPagesLength; index += items_per_page) {
             newItems.push({
+                index,
                 pages: pages.slice(index, index + items_per_page)
             });
         }
@@ -85,8 +86,8 @@ export default class PDFCanvas {
         return false;
     }
     draw() {
-        this.items.forEach((item) => {
-            this.drawPages(item.pages);
+        this.items.forEach((item, index) => {
+            this.drawPages(index, item.pages);
         });
     }
     updateBitmapPaint(page: OCRPage) {
@@ -168,7 +169,7 @@ export default class PDFCanvas {
             });
         }
     }
-    drawPages(pages: OCRPage[], forExport = false) {
+    drawPages(pdfPageIndex: number, pages: OCRPage[], forExport = false) {
         const { pagerPagePaddingHorizontal, pagerPagePaddingVertical, paper_size, dpi, page_padding, orientation, items_per_page } = this.options;
         const pagePadding = ptToPixel(page_padding, dpi);
         const canvas = this.canvas;
@@ -305,13 +306,9 @@ export default class PDFCanvas {
                     // const src = page.getImagePath();
 
                     let itemAvailableWidth = widthPerColumn - 2 * pagePadding;
-                    let itemAvailableHeight = widthPerRow - 2 * pagePadding;
+                    const itemAvailableHeight = widthPerRow - 2 * pagePadding;
                     if (last && columns * rows > nbItems) {
-                        if (orientation === 'landscape') {
-                            itemAvailableHeight = 2 * widthPerRow - 2 * pagePadding;
-                        } else {
-                            itemAvailableWidth = 2 * widthPerColumn - 2 * pagePadding;
-                        }
+                        itemAvailableWidth = 2 * widthPerColumn - 2 * pagePadding;
                     }
                     const itemRatio = widthPerColumn / widthPerRow;
                     if (pageRatio > itemRatio) {

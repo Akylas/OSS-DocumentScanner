@@ -107,7 +107,7 @@ export default class PDFExportCanvas extends PDFCanvas {
                 const scale = Screen.mainScreen.scale;
                 this.canvas.scale(scale, scale);
                 await this.loadImagesForPage(index);
-                this.drawPages(items[index].pages, true);
+                this.drawPages(index, items[index].pages, true);
             }
             UIGraphicsEndPDFContext();
 

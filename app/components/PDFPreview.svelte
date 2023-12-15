@@ -32,6 +32,7 @@
 
     $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
     interface Item {
+        index: number;
         pages: OCRPage[];
     }
 
@@ -49,7 +50,7 @@
     // pdfCanvas.updatePages(documents);
     let pager: NativeViewElementNode<Pager>;
     let drawer: DrawerElement;
-    let items: ObservableArray<{ pages: OCRPage[]; loading?: boolean }>;
+    let items: ObservableArray<{ index: number; pages: OCRPage[]; loading?: boolean }>;
     let currentPagerIndex = 0;
 
     const topBarHeight = 50;
@@ -94,7 +95,7 @@
     }
     function drawPDFPage(item: Item, { canvas }: { canvas: Canvas }) {
         pdfCanvas.canvas = canvas;
-        pdfCanvas.drawPages(item.pages);
+        pdfCanvas.drawPages(item.index, item.pages);
     }
 
     onDestroy(() => {
