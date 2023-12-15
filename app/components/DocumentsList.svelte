@@ -78,15 +78,17 @@
             );
             updateNoDocument();
 
-            const component = (await import('~/components/PDFPreview.svelte')).default;
-            await showModal({
-                page: component,
-                animated: true,
-                fullscreen: true,
-                props: {
-                    documents: [documents.getItem(0).doc]
-                }
-            });
+            if (DEV_LOG) {
+                const component = (await import('~/components/PDFPreview.svelte')).default;
+                await showModal({
+                    page: component,
+                    animated: true,
+                    fullscreen: true,
+                    props: {
+                        documents: [documents.getItem(0).doc]
+                    }
+                });
+            }
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
             console.error(error);
