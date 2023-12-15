@@ -85,7 +85,7 @@ module.exports = (env, params = {}) => {
         uploadSentry,
         verbose, // --env.verbose
         uglify, // --env.uglify
-        noconsole = true, // --env.noconsole
+        noconsole, // --env.noconsole
         devlog, // --env.devlog
         testlog, // --env.testlog
         fakeall, // --env.fakeall
