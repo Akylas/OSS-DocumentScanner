@@ -8,7 +8,7 @@
   self.backgroundColor = UIColor.clearColor;
   self.opaque = NO;
   self.fillAlpha = 0;
-  self.colors = [NSArray arrayWithObjects:[UIColor blueColor]];
+  self.colors = [NSArray arrayWithObjects:[UIColor blueColor], nil];
   return self;
 }
 
