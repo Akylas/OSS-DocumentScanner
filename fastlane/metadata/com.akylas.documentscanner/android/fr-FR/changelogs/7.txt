@@ -1,4 +1,4 @@
 *Bug fixes*
 - show error on missing camera permission
 - removed debug auto open pdf preview on start. Sorry!
-- some pages item were not rendering corretly in landscape mode
+- some pages item were not rendering correctly in landscape mode
