@@ -28,7 +28,6 @@ firmwares
 **/iOS/*.lproj/InfoPlist.strings
 
 # NativeScript Template
-*.js.map
 !webpack.config.js
 *.css
 
@@ -64,8 +63,6 @@ zxingcpp
 !.vscode/launch.json
 !.vscode/extensions.json
 .sentryclirc
-pnpm-lock.yaml
-/fastlane/report.xml
 *.zip
 dist
 /geojson
@@ -78,3 +75,4 @@ dist
 tesseract/ios/**
 *.framework
 /typings/x86_64
+/.sentryclirc
