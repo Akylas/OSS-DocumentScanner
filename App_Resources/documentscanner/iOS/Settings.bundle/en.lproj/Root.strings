@@ -96,6 +96,7 @@
 "color" = "color";
 "capturing" = "capturing";
 "cancel" = "cancel";
+"camera_permission_needed" = "camera permission is need to take pictures";
 "black_white" = "black & white";
 "auto" = "auto";
 "about" = "about";
