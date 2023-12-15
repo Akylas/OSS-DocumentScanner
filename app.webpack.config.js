@@ -6,7 +6,7 @@ const { dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const SentryCliPlugin = require('@sentry/webpack-plugin');
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
 const Fontmin = require('@akylas/fontmin');
@@ -517,14 +517,30 @@ module.exports = (env, params = {}) => {
                 })
             );
             config.plugins.push(
-                new SentryCliPlugin({
-                    release: appVersion,
-                    urlPrefix: 'app:///',
-                    rewrite: true,
-                    release: `${appId}@${appVersion}+${buildNumber}`,
-                    dist: `${buildNumber}.${platform}`,
-                    ignoreFile: '.sentrycliignore',
-                    include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                sentryWebpackPlugin({
+                    org: process.env.SENTRY_ORG,
+                    url: process.env.SENTRY_URL,
+                    project: process.env.SENTRY_PROJECT,
+                    authToken: process.env.SENTRY_AUTH_TOKEN,
+                    release: {
+                        name: `${appId}@${appVersion}+${buildNumber}`,
+                        dist: `${buildNumber}.${platform}`,
+                        setCommits: {
+                            auto: true,
+                            ignoreEmpty: true,
+                            ignoreMissing: true
+                        },
+                        create: true,
+                        cleanArtifacts: true
+                    },
+                    sourcemaps: {
+                        rewriteSources: (source, map) => {
+                            console.log('rewriteSources', source);
+                            return 'app:///' + source;
+                        },
+                        ignore: ['tns-java-classes', 'hot-update'],
+                        assets: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                    }
                 })
             );
         } else {
