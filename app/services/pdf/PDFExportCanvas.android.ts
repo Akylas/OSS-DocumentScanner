@@ -125,7 +125,7 @@ export default class PDFExportCanvas extends PDFCanvas {
                 DEV_LOG && console.log('export page', pageWidth, pageHeight, scale, index);
                 this.canvas.scale(scale, scale);
                 await this.loadImagesForPage(index);
-                this.drawPages(items[index].pages, true);
+                this.drawPages(index, items[index].pages, true);
                 pdfDocument.finishPage(page);
             }
             recycleImages(Object.values(this.imagesCache));
