@@ -212,12 +212,25 @@
     async function onStartCam() {
         try {
             const result = await request('camera');
+            if (result[0] !== 'authorized') {
+                throw new Error(lc('camera_permission_needed'));
+            }
             const document: OCRDocument = await showModal({
                 page: Camera,
                 fullscreen: true
             });
             if (document) {
-                await goToView(document);
+                if (document.pages.length === 1) {
+                    const component = (await import('~/components/DocumentEdit.svelte')).default;
+                    navigate({
+                        page: component,
+                        props: {
+                            document
+                        }
+                    });
+                } else {
+                    await goToView(document);
+                }
             }
             // const documentScanner = new DocumentScanner({
             //     showColorFilters: false,
@@ -435,7 +448,6 @@
                     fontWeight: 'normal',
                     containerColumns: 'auto',
                     onClose: closePopover,
-                    margin: 4,
                     options
                 }
             });
