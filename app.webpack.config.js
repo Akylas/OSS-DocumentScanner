@@ -39,7 +39,7 @@ module.exports = (env, params = {}) => {
                 devlog: true,
                 noconsole: false,
                 sourceMap: true,
-                uglify: true
+                uglify: false
             },
             env
         );
@@ -536,21 +536,22 @@ module.exports = (env, params = {}) => {
                             ignoreMissing: true
                         },
                         create: true,
-                        cleanArtifacts: true
-                        // uploadLegacySourcemaps: {
-                        //     // sourceMapReference: false,
-                        //     ignore: ['tns-java-classes', 'hot-update'],
-                        //     paths: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
-                        //     // rewrite: true,
-                        //     // urlPrefix: process.env.SENTRY_PREFIX
-                        // }
+                        cleanArtifacts: true,
+                        uploadLegacySourcemaps: {
+                            // sourceMapReference: false,
+                            ignore: ['tns-java-classes', 'hot-update'],
+                            paths: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
+                            // validate: true,
+                            rewrite: true,
+                            // urlPrefix: process.env.SENTRY_PREFIX
+                        }
                     },
-                    debug: false,
+                    // debug: true,
                     sourcemaps: {
-                        // assets: './**/*.nonexistent'
-                        rewriteSources: (source, map) => source.replace('webpack:///./', '~/').replace('webpack:///', ''),
-                        ignore: ['tns-java-classes', 'hot-update'],
-                        assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
+                        assets: './**/*.nonexistent'
+                        // rewriteSources: (source, map) => source.replace('webpack:///./', '~/').replace('webpack:///', ''),
+                        // ignore: ['tns-java-classes', 'hot-update'],
+                        // assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
                     }
                 })
             );
