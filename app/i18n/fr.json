@@ -14,12 +14,14 @@
   "about": "à propos",
   "auto": "auto",
   "black_white": "noir",
+  "camera_permission_needed": "l'autorisation de l'appareil photo est nécessaire pour prendre des photos",
   "cancel": "annuler",
   "capturing": "capture en cours...",
   "color": "couleur",
   "color_desc": "améliorer les couleurs et réduire les nuances de couleurs indésirables",
   "computing": "traitement...",
   "confirm_delete": "êtes-vous sûr de vouloir supprimer ce document?",
+  "confirm_delete_document": "êtes-vous sûr de vouloir supprimer ce document ?",
   "confirm_delete_documents": "êtes-vous sûr de vouloir supprimer ces documents de %1$?",
   "confirm_delete_page": "êtes-vous sûr de vouloir supprimer page %1$s?",
   "confirm_delete_pages": "êtes-vous sûr de vouloir supprimer ces pages de %1$?",
@@ -59,6 +61,7 @@
       }
     }
   },
+  "italian": "italien",
   "items_per_page": "objets par page",
   "landscape": "paysage",
   "language": "language",

@@ -15,9 +15,11 @@
     <string-array name="langs">
         <item name="fr">@string/french</item>
         <item name="en">@string/english</item>
+        <item name="it">@string/italian</item>
     </string-array>
     <string-array name="langsValues">
         <item name="french">fr</item>
         <item name="en">en</item>
+        <item name="it">it</item>
     </string-array>
 </resources>
