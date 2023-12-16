@@ -42,7 +42,7 @@
   "export": "export",
   "export_folder": "export folder",
   "export_settings": "export settings",
-  "export_settings_desc": "export all AlpiMaps settings so that you can import them later",
+  "export_settings_desc": "export all application settings so that you can import them later",
   "exporting": "exporting",
   "failed": "failed",
   "format": "format",
@@ -61,8 +61,8 @@
       }
     }
   },
-  "items_per_page": "items per page",
   "italian": "italian",
+  "items_per_page": "items per page",
   "landscape": "landscape",
   "language": "language",
   "languages": "languages",
