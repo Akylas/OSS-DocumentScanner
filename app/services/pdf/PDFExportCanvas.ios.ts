@@ -103,7 +103,7 @@ export default class PDFExportCanvas extends PDFCanvas {
                 const pageRect = CGRectMake(0, 0, pageWidth, pageHeight);
                 UIGraphicsBeginPDFPageWithInfo(pageRect, null);
                 const context = UIGraphicsGetCurrentContext();
-                canvas['setContext'](context, pageWidth, pageHeight);
+                canvas.setContext(context, pageWidth, pageHeight);
                 const scale = Screen.mainScreen.scale;
                 this.canvas.scale(scale, scale);
                 await this.loadImagesForPage(index);

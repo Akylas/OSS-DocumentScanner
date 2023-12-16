@@ -120,9 +120,9 @@ export default class PDFExportCanvas extends PDFCanvas {
                 }
                 const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(pageWidth, pageHeight, index).create();
                 const page = pdfDocument.startPage(pageInfo);
-                this.canvas['mNative'] = page.getCanvas();
+                this.canvas.setNative( page.getCanvas());
                 const scale = Screen.mainScreen.scale;
-                DEV_LOG && console.log('export page', pageWidth, pageHeight, scale, index);
+                DEV_LOG && console.log('export page', pageWidth, pageHeight, scale, index, this.canvas, this.canvas.scale);
                 this.canvas.scale(scale, scale);
                 await this.loadImagesForPage(index);
                 this.drawPages(index, items[index].pages, true);
