@@ -90,7 +90,6 @@ export default class PDFExportCanvas extends PDFCanvas {
 
             return pdfFile.path;
         } else {
-            //@ts-ignore
             this.canvas = new Canvas();
             const pdfDocument = new android.graphics.pdf.PdfDocument();
             const items = this.items;

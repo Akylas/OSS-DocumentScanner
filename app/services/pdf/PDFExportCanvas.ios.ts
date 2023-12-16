@@ -70,7 +70,6 @@ export default class PDFExportCanvas extends PDFCanvas {
 
             return pdfFile.path;
         } else {
-            //@ts-ignore
             this.canvas = new Canvas();
             const pdfData = NSMutableData.alloc().init();
             const canvas = new Canvas(0, 0);
