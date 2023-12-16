@@ -143,6 +143,8 @@
     async function onLongPress(command, item?) {
         try {
             switch (command) {
+                case 'version':
+                    throw new Error('test error');
             }
         } catch (error) {
             showError(error);
