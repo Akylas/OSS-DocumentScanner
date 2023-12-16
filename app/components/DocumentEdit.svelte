@@ -7,11 +7,11 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { File, ImageSource, ObservableArray, Page, View, path } from '@nativescript/core';
+    import { File, Frame, ImageSource, ObservableArray, Page, View, path } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode, goBack, navigate, showModal } from 'svelte-native/dom';
     import { Writable, writable } from 'svelte/store';
     import CActionBar from '~/components/CActionBar.svelte';
     import CropView from '~/components/CropView.svelte';
@@ -364,19 +364,34 @@
 
     async function deleteCurrentPage() {
         try {
-            const result = await confirm({
-                title: lc('delete_page', currentIndex),
-                message: lc('confirm_delete_page', currentIndex + 1),
-                okButtonText: lc('delete'),
-                cancelButtonText: lc('cancel')
-            });
+            let result;
+            const deleteDocument = document.pages.length === 1;
+            if (deleteDocument) {
+                result = await confirm({
+                    title: lc('delete'),
+                    message: lc('confirm_delete_document'),
+                    okButtonText: lc('delete'),
+                    cancelButtonText: lc('cancel')
+                });
+            } else {
+                result = await confirm({
+                    title: lc('delete_page', currentIndex),
+                    message: lc('confirm_delete_page', currentIndex + 1),
+                    okButtonText: lc('delete'),
+                    cancelButtonText: lc('cancel')
+                });
+            }
             if (result) {
                 try {
-                    await document.deletePage(currentIndex);
-                    pager.nativeView.scrollToIndexAnimated(currentIndex, true);
-                    // startPageIndex = currentIndex -= 1;
+                    if (deleteDocument) {
+                        await documentsService.deleteDocuments([document]);
+                        goBack({ to: { nativeView: Frame.topmost().backStack[0].resolvedPage } as any });
+                    } else {
+                        await document.deletePage(currentIndex);
+                        pager.nativeView.scrollToIndexAnimated(currentIndex, true);
+                    }
                 } catch (err) {
-                    console.error(err.err.stack);
+                    showError(err, err.stack);
                 }
             }
         } catch (err) {
