@@ -346,6 +346,7 @@ module.exports = (env, params = {}) => {
     const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
 
     const context = nsWebpack.Utils.platform.getEntryDirPath();
+    // folders need to exist (app/fonts, app/fonts/android... ) or it will trigger webpack unwanted changes
     const copyPatterns = [
         { context, from: 'fonts/!(ios|android)/**/*', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
         { context, from: 'fonts/*', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
@@ -510,12 +511,15 @@ module.exports = (env, params = {}) => {
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
             config.devtool = false;
+            // config.devtool = 'source-map';
             config.plugins.push(
                 new webpack.SourceMapDevToolPlugin({
-                    append: `\n//# sourceMappingURL=${process.env.SENTRY_PREFIX}[name].js.map`,
+                    // moduleFilenameTemplate:  'webpack://[namespace]/[resource-path]?[loaders]',
+                    append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
                     filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
                 })
             );
+            console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
             config.plugins.push(
                 sentryWebpackPlugin({
                     org: process.env.SENTRY_ORG,
@@ -532,14 +536,20 @@ module.exports = (env, params = {}) => {
                         },
                         create: true,
                         cleanArtifacts: true
+                        // uploadLegacySourcemaps: {
+                        //     // sourceMapReference: false,
+                        //     ignore: ['tns-java-classes', 'hot-update'],
+                        //     paths: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                        //     // rewrite: true,
+                        //     // urlPrefix: process.env.SENTRY_PREFIX
+                        // }
                     },
+                    debug: false,
                     sourcemaps: {
-                        rewriteSources: (source, map) => {
-                            console.log('rewriteSources', source);
-                            return 'app:///' + source;
-                        },
+                        // assets: './**/*.nonexistent'
+                        rewriteSources: (source, map) => source.replace('webpack:///./', '~/').replace('webpack:///', ''),
                         ignore: ['tns-java-classes', 'hot-update'],
-                        assets: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                        assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
                     }
                 })
             );
@@ -596,6 +606,6 @@ module.exports = (env, params = {}) => {
             }
         })
     ];
-    // return config;
-    return [require('./webpdfviewer/webpack.config.js')(env), config];
+    return config;
+    // return [require('./webpdfviewer/webpack.config.js')(env), config];
 };
