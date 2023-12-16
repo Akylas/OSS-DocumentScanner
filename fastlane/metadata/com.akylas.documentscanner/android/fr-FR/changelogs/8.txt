@@ -1,0 +1,6 @@
+*Features*
+- italian translation thanks @Enrico!
+
+*Bug fixes*
+- show error on missing camera permission
+- pprevent crash (and further crash) when removing the last page of a document in the edit page view
