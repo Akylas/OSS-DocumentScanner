@@ -38,7 +38,6 @@ export async function share(content: Content, options: Options = {}) {
         intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
     }
     if (content.file) {
-        console.log('sharing file', content.file);
         const sdkVersionInt = parseInt(Device.sdkVersion, 10);
         const newFile = new java.io.File(content.file);
         let shareableFileUri;
@@ -48,7 +47,6 @@ export async function share(content: Content, options: Options = {}) {
             shareableFileUri = android.net.Uri.fromFile(newFile);
         }
         intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
-        console.log('sharing file done ', content.file);
     }
 
     const chooser = Intent.createChooser(intent, options.dialogTitle);

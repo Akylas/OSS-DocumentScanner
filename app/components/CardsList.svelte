@@ -87,7 +87,7 @@
     function updateNoDocument() {
         nbDocuments = documents.length;
         showNoDocument = nbDocuments === 0;
-        console.log('updateNoDocument', showNoDocument);
+        // console.log('updateNoDocument', showNoDocument);
     }
     function onDocumentAdded(event: EventData & { doc }) {
         documents[CARD_APP ? 'push' : 'unshift']({
@@ -271,7 +271,6 @@
     }
     let nbSelected = 0;
     function selectItem(item: Item) {
-        console.log('selectItem');
         if (!item.selected) {
             documents.some((d, index) => {
                 if (d === item) {
@@ -284,7 +283,6 @@
         }
     }
     function unselectItem(item: Item) {
-        console.log('unselectItem');
         if (item.selected) {
             documents.some((d, index) => {
                 if (d === item) {
@@ -533,9 +531,7 @@
             if (result) {
                 switch (result.id) {
                     case 'layout':
-                        console.log('closeCurrentMenu');
                         await collectionView?.nativeElement.closeCurrentMenu();
-                        console.log('closeCurrentMenu done');
                         if (viewStyle === 'default') {
                             viewStyle = 'fullcard';
                         } else {

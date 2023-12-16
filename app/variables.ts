@@ -109,7 +109,7 @@ const onInitRootView = function () {
         setTimeout(() => {
             const rootView = Application.getRootView();
             const rootViewStyle = rootView?.style;
-            DEV_LOG && console.log('initRootView', rootView);
+            // DEV_LOG && console.log('initRootView', rootView);
             fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
             // DEV_LOG && console.log('fonts', get(fonts));
             actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
@@ -154,11 +154,11 @@ const onInitRootView = function () {
 Application.on('initRootView', onInitRootView);
 
 export function updateThemeColors(theme: string, force = false) {
-    DEV_LOG && console.log('updateThemeColors', theme, force);
+    // DEV_LOG && console.log('updateThemeColors', theme, force);
     try {
         if (!force) {
             theme = Application.systemAppearance();
-            console.log('systemAppearance', theme);
+            // console.log('systemAppearance', theme);
         }
     } catch (err) {
         console.error('updateThemeColors', err);
@@ -247,6 +247,6 @@ export function updateThemeColors(theme: string, force = false) {
     }
     currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
     colors.set(currentColors);
-    DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
+    // DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
 }

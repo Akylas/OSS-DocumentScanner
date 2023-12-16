@@ -61,7 +61,6 @@
         while (event.detail) {
             event = event.detail;
         }
-        console.log('onTap', item, Object.keys(event));
         if (item.isPick) {
             try {
                 const result = await openFilePicker({

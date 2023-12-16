@@ -312,14 +312,12 @@
     function startPreview() {
         if (!previewStarted) {
             previewStarted = true;
-            console.log('startPreview');
             cameraPreview?.nativeView.startPreview();
         }
     }
     function stopPreview() {
         if (previewStarted) {
             previewStarted = false;
-            console.log('stopPreview');
             cameraPreview?.nativeView.stopPreview();
             if (cropView?.nativeView) {
                 cropView.nativeView.quads = null;
@@ -337,7 +335,7 @@
         })();
     }
     function onBackground() {
-        DEV_LOG && console.log('onBackground', !!cameraPreview);
+        // DEV_LOG && console.log('onBackground', !!cameraPreview);
         stopPreview();
     }
     function onForeground() {
@@ -454,7 +452,6 @@
         const imageView = fullImageView.nativeElement;
         imageView.originX = 0.5;
         imageView.originY = 0.5;
-        console.log('imagePath', imagePath, croppedImagePath);
         if (!imagePath && croppedImagePath) {
             showingFullScreenImage = false;
             await imageView.animate({
@@ -556,7 +553,6 @@
 
     function toggleEditing() {
         editing = !editing;
-        console.log('toggleEditing');
         if (torchEnabled) {
             setTorchEnabled(!editing);
         }

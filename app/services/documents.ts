@@ -121,7 +121,6 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     }
 
     async createPage(page: OCRPage) {
-        console.log('createPage', page);
         const createdDate = Date.now();
         return this.create({
             ...cleanUndefined(page),

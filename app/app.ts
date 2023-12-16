@@ -82,7 +82,7 @@ try {
     let launched = false;
     async function start() {
         try {
-            DEV_LOG && console.log('start');
+            // DEV_LOG && console.log('start');
             await syncService.start();
             await ocrService.start();
             await documentsService.start();
@@ -97,20 +97,20 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
-        DEV_LOG && console.log('launchEvent');
+        // DEV_LOG && console.log('launchEvent');
         startThemeHelper();
         launched = true;
         start();
     });
     Application.on(Application.resumeEvent, () => {
         if (!launched) {
-            DEV_LOG && console.log('resume');
+            // DEV_LOG && console.log('resume');
             launched = true;
             start();
         }
     });
     Application.on(Application.exitEvent, () => {
-        DEV_LOG && console.log('exit');
+        // DEV_LOG && console.log('exit');
         launched = false;
         //  ocrService.stop();
         try {

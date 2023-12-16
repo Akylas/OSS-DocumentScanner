@@ -40,7 +40,6 @@
                 ocrService.addLanguages(result);
                 languages.push(result);
                 languages = languages;
-                console.log('should add language', result);
             }
         } catch (error) {
             showError(error);

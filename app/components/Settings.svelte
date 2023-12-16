@@ -324,11 +324,9 @@
         }
     }
     function refreshCollectionView() {
-        console.log('refreshCollectionView');
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
-    
 </script>
 
 <page actionBarHidden={true}>

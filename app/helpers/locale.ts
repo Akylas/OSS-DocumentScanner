@@ -120,7 +120,7 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
 
 prefs.on('key:language', () => {
     const newLanguage = getString('language');
-    DEV_LOG && console.log('language changed', newLanguage);
+    // DEV_LOG && console.log('language changed', newLanguage);
     // on pref change we are updating
     if (newLanguage === lang) {
         return;
@@ -130,7 +130,7 @@ prefs.on('key:language', () => {
 
 prefs.on('key:clock_24', () => {
     const newValue = ApplicationSettings.getBoolean('clock_24', default24Clock);
-    DEV_LOG && console.log('clock_24 changed', newValue);
+    // DEV_LOG && console.log('clock_24 changed', newValue);
     clock_24 = newValue;
     clock_24Store.set(newValue);
     // we fake a language change to update the UI

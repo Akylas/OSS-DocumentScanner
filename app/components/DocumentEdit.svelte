@@ -150,7 +150,7 @@
             );
 
             currentSelectedImageRotation = item.rotation;
-            console.log('onImageRotated', currentSelectedImageRotation);
+            DEV_LOG && console.log('onImageRotated', currentSelectedImageRotation);
             // items.setItem(currentIndex, item);
         } catch (error) {
             showError(error);
@@ -201,7 +201,6 @@
     async function showEnhancements(event) {
         try {
             const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            console.log('showEnhancements', transforms);
 
             function getData(transformId) {
                 const value = transforms.indexOf(transformId) !== -1;
@@ -409,7 +408,6 @@
     }
 
     async function updateImageUris() {
-        DEV_LOG && console.log('updateImageUris');
         await getCurrentImageView()?.updateImageUri();
         collectionView?.nativeView.eachChildAsync((c: View) => c.getViewById<Img>('imageView')?.updateImageUri());
         refreshCollectionView();
@@ -506,7 +504,6 @@
         }
     }
     function refreshPager() {
-        console.log('refreshPager');
         pager?.nativeView?.refresh();
     }
     onThemeChanged(refreshPager);

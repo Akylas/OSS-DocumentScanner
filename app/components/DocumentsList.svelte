@@ -98,7 +98,6 @@
     function updateNoDocument() {
         nbDocuments = documents.length;
         showNoDocument = nbDocuments === 0;
-        console.log('updateNoDocument', showNoDocument);
     }
     function onDocumentAdded(event: EventData & { doc }) {
         documents.unshift({

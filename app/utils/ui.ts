@@ -358,7 +358,6 @@ export async function importAndScanImage(document?: OCRDocument) {
             // on android pressing the back button will trigger an error which we dont want
             .present()
             .catch((err) => null);
-        console.log('importAndScanImage', selection);
         if (__IOS__) {
             //we need to wait a bit or the presenting controller
             // is still the image picker and will mix things up
@@ -425,7 +424,7 @@ export async function importAndScanImage(document?: OCRDocument) {
                                       }
                                     : {})
                             });
-                            DEV_LOG && console.log('added page', pagesToAdd[pagesToAdd.length - 1]);
+                            DEV_LOG && console.log('added page', JSON.stringify(pagesToAdd[pagesToAdd.length - 1]));
                         }
                         if (document) {
                             await document.addPages(pagesToAdd);

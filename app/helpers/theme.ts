@@ -23,7 +23,7 @@ let autoDarkToBlack = getBoolean('auto_black', false);
 const ThemeBlack = 'ns-black';
 
 Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { newValue }) => {
-    DEV_LOG && console.log('systemAppearanceChangedEvent', theme, event.newValue, autoDarkToBlack);
+    // DEV_LOG && console.log('systemAppearanceChangedEvent', theme, event.newValue, autoDarkToBlack);
     if (theme === 'auto') {
         let theme = event.newValue;
         if (autoDarkToBlack && theme === 'dark') {
@@ -85,7 +85,7 @@ export async function selectTheme() {
 const AppCompatDelegate = __ANDROID__ ? androidx.appcompat.app.AppCompatDelegate : undefined;
 export function applyTheme(theme: Themes) {
     try {
-        DEV_LOG && console.log('applyTheme', theme);
+        // DEV_LOG && console.log('applyTheme', theme);
         switch (theme) {
             case 'auto':
                 Theme.setMode(Theme.Auto);
@@ -142,7 +142,7 @@ function getSystemAppearance(): 'dark' | 'light' {
 }
 
 export function getRealTheme(th = theme) {
-    DEV_LOG && console.log('getRealTheme', th);
+    // DEV_LOG && console.log('getRealTheme', th);
     if (th === 'auto') {
         try {
             th = getSystemAppearance();
@@ -177,7 +177,7 @@ export function start() {
 
     prefs.on('key:auto_black', () => {
         autoDarkToBlack = getBoolean('auto_black');
-        DEV_LOG && console.log('key:auto_black', theme, autoDarkToBlack);
+        // DEV_LOG && console.log('key:auto_black', theme, autoDarkToBlack);
         if (theme === 'auto') {
             const realTheme = getRealTheme(theme);
             currentTheme.set(realTheme);
@@ -188,7 +188,7 @@ export function start() {
 
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
-        DEV_LOG && console.log('key:theme', theme, newTheme, autoDarkToBlack);
+        // DEV_LOG && console.log('key:theme', theme, newTheme, autoDarkToBlack);
         if (__IOS__ && SDK_VERSION < 13) {
             newTheme = 'light';
         }
@@ -232,7 +232,7 @@ export function start() {
         }
         // we need to update the theme on every activity start
         Application.on('activity_started', () => {
-            DEV_LOG && console.log('activity_started');
+            // DEV_LOG && console.log('activity_started');
             if (Application.getRootView()) {
                 getRealThemeAndUpdateColors();
             }

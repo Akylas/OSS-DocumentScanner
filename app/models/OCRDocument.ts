@@ -51,10 +51,10 @@ export class OCRDocument extends Observable implements Document {
 
     static async createDocument(name?: string, pagesData?: PageData[], setRaw = false) {
         const docId = Date.now() + '';
-        DEV_LOG && console.log('createDocument', docId);
+        // DEV_LOG && console.log('createDocument', docId);
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
         await doc.addPages(pagesData);
-        DEV_LOG && console.log('createDocument pages added');
+        // DEV_LOG && console.log('createDocument pages added');
         await doc.save({}, false);
         return doc;
     }
@@ -77,7 +77,7 @@ export class OCRDocument extends Observable implements Document {
             return;
         }
         attributes.size = File.fromPath(attributes.imagePath).size;
-        DEV_LOG && console.log('add1 page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
+        // DEV_LOG && console.log('add1 page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
         if (sourceImagePath) {
             let baseName = sourceImagePath
                 .split('/')
@@ -171,7 +171,7 @@ export class OCRDocument extends Observable implements Document {
                 //using saved image to disk
                 pages.push(await documentsService.pageRepository.createPage(attributes));
             }
-            DEV_LOG && console.log('addPages done', JSON.stringify(pages));
+            // DEV_LOG && console.log('addPages done', JSON.stringify(pages));
             if (this.pages) {
                 this.pages.push(...pages);
             } else {
@@ -193,7 +193,6 @@ export class OCRDocument extends Observable implements Document {
 
     async removeFromDisk() {
         const docData = documentsService.dataFolder.getFolder(this.id);
-        DEV_LOG && console.log('OCRDocument', 'removeFromDisk');
         return docData.remove();
     }
 
@@ -265,7 +264,6 @@ export class OCRDocument extends Observable implements Document {
     }
 
     async save(data: Partial<OCRDocument> = {}, updateModifiedDate = false) {
-        DEV_LOG && console.log('OCRDocument save', new Error().stack);
         data.pagesOrder = this.pages.map((p) => p.id);
         await documentsService.documentRepository.update(this, data, updateModifiedDate);
         documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this, updateModifiedDate });

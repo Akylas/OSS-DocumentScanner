@@ -67,7 +67,6 @@
             // loading = true;
             if (q?.length) {
                 items = miniSearch.search(q) as any;
-                console.log('miniSearch', q, items);
             } else {
                 items = fullItems;
             }

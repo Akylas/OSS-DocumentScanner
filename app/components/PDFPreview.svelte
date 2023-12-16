@@ -41,7 +41,6 @@
     let { orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = pdfCanvas.options;
     $: ({ orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = $optionsStore);
     optionsStore.subscribe((newValue) => {
-        console.log('optionsStore change', newValue);
         Object.assign(pdfCanvas.options, newValue);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
@@ -88,7 +87,6 @@
             if (view instanceof ContentView) {
                 view = view.content;
             }
-            console.log('requestPagesRedraw', view);
             (view as CanvasView)?.invalidate();
             return true;
         });
@@ -127,9 +125,7 @@
                 const filePath = await exporter.export(documents, exportDirectory, result.text);
                 hideLoading();
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
-                DEV_LOG && console.log('onSnack', onSnack);
                 if (onSnack.reason === 'action') {
-                    DEV_LOG && console.log('openFile', filePath);
                     openFile(filePath);
                 }
             }
