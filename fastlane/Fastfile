@@ -113,16 +113,17 @@ lane :build_flavor do |params|
   puts "sentry_version:"  + sentry_version
   puts "options:"  + JSON.generate(options.to_json)
 
-  if (options[:sentry])
-    sentry_create_release(
-      project_slug: sentry_project_slug,
-      app_identifier: app_identifier,
-      sentry_cli_path: sentry_cli_path,
-      version: sentry_version
-    )
-  end
+  # done through webpack
+  # if (options[:sentry])
+  #   sentry_create_release(
+  #     project_slug: sentry_project_slug,
+  #     app_identifier: app_identifier,
+  #     sentry_cli_path: sentry_cli_path,
+  #     version: sentry_version
+  #   )
+  # end
   build(flavor: flavor, options: options)
-  push_to_git_remote
+  push_to_git_remote(tags:false)
 
   if (options[:sentry])
     sh("npm", "run", "sentry-set-commits", "#{sentry_version}")
@@ -176,7 +177,7 @@ lane :build_flavor do |params|
     add_git_tag(tag: tag, force: true)
     push_git_tags(force: true)
   end
-  push_to_git_remote
+  push_to_git_remote(tags:false)
 end
 
 
