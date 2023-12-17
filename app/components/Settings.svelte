@@ -161,9 +161,10 @@
             switch (command) {
                 case 'export_settings':
                     const jsonStr = ApplicationSettings.getAllJSON();
+                    DEV_LOG && console.log('export_settings', jsonStr);
                     if (jsonStr) {
                         await saveFile({
-                            name: `alpimaps_settings_${dayjs().format('YYYY-MM-DD')}.json`,
+                            name: `${__APP_ID__}_settings_${dayjs().format('YYYY-MM-DD')}.json`,
                             data: jsonStr
                         });
                     }
@@ -181,6 +182,7 @@
                         const nativePref = ApplicationSettings.getNative();
                         if (__ANDROID__) {
                             const editor = (nativePref as android.content.SharedPreferences).edit();
+                            editor.clear();
                             Object.keys(json).forEach((k) => {
                                 if (k.startsWith('_')) {
                                     return;
@@ -202,6 +204,8 @@
                             editor.apply();
                         } else {
                             const userDefaults = nativePref as NSUserDefaults;
+                            const domain = NSBundle.mainBundle.bundleIdentifier;
+                            userDefaults.removePersistentDomainForName(domain);
                             Object.keys(json).forEach((k) => {
                                 if (k.startsWith('_')) {
                                     return;

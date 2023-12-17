@@ -12,6 +12,7 @@ declare namespace com {
                 static getDimensionFromInt(context: android.content.Context, intToGet);
                 static getColorFromInt(context: android.content.Context, intToGet);
                 static getColorFromName(context: android.content.Context, intToGet);
+                static restartApp(context: android.content.Context, activity: android.app.Activity);
             }
             export class CustomImageAnalysisCallback {
                 constructor(context: android.content.Context, cropView);
