@@ -384,7 +384,6 @@
                 try {
                     if (deleteDocument) {
                         await documentsService.deleteDocuments([document]);
-                        goBack({ to: { nativeView: Frame.topmost().backStack[0].resolvedPage } as any });
                     } else {
                         await document.deletePage(currentIndex);
                         pager.nativeView.scrollToIndexAnimated(currentIndex, true);
@@ -467,17 +466,17 @@
             }
         }
     }
+    function onDocumentsDeleted(event: EventData & { documents }) {
+        if (event.documents.indexOf(document) !== -1) {
+            goBack();
+        }
+    }
     onMount(() => {
-        // notifyWhenChanges(enhanced, (value) => {
-        //     updateTransform(value, enhanced, 'enhance');
-        // });
-        // notifyWhenChanges(whitepaper, (value) => {
-        //     updateTransform(value, whitepaper, 'whitepaper');
-        // });
-
+        documentsService.on('documentsDeleted', onDocumentsDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
     });
     onDestroy(() => {
+        documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
     });
 

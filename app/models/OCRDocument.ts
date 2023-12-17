@@ -198,6 +198,9 @@ export class OCRDocument extends Observable implements Document {
 
     async deletePage(pageIndex: number) {
         const removed = this.pages.splice(pageIndex, 1);
+        if (this.pages.length === 0) {
+            return documentsService.deleteDocuments([this]);
+        }
         if (this.#observables) {
             this.#observables.splice(pageIndex, 1);
         }

@@ -312,11 +312,10 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
     async search(args: { postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
         const result = await super.search({ ...args /* , postfix: sql`d LEFT JOIN PAGE p on p.document_id = d.id` */ });
-        // for (let index = 0; index < result.length; index++) {
-        //     const doc = result[index];
-        //     doc.pages = (await this.getPages(doc)) as any;
-        // }
-        return result;
+
+        // remove all documents with no Page, it is a bug and should never happen
+
+        return result.filter((d) => d.pages?.length > 0);
     }
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<OCRDocument> {
         const document = new OCRDocument(attributes.id);
@@ -380,12 +379,12 @@ export class DocumentsService extends Observable {
         this.notify({ eventName: 'started' });
         this.started = true;
     }
-    async deleteDocuments(docs: OCRDocument[]) {
+    async deleteDocuments(documents: OCRDocument[]) {
         // await this.documentRepository.delete(model);
-        await Promise.all(docs.map((d) => this.documentRepository.delete(d)));
+        await Promise.all(documents.map((d) => this.documentRepository.delete(d)));
         // await OCRDocument.delete(docs.map((d) => d.id));
-        docs.forEach((doc) => doc.removeFromDisk());
-        this.notify({ eventName: 'documentsDeleted', docs });
+        documents.forEach((doc) => doc.removeFromDisk());
+        this.notify({ eventName: 'documentsDeleted', documents });
     }
     stop() {
         DEV_LOG && console.log('DocumentsService stop');

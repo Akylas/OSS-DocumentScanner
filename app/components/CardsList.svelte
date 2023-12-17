@@ -111,9 +111,9 @@
             documents.setItem(index, documents.getItem(index));
         }
     }
-    function onDocumentsDeleted(event: EventData & { docs: OCRDocument[] }) {
+    function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
         for (let index = documents.length - 1; index >= 0; index--) {
-            if (event.docs.indexOf(documents.getItem(index).doc) !== -1) {
+            if (event.documents.indexOf(documents.getItem(index).doc) !== -1) {
                 documents.splice(index, 1);
                 nbSelected -= 1;
             }

@@ -327,10 +327,16 @@
         items.splice(index, 1);
         items.forEach((item, index) => (item.index = index + 1));
     }
+    function onDocumentsDeleted(event: EventData & { documents }) {
+        if (event.documents.indexOf(document) !== -1) {
+            goBack();
+        }
+    }
     onMount(() => {
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        documentsService.on('documentsDeleted', onDocumentsDeleted);
         documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         document.on('pagesAdded', onPagesAdded);
@@ -340,6 +346,7 @@
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageDeleted', onDocumentPageDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
         document?.off('pagesAdded', onPagesAdded);

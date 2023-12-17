@@ -91,7 +91,7 @@
             // }
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
@@ -122,9 +122,9 @@
             documents.setItem(index, item);
         }
     }
-    function onDocumentsDeleted(event: EventData & { docs: OCRDocument[] }) {
+    function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
         for (let index = documents.length - 1; index >= 0; index--) {
-            if (event.docs.indexOf(documents.getItem(index).doc) !== -1) {
+            if (event.documents.indexOf(documents.getItem(index).doc) !== -1) {
                 documents.splice(index, 1);
                 nbSelected -= 1;
             }
@@ -136,15 +136,17 @@
     }
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        let index = -1;
+        // let index = -1;
         DEV_LOG && console.log('onDocumentPageUpdated', event.pageIndex, event.imageUpdated);
+        const document = event.object as OCRDocument;
         if (event.pageIndex === 0) {
-            documents.some((d, i) => {
-                if (d.doc === (event.object as any)) {
-                    index = i;
-                    return true;
-                }
-            });
+            const index = documents.findIndex((d) => d.doc === document);
+            // documents.some((d, i) => {
+            //     if (d.doc === (event.object as any)) {
+            //         index = i;
+            //         return true;
+            //     }
+            // });
             if (index >= 0) {
                 documents.setItem(index, documents.getItem(index));
                 if (!!event.imageUpdated) {
