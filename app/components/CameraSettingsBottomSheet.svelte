@@ -51,6 +51,7 @@
     <stacklayout horizontalAlignment="right" orientation="horizontal" padding="16">
         <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
         <checkbox checked={transforms.indexOf('whitepaper') !== -1} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />
+        <checkbox checked={transforms.indexOf('color') !== -1} marginLeft={4} text={lc('color')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('color')} />
         <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
     </stacklayout>
     <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>

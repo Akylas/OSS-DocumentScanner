@@ -3,7 +3,7 @@
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Img } from '@nativescript-community/ui-image';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, File, ObservableArray, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, File, ObservableArray, Page, Screen, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -54,12 +54,13 @@
     const newDocument = !document;
 
     const contours: [number, number][][] = null;
-    let pages: ObservableArray<OCRPage>;
+    // let pages: ObservableArray<OCRPage>;
     let nbPages = 0;
     let takingPicture = false;
-    let croppedImagePath: string = null;
-    let smallImagePath: string = null;
-    let croppedImageRotation: number = 0;
+    // let croppedImage: string | ImageSource = null;
+    let smallImage: string | ImageSource = null;
+    let smallImageRotation: number = 0;
+    // let croppedImageRotation: number = 0;
     let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(',');
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
@@ -67,7 +68,7 @@
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
     let cameraScreenRatio = 1;
-    let showingFullScreenImage = false;
+    const showingFullScreenImage = false;
     let editing = false;
 
     const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
@@ -185,7 +186,7 @@
         //     return;
         // }
         try {
-            stopPreview();
+            // stopPreview();
             showLoading(l('computing'));
             // editingImage = await loadImage(imagePath);
             editingImage = new ImageSource(image);
@@ -218,7 +219,7 @@
             showError(err);
         } finally {
             takingPicture = false;
-            startPreview();
+            // startPreview();
             hideLoading();
         }
     }
@@ -287,7 +288,7 @@
     onDestroy(() => {
         clearImages();
         document = null;
-        croppedImageRotation = 0;
+        // croppedImageRotation = 0;
         nbPages = 0;
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -345,6 +346,12 @@
     async function saveCurrentDocument() {
         try {
             DEV_LOG && console.log('saveCurrentDocument', newDocument, !!document);
+            if (!document) {
+                document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+            } else {
+                await document.addPages(pagesToAdd);
+            }
+            DEV_LOG && console.log('saveCurrentDocument1', newDocument, !!document);
             if (document) {
                 await document.save({}, false);
                 if (newDocument) {
@@ -384,11 +391,14 @@
     function clearImages() {
         // if (editingImage) {
         recycleImages(editingImage);
+        if (pagesToAdd) {
+            recycleImages(pagesToAdd.map((d) => d.image));
+        }
         editingImage = null;
-        // }
-        smallImagePath = null;
-        croppedImagePath = null;
+        smallImage = null;
+        // croppedImage = null;
     }
+    const pagesToAdd: PageData[] = [];
 
     async function addCurrentImageToDocument(sourceImage, quads) {
         try {
@@ -407,7 +417,6 @@
             // const start = Date.now();
             // const qrCode = await detectQRCode(images[0], {});
             // console.log('detected qrcode', qrCode, Date.now() - start, 'ms');
-            const pagesToAdd: PageData[] = [];
             for (let index = 0; index < images.length; index++) {
                 const image = images[index];
                 pagesToAdd.push({
@@ -425,85 +434,95 @@
             }
 
             //TODO:
-            if (!document) {
-                document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-            } else {
-                await document.addPages(pagesToAdd);
-            }
-            if (!pages) {
-                pages = document.getObservablePages();
-            }
-            recycleImages(images);
+            // if (!document) {
+            //     document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+            // } else {
+            //     await document.addPages(pagesToAdd);
+            // }
+            // if (!pages) {
+            //     pages = document.getObservablePages();
+            // }
+            // recycleImages(images);
             images = null;
-            nbPages = pages.length;
+            nbPages = pagesToAdd.length;
             startPreview();
             // if (editing) {
             //     toggleEditing();
             // }
-            const lastPage = pages.getItem(pages.length - 1);
+            const lastPage = pagesToAdd[pagesToAdd.length - 1];
             currentQuad = lastPage.crop;
-            setCurrentImage(lastPage.getImagePath(), lastPage.rotation, true);
+            setCurrentImage(new ImageSource(lastPage.image), lastPage.rotation, true);
         } catch (error) {
             showError(error);
         }
     }
 
-    async function setCurrentImage(imagePath, rotation = 0, needAnimateBack = false) {
-        const imageView = fullImageView.nativeElement;
-        imageView.originX = 0.5;
-        imageView.originY = 0.5;
-        if (!imagePath && croppedImagePath) {
-            showingFullScreenImage = false;
-            await imageView.animate({
-                duration: 200,
-                opacity: 0,
-                scale: {
-                    x: 0.5,
-                    y: 0.5
-                }
-            });
-            croppedImagePath = imagePath;
-            croppedImageRotation = rotation;
-        } else if (imagePath) {
-            showingFullScreenImage = !needAnimateBack;
-            croppedImagePath = imagePath;
-            croppedImageRotation = rotation;
-            imageView.opacity = 0;
-            imageView.scaleX = 0.5;
-            imageView.scaleY = 0.5;
-            await imageView.animate({
-                duration: 200,
-                opacity: 1,
-                scale: {
-                    x: 1,
-                    y: 1
-                }
-            });
-            if (needAnimateBack) {
-                imageView.originX = 0;
-                imageView.originY = 1;
-                const ratio = imageView.getMeasuredWidth() / imageView.getMeasuredHeight();
-                const scaleX = (ratio * smallImageView.nativeElement.getMeasuredHeight()) / imageView.getMeasuredWidth();
-                const scaleY = smallImageView.nativeElement.getMeasuredHeight() / imageView.getMeasuredHeight();
-                await imageView.animate({
-                    duration: 400,
-                    opacity: 1,
-                    scale: {
-                        x: scaleX,
-                        y: scaleY
-                    },
+    async function setCurrentImage(image, rotation = 0, needAnimateBack = false) {
+        // const imageView = fullImageView.nativeElement;
+        // const sImageView = smallImageView.nativeElement;
+        // imageView.originX = 0.5;
+        // imageView.originY = 0.5;
+        // if (!image) {
+        //     showingFullScreenImage = false;
+        //     await imageView.animate({
+        //         duration: 200,
+        //         opacity: 0,
+        //         scale: {
+        //             x: 0.5,
+        //             y: 0.5
+        //         }
+        //     });
+        //     // croppedImage = image;
+        //     // croppedImageRotation = rotation;
+        // } else if (image) {
+        smallImage = image;
+        smallImageRotation = rotation;
+        // smallImageView.nativeElement.opacity = 0;
+        // showingFullScreenImage = true;
+        // // croppedImage = image;
+        // // croppedImageRotation = rotation;
+        // imageView.translateX = 0;
+        // imageView.translateY = 0;
+        // imageView.opacity = 0;
+        // imageView.scaleX = 0.5;
+        // imageView.scaleY = 0.5;
+        // console.log('animating', needAnimateBack);
+        // await imageView.animate({
+        //     duration: 200,
+        //     opacity: 1,
+        //     scale: {
+        //         x: 1,
+        //         y: 1
+        //     }
+        // });
+        // if (needAnimateBack) {
+        //     imageView.originX = 0;
+        //     imageView.originY = 1;
+        //     const position = sImageView.getLocationOnScreen();
+        //     const size = { width: sImageView.getMeasuredWidth(), height: sImageView.getMeasuredHeight() };
+        //     const ratio = imageView.getMeasuredWidth() / imageView.getMeasuredHeight();
+        //     const scaleX = (ratio * size.height) / imageView.getMeasuredWidth();
+        //     const scaleY = size.height / imageView.getMeasuredHeight();
+        //     console.log('animateBack', showingFullScreenImage, ratio, scaleX, scaleY);
+        //     await imageView.animate({
+        //         duration: 400,
+        //         scale: {
+        //             x: scaleX,
+        //             y: scaleY
+        //         },
 
-                    translate: {
-                        x: Utils.layout.toDeviceIndependentPixels((smallImageView.nativeElement.getMeasuredWidth() - ratio * smallImageView.nativeElement.getMeasuredHeight()) / 2),
-                        y: 0
-                    }
-                });
-                imageView.opacity = 0;
-            }
-            smallImagePath = imagePath;
-        }
+        //         translate: {
+        //             x: position.x + Utils.layout.toDeviceIndependentPixels((size.width - ratio * size.height) / 2),
+        //             y: -(Screen.mainScreen.heightDIPs - position.y - Utils.layout.toDeviceIndependentPixels(size.height))
+        //         }
+        //     });
+        //     imageView.opacity = 0;
+        // }
+        // smallImageView.nativeElement.opacity = 1;
+        // showingFullScreenImage = false;
+        // }
     }
-    $: canSaveDoc = !!document;
+    $: canSaveDoc = nbPages > 0;
 
     function onCameraLayoutChanged() {
         cameraScreenRatio = cameraPreview.nativeElement.getMeasuredWidth() / cameraPreview.nativeElement.getMeasuredHeight();
@@ -546,10 +565,10 @@
     function onFinishEditing() {
         toggleEditing();
     }
-    function onCroppedImageChanged() {
-        //current cropped image was modified
-        smallImageView?.nativeView?.updateImageUri();
-    }
+    // function onCroppedImageChanged() {
+    //     //current cropped image was modified
+    //     smallImageView?.nativeView?.updateImageUri();
+    // }
 
     function toggleEditing() {
         editing = !editing;
@@ -580,80 +599,90 @@
 </script>
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
-    <gridlayout rows="auto,*">
-        <cameraView bind:this={cameraPreview} autoFocus={true} enablePinchZoom={true} {flashMode} rowSpan="2" on:layoutChanged={onCameraLayoutChanged} on:loaded={applyProcessor} />
+    <gridlayout backgroundColor="black" paddingBottom={30} rows="auto,*,auto,auto">
+        <cameraView
+            bind:this={cameraPreview}
+            autoFocus={true}
+            enablePinchZoom={true}
+            {flashMode}
+            rowSpan="2"
+            on:layoutChanged={onCameraLayoutChanged}
+            on:loaded={applyProcessor}
+            on:tap={focusCamera} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
             <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
             <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-dots-vertical" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showOptions} />
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-tune" variant="text" visibility={startOnCam ? 'collapsed' : 'visible'} on:tap={showCameraSettings} />
         </CActionBar>
 
-        <gridlayout padding="10" row={1} rows="*,auto">
-            <gridlayout>
-                <stacklayout horizontalAlignment="left" verticalAlignment="center">
-                    <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
-                    <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
-                    <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
-                </stacklayout>
-                <mdbutton
-                    class="icon-btn"
-                    color="white"
-                    horizontalAlignment="left"
-                    text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
-                    variant="text"
-                    verticalAlignment="bottom"
-                    on:tap={() => (batchMode = !batchMode)} />
-            </gridlayout>
+        <!-- <gridlayout padding="10" row={1} rows="*,auto"> -->
+        <stacklayout horizontalAlignment="left" orientation="horizontal" row={2} verticalAlignment="center">
+            <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
+            <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
+            <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
+        </stacklayout>
+        <mdbutton class="icon-btn" color="white" horizontalAlignment="right" row={2} text="mdi-tune" variant="text" visibility={startOnCam ? 'collapsed' : 'visible'} on:tap={showCameraSettings} />
+
+        <gridlayout columns="60,*,auto,*,60" row={3}>
+            <mdbutton
+                class="icon-btn"
+                color="white"
+                horizontalAlignment="left"
+                marginLeft={10}
+                text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
+                variant="text"
+                verticalAlignment="center"
+                on:tap={() => (batchMode = !batchMode)} />
 
             <image
                 bind:this={smallImageView}
-                colorMatrix={getColorMatrix(colorType)}
-                height={80}
-                horizontalAlignment="left"
-                imageRotation={croppedImageRotation}
-                rowSpan={2}
-                src={smallImagePath}
-                stretch="aspectFit"
-                verticalAlignment="bottom"
-                width={80}
-                on:tap={toggleEditing} />
-
-            <image
-                bind:this={fullImageView}
-                colorMatrix={getColorMatrix(colorType)}
-                imageRotation={croppedImageRotation}
-                isUserInteractionEnabled={showingFullScreenImage}
-                rowSpan={2}
-                src={croppedImagePath}
-                stretch="aspectFit"
-                visibility={showingFullScreenImage ? 'visible' : 'hidden'}
-                on:tap={() => setCurrentImage(null)} />
-
-            <gridlayout
                 borderColor="white"
-                borderRadius="50%"
-                borderWidth={3}
-                height={90}
+                col={1}
+                colorMatrix={getColorMatrix(colorType)}
+                height={60}
                 horizontalAlignment="center"
-                marginBottom={10}
-                opacity={takingPicture ? 0.6 : 1}
-                row={1}
-                verticalAlignment="bottom"
-                width={90}>
+                imageRotation={smallImageRotation}
+                src={smallImage}
+                stretch="aspectFit"
+                verticalAlignment="center"
+                width={60} />
+            <gridlayout borderColor="white" borderRadius="50%" borderWidth={3} col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
                 <gridlayout
                     backgroundColor={colorPrimary}
                     borderRadius="50%"
-                    height={74}
+                    height={54}
                     horizontalAlignment="center"
                     ignoreTouchAnimation={false}
                     touchAnimation={touchAnimationShrink}
-                    width={74}
+                    width={54}
                     on:tap={takePicture} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
-            <!-- <mdbutton
+
+            <mdbutton
+                class="fab"
+                col={3}
+                elevation={0}
+                horizontalAlignment="center"
+                rippleColor="white"
+                text="mdi-check"
+                variant="text"
+                verticalAlignment="center"
+                visibility={canSaveDoc ? 'visible' : 'hidden'}
+                on:tap={() => saveCurrentDocument()} />
+        </gridlayout>
+
+        <!-- <image
+            bind:this={fullImageView}
+            colorMatrix={getColorMatrix(colorType)}
+            imageRotation={smallImageRotation}
+            rowSpan={4}
+            src={smallImage}
+            stretch="aspectFit"
+            visibility={showingFullScreenImage ? 'visible' : 'hidden'} /> -->
+
+        <!-- <mdbutton
                 row={1}
                 visibility={pauseProcessing ? 'visible' : 'hidden'}
                 text="reset"
@@ -661,27 +690,15 @@
                 verticalAlignment="bottom"
                 horizontalAlignment="left"
             /> -->
-            <mdbutton
-                class="fab"
-                elevation={0}
-                horizontalAlignment="right"
-                rippleColor="white"
-                row={1}
-                text="mdi-check"
-                variant="text"
-                verticalAlignment="center"
-                visibility={canSaveDoc ? 'visible' : 'hidden'}
-                on:tap={() => saveCurrentDocument()} />
-        </gridlayout>
-        <CropEditView
-            {croppedImagePath}
+        <!-- </gridlayout> -->
+        <!-- <CropEditView
+            croppedImagePath={croppedImage}
             {editingImage}
             quad={currentQuad}
-            rowSpan={2}
+            rowSpan={4}
             visibility={editing ? 'visible' : 'collapsed'}
             bind:croppedImageRotation
             bind:colorType
-            on:finished={onFinishEditing}
-            on:croppedImageChanged={onCroppedImageChanged} />
+            on:finished={onFinishEditing} /> -->
     </gridlayout>
 </page>
