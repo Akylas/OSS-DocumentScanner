@@ -7,7 +7,7 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { File, Frame, ImageSource, ObservableArray, Page, View, path } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, File, Frame, ImageSource, ObservableArray, Page, View, path } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -486,10 +486,16 @@
         }
     }
     onMount(() => {
+        if (__ANDROID__) {
+            Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
+        }
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
     });
     onDestroy(() => {
+        if (__ANDROID__) {
+            Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
+        }
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
     });
@@ -498,18 +504,18 @@
         collectionView?.nativeView?.refreshVisibleItems();
     }
 
-    async function onRecropTapFinish() {
+    async function onRecropTapFinish(cancel = false) {
         try {
             if (recrop) {
                 // let s see if quads changed and update image
-                if (quadChanged) {
+                if (quadChanged && !cancel) {
                     await document.updatePageCrop(currentIndex, quad, editingImage);
                     updateImageUris();
                     quadChanged = false;
-                    recycleImages(editingImage);
-                    editingImage = null;
                     quads = [];
                 }
+                recycleImages(editingImage);
+                editingImage = null;
                 recrop = false;
             }
         } catch (error) {
@@ -520,6 +526,22 @@
         pager?.nativeView?.refresh();
     }
     onThemeChanged(refreshPager);
+    function onGoBack() {
+        if (recrop) {
+            onRecropTapFinish(true);
+        } else {
+            goBack();
+        }
+    }
+    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
+        if (__ANDROID__) {
+            console.log('onAndroidBackButton', recrop);
+            if (recrop) {
+                data.cancel = true;
+                onRecropTapFinish(true);
+            }
+        }
+    }
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
@@ -579,7 +601,7 @@
             <CropView {editingImage} bind:quadChanged bind:quads />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
         </gridlayout>
-        <CActionBar title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
+        <CActionBar {onGoBack} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
