@@ -18,9 +18,9 @@
     let collectionView: NativeViewElementNode<CollectionView>;
 
     const filters = ColorMatricesTypes.map((k) => ({
-        id: k,
-        text: lc(k),
-        colorType: k
+        ...k,
+        text: lc(k.id),
+        colorType: k.id
     }));
 
     function addOrRemoveTransform(transform: string) {

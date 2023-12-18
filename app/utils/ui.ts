@@ -153,23 +153,28 @@ export async function hideLoading() {
 // };
 
 const sortPriority = ['normal', 'grayscale', 'bw', 'sepia', 'invert', 'polaroid', 'nightvision'];
-export const ColorMatricesTypes = Object.keys(ColorMatrices).sort((a, b) => {
-    const sortIndexA = sortPriority.indexOf(a);
-    const sortIndexB = sortPriority.indexOf(b);
-    if (sortIndexA !== -1) {
-        if (sortIndexB !== -1) {
-            return sortIndexA - sortIndexB;
+export const ColorMatricesTypes = Object.keys(ColorMatrices)
+    .sort((a, b) => {
+        const sortIndexA = sortPriority.indexOf(a);
+        const sortIndexB = sortPriority.indexOf(b);
+        if (sortIndexA !== -1) {
+            if (sortIndexB !== -1) {
+                return sortIndexA - sortIndexB;
+            }
+            return -1;
+        } else if (sortIndexB !== -1) {
+            return 1;
         }
-        return -1;
-    } else if (sortIndexB !== -1) {
-        return 1;
-    }
-    return a.localeCompare(b);
-});
+        return a.localeCompare(b);
+    })
+    .map((k) => ({
+        id: k,
+        ...ColorMatrices[k]
+    }));
 export type ColorMatricesType = string;
 
 export function getColorMatrix(type: string, ...args): number[] {
-    return (ColorMatrices[type] as Function)?.apply(ColorMatrices, args);
+    return ColorMatrices[type]?.fn?.apply(ColorMatrices, args);
 }
 
 // function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues, stopValues, fraction) {

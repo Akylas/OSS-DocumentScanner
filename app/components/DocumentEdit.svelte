@@ -5,7 +5,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { File, Frame, ImageSource, ObservableArray, Page, View, path } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
@@ -18,6 +18,7 @@
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { debounce } from '@nativescript/core/utils';
     import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { ocrService } from '~/services/ocr';
@@ -326,30 +327,43 @@
         }
     }
 
-    async function setBlackWhiteLevel(event) {
+    const saveCurrentItemColorType = debounce(function (index, colorMatrix) {
+        document.updatePage(index, {
+            colorMatrix
+        });
+    }, 500);
+    function onColorMatrixChange(colorType, value) {
         const current = items.getItem(currentIndex);
-        // if (current.colorType !== ColorType.BLACK_WHITE) {
-        //     return;
-        // }
+        current.colorMatrix = getColorMatrix(colorType, value);
+        items.setItem(currentIndex, current);
+        saveCurrentItemColorType(currentIndex, current.colorMatrix);
+    }
 
-        const currentValue = current.colorMatrix[0];
+    async function setColorMatrixLevels(item, event) {
+        if (!item.range) {
+            return;
+        }
+
         try {
-            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
-            showPopover({
-                view: SliderPopover,
+            const component = (await import('~/components/SliderPopover.svelte')).default;
+            const currentValue = item.colorMatrix?.[0] || 1;
+            onColorMatrixChange(item.colorType, currentValue);
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
                 props: {
                     min: 0.5,
                     max: 2,
                     step: 0.1,
-                    title: 'black_white_level',
-                    icon: 'mdi-brightness-6',
+                    // title: 'black_white_level',
+                    // icon: 'mdi-brightness-6',
+                    width: '80%',
                     value: currentValue,
                     onChange(value) {
-                        document.updatePage(currentIndex, {
-                            colorMatrix: getColorMatrix(current.colorType, value)
-                        });
+                        onColorMatrixChange(item.colorType, value);
                     }
                 }
             });
@@ -413,9 +427,9 @@
     }
 
     const filters = ColorMatricesTypes.map((k) => ({
-        id: k,
-        text: lc(k),
-        colorType: k
+        ...k,
+        text: lc(k.id),
+        colorType: k.id
     }));
     let updatingTransform = false;
     async function updateTransform(value: boolean, store: Writable<boolean>, type: string) {
@@ -549,7 +563,7 @@
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
-                <gridlayout id={item.text} padding={4} rows="*,25" on:tap={applyImageTransform(item)}>
+                <gridlayout id={item.text} padding={4} rows="*,25" on:tap={applyImageTransform(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
                         id="imageView"
                         colorMatrix={getColorMatrix(item.colorType)}
