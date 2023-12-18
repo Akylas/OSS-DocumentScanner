@@ -34,6 +34,11 @@ Open Source app to scan your documents.
 You can,
 - [Create an issue here](https://github.com/Akylas/com.akylas.documentscanner/issues)
 
+### Contributors
+
+Thanks to our contributors:
+* [Enrico Dell'Oste](https://www.smartpixel.it/)
+
 ### Building
 
 This app uses opencv and tesseract. I did not include the libraries because there are huge and would make the github repo too big.
