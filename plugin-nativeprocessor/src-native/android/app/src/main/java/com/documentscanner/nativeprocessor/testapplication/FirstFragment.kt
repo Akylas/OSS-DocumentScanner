@@ -91,9 +91,44 @@ class FirstFragment : Fragment() {
         }
 
     }
+    fun requestStoragePermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this.requireActivity(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED -> {
+//                layout.showSnackbar(
+//                    view,
+//                    "granted",
+//                    Snackbar.LENGTH_INDEFINITE,
+//                    null
+//                ) {}
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this.requireActivity(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) -> {
+                view?.let {
+                    Snackbar.make(it, "permission required", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("ok") {
+                            requestPermissionLauncher.launch(
+                                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            )
+                        }.show()
+                }
+            }
+
+            else -> {
+                requestPermissionLauncher.launch(
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+            }
+        }
+
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.cameraView.displayRatio = "16:9"
         binding.cameraView.savePhotoToDisk = false
         val activity = this.requireActivity()
         var lastQRCode: String? = null
@@ -138,6 +173,7 @@ class FirstFragment : Fragment() {
             }
 
             override fun onCameraOpen() {
+                var test = binding.cameraView.getAllAvailablePictureSizes();
                 Log.d("CameraView", "onCameraOpen")
             }
 
@@ -158,7 +194,7 @@ class FirstFragment : Fragment() {
             ) {
                 Log.d(
                     "CameraView",
-                    "onCameraPhotoImage: " + image?.byteCount + " " + ((System.nanoTime() - photoTime) / 1000000) + "ms"
+                    "onCameraPhotoImage: " + image?.width + " " + image?.height + " " + image?.byteCount + " " + ((System.nanoTime() - photoTime) / 1000000) + "ms"
                 )
                 if (image != null) {
                     CustomImageAnalysisCallback.getJSONDocumentCorners(
@@ -244,6 +280,7 @@ class FirstFragment : Fragment() {
 
         }
         requestCameraPermission()
+        requestStoragePermission()
 //        binding.cameraView.startPreview()
 //        binding.buttonFirst.setOnClickListener {
 //            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
@@ -322,7 +359,8 @@ class FirstFragment : Fragment() {
 
         binding.fab.setOnClickListener { view ->
             photoTime = System.nanoTime()
-            binding.cameraView.takePhoto("{\"savePhotoToDisk\":false, \"returnImageProxy\":false}")
+//            binding.cameraView.takePhoto("{\"savePhotoToDisk\":false,\"saveToGallery\":false, \"returnImageProxy\":false, \"pictureSize\":\"3096x4128\", \"captureMode\":0}")
+            binding.cameraView.takePhoto("{}")
 
 //            launcher.launch(arrayOf("image/*"))
         }
