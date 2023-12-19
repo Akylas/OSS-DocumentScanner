@@ -1,0 +1,10 @@
+*Features*
+- basic support for changing color matrix transforms level
+- *android:* monochrome icon
+- better image share/export feature
+
+*Bug fixes*
+- import/export settings fix
+- handles removing last page as best as we can. Try to prevent crash on start because of remaining document with no page
+- new camera view layout
+- if recroping and going "back" then only stop recroping instead of actually going back
