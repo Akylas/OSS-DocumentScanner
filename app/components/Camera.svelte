@@ -528,7 +528,6 @@
         cameraScreenRatio = cameraPreview.nativeElement.getMeasuredWidth() / cameraPreview.nativeElement.getMeasuredHeight();
     }
     function focusCamera(e) {
-        DEV_LOG && console.log('focusCamera', e.getX(), e.getY(), Object.keys(e));
         cameraPreview.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
     function onCollectionLayoutChanged(e) {
@@ -606,6 +605,7 @@
             enablePinchZoom={true}
             {flashMode}
             rowSpan="2"
+            stretch="aspectFit"
             on:layoutChanged={onCameraLayoutChanged}
             on:loaded={applyProcessor}
             on:tap={focusCamera} />

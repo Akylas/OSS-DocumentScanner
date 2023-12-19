@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageProxy
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -128,7 +129,8 @@ class FirstFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.cameraView.displayRatio = "16:9"
+//        binding.cameraView.displayRatio = "16:9"
+        binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
         binding.cameraView.savePhotoToDisk = false
         val activity = this.requireActivity()
         var lastQRCode: String? = null
@@ -173,7 +175,8 @@ class FirstFragment : Fragment() {
             }
 
             override fun onCameraOpen() {
-                var test = binding.cameraView.getAllAvailablePictureSizes();
+//                var test = binding.cameraView.getAllAvailablePictureSizes();
+                binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
                 Log.d("CameraView", "onCameraOpen")
             }
 
