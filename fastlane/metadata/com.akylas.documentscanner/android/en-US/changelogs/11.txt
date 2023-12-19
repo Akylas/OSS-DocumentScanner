@@ -1,0 +1,7 @@
+*Features*
+- allow to select multiple documents and export them as pdf
+
+*Bug fixes*
+- regression fix where re cropping would not work
+- image export directory was not saved correctly and was overwriting pdf export folder
+- settings missing translations and wrong value for preview size threshold
