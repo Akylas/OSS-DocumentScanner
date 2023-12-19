@@ -261,48 +261,63 @@
             showError(error);
         }
     }
-
-    async function shareCurrentItem() {
+    async function showImageExportPopover(event) {
         try {
-            shareItem(items.getItem(currentIndex));
-        } catch (error) {
-            showError(error);
+            const component = (await import('~/components/ImageExportPopover.svelte')).default;
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                props: {
+                    page: items.getItem(currentIndex)
+                }
+            });
+        } catch (err) {
+            showError(err);
         }
     }
-    async function saveCurrentImage() {
-        if (__ANDROID__) {
-            try {
-                const imagePath = items.getItem(currentIndex).imagePath;
-                const file = File.fromPath(imagePath);
-                const destinationPath = path.join(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), file.name);
-                await (await ImageSource.fromFile(imagePath)).saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
-            } catch (error) {
-                showError(error);
-            }
-        } else {
-            try {
-                const imagePath = items.getItem(currentIndex).imagePath;
-                const imageSource = await ImageSource.fromFile(imagePath);
-                await new Promise<void>((resolve, reject) => {
-                    PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
-                        () => {
-                            PHAssetChangeRequest.creationRequestForAssetFromImage(imageSource.ios);
-                        },
-                        (success, err) => {
-                            if (success) {
-                                resolve();
-                            } else {
-                                reject(err);
-                            }
-                        }
-                    );
-                });
-                showSnack({ message: l('image_saved_gallery') });
-            } catch (error) {
-                showError(error);
-            }
-        }
-    }
+    // async function shareCurrentItem() {
+    //     try {
+    //         shareItem(items.getItem(currentIndex));
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
+    // async function saveCurrentImage() {
+    //     if (__ANDROID__) {
+    //         try {
+    //             const imagePath = items.getItem(currentIndex).imagePath;
+    //             const file = File.fromPath(imagePath);
+    //             const destinationPath = path.join(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), file.name);
+    //             await (await ImageSource.fromFile(imagePath)).saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+    //         } catch (error) {
+    //             showError(error);
+    //         }
+    //     } else {
+    //         try {
+    //             const imagePath = items.getItem(currentIndex).imagePath;
+    //             const imageSource = await ImageSource.fromFile(imagePath);
+    //             await new Promise<void>((resolve, reject) => {
+    //                 PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
+    //                     () => {
+    //                         PHAssetChangeRequest.creationRequestForAssetFromImage(imageSource.ios);
+    //                     },
+    //                     (success, err) => {
+    //                         if (success) {
+    //                             resolve();
+    //                         } else {
+    //                             reject(err);
+    //                         }
+    //                     }
+    //                 );
+    //             });
+    //             showSnack({ message: l('image_saved_gallery') });
+    //         } catch (error) {
+    //             showError(error);
+    //         }
+    //     }
+    // }
 
     async function showCurrentOCRData() {
         try {
@@ -554,15 +569,7 @@
             </Template>
         </pager>
         <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
-        <mdbutton
-            class="icon-btn"
-            horizontalAlignment="right"
-            row={2}
-            text="mdi-share-variant"
-            variant="text"
-            verticalAlignment="bottom"
-            on:tap={() => shareCurrentItem()}
-            on:longPress={() => saveCurrentImage()} />
+        <mdbutton class="icon-btn" horizontalAlignment="right" row={2} text="mdi-share-variant" variant="text" verticalAlignment="bottom" on:tap={showImageExportPopover} />
         <mdbutton
             class="icon-btn"
             horizontalAlignment="right"
