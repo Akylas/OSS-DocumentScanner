@@ -83,8 +83,8 @@
                 id: 'setting',
                 key: 'previewResizeThreshold',
                 title: lc('preview_resize_threshold'),
-                description: lc('preview_resize_threshold_desc'),
-                // default: ApplicationSettings.getNumber('previewResizeThreshold', 200),
+                full_description: lc('preview_resize_threshold_desc'),
+                default: ApplicationSettings.getNumber('previewResizeThreshold', 200),
                 rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', 200),
                 type: 'prompt'
             },
@@ -276,7 +276,7 @@
                     if (item.type === 'prompt') {
                         const result = await prompt({
                             title: getTitle(item),
-                            message: getSubtitle(item),
+                            message: item.full_description || item.description  ,
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
@@ -347,9 +347,9 @@
                             fontSize={14}
                             lineBreak="end"
                             maxLines={2}
-                            text={getSubtitle(item)}
+                            text={item.description}
                             verticalTextAlignment="top"
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
+                            visibility={item.description?.length > 0 ? 'visible' : 'collapsed'} />
                     </stacklayout>
                     <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
                     <!-- <absolutelayout backgroundColor={colorOutline} colSpan={2} height={1} verticalAlignment="bottom" /> -->
@@ -365,9 +365,9 @@
                             fontSize={14}
                             lineBreak="end"
                             maxLines={2}
-                            text={getSubtitle(item)}
+                            text={item.description}
                             verticalTextAlignment="top"
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
+                            visibility={item.description?.length > 0 ? 'visible' : 'collapsed'} />
                     </stacklayout>
 
                     <label
