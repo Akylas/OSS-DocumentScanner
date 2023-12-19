@@ -512,14 +512,14 @@ module.exports = (env, params = {}) => {
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
             config.devtool = false;
-            // config.devtool = 'source-map';
-            config.plugins.push(
-                new webpack.SourceMapDevToolPlugin({
-                    // moduleFilenameTemplate:  'webpack://[namespace]/[resource-path]?[loaders]',
-                    append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
-                    filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
-                })
-            );
+            config.devtool = 'source-map';
+            // config.plugins.push(
+            //     new webpack.SourceMapDevToolPlugin({
+            //         // moduleFilenameTemplate:  'webpack://[namespace]/[resource-path]?[loaders]',
+            //         append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
+            //         filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
+            //     })
+            // );
             console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
             config.plugins.push(
                 sentryWebpackPlugin({
@@ -536,22 +536,22 @@ module.exports = (env, params = {}) => {
                             ignoreMissing: true
                         },
                         create: true,
-                        cleanArtifacts: true,
-                        uploadLegacySourcemaps: {
-                            // sourceMapReference: false,
-                            ignore: ['tns-java-classes', 'hot-update'],
-                            paths: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
-                            // validate: true,
-                            rewrite: true,
-                            // urlPrefix: process.env.SENTRY_PREFIX
-                        }
+                        cleanArtifacts: true
+                        // uploadLegacySourcemaps: {
+                        //     // sourceMapReference: false,
+                        //     ignore: ['tns-java-classes', 'hot-update'],
+                        //     paths: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
+                        //     // validate: true,
+                        //     rewrite: true,
+                        //     // urlPrefix: process.env.SENTRY_PREFIX
+                        // }
                     },
                     // debug: true,
                     sourcemaps: {
-                        assets: './**/*.nonexistent'
+                        // assets: './**/*.nonexistent'
                         // rewriteSources: (source, map) => source.replace('webpack:///./', '~/').replace('webpack:///', ''),
-                        // ignore: ['tns-java-classes', 'hot-update'],
-                        // assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
+                        ignore: ['tns-java-classes', 'hot-update'],
+                        assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
                     }
                 })
             );
