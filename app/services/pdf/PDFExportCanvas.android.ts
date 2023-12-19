@@ -73,7 +73,7 @@ export default class PDFExportCanvas extends PDFCanvas {
             if (folder !== pdfFile.parent.path) {
                 const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
                 const outfile = outdocument.createFile('application/pdf', filename);
-                console.log('outfile', outfile.getUri().toString());
+                DEV_LOG && console.log('outfile', outfile.getUri().toString());
                 await new Promise((resolve, reject) => {
                     org.nativescript.widgets.Async.File.copy(
                         pdfFile.path,
@@ -119,7 +119,7 @@ export default class PDFExportCanvas extends PDFCanvas {
                 }
                 const pageInfo = new android.graphics.pdf.PdfDocument.PageInfo.Builder(pageWidth, pageHeight, index).create();
                 const page = pdfDocument.startPage(pageInfo);
-                this.canvas.setNative( page.getCanvas());
+                this.canvas.setNative(page.getCanvas());
                 const scale = Screen.mainScreen.scale;
                 DEV_LOG && console.log('export page', pageWidth, pageHeight, scale, index, this.canvas, this.canvas.scale);
                 this.canvas.scale(scale, scale);
