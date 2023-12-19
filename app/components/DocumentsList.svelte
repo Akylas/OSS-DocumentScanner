@@ -394,6 +394,16 @@
             }
         });
     }
+
+    function getSelectedDocuments() {
+        const selected = [];
+        documents.forEach((d, index) => {
+            if (d.selected) {
+                selected.push(d.doc);
+            }
+        });
+        return selected;
+    }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
             try {
@@ -404,13 +414,7 @@
                     cancelButtonText: lc('cancel')
                 });
                 if (result) {
-                    const selected = [];
-                    documents.forEach((d, index) => {
-                        if (d.selected) {
-                            selected.push(d.doc);
-                        }
-                    });
-                    await documentsService.deleteDocuments(selected);
+                    await documentsService.deleteDocuments(getSelectedDocuments());
                 }
             } catch (error) {
                 showError(error);
@@ -555,6 +559,22 @@
             }
         }
     }
+    async function showPDFPopover(event) {
+        try {
+            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                props: {
+                    documents: getSelectedDocuments()
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
@@ -636,6 +656,7 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)}>
                 <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-fullscreen" variant="text" on:tap={fullscreenSelectedDocuments} />
             </CActionBar>
         {/if}
