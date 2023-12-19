@@ -520,6 +520,7 @@
     }
 
     async function onRecropTapFinish(cancel = false) {
+        console.log('onRecropTapFinish', cancel, recrop, quadChanged);
         try {
             if (recrop) {
                 // let s see if quads changed and update image
@@ -606,7 +607,7 @@
         </collectionview>
         <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
             <CropView {editingImage} bind:quadChanged bind:quads />
-            <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={onRecropTapFinish} />
+            <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
         </gridlayout>
         <CActionBar {onGoBack} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
