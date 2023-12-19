@@ -33,7 +33,7 @@
             });
             if (result.folders.length) {
                 exportDirectory = result.folders[0];
-                ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+                ApplicationSettings.setString('image_export_directory', exportDirectory);
             }
         } catch (error) {
             showError(error);
