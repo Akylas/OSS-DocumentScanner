@@ -32,7 +32,7 @@
         "@nativescript-community/md5": "^1.0.4",
         "@nativescript-community/perms": "2.3.0",
         "@nativescript-community/preferences": "1.3.0",
-        "@nativescript-community/sentry": "4.6.14",
+        "@nativescript-community/sentry": "4.6.15",
         "@nativescript-community/sqlite": "3.4.2",
         "@nativescript-community/systemui": "1.1.19",
         "@nativescript-community/ui-cameraview": "0.0.9",
@@ -59,7 +59,7 @@
         "@nativescript-community/ui-material-textview": "7.2.23",
         "@nativescript-community/ui-pager": "14.1.16",
         "@nativescript-community/ui-pager-indicator": "^14.1.16",
-        "@nativescript-community/ui-popover": "0.1.12",
+        "@nativescript-community/ui-popover": "0.1.13",
         "@nativescript-community/ui-webview": "^1.4.10",
         "@nativescript-community/ui-zoomimage": "4.3.27",
         "@nativescript/imagepicker": "3.0.1",
@@ -140,6 +140,7 @@
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
         "@nativescript/webpack": "../NativeScript/dist/packages/nativescript-webpack.tgz",
-        "@nativescript-community/ui-canvas": "portal:/home/mguillon/dev/nativescript/ui-canvas/packages/ui-canvas"
+        "@nativescript-community/ui-canvas": "portal:/home/mguillon/dev/nativescript/ui-canvas/packages/ui-canvas",
+        "@nativescript-community/ui-cameraview": "portal:../ui-cameraview/packages/ui-cameraview"
     }
 }
