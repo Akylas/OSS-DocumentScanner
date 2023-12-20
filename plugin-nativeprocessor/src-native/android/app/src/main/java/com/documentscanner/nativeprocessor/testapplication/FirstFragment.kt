@@ -129,7 +129,8 @@ class FirstFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-//        binding.cameraView.displayRatio = "16:9"
+        binding.cameraView.aspectRatio = "16:9"
+//        binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
         binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
         binding.cameraView.savePhotoToDisk = false
         val activity = this.requireActivity()
@@ -175,9 +176,8 @@ class FirstFragment : Fragment() {
             }
 
             override fun onCameraOpen() {
-//                var test = binding.cameraView.getAllAvailablePictureSizes();
-                binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
-                Log.d("CameraView", "onCameraOpen")
+                var test = binding.cameraView.getAllAvailablePictureSizes();
+                Log.d("CameraView", "onCameraOpen " + test.get(0).toString())
             }
 
             override fun onCameraClose() {
