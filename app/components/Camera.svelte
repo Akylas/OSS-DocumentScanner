@@ -24,6 +24,7 @@
     import { QRCodeData, cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners, getJSONDocumentCornersAndImage } from 'plugin-nativeprocessor';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
+    import { writable } from 'svelte/store';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -47,6 +48,18 @@
     let cropView: NativeViewElementNode<CropView>;
     let fullImageView: NativeViewElementNode<Img>;
     let smallImageView: NativeViewElementNode<Img>;
+
+    const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string }>(
+        JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited"}'))
+    );
+    cameraOptionsStore.subscribe((newValue) => {
+        console.log('cameraOptionsStore changed', newValue);
+        ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
+    });
+    $: ({ aspectRatio, stretch, viewsize } = $cameraOptionsStore);
+
+    // let aspectRatio = ApplicationSettings.getString('camera_aspectratio', '4:3');
+    // let stretch = ApplicationSettings.getString('camera_stretch', 'aspectFit');
     // let collectionView: NativeViewElementNode<CollectionView>;
 
     export let modal = false;
@@ -159,6 +172,7 @@
         const result: { icon: string; id: string; text: string } = await showBottomSheet({
             parent: page,
             view: CameraSettingsBottomSheet,
+            backgroundOpacity:0.8,
             closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
                 transforms = bottomsheetComponent.transforms;
                 colorType = bottomsheetComponent.colorType;
@@ -166,6 +180,7 @@
                 ApplicationSettings.setString('defaultTransforms', transforms.join(','));
             },
             props: {
+                cameraOptionsStore,
                 colorType,
                 transforms
             }
@@ -601,11 +616,12 @@
     <gridlayout backgroundColor="black" paddingBottom={30} rows="auto,*,auto,auto">
         <cameraView
             bind:this={cameraPreview}
+            {aspectRatio}
             autoFocus={true}
             enablePinchZoom={true}
             {flashMode}
-            rowSpan="2"
-            stretch="aspectFit"
+            rowSpan={viewsize === 'full' ? 4 : 2}
+            {stretch}
             on:layoutChanged={onCameraLayoutChanged}
             on:loaded={applyProcessor}
             on:tap={focusCamera} />
