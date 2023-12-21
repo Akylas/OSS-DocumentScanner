@@ -1,0 +1,2 @@
+*Bug fixes*
+- *android:* regression fix preventing live document scanning preview
