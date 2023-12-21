@@ -72,6 +72,8 @@ namespace svelteNative.JSX {
         noCache?: boolean;
         imageRotation?: number;
         colorMatrix?: number[];
+        blurRadius?: number;
+        fadeDuration?: number;
     }
     export interface LabelAttributes {
         autoFontSize?: boolean;
