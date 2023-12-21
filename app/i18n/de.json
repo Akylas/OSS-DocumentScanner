@@ -1,1 +1,35 @@
-{}
+{
+    "languages": "Sprachen",
+    "preview": "Vorschau",
+    "italian": "italienisch",
+    "save": "speichern",
+    "password": "Passwort",
+    "theme": {
+        "light": "hell",
+        "dark": "dunkel",
+        "black": "schwarz"
+    },
+    "portrait": "Hochformat",
+    "source_code": "Quellcode",
+    "username": "Benutzername",
+    "select_language": "Sprache wählen",
+    "delete": "löschen",
+    "version": "Version",
+    "import_settings": "Import-Einstellungen",
+    "ok": "OK",
+    "french": "französisch",
+    "camera_settings": "Kamera-Einstellungen",
+    "black_white": "schwarz & weiss",
+    "landscape": "Querformat",
+    "dark": "dunkel",
+    "cancel": "abbrechen",
+    "language": "Sprache",
+    "orientation": "Ausrichtung",
+    "error": "Fehler",
+    "quality": "Qualität",
+    "settings": {
+        "title": "Einstellungen"
+    },
+    "export_settings": "Export-Einstellungen",
+    "later": "später"
+}
