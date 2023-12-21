@@ -1,9 +1,9 @@
 <!-- <p align="center"><img src="fastlane/metadata/android/en-US/images/featureGraphic.png" width="100%"></a></p> -->
 
-<img title="" src="./fastlane/metadata/com.akylas.documentscanner/android/en-US/images/icon.png" align="right" width="64">
-<!-- <img title="" src="./featureGraphic.png"> -->
+<!-- <img title="" src="./fastlane/metadata/com.akylas.documentscanner/android/en-US/images/icon.png" align="right" width="64"> -->
+<img title="" src="./featureGraphic.png">
 
-# OSS Document Scanner
+<!-- # OSS Document Scanner -->
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](COC.md)
 [![GitHub repo stars](https://img.shields.io/github/stars/Akylas/com.akylas.documentscanner?style=flat)](https://github.com/Akylas/com.akylas.documentscanner/stargazers)
@@ -23,7 +23,7 @@
 [<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/com.akylas.documentscanner)
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=com.akylas.documentscanner)
 [<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/machiav3lli/oandbackupx/releases)
-<div align="center">
+<div>
 
 <a href="https://testflight.apple.com/join/sxiV4ZKL"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
 </div>
