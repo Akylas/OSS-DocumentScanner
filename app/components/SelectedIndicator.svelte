@@ -12,7 +12,7 @@
     fontFamily={$fonts.mdi}
     fontSize={18}
     height={26}
-    horizontalAlignment="right"
+    horizontalAlignment="left"
     margin={10}
     rowSpan={2}
     text="mdi-check"

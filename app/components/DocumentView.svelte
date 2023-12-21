@@ -411,7 +411,7 @@
                         stretch="aspectFit"
                         verticalAlignment="center" />
                     <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $systemFontScale} height="100%" padding="10 0 0 0" row={1}>
-                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size)}`} textAlignment="right" verticalAlignment="bottom" />
+                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size)}`} textAlignment="left" verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>

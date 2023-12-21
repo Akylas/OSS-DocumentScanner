@@ -1,4 +1,4 @@
-<script lang="ts">
+<script context="module" lang="ts">
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { LottieView } from '@nativescript-community/ui-lottie';
@@ -20,7 +20,7 @@
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { importAndScanImage, timeout } from '~/utils/ui';
+    import { importAndScanImage, showPopoverMenu, timeout } from '~/utils/ui';
     import { colors, screenWidthDips, systemFontScale } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
@@ -34,7 +34,13 @@
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { log } from 'console';
     import { request } from '@nativescript-community/perms';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { createNativeAttributedString } from '@nativescript-community/ui-label';
 
+    const textPaint = new Paint();
+</script>
+
+<script lang="ts">
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 100;
 
@@ -51,6 +57,8 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let lottieView: NativeViewElementNode<LottieView>;
 
+    let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'default');
+    $: condensed = viewStyle === 'condensed';
     let syncEnabled = syncService.enabled;
     // let items: ObservableArray<{
     //     doc: OCRDocument; selected: boolean
@@ -161,7 +169,7 @@
         DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
     // technique for only specific properties to get updated on store change
-    let colorPrimaryContainer = $colors.colorPrimaryContainer;
+    let { colorPrimaryContainer, colorOnBackground } = $colors;
     $: ({
         colorSurfaceContainerHigh,
         colorOnBackground,
@@ -436,28 +444,42 @@
                     name: l('about')
                 }
             ];
-            const result: { icon: string; id: string; text: string } = await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: OptionSelect,
-                anchor: event.object,
+            const result = await showPopoverMenu<{ icon: string; id: string; text: string }>({
+                options,
                 vertPos: VerticalPosition.BELOW,
-                transparent: true,
-                hideArrow: true,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
+                anchor: event.object,
+                // onClose: (item) => {
+                //     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
+                // }
                 props: {
-                    borderRadius: 10,
-                    elevation: 4,
-                    margin: 4,
-                    backgroundColor: colorSurfaceContainer,
-                    width: 200,
                     rowHeight: 48,
-                    height: options.length * 48 + 16,
                     fontWeight: 'normal',
-                    containerColumns: 'auto',
-                    onClose: closePopover,
-                    options
+                    containerColumns: 'auto'
                 }
             });
+            // const result: { icon: string; id: string; text: string } = await showPopover({
+            //     backgroundColor: colorSurfaceContainer,
+            //     view: OptionSelect,
+            //     anchor: event.object,
+            //     vertPos: VerticalPosition.BELOW,
+            //     transparent: true,
+            //     hideArrow: true,
+            //     horizPos: HorizontalPosition.ALIGN_RIGHT,
+            //     props: {
+            //         borderRadius: 10,
+            //         elevation: 4,
+            //         margin: 4,
+            //         backgroundColor: colorSurfaceContainer,
+            //         width: 200,
+            //         rowHeight: 48,
+            //         height: options.length * 48 + 16,
+            //         fontWeight: 'normal',
+            //         containerColumns: 'auto',
+            //         onClose: closePopover,
+            //         options
+            //     }
+            // });
             if (result) {
                 switch (result.id) {
                     case 'about':
@@ -480,6 +502,24 @@
         try {
             const Settings = (await import('~/components/Settings.svelte')).default;
             navigate({ page: Settings });
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function selectViewStyle(event) {
+        try {
+            // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
+            await showPopoverMenu({
+                options: [
+                    { id: 'default', name: lc('default') },
+                    { id: 'condensed', name: lc('condensed') }
+                ],
+                anchor: event.object,
+                onClose: (item) => {
+                    viewStyle = item.id;
+                    ApplicationSettings.setString('documents_list_view_style', viewStyle);
+                }
+            });
         } catch (error) {
             showError(error);
         }
@@ -536,9 +576,9 @@
     //         showError(error);
     //     }
     // }
-    function getSize(item: Item) {
-        return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
-    }
+    // function getSize(item: Item) {
+    //     return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
+    // }
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
@@ -575,45 +615,95 @@
             showError(err);
         }
     }
+    function getItemImageHeight(viewStyle) {
+        return condensed ? 60 : 114;
+    }
+    function getItemRowHeight(viewStyle) {
+        return condensed ? 80 : 150;
+    }
+    function getImageMargin(viewStyle) {
+        switch (viewStyle) {
+            case 'condensed':
+                return 0;
+
+            default:
+                return 10;
+        }
+    }
+
+    $: textPaint.color = colorOnBackground || 'black';
+    $: textPaint.textSize = (condensed ? 11 : 14) * $systemFontScale;
+
+    function onCanvasDraw(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
+        // const w2 = w / 2;
+        // const h2 = h / 2;
+        const dx = getItemImageHeight(viewStyle) + 16 + 10;
+        textPaint.color = colorOnSurfaceVariant;
+        canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
+        textPaint.color = colorOnBackground;
+        const topText = createNativeAttributedString({
+            spans: [
+                {
+                    fontSize: 16 * $systemFontScale,
+                    fontWeight: 'bold',
+                    lineBreak: 'end',
+                    lineHeight: 18 * $systemFontScale,
+                    text: item.doc.name
+                },
+                {
+                    color: colorOnSurfaceVariant,
+                    lineHeight: (condensed ? 16 : 26) * $systemFontScale,
+                    text: '\n' + dayjs(item.doc.createdDate).format('L LT')
+                }
+            ]
+        });
+        const staticLayout = new StaticLayout(topText, textPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true, 'end');
+        canvas.translate(dx, 4 + 10);
+        staticLayout.draw(canvas);
+        // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={150 * $systemFontScale}>
+        <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={getItemRowHeight(viewStyle) * $systemFontScale}>
             <Template let:item>
                 <!-- TODO: make this a canvas -->
-                <gridlayout
+                <canvaslabel
                     backgroundColor={colorSurfaceContainerHigh}
                     borderRadius={12}
-                    columns="auto,*"
+                    fontSize={14 * $systemFontScale}
                     margin="8 16 8 16"
                     padding={10}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
-                    >/
+                    on:draw={(e) => onCanvasDraw(item, e)}>
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
-                        height={114}
+                        horizontalAlignment="left"
                         item={item.doc.pages[0]}
+                        marginBottom={getImageMargin(viewStyle)}
+                        marginTop={getImageMargin(viewStyle)}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
-                        verticalAlignment="center"
-                        width={114} />
-                    <canvaslabel col={1} fontSize={14 * $systemFontScale} padding="4 0 6 16">
-                        <cgroup>
-                            <cspan fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
-                            <cspan color={colorOnSurfaceVariant} lineHeight={26 * $systemFontScale} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
-                        </cgroup>
+                        width={getItemImageHeight(viewStyle)} />
+                    <!-- <canvaslabel col={1} fontSize={14 * $systemFontScale} padding="4 0 6 16" color="red">
+                    <cgroup>
+                        <cspan fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
+                        <cspan color={colorOnSurfaceVariant} lineHeight={26 * $systemFontScale} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
+                    </cgroup>
 
-                        <cspan color={colorOnSurfaceVariant} text={getSize(item)} verticalAlignment="bottom" />
-                    </canvaslabel>
-                    <SelectedIndicator selected={item.selected} />
-                    <SyncIndicator col={1} selected={item.doc._synced === 1} visible={syncEnabled} />
-                    <PageIndicator col={1} horizontalAlignment="right" text={item.doc.pages.length} />
-                </gridlayout>
+                    <cspan color={colorOnSurfaceVariant} text={getSize(item)} verticalAlignment="bottom" />
+                    </canvaslabel> -->
+                    <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
+                    <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                    <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />
+                </canvaslabel>
             </Template>
         </collectionView>
         {#if showNoDocument}
@@ -650,6 +740,7 @@
                 variant="text"
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
+            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showSettings} />
         </CActionBar>
         <!-- {#if nbSelected > 0} -->

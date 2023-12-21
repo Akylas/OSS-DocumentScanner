@@ -13,7 +13,7 @@
     fontSize={14}
     fontWeight="bold"
     height={20 * $systemFontScale}
-    horizontalAlignment="left"
+    horizontalAlignment="right"
     paddingLeft={defaultPadding * $systemFontScale}
     paddingRight={defaultPadding * $systemFontScale}
     rowSpan={2}
