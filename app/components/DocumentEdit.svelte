@@ -25,7 +25,7 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { notifyWhenChanges } from '~/utils/svelte/store';
-    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, timeout, updateLoadingProgress } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, showPopoverMenu, timeout, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
     import { colors, systemFontScale } from '~/variables';
 
@@ -201,32 +201,27 @@
     }
     async function showEnhancements(event) {
         try {
-            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
 
             function getData(transformId) {
                 const value = transforms.indexOf(transformId) !== -1;
                 return { type: 'checkbox', id: transformId, value, data: value };
             }
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: OptionSelect,
-                anchor: event.object,
+            await showPopoverMenu({
+                options: [
+                    { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
+                    { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },
+                    { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
+                ],
                 vertPos: VerticalPosition.ABOVE,
-                // disableDimBackground: true,
+
+                anchor: event.object,
+                // onClose: (item) => {
+                //     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
+                // }
                 props: {
-                    borderRadius: 10,
-                    elevation: 4,
-                    margin: 4,
-                    backgroundColor: colorSurfaceContainer,
-                    containerColumns: 'auto',
-                    rowHeight: 58 * $systemFontScale,
-                    height: 58 * 3 * $systemFontScale + 8,
                     width: 380,
-                    options: [
-                        { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
-                        { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },
-                        { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
-                    ],
+                    containerColumns: 'auto',
                     onCheckBox(item, value, e) {
                         if (updatingTransform) {
                             e.object.checked = !value;
@@ -235,8 +230,37 @@
                         updateTransform(value, null, item.id);
                     }
                 }
-                // trackingScrollView: 'collectionView'
             });
+            // await showPopover({
+            //     backgroundColor: colorSurfaceContainer,
+            //     view: OptionSelect,
+            //     anchor: event.object,
+            //     vertPos: VerticalPosition.ABOVE,
+            //     // disableDimBackground: true,
+            //     props: {
+            //         borderRadius: 10,
+            //         elevation: 4,
+            //         margin: 4,
+            //         backgroundColor: colorSurfaceContainer,
+            //         containerColumns: 'auto',
+            //         rowHeight: 58 * $systemFontScale,
+            //         height: 58 * 3 * $systemFontScale + 8,
+            //         width: 380,
+            //         options: [
+            //             { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
+            //             { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },
+            //             { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
+            //         ],
+            //         onCheckBox(item, value, e) {
+            //             if (updatingTransform) {
+            //                 e.object.checked = !value;
+            //                 return;
+            //             }
+            //             updateTransform(value, null, item.id);
+            //         }
+            //     }
+            //     // trackingScrollView: 'collectionView'
+            // });
         } catch (error) {
             showError(error);
         }

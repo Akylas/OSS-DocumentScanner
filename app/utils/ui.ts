@@ -20,6 +20,10 @@ import { l, lc } from '~/helpers/locale';
 
 import type LoadingIndicator__SvelteComponent_ from '~/components/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/LoadingIndicator.svelte';
+import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+import { colors, systemFontScale } from '~/variables';
+import { get } from 'svelte/store';
+import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 
 export interface ComponentInstanceInfo {
     element: NativeViewElementNode<View>;
@@ -482,4 +486,34 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
         componentInstanceInfo.viewInstance.$destroy();
         componentInstanceInfo = null;
     }
+}
+
+export async function showPopoverMenu<T = any>({ options, anchor, onClose, props, horizPos, vertPos }: { options; anchor; onClose?; props? } & Partial<PopoverOptions>) {
+    const { colorSurfaceContainer } = get(colors);
+    const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+    const rowHeight = (props?.rowHeight || 58) * get(systemFontScale);
+    const result: T = await showPopover({
+        backgroundColor: colorSurfaceContainer,
+        view: OptionSelect,
+        anchor,
+        horizPos: horizPos ?? HorizontalPosition.ALIGN_LEFT,
+        vertPos: vertPos ?? VerticalPosition.CENTER,
+        props: {
+            borderRadius: 10,
+            elevation: 4,
+            margin: 4,
+            backgroundColor: colorSurfaceContainer,
+            containerColumns: 'auto',
+            rowHeight,
+            height: Math.min(rowHeight * options.length + 8, 300),
+            width: 150,
+            options,
+            onClose: (item) => {
+                closePopover();
+                onClose?.(item);
+            },
+            ...(props || {})
+        }
+    });
+    return result;
 }

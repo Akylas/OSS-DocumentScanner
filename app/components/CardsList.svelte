@@ -20,7 +20,7 @@
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { importAndScanImage, timeout } from '~/utils/ui';
+    import { importAndScanImage, showPopoverMenu, timeout } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
@@ -493,7 +493,7 @@
     }
     async function showOptions(event) {
         try {
-            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             const options = [
                 {
                     icon: 'mdi-view-dashboard',
@@ -506,28 +506,42 @@
                     name: l('preferences')
                 }
             ];
-            const result: { icon: string; id: string; text: string } = await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: OptionSelect,
-                anchor: event.object,
+            const result = await showPopoverMenu<{ icon: string; id: string; text: string }>({
+                options,
                 vertPos: VerticalPosition.BELOW,
-                transparent: true,
-                hideArrow: true,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
+                anchor: event.object,
+                // onClose: (item) => {
+                //     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
+                // }
                 props: {
-                    borderRadius: 10,
-                    elevation: 4,
-                    margin: 4,
-                    backgroundColor: colorSurfaceContainer,
-                    width: 200,
                     rowHeight: 48,
-                    height: options.length * 48 + 16,
                     fontWeight: 'normal',
-                    containerColumns: 'auto',
-                    onClose: closePopover,
-                    options
+                    containerColumns: 'auto'
                 }
             });
+            // const result: { icon: string; id: string; text: string } = await showPopover({
+            //     backgroundColor: colorSurfaceContainer,
+            //     view: OptionSelect,
+            //     anchor: event.object,
+            //     vertPos: VerticalPosition.BELOW,
+            //     transparent: true,
+            //     hideArrow: true,
+            //     horizPos: HorizontalPosition.ALIGN_RIGHT,
+            //     props: {
+            //         borderRadius: 10,
+            //         elevation: 4,
+            //         margin: 4,
+            //         backgroundColor: colorSurfaceContainer,
+            //         width: 200,
+            //         rowHeight: 48,
+            //         height: options.length * 48 + 16,
+            //         fontWeight: 'normal',
+            //         containerColumns: 'auto',
+            //         onClose: closePopover,
+            //         options
+            //     }
+            // });
             if (result) {
                 switch (result.id) {
                     case 'layout':

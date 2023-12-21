@@ -23,7 +23,7 @@
     import PDFCanvas from '~/services/pdf/PDFCanvas';
     import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
     import { showError } from '~/utils/error';
-    import { hideLoading, showLoading } from '~/utils/ui';
+    import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
     import { colors, fonts, systemFontScale } from '~/variables';
     import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
@@ -173,31 +173,37 @@
     };
     async function selectOption(option: string, event, valueTransformer?, fullRefresh = true) {
         try {
-            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
-
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: OptionSelect,
+            await showPopoverMenu({
+                options,
                 anchor: event.object,
-                horizPos: HorizontalPosition.ALIGN_LEFT,
-                vertPos: VerticalPosition.CENTER,
-                props: {
-                    borderRadius: 10,
-                    elevation: 4,
-                    margin: 4,
-                    backgroundColor: colorSurfaceContainer,
-                    containerColumns: 'auto',
-                    rowHeight: 58 * $systemFontScale,
-                    height: Math.min(58 * options.length * $systemFontScale + 8, 300),
-                    width: 150,
-                    options,
-                    onClose: (item) => {
-                        closePopover();
-                        updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
-                    }
+                onClose: (item) => {
+                    updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
                 }
             });
+            // await showPopover({
+            //     backgroundColor: colorSurfaceContainer,
+            //     view: OptionSelect,
+            //     anchor: event.object,
+            //     horizPos: HorizontalPosition.ALIGN_LEFT,
+            //     vertPos: VerticalPosition.CENTER,
+            //     props: {
+            //         borderRadius: 10,
+            //         elevation: 4,
+            //         margin: 4,
+            //         backgroundColor: colorSurfaceContainer,
+            //         containerColumns: 'auto',
+            //         rowHeight: 58 * $systemFontScale,
+            //         height: Math.min(58 * options.length * $systemFontScale + 8, 300),
+            //         width: 150,
+            //         options,
+            //         onClose: (item) => {
+            //             closePopover();
+            //             updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
+            //         }
+            //     }
+            // });
         } catch (error) {
             showError(error);
         }
