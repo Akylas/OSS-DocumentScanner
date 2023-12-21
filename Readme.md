@@ -63,6 +63,19 @@ You can,
 Thanks to our contributors:
 * [Enrico Dell'Oste](https://www.smartpixel.it/)
 
+### Languages: [<img align="right" src="https://hosted.weblate.org/widgets/oss-document-scanner/-/287x66-white.png" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
+
+[<img src="https://hosted.weblate.org/widgets/oss-document-scanner/-/multi-auto.svg" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/)
+
+The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/oss-document-scanner/).
+
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
+	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
+  </a>
+</p>
+
 ### Building
 
 This app uses opencv and tesseract. I did not include the libraries because there are huge and would make the github repo too big.
@@ -99,17 +112,3 @@ It is a bit trickier for Tesseract as we need to compile it
 
 You need to use yarn with this project as it uses the `portal:` protocol for some dependencies.
 Note that the project has some `yarn link` for easy local dev for me. The best is for you to remove the `resolutions` part of the `package.json`
-
-### Languages: [<img align="right" src="https://hosted.weblate.org/widgets/oss-document-scanner/-/287x66-white.png" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
-
-[<img src="https://hosted.weblate.org/widgets/oss-document-scanner/-/multi-auto.svg" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/)
-
-The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/oss-document-scanner/).
-
-
-
-<p align="center">
-  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
-	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
-  </a>
-</p>
