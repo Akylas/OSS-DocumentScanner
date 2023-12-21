@@ -6,7 +6,7 @@
     import { getLocaleDisplayName, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
     import { colors, fonts } from '~/variables';
-    import SearchCollectionView from './SearchCollectionView.svelte';
+    // import SearchCollectionView from './SearchCollectionView.svelte';
     import { ocrService } from '~/services/ocr';
     import MiniSearch from '~/utils/minisearch';
     import { Template } from 'svelte-native/components';
@@ -14,7 +14,7 @@
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 
     let textField: NativeViewElementNode<TextField>;
-    let collectionView: SearchCollectionView;
+    // let collectionView: SearchCollectionView;
     // let currentSearchText: string;
     export let width = 300;
     export let height = 50;
@@ -131,7 +131,7 @@
             on:unloaded={blurTextField}
             on:textChange={onTextChange}
             on:loaded={focus} />
-        <collectionview bind:this={collectionView} {items} row={1} rowHeight={56}>
+        <collectionview {items} row={1} rowHeight={56}>
             <Template let:item>
                 <gridlayout columns="auto,*,auto" padding={16} rippleColor={colorPrimary} on:tap={() => close(item)}>
                     <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapsed'} />

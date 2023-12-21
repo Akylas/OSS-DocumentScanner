@@ -5,7 +5,7 @@ import { loadImage, recycleImages } from '~/utils/utils';
 import { request } from '@nativescript-community/https';
 import { networkService } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { getLocaleDisplayName, l, lc } from '~/helpers/locale';
+import { getCurrentISO3Language, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
 
 const languages = {
@@ -150,8 +150,7 @@ export class OCRService extends Observable {
     mDataType: 'best' | 'standard' | 'fast';
     mDownloadedLanguages: string[] = [];
     async start() {
-        // DEV_LOG && console.log(TAG, 'start');
-        this.languages = ApplicationSettings.getString('tesseract_languages', 'fra');
+        this.languages = ApplicationSettings.getString('tesseract_languages', getCurrentISO3Language());
         this.dataType = ApplicationSettings.getString('tesseract_datatype', 'best') as any;
     }
 

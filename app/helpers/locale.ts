@@ -151,6 +151,14 @@ export function getLocaleDisplayName(locale?) {
         return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
     }
 }
+export function getCurrentISO3Language() {
+    if (__IOS__) {
+        return NSLocale.alloc().initWithLocaleIdentifier(lang)['ISO639_2LanguageIdentifier'];
+    } else {
+        const locale = java.util.Locale.forLanguageTag(lang);
+        return locale.getISO3Language();
+    }
+}
 async function internalSelectLanguage() {
     try {
         const actions = SUPPORTED_LOCALES;
