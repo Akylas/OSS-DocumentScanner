@@ -1,0 +1,7 @@
+*Features*
+- new condensed style for main document list view
+- allow renaming documents (click document name in the action bar)
+
+*Bug fixes*
+- prevent error if canceling capture image cropping (with top left cancel button)
+- use phone language as default ocr language
