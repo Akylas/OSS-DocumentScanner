@@ -129,7 +129,7 @@ class FirstFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.cameraView.aspectRatio = "16:9"
+        binding.cameraView.aspectRatio = "4:3"
 //        binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
         binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
         binding.cameraView.savePhotoToDisk = false
