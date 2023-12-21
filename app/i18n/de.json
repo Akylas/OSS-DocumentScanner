@@ -31,5 +31,12 @@
         "title": "Einstellungen"
     },
     "export_settings": "Export-Einstellungen",
-    "later": "später"
+    "later": "später",
+    "nb_pages": "%1$s Seiten",
+    "selected": "%1$s ausgewählt",
+    "a4": "A4",
+    "about": "Über",
+    "confirm_delete_page": "Sind Sie sicher, dass Sie Seite %1$s löschen möchten?",
+    "a3": "A3",
+    "no_document_yet": "Fügen Sie ein Dokument hinzu, in dem Sie ein Foto machen oder ein Bild importieren"
 }
