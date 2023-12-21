@@ -13,10 +13,14 @@
     import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorPrimary, colorOnBackground } = $colors);
 
+    export let keepScreenAwake = false;
+    export let refreshOnOrientationChange = false;
+    export let screenBrightness = -1;
     export let startPageIndex: number = 0;
     export let backgroundColor = 'black';
+    export let labelColor = 'white';
     export let statusBarStyle: any = 'dark';
     export let actionBarStyle: any = backgroundColor === 'black' ? 'black' : '';
     export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation? }[];
@@ -82,7 +86,11 @@
 
     function onOrientationChanged(event: OrientationChangedEventData) {
         imageFunctionArg = event.newValue;
-        pager?.nativeElement.refresh();
+        // setTimeout(() => {
+        if (refreshOnOrientationChange) {
+            pager?.nativeElement.refresh();
+        }
+        // }, 1000);
     }
 
     onMount(() => {
@@ -93,15 +101,16 @@
     });
 </script>
 
-<page actionBarHidden={true} {backgroundColor} screenOrientation="all" statusBarColor={backgroundColor} {statusBarStyle}>
+<page actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" statusBarColor={backgroundColor} {statusBarStyle}>
     <gridlayout rows="auto,*">
         <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
 
-        <pager bind:this={pager} items={images} rowSpan={2} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
+        <pager bind:this={pager} items={images} preserveIndexOnItemsChange={true} rowSpan={2} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout rows="*,auto" width="100%">
                     <RotableImageView id="imageView" {imageFunctionArg} {item} margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} zoomable={true} />
                     <label
+                        color={labelColor}
                         fontSize={30}
                         fontWeight="bold"
                         paddingTop={5}

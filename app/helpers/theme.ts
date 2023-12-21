@@ -52,6 +52,9 @@ export function toggleTheme(autoDark = false) {
     const newTheme = theme === 'dark' ? (autoDark ? 'auto' : 'light') : 'dark';
     setString('theme', newTheme);
 }
+export function isDarkTheme(theme) {
+    return theme === 'dark' || theme === 'black';
+}
 export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark'];

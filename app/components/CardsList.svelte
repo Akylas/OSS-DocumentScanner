@@ -113,9 +113,12 @@
     }
     function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
         for (let index = documents.length - 1; index >= 0; index--) {
-            if (event.documents.indexOf(documents.getItem(index).doc) !== -1) {
+            const item = documents.getItem(index);
+            if (event.documents.indexOf(item.doc) !== -1) {
                 documents.splice(index, 1);
-                nbSelected -= 1;
+                if (item.selected) {
+                    nbSelected -= 1;
+                }
             }
         }
         updateNoDocument();
@@ -468,6 +471,15 @@
             }
         }
     }
+    function getSelectedDocuments() {
+        const selected = [];
+        documents.forEach((d, index) => {
+            if (d.selected) {
+                selected.push(d.doc);
+            }
+        });
+        return selected;
+    }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
             try {
@@ -478,98 +490,123 @@
                     cancelButtonText: lc('cancel')
                 });
                 if (result) {
-                    const selected = [];
-                    documents.forEach((d, index) => {
-                        if (d.selected) {
-                            selected.push(d.doc);
-                        }
-                    });
-                    await documentsService.deleteDocuments(selected);
+                    await documentsService.deleteDocuments(getSelectedDocuments());
                 }
             } catch (error) {
                 showError(error);
             }
         }
     }
-    async function showOptions(event) {
+
+    async function showPDFPopover(event) {
         try {
-            // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            const options = [
-                {
-                    icon: 'mdi-view-dashboard',
-                    id: 'layout',
-                    name: l('change_layout')
-                },
-                {
-                    icon: 'mdi-cogs',
-                    id: 'preferences',
-                    name: l('preferences')
-                }
-            ];
-            const result = await showPopoverMenu<{ icon: string; id: string; text: string }>({
-                options,
-                vertPos: VerticalPosition.BELOW,
-                horizPos: HorizontalPosition.ALIGN_RIGHT,
+            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
                 anchor: event.object,
-                // onClose: (item) => {
-                //     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
-                // }
+                vertPos: VerticalPosition.BELOW,
                 props: {
-                    rowHeight: 48,
-                    fontWeight: 'normal',
-                    containerColumns: 'auto'
+                    documents: getSelectedDocuments()
                 }
             });
-            // const result: { icon: string; id: string; text: string } = await showPopover({
-            //     backgroundColor: colorSurfaceContainer,
-            //     view: OptionSelect,
-            //     anchor: event.object,
-            //     vertPos: VerticalPosition.BELOW,
-            //     transparent: true,
-            //     hideArrow: true,
-            //     horizPos: HorizontalPosition.ALIGN_RIGHT,
-            //     props: {
-            //         borderRadius: 10,
-            //         elevation: 4,
-            //         margin: 4,
-            //         backgroundColor: colorSurfaceContainer,
-            //         width: 200,
-            //         rowHeight: 48,
-            //         height: options.length * 48 + 16,
-            //         fontWeight: 'normal',
-            //         containerColumns: 'auto',
-            //         onClose: closePopover,
-            //         options
-            //     }
-            // });
-            if (result) {
-                switch (result.id) {
-                    case 'layout':
-                        await collectionView?.nativeElement.closeCurrentMenu();
-                        if (viewStyle === 'default') {
-                            viewStyle = 'fullcard';
-                        } else {
-                            viewStyle = 'default';
-                        }
-                        ApplicationSettings.setString('cardViewStyle', viewStyle);
-                        collectionView?.nativeView.refresh();
-                        break;
-                    case 'about':
-                        const About = (await import('~/components/About.svelte')).default;
-                        showModal({ page: About, animated: true, fullscreen: true });
-                        // navigate({ page: About });
-                        break;
-
-                    case 'preferences':
-                        const Settings = (await import('~/components/Settings.svelte')).default;
-                        navigate({ page: Settings });
-                        break;
-                }
+        } catch (err) {
+            showError(err);
+        }
+    }
+    async function switchLayout() {
+        try {
+            await collectionView?.nativeElement.closeCurrentMenu();
+            if (viewStyle === 'default') {
+                viewStyle = 'fullcard';
+            } else {
+                viewStyle = 'default';
             }
+            ApplicationSettings.setString('cardViewStyle', viewStyle);
+            collectionView?.nativeView.refresh();
         } catch (error) {
             showError(error);
         }
     }
+    // async function showOptions(event) {
+    //     try {
+    //         // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+    //         const options = [
+    //             {
+    //                 icon: 'mdi-view-dashboard',
+    //                 id: 'layout',
+    //                 name: l('change_layout')
+    //             },
+    //             {
+    //                 icon: 'mdi-cogs',
+    //                 id: 'preferences',
+    //                 name: l('preferences')
+    //             }
+    //         ];
+    //         const result = await showPopoverMenu<{ icon: string; id: string; text: string }>({
+    //             options,
+    //             vertPos: VerticalPosition.BELOW,
+    //             horizPos: HorizontalPosition.ALIGN_RIGHT,
+    //             anchor: event.object,
+    //             // onClose: (item) => {
+    //             //     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
+    //             // }
+    //             props: {
+    //                 rowHeight: 48,
+    //                 fontWeight: 'normal',
+    //                 containerColumns: 'auto'
+    //             }
+    //         });
+    //         // const result: { icon: string; id: string; text: string } = await showPopover({
+    //         //     backgroundColor: colorSurfaceContainer,
+    //         //     view: OptionSelect,
+    //         //     anchor: event.object,
+    //         //     vertPos: VerticalPosition.BELOW,
+    //         //     transparent: true,
+    //         //     hideArrow: true,
+    //         //     horizPos: HorizontalPosition.ALIGN_RIGHT,
+    //         //     props: {
+    //         //         borderRadius: 10,
+    //         //         elevation: 4,
+    //         //         margin: 4,
+    //         //         backgroundColor: colorSurfaceContainer,
+    //         //         width: 200,
+    //         //         rowHeight: 48,
+    //         //         height: options.length * 48 + 16,
+    //         //         fontWeight: 'normal',
+    //         //         containerColumns: 'auto',
+    //         //         onClose: closePopover,
+    //         //         options
+    //         //     }
+    //         // });
+    //         if (result) {
+    //             switch (result.id) {
+    //                 case 'layout':
+    //                     await collectionView?.nativeElement.closeCurrentMenu();
+    //                     if (viewStyle === 'default') {
+    //                         viewStyle = 'fullcard';
+    //                     } else {
+    //                         viewStyle = 'default';
+    //                     }
+    //                     ApplicationSettings.setString('cardViewStyle', viewStyle);
+    //                     collectionView?.nativeView.refresh();
+    //                     break;
+    //                 case 'about':
+    //                     const About = (await import('~/components/About.svelte')).default;
+    //                     showModal({ page: About, animated: true, fullscreen: true });
+    //                     // navigate({ page: About });
+    //                     break;
+
+    //                 case 'preferences':
+    //                     const Settings = (await import('~/components/Settings.svelte')).default;
+    //                     navigate({ page: Settings });
+    //                     break;
+    //             }
+    //         }
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
     async function showSettings() {
         try {
             const Settings = (await import('~/components/Settings.svelte')).default;
@@ -810,10 +847,13 @@
                 variant="text"
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+
+            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={switchLayout} />
+            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showSettings} />
         </CActionBar>
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)}>
+                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
             </CActionBar>
         {/if}

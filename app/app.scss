@@ -76,6 +76,9 @@ htmllabel {
     &:onTertiary {
         color: var(--colorOnTertiary);
     }
+    &:white {
+        color: black;
+    }
 }
 // mdtextfield {
 //     color: black;
@@ -153,6 +156,12 @@ page {
 
         color: white;
         ripple-color: white;
+    }
+
+    &:white {
+
+        color: black;
+        ripple-color: black;
     }
 }
 

@@ -18,7 +18,7 @@
     import RotableImageView from '~/components/RotableImageView.svelte';
     import SelectedIndicator from '~/components/SelectedIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { getRealTheme, isDarkTheme, onThemeChanged, theme } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
@@ -33,7 +33,7 @@
     const colWidth = screenWidthDips / 2;
     const itemHeight = (colWidth - 2 * rowMargin) * 0.584 + 2 * rowMargin;
 
-    const qrcodeColorMatrix = [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
+    $: qrcodeColorMatrix = isDarkTheme(getRealTheme(theme)) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
     $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurfaceVariant } = $colors);
     interface Item {
@@ -44,8 +44,9 @@
 
     export let document: OCRDocument;
     const topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
-    const statusBarStyle = new Color(topBackgroundColor).isDark() ? 'dark' : 'light';
-    const defaultVisualState = statusBarStyle === 'dark' ? 'black' : null;
+    const statusBarStyle = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
+    console.log('statusBarStyle', topBackgroundColor, new Color(topBackgroundColor).getBrightness(), statusBarStyle);
+    const defaultVisualState = statusBarStyle === 'light' ? 'white' : null;
 
     let qrcodes: QRCodeData;
     let currentQRCodeImage: ImageSource;
@@ -390,14 +391,18 @@
                     : undefined,
                 // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                 props: {
+                    refreshOnOrientationChange: true,
+                    labelColor: 'black',
                     backgroundColor: 'white',
                     statusBarStyle: 'light',
+                    keepScreenAwake: true,
+                    screenBrightness: 1,
                     images: qrcodes.map((qrcode, index) => ({
                         name: pages.getItem(index).name || document.name,
                         subtitle: qrcode.text,
                         sharedTransitionTag: 'qrcode' + index,
                         labelSharedTransitionTag: 'qrcodelabel' + index,
-                        colorMatrix: qrcodeColorMatrix,
+                        colorMatrix: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1],
                         margin: '0 10 0 10',
                         image: (orientation) => {
                             if (orientation === 'landscape') {
