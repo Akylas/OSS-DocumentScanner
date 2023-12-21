@@ -9,6 +9,7 @@
     import RotableImageView from '~/components/RotableImageView.svelte';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
+    import { getColorMatrix } from '~/utils/ui';
     import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -18,16 +19,23 @@
     export let backgroundColor = 'black';
     export let statusBarStyle: any = 'dark';
     export let actionBarStyle: any = backgroundColor === 'black' ? 'black' : '';
-    export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; margin?; imageRotation? }[];
+    export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation? }[];
     let pager: NativeViewElementNode<Pager>;
     let imageFunctionArg = Application.orientation();
 
     let currentIndex = startPageIndex;
     const firstItem = images[currentIndex];
 
+    // let currentImageSrc = firstItem.image;
+    // let currentImageRotation = firstItem.rotation;
+    // let currentImageColorMatrix = firstItem.colorMatrix || getColorMatrix(firstItem.colorType);
+
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
         const item = images[currentIndex];
+        // currentImageSrc = item.image;
+        // currentImageRotation = item.rotation;
+        // currentImageColorMatrix = item.colorMatrix || getColorMatrix(item.colorType);
     }
     // function onFirstLayout(item, e) {
     //     console.log('onFirstLayout');
@@ -87,6 +95,8 @@
 
 <page actionBarHidden={true} {backgroundColor} screenOrientation="all" statusBarColor={backgroundColor} {statusBarStyle}>
     <gridlayout rows="auto,*">
+        <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
+
         <pager bind:this={pager} items={images} rowSpan={2} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout rows="*,auto" width="100%">
