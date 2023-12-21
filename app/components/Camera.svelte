@@ -228,7 +228,9 @@
             }
             if (quads?.length) {
                 await addCurrentImageToDocument(image, quads);
+                return true;
             }
+            return false;
         } catch (err) {
             console.error(err, err.stack);
             showError(err);
@@ -257,8 +259,8 @@
                 captureMode: 1
                 // captureMode: batchMode ? 1 : 0
             });
-            await processAndAddImage(image);
-            if (!batchMode) {
+            const didAdd = await processAndAddImage(image);
+            if (didAdd && !batchMode) {
                 await saveCurrentDocument();
             }
         } catch (err) {
