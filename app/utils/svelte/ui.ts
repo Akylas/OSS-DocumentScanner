@@ -5,3 +5,19 @@ export function fade(node, { delay = 0, duration = 400, easing = easings.easeInO
         opacity: t * opacity
     }));
 }
+
+export function conditionalEvent(node, { condition, event, callback }) {
+    let toRemove;
+    if (condition) {
+        toRemove = callback;
+        node.addEventListener(event, callback);
+    }
+
+    return {
+        destroy() {
+            if (toRemove) {
+                node.removeEventListener(event, toRemove);
+            }
+        }
+    };
+}

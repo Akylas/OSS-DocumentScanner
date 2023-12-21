@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { conditionalEvent } from '~/utils/svelte/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
     const iconPaint = new Paint();
 </script>
@@ -65,22 +66,6 @@
         canvas.translate(0, h2 - staticLayout.getHeight() / 2);
         staticLayout.draw(canvas);
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
-    }
-
-    function conditionalEvent(node, { condition, event, callback }) {
-        let toRemove;
-        if (condition) {
-            toRemove = callback;
-            node.addEventListener(event, callback);
-        }
-
-        return {
-            destroy() {
-                if (toRemove) {
-                    node.removeEventListener(event, toRemove);
-                }
-            }
-        };
     }
 </script>
 

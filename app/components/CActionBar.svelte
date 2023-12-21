@@ -2,7 +2,7 @@
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from 'svelte-native';
-    import { fade } from '~/utils/svelte/ui';
+    import { conditionalEvent, fade } from '~/utils/svelte/ui';
     import { showError } from '~/utils/error';
     import { Application } from '@akylas/nativescript';
     export let title: string = null;
@@ -15,6 +15,7 @@
     export let buttonsDefaultVisualState = null;
     export let clazz: string = '';
     export let onGoBack: Function = null;
+    export let onTitleTap: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
     let menuIconVisibility: string;
@@ -55,10 +56,12 @@
         verticalTextAlignment="center"
         visibility={!!title ? 'visible' : 'hidden'}
         {...$$restProps?.titleProps}
-        defaultVisualState={labelsDefaultVisualState} />
+        defaultVisualState={labelsDefaultVisualState}
+        use:conditionalEvent={{ condition: !!onTitleTap, event: 'tap', callback: onTitleTap }} />
     <!-- {#if showLogo && !title}
         <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
     {/if} -->
+    <slot name="center" col={1} />
     <stacklayout col={0} orientation="horizontal">
         <slot name="left" />
         <mdbutton class={'actionBarButton ' + clazz} defaultVisualState={buttonsDefaultVisualState} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />

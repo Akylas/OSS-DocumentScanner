@@ -18,7 +18,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { hideLoading, importAndScanImage, showLoading, showPopoverMenu } from '~/utils/ui';
     import { colors, fonts, screenWidthDips, systemFontScale } from '~/variables';
     import PageIndicator from './PageIndicator.svelte';
     import { filesize } from 'filesize';
@@ -26,12 +26,13 @@
     import { request } from '@nativescript-community/perms';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { TextField } from '@nativescript-community/ui-material-textfield';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant, colorBackground } = $colors);
 
     interface Item {
         page: OCRPage;
@@ -302,7 +303,11 @@
         items.splice(index, 1);
         items.forEach((item, index) => (item.index = index + 1));
     }
-
+    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
+        if (document === event.doc) {
+            document = event.doc;
+        }
+    }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
             goBack();
@@ -312,6 +317,7 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        documentsService.on('documentUpdated', onDocumentUpdated);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
@@ -322,6 +328,7 @@
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        documentsService.off('documentUpdated', onDocumentUpdated);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageDeleted', onDocumentPageDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
@@ -346,6 +353,30 @@
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
+
+    let editingTitle = false;
+    let editingTitleTextField: NativeViewElementNode<TextField>;
+
+    async function saveDocumentTitle(event) {
+        try {
+            DEV_LOG && console.log('saveDocumentTitle', editingTitleTextField.nativeElement.text);
+            await document.save({
+                name: editingTitleTextField.nativeElement.text
+            });
+            editingTitle = false;
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function onTextFieldFocus(event) {
+        try {
+            const textField = event.object as TextField;
+            textField.setSelection(textField.text.length);
+            textField.requestFocus();
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page id="pdfView" actionBarHidden={true}>
@@ -353,11 +384,27 @@
         <CActionBar
             forceCanGoBack={nbSelected > 0}
             onGoBack={nbSelected ? unselectAll : null}
+            onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
         </CActionBar>
+        {#if editingTitle}
+            <CActionBar forceCanGoBack={true} onGoBack={() => (editingTitle = false)} title={null}>
+                <textfield
+                    bind:this={editingTitleTextField}
+                    slot="center"
+                    backgroundColor={colorBackground}
+                    col={1}
+                    paddingBottom={4}
+                    paddingTop={4}
+                    text={document.name}
+                    verticalTextAlignment="center"
+                    on:layoutChanged={onTextFieldFocus} />
+                <mdbutton class="actionBarButton" text="mdi-content-save" variant="text" on:tap={saveDocumentTitle} />
+            </CActionBar>
+        {/if}
 
         <collectionview
             bind:this={collectionView}

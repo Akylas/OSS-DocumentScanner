@@ -57,7 +57,7 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let lottieView: NativeViewElementNode<LottieView>;
 
-    let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'default');
+    let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'expanded');
     $: condensed = viewStyle === 'condensed';
     let syncEnabled = syncService.enabled;
     // let items: ObservableArray<{
@@ -511,7 +511,7 @@
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
             await showPopoverMenu({
                 options: [
-                    { id: 'default', name: lc('default') },
+                    { id: 'default', name: lc('expanded') },
                     { id: 'condensed', name: lc('condensed') }
                 ],
                 anchor: event.object,
