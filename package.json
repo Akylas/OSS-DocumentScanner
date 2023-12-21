@@ -35,7 +35,7 @@
         "@nativescript-community/sentry": "4.6.15",
         "@nativescript-community/sqlite": "3.4.2",
         "@nativescript-community/systemui": "1.1.19",
-        "@nativescript-community/ui-cameraview": "0.1.1",
+        "@nativescript-community/ui-cameraview": "0.1.2",
         "@nativescript-community/ui-canvas": "4.6.10",
         "@nativescript-community/ui-canvaslabel": "1.2.13",
         "@nativescript-community/ui-checkbox": "^2.0.12",
