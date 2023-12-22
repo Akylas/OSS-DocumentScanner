@@ -1,7 +1,7 @@
 {
     "languages": "Sprachen",
     "preview": "Vorschau",
-    "italian": "italienisch",
+    "italian": "Italienisch",
     "save": "speichern",
     "password": "Passwort",
     "theme": {
@@ -13,16 +13,16 @@
     "source_code": "Quellcode",
     "username": "Benutzername",
     "select_language": "Sprache wählen",
-    "delete": "löschen",
+    "delete": "Löschen",
     "version": "Version",
     "import_settings": "Import-Einstellungen",
     "ok": "OK",
-    "french": "französisch",
+    "french": "Französisch",
     "camera_settings": "Kamera-Einstellungen",
-    "black_white": "schwarz & weiss",
+    "black_white": "Schwarz & Weiß",
     "landscape": "Querformat",
-    "dark": "dunkel",
-    "cancel": "abbrechen",
+    "dark": "Dunkel",
+    "cancel": "Abbrechen",
     "language": "Sprache",
     "orientation": "Ausrichtung",
     "error": "Fehler",
@@ -38,5 +38,57 @@
     "about": "Über",
     "confirm_delete_page": "Sind Sie sicher, dass Sie Seite %1$s löschen möchten?",
     "a3": "A3",
-    "no_document_yet": "Fügen Sie ein Dokument hinzu, in dem Sie ein Foto machen oder ein Bild importieren"
+    "no_document_yet": "Fügen Sie ein Dokument hinzu, in dem Sie ein Foto machen oder ein Bild importieren",
+    "enhance_desc": "Funktionen im Bild verbessern",
+    "list_used_third_parties": "Benutzte Drittanbieter auflisten",
+    "image_saved": "Bild gespeichert",
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "OSS Kartenetui"
+        }
+    },
+    "english": "Englisch",
+    "export_folder": "Exportier-Ordner",
+    "exporting": "Exportieren",
+    "ocr_computing": "Text aufspüren (%1$s%%) …",
+    "full": "Voll",
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "OSS Dokumentenscanner"
+        }
+    },
+    "images_loading": "Bilder werden geladen …",
+    "delete_page": "Seite löschen",
+    "export": "Export",
+    "preferences": "Präferenzen",
+    "light": "Hell",
+    "filters": "Filter",
+    "color_desc": "Verbessert Farben und verringert ungewünschte Farbverläufe",
+    "expanded": "Erweitert",
+    "computing": "Berechnung …",
+    "image_import": "Ein Bild importieren",
+    "enhance": "Verbessern",
+    "camera_permission_needed": "Die Berechtigung für Fotos ist notwendig, um Fotos schießen zu können",
+    "open": "Öffnen",
+    "ocr_missing_languages": "OCR-Modelle fehlen, sie werden nun heruntergeladen: %1$s",
+    "password_not_saved": "Das Passwort wurde nicht gespeichert",
+    "auto": "Automatisch",
+    "ios": {
+        "info": {
+            "plist": {
+                "NSCameraUsageDescription": "Der Fotoapparat wird benutzt, um Ihre Dokumente zu scannen",
+                "NSPhotoLibraryUsageDescription": "Importiere Bilder, um sie zu scannen"
+            }
+        }
+    },
+    "loading": "Laden",
+    "no_document_found": "Es wurde kein Dokument gefunden",
+    "no_text_found_in_page": "Es wurde kein Text in Ihrem Dokument festgestellt",
+    "items_per_page": "Objekte pro Seite",
+    "format": "Format",
+    "image_filename": "Dateiname des Bildes für den Export",
+    "capturing": "Aufnehmen",
+    "color": "Farbe",
+    "get_app_source_code": "Den App-Quellcode erhalten",
+    "failed": "Fehlgeschlagen"
 }
