@@ -1,30 +1,10 @@
-import { IMG_COMPRESS, OCRDocument, OCRPage } from '~/models/OCRDocument';
-import PDFCanvas from './PDFCanvas';
-import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { loadImage, recycleImages } from '~/utils/utils.common';
-import { getColorMatrix } from '~/utils/ui';
-import { File, Screen, Utils, knownFolders, path } from '@nativescript/core';
+import { Canvas } from '@nativescript-community/ui-canvas';
+import { Screen, Utils, knownFolders, path } from '@nativescript/core';
+import { IMG_COMPRESS, OCRDocument } from '~/models/OCRDocument';
+import { recycleImages } from '~/utils/utils.common';
+import PDFExportCanvasBase from './PDFExportCanvas.common';
 
-export default class PDFExportCanvas extends PDFCanvas {
-    async getTransformedBitmap(page: OCRPage) {
-        const width = page.width * page.scale;
-        const height = page.height * page.scale;
-        const pageCanvas = new Canvas(width, height);
-        const imageSource = await loadImage(page.getImagePath());
-        let bitmapPaint: Paint = null;
-        if (page.colorType || page.colorMatrix) {
-            if (!bitmapPaint) {
-                bitmapPaint = new Paint();
-            }
-            bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
-        }
-        pageCanvas.translate(width / 2, height / 2);
-        pageCanvas.rotate(page.rotation, 0, 0);
-        pageCanvas.scale(page.scale, page.scale, 0, 0);
-        pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint?.['getNative']());
-        recycleImages(imageSource);
-        return pageCanvas.getImage();
-    }
+export default class PDFExportCanvas extends PDFExportCanvasBase {
     async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '') {
         const start = Date.now();
         const options = this.options;

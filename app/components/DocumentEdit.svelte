@@ -294,7 +294,7 @@
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
                 props: {
-                    page: items.getItem(currentIndex)
+                    pages: [items.getItem(currentIndex)]
                 }
             });
         } catch (err) {

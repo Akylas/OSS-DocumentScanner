@@ -90,6 +90,23 @@
             showError(err);
         }
     }
+
+    async function showImageExportPopover(event) {
+        try {
+            const component = (await import('~/components/ImageExportPopover.svelte')).default;
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                props: {
+                    pages: getSelectedPages()
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
     async function addPages() {
         try {
             await request('camera');
@@ -178,6 +195,16 @@
         //         documents.setItem(index, d);
         //     });
         // refresh();
+    }
+
+    function getSelectedPages() {
+        const selected = [];
+        items.forEach((d, index) => {
+            if (d.selected) {
+                selected.push(d.page);
+            }
+        });
+        return selected;
     }
 
     function startDragging(item: Item) {
@@ -387,6 +414,7 @@
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
+            <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={showImageExportPopover} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
         </CActionBar>

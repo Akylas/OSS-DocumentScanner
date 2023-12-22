@@ -1,24 +1,22 @@
 <script context="module" lang="ts">
-    import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
-    import { ApplicationSettings, File, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
-    import ListItem from './ListItem.svelte';
-    import { l, lc } from '~/helpers/locale';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import { showError } from '~/utils/error';
-    import { documentsService } from '~/services/documents';
-    import { hideLoading, showLoading } from '~/utils/ui';
-    import { openFile } from '@nativescript/core/utils';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
-    import { DismissReasons, SnackBarAction, showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { showModal } from 'svelte-native';
+    import { ApplicationSettings, File, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
+    import { l, lc } from '~/helpers/locale';
+    import { IMG_COMPRESS, IMG_FORMAT, OCRPage } from '~/models/OCRDocument';
+    import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
+    import { hideLoading, showLoading } from '~/utils/ui';
+    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
+    import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
+    import { recycleImages } from '~/utils/utils.common';
     const isAndroid = __ANDROID__;
 </script>
 
 <script lang="ts">
-    export let page: OCRPage;
+    export let pages: OCRPage[];
     let exportDirectory = ApplicationSettings.getString(
         'image_export_directory',
         __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
@@ -42,54 +40,100 @@
 
     async function exportImage() {
         try {
-            const imagePath = page.getImagePath();
-            const file = File.fromPath(imagePath);
             await closePopover();
-            const result = await prompt({
-                okButtonText: lc('ok'),
-                cancelButtonText: lc('cancel'),
-                defaultText: Date.now() + '.jpg',
-                hintText: lc('image_filename')
-            });
-            if (result?.result && result?.text?.length) {
-                showLoading(l('exporting'));
-                if (__ANDROID__ && exportDirectory.startsWith('content://')) {
-                    const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(exportDirectory));
-                    const outfile = outdocument.createFile('image/jpeg', result.text);
-                    const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
-                    const imageSource = await ImageSource.fromFile(imagePath);
-                    (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
-                    hideLoading();
-                    await showSnack({ message: lc('image_saved', outfile.getUri().toString()) });
-                    // } else if (__ANDROID__) {
-                    //     const destinationPath = path.join(exportDirectory, result.text);
-
-                    //     const nativeFile = new java.io.File(destinationPath);
-                    //     DEV_LOG && console.log('export image', nativeFile.getPath());
-                    //     const stream = new java.io.FileOutputStream(nativeFile);
-                    //     const imageSource = await ImageSource.fromFile(imagePath);
-                    //     (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
-                    //     hideLoading();
-                    //     await showSnack({ message: lc('image_saved', destinationPath) });
-                } else {
-                    const destinationPath = path.join(exportDirectory, result.text);
-                    await (await ImageSource.fromFile(imagePath)).saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
-                    hideLoading();
-                    await showSnack({ message: lc('image_saved', destinationPath) });
+            const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
+            const imagePaths = sortedPages.map((page) => page.getImagePath());
+            const canSetName = imagePaths.length === 1;
+            let outputImageNames = [];
+            if (canSetName) {
+                const result = await prompt({
+                    okButtonText: lc('ok'),
+                    cancelButtonText: lc('cancel'),
+                    defaultText: Date.now() + '',
+                    hintText: lc('image_filename')
+                });
+                if (!result?.result || !result?.text?.length) {
+                    return;
                 }
-                // if (onSnack.reason === 'action') {
-                //     DEV_LOG && console.log('openFile', filePath);
-                //     openFile(filePath);
-                // }
+                outputImageNames.push(result.text);
+            } else {
+                outputImageNames = sortedPages.map((page) => page.createdDate);
+                // find duplicates and rename if any
+                let lastName;
+                let renameDelta = 1;
+                for (let index = 0; index < outputImageNames.length; index++) {
+                    const name = outputImageNames[index];
+                    if (name === lastName) {
+                        outputImageNames[index] = name + '_' + (renameDelta++ + '').padStart(2, '0');
+                        // we dont reset lastName so that we compare to the first one found
+                    } else {
+                        lastName = name;
+                        renameDelta = 1;
+                    }
+                }
+            }
+            DEV_LOG && console.log('outputImageNames', outputImageNames);
+            showLoading(l('exporting'));
+            const destinationPaths = [];
+            let finalMessagePart;
+            await Promise.all(
+                sortedPages.map(
+                    (page, index) =>
+                        new Promise<void>(async (resolve, reject) => {
+                            let imageSource: ImageSource;
+                            try {
+                                const destinationName = outputImageNames[index] + '.' + IMG_FORMAT;
+                                // const imageSource = await ImageSource.fromFile(imagePath);
+                                imageSource = await getTransformedImage(page);
+                                if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+                                    const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(exportDirectory));
+
+                                    const outfile = outdocument.createFile('image/jpeg', destinationName);
+                                    if (!finalMessagePart) {
+                                        if (canSetName) {
+                                            finalMessagePart = outfile.getName();
+                                        } else {
+                                            finalMessagePart = outdocument.getName();
+                                        }
+                                    }
+                                    const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
+                                    (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
+                                    destinationPaths.push(outfile.getUri().toString());
+                                } else {
+                                    const destinationPath = path.join(exportDirectory, destinationName);
+                                    await imageSource.saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+                                    destinationPaths.push(destinationPath);
+                                    if (!finalMessagePart) {
+                                        if (canSetName) {
+                                            finalMessagePart = destinationPath;
+                                        } else {
+                                            finalMessagePart = exportDirectory;
+                                        }
+                                    }
+                                }
+                                resolve();
+                            } catch (error) {
+                                reject(error);
+                            } finally {
+                                recycleImages(imageSource);
+                            }
+                        })
+                )
+            );
+            if (outputImageNames.length === 1) {
+                await showSnack({ message: lc('image_saved', finalMessagePart) });
+            } else {
+                await showSnack({ message: lc('images_saved', finalMessagePart) });
             }
         } catch (error) {
-            hideLoading();
             showError(error);
+        } finally {
+            hideLoading();
         }
     }
     async function shareImage() {
         try {
-            await share({ file: page.getImagePath() });
+            await share({ file: pages[0].getImagePath() });
         } catch (error) {
             showError(error);
         }
@@ -100,6 +144,6 @@
     {#if isAndroid}
         <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
     {/if}
-    <mdbutton row={1} text={lc('share')} on:tap={shareImage} />
+    <mdbutton row={1} text={lc('share')} visibility={pages.length === 1 ? 'visible' : 'collapsed'} on:tap={shareImage} />
     <mdbutton row={2} text={lc('export')} on:tap={exportImage} />
 </PopoverBackgroundView>

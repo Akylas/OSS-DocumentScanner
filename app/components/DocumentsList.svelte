@@ -36,6 +36,7 @@
     import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
+    import { securityService } from '~/services/security';
 
     const textPaint = new Paint();
 </script>
@@ -292,7 +293,7 @@
             showError(error);
         }
     }
-    function onNavigatedTo(e: NavigatedData) {
+    async function onNavigatedTo(e: NavigatedData) {
         if (!e.isBackNavigation) {
             if (documentsService.started) {
                 refresh();
@@ -377,17 +378,11 @@
     }
     async function fullscreenSelectedDocuments() {
         const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
-        const selected: OCRDocument[] = [];
-        documents.forEach((d, index) => {
-            if (d.selected) {
-                selected.push(d.doc);
-            }
-        });
         navigate({
             page: component,
             // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
             props: {
-                images: selected.reduce((acc, doc) => {
+                images: getSelectedDocuments().reduce((acc, doc) => {
                     doc.pages.forEach((page) =>
                         acc.push({
                             // sharedTransitionTag: `document_${doc.id}_${page.id}`,
@@ -431,7 +426,6 @@
     }
     async function showOptions(event) {
         try {
-            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             const options = [
                 {
                     icon: 'mdi-cogs',
@@ -615,6 +609,26 @@
             showError(err);
         }
     }
+
+    async function showImageExportPopover(event) {
+        try {
+            const component = (await import('~/components/ImageExportPopover.svelte')).default;
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                props: {
+                    pages: getSelectedDocuments().reduce((acc, doc) => {
+                        acc.push(...doc.pages);
+                        return acc;
+                    }, [])
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
     function getItemImageHeight(viewStyle) {
         return condensed ? 60 : 114;
     }
@@ -747,6 +761,7 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)}>
                 <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+                <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={showImageExportPopover} />
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-fullscreen" variant="text" on:tap={fullscreenSelectedDocuments} />
             </CActionBar>
