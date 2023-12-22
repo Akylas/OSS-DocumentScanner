@@ -14,6 +14,9 @@ declare namespace com {
                 static getColorFromName(context: android.content.Context, intToGet);
                 static restartApp(context: android.content.Context, activity: android.app.Activity);
             }
+            export class PDFUtils {
+                static compressPDF(src: string, dst: string, jpegQuality: number);
+            }
             export class CustomImageAnalysisCallback {
                 constructor(context: android.content.Context, cropView);
             }
