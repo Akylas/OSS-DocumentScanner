@@ -1,4 +1,4 @@
-package com.akylas.weather.benchmark
+package com.akylas.cardwallet.benchmark
 
 import android.graphics.Point
 import android.os.Build
@@ -63,7 +63,7 @@ class StartupProfileGenerator {
 
 
     companion object {
-        private const val PACKAGE_NAME = "akylas.alpi.maps"
+        private const val PACKAGE_NAME = "com.akylas.cardwallet"
 
     }
 }

@@ -1,4 +1,4 @@
-package com.akylas.weather.benchmark
+package com.akylas.documentscanner.benchmark
 
 import android.graphics.Point
 import android.os.Build
@@ -34,36 +34,29 @@ class StartupProfileGenerator {
     @RequiresApi(Build.VERSION_CODES.P)
     @Test
     fun startup() =
-        baselineProfileRule.collect(
-            packageName = PACKAGE_NAME,
-            includeInStartupProfile = true
-        ) {
-            startActivityAndWait()
-            // access file permission on android 12+
-            device.wait(Until.hasObject(By.checkable(true)), 1_000)
-            val switch = device.findObject(By.checkable(true));
-            if (switch != null) {
-                switch.click()
-                device.pressBack()
-                device.waitForIdle()
-            }
+    baselineProfileRule.collect(
+        packageName = PACKAGE_NAME,
+        includeInStartupProfile = true
+    ) {
+        startActivityAndWait()
 
-            // Waits for content to be visible, which represents time to fully drawn.
-            val input = By.desc("cartoMap")
-            device.wait(Until.hasObject(input), 2_000)
-            val scrollable = device.findObject(input)
-            // Setting a gesture margin is important otherwise gesture nav is triggered.
-//            scrollable.setGestureMargin(device.displayWidth / 5)
+        // Waits for content to be visible, which represents time to fully drawn.
+        device.wait(Until.hasObject(By.scrollable(true)), 5_000)
+        val recycler = device.findObject(By.scrollable(true))
+        // Setting a gesture margin is important otherwise gesture nav is triggered.
+        recycler.setGestureMargin(device.displayWidth / 5)
+//            recycler.swipe(Direction.DOWN, 0.8f)
+//            device.waitForIdle()
 
-            // From center we scroll 2/3 of it which is 1/3 of the screen.
-            scrollable.drag(Point(0, scrollable.visibleCenter.y / 3))
-            device.waitForIdle()
-            device.pressBack()
-        }
+        // From center we scroll 2/3 of it which is 1/3 of the screen.
+        recycler.drag(Point(0, recycler.visibleCenter.y / 3))
+        device.waitForIdle()
+        device.pressBack()
+    }
 
 
     companion object {
-        private const val PACKAGE_NAME = "akylas.alpi.maps"
+        private const val PACKAGE_NAME = "com.akylas.documentscanner"
 
     }
 }

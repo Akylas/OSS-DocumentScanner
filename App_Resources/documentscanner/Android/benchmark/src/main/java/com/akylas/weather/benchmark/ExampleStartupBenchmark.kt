@@ -1,4 +1,4 @@
-package com.akylas.weather.benchmark
+package com.akylas.documentscanner.benchmark
 
 import android.content.Intent
 import android.graphics.Point
@@ -74,9 +74,8 @@ class ExampleStartupBenchmark {
         val recycler = device.findObject(By.scrollable(true))
         // Setting a gesture margin is important otherwise gesture nav is triggered.
         recycler.setGestureMargin(device.displayWidth / 5)
-
-        // From center we scroll 2/3 up to trigger a refresh
-        recycler.drag(Point(0, -recycler.visibleCenter.y / 3))
+//            recycler.swipe(Direction.DOWN, 0.8f)
+//            device.waitForIdle()
 
         // From center we scroll 2/3 of it which is 1/3 of the screen.
         recycler.drag(Point(0, recycler.visibleCenter.y / 3))
@@ -86,7 +85,7 @@ class ExampleStartupBenchmark {
 
 
     companion object {
-        private const val PACKAGE_NAME = "akylas.alpi.maps"
+        private const val PACKAGE_NAME = "com.akylas.documentscanner"
 
     }
 }

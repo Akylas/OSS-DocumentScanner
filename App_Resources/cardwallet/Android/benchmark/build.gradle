@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace 'com.akylas.weather.benchmark'
+    namespace 'com.akylas.cardwallet.benchmark'
     compileSdk 34
 
     compileOptions {
@@ -56,7 +56,7 @@ dependencies {
     implementation 'androidx.test.ext:junit:1.1.5'
     implementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'androidx.test.uiautomator:uiautomator:2.2.0'
-    implementation 'androidx.benchmark:benchmark-macro-junit4:1.2.0-rc02'
+    implementation 'androidx.benchmark:benchmark-macro-junit4:1.2.2'
 }
 
 androidComponents {
@@ -98,4 +98,5 @@ repositories {
     }
 
     mavenCentral()
+	maven { url 'https://jitpack.io' }
 }
