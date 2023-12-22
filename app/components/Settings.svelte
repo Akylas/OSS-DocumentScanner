@@ -3,7 +3,7 @@
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, File, Folder, ObservableArray, Utils, path } from '@nativescript/core';
+    import { ApplicationSettings, File, Folder, ObservableArray, Utils, View, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -17,6 +17,10 @@
     import CActionBar from './CActionBar.svelte';
     import { restartApp } from '~/utils/utils';
     import { syncService } from '~/services/sync';
+    import ListItem from './ListItem.svelte';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import ListItemAutoSize from './ListItemAutoSize.svelte';
+    import { securityService } from '~/services/security';
 
     let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
     let colorOnSurface = $colors.colorOnSurface;
@@ -156,9 +160,18 @@
             items.setItem(index, item);
         }
     }
-    async function onTap(command, item?) {
+    let checkboxTapTimer;
+    async function onTap(item, event) {
         try {
-            switch (command) {
+            if (item.type === 'checkbox') {
+                // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
+                const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+                checkboxTapTimer = setTimeout(() => {
+                    checkboxView.checked = !checkboxView.checked;
+                }, 10);
+                return;
+            }
+            switch (item.id) {
                 case 'export_settings':
                     const jsonStr = ApplicationSettings.getAllJSON();
                     DEV_LOG && console.log('export_settings', jsonStr);
@@ -276,7 +289,7 @@
                     if (item.type === 'prompt') {
                         const result = await prompt({
                             title: getTitle(item),
-                            message: item.full_description || item.description  ,
+                            message: item.full_description || item.description,
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
@@ -319,12 +332,49 @@
     onLanguageChanged(refresh);
 
     function selectTemplate(item, index, items) {
-        return item.type === 'switch' ? item.type : 'default';
+        return item.type || 'default';
     }
 
-    function onCheckBox(item, value: boolean) {
+    async function onCheckBox(item, event) {
+        const value = event.value;
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
         try {
-            ApplicationSettings.setBoolean(item.key, value);
+            switch (item.id) {
+                case 'biometric_lock':
+                    if (value) {
+                        try {
+                            await securityService.enableBiometric();
+                        } catch (error) {
+                            const checkboxView: CheckBox = event.object;
+                            checkboxView.checked = item.value = false;
+                            showError(error);
+                        }
+                    } else {
+                        securityService.clear();
+                        securityService.disableBiometric();
+                    }
+                    break;
+                case 'biometric_auto_lock':
+                    // if (value) {
+                    //     if (securityService.biometricEnabled) {
+                    //         const checkboxView: CheckBox = event.object;
+                    //         checkboxView.checked = item.value = false;
+                    //     } else {
+                    securityService.autoLockEnabled = value;
+                    // }
+                    // } else {
+                    //     securityService.clear();
+                    //     securityService.disableBiometric();
+                    // }
+                    break;
+
+                default:
+                    ApplicationSettings.setBoolean(item.key, value);
+                    break;
+            }
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -337,37 +387,49 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} rowHeight={70} android:paddingBottom={$navigationBarHeight}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
             <Template key="switch" let:item>
-                <gridlayout columns="*,auto" padding="0 10 0 10">
-                    <stacklayout verticalAlignment="middle">
-                        <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} verticalTextAlignment="top" />
+                <ListItemAutoSize leftIcon={item.icon} mainCol={1} showBottomLine={false} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+                </ListItemAutoSize>
+            </Template>
+            <Template key="checkbox" let:item>
+                <ListItemAutoSize leftIcon={item.icon} mainCol={1} showBottomLine={false} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <checkbox id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+                </ListItemAutoSize>
+            </Template>
+            <Template let:item>
+                <ListItemAutoSize
+                    leftIcon={item.icon}
+                    rightIcon={item.rightBtnIcon}
+                    rightValue={item.rightValue}
+                    showBottomLine={false}
+                    subtitle={item.description}
+                    title={getTitle(item)}
+                    on:tap={(event) => onTap(item, event)}>
+                </ListItemAutoSize>
+            </Template>
+            <!-- <Template key="switch" let:item>
+                <gridlayout columns="*,auto" padding="10 16 10 16">
+                    <stacklayout verticalAlignment="middle" on:tap={(event) => onTap(item, event)}>
+                        <label fontSize={17} fontWeight="bold" lineBreak="end" maxLines={1} text={getTitle(item)} verticalTextAlignment="top" />
                         <label
                             color={colorOnSurfaceVariant}
                             fontSize={14}
                             lineBreak="end"
-                            maxLines={2}
                             text={item.description}
                             verticalTextAlignment="top"
                             visibility={item.description?.length > 0 ? 'visible' : 'collapsed'} />
                     </stacklayout>
-                    <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
-                    <!-- <absolutelayout backgroundColor={colorOutline} colSpan={2} height={1} verticalAlignment="bottom" /> -->
+                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" rippleColor={colorOnSurface} on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)}>
+                <gridlayout columns="auto,*,auto" padding="10 16 10 16" rippleColor={colorOnSurface} on:tap={(event) => onTap(item, event)} on:longPress={(event) => onLongPress(item.id, item)}>
                     <label fontFamily={$fonts.mdi} fontSize={36} marginLeft="-10" text={item.icon} verticalAlignment="middle" visibility={!!item.icon ? 'visible' : 'hidden'} width={40} />
-                    <stacklayout col={1} marginLeft="10" verticalAlignment="middle">
-                        <label color={colorOnSurface} fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
-                        <label
-                            color={colorOnSurfaceVariant}
-                            fontSize={14}
-                            lineBreak="end"
-                            maxLines={2}
-                            text={item.description}
-                            verticalTextAlignment="top"
-                            visibility={item.description?.length > 0 ? 'visible' : 'collapsed'} />
+                    <stacklayout col={1} height={item.description?.length > 0 ? 'auto' : 50} marginLeft="10" verticalAlignment="middle">
+                        <label color={colorOnSurface} fontSize={17} fontWeight="bold" lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
+                        <label color={colorOnSurfaceVariant} fontSize={14} lineBreak="end" text={item.description} verticalTextAlignment="top" />
                     </stacklayout>
 
                     <label
@@ -376,7 +438,7 @@
                         marginLeft={16}
                         marginRight={16}
                         text={item.rightValue && item.rightValue()}
-                        verticalAlignment="middle"
+                        verticalAlignment="center"
                         visibility={!!item.rightValue ? 'visible' : 'collapsed'} />
                     <label
                         col={2}
@@ -387,11 +449,11 @@
                         marginLeft={16}
                         marginRight={16}
                         text={item.rightBtnIcon}
+                        verticalAlignment="center"
                         visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
                         width={25} />
-                    <!-- <absolutelayout backgroundColor={colorOutlineVariant} col={1} colSpan={3} height={1} marginLeft={20} row={2} verticalAlignment="bottom" /> -->
                 </gridlayout>
-            </Template>
+            </Template> -->
         </collectionview>
         <CActionBar canGoBack title={$slc('settings')} />
     </gridlayout>
