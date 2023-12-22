@@ -1,1 +1,41 @@
-{}
+{
+    "camera_preview_stretch": "modo de visualização",
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "OSS Card Wallet"
+        }
+    },
+    "confirm_delete_document": "tem certeza de que deseja excluir este documento?",
+    "camera_view_size": "espaço de exibição",
+    "documents": "documentos",
+    "aspect_fit": "ajustar",
+    "downloading": "baixando (%1$s%%)...",
+    "confirm_delete_pages": "tem certeza de que deseja excluir estas %1$s páginas?",
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "OSS Document Scanner"
+        }
+    },
+    "delete_page": "excluir",
+    "confirm_delete": "tem certeza de que deseja excluir este documento?",
+    "confirm_delete_documents": "tem certeza de que deseja excluir estes %1$s documentos?",
+    "delete": "excluir",
+    "aspect_ratio": "proporção",
+    "a4": "A4",
+    "color_desc": "melhoria das cores e redução de tons de cor indesejados",
+    "computing": "processando...",
+    "camera_settings": "configurações da câmera",
+    "download": "baixar",
+    "about": "sobre",
+    "black_white": "preto e branco",
+    "camera_permission_needed": "a permissão de acesso à câmera é necessária para tirar fotos",
+    "dark": "escuro",
+    "confirm_delete_page": "tem certeza de que deseja excluir a página %1$s?",
+    "cancel": "cancelar",
+    "disabled": "desabilitado",
+    "auto": "automático",
+    "a3": "A3",
+    "aspect_fill": "preencher",
+    "capturing": "capturando",
+    "color": "cor"
+}
