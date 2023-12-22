@@ -25,6 +25,8 @@ import { syncService } from './services/sync';
 import { showError } from './utils/error';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 import { ImageViewTraceCategory } from '@nativescript-community/ui-image';
+import { securityService } from './services/security';
+import { networkService } from './services/api';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -83,6 +85,8 @@ try {
     async function start() {
         try {
             // DEV_LOG && console.log('start');
+            networkService.start();
+            securityService.start();
             await syncService.start();
             await ocrService.start();
             await documentsService.start();

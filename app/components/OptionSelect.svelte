@@ -24,13 +24,13 @@
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
-    export let rowHeight = 72;
+    export let rowHeight = null;
     export let width: string | number = '*';
     export let containerColumns: string = '*';
     export let fontWeight = 'bold';
     export let options: OptionType[];
     export let onClose = null;
-    export let height: number | string = 350;
+    export let height: number | string = null;
     export let fontSize = 16;
     export let iconFontSize = 24;
     export let onCheckBox: (item, value, e) => void = null;

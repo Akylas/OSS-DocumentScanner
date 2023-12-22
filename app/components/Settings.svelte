@@ -84,6 +84,22 @@
             },
 
             {
+                type: 'switch',
+                id: 'biometric_lock',
+                title: lc('biometric_lock'),
+                description: lc('biometric_lock_desc'),
+                value: securityService.biometricEnabled
+            },
+            {
+                type: 'switch',
+                id: 'biometric_auto_lock',
+                title: lc('biometric_auto_lock'),
+                description: lc('biometric_auto_lock_desc'),
+                enabled: securityService.biometricEnabled,
+                value: securityService.biometricEnabled && securityService.autoLockEnabled
+            },
+
+            {
                 id: 'setting',
                 key: 'previewResizeThreshold',
                 title: lc('preview_resize_threshold'),
@@ -100,7 +116,7 @@
             },
             // {
             //     id: 'test',
-            //     type: 'switch',
+            //     type: 'checkbox',
             //     title: lc('webdav_sync'),
             //     value:false
             // },
