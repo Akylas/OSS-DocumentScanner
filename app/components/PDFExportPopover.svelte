@@ -1,19 +1,17 @@
 <script context="module" lang="ts">
-    import { OCRDocument } from '~/models/OCRDocument';
-    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
-    import { ApplicationSettings, knownFolders, path } from '@nativescript/core';
-    import ListItem from './ListItem.svelte';
-    import { l, lc } from '~/helpers/locale';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import { showError } from '~/utils/error';
-    import { documentsService } from '~/services/documents';
-    import { hideLoading, showLoading } from '~/utils/ui';
-    import { openFile } from '@nativescript/core/utils';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
-    import { DismissReasons, SnackBarAction, showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { ApplicationSettings, knownFolders } from '@nativescript/core';
+    import { openFile } from '@nativescript/core/utils';
     import { showModal } from 'svelte-native';
+    import { l, lc } from '~/helpers/locale';
+    import { OCRDocument } from '~/models/OCRDocument';
     import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+    import { showError } from '~/utils/error';
+    import { hideLoading, showLoading } from '~/utils/ui';
+    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
     const isAndroid = __ANDROID__;
 </script>
 
@@ -101,7 +99,6 @@
     {#if isAndroid}
         <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
     {/if}
-    <!-- <ListItem height={58} subtitle={exportDirectory} title={lc('export_folder')} on:tap={pickExportFolder} /> -->
     <mdbutton row={1} text={lc('open')} on:tap={openPDF} />
     <mdbutton row={2} text={lc('export')} on:tap={exportPDF} />
     <mdbutton row={3} text={lc('preview')} on:tap={openPDFPreview} />
