@@ -252,7 +252,7 @@
             if (!doc) {
                 return;
             }
-            const component = (await import('~/components/DocumentEdit.svelte')).default;
+            const component = doc.pages.length > 1 ? (await import('~/components/DocumentView.svelte')).default : (await import('~/components/DocumentEdit.svelte')).default;
             navigate({
                 page: component,
                 props: {

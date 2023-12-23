@@ -138,8 +138,10 @@
 
     async function importDocument() {
         try {
+            const oldPagesNumber = document.pages.length;
             const doc = await importAndScanImage(document);
-            if (doc) {
+            // if more than 1 page was imported stay here so that the user sees the added pages
+            if (doc && doc.pages.length - oldPagesNumber === 1) {
                 const component = (await import('~/components/DocumentEdit.svelte')).default;
                 navigate({
                     page: component,

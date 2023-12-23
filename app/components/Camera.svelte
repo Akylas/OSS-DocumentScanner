@@ -208,7 +208,7 @@
             // eslint-disable-next-line prefer-const
             let quads = await getJSONDocumentCorners(editingImage, 300, 0);
             if (quads.length === 0) {
-                const ModalImportImage = (await import('~/components/ModalImportImage.svelte')).default;
+                const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
                 quads = await showModal({
                     page: ModalImportImage,
                     animated: true,

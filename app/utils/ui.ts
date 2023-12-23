@@ -6,6 +6,7 @@ import { AlertDialog, MDCAlertControlerOptions, alert } from '@nativescript-comm
 import { AlertOptions, Image, ImageAsset, ImageSource, StackLayout, View } from '@nativescript/core';
 import { openUrl } from '@nativescript/core/utils';
 import * as imagepicker from '@nativescript/imagepicker';
+import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import dayjs from 'dayjs';
 import { OCRDocument, PageData } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
@@ -352,89 +353,146 @@ export function getColorMatrix(type: string, ...args): number[] {
 // }
 
 export async function importAndScanImage(document?: OCRDocument) {
-    await request('storage');
-    let selection;
-    let editingImage: ImageSource;
+    await request({ storage: {}, photo: {} });
+    let selection: { files: string[]; ios?; android? };
+    const pagesToAdd: PageData[] = [];
+    let items;
+    // let editingImage: ImageSource;
     try {
-        selection = await imagepicker
-            .create({
-                mediaType: 1,
-                android: {
-                    read_external_storage: 'reading images'
-                },
-                mode: 'single' // use "multiple" for multiple selection
-            })
-            // on android pressing the back button will trigger an error which we dont want
-            .present()
-            .catch((err) => null);
-        if (__IOS__) {
-            //we need to wait a bit or the presenting controller
-            // is still the image picker and will mix things up
-            await timeout(500);
-        }
-        if (selection?.length) {
+        selection = await openFilePicker({
+            extensions: ['image/*'],
+            multipleSelection: true,
+            pickerMode: 0
+        });
+        // selection = await imagepicker
+        //     .create({
+        //         mediaType: 1,
+        //         android: {
+        //             read_external_storage: lc('import_images')
+        //         },
+        //         mode: 'multiple' // use "multiple" for multiple selection
+        //     })
+        //     // on android pressing the back button will trigger an error which we dont want
+        //     .present()
+        //     .catch((err) => null);
+        // if (__IOS__) {
+        //     //we need to wait a bit or the presenting controller
+        //     // is still the image picker and will mix things up
+        //     await timeout(500);
+        // }
+        DEV_LOG && console.log('selection', selection);
+        if (selection?.files?.length) {
             await showLoading(l('computing'));
-            const sourceImagePath = selection[0].path;
-            editingImage = await loadImage(sourceImagePath);
 
-            if (!editingImage) {
-                throw new Error('failed to read imported image');
-            }
-            let quads = await getJSONDocumentCorners(editingImage, 300, 0);
-            let qrcode;
-            if (CARD_APP) {
-                // try to get the qrcode to show it in the import screen
-                qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
-            }
-            if (quads.length === 0) {
-                quads.push([
-                    [100, 100],
-                    [editingImage.width - 100, 100],
-                    [editingImage.width - 100, editingImage.height - 100],
-                    [100, editingImage.height - 100]
-                ]);
-            }
-            if (quads?.length) {
-                const ModalImportImage = (await import('~/components/ModalImportImage.svelte')).default;
-                quads = await showModal({
+            items = await Promise.all(
+                selection.files.map(
+                    (s) =>
+                        new Promise(async (resolve, reject) => {
+                            try {
+                                const sourceImagePath = s;
+                                const editingImage = await loadImage(sourceImagePath);
+
+                                if (!editingImage) {
+                                    throw new Error('failed to read imported image');
+                                }
+                                const quads = await getJSONDocumentCorners(editingImage, 300, 0);
+                                let qrcode;
+                                if (CARD_APP) {
+                                    // try to get the qrcode to show it in the import screen
+                                    qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
+                                }
+                                if (quads.length === 0) {
+                                    quads.push([
+                                        [100, 100],
+                                        [editingImage.width - 100, 100],
+                                        [editingImage.width - 100, editingImage.height - 100],
+                                        [100, editingImage.height - 100]
+                                    ]);
+                                }
+                                resolve({ editingImage, quads, sourceImagePath, qrcode });
+                            } catch (error) {
+                                reject(error);
+                            }
+                        })
+                )
+            );
+            DEV_LOG && console.log('items', items);
+            // const sourceImagePath = selection[0].path;
+            // editingImage = await loadImage(sourceImagePath);
+
+            // if (!editingImage) {
+            //     throw new Error('failed to read imported image');
+            // }
+            // let quads = await getJSONDocumentCorners(editingImage, 300, 0);
+            // let qrcode;
+            // if (CARD_APP) {
+            //     // try to get the qrcode to show it in the import screen
+            //     qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
+            // }
+            // if (quads.length === 0) {
+            //     quads.push([
+            //         [100, 100],
+            //         [editingImage.width - 100, 100],
+            //         [editingImage.width - 100, editingImage.height - 100],
+            //         [100, editingImage.height - 100]
+            //     ]);
+            // }
+            if (items?.length) {
+                const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
+                const newItems = await showModal({
                     page: ModalImportImage,
                     animated: true,
                     fullscreen: true,
                     props: {
-                        editingImage,
-                        quads,
-                        qrcode
+                        items
                     }
                 });
-                if (quads) {
-                    console.log('about to cropDocument', quads);
-                    const images = await cropDocument(editingImage, quads);
-                    let qrcode;
-                    let colors;
-                    if (CARD_APP) {
-                        [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
-                        DEV_LOG && console.log('qrcode and colors', qrcode, colors);
-                    }
-                    if (images?.length) {
-                        const pagesToAdd: PageData[] = [];
-                        for (let index = 0; index < images.length; index++) {
-                            const image = images[index];
-                            pagesToAdd.push({
-                                image,
-                                crop: quads[index],
-                                sourceImagePath,
-                                width: __ANDROID__ ? image.getWidth() : image.size.width,
-                                height: __ANDROID__ ? image.getHeight() : image.size.height,
-                                rotation: editingImage.rotationAngle,
-                                ...(CARD_APP
-                                    ? {
-                                          qrcode,
-                                          colors
-                                      }
-                                    : {})
-                            });
-                            DEV_LOG && console.log('added page', JSON.stringify(pagesToAdd[pagesToAdd.length - 1]));
-                        }
+                if (newItems) {
+                    items = newItems;
+                    DEV_LOG && console.log('items after crop', items);
+
+                    await Promise.all(
+                        items.map(
+                            (item) =>
+                                new Promise<void>(async (resolve, reject) => {
+                                    try {
+                                        DEV_LOG && console.log('about to cropDocument', item.quads);
+                                        const images = await cropDocument(item.editingImage, item.quads);
+                                        let qrcode;
+                                        let colors;
+                                        if (CARD_APP) {
+                                            [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
+                                            DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+                                        }
+                                        if (images?.length) {
+                                            for (let index = 0; index < images.length; index++) {
+                                                const image = images[index];
+                                                pagesToAdd.push({
+                                                    image,
+                                                    crop: item.quads[index],
+                                                    sourceImagePath: item.sourceImagePath,
+                                                    width: __ANDROID__ ? image.getWidth() : image.size.width,
+                                                    height: __ANDROID__ ? image.getHeight() : image.size.height,
+                                                    rotation: item.editingImage.rotationAngle,
+                                                    ...(CARD_APP
+                                                        ? {
+                                                              qrcode,
+                                                              colors
+                                                          }
+                                                        : {})
+                                                });
+                                                DEV_LOG && console.log('added page', JSON.stringify(pagesToAdd[pagesToAdd.length - 1]));
+                                            }
+                                        }
+                                        resolve();
+                                    } catch (error) {
+                                        reject(error);
+                                    }
+                                })
+                        )
+                    );
+                    DEV_LOG && console.log('pagesToAdd', pagesToAdd);
+                    if (pagesToAdd.length) {
                         if (document) {
                             await document.addPages(pagesToAdd);
                             await document.save({}, false);
@@ -443,19 +501,20 @@ export async function importAndScanImage(document?: OCRDocument) {
                             DEV_LOG && console.log('documentAdded', document);
                             documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc: document });
                         }
-                        recycleImages(images);
                         return document;
                     }
                 }
-            } else {
-                showSnack({ message: lc('no_document_found') });
             }
+            showSnack({ message: lc('no_document_found') });
         }
     } catch (error) {
         showError(error);
     } finally {
         hideLoading();
-        recycleImages(editingImage);
+        recycleImages(pagesToAdd.map((p) => p.image));
+        if (items) {
+            recycleImages(items.map((i) => i.editingImage));
+        }
     }
 }
 
