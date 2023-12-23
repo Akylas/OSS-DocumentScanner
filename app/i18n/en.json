@@ -66,6 +66,7 @@
   "image_saved": "image saved",
   "images_loading": "images loading...",
   "images_saved": "images saved in %1$s",
+  "import_images": "import images",
   "import_settings": "import settings",
   "import_settings_desc": "import all settings from a previous backup",
   "ios": {
