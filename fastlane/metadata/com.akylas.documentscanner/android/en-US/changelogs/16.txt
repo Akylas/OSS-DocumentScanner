@@ -1,0 +1,10 @@
+*Features*
+- allow to export multiple images (pages) at once
+- basic biometrics lock support
+- allow importing multiple images at once (be careful because all images have to be loaded in memory! too many could make the app crash)
+
+*Bug fixes*
+- *android:* pdf are now compressed!
+- better layout for the settings page
+- *android:* changing language fixes
+- share image with filter applied
