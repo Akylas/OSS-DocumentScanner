@@ -20,11 +20,11 @@
     "color": "couleur",
     "color_desc": "améliorer les couleurs et réduire les nuances de couleurs indésirables",
     "computing": "traitement...",
-    "confirm_delete": "êtes-vous sûr de vouloir supprimer ce document?",
-    "confirm_delete_document": "êtes-vous sûr de vouloir supprimer ce document ?",
-    "confirm_delete_documents": "êtes-vous sûr de vouloir supprimer ces documents de %1$?",
-    "confirm_delete_page": "êtes-vous sûr de vouloir supprimer page %1$s?",
-    "confirm_delete_pages": "êtes-vous sûr de vouloir supprimer ces pages de %1$?",
+    "confirm_delete": "Êtes-vous sûr de vouloir supprimer ce document ?",
+    "confirm_delete_document": "Êtes-vous sûr de vouloir supprimer ce document ?",
+    "confirm_delete_documents": "Êtes-vous sûr de vouloir supprimer ces documents de %1$ ?",
+    "confirm_delete_page": "Êtes-vous sûr de vouloir supprimer page %1$s ?",
+    "confirm_delete_pages": "Êtes-vous sûr de vouloir supprimer ces pages de %1$ ?",
     "dark": "sombre",
     "delete": "supprimer",
     "delete_page": "supprimer",
@@ -127,5 +127,6 @@
     "webdav_sync_desc": "permet à webdav de synchroniser vos documents (backup)",
     "whitepaper": "papier blanc",
     "whitepaper_desc": "amélioration pour les documents de type feuille blanche",
-    "camera_settings": "paramètres de caméra"
+    "camera_settings": "paramètres de caméra",
+    "condensed": "condensé"
 }
