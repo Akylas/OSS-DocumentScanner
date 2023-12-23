@@ -90,5 +90,22 @@
     "capturing": "Aufnehmen",
     "color": "Farbe",
     "get_app_source_code": "Den App-Quellcode erhalten",
-    "failed": "Fehlgeschlagen"
+    "failed": "Fehlgeschlagen",
+    "biometric_lock_desc": "Die App mit Biometrie oder einem Pin-Code sperren",
+    "camera_preview_stretch": "Vorschau der Dehnung",
+    "confirm_delete_document": "Sind Sie sicher, dass Sie dieses Dokument löschen wollen?",
+    "authenticate_security": "Anmelden, um auf die App zugreifen zu können",
+    "camera_view_size": "Größe ansehen",
+    "documents": "Dokumente",
+    "aspect_fit": "Anpassen des Aussehens",
+    "downloading": "Herunterladen (%1$s%%) …",
+    "confirm_delete_pages": "Sind Sie sicher, dass Sie diese %1$s Seiten löschen wollen?",
+    "confirm_delete": "Sind Sie sicher, dass Sie dieses Dokument löschen wollen?",
+    "confirm_delete_documents": "Sind Sie sicher, dass Sie diese %1$s Dokumente löschen wollen?",
+    "draw_ocr_overlay": "OCR-Überlagerung zeichnen",
+    "download": "Herunterladen",
+    "draw_ocr_text": "OCR-Text umreißen",
+    "biometric_lock": "Biometrische Sicherheit",
+    "disabled": "deaktiviert",
+    "aspect_fill": "Aussehen der Auffüllung"
 }
