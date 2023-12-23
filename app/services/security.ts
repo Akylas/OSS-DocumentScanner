@@ -48,7 +48,7 @@ export default class SecurityService extends Observable {
     async onAppForeground(args: ApplicationEventData) {
         if (this.background) {
             this.background = false;
-            if (this.autoLockEnabled ) {
+            if (this.autoLockEnabled) {
                 // this.launched = true;
                 await this.validateSecurityOrClose();
             }
@@ -175,7 +175,7 @@ export default class SecurityService extends Observable {
             return validated;
         }
     }
-    async verifyFingerprint(options: VerifyBiometricOptions = { }) {
+    async verifyFingerprint(options: VerifyBiometricOptions = {}) {
         try {
             const result = await this.biometricAuth.verifyBiometric({ message: lc('authenticate_security'), ...options });
             return result.code === ERROR_CODES.SUCCESS;
