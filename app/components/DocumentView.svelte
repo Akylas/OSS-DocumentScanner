@@ -123,7 +123,7 @@
         }
     }
 
-    async function importDocument() {
+    async function importPages() {
         try {
             const doc = await importAndScanImage(document);
             if (doc) {
@@ -497,7 +497,7 @@
         </collectionview>
 
         <stacklayout horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom">
-            <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
+            <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importPages} />
             <mdbutton class="fab" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
         </stacklayout>
     </gridlayout>
