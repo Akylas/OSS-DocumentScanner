@@ -19,7 +19,8 @@ android {
       reset()
       include resConfigs.split(',')
     } else {
-      resConfigs "en", "fr", "es"
+      // do we need other languages for this app?
+      resConfigs "en"
     }
     ndk {
       if (splitEnabled || project.hasProperty('abiFilters')) {
