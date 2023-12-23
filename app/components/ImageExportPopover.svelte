@@ -74,7 +74,7 @@
             }
             DEV_LOG && console.log('outputImageNames', outputImageNames);
             showLoading(l('exporting'));
-            const destinationPaths = [];
+            // const destinationPaths = [];
             let finalMessagePart;
             await Promise.all(
                 sortedPages.map(
@@ -86,23 +86,23 @@
                                 // const imageSource = await ImageSource.fromFile(imagePath);
                                 imageSource = await getTransformedImage(page);
                                 if (__ANDROID__ && exportDirectory.startsWith('content://')) {
-                                    const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(exportDirectory));
-
+                                    const context = Utils.android.getApplicationContext();
+                                    const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
                                     const outfile = outdocument.createFile('image/jpeg', destinationName);
                                     if (!finalMessagePart) {
                                         if (canSetName) {
-                                            finalMessagePart = outfile.getName();
+                                            finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
                                         } else {
-                                            finalMessagePart = outdocument.getName();
+                                            finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
                                         }
                                     }
                                     const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
                                     (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
-                                    destinationPaths.push(outfile.getUri().toString());
+                                    // destinationPaths.push(outfile.getUri().toString());
                                 } else {
                                     const destinationPath = path.join(exportDirectory, destinationName);
                                     await imageSource.saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
-                                    destinationPaths.push(destinationPath);
+                                    // destinationPaths.push(destinationPath);
                                     if (!finalMessagePart) {
                                         if (canSetName) {
                                             finalMessagePart = destinationPath;
