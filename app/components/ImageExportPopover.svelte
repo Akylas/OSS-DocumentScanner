@@ -133,7 +133,14 @@
     }
     async function shareImage() {
         try {
-            await share({ file: pages[0].getImagePath() });
+            const page = pages[0];
+            if (page.colorMatrix) {
+                const imageSource = await getTransformedImage(page);
+                await share({ image: imageSource });
+                recycleImages(imageSource);
+            } else {
+                await share({ file: pages[0].getImagePath() });
+            }
         } catch (error) {
             showError(error);
         }
