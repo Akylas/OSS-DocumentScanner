@@ -46,32 +46,38 @@ $lang.subscribe((newLang: string) => {
     globalObservable.notify({ eventName: 'language', data: lang });
 });
 function setLang(newLang) {
-    newLang = getActualLanguage(newLang);
-    if (supportedLanguages.indexOf(newLang) === -1) {
-        newLang = newLang.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(newLang) === -1) {
-            newLang = 'en';
+    let actualNewLang = getActualLanguage(newLang);
+    DEV_LOG && console.log('setLang', newLang, actualNewLang);
+    if (supportedLanguages.indexOf(actualNewLang) === -1) {
+        actualNewLang = actualNewLang.split('-')[0].toLowerCase();
+        if (supportedLanguages.indexOf(actualNewLang) === -1) {
+            actualNewLang = 'en';
         }
     }
     if (__IOS__) {
-        overrideNativeLocale(newLang);
+        overrideNativeLocale(actualNewLang);
     } else {
         // Application.android.foregroundActivity?.recreate();
         try {
-            const appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(newLang);
+            const appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang);
             // Call this on the main thread as it may require Activity.restart()
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
         } catch (error) {
             console.error(error);
         }
     }
-    $lang.set(newLang);
+    $lang.set(actualNewLang);
 }
 
 const deviceLanguage = getString('language', DEFAULT_LOCALE);
 function getActualLanguage(language) {
     if (language === 'auto') {
-        language = Device.language;
+        if (__ANDROID__) {
+            // N Device.language reads app config which thus does return locale app language and not device language
+            language = java.util.Locale.getDefault().getLanguage();
+        } else {
+            language = Device.language;
+        }
     }
     switch (language) {
         case 'cs':
@@ -120,7 +126,7 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
 
 prefs.on('key:language', () => {
     const newLanguage = getString('language');
-    // DEV_LOG && console.log('language changed', newLanguage);
+    DEV_LOG && console.log('language changed', newLanguage);
     // on pref change we are updating
     if (newLanguage === lang) {
         return;
@@ -164,13 +170,12 @@ async function internalSelectLanguage() {
         const actions = SUPPORTED_LOCALES;
         const currentLanguage = getString('language', DEFAULT_LOCALE);
         const component = (await import('~/components/OptionSelect.svelte')).default;
-
         return showAlertOptionSelect(
             component,
             {
-                height: 200,
+                height: actions.length * 56,
                 rowHeight: 56,
-                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k), data: k }))).map((d) => ({
+                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
                     ...d,
                     boxType: 'circle',
                     type: 'checkbox',
@@ -189,7 +194,8 @@ async function internalSelectLanguage() {
 export async function selectLanguage() {
     try {
         const result = await internalSelectLanguage();
-        if (result && result.data) {
+        DEV_LOG && console.log('selectLanguage', result);
+        if (result?.data) {
             ApplicationSettings.setString('language', result.data);
         }
     } catch (err) {
