@@ -84,7 +84,7 @@ try {
     let launched = false;
     async function start() {
         try {
-            // DEV_LOG && console.log('start');
+            DEV_LOG && console.log('start');
             networkService.start();
             securityService.start();
             await syncService.start();

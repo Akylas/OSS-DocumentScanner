@@ -71,7 +71,7 @@
         }
     }
     function refresh() {
-        const newItems = [
+        const newItems: any[] = [
             {
                 id: 'language',
                 description: getLocaleDisplayName(),
@@ -81,80 +81,86 @@
                 id: 'dark_mode',
                 description: getThemeDisplayName(),
                 title: lc('theme.title')
-            },
-
-            {
-                type: 'switch',
-                id: 'biometric_lock',
-                title: lc('biometric_lock'),
-                description: lc('biometric_lock_desc'),
-                value: securityService.biometricEnabled
-            },
-            {
-                type: 'switch',
-                id: 'biometric_auto_lock',
-                title: lc('biometric_auto_lock'),
-                description: lc('biometric_auto_lock_desc'),
-                enabled: securityService.biometricEnabled,
-                value: securityService.biometricEnabled && securityService.autoLockEnabled
-            },
-
-            {
-                id: 'setting',
-                key: 'previewResizeThreshold',
-                title: lc('preview_resize_threshold'),
-                full_description: lc('preview_resize_threshold_desc'),
-                default: ApplicationSettings.getNumber('previewResizeThreshold', 200),
-                rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', 200),
-                type: 'prompt'
-            },
-            {
-                id: 'webdav',
-                rightValue: () => (syncService.enabled ? lc('enabled') : lc('disabled')),
-                title: lc('webdav_sync'),
-                description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
-            },
-            // {
-            //     id: 'test',
-            //     type: 'checkbox',
-            //     title: lc('webdav_sync'),
-            //     value:false
-            // },
-            // {
-            //     id: 'share',
-            //     rightBtnIcon: 'mdi-chevron-right',
-            //     title: lc('share_application')
-            // },
-            {
-                id: 'version',
-                title: lc('version'),
-                description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
-            },
-            {
-                id: 'github',
-                rightBtnIcon: 'mdi-chevron-right',
-                title: lc('source_code'),
-                description: lc('get_app_source_code')
-            },
-            {
-                id: 'third_party',
-                rightBtnIcon: 'mdi-chevron-right',
-                title: lc('third_parties'),
-                description: lc('list_used_third_parties')
-            },
-            {
-                id: 'export_settings',
-                title: lc('export_settings'),
-                description: lc('export_settings_desc'),
-                rightBtnIcon: 'mdi-chevron-right'
-            },
-            {
-                id: 'import_settings',
-                title: lc('import_settings'),
-                description: lc('import_settings_desc'),
-                rightBtnIcon: 'mdi-chevron-right'
             }
-        ];
+        ]
+            .concat(
+                securityService.biometricsAvailable
+                    ? [
+                          {
+                              type: 'switch',
+                              id: 'biometric_lock',
+                              title: lc('biometric_lock'),
+                              description: lc('biometric_lock_desc'),
+                              value: securityService.biometricEnabled
+                          },
+                          {
+                              type: 'switch',
+                              id: 'biometric_auto_lock',
+                              title: lc('biometric_auto_lock'),
+                              description: lc('biometric_auto_lock_desc'),
+                              enabled: securityService.biometricEnabled,
+                              value: securityService.biometricEnabled && securityService.autoLockEnabled
+                          }
+                      ]
+                    : ([] as any)
+            )
+            .concat([
+                {
+                    id: 'setting',
+                    key: 'previewResizeThreshold',
+                    title: lc('preview_resize_threshold'),
+                    full_description: lc('preview_resize_threshold_desc'),
+                    default: ApplicationSettings.getNumber('previewResizeThreshold', 200),
+                    rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', 200),
+                    type: 'prompt'
+                },
+                {
+                    id: 'webdav',
+                    rightValue: () => (syncService.enabled ? lc('enabled') : lc('disabled')),
+                    title: lc('webdav_sync'),
+                    description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
+                },
+                // {
+                //     id: 'test',
+                //     type: 'checkbox',
+                //     title: lc('webdav_sync'),
+                //     value:false
+                // },
+                // {
+                //     id: 'share',
+                //     rightBtnIcon: 'mdi-chevron-right',
+                //     title: lc('share_application')
+                // },
+                {
+                    id: 'version',
+                    title: lc('version'),
+                    description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
+                },
+                {
+                    id: 'github',
+                    rightBtnIcon: 'mdi-chevron-right',
+                    title: lc('source_code'),
+                    description: lc('get_app_source_code')
+                },
+                {
+                    id: 'third_party',
+                    rightBtnIcon: 'mdi-chevron-right',
+                    title: lc('third_parties'),
+                    description: lc('list_used_third_parties')
+                },
+                {
+                    id: 'export_settings',
+                    title: lc('export_settings'),
+                    description: lc('export_settings_desc'),
+                    rightBtnIcon: 'mdi-chevron-right'
+                },
+                {
+                    id: 'import_settings',
+                    title: lc('import_settings'),
+                    description: lc('import_settings_desc'),
+                    rightBtnIcon: 'mdi-chevron-right'
+                }
+            ] as any);
 
         items = new ObservableArray(newItems);
     }
@@ -357,6 +363,7 @@
             clearTimeout(checkboxTapTimer);
             checkboxTapTimer = null;
         }
+        DEV_LOG && console.log('onCheckBox', item.id, value);
         try {
             switch (item.id) {
                 case 'biometric_lock':

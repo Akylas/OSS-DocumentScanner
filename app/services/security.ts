@@ -1,5 +1,5 @@
 import { Application, ApplicationEventData, Observable } from '@nativescript/core';
-import { BiometricAuth, ERROR_CODES } from '@nativescript/biometrics';
+import { BiometricAuth, ERROR_CODES, VerifyBiometricOptions } from '@nativescript/biometrics';
 import { booleanProperty, stringProperty } from './BackendService';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { l, lc } from '~/helpers/locale';
@@ -13,6 +13,8 @@ export interface PasscodeWindowOptions {
     storePassword?: string;
 }
 
+const TAG = '[SecurityService]';
+
 /**
  * Parent service class. Has common configs and methods.
  */
@@ -22,48 +24,44 @@ export default class SecurityService extends Observable {
     @booleanProperty({ default: false }) biometricEnabled: boolean;
     @booleanProperty({ default: false }) pincodeEnabled: boolean;
     @booleanProperty({ default: false }) autoLockEnabled: boolean;
-    async biometricsAvailable() {
-        const r = await this.biometricAuth.available();
-        DEV_LOG && console.log('biometricsAvailable', r);
-        return r.biometrics || r.touch || r.face;
-    }
+    biometricsAvailable = true;
 
-    start() {
-        Application.on(Application.resumeEvent, this.onAppResume, this);
-        Application.on(Application.suspendEvent, this.onAppSuspend, this);
-        Application.on(Application.exitEvent, this.onAppExit, this);
+    async start() {
+        DEV_LOG && console.log(TAG, 'start', this.background);
+        Application.on(Application.foregroundEvent, this.onAppForeground, this);
+        Application.on(Application.backgroundEvent, this.onAppBackground, this);
+        // Application.on(Application.exitEvent, this.onAppExit, this);
+        const r = await this.biometricAuth.available();
+        this.biometricsAvailable = r.biometrics || r.touch || r.face;
+        if (this.biometricsAvailable) {
+            this.validateSecurityOrClose();
+        }
     }
     stop() {
-        Application.off(Application.resumeEvent, this.onAppResume, this);
-        Application.off(Application.suspendEvent, this.onAppSuspend, this);
-        Application.off(Application.exitEvent, this.onAppExit, this);
+        Application.off(Application.foregroundEvent, this.onAppForeground, this);
+        Application.off(Application.backgroundEvent, this.onAppBackground, this);
+        // Application.off(Application.exitEvent, this.onAppExit, this);
     }
 
-    launched = false;
-    resumed = false;
-    async onAppResume(args: ApplicationEventData) {
-        DEV_LOG && console.log('onAppResume', this.launched, this.resumed);
-        if (!this.launched) {
-            this.resumed = true;
-            this.launched = true;
-            setTimeout(() => {
-                this.validateSecurityOrClose();
-            }, 500);
-        } else if (!this.resumed) {
-            this.resumed = true;
-            if (this.autoLockEnabled) {
+    // launched = false;
+    background = true;
+    async onAppForeground(args: ApplicationEventData) {
+        if (this.background) {
+            this.background = false;
+            if (this.autoLockEnabled ) {
+                // this.launched = true;
                 await this.validateSecurityOrClose();
             }
         }
     }
-    onAppSuspend(args: ApplicationEventData) {
-        if (this.resumed) {
-            this.resumed = false;
+    onAppBackground(args: ApplicationEventData) {
+        if (!this.background) {
+            this.background = true;
         }
     }
-    onAppExit(args: ApplicationEventData) {
-            this.launched = false;
-    }
+    // onAppExit(args: ApplicationEventData) {
+    //     this.launched = false;
+    // }
     clear() {
         this.storedPassword = null;
         this.autoLockEnabled = false;
@@ -72,27 +70,33 @@ export default class SecurityService extends Observable {
     passcodeSet() {
         return !!this.storedPassword;
     }
-
+    validating = false;
     async validateSecurityOrClose(options = {}) {
+        if (this.validating) {
+            return;
+        }
         try {
-            await securityService.validateSecurity({ closeOnBack: true, ...options });
+            this.validating = true;
+            await this.validateSecurity({ closeOnBack: true, ...options });
         } catch (error) {
-            if (error.code === 50) {
+            if (error.code === 50 || error.code === 60) {
                 if (__ANDROID__) {
                     Application.android.startActivity.finish();
                 }
             } else {
                 throw error;
             }
+        } finally {
+            this.validating = false;
         }
     }
 
     async enableBiometric() {
         try {
-            this.biometricEnabled = await this.verifyFingerprint();
-            DEV_LOG && console.log('enableBiometric', this.biometricEnabled);
+            this.biometricEnabled = await this.verifyFingerprint({});
             return this.biometricEnabled;
         } catch (error) {
+            console.error(error);
             throw error;
         }
     }
@@ -157,7 +161,6 @@ export default class SecurityService extends Observable {
         return !changed;
     }
     async validateSecurity(options?: PasscodeWindowOptions) {
-        DEV_LOG && console.log('validateSecurity', this.biometricEnabled);
         if (!this.biometricEnabled) {
             return;
         }
@@ -172,10 +175,9 @@ export default class SecurityService extends Observable {
             return validated;
         }
     }
-    async verifyFingerprint() {
+    async verifyFingerprint(options: VerifyBiometricOptions = { }) {
         try {
-            const result = await this.biometricAuth.verifyBiometric({ message: lc('authenticate_security'), pinFallback: true });
-            DEV_LOG && console.log('verifyFingerprint', result);
+            const result = await this.biometricAuth.verifyBiometric({ message: lc('authenticate_security'), ...options });
             return result.code === ERROR_CODES.SUCCESS;
         } catch (error) {
             console.error(error, error.stack);

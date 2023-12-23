@@ -115,8 +115,8 @@ class NetworkService extends Observable {
             return;
         }
         this.monitoring = true;
-        Application.on(Application.resumeEvent, this.onAppResume, this);
-        Application.on(Application.suspendEvent, this.onAppSuspend, this);
+        Application.on(Application.foregroundEvent, this.onAppForeground, this);
+        Application.on(Application.backgroundEvent, this.onAppBackground, this);
         startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = getConnectionType();
     }
@@ -124,25 +124,21 @@ class NetworkService extends Observable {
         if (!this.monitoring) {
             return;
         }
-        Application.off(Application.resumeEvent, this.onAppResume, this);
-        Application.off(Application.suspendEvent, this.onAppSuspend, this);
+        Application.off(Application.foregroundEvent, this.onAppForeground, this);
+        Application.off(Application.backgroundEvent, this.onAppBackground, this);
         this.monitoring = false;
         stopMonitoring();
     }
-    launched = false;
-    resumed = false;
-    onAppResume(args: ApplicationEventData) {
-        if (!this.launched) {
-            this.launched = true;
-        }
-        if (!this.resumed) {
-            this.resumed = true;
+    background = true;
+    onAppForeground(args: ApplicationEventData) {
+        if (this.background) {
+            this.background = false;
             this.connectionType = getConnectionType();
         }
     }
-    onAppSuspend(args: ApplicationEventData) {
-        if (this.resumed) {
-            this.resumed = false;
+    onAppBackground(args: ApplicationEventData) {
+        if (!this.background) {
+            this.background = true;
         }
     }
     onConnectionStateChange(newConnectionType: connectionType) {
