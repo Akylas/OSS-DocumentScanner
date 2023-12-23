@@ -17,6 +17,7 @@
     "aspect_ratio": "aspect ratio",
     "authenticate_security": "authenticate to access the application",
     "auto": "auto",
+    "biometric_auto_lock": "biometric auto lock",
     "biometric_lock": "Biometric security",
     "biometric_lock_desc": "Lock the application using biometrics / PIN code",
     "black_white": "black & white",
