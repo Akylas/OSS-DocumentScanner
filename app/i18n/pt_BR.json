@@ -9,7 +9,7 @@
     "camera_view_size": "espaço de exibição",
     "documents": "documentos",
     "aspect_fit": "ajustar",
-    "downloading": "baixando (%1$s%%)...",
+    "downloading": "baixando (%1$s%%)…",
     "confirm_delete_pages": "tem certeza de que deseja excluir estas %1$s páginas?",
     "$com.akylas.documentscanner": {
         "app": {
@@ -40,7 +40,7 @@
     "color": "cor",
     "export_settings_desc": "exportar todas as configurações para poder importá-las mais tarde",
     "enhance_desc": "aprimorar características da imagem",
-    "english": "inglês",
+    "english": "Inglês",
     "export_folder": "pasta de destino",
     "exporting": "exportação",
     "enabled": "habilitado",
