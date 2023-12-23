@@ -359,8 +359,10 @@ export async function importAndScanImage(document?: OCRDocument) {
     let items;
     // let editingImage: ImageSource;
     try {
+        // TODO add iOS image filter
         selection = await openFilePicker({
-            extensions: ['image/*'],
+            // extensions: ['image/*'],
+            mimeTypes: ['image/*'],
             multipleSelection: true,
             pickerMode: 0
         });
