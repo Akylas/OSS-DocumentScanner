@@ -1,1 +1,43 @@
-{}
+{
+    "biometric_lock_desc": "Подсигурете приложението с биометрия / пинкод",
+    "camera_preview_stretch": "покажи разтегнато",
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "OSS Портмоне"
+        }
+    },
+    "confirm_delete_document": "сигурни ли сте, че искате да изтриете този документ?",
+    "camera_view_size": "размер",
+    "documents": "документи",
+    "downloading": "изтегля се (%1$s%%)...",
+    "confirm_delete_pages": "сигурни ли сте, че искате да изтриете тези %1$s страници?",
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "OSS Скенер за документи"
+        }
+    },
+    "delete_page": "изтриване",
+    "confirm_delete": "сигурни ли сте, че искате да изтриете този документ?",
+    "confirm_delete_documents": "сигурни ли сте, че искате да изтриете тези %1$s документи?",
+    "delete": "изтриване",
+    "a4": "А4",
+    "color_desc": "подобрява цветовете и намалява нежеланите цветови нюанси",
+    "computing": "зарежда...",
+    "condensed": "сгъстено",
+    "draw_ocr_overlay": "начертаване на ocr слой",
+    "camera_settings": "настройки на камерата",
+    "download": "изтегли",
+    "draw_ocr_text": "начертаване на ocr текст",
+    "about": "oтносно",
+    "black_white": "черно & бяло",
+    "camera_permission_needed": "За правене на снимки е необходимо разрешение за ползване на камерата",
+    "dark": "тъмно",
+    "biometric_lock": "Сигурност чрез биометрия",
+    "confirm_delete_page": "сигурни ли сте, че искате да изтриете страница %1$s?",
+    "cancel": "отмени",
+    "disabled": "забранено",
+    "auto": "автоматично",
+    "a3": "А3",
+    "capturing": "сканиране",
+    "color": "цвят"
+}
