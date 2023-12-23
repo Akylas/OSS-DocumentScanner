@@ -37,5 +37,22 @@
     "a3": "A3",
     "aspect_fill": "preencher",
     "capturing": "capturando",
-    "color": "cor"
+    "color": "cor",
+    "export_settings_desc": "exportar todas as configurações para poder importá-las mais tarde",
+    "enhance_desc": "aprimorar características da imagem",
+    "english": "inglês",
+    "export_folder": "pasta de destino",
+    "exporting": "exportação",
+    "enabled": "habilitado",
+    "export": "exportar",
+    "filters": "filtros",
+    "expanded": "expandido",
+    "condensed": "compacto",
+    "draw_ocr_overlay": "desenhar sobreposição de ocr",
+    "draw_ocr_text": "desenhar texto de ocr",
+    "enhance": "aprimorar",
+    "error": "erro",
+    "export_settings": "configurações de exportação",
+    "format": "formato",
+    "failed": "falhou"
 }
