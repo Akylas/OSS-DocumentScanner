@@ -1,5 +1,5 @@
-import { Utils } from '@nativescript/core';
-const CHANNEL_ID = 'channelId';
+// import { Utils } from '@nativescript/core';
+// const CHANNEL_ID = 'channelId';
 
 @NativeClass
 @JavaProxy('__PACKAGE__.MainApplication')
