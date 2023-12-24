@@ -135,7 +135,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
             return;
         }
         DEV_LOG && console.error('showError', err, err?.['stack']);
-        const reporterEnabled = isSentryEnabled;
+        const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const realError = typeof err === 'string' ? null : err;
 
         const isString = realError === null || realError === undefined;
@@ -144,7 +144,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
             showSnack({ message });
             return;
         }
-        if (SENTRY_ENABLED && isSentryEnabled) {
+        if (reporterEnabled) {
             Sentry.captureException(err);
         }
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
