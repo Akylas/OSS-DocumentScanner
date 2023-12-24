@@ -9,7 +9,7 @@ module.exports = {
         defaultLanguage: 'en'
     },
     android: {
-        gradleVersion: '8.5',
+        gradleVersion: '8.3',
         markingMode: 'none',
         codeCache: true,
         enableMultithreadedJavascript: false
