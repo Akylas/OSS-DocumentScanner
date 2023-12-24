@@ -59,7 +59,7 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
         width={iconFontSize * 2} />
-    <stacklayout col={1} height={subtitle?.length > 0 ? 'auto' : 50} marginLeft="10" verticalAlignment="middle">
+    <stacklayout col={1} height={subtitle?.length > 0 ? 'auto' : 40} marginLeft={10} verticalAlignment="middle">
         <label color={colorOnSurface} {fontSize} {fontWeight} lineBreak="end" maxLines={1} text={title} textWrap="true" />
         <label color={subtitleColor} fontSize={subtitleFontSize} lineBreak="end" text={subtitle} />
     </stacklayout>

@@ -166,11 +166,13 @@
     }
     refresh();
 
-    async function onLongPress(command, item?) {
+    async function onLongPress(item, event) {
         try {
-            switch (command) {
+            switch (item.id) {
                 case 'version':
-                    throw new Error('test error');
+                    if (SENTRY_ENABLED) {
+                        throw new Error('test error');
+                    }
             }
         } catch (error) {
             showError(error);
@@ -429,7 +431,8 @@
                     showBottomLine={false}
                     subtitle={item.description}
                     title={getTitle(item)}
-                    on:tap={(event) => onTap(item, event)}>
+                    on:tap={(event) => onTap(item, event)}
+                    on:longPress={(event) => onLongPress(item, event)}>
                 </ListItemAutoSize>
             </Template>
             <!-- <Template key="switch" let:item>
