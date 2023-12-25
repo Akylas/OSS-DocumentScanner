@@ -82,6 +82,7 @@ try {
     // Trace.enable();
 
     let launched = false;
+    let androidIntentToHandle;
     async function start() {
         try {
             DEV_LOG && console.log('start');
@@ -90,7 +91,6 @@ try {
             await syncService.start();
             await ocrService.start();
             await documentsService.start();
-
             try {
                 await syncService.syncDocuments();
             } catch (error) {
@@ -124,6 +124,12 @@ try {
             console.error(error, error.stack);
         }
     });
+    if (__ANDROID__) {
+        // store start intent we might received before first page is mounted
+        Application.android.on(Application.android.activityNewIntentEvent, (event) => {
+            Application.android['startIntent'] = event.intent;
+        });
+    }
 
     themer.createShape('round', {
         cornerFamily: 'rounded' as any,
@@ -145,6 +151,7 @@ try {
     } else {
         Comp = await import('~/components/DocumentsList.svelte');
     }
+    DEV_LOG && console.log('svelteNative');
     svelteNative(Comp.default, {});
 } catch (error) {
     console.error(error, error.stack);

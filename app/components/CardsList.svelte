@@ -3,7 +3,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition, Utils, View } from '@nativescript/core';
-    import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
+    import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
@@ -20,7 +20,7 @@
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { importAndScanImage, showPopoverMenu, timeout } from '~/utils/ui';
+    import { importAndScanImage, importAndScanImageFromUris, showPopoverMenu, timeout } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips } from '~/variables';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
@@ -168,7 +168,13 @@
 
     onMount(() => {
         if (__ANDROID__) {
+            const intent = Application.android['startIntent'];
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
+            Application.android.on(Application.android.activityNewIntentEvent, onAndroidNewItent);
+
+            if (intent) {
+                onAndroidNewItent({ intent } as any);
+            }
         }
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         documentsService.on('documentPageDeleted', onDocumentPageUpdated);
@@ -182,6 +188,7 @@
     onDestroy(() => {
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
+            Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
         }
         documentsService.on('documentPageDeleted', onDocumentPageUpdated);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
@@ -468,6 +475,45 @@
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
+            }
+        }
+    }
+    async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
+        if (__ANDROID__) {
+            try {
+                const uris = [];
+                const intent = event.intent as android.content.Intent;
+                DEV_LOG && console.log('onAndroidNewItent', intent.getAction());
+                switch (intent.getAction()) {
+                    case 'android.intent.action.SEND':
+                        const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
+                        if (imageUri) {
+                            uris.push(imageUri.toString());
+                        }
+                        break;
+                    case 'android.intent.action.SEND_MULTIPLE':
+                        const imageUris = intent.getParcelableArrayListExtra('android.intent.extra.STREAM') as java.util.ArrayList<android.net.Uri>;
+                        if (imageUris) {
+                            for (let index = 0; index < imageUris.size(); index++) {
+                                uris.push(imageUris.get(index).toString());
+                            }
+                        }
+                }
+                if (uris.length) {
+                    const doc = await importAndScanImageFromUris(uris);
+                    if (!doc) {
+                        return;
+                    }
+                    const component = doc.pages.length > 1 ? (await import('~/components/DocumentView.svelte')).default : (await import('~/components/DocumentEdit.svelte')).default;
+                    navigate({
+                        page: component,
+                        props: {
+                            document: doc
+                        }
+                    });
+                }
+            } catch (error) {
+                showError(error);
             }
         }
     }

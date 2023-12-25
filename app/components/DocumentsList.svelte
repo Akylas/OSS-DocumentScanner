@@ -187,8 +187,12 @@
 
     onMount(() => {
         if (__ANDROID__) {
+            const intent = Application.android['startIntent'];
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.on(Application.android.activityNewIntentEvent, onAndroidNewItent);
+            if (intent) {
+                onAndroidNewItent({ intent } as any);
+            }
         }
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         documentsService.on('documentPageDeleted', onDocumentPageUpdated);
@@ -709,7 +713,7 @@
                 },
                 {
                     color: colorOnSurfaceVariant,
-                    lineHeight: (condensed ? 16 : 26) * $systemFontScale,
+                    lineHeight: (condensed ? 14 : 26) * $systemFontScale,
                     text: '\n' + dayjs(item.doc.createdDate).format('L LT')
                 }
             ]
