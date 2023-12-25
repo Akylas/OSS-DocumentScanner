@@ -207,28 +207,31 @@
             editingImage = new ImageSource(image);
             // eslint-disable-next-line prefer-const
             let quads = await getJSONDocumentCorners(editingImage, 300, 0);
+
             if (quads.length === 0) {
+                let items = [
+                    {
+                        editingImage,
+                        quads: [
+                            [
+                                [100, 100],
+                                [editingImage.width - 100, 100],
+                                [editingImage.width - 100, editingImage.height - 100],
+                                [100, editingImage.height - 100]
+                            ]
+                        ] as [number, number][][]
+                    }
+                ];
                 const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
-                quads = await showModal({
+                items = await showModal({
                     page: ModalImportImage,
                     animated: true,
                     fullscreen: true,
                     props: {
-                        items: [
-                            {
-                                editingImage,
-                                quads: [
-                                    [
-                                        [100, 100],
-                                        [editingImage.width - 100, 100],
-                                        [editingImage.width - 100, editingImage.height - 100],
-                                        [100, editingImage.height - 100]
-                                    ]
-                                ]
-                            }
-                        ]
+                        items
                     }
                 });
+                quads = items ? items[0].quads : undefined;
             }
             if (quads?.length) {
                 await addCurrentImageToDocument(image, quads);
