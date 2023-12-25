@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
-    let bitmapPaint: Paint;
-    const textPaint = new Paint();
+    // let bitmapPaint: Paint;
+    // const textPaint = new Paint();
     const bgPaint = new Paint();
     bgPaint.color = 'white';
     bgPaint.setShadowLayer(6, 0, 2, '#00000088');
