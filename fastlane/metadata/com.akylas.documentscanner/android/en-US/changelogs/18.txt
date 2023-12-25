@@ -1,0 +1,6 @@
+*Features*
+- allow to received images shared from other apps
+
+*Bug fixes*
+- crash while accepting image taken from camera
+- allow to share multiple images
