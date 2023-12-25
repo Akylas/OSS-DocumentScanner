@@ -39,7 +39,7 @@ module.exports = (env, params = {}) => {
                 devlog: true,
                 noconsole: false,
                 sourceMap: true,
-                uglify: false
+                uglify: true
             },
             env
         );
