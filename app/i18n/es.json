@@ -18,7 +18,7 @@
         }
     },
     "successful": "completado",
-    "english": "inglés",
+    "english": "Inglés",
     "password": "contraseña",
     "export_folder": "carpeta a exportar",
     "theme": {
@@ -36,7 +36,7 @@
     "reduce_image_size": "reducir tamaño de imagen",
     "documents": "documentos",
     "aspect_fit": "encajar al tamaño",
-    "downloading": "descargando (%1$s%%)...",
+    "downloading": "descargando (%1$s%%)…",
     "server_address": "dirección de servidor",
     "confirm_delete_pages": "¿está seguro de que desea borrar esas %1$s páginas?",
     "ocr_computing": "detectando texto (%1$s%%)...",
@@ -143,5 +143,6 @@
     "later": "después",
     "no_document_yet": "añada un documento utilizando la cámara o importar uno desde una imagen",
     "get_app_source_code": "ver código fuente de app",
-    "failed": "fallido"
+    "failed": "fallido",
+    "biometric_auto_lock": "bloqueo biométrico automático"
 }
