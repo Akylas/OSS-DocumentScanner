@@ -8,7 +8,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
-    import { colors, systemFontScale } from '~/variables';
+    import { colors, screenWidthDips, systemFontScale } from '~/variables';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     import { showError } from '~/utils/error';
@@ -16,6 +16,9 @@
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
+    const isAndroid = __ANDROID__;
+
+    const textFieldWidth = (screenWidthDips - 20 - 22 - 16) / 2;
 
     export let transforms = [];
     export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string }>;
@@ -120,12 +123,14 @@
 <gesturerootview padding="10 10 0 10" rows="auto">
     <stacklayout>
         <label fontSize={19} fontWeight="bold" margin={5} text={lc('camera_settings')} />
-        <gridlayout columns="*,*" padding="10" rows="auto,auto">
+        <wraplayout padding="10">
             <!-- <mdbutton class="icon-btn" color="white" fontSize={14} text={aspectRatio} variant="text" on:tap={toggleAspectRatio} /> -->
-            <textfield editable={false} hint={lc('aspect_ratio')} text={aspectRatio} variant="outline" on:tap={(e) => selectOption('aspectRatio', e)} />
-            <textfield col={1} editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" on:tap={(e) => selectOption('stretch', e)} />
-            <textfield editable={false} hint={lc('camera_view_size')} row={1} text={viewsize} variant="outline" on:tap={(e) => selectOption('viewsize', e)} />
-        </gridlayout>
+            <textfield editable={false} hint={lc('camera_view_size')} text={viewsize} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('viewsize', e)} />
+            <textfield editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('stretch', e)} />
+            {#if isAndroid}
+                <textfield editable={false} hint={lc('aspect_ratio')} text={aspectRatio} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('aspectRatio', e)} />
+            {/if}
+        </wraplayout>
         <label fontSize={19} fontWeight="bold" margin={5} text={lc('transformations')} />
         <stacklayout horizontalAlignment="left" orientation="horizontal" padding="10">
             <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
