@@ -1,0 +1,5 @@
+*Bug fixes*
+- crash while trying to add images from camera
+- updated italian translation
+- better layout for 3rd party dependencies
+- fix crash on app start. Sorry about this one everyone!
