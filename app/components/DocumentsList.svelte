@@ -630,7 +630,7 @@
         }
     }
     function getItemImageHeight(viewStyle) {
-        return condensed ? 60 : 114;
+        return condensed ? 44 : 94;
     }
     function getItemRowHeight(viewStyle) {
         return condensed ? 80 : 150;
@@ -653,7 +653,7 @@
         const h = canvas.getHeight();
         // const w2 = w / 2;
         // const h2 = h / 2;
-        const dx = getItemImageHeight(viewStyle) + 16 + 10;
+        const dx = 10 + getItemImageHeight(viewStyle) * $systemFontScale + 16 ;
         textPaint.color = colorOnSurfaceVariant;
         canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
         textPaint.color = colorOnBackground;
@@ -685,7 +685,6 @@
         <!-- {/if} -->
         <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={getItemRowHeight(viewStyle) * $systemFontScale}>
             <Template let:item>
-                <!-- TODO: make this a canvas -->
                 <canvaslabel
                     backgroundColor={colorSurfaceContainerHigh}
                     borderRadius={12}
@@ -705,15 +704,7 @@
                         marginTop={getImageMargin(viewStyle)}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
-                        width={getItemImageHeight(viewStyle)} />
-                    <!-- <canvaslabel col={1} fontSize={14 * $systemFontScale} padding="4 0 6 16" color="red">
-                    <cgroup>
-                        <cspan fontSize={16 * $systemFontScale} fontWeight="bold" lineBreak="end" lineHeight={18 * $systemFontScale} text={item.doc.name} />
-                        <cspan color={colorOnSurfaceVariant} lineHeight={26 * $systemFontScale} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
-                    </cgroup>
-
-                    <cspan color={colorOnSurfaceVariant} text={getSize(item)} verticalAlignment="bottom" />
-                    </canvaslabel> -->
+                        width={getItemImageHeight(viewStyle) * $systemFontScale} />
                     <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
                     <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                     <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />
