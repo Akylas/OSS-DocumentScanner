@@ -143,8 +143,6 @@
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
         "@nativescript/webpack": "../NativeScript/dist/packages/nativescript-webpack.tgz",
-        "@nativescript-community/ui-canvas": "portal:/home/mguillon/dev/nativescript/ui-canvas/packages/ui-canvas",
-        "@nativescript-community/ui-cameraview": "portal:../ui-cameraview/packages/ui-cameraview",
-        "@nativescript-community/ui-document-picker": "portal:/home/mguillon/dev/nativescript/ui-document-picker/packages/ui-document-picker"
+        "@nativescript-community/ui-cameraview": "portal:../ui-cameraview/packages/ui-cameraview"
     }
 }
