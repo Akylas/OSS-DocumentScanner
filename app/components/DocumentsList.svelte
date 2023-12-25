@@ -653,7 +653,7 @@
         const h = canvas.getHeight();
         // const w2 = w / 2;
         // const h2 = h / 2;
-        const dx = 10 + getItemImageHeight(viewStyle) * $systemFontScale + 16 ;
+        const dx = 10 + getItemImageHeight(viewStyle) * $systemFontScale + 16;
         textPaint.color = colorOnSurfaceVariant;
         canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
         textPaint.color = colorOnBackground;
@@ -685,11 +685,11 @@
         <!-- {/if} -->
         <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={getItemRowHeight(viewStyle) * $systemFontScale}>
             <Template let:item>
-                <canvaslabel
+                <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
                     borderRadius={12}
                     fontSize={14 * $systemFontScale}
-                    margin="8 16 8 16"
+                    margin={8}
                     padding={10}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
@@ -708,7 +708,7 @@
                     <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
                     <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                     <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />
-                </canvaslabel>
+                </canvasview>
             </Template>
         </collectionView>
         {#if showNoDocument}
