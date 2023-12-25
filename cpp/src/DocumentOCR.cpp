@@ -170,16 +170,15 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
         std::vector<cv::Point> contours_poly;
         std::vector<cv::Point> contour;
         element = getStructuringElement(cv::MORPH_RECT, cv::Size(options.textDetect1, options.textDetect2));
-        cv::morphologyEx(img_sobel, img_threshold, MORPH_CLOSE, element); // Does the trick
+        cv::morphologyEx(img_sobel, img_threshold, MORPH_CLOSE, element);
 
         if (options.textDetectDilate > 0)
         {
             element = getStructuringElement(cv::MORPH_RECT,
                                             cv::Size(options.textDetectDilate, options.textDetectDilate));
             cv::dilate(img_threshold, img_threshold, element, cv::Point(-1, -1),
-                       1); // Does the trick
+                       1);
         }
-        // img_threshold = resizeImageToThreshold(img_threshold, 1500, 0);
         cv::findContours(img_threshold, contours, hierarchy, cv::RETR_EXTERNAL,
                          cv::CHAIN_APPROX_NONE);
         if (contours.size() > 0)
@@ -201,10 +200,10 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
                     if (appRect.width < 0.9 * imageWidth && appRect.height < 0.9 * imageHeight)
                     {
                         boundRects.push_back(appRect);
-                        if (!out_img.empty())
-                        {
+                        // if (!out_img.empty())
+                        // {
                             // cv::rectangle(out_img, appRect, cv::Scalar(0, 255, 0), 3);
-                        }
+                        // }
                     }
                 }
             }
@@ -238,10 +237,6 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
     int boundRectsCount = boundRects.size();
     int boundRectDone = 0;
 
-//    tesseract::CANCEL_FUNC cancelCallback = [] (void* cancel_this, int words) {
-//        return true;
-//    };
-
     std::optional<tesseract::ETEXT_DESC> monitor;
     int16_t lastProgress = 0;
     if (progressLambda != std::nullopt) {
@@ -256,8 +251,6 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
         monitor = tesseract::ETEXT_DESC();
         monitor->progress_callback2 = progressCallback;
     }
-//    monitor.cancel = cancelCallback;
-//    monitor.cancel_this = nat;
     for (int i = 0; i < boundRectsCount; i++)
     {
         Mat group_img = Mat::zeros(image.rows + 2, image.cols + 2, CV_8UC1);
@@ -287,11 +280,6 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
                 DocumentOCR::OCRData data;
                 string stdWord = (string(word));
                 trim(stdWord);
-                //                if (!fullText.empty())
-                //                {
-                //                    // only clean up if we are merging
-                //                    stdWord.erase(std::remove(stdWord.begin(), stdWord.end(), '\n'), stdWord.end());
-                //                }
                 int wordSize = stdWord.size();
                 if ((wordSize < 2) || (conf < 51) ||
                     ((wordSize == 2) && (stdWord[0] == stdWord[1])) ||
@@ -368,15 +356,6 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
         }
         boundRectDone++;
     }
-
-    // for (int j = 0; j < (int)ocr_data.size(); j++)
-    // {
-    //     OCRData data = ocr_data[j];
-    //     rectangle(out_img, data.box.tl(), data.box.br(), Scalar(255, 0, 255), 3);
-    //     Size word_size = getTextSize(data.text, FONT_HERSHEY_SIMPLEX, (double)scale_font, (int)(3 * scale_font), NULL);
-    //     rectangle(out_img, data.box.tl() - Point(3, word_size.height + 3), data.box.tl() + Point(word_size.width, 0), Scalar(255, 0, 255), -1);
-    //     putText(out_img, data.text, data.box.tl() - Point(1, 1), FONT_HERSHEY_SIMPLEX, scale_font, Scalar(255, 255, 255), (int)(3 * scale_font));
-    // }
     api->Clear();
     if (progressLambda != std::nullopt) {
         progressLambda.value()(100);
