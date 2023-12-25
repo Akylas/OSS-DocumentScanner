@@ -566,7 +566,7 @@ export async function showPopoverMenu<T = any>({ options, anchor, onClose, props
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight,
-            height: Math.min(rowHeight * options.length + 8, 300),
+            height: Math.min(rowHeight * options.length, 300),
             width: 150,
             options,
             onClose: (item) => {

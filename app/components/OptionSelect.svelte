@@ -24,6 +24,7 @@
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
+    export let borderRadius = null;
     export let rowHeight = null;
     export let width: string | number = '*';
     export let containerColumns: string = '*';
@@ -103,7 +104,7 @@
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
-    <gridlayout {backgroundColor} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
+    <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
         {#if showFilter}
             <gridlayout borderColor={colorOutline} margin="10 10 0 10">
                 <textfield
@@ -131,9 +132,10 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} paddingBottom={8} paddingTop={8} row={1} {rowHeight}>
+        <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} row={1} {rowHeight}>
             <Template key="checkbox" let:item>
                 <ListItem
+                    {borderRadius}
                     color={item.color}
                     columns="auto,*,auto"
                     {fontSize}
@@ -150,6 +152,7 @@
             </Template>
             <Template let:item>
                 <ListItem
+                    {borderRadius}
                     color={item.color}
                     {fontSize}
                     {fontWeight}
