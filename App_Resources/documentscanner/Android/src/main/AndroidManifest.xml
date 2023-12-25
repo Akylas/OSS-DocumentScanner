@@ -11,8 +11,8 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"
-        tools:ignore="ScopedStorage" 
-        tools:replace="android:maxSdkVersion"/>
+        tools:ignore="ScopedStorage"
+        tools:replace="android:maxSdkVersion" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application android:requestLegacyExternalStorage="true" android:name=".MainApplication"
@@ -30,11 +30,20 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <!-- <activity android:name="com.nativescript.preferences.NativescriptSettingsActivity"
         android:theme="@style/SettingsTheme" android:exported="true" /> -->
-        <meta-data android:name="io.sentry.anr.enable" android:value="false" />
         <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="__PACKAGE__.provider" android:exported="false"
@@ -42,5 +51,11 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" tools:replace="android:resource" />
         </provider>
+        <meta-data android:name="io.sentry.anr.enable" android:value="false" />
+        <meta-data android:name="io.sentry.breadcrumbs.activity-lifecycle" android:value="false" />
+        <meta-data android:name="io.sentry.breadcrumbs.app-lifecycle" android:value="false" />
+        <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />
+        <meta-data android:name="io.sentry.breadcrumbs.app-components" android:value="false" />
+        <meta-data android:name="io.sentry.breadcrumbs.user-interaction" android:value="false" />
     </application>
 </manifest>
