@@ -1,25 +1,32 @@
 {
   "$com.akylas.cardwallet": {
-    "app": {
-      "name": "OSS Card Wallet"
-    }
+      "app": {
+          "name": "OSS Card Wallet"
+      }
   },
   "$com.akylas.documentscanner": {
-    "app": {
-      "name": "OSS Document Scanner"
-    }
+      "app": {
+          "name": "OSS Document Scanner"
+      }
   },
   "a3": "a3",
   "a4": "a4",
   "about": "informazioni",
+  "aspect_fill": "riempi",
+  "aspect_fit": "adatta",
+  "aspect_ratio": "proporzioni",
   "auto": "automatico",
   "black_white": "bianco e nero",
   "camera_permission_needed": "per scattare foto è necessaria l'autorizzazione della fotocamera",
+  "camera_preview_stretch": "imposta anteprima",
+  "camera_settings": "impostazioni della fotocamera",
+  "camera_view_size": "dimensione visualizzazione",
   "cancel": "annulla",
   "capturing": "acquisizione",
   "color": "colore",
   "color_desc": "migliora i colori e riduci le sfumature indesiderate",
   "computing": "elaborazione...",
+  "condensed": "compatto",
   "confirm_delete": "sei sicuro di voler eliminare questo documento?",
   "confirm_delete_document": "sei sicuro di voler eliminare questo documento?",
   "confirm_delete_documents": "sei sicuro di voler eliminare questi %1$s documenti?",
@@ -39,27 +46,31 @@
   "enhance": "migliora",
   "enhance_desc": "migliora le caratteristiche dell'immagine",
   "error": "errore",
+  "expanded": "esteso",
   "export": "esportazione",
   "export_folder": "cartella di destinazione",
   "export_settings": "impostazioni di esportazione",
   "export_settings_desc": "esporta tutte le impostazioni per poterle importare successivamente",
   "exporting": "esportazione",
   "failed": "fallito",
+  "filters": "filtri",
   "format": "formato",
   "french": "francese",
   "full": "completo",
   "get_app_source_code": "ottieni il codice sorgente dell'app",
+  "image_filename": "nome del file immagine da esportare",
   "image_import": "importa un'immagine",
+  "image_saved": "immagine salvata",
   "images_loading": "caricamento delle immagini...",
   "import_settings": "impostazioni di importazione",
   "import_settings_desc": "importa tutte le impostazioni da un backup precedente",
   "ios": {
-    "info": {
-      "plist": {
-        "NSCameraUsageDescription": "La fotocamera viene utilizzata per la scansione dei documenti",
-        "NSPhotoLibraryUsageDescription": "Importa le immagini per scansionarle"
+      "info": {
+          "plist": {
+              "NSCameraUsageDescription": "La fotocamera viene utilizzata per la scansione dei documenti",
+              "NSPhotoLibraryUsageDescription": "Importa le immagini per scansionarle"
+          }
       }
-    }
   },
   "italian": "italiano",
   "items_per_page": "elementi per pagina",
@@ -88,6 +99,8 @@
   "portrait": "verticale",
   "preferences": "preferenze",
   "preview": "anteprima",
+  "preview_resize_threshold": "ridimensionamento immagine fotocamera",
+  "preview_resize_threshold_desc": "dimensione a cui viene ridimensionata l'immagine della fotocamera per rilevare i documenti. Una dimensione maggiore significa un rilevamento migliore, ma più lento",
   "quality": "qualità",
   "reduce_image_size": "riduci le dimensioni dell'immagine",
   "remote_folder": "cartella remota",
@@ -103,7 +116,7 @@
   "selected": "%1$s selezionati",
   "server_address": "indirizzo del server",
   "settings": {
-    "title": "impostazioni"
+      "title": "impostazioni"
   },
   "share_application": "condividi applicazione",
   "source_code": "codice sorgente",
@@ -113,13 +126,14 @@
   "system": "sistema",
   "test": "test",
   "theme": {
-    "auto": "automatico",
-    "black": "nero",
-    "dark": "scuro",
-    "light": "chiaro",
-    "title": "tema"
+      "auto": "automatico",
+      "black": "nero",
+      "dark": "scuro",
+      "light": "chiaro",
+      "title": "tema"
   },
   "third_parties": "librerie di terze parti",
+  "transformations": "trasformazioni",
   "username": "nome utente",
   "version": "versione",
   "webdav_config": "configurazione webdav",
