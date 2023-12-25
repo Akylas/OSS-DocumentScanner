@@ -1,15 +1,22 @@
-<script lang="ts">
-    import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
+<script context="module" lang="ts">
+    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from 'svelte';
     import { colors, fonts, systemFontScale } from '~/variables';
+    const iconPaint = new Paint();
+    const linePaint = new Paint();
+    linePaint.strokeWidth = 1;
+</script>
+
+<script lang="ts">
     const dispatch = createEventDispatcher();
     let colorOutlineVariant = $colors.colorOutlineVariant;
     let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
     let colorOnSurface = $colors.colorOnSurface;
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors);
-    export let showBottomLine: boolean = true;
-    export let extraPaddingLeft: number = 0;
+
+    $: linePaint.color = colorOutlineVariant;
+    export let showBottomLine: boolean = false;
     export let iconFontSize: number = 24;
     export let rightIconFontSize: number = 30;
     export let fontSize: number = 17;
@@ -23,10 +30,26 @@
     export let rightIcon: string = null;
     export let rightValue: string | Function = null;
     export let columns: string = 'auto,*,auto';
-    export let mainCol = 0;
     export let leftIconFonFamily: string = $fonts.mdi;
     export let rightIconFonFamily: string = $fonts.mdi;
+    export let mainCol = 1;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
+
+    function draw(event: { canvas: Canvas; object: CanvasView }) {
+        const canvas = event.canvas;
+        const h = canvas.getHeight();
+        const w = canvas.getHeight();
+        if (leftIcon) {
+            iconPaint.textSize = iconFontSize * $systemFontScale;
+            iconPaint.color = titleColor;
+            iconPaint.fontFamily = leftIconFonFamily;
+            event.canvas.drawText(leftIcon, 0, 0, iconPaint);
+        }
+        if (showBottomLine) {
+            event.canvas.drawLine(20, h - 1, w, h - 1, linePaint);
+        }
+        onDraw?.(event);
+    }
 </script>
 
 <!-- <gridlayout>
@@ -50,29 +73,25 @@
     </gridlayout>
 </gridlayout> -->
 
-<gridlayout {columns} padding="10 16 10 16" rippleColor={colorOnSurface} on:tap={(event) => dispatch('tap', event)} on:longPress={(event) => dispatch('longPress', event)}>
-    <label
+<canvasview {columns} padding="10 16 10 16" rippleColor={colorOnSurface} on:tap={(event) => dispatch('tap', event)} on:longPress={(event) => dispatch('longPress', event)}>
+    <!-- <label
         fontFamily={leftIconFonFamily}
         fontSize={iconFontSize}
         marginLeft="-10"
         text={leftIcon}
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
-        width={iconFontSize * 2} />
-    <stacklayout col={1} height={subtitle?.length > 0 ? 'auto' : 40} marginLeft={10} verticalAlignment="middle">
-        <label color={colorOnSurface} {fontSize} {fontWeight} lineBreak="end" maxLines={1} text={title} textWrap="true" />
-        <label color={subtitleColor} fontSize={subtitleFontSize} lineBreak="end" text={subtitle} />
-    </stacklayout>
+        width={iconFontSize * 2} /> -->
+    <label col={mainCol} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
+        <cspan color={titleColor} {fontSize} {fontWeight} text={title} />
+        <cspan color={subtitleColor} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
+    </label>
 
-    <label
-        col={2}
-        color={subtitleColor}
-        marginLeft={16}
-        marginRight={16}
-        text={typeof rightValue === 'function' ? rightValue() : rightValue}
-        verticalAlignment="center"
-        visibility={!!rightValue ? 'visible' : 'collapsed'} />
-    <label
+    <label col={2} color={subtitleColor} marginLeft={16} textAlignment="right" verticalAlignment="center" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
+        <cspan fontSize={subtitleFontSize} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
+        <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize} text={rightIcon} />
+    </label>
+    <!-- <label
         col={2}
         color={subtitleColor}
         fontFamily={rightIconFonFamily}
@@ -83,10 +102,9 @@
         text={rightIcon}
         verticalAlignment="center"
         visibility={!!rightIcon ? 'visible' : 'hidden'}
-        width={25} />
-    <!-- TODO: refactor i dont like to have to create another gridlayout just for the line(padding issue) -->
+        width={25} /> -->
     <slot />
-    <canvasView visibility={showBottomLine ? 'visible' : 'hidden'}>
-        <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" />
-    </canvasView>
-</gridlayout>
+    <!-- <canvasView> -->
+    <!-- <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" visibility={showBottomLine ? 'visible' : 'hidden'} /> -->
+    <!-- </canvasView> -->
+</canvasview>

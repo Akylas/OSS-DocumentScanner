@@ -414,12 +414,12 @@
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
             <Template key="switch" let:item>
-                <ListItemAutoSize leftIcon={item.icon} mainCol={1} showBottomLine={false} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize leftIcon={item.icon} mainCol={1} showBottomLine={false} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <checkbox id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
