@@ -26,6 +26,15 @@ export async function share(content: Content, options: Options = {}) {
         if (content.image) {
             items.push(content.image.ios);
         }
+        if (content.images) {
+            content.images.forEach((image) => items.push(image.ios));
+        }
+        if (content.file) {
+            items.push(content.file);
+        }
+        if (content.files) {
+            content.files.forEach((file) => items.push(file));
+        }
         const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
         if (options.subject) {
             shareController.setValueForKey(options.subject, 'subject');

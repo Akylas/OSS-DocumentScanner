@@ -4,7 +4,9 @@ export interface Content {
     title?: string;
     message?: string;
     image?: ImageSource;
+    images?: ImageSource[];
     file?: string;
+    files?: string[];
     url?: string;
 }
 export interface Options {

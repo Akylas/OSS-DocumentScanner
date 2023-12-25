@@ -1,15 +1,18 @@
-import { Application, Device, ImageSource, knownFolders, path } from '@nativescript/core';
-import { ad } from '@nativescript/core/utils';
+import { Application, Device, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
 import { Content, Options } from './share';
 
 let numberOfImagesCreated = 0;
+const sdkVersionInt = parseInt(Device.sdkVersion, 10);
+const EXTRA_STREAM = 'android.intent.extra.STREAM';
+const ACTION_SEND = 'android.intent.action.SEND';
+const ACTION_SEND_MULTIPLE = 'android.intent.action.SEND_MULTIPLE';
 export async function share(content: Content, options: Options = {}) {
     if (content == null) {
         throw new Error('missing_content');
     }
     const Intent = android.content.Intent;
 
-    const intent = new Intent(Intent.ACTION_SEND);
+    const intent = new Intent(ACTION_SEND);
     intent.setTypeAndNormalize('text/plain');
 
     if (content.title) {
@@ -21,13 +24,13 @@ export async function share(content: Content, options: Options = {}) {
     }
     const currentActivity: android.app.Activity = Application.android.foregroundActivity || Application.android.startActivity;
 
-    if (content.image) {
+    const uris = [];
+
+    async function addImage(image) {
         intent.setTypeAndNormalize('image/jpeg');
         const imageFileName = 'share_image_' + numberOfImagesCreated++ + '.jpg';
-        const dir = currentActivity.getExternalCacheDir();
-        const filePath = path.join(dir.toString(), imageFileName);
-        await content.image.saveToFileAsync(filePath, 'jpg');
-        const sdkVersionInt = parseInt(Device.sdkVersion, 10);
+        const filePath = path.join(knownFolders.temp().path, imageFileName);
+        await image.saveToFileAsync(filePath, 'jpg');
         const newFile = new java.io.File(filePath);
         let shareableFileUri;
         if (sdkVersionInt >= 21) {
@@ -35,18 +38,43 @@ export async function share(content: Content, options: Options = {}) {
         } else {
             shareableFileUri = android.net.Uri.fromFile(newFile);
         }
-        intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
+        uris.push(shareableFileUri);
     }
-    if (content.file) {
-        const sdkVersionInt = parseInt(Device.sdkVersion, 10);
-        const newFile = new java.io.File(content.file);
+
+    function addFile(file) {
+        const newFile = new java.io.File(file);
         let shareableFileUri;
         if (sdkVersionInt >= 21) {
             shareableFileUri = androidx.core.content.FileProvider.getUriForFile(currentActivity, Application.android.nativeApp.getPackageName() + '.provider', newFile);
         } else {
             shareableFileUri = android.net.Uri.fromFile(newFile);
         }
-        intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
+        uris.push(shareableFileUri);
+    }
+
+    if (content.image) {
+        await addImage(content.image);
+    }
+    if (content.images) {
+        for (let index = 0; index < content.images.length; index++) {
+            await addImage(content.images[index]);
+        }
+    }
+    if (content.file) {
+        addFile(content.file);
+    }
+    if (content.files) {
+        for (let index = 0; index < content.files.length; index++) {
+            addFile(content.files[index]);
+        }
+    }
+    if (uris.length === 1) {
+        intent.putExtra(EXTRA_STREAM, uris[0]);
+    } else if (uris.length > 1) {
+        const arrayList = new java.util.ArrayList(uris.length);
+        uris.forEach((uri) => arrayList.add(uri));
+        intent.setAction(ACTION_SEND_MULTIPLE);
+        intent.putExtra(EXTRA_STREAM, arrayList);
     }
 
     const chooser = Intent.createChooser(intent, options.dialogTitle);
@@ -55,7 +83,7 @@ export async function share(content: Content, options: Options = {}) {
     if (currentActivity !== null) {
         currentActivity.startActivity(chooser);
     } else {
-        ad.getApplicationContext().startActivity(chooser);
+        Utils.android.getApplicationContext().startActivity(chooser);
     }
     return true;
 }

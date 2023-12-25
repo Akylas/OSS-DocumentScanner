@@ -132,17 +132,23 @@
         }
     }
     async function shareImage() {
+        const images = [];
+        const files = [];
         try {
-            const page = pages[0];
-            if (page.colorMatrix) {
-                const imageSource = await getTransformedImage(page);
-                await share({ image: imageSource });
-                recycleImages(imageSource);
-            } else {
-                await share({ file: pages[0].getImagePath() });
+            for (let index = 0; index < pages.length; index++) {
+                const page = pages[index];
+                if (page.colorMatrix) {
+                    const imageSource = await getTransformedImage(page);
+                    images.push(imageSource);
+                } else {
+                    files.push(page.getImagePath());
+                }
             }
+            await share({ images, files });
         } catch (error) {
             showError(error);
+        } finally {
+            recycleImages(images);
         }
     }
 </script>
@@ -151,6 +157,6 @@
     {#if isAndroid}
         <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
     {/if}
-    <mdbutton row={1} text={lc('share')} visibility={pages.length === 1 ? 'visible' : 'collapsed'} on:tap={shareImage} />
+    <mdbutton row={1} text={lc('share')} on:tap={shareImage} />
     <mdbutton row={2} text={lc('export')} on:tap={exportImage} />
 </PopoverBackgroundView>
