@@ -15,7 +15,7 @@
         editingImage;
         quads;
         qrcode?: QRCodeData;
-    }[];
+    }[] = [];
     // export let editingImage;
     // export let quads;
     // export let qrcode: QRCodeData = null;

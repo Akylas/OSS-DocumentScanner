@@ -172,7 +172,7 @@
         const result: { icon: string; id: string; text: string } = await showBottomSheet({
             parent: page,
             view: CameraSettingsBottomSheet,
-            backgroundOpacity:0.8,
+            backgroundOpacity: 0.8,
             closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
                 transforms = bottomsheetComponent.transforms;
                 colorType = bottomsheetComponent.colorType;
@@ -214,14 +214,18 @@
                     animated: true,
                     fullscreen: true,
                     props: {
-                        editingImage,
-                        quads: [
-                            [
-                                [100, 100],
-                                [editingImage.width - 100, 100],
-                                [editingImage.width - 100, editingImage.height - 100],
-                                [100, editingImage.height - 100]
-                            ]
+                        items: [
+                            {
+                                editingImage,
+                                quads: [
+                                    [
+                                        [100, 100],
+                                        [editingImage.width - 100, 100],
+                                        [editingImage.width - 100, editingImage.height - 100],
+                                        [100, editingImage.height - 100]
+                                    ]
+                                ]
+                            }
                         ]
                     }
                 });
