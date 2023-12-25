@@ -401,7 +401,7 @@
                     break;
             }
         } catch (error) {
-            console.error(error, error.stack);
+            showError(error);
         }
     }
     function refreshCollectionView() {
