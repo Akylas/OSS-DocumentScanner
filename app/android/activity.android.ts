@@ -8,7 +8,7 @@ function getThemeColor(context, colorResId) {
 }
 @NativeClass()
 @JavaProxy('__PACKAGE__.MainActivity')
-class MainActivity extends androidx.appcompat.app.AppCompatActivity {
+export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     public isNativeScriptActivity;
 
     private _callbacks: AndroidActivityCallbacks;
