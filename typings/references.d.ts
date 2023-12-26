@@ -76,6 +76,7 @@ namespace svelteNative.JSX {
         colorMatrix?: number[];
         blurRadius?: number;
         fadeDuration?: number;
+        'on:rotateAnimated'?: (args: EventData) => void;
     }
     export interface LabelAttributes {
         autoFontSize?: boolean;
@@ -91,5 +92,8 @@ namespace svelteNative.JSX {
         screenOrientation?: string;
         keepScreenAwake?: boolean;
         screenBrightness?: number;
+
+        'on:closingModally'?: (args: ShownModallyData) => void;
+        // "on:shownModally"?: (args: ShownModallyData) => void;
     }
 }
