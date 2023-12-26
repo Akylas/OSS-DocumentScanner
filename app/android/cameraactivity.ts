@@ -1,6 +1,6 @@
 import { AndroidActivityBackPressedEventData, AndroidActivityRequestPermissionsEventData, AndroidActivityResultEventData, Application, Frame, GridLayout, Trace, View } from '@nativescript/core';
 import { CSSUtils } from '@nativescript/core/css/system-classes';
-import Camera from '~/components/Camera.svelte';
+// import Camera from '~/components/Camera.svelte';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { resolveComponentElement } from '~/utils/ui';
 // import { resolveComponentElement } from '~/utils/ui';
@@ -255,16 +255,16 @@ export class CameraActivity extends androidx.appcompat.app.AppCompatActivity {
         activity.setContentView(rootView.nativeViewProtected, new org.nativescript.widgets.CommonLayoutParams());
 
         try {
-            const intent = activity.getIntent();
-            let outputUri;
-            if (intent.getExtras()?.containsKey('output')) {
-                outputUri = intent.getExtras().get('output').toString();
-            }
-            //ensure theme is started
-            startThemeHelper();
-            const componentInstanceInfo = resolveComponentElement(Camera, { outputUri });
-            const view: View = componentInstanceInfo.element.nativeView;
-            (rootView as GridLayout).addChild(view);
+            // const intent = activity.getIntent();
+            // let outputUri;
+            // if (intent.getExtras()?.containsKey('output')) {
+            //     outputUri = intent.getExtras().get('output').toString();
+            // }
+            // //ensure theme is started
+            // startThemeHelper();
+            // const componentInstanceInfo = resolveComponentElement(Camera, { outputUri });
+            // const view: View = componentInstanceInfo.element.nativeView;
+            // (rootView as GridLayout).addChild(view);
         } catch (err) {
             console.error('error retreiving data', err, err.stack);
         } finally {
