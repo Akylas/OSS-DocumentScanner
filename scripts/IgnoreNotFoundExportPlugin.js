@@ -13,9 +13,9 @@ module.exports = class IgnoreNotFoundExportPlugin {
         if (this.exportsToIgnore.length > 0) {
             const exportsPattern = '(' + this.exportsToIgnore.map(escapeStringForRegExp).join('|') + ')';
 
-            return new RegExp(`export '${exportsPattern}'( \\(imported as '.*'\\))? was not found in`);
+            return new RegExp(`export '${exportsPattern}'( \\((imported|reexported) as '.*'\\))? was not found in`);
         } else {
-            return /export '.*'( \(imported as '.*'\))? was not found in/;
+            return /export '.*'( \((imported|reexported) as '.*'\))? was not found in/;
         }
     }
 
