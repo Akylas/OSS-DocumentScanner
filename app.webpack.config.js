@@ -2,7 +2,7 @@
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
-const { dirname, join, relative, resolve } = require('path');
+const { dirname, join, isAbsolute, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -11,6 +11,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
 const Fontmin = require('@akylas/fontmin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+const SvelteCheckPlugin = require('svelte-check-plugin');
 
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
@@ -403,7 +404,15 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
 
     // TODO: find a better way to detect symlinked packages
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    // config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    config.optimization.splitChunks.cacheGroups.defaultVendor.test = function (module) {
+        const absPath = module.resource;
+        if (absPath) {
+            const relativePath = relative(projectRoot, absPath);
+            return absPath.indexOf('node_modules') !== -1 || !(relativePath && !relativePath.startsWith('..') && !isAbsolute(relativePath));
+        }
+        return false;
+    };
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core)';
@@ -506,6 +515,9 @@ module.exports = (env, params = {}) => {
         config.plugins.push(
             new ForkTsCheckerWebpackPlugin({
                 async: false
+            }),
+            new SvelteCheckPlugin({
+                args: ['--compiler-warnings', `${[...ignoredSvelteWarnings].map((s) => s + ':ignore').join(',')}`]
             })
         );
     }
