@@ -99,7 +99,7 @@
 
     const filters = ColorMatricesTypes.map((k) => ({
         id: k,
-        text: lc(k),
+        text: lc(k.id),
         colorType: k
     }));
 </script>
