@@ -7,7 +7,7 @@
     import CActionBar from './CActionBar.svelte';
     import { showLoading, timeout } from '~/utils/ui';
     import { AlertDialog, alert } from '@nativescript-community/ui-material-dialogs';
-    const title = `Page ${index++}`
+    const title = `Page ${index++}`;
     async function showModalTest() {
         try {
             const TestPage = (await import('~/components/TestPage.svelte')).default;
@@ -49,7 +49,7 @@
     <gridlayout rows="auto,*">
         <mdbutton row="1" text="showModal" verticalAlignment="bottom" on:tap={showModalTest} />
         <mdbutton row="1" text="showLoading" verticalAlignment="top" on:tap={showLoadingTest} />
-        <CActionBar backgroundColor="red" modalWindow={true} title={title} />
+        <CActionBar backgroundColor="red" modalWindow={true} {title} />
     </gridlayout>
 </page>
 >
