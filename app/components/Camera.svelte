@@ -1,30 +1,27 @@
 <script lang="ts">
-    import { request } from '@nativescript-community/perms';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Img } from '@nativescript-community/ui-image';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, File, ObservableArray, Page, Screen, TouchAnimationOptions, Utils } from '@nativescript/core';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import dayjs from 'dayjs';
+    import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
     import { closeModal, showModal } from 'svelte-native';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
-    import { CropView } from 'plugin-nativeprocessor/CropView';
-    import { l, lc, onLanguageChanged } from '~/helpers/locale';
-    import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+    import { writable } from 'svelte/store';
+    import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
+    import { l } from '~/helpers/locale';
+    import { OCRDocument, PageData } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { getColorMatrix, hideLoading, importAndScanImage, showLoading, timeout } from '~/utils/ui';
+    import { getColorMatrix, hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
     import ActionSheet from './ActionSheet.svelte';
     import CActionBar from './CActionBar.svelte';
-    import CropEditView from './CropEditView.svelte';
-    import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { QRCodeData, cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners, getJSONDocumentCornersAndImage } from 'plugin-nativeprocessor';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
-    import { writable } from 'svelte/store';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -64,6 +61,8 @@
 
     export let modal = false;
     export let document: OCRDocument = null;
+    // export let outputUri; // android only
+    // export let forActivityResult = false; //android only
     const newDocument = !document;
 
     const contours: [number, number][][] = null;

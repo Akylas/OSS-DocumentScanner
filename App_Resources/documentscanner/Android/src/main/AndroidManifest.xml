@@ -41,6 +41,17 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+        <!-- <activity android:name=".CameraActivity" android:theme="@style/AppTheme" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode" android:windowSoftInputMode="stateHidden|adjustResize" android:noHistory="true" android:taskAffinity="" android:excludeFromRecents="true" android:exported="true" android:screenOrientation="nosensor"
+        android:visibleToInstantApps="true">
+            <intent-filter>
+                <action android:name="android.media.action.IMAGE_CAPTURE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.media.action.STILL_IMAGE_CAMERA" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity> -->
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <!-- <activity android:name="com.nativescript.preferences.NativescriptSettingsActivity"
         android:theme="@style/SettingsTheme" android:exported="true" /> -->
