@@ -26,4 +26,16 @@ public class Utils {
         activity.getDelegate().applyDayNight();
         DynamicColors.applyIfAvailable(activity);
     }
+
+    public static void restartApp(Context ctx, AppCompatActivity activity) {
+        PackageManager pm = ctx.getPackageManager();
+        Intent intent = pm.getLaunchIntentForPackage(ctx.getPackageName());
+        Intent mainIntent = Intent.makeRestartActivityTask(intent.getComponent());
+        ctx.startActivity(mainIntent);
+        Runtime.getRuntime().exit(0);
+    }
+
+    public static Locale getSystemLocale() {
+        return androidx.core.os.ConfigurationCompat.getLocales(android.content.res.Resources.getSystem().getConfiguration()).get(0);
+    }
 }

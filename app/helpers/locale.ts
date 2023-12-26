@@ -57,9 +57,18 @@ function setLang(newLang) {
     } else {
         // Application.android.foregroundActivity?.recreate();
         try {
-            const appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang);
+            let appLocale;
+            if (newLang === 'auto') {
+                appLocale = androidx.core.os.LocaleListCompat.getEmptyLocaleList();
+            } else {
+                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang);
+            }
+            DEV_LOG && console.log('appLocale', appLocale);
             // Call this on the main thread as it may require Activity.restart()
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
+            currentLocale = null;
+            // TODO: check why getEmptyLocaleList does not reset the locale to system
+            actualNewLang = getActualLanguage(newLang);
         } catch (error) {
             console.error(error);
         }
@@ -72,6 +81,15 @@ function getActualLanguage(language) {
     if (language === 'auto') {
         if (__ANDROID__) {
             // N Device.language reads app config which thus does return locale app language and not device language
+            DEV_LOG &&
+                console.log(
+                    'getActualLanguage',
+                    language,
+                    java.util.Locale.getDefault().getLanguage(),
+                    com.akylas.documentscanner.Utils.getSystemLocale().getLanguage(),
+                    Device.language,
+                    androidx.appcompat.app.AppCompatDelegate['getApplicationLocales']()
+                );
             language = java.util.Locale.getDefault().getLanguage();
         } else {
             language = Device.language;
@@ -164,30 +182,26 @@ export function getCurrentISO3Language() {
     }
 }
 async function internalSelectLanguage() {
-    try {
-        const actions = SUPPORTED_LOCALES;
-        const currentLanguage = getString('language', DEFAULT_LOCALE);
-        const component = (await import('~/components/OptionSelect.svelte')).default;
-        return showAlertOptionSelect(
-            component,
-            {
-                height: actions.length * 56,
-                rowHeight: 56,
-                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
-                    ...d,
-                    boxType: 'circle',
-                    type: 'checkbox',
-                    value: currentLanguage === d.data
-                }))
-            },
-            {
-                title: lc('select_language')
-            }
-        );
-    } catch (err) {
-        showError(err);
-    } finally {
-    }
+    // try {
+    const actions = SUPPORTED_LOCALES;
+    const currentLanguage = getString('language', DEFAULT_LOCALE);
+    const component = (await import('~/components/OptionSelect.svelte')).default;
+    return showAlertOptionSelect(
+        component,
+        {
+            height: actions.length * 56,
+            rowHeight: 56,
+            options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
+                ...d,
+                boxType: 'circle',
+                type: 'checkbox',
+                value: currentLanguage === d.data
+            }))
+        },
+        {
+            title: lc('select_language')
+        }
+    );
 }
 export async function selectLanguage() {
     try {
@@ -201,6 +215,7 @@ export async function selectLanguage() {
     }
 }
 
+// TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
 
 export { l, lc, lt, lu };

@@ -13,6 +13,7 @@ declare namespace com {
                 static getColorFromInt(context: android.content.Context, intToGet);
                 static getColorFromName(context: android.content.Context, intToGet);
                 static restartApp(context: android.content.Context, activity: android.app.Activity);
+                static getSystemLocale(): java.util.Locale;
             }
             export class PDFUtils {
                 static compressPDF(src: string, dst: string, jpegQuality: number);

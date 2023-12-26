@@ -14,14 +14,14 @@ android {
     versionCode 18
     versionName "1.2.8"
 
-    if (project.hasProperty('resConfigs')) {
-      def resConfigs = project.findProperty('resConfigs')
-      reset()
-      include resConfigs.split(',')
-    } else {
-      // do we need other languages for this app?
-      resConfigs "en"
-    }
+    // if (project.hasProperty('resConfigs')) {
+    //   def resConfigs = project.findProperty('resConfigs')
+    //   reset()
+    //   include resConfigs.split(',')
+    // } else {
+    //   // do we need other languages for this app?
+    //   resConfigs "en"
+    // }
     ndk {
       if (splitEnabled || project.hasProperty('abiFilters')) {
         abiFilters.clear()
@@ -30,6 +30,10 @@ android {
         }
       }
     }
+    androidResources {
+      generateLocaleConfig = true
+    }
+
   }
   ndkVersion = project.ndkVersion
   
