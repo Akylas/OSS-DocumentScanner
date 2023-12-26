@@ -13,6 +13,8 @@ const Fontmin = require('@akylas/fontmin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const SvelteCheckPlugin = require('svelte-check-plugin');
 
+const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus', 'illegal-attribute-character']);
+
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
         codePt -= 0x10000;
@@ -93,7 +95,8 @@ module.exports = (env, params = {}) => {
         fakeall, // --env.fakeall
         profile, // --env.profile
         fork = true, // --env.fakeall
-        accessibility = false, // --env.adhoc
+        accessibility = false, // --env.accessibility
+        sveltecheck = true, // --env.sveltecheck
         adhoc, // --env.adhoc
         timeline, // --env.timeline
         locale = 'auto', // --env.locale
@@ -104,8 +107,9 @@ module.exports = (env, params = {}) => {
     // console.log('env', env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
-    env.appComponents = env.appComponents || ['~/android/activity.android'];
-    const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus', 'illegal-attribute-character']);
+    env.appComponents = env.appComponents || [];
+    // env.appComponents.push('~/android/cameraactivity');
+    env.appComponents.push('~/android/activity.android');
 
     nsWebpack.chainWebpack((config, env) => {
         config.module
@@ -515,11 +519,16 @@ module.exports = (env, params = {}) => {
         config.plugins.push(
             new ForkTsCheckerWebpackPlugin({
                 async: false
-            }),
-            new SvelteCheckPlugin({
-                args: ['--compiler-warnings', `${[...ignoredSvelteWarnings].map((s) => s + ':ignore').join(',')}`]
             })
         );
+
+        if (sveltecheck) {
+            config.plugins.push(
+                new SvelteCheckPlugin({
+                    args: ['--compiler-warnings', `${[...ignoredSvelteWarnings].map((s) => s + ':ignore').join(',')}`]
+                })
+            );
+        }
     }
 
     if (hiddenSourceMap || sourceMap) {
