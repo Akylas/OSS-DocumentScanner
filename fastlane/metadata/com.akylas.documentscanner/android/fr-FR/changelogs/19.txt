@@ -1,0 +1,2 @@
+*Bug fixes*
+- locale set from settings fix. Working on android 13 per app language
