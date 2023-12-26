@@ -1,14 +1,12 @@
 import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { alert } from '@nativescript-community/ui-material-dialogs';
-import { ApplicationSettings, Device, File, Utils, View } from '@nativescript/core';
+import { ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
-import { ComponentInstanceInfo, resolveComponentElement, showAlertOptionSelect } from '~/utils/ui';
+import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
