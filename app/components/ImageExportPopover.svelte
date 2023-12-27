@@ -12,15 +12,20 @@
     import PopoverBackgroundView from './PopoverBackgroundView.svelte';
     import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
     import { recycleImages } from '~/utils/utils.common';
+    import { colors } from '~/variables';
     const isAndroid = __ANDROID__;
 </script>
 
 <script lang="ts">
+    $: ({ colorOnSurfaceVariant } = $colors);
     export let pages: OCRPage[];
     let exportDirectory = ApplicationSettings.getString(
         'image_export_directory',
         __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
     );
+    // if (__ANDROID__) {
+    //     console.log('real file path', com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(exportDirectory)));
+    // }
     DEV_LOG && console.log('exportDirectory', exportDirectory);
     async function pickExportFolder() {
         DEV_LOG && console.log('pickExportFolder', exportDirectory);
@@ -155,7 +160,11 @@
 
 <PopoverBackgroundView rows="auto,auto,auto,auto" width={350}>
     {#if isAndroid}
-        <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
+        <gridlayout columns="*" margin={5} rows="auto">
+            <textfield hint={lc('export_folder')} paddingRight={60} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
+
+            <mdbutton class="icon-btn" color={colorOnSurfaceVariant} horizontalAlignment="right" text="mdi-folder-open" variant="text" verticalAlignment="middle" on:tap={pickExportFolder} />
+        </gridlayout>
     {/if}
     <mdbutton row={1} text={lc('share')} on:tap={shareImage} />
     <mdbutton row={2} text={lc('export')} on:tap={exportImage} />
