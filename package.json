@@ -92,7 +92,7 @@
         "@nativescript/types-android": "8.6.1",
         "@nativescript/types-ios": "8.6.1",
         "@nativescript/webpack": "5.0.18",
-        "@sentry/cli": "2.23.0",
+        "@sentry/cli": "2.23.1",
         "@sentry/webpack-plugin": "2.10.2",
         "@tsconfig/svelte": "^5.0.2",
         "@types/node": "^18.18.14",
