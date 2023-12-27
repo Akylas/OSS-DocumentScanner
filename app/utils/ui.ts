@@ -520,7 +520,7 @@ export async function importAndScanImage(document?: OCRDocument) {
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.files?.length) {
-            return await importAndScanImageFromUris(selection?.files);
+            return await importAndScanImageFromUris(selection?.files, document);
         }
     } catch (error) {
         showError(error);
