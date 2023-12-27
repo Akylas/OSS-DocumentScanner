@@ -1,0 +1,5 @@
+*Bug fixes*
+- *android:* fixed crash while compressing PDF in production builds
+- inserting new pages in documents would create new document
+- better layout for actionbar title while selecting elements
+- show button to set exporting dir so that it is clearer to users
