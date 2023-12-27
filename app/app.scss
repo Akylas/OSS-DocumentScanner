@@ -131,6 +131,7 @@ page {
     @extend .mdi;
     shape: round;
     background-color: transparent;
+    margin: 0;
 
     &:disabled {
         color: var(--colorOutlineVariant);
