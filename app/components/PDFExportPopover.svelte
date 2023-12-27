@@ -12,11 +12,13 @@
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading } from '~/utils/ui';
     import PopoverBackgroundView from './PopoverBackgroundView.svelte';
+    import { colors } from '~/variables';
     const isAndroid = __ANDROID__;
 </script>
 
 <script lang="ts">
     export let documents: OCRDocument[];
+    $: ({ colorOnSurfaceVariant } = $colors);
     let exportDirectory = ApplicationSettings.getString(
         'pdf_export_directory',
         __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
@@ -97,7 +99,11 @@
 
 <PopoverBackgroundView rows="auto,auto,auto,auto" width={350}>
     {#if isAndroid}
-        <textfield hint={lc('export_folder')} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
+        <gridlayout columns="*" margin={5} rows="auto">
+            <textfield hint={lc('export_folder')} paddingRight={60} placeholder={lc('export_folder')} text={exportDirectory} variant="outline" on:tap={pickExportFolder} />
+
+            <mdbutton class="icon-btn" color={colorOnSurfaceVariant} horizontalAlignment="right" text="mdi-folder-open" variant="text" verticalAlignment="middle" on:tap={pickExportFolder} />
+        </gridlayout>
     {/if}
     <mdbutton row={1} text={lc('open')} on:tap={openPDF} />
     <mdbutton row={2} text={lc('export')} on:tap={exportPDF} />
