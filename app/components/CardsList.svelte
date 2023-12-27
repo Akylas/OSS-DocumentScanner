@@ -898,7 +898,7 @@
             <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showSettings} />
         </CActionBar>
         {#if nbSelected > 0}
-            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)}>
+            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ maxLines: 1, autoFontSize: true }}>
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
             </CActionBar>
