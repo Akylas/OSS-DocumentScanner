@@ -195,7 +195,7 @@ module.exports = (env, params = {}) => {
     if (platform === 'android') {
         const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
         const gradleData = readFileSync(gradlePath, 'utf8');
-        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+)"/)[1];
+        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+(?:-(?:[a-z]|[A-Z])+)?)"/)[1];
         buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
     } else if (platform === 'ios') {
         const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
