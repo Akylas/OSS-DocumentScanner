@@ -51,7 +51,7 @@ ${whitelistfilteredLines
     .join('\n')}
 `;
 
-const appProguard = path.join('App_Resources', 'Android', 'proguard-rules.pro');
+const appProguard = path.join(process.argv[3], 'Android', 'proguard-rules.pro');
 if (fs.existsSync(appProguard)) {
     data += '\n' + fs.readFileSync(appProguard, 'utf-8');
 }
