@@ -66,7 +66,7 @@
             }
             return item.image;
         }
-        return item.getImagePath?.();
+        return item.imagePath;
     }
 
     onDestroy(() => {
