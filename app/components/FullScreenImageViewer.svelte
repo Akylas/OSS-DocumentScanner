@@ -78,7 +78,7 @@
 
     async function shareItem(item) {
         try {
-            await share({ file: await item.getImagePath() });
+            await share({ file: await item.imagePath });
         } catch (error) {
             showError(error);
         }

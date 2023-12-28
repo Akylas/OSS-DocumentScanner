@@ -47,7 +47,7 @@
         try {
             await closePopover();
             const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
-            const imagePaths = sortedPages.map((page) => page.getImagePath());
+            const imagePaths = sortedPages.map((page) => page.imagePath);
             const canSetName = imagePaths.length === 1;
             let outputImageNames = [];
             if (canSetName) {
@@ -146,7 +146,7 @@
                     const imageSource = await getTransformedImage(page);
                     images.push(imageSource);
                 } else {
-                    files.push(page.getImagePath());
+                    files.push(page.imagePath);
                 }
             }
             await share({ images, files });

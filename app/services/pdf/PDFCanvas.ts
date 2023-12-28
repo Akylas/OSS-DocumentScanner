@@ -1,8 +1,7 @@
-import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/core';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { lc } from '~/helpers/locale';
-import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
+import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/core';
+import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
+import { getColorMatrix } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils.common';
 let bitmapPaint: Paint;
 const textPaint = new Paint();
@@ -69,7 +68,7 @@ export default class PDFCanvas {
     async loadImagesForPage(pdfPageIndex) {
         const item = this.items[pdfPageIndex];
         for (let index = 0; index < item.pages.length; index++) {
-            const src = item.pages[index].getImagePath();
+            const src = item.pages[index].imagePath;
             if (!this.imagesCache[src]) {
                 this.imagesCache[src] = await loadImage(src);
             }
@@ -78,7 +77,7 @@ export default class PDFCanvas {
     needsLoadImage(pdfPageIndex) {
         const item = this.items[pdfPageIndex];
         for (let index = 0; index < item.pages.length; index++) {
-            const src = item.pages[index].getImagePath();
+            const src = item.pages[index].imagePath;
             if (!this.imagesCache[src]) {
                 return true;
             }
@@ -107,7 +106,7 @@ export default class PDFCanvas {
     }
     drawImageOnCanvas(canvas: Canvas, page: OCRPage, toDrawWidth, toDrawHeight, forExport) {
         const dpi = this.options.dpi;
-        const src = page.getImagePath();
+        const src = page.imagePath;
         let imageWidth = page.width;
         let imageHeight = page.height;
         if (page.rotation % 180 !== 0) {
@@ -180,7 +179,7 @@ export default class PDFCanvas {
         let dx = forExport ? 0 : pagerPagePaddingHorizontal;
         let dy = forExport ? 0 : pagerPagePaddingVertical;
         const nbItems = pages.length;
-        const srcs = pages.map((page) => page.getImagePath());
+        const srcs = pages.map((page) => page.imagePath);
         // console.log('drawPDFPage', w, h, nbItems, srcs);
         const isLoading = srcs.some((src) => !this.imagesCache[src]);
         canvas.translate(dx, dy);
@@ -198,7 +197,7 @@ export default class PDFCanvas {
             imageHeight *= page.scale;
             const pageRatio = imageWidth / imageHeight;
 
-            // const src = page.getImagePath();
+            // const src = page.imagePath;
             let toDrawWidth;
             let toDrawHeight;
             let scale;
@@ -303,7 +302,7 @@ export default class PDFCanvas {
                         imageHeight = page.width;
                     }
                     const pageRatio = imageWidth / imageHeight;
-                    // const src = page.getImagePath();
+                    // const src = page.imagePath;
 
                     let itemAvailableWidth = widthPerColumn - 2 * pagePadding;
                     const itemAvailableHeight = widthPerRow - 2 * pagePadding;

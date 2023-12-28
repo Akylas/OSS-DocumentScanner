@@ -49,7 +49,7 @@
     const firstItem = items.getItem(currentIndex);
     let currentItemOCRData = firstItem.ocrData;
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
-    let currentSelectedImagePath = firstItem.getImagePath();
+    let currentSelectedImagePath = firstItem.imagePath;
     let currentSelectedImageRotation = firstItem.rotation || 0;
     let transforms = firstItem.transforms?.split(',') || [];
     // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
@@ -112,7 +112,7 @@
         currentIndex = event.object.selectedIndex;
         const item = items.getItem(currentIndex);
         currentItemSubtitle = `${item.width} x ${item.height}`;
-        currentSelectedImagePath = item.getImagePath();
+        currentSelectedImagePath = item.imagePath;
         currentSelectedImageRotation = item.rotation || 0;
         currentItemOCRData = item.ocrData;
         transforms = item.transforms?.split(',') || [];
@@ -267,7 +267,7 @@
     }
     async function shareItem(item) {
         try {
-            await share({ file: await item.getImagePath() });
+            await share({ file: await item.imagePath });
         } catch (error) {
             showError(error);
         }

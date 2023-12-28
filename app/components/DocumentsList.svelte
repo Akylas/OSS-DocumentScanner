@@ -432,7 +432,7 @@
                         acc.push({
                             // sharedTransitionTag: `document_${doc.id}_${page.id}`,
                             name: page.name || doc.name,
-                            image: page.getImagePath(),
+                            image: page.imagePath,
                             ...page
                         })
                     );

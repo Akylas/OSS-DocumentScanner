@@ -393,9 +393,6 @@ export class OCRPage extends Observable implements Page {
     colors: ColorPaletteData;
     _colors: string;
 
-    getImagePath() {
-        return this.imagePath;
-    }
     constructor(id: string, docId: string) {
         super();
         this.id = id;
