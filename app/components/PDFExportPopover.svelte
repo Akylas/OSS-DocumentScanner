@@ -8,11 +8,11 @@
     import { showModal } from 'svelte-native';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument } from '~/models/OCRDocument';
-    import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading } from '~/utils/ui';
     import PopoverBackgroundView from './PopoverBackgroundView.svelte';
     import { colors } from '~/variables';
+    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     const isAndroid = __ANDROID__;
 </script>
 
@@ -44,8 +44,7 @@
         try {
             await closePopover();
             showLoading(l('exporting'));
-            const exporter = new PDFExportCanvas();
-            const filePath = await exporter.export(documents);
+            const filePath = await exportPDFAsync(documents);
 
             hideLoading();
             openFile(filePath);
@@ -65,8 +64,7 @@
             if (result?.result && result?.text?.length) {
                 showLoading(l('exporting'));
                 DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                const exporter = new PDFExportCanvas();
-                const filePath = await exporter.export(documents, exportDirectory, result.text);
+                const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
                 hideLoading();
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                 DEV_LOG && console.log('onSnack', onSnack);

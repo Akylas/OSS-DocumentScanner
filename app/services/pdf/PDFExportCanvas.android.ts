@@ -1,4 +1,4 @@
-import { Canvas } from '@nativescript-community/ui-canvas';
+import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Screen, Utils, knownFolders, path } from '@nativescript/core';
 import { IMG_COMPRESS, OCRDocument } from '~/models/OCRDocument';
 import { recycleImages } from '~/utils/utils.common';

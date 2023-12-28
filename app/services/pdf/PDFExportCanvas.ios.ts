@@ -1,8 +1,6 @@
-import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
+import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Folder, Screen, knownFolders } from '@nativescript/core';
-import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { getColorMatrix } from '~/utils/ui';
-import { loadImage, recycleImages } from '~/utils/utils.common';
+import { OCRDocument } from '~/models/OCRDocument';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {

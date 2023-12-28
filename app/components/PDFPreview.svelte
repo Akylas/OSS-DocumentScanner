@@ -21,7 +21,6 @@
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import PDFCanvas from '~/services/pdf/PDFCanvas';
-    import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
@@ -29,6 +28,7 @@
     import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 
     $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
     interface Item {
@@ -121,8 +121,7 @@
                     'pdf_export_directory',
                     __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
                 );
-                const exporter = new PDFExportCanvas();
-                const filePath = await exporter.export(documents, exportDirectory, result.text);
+                const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
                 hideLoading();
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                 if (onSnack.reason === 'action') {
@@ -136,8 +135,7 @@
     async function openPDF() {
         try {
             showLoading(l('exporting'));
-            const exporter = new PDFExportCanvas();
-            const filePath = await exporter.export(documents);
+            const filePath = await exportPDFAsync(documents);
             hideLoading();
             openFile(filePath);
         } catch (error) {
