@@ -52,4 +52,3 @@
         <CActionBar backgroundColor="red" modalWindow={true} {title} />
     </gridlayout>
 </page>
->

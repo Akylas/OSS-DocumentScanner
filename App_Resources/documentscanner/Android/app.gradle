@@ -120,7 +120,6 @@ android {
     exclude "org/bouncycastle/**"
     exclude "license/**"
     // resources.excludes += "assets/com/tom_roush/fontbox/resources/cmap/*"
-
   }
   // flavorDimensions "stage"
   // productFlavors {
