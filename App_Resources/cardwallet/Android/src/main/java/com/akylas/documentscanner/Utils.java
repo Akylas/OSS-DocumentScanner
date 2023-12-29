@@ -1,9 +1,12 @@
 package com.akylas.documentscanner;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.color.DynamicColors;
+import java.util.Locale;
 
 public class Utils {
     public static int getColorFromName(Context context, String name) {
@@ -38,4 +41,5 @@ public class Utils {
     public static Locale getSystemLocale() {
         return androidx.core.os.ConfigurationCompat.getLocales(android.content.res.Resources.getSystem().getConfiguration()).get(0);
     }
+
 }
