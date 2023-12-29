@@ -143,5 +143,6 @@
     "remote_folder": "pasta remota",
     "later": "mais tarde",
     "no_document_yet": "adicione um documento usando a câmera ou importando de uma imagem",
-    "get_app_source_code": "acesse o código fonte do aplicativo"
+    "get_app_source_code": "acesse o código fonte do aplicativo",
+    "biometric_auto_lock": "bloqueio biométrico automático"
 }

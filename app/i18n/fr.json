@@ -1,12 +1,12 @@
 {
     "$com.akylas.cardwallet": {
         "app": {
-            "name": "OSS Card Wallet"
+            "name": "OSS Portefeuille"
         }
     },
     "$com.akylas.documentscanner": {
         "app": {
-            "name": "OSS Document Scanner"
+            "name": "Scanner de documents OSS"
         }
     },
     "a3": "a3",
@@ -31,10 +31,10 @@
     "disabled": "désactivé",
     "documents": "documents",
     "download": "Télécharger",
-    "downloading": "téléchargement (%1$s%%)...",
+    "downloading": "téléchargement (%1$s%%)…",
     "draw_ocr_overlay": "dessiner une superposition ocr",
     "draw_ocr_text": "dessiner du texte ocr",
-    "enabled": "eabled",
+    "enabled": "activé",
     "english": "Anglais",
     "enhance": "Améliorer",
     "enhance_desc": "améliorer les fonctionnalités de l'image",
@@ -56,8 +56,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "Description text goes here",
-                "NSPhotoLibraryUsageDescription": "Description text goes here"
+                "NSCameraUsageDescription": "L' appareil photo est utilisé pour analyser vos documents",
+                "NSPhotoLibraryUsageDescription": "Importer des images pour les scanner"
             }
         }
     },
@@ -128,5 +128,21 @@
     "whitepaper": "papier blanc",
     "whitepaper_desc": "amélioration pour les documents de type feuille blanche",
     "camera_settings": "paramètres de caméra",
-    "condensed": "condensé"
+    "condensed": "condensé",
+    "biometric_lock_desc": "Verrouiller l'application à l'aide de la biométrie ou d'un code PIN",
+    "image_saved": "image enregistrée",
+    "camera_preview_stretch": "Aperçu de l'étirement",
+    "authenticate_security": "Authentifiez vous pour accéder à l'application",
+    "camera_view_size": "visualiser la taille",
+    "aspect_fit": "aspect ajustement",
+    "biometric_auto_lock": "verrouillage automatique biométrique",
+    "filters": "filtres",
+    "preview_resize_threshold_desc": "taille à laquelle l'image de la caméra est redimensionnée pour détecter les documents. Une taille plus grande permet une meilleure détection, mais elle est plus lente",
+    "aspect_ratio": "rapport hauteur/largeur",
+    "expanded": "élargie",
+    "transformations": "transformations",
+    "biometric_lock": "Sécurité biométrique",
+    "preview_resize_threshold": "seuil de redimensionnement de l'image de la caméra",
+    "aspect_fill": "aspect du remplissage",
+    "image_filename": "nom de l'image à exporter"
 }
