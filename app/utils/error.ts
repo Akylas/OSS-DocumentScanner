@@ -134,9 +134,9 @@ export async function showError(err: Error | string, showAsSnack = false) {
         if (!err) {
             return;
         }
-        DEV_LOG && console.error('showError', err, err?.['stack']);
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const realError = typeof err === 'string' ? null : err;
+        DEV_LOG && console.error('showError', reporterEnabled, realError, err, err?.['stack']);
 
         const isString = realError === null || realError === undefined;
         const message = isString ? (err as string) : realError.message || realError.toString();
@@ -161,7 +161,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
             view: label
         });
     } catch (error) {
-        console.error('showError', error);
+        console.error('error trying to show error', err, error, error.stack);
     }
 }
 
