@@ -151,7 +151,6 @@ try {
     } else {
         Comp = await import('~/components/DocumentsList.svelte');
     }
-    DEV_LOG && console.log('svelteNative');
     svelteNative(Comp.default, {});
 } catch (error) {
     console.error(error, error.stack);
