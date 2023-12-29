@@ -136,6 +136,7 @@ task createProguard {
     doLast {
         exec {
             workingDir "$USER_PROJECT_ROOT"
+            println("node scripts/createProguard.js ${rootDir} ${getAppResourcesPath()}")
             commandLine 'node', "scripts/createProguard.js", "${rootDir}", "${getAppResourcesPath()}"
         }
     }

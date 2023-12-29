@@ -11,8 +11,8 @@ android {
   defaultConfig {  
     multiDexEnabled false
     minSdkVersion 21
-    versionCode 22
-    versionName "1.2.12"
+    versionCode 23
+    versionName "1.2.13"
 
     // if (project.hasProperty('resConfigs')) {
     //   def resConfigs = project.findProperty('resConfigs')
@@ -117,7 +117,6 @@ android {
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
     exclude "com/itextpdf/**"
-    exclude "org/apache/**"
     exclude "org/bouncycastle/**"
     exclude "license/**"
     // resources.excludes += "assets/com/tom_roush/fontbox/resources/cmap/*"
@@ -142,6 +141,7 @@ task createProguard {
     doLast {
         exec {
             workingDir "$USER_PROJECT_ROOT"
+            println("node scripts/createProguard.js ${rootDir} ${getAppResourcesPath()}")
             commandLine 'node', "scripts/createProguard.js", "${rootDir}", "${getAppResourcesPath()}"
         }
     }
