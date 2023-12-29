@@ -559,19 +559,13 @@ module.exports = (env, params = {}) => {
                         },
                         create: true,
                         cleanArtifacts: true
-                        // uploadLegacySourcemaps: {
-                        //     // sourceMapReference: false,
-                        //     ignore: ['tns-java-classes', 'hot-update'],
-                        //     paths: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
-                        //     // validate: true,
-                        //     rewrite: true,
-                        //     // urlPrefix: process.env.SENTRY_PREFIX
-                        // }
                     },
                     // debug: true,
                     sourcemaps: {
                         // assets: './**/*.nonexistent'
-                        // rewriteSources: (source, map) => source.replace('webpack:///./', '~/').replace('webpack:///', ''),
+                        // rewriteSources: (source, map) => {
+                        //     return source.replace('webpack:///', '');
+                        // },
                         ignore: ['tns-java-classes', 'hot-update'],
                         assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
                     }
