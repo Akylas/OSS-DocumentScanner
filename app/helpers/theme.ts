@@ -212,14 +212,6 @@ export function start() {
         setTimeout(() => {
             globalObservable.notify({ eventName: 'theme', data: { theme: realTheme, colors: get(colors) } });
         }, 0);
-        // if (__ANDROID__) {
-        //     // we recreate the activity to get the change
-        //     const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
-        //     activity.recreate();
-        //     if (Application.android.foregroundActivity !== activity) {
-        //         (Application.android.foregroundActivity as androidx.appcompat.app.AppCompatActivity).recreate();
-        //     }
-        // }
     });
     const realTheme = getRealTheme(theme);
     currentTheme.set(realTheme);

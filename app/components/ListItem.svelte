@@ -27,7 +27,6 @@
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<!-- <canvasView> -->
 <canvasView {columns} rippleColor={colorOnSurface} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
     <canvaslabel col={mainCol} color={titleColor} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
@@ -41,7 +40,3 @@
     <slot />
     <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" visibility={showBottomLine ? 'visible' : 'hidden'} />
 </canvasView>
-<!-- TODO: refactor i dont like to have to create another gridlayout just for the line(padding issue) -->
-<!-- <canvasView> -->
-<!-- </canvasView> -->
-<!-- </canvasView> -->
