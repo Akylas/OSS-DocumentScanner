@@ -118,7 +118,7 @@ const onInitRootView = function () {
             const nUtils = com.akylas.documentscanner.Utils;
             const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
             if (nActionBarHeight > 0) {
-                actionBarHeight.set(nActionBarHeight);
+                actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
             }
             const resources = Utils.android.getApplicationContext().getResources();
             systemFontScale.set(resources.getConfiguration().fontScale);
