@@ -1,0 +1,2 @@
+*Bug fixes*
+- *android:* biometric fixes
