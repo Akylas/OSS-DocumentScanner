@@ -25,8 +25,12 @@ export default class SecurityService extends Observable {
     @booleanProperty({ default: false }) pincodeEnabled: boolean;
     @booleanProperty({ default: false }) autoLockEnabled: boolean;
     biometricsAvailable = true;
-
+    started = false;
     async start() {
+        if (this.started) {
+            return;
+        }
+        this.started = true;
         DEV_LOG && console.log(TAG, 'start', this.background);
         Application.on(Application.foregroundEvent, this.onAppForeground, this);
         Application.on(Application.backgroundEvent, this.onAppBackground, this);
@@ -34,27 +38,45 @@ export default class SecurityService extends Observable {
         const r = await this.biometricAuth.available();
         this.biometricsAvailable = r.biometrics || r.touch || r.face;
         if (this.biometricsAvailable) {
-            this.validateSecurityOrClose();
+            // const onResume = () => {
+            //     Application.off(Application.resumeEvent, onResume, this);
+            //     DEV_LOG && console.log('resume');
+            setTimeout(() => {
+                this.validateSecurityOrClose();
+            }, 500);
+            // };
+            // Application.on(Application.resumeEvent, onResume, this);
+            // we need to delay it or the fact that the activity gets resumed will cancel it thus close the app
+            // setTimeout(() => {
+            // }, 500);
         }
     }
     stop() {
+        if (!this.started) {
+            return;
+        }
+        DEV_LOG && console.log(TAG, 'stop', this.background, this.started);
+        this.started = false;
+        this.background = false;
         Application.off(Application.foregroundEvent, this.onAppForeground, this);
         Application.off(Application.backgroundEvent, this.onAppBackground, this);
         // Application.off(Application.exitEvent, this.onAppExit, this);
     }
 
     // launched = false;
-    background = true;
+    background = false;
     async onAppForeground(args: ApplicationEventData) {
         if (this.background) {
             this.background = false;
-            if (this.autoLockEnabled) {
+            DEV_LOG && console.log(TAG, 'onAppForeground', this.background, this.started, this.autoLockEnabled);
+            if (this.started && this.autoLockEnabled) {
                 // this.launched = true;
                 await this.validateSecurityOrClose();
             }
         }
     }
     onAppBackground(args: ApplicationEventData) {
+        DEV_LOG && console.log(TAG, 'onAppBackground', this.background, this.started, this.autoLockEnabled);
         if (!this.background) {
             this.background = true;
         }
@@ -72,27 +94,24 @@ export default class SecurityService extends Observable {
     }
     validating = false;
     async validateSecurityOrClose(options = {}) {
-        if (this.validating) {
-            return;
-        }
+        DEV_LOG && console.log('validateSecurityOrClose', this.validating);
         try {
-            this.validating = true;
             await this.validateSecurity({ closeOnBack: true, ...options });
         } catch (error) {
-            if (error.code === 50 || error.code === 60) {
+            DEV_LOG && console.error('validateSecurityOrClose error', error);
+            if (error.code === 50 || error.code === 60 || error.code === -3) {
                 if (__ANDROID__) {
                     Application.android.startActivity.finish();
                 }
             } else {
                 throw error;
             }
-        } finally {
-            this.validating = false;
         }
     }
 
     async enableBiometric() {
         try {
+            DEV_LOG && console.log('enableBiometric');
             this.biometricEnabled = await this.verifyFingerprint({});
             return this.biometricEnabled;
         } catch (error) {
@@ -114,44 +133,44 @@ export default class SecurityService extends Observable {
             throw error;
         }
     }
-    async createPasscode() {
-        return this.showPasscodeWindow({
-            creation: true
-        }).then((r) => {
-            this.storedPassword = r.passcode;
-        });
-    }
-    async changePasscode() {
-        const r = await this.showPasscodeWindow({
-            change: true,
-            storePassword: this.storedPassword
-        });
-        if (this.storedPassword === r.oldPasscode) {
-            this.storedPassword = r.passcode;
-            return true;
-        }
-        return false;
-    }
-    showingPasscodeWindow = false;
-    async showPasscodeWindow(options?: PasscodeWindowOptions): Promise<{ passcode: string; oldPasscode?: string; validated?: boolean }> {
-        if (this.showingPasscodeWindow) {
-            return;
-        }
-        try {
-            this.showingPasscodeWindow = true;
-            const component = (await import('~/components/PasscodeWindow.svelte')).default;
-            return showModal({
-                page: component,
-                animated: true,
-                fullscreen: true,
-                props: options
-            });
-        } catch (error) {
-            throw error;
-        } finally {
-            this.showingPasscodeWindow = false;
-        }
-    }
+    // async createPasscode() {
+    //     return this.showPasscodeWindow({
+    //         creation: true
+    //     }).then((r) => {
+    //         this.storedPassword = r.passcode;
+    //     });
+    // }
+    // async changePasscode() {
+    //     const r = await this.showPasscodeWindow({
+    //         change: true,
+    //         storePassword: this.storedPassword
+    //     });
+    //     if (this.storedPassword === r.oldPasscode) {
+    //         this.storedPassword = r.passcode;
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    // showingPasscodeWindow = false;
+    // async showPasscodeWindow(options?: PasscodeWindowOptions): Promise<{ passcode: string; oldPasscode?: string; validated?: boolean }> {
+    //     if (this.showingPasscodeWindow) {
+    //         return;
+    //     }
+    //     try {
+    //         this.showingPasscodeWindow = true;
+    //         const component = (await import('~/components/PasscodeWindow.svelte')).default;
+    //         return showModal({
+    //             page: component,
+    //             animated: true,
+    //             fullscreen: true,
+    //             props: options
+    //         });
+    //     } catch (error) {
+    //         throw error;
+    //     } finally {
+    //         this.showingPasscodeWindow = false;
+    //     }
+    // }
     async shouldReAuth() {
         DEV_LOG && console.log('shouldReAuth', this.biometricEnabled);
         if (this.biometricEnabled !== true) {
@@ -161,22 +180,31 @@ export default class SecurityService extends Observable {
         return !changed;
     }
     async validateSecurity(options?: PasscodeWindowOptions) {
-        if (!this.biometricEnabled) {
+        if (!this.biometricEnabled || this.validating) {
             return;
         }
-        if (!this.pincodeEnabled || options?.closeOnBack !== true) {
-            return this.verifyFingerprint();
-        } else {
-            const result = await this.showPasscodeWindow({ allowClose: false, storePassword: this.storedPassword, ...options });
-            const validated = result && (result.validated === true || result.passcode === this.storedPassword);
-            if (!validated && result?.passcode) {
-                setTimeout(() => showSnack({ message: l('wrong_passcode'), view: Application.getRootView() }), 300);
-            }
-            return validated;
+        this.validating = true;
+
+        try {
+            // if (!this.pincodeEnabled || options?.closeOnBack !== true) {
+                return this.verifyFingerprint();
+            // } else {
+            //     const result = await this.showPasscodeWindow({ allowClose: false, storePassword: this.storedPassword, ...options });
+            //     const validated = result && (result.validated === true || result.passcode === this.storedPassword);
+            //     if (!validated && result?.passcode) {
+            //         setTimeout(() => showSnack({ message: l('wrong_passcode'), view: Application.getRootView() }), 300);
+            //     }
+            //     return validated;
+            // }
+        } catch (error) {
+            throw error;
+        } finally {
+            this.validating = false;
         }
     }
     async verifyFingerprint(options: VerifyBiometricOptions = {}) {
         try {
+            DEV_LOG && console.log('verifyFingerprint', options, new Error().stack);
             const result = await this.biometricAuth.verifyBiometric({ message: lc('authenticate_security'), ...options });
             return result.code === ERROR_CODES.SUCCESS;
         } catch (error) {

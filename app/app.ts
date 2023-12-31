@@ -101,7 +101,7 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
-        // DEV_LOG && console.log('launchEvent');
+        DEV_LOG && console.log('launch');
         startThemeHelper();
         launched = true;
         start();
@@ -114,10 +114,11 @@ try {
         }
     });
     Application.on(Application.exitEvent, () => {
-        // DEV_LOG && console.log('exit');
+        DEV_LOG && console.log('exit');
         launched = false;
         //  ocrService.stop();
         try {
+            securityService.stop();
             syncService.stop();
             documentsService.stop();
         } catch (error) {
