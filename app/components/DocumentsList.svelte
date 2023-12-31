@@ -32,7 +32,6 @@
     import PageIndicator from './PageIndicator.svelte';
     import { filesize } from 'filesize';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { log } from 'console';
     import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
