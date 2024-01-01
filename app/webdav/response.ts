@@ -12,6 +12,7 @@ export async function createErrorFromResponse(response: Response, prefix: string
 
 export async function handleResponseCode(context: WebDAVClientContext, response: Response) {
     const { statusCode } = response;
+    DEV_LOG && console.log('handleResponseCode', response.statusCode, response.headers, response.content.toString());
     // if (statusCode === 401 && context.digest) return response;
     if (statusCode >= 400) {
         const err = await createErrorFromResponse(response);

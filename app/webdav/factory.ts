@@ -40,7 +40,7 @@ import { parseXML, prepareFileFromProps } from './tools/dav';
 import { HttpsResponse, HttpsResponseLegacy } from '@nativescript-community/https';
 import { fromBase64 } from './tools/encode';
 
-const DEFAULT_CONTACT_HREF = 'https://github.com/perry-mitchell/webdav-client/blob/master/LOCK_CONTACT.md';
+const DEFAULT_CONTACT_HREF = 'mail:contact@akylas.fr';
 
 async function _getFileContentsBuffer(context: WebDAVClientContext, filePath: string, options: GetFileContentsOptions = {}): Promise<HttpsResponse<HttpsResponseLegacy<any>>> {
     const requestOptions = prepareRequestOptions(
@@ -192,8 +192,8 @@ export function createContext(remoteURL: string, options: WebDAVClientOptions = 
         httpsAgent,
         password,
         token,
-        username,
-        withCredentials
+        username
+        // withCredentials
     } = options;
     let authType = authTypeRaw;
     if (!authType) {
@@ -212,15 +212,15 @@ export function createContext(remoteURL: string, options: WebDAVClientOptions = 
         remoteBasePath,
         contactHref,
         ha1,
-        headers: Object.assign({}, headers),
+        headers: headers || {},
         httpAgent,
         httpsAgent,
         // password, // dont store the password!
         remotePath: remoteURL,
         remoteURL,
         token,
-        username,
-        withCredentials
+        username
+        // withCredentials
     } as WebDAVClientContext;
     setupAuth(context, username, password, token, ha1);
     return context;

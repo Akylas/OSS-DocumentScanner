@@ -88,6 +88,7 @@ async function webdavRequest<T>(requestOptions: RequestOptionsWithState): Promis
     }
     // Perform digest request + check
     const response = await _request(requestOptions);
+    DEV_LOG && console.log('webdavRequest response', response.statusCode, response.headers, response.content.toString());
     if (response.statusCode === 401) {
         _digest.hasDigestAuth = parseDigestAuth(response, _digest);
         if (_digest.hasDigestAuth) {

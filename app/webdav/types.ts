@@ -257,7 +257,7 @@ export interface WebDAVClientContext {
     remoteURL: string;
     token?: OAuthToken;
     username?: string;
-    withCredentials?: boolean;
+    // withCredentials?: boolean;
 }
 
 export interface WebDAVClientError extends Error {
@@ -278,11 +278,11 @@ export interface WebDAVClientOptions {
     password?: string;
     token?: OAuthToken;
     username?: string;
-    withCredentials?: boolean;
+    // withCredentials?: boolean;
 }
 
 export interface WebDAVMethodOptions extends Partial<HTTPSOptions> {
     data?: RequestDataPayload;
     headers?: Headers;
-    signal?: AbortSignal;
+    // signal?: AbortSignal;
 }

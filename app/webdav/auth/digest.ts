@@ -6,7 +6,11 @@ const NONCE_CHARS = 'abcdef0123456789';
 const NONCE_SIZE = 32;
 
 export function createDigestContext(username: string, password: string, ha1: string): DigestContext {
-    return { username, password, ha1, nc: 0, algorithm: 'md5', hasDigestAuth: false };
+    const digest = { username, password, ha1, nc: 0, algorithm: 'md5', hasDigestAuth: false } as DigestContext;
+    // if (!digest.ha1) {
+    //     digest.ha1 = ha1Compute(digest.algorithm, digest.username, digest.realm, digest.password, digest.nonce, digest.cnonce, digest.ha1);
+    // }
+    return digest;
 }
 
 export function generateDigestAuthHeader(options, digest: DigestContext): string {
