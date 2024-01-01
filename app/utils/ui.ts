@@ -1,30 +1,27 @@
 // import InAppBrowser from '@akylas/nativescript-inappbrowser';
 import { request } from '@nativescript-community/perms';
-import { Label } from '@nativescript-community/ui-label';
-import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
-import { AlertDialog, MDCAlertControlerOptions, alert } from '@nativescript-community/ui-material-dialogs';
-import { AlertOptions, Image, ImageAsset, ImageSource, StackLayout, View } from '@nativescript/core';
-import { openUrl } from '@nativescript/core/utils';
-import * as imagepicker from '@nativescript/imagepicker';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
-import dayjs from 'dayjs';
-import { OCRDocument, PageData } from '~/models/OCRDocument';
-import { documentsService } from '~/services/documents';
-import { showError } from './error';
-import ColorMatrices from './color_matrix';
+import { AlertDialog, MDCAlertControlerOptions, alert } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { showModal } from 'svelte-native';
-import { loadImage, recycleImages } from './utils.common';
+import { AlertOptions, View } from '@nativescript/core';
+import { openUrl } from '@nativescript/core/utils';
+import dayjs from 'dayjs';
 import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { l, lc } from '~/helpers/locale';
+import { OCRDocument, PageData } from '~/models/OCRDocument';
+import { documentsService } from '~/services/documents';
+import ColorMatrices from './color_matrix';
+import { showError } from './error';
+import { loadImage, recycleImages } from './utils.common';
 
-import type LoadingIndicator__SvelteComponent_ from '~/components/LoadingIndicator.svelte';
-import LoadingIndicator from '~/components/LoadingIndicator.svelte';
-import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-import { colors, systemFontScale } from '~/variables';
-import { get } from 'svelte/store';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
+import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+import { get } from 'svelte/store';
+import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
+import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
+import { colors, systemFontScale } from '~/variables';
 
 export interface ComponentInstanceInfo {
     element: NativeViewElementNode<View>;
@@ -558,7 +555,7 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
 
 export async function showPopoverMenu<T = any>({ options, anchor, onClose, props, horizPos, vertPos }: { options; anchor; onClose?; props? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
-    const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+    const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(systemFontScale);
     const result: T = await showPopover({
         backgroundColor: colorSurfaceContainer,

@@ -5,11 +5,10 @@
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import RotableImageView from '~/components/RotableImageView.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { getColorMatrix } from '~/utils/ui';
     import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change

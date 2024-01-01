@@ -1,9 +1,10 @@
 <script lang="ts">
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { lc } from '~/helpers/locale';
-    import { colors } from '~/variables';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { colors } from '~/variables';
+    import { AuthType } from '~/webdav';
     // technique for only specific properties to get updated on store change
     $: ({ colorError, colorSecondary, colorOnError, colorOnSurfaceVariant } = $colors);
 
@@ -31,7 +32,7 @@
     }
     async function save() {
         // if (testConnectionSuccess > 0) {
-        syncService.saveData({ username, password, remoteURL, remoteFolder });
+        syncService.saveData({ username, password, remoteURL, remoteFolder, authType: AuthType.Digest });
         closeBottomSheet();
         // }
     }

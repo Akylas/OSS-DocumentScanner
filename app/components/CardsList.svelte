@@ -1,40 +1,35 @@
 <script lang="ts">
+    import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+    import { request } from '@nativescript-community/perms';
+    import { SnapPosition } from '@nativescript-community/ui-collectionview';
+    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
+    import { Img } from '@nativescript-community/ui-image';
+    import { LottieView } from '@nativescript-community/ui-lottie';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { LottieView } from '@nativescript-community/ui-lottie';
-    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, Screen, SharedTransition, Utils, View } from '@nativescript/core';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
-    import dayjs from 'dayjs';
+    import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import ActionSheet from '~/components/ActionSheet.svelte';
     import CActionBar from '~/components/CActionBar.svelte';
-    import Camera from '~/components/Camera.svelte';
-    import RotableImageView from '~/components/RotableImageView.svelte';
-    import SelectedIndicator from '~/components/SelectedIndicator.svelte';
-    import SyncIndicator from '~/components/SyncIndicator.svelte';
+    import Camera from '~/components/camera/Camera.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
+    import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
-    import { prefs } from '~/services/preferences';
-    import { showError } from '~/utils/error';
-    import { importAndScanImage, importAndScanImageFromUris, showPopoverMenu, timeout } from '~/utils/ui';
-    import { colors, screenHeightDips, screenWidthDips } from '~/variables';
-    import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { syncService } from '~/services/sync';
-    import { Img } from '@nativescript-community/ui-image';
-    import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
-    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import PageIndicator from './PageIndicator.svelte';
-    import { filesize } from 'filesize';
-    import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { log } from 'console';
-    import { request } from '@nativescript-community/perms';
+    import { importAndScanImage, importAndScanImageFromUris } from '~/utils/ui';
+    import { colors, screenHeightDips, screenWidthDips } from '~/variables';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -259,7 +254,7 @@
             if (!doc) {
                 return;
             }
-            const component = doc.pages.length > 1 ? (await import('~/components/DocumentView.svelte')).default : (await import('~/components/DocumentEdit.svelte')).default;
+            const component = doc.pages.length > 1 ? (await import('~/components/view/DocumentView.svelte')).default : (await import('~/components/edit/DocumentEdit.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -504,7 +499,7 @@
                     if (!doc) {
                         return;
                     }
-                    const component = doc.pages.length > 1 ? (await import('~/components/DocumentView.svelte')).default : (await import('~/components/DocumentEdit.svelte')).default;
+                    const component = doc.pages.length > 1 ? (await import('~/components/view/DocumentView.svelte')).default : (await import('~/components/edit/DocumentEdit.svelte')).default;
                     navigate({
                         page: component,
                         props: {
@@ -546,7 +541,7 @@
 
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
             await showPopover({
                 backgroundColor: colorSurfaceContainer,
                 view: component,
@@ -637,11 +632,6 @@
     //                     ApplicationSettings.setString('cardViewStyle', viewStyle);
     //                     collectionView?.nativeView.refresh();
     //                     break;
-    //                 case 'about':
-    //                     const About = (await import('~/components/About.svelte')).default;
-    //                     showModal({ page: About, animated: true, fullscreen: true });
-    //                     // navigate({ page: About });
-    //                     break;
 
     //                 case 'preferences':
     //                     const Settings = (await import('~/components/Settings.svelte')).default;
@@ -655,7 +645,7 @@
     // }
     async function showSettings() {
         try {
-            const Settings = (await import('~/components/Settings.svelte')).default;
+            const Settings = (await import('~/components/settings/Settings.svelte')).default;
             navigate({ page: Settings });
         } catch (error) {
             showError(error);
@@ -673,7 +663,7 @@
     }
     async function showSyncSettings() {
         try {
-            const WebdavConfig = (await import('~/components/WebdavConfig.svelte')).default;
+            const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
             await showBottomSheet({
                 parent: this,
                 skipCollapsedState: true,

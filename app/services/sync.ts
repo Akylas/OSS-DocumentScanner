@@ -63,13 +63,15 @@ export class SyncService extends Observable {
         const configStr = ApplicationSettings.getString(SETTINGS_KEY);
         if (configStr) {
             const config = JSON.parse(configStr);
+            const { remoteURL, headers, authType, ...otherConfig } = config;
             // const context = createContext(config.remoteURL, { config.username, password, authType: AuthType.Password });
-            this.remoteURL = config.remoteURL;
+            this.remoteURL = remoteURL;
             this.remoteFolder = config.remoteFolder;
             this.username = config.username;
-            this.client = createClient(config.remoteURL, {
-                headers: config.headers,
-                authType: AuthType.None
+            this.client = createClient(remoteURL, {
+                headers,
+                authType: !authType || authType === AuthType.Password ? AuthType.None : authType,
+                ...otherConfig
             });
             DEV_LOG && console.log('SyncService', 'start', config);
             this.notify({ eventName: 'state', enabled: this.enabled });
@@ -91,14 +93,20 @@ export class SyncService extends Observable {
         documentsService.off('documentUpdated', this.onDocumentUpdated, this);
     }
 
-    saveData({ remoteURL, username, password, remoteFolder }) {
+    saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password }) {
         if (remoteURL && username && password && remoteFolder) {
-            const context = createContext(remoteURL, { username, password, authType: AuthType.Password });
-            ApplicationSettings.setString(SETTINGS_KEY, JSON.stringify({ remoteURL, username, headers: context.headers, remoteFolder }));
+
+            // TODO: if we use digest we need a test connection to acquire the ha1
+            const context = createContext(remoteURL, { username, password, authType });
+            const config = { remoteURL, username, headers: context.headers, remoteFolder, ha1: context.ha1 || context.digest?.ha1, authType };
+            DEV_LOG && console.log('saveData', context, config);
+            ApplicationSettings.setString(SETTINGS_KEY, JSON.stringify(config));
             this.remoteFolder = remoteFolder;
             this.client = createClient(remoteURL, {
                 headers: context.headers,
-                authType: AuthType.None
+                authType: authType === AuthType.Password ? AuthType.None : authType,
+                username: config.username,
+                ha1: config.ha1
             });
             this.syncDocuments();
         } else {
@@ -107,9 +115,10 @@ export class SyncService extends Observable {
         }
         this.notify({ eventName: 'state', enabled: this.enabled });
     }
-    async testConnection({ remoteURL, username, password, remoteFolder }): Promise<boolean> {
+    async testConnection({ remoteURL, username, password, remoteFolder, authType = null }): Promise<boolean> {
         try {
-            const context = createContext(remoteURL, { password, username, authType: AuthType.Password });
+            const context = createContext(remoteURL, { password, username, authType: authType || AuthType.Password });
+            DEV_LOG && console.log('testConnection', context);
             const result = await exists(context, remoteFolder, { cachePolicy: 'noCache' });
             return true;
         } catch (error) {

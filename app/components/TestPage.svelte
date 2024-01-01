@@ -4,7 +4,7 @@
 
 <script lang="ts">
     import { showModal } from 'svelte-native';
-    import CActionBar from './CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { showLoading, timeout } from '~/utils/ui';
     import { AlertDialog, alert } from '@nativescript-community/ui-material-dialogs';
     const title = `Page ${index++}`;

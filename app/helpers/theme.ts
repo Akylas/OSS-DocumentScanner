@@ -58,7 +58,7 @@ export function isDarkTheme(theme) {
 export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark'];
-        const component = (await import('~/components/OptionSelect.svelte')).default;
+        const component = (await import('~/components/common/OptionSelect.svelte')).default;
         const result = await showAlertOptionSelect(
             component,
             {

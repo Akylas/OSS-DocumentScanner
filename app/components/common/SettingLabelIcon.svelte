@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
     import { colors, fonts } from '~/variables';
-
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);

@@ -1,26 +1,24 @@
 <script lang="ts">
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
-    import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, File, Folder, ObservableArray, Utils, View, path } from '@nativescript/core';
+    import { openFilePicker, saveFile } from '@nativescript-community/ui-document-picker';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { ApplicationSettings, File, ObservableArray, Utils, View } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
+    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
+    import { securityService } from '~/services/security';
+    import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { hideLoading, openLink, showLoading } from '~/utils/ui';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
-    import CActionBar from './CActionBar.svelte';
     import { restartApp } from '~/utils/utils';
-    import { syncService } from '~/services/sync';
-    import ListItem from './ListItem.svelte';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import ListItemAutoSize from './ListItemAutoSize.svelte';
-    import { securityService } from '~/services/security';
+    import { colors, navigationBarHeight } from '~/variables';
 
     let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
     let colorOnSurface = $colors.colorOnSurface;
@@ -289,7 +287,7 @@
                     });
                     break;
                 case 'webdav':
-                    const WebdavConfig = (await import('~/components/WebdavConfig.svelte')).default;
+                    const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
                     await showBottomSheet({
                         parent: this,
                         view: WebdavConfig,
@@ -300,7 +298,7 @@
                     Utils.openUrl(STORE_REVIEW_LINK);
                     break;
                 case 'third_party':
-                    const ThirdPartySoftwareBottomSheet = (await import('~/components/ThirdPartySoftwareBottomSheet.svelte')).default;
+                    const ThirdPartySoftwareBottomSheet = (await import('~/components/about/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
@@ -329,7 +327,7 @@
                             updateItem(item);
                         }
                     } else {
-                        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+                        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
                         const result = await showBottomSheet<any>({
                             parent: null,
                             view: OptionSelect,

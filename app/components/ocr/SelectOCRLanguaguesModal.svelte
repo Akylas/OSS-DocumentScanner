@@ -3,13 +3,13 @@
     import { TextField, Utils } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { getLocaleDisplayName, lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
     import { colors, fonts } from '~/variables';
     // import SearchCollectionView from './SearchCollectionView.svelte';
+    import { Template } from 'svelte-native/components';
     import { ocrService } from '~/services/ocr';
     import MiniSearch from '~/utils/minisearch';
-    import { Template } from 'svelte-native/components';
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 

@@ -6,6 +6,8 @@ import { documentsService } from '~/services/documents';
 import { ColorMatricesType, timeout } from '~/utils/ui';
 import { loadImage, recycleImages } from '~/utils/utils';
 
+export const TRANSFORMS_SPLIT = '|';
+
 export interface ImageConfig {
     colorType?: ColorMatricesType;
     colorMatrix?: number[];

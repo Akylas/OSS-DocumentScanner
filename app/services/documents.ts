@@ -84,7 +84,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     }
     migrations = Object.assign(
         {
-            addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`
+            addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`,
+            transformsSplit: sql`UPDATE Page SET transforms = replace( transforms, ',', '|' ) `
         },
         CARD_APP
             ? {

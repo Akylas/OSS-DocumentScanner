@@ -185,7 +185,7 @@ async function internalSelectLanguage() {
     // try {
     const actions = SUPPORTED_LOCALES;
     const currentLanguage = getString('language', DEFAULT_LOCALE);
-    const component = (await import('~/components/OptionSelect.svelte')).default;
+    const component = (await import('~/components/common/OptionSelect.svelte')).default;
     return showAlertOptionSelect(
         component,
         {

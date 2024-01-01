@@ -11,17 +11,15 @@
     import { closeModal, showModal } from 'svelte-native';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { writable } from 'svelte/store';
-    import CameraSettingsBottomSheet from '~/components/CameraSettingsBottomSheet.svelte';
+    import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { l } from '~/helpers/locale';
-    import { OCRDocument, PageData } from '~/models/OCRDocument';
+    import { OCRDocument, PageData, TRANSFORMS_SPLIT } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
-    import { prefs } from '~/services/preferences';
     import { showError } from '~/utils/error';
-    import { getColorMatrix, hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
-    import ActionSheet from './ActionSheet.svelte';
-    import CActionBar from './CActionBar.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -74,7 +72,7 @@
     let smallImageRotation: number = 0;
     // let croppedImageRotation: number = 0;
     let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
-    let transforms = ApplicationSettings.getString('defaultTransforms', '').split(',');
+    let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
@@ -111,7 +109,7 @@
                 }
             });
         } else {
-            const page = (await import('~/components/DocumentView.svelte')).default;
+            const page = (await import('~/components/view/DocumentView.svelte')).default;
             return navigate({
                 page,
                 props: {
@@ -121,51 +119,50 @@
         }
     }
 
-    async function showOptions() {
-        const result: { icon: string; id: string; text: string } = await showBottomSheet({
-            parent: page,
-            view: ActionSheet,
-            props: {
-                options: [
-                    {
-                        icon: 'mdi-cogs',
-                        id: 'preferences',
-                        text: l('preferences')
-                    },
-                    {
-                        icon: 'mdi-information-outline',
-                        id: 'about',
-                        text: l('about')
-                    },
-                    {
-                        icon: 'mdi-image-plus',
-                        id: 'image_import',
-                        text: l('image_import')
-                    }
-                ]
-            }
-        });
-        if (result) {
-            switch (result.id) {
-                case 'preferences':
-                    prefs.openSettings();
-                    break;
-                case 'image_import':
-                    try {
-                        const doc = await importAndScanImage();
-                        await goToView(doc);
-                    } catch (err) {
-                        console.error(err);
-                    }
-
-                    break;
-                case 'about':
-                    const About = require('./About.svelte').default;
-                    showModal({ page: About, animated: true, fullscreen: true });
-                    break;
-            }
+    async function showSettings() {
+        try {
+            const Settings = (await import('~/components/settings/Settings.svelte')).default;
+            navigate({ page: Settings });
+        } catch (error) {
+            showError(error);
         }
     }
+    // async function showOptions() {
+    //     const result: { icon: string; id: string; text: string } = await showBottomSheet({
+    //         parent: page,
+    //         view: ActionSheet,
+    //         props: {
+    //             options: [
+    //                 {
+    //                     icon: 'mdi-cogs',
+    //                     id: 'preferences',
+    //                     text: l('preferences')
+    //                 },
+    //                 {
+    //                     icon: 'mdi-image-plus',
+    //                     id: 'image_import',
+    //                     text: l('image_import')
+    //                 }
+    //             ]
+    //         }
+    //     });
+    //     if (result) {
+    //         switch (result.id) {
+    //             case 'preferences':
+    //                 prefs.openSettings();
+    //                 break;
+    //             case 'image_import':
+    //                 try {
+    //                     const doc = await importAndScanImage();
+    //                     await goToView(doc);
+    //                 } catch (err) {
+    //                     console.error(err);
+    //                 }
+
+    //                 break;
+    //         }
+    //     }
+    // }
 
     async function showCameraSettings() {
         const result: { icon: string; id: string; text: string } = await showBottomSheet({
@@ -176,7 +173,7 @@
                 transforms = bottomsheetComponent.transforms;
                 colorType = bottomsheetComponent.colorType;
                 ApplicationSettings.setString('defaultColorType', colorType);
-                ApplicationSettings.setString('defaultTransforms', transforms.join(','));
+                ApplicationSettings.setString('defaultTransforms', transforms.join(TRANSFORMS_SPLIT));
             },
             props: {
                 cameraOptionsStore,
@@ -637,7 +634,7 @@
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
             <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-dots-vertical" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showOptions} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showSettings} />
         </CActionBar>
 
         <!-- <gridlayout padding="10" row={1} rows="*,auto"> -->

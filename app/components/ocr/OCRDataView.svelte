@@ -5,7 +5,7 @@
     import { OCRData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { showError } from '~/utils/error';
-    import CActionBar from './CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
 
     export let ocrData: OCRData;
     export let imagePath: string;

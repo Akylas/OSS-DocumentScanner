@@ -2,9 +2,8 @@
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from 'svelte-native';
-    import { conditionalEvent, fade } from '~/utils/svelte/ui';
     import { showError } from '~/utils/error';
-    import { Application } from '@akylas/nativescript';
+    import { conditionalEvent, fade } from '~/utils/svelte/ui';
     export let title: string = null;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;

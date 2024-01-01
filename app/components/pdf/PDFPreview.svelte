@@ -9,26 +9,26 @@
 
 <script lang="ts">
     import { ApplicationSettings, ContentView, ObservableArray, knownFolders } from '@akylas/nativescript';
+    import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { writable } from 'svelte/store';
-    import CActionBar from '~/components/CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import PDFCanvas from '~/services/pdf/PDFCanvas';
+    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
-    import { colors, fonts, systemFontScale } from '~/variables';
-    import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
+    import { colors, fonts } from '~/variables';
 
     $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
     interface Item {
@@ -220,7 +220,7 @@
     }
     async function selectSilderOption(option: string, event, fullRefresh = false) {
         try {
-            const component = (await import('~/components/SliderPopover.svelte')).default;
+            const component = (await import('~/components/common/SliderPopover.svelte')).default;
 
             await showPopover({
                 backgroundColor: colorSurfaceContainer,

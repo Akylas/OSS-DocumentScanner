@@ -12,11 +12,12 @@
     import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import Camera from '~/components/Camera.svelte';
-    import PdfEdit from '~/components/DocumentEdit.svelte';
-    import RotableImageView from '~/components/RotableImageView.svelte';
-    import SelectedIndicator from '~/components/SelectedIndicator.svelte';
+    import Camera from '~/components/camera/Camera.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import PageIndicator from '~/components/common/PageIndicator.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, isDarkTheme, onThemeChanged, theme } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
@@ -25,7 +26,6 @@
     import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
     import { colors, screenWidthDips } from '~/variables';
-    import PageIndicator from './PageIndicator.svelte';
     export const screenWidthPixels = Screen.mainScreen.widthPixels;
     export const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -105,7 +105,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
             await showPopover({
                 backgroundColor: colorSurfaceContainer,
                 view: component,
@@ -142,7 +142,7 @@
             const doc = await importAndScanImage(document);
             // if more than 1 page was imported stay here so that the user sees the added pages
             if (doc && doc.pages.length - oldPagesNumber === 1) {
-                const component = (await import('~/components/DocumentEdit.svelte')).default;
+                const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
                 navigate({
                     page: component,
                     props: {

@@ -1,18 +1,15 @@
 <svelte:options accessors />
 
 <script lang="ts">
-    import { Color } from '@nativescript/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { Color } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { lc } from '~/helpers/locale';
-    import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
-    import { colors, screenWidthDips, systemFontScale } from '~/variables';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { showError } from '~/utils/error';
     import { Writable } from 'svelte/store';
+    import { lc } from '~/helpers/locale';
+    import { showError } from '~/utils/error';
+    import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
+    import { colors, screenWidthDips } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);

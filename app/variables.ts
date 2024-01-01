@@ -106,34 +106,34 @@ export const systemFontScale = writable(1);
 const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
-        setTimeout(() => {
-            const rootView = Application.getRootView();
-            const rootViewStyle = rootView?.style;
-            // DEV_LOG && console.log('initRootView', rootView);
-            fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
-            // DEV_LOG && console.log('fonts', get(fonts));
-            actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
-            actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
-            const activity = Application.android.startActivity;
-            const nUtils = com.akylas.documentscanner.Utils;
-            const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
-            if (nActionBarHeight > 0) {
-                actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
-            }
-            const resources = Utils.android.getApplicationContext().getResources();
-            systemFontScale.set(resources.getConfiguration().fontScale);
-            const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
-            let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
-            if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
-                navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
-            }
-            resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
-            if (id > 0 && resourceId > 0) {
-                innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
-                statusBarHeight.set(innerStatusBarHeight);
-            }
-            globalMarginTop = innerStatusBarHeight;
-        }, 0);
+        // setTimeout(() => {
+        const rootView = Application.getRootView();
+        const rootViewStyle = rootView?.style;
+        // DEV_LOG && console.log('initRootView', rootView);
+        fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
+        // DEV_LOG && console.log('fonts', get(fonts));
+        actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
+        actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
+        const activity = Application.android.startActivity;
+        const nUtils = com.akylas.documentscanner.Utils;
+        const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
+        if (nActionBarHeight > 0) {
+            actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
+        }
+        const resources = Utils.android.getApplicationContext().getResources();
+        systemFontScale.set(resources.getConfiguration().fontScale);
+        const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
+        let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
+        if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
+            navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
+        }
+        resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
+        if (id > 0 && resourceId > 0) {
+            innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+            statusBarHeight.set(innerStatusBarHeight);
+        }
+        globalMarginTop = innerStatusBarHeight;
+        // }, 0);
     }
 
     if (__IOS__) {

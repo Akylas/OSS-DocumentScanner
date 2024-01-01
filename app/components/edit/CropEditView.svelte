@@ -1,19 +1,17 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { Matrix, Paint, Style } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
+    import { Img } from '@nativescript-community/ui-image';
     import { ImageSource, View, querySelectorAll } from '@nativescript/core';
+    import { cropDocument } from 'plugin-nativeprocessor';
     import { createEventDispatcher } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CropView from '~/components/CropView.svelte';
+    import CropView from '~/components/common/CropView.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { IMG_COMPRESS, IMG_FORMAT } from '~/models/OCRDocument';
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { colors } from '~/variables';
-    import RotableImageView from './RotableImageView.svelte';
     import { recycleImages } from '~/utils/utils.common';
-    import { cropDocument } from 'plugin-nativeprocessor';
 
     let recrop = false;
     let topView: NativeViewElementNode<View>;

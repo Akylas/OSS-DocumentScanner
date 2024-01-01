@@ -146,7 +146,7 @@ try {
     let Comp;
     const startOnCam = START_ON_CAM; /* ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) */
     if (startOnCam) {
-        Comp = await import('~/components/Camera.svelte');
+        Comp = await import('~/components/camera/Camera.svelte');
     } else if (CARD_APP) {
         Comp = await import('~/components/CardsList.svelte');
     } else {

@@ -1,32 +1,31 @@
 <script lang="ts">
+    import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { Application, ContentView, EventData, NavigatedData, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
+    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { Application, ContentView, EventData, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
-    import { openFile } from '@nativescript/core/utils';
+    import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import Camera from '~/components/Camera.svelte';
-    import PdfEdit from '~/components/DocumentEdit.svelte';
-    import RotableImageView from '~/components/RotableImageView.svelte';
-    import SelectedIndicator from '~/components/SelectedIndicator.svelte';
+    import Camera from '~/components/camera/Camera.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import PageIndicator from '~/components/common/PageIndicator.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { l, lc } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, showLoading, showPopoverMenu } from '~/utils/ui';
-    import { colors, fonts, screenWidthDips, systemFontScale } from '~/variables';
-    import PageIndicator from './PageIndicator.svelte';
-    import { filesize } from 'filesize';
-    import { onThemeChanged } from '~/helpers/theme';
-    import { request } from '@nativescript-community/perms';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { colors, screenWidthDips, systemFontScale } from '~/variables';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -76,7 +75,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
             await showPopover({
                 backgroundColor: colorSurfaceContainer,
                 view: component,
@@ -129,7 +128,7 @@
             const doc = await importAndScanImage(document);
             // if more than 1 page was imported stay here so that the user sees the added pages
             if (doc && doc.pages.length - oldPagesNumber === 1) {
-                const component = (await import('~/components/DocumentEdit.svelte')).default;
+                const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
                 navigate({
                     page: component,
                     props: {

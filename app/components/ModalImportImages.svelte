@@ -2,8 +2,8 @@
     import { Page } from '@nativescript/core';
     import { closeModal } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CropView from '~/components/CropView.svelte';
-    import CActionBar from '~/components/CActionBar.svelte';
+    import CropView from '~/components/common/CropView.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { QRCodeData } from 'plugin-nativeprocessor';
     import { Template } from 'svelte-native/components';
     import { Pager } from '@nativescript-community/ui-pager';

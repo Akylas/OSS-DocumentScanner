@@ -1,14 +1,15 @@
 <script context="module" lang="ts">
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { File, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import ListItem from '~/components/common/ListItem.svelte';
     import { lc } from '~/helpers/locale';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { actionBarButtonHeight, colors, fonts } from '~/variables';
-    import IconButton from './IconButton.svelte';
+    import { actionBarButtonHeight, colors } from '~/variables';
     export interface OptionType {
         name: string;
         isPick?: boolean;
@@ -19,8 +20,6 @@
 </script>
 
 <script lang="ts">
-    import ListItem from './ListItem.svelte';
-
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;

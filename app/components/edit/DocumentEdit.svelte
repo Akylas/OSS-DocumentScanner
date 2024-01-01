@@ -7,27 +7,25 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, File, Frame, ImageSource, ObservableArray, Page, TextField, View, path } from '@nativescript/core';
-    import { openFile } from '@nativescript/core/utils';
+    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, TextField, View } from '@nativescript/core';
+    import { debounce } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, goBack, navigate, showModal } from 'svelte-native/dom';
-    import { Writable, writable } from 'svelte/store';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import CropView from '~/components/CropView.svelte';
-    import RotableImageView from '~/components/RotableImageView.svelte';
+    import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
+    import { Writable } from 'svelte/store';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import CropView from '~/components/common/CropView.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { debounce } from '@nativescript/core/utils';
-    import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage, TRANSFORMS_SPLIT } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { notifyWhenChanges } from '~/utils/svelte/store';
-    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, showPopoverMenu, timeout, updateLoadingProgress } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, showPopoverMenu, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
-    import { colors, systemFontScale } from '~/variables';
+    import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer, colorBackground } = $colors);
@@ -51,12 +49,12 @@
     let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
     let currentSelectedImagePath = firstItem.imagePath;
     let currentSelectedImageRotation = firstItem.rotation || 0;
-    let transforms = firstItem.transforms?.split(',') || [];
+    let transforms = firstItem.transforms?.split(TRANSFORMS_SPLIT) || [];
     // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     // const enhanced = writable(transforms.indexOf('enhance') !== -1);
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/PDFExportPopover.svelte')).default;
+            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
             await showPopover({
                 backgroundColor: colorSurfaceContainer,
                 view: component,
@@ -95,7 +93,7 @@
 
     async function showOCRSettings() {
         try {
-            const OCRSettingsBottomSheet = (await import('~/components/OCRSettingsBottomSheet.svelte')).default;
+            const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;
             const shouldStart = await showBottomSheet({
                 parent: page,
                 view: OCRSettingsBottomSheet,
@@ -115,7 +113,7 @@
         currentSelectedImagePath = item.imagePath;
         currentSelectedImageRotation = item.rotation || 0;
         currentItemOCRData = item.ocrData;
-        transforms = item.transforms?.split(',') || [];
+        transforms = item.transforms?.split(TRANSFORMS_SPLIT) || [];
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;
         // $enhanced = transforms.indexOf('enhance') !== -1;
         console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
@@ -347,7 +345,7 @@
         try {
             const item = items.getItem(currentIndex);
 
-            const OCRDataBottomSheet = (await import('~/components/OCRDataView.svelte')).default;
+            const OCRDataBottomSheet = (await import('~/components/ocr/OCRDataView.svelte')).default;
             await showModal({
                 page: OCRDataBottomSheet,
                 fullscreen: true,
@@ -384,7 +382,7 @@
         }
 
         try {
-            const component = (await import('~/components/SliderPopover.svelte')).default;
+            const component = (await import('~/components/common/SliderPopover.svelte')).default;
             const currentValue = item.colorMatrix?.[0] || 1;
             onColorMatrixChange(item.colorType, currentValue);
             await showPopover({
@@ -479,7 +477,7 @@
         updatingTransform = true;
         try {
             const page = items.getItem(currentIndex);
-            const currentTransforms = page.transforms?.split(',') || [];
+            const currentTransforms = page.transforms?.split(TRANSFORMS_SPLIT) || [];
             if (value) {
                 if (currentTransforms.indexOf(type) === -1) {
                     await showLoading(l('computing'));

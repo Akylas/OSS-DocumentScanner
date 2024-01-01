@@ -6,13 +6,13 @@
     import { ApplicationSettings, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { showModal } from 'svelte-native';
+    import PopoverBackgroundView from '~/components/common/PopoverBackgroundView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument } from '~/models/OCRDocument';
+    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading } from '~/utils/ui';
-    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
     import { colors } from '~/variables';
-    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     const isAndroid = __ANDROID__;
 </script>
 
@@ -80,7 +80,7 @@
     async function openPDFPreview() {
         try {
             await closePopover();
-            const component = (await import('~/components/PDFPreview.svelte')).default;
+            const component = (await import('~/components/pdf/PDFPreview.svelte')).default;
             await showModal({
                 page: component,
                 animated: true,

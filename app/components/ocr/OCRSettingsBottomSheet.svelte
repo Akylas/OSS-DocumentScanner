@@ -1,17 +1,15 @@
 <svelte:options accessors />
 
 <script lang="ts">
-    import { View, WrapLayout } from '@akylas/nativescript';
+    import { View } from '@akylas/nativescript';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { getLocaleDisplayName, lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
-    import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -23,7 +21,7 @@
     let dataType = ocrService.dataType;
     async function addLanguages(event) {
         try {
-            const SearchModal = (await import('~/components/SelectOCRLanguaguesModal.svelte')).default;
+            const SearchModal = (await import('~/components/ocr/SelectOCRLanguaguesModal.svelte')).default;
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;
             const result: any = await showPopover({

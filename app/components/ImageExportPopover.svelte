@@ -3,14 +3,14 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
-    import { ApplicationSettings, File, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
+    import { ApplicationSettings, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
+    import PopoverBackgroundView from '~/components/common/PopoverBackgroundView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { IMG_COMPRESS, IMG_FORMAT, OCRPage } from '~/models/OCRDocument';
+    import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { hideLoading, showLoading } from '~/utils/ui';
-    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
-    import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
     import { recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
     const isAndroid = __ANDROID__;
