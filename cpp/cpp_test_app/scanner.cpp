@@ -12,6 +12,7 @@
 #include <vector>
 #include <DocumentDetector.h>
 #include <ColorSimplificationTransform.h>
+#include <WhitePaperTransform.h>
 
 #include <Utils.h>
 #include <stack>
@@ -43,6 +44,31 @@ static inline void trim(std::string &s)
     rtrim(s);
     ltrim(s);
 }
+
+
+class DoubleTrack{
+public:
+
+    int int_value = 0;
+    double precision;
+    double* currentValue;
+    void(*user_callback)(double);
+
+    void setup(const std::string& field_name, const std::string& window_name, double* value, double max_value, void(*function)(double), unsigned precision = 100){
+            int_value = *value * precision;
+            user_callback = function;
+            this->precision = precision;
+            this->currentValue = value;
+            createTrackbar(field_name, window_name, &int_value, max_value * precision, DoubleTrack::callback, this);
+    }
+
+    static void callback(int, void* object){
+        DoubleTrack* pObject = static_cast<DoubleTrack*>(object);
+        *pObject->currentValue = pObject->int_value / pObject->precision;
+        pObject->user_callback(*pObject->currentValue);
+    }
+
+};
 
 void listFilesInFolder(string dirPath)
 {
@@ -172,6 +198,9 @@ int textDetectDilate = 40; // 0
 int textDetect1 = 70;      // 34
 int textDetect2 = 4;       // 12
 
+WhitePaperTransformOptions whitepaperOptions;
+
+
 inline uchar reduceVal(const uchar val)
 {
     if (val > 128)
@@ -261,6 +290,14 @@ void updateImage()
     docDetector.image = image;
     resizedImage = docDetector.resizeImageMax();
     vector<vector<cv::Point>> pointsList = docDetector.scanPoint(edged, resizedImage, true);
+    if (pointsList.size() == 0) {
+        vector<cv::Point> points;
+        points.push_back(cv::Point(0,0));
+        points.push_back(cv::Point(image.cols, 0));
+        points.push_back(cv::Point(image.cols, image.rows));
+        points.push_back(cv::Point(0, image.rows));
+        pointsList.push_back(points);
+    }
 
     // for (size_t i = 0; i < pointsList.size(); i++)
     // {
@@ -275,7 +312,9 @@ void updateImage()
         warped = cropAndWarp(image, pointsList[0]);
         if (whitepaper == 1)
         {
-            detector::DocumentDetector::applyTransforms(warped, "whitepaper");
+            string s;
+            encode_json(whitepaperOptions, s, jsoncons::indenting::no_indent);
+            detector::DocumentDetector::applyTransforms(warped, "whitepaper_" + s);
         }
         if (enhance == 1)
         {
@@ -383,10 +422,16 @@ void on_trackbar(int, void *)
     }
     updateImage();
 }
+void on_double_trackbar(double)
+{
+    updateImage();
+}
 void on_trackbar_image(int, void *)
 {
     updateSourceImage();
 }
+
+JSONCONS_N_MEMBER_TRAITS(WhitePaperTransformOptions, 0, csBlackPer,csWhitePer, gaussKSize, gaussSigma , gammaValue, cbBlackPer, cbWhitePer, dogKSize, dogSigma2);
 
 int main(int argc, char **argv)
 {
@@ -404,9 +449,9 @@ int main(int argc, char **argv)
     moveWindow("SourceImage", 550, 500);
     namedWindow("Options", 0);
     resizeWindow("Options", 450, 400);
-    namedWindow("HoughLinesP", WINDOW_KEEPRATIO);
-    resizeWindow("HoughLinesP", 400, 300);
-    moveWindow("HoughLinesP", 1200, 600);
+    // namedWindow("HoughLinesP", WINDOW_KEEPRATIO);
+    // resizeWindow("HoughLinesP", 400, 300);
+    // moveWindow("HoughLinesP", 1200, 600);
     namedWindow("Edges", WINDOW_KEEPRATIO);
     resizeWindow("Edges", 600, 400);
     moveWindow("Edges", 550, 0);
@@ -414,6 +459,10 @@ int main(int argc, char **argv)
     namedWindow("Warped", WINDOW_KEEPRATIO);
     moveWindow("Warped", 1200, 0);
     resizeWindow("Warped", 400, 600);
+
+    namedWindow("WarpedOptions", WINDOW_KEEPRATIO);
+    moveWindow("WarpedOptions", 1200, 600);
+    resizeWindow("WarpedOptions", 400, 600);
 
     // namedWindow("Detect", WINDOW_KEEPRATIO);
     // moveWindow("Detect", 1400, 100);
@@ -437,27 +486,39 @@ int main(int argc, char **argv)
     // createTrackbar("textDetect2:", "SourceImage", &textDetect2, 100, on_trackbar);
     // createTrackbar("textDetectDilate:", "SourceImage", &textDetectDilate, 100, on_trackbar);
     // createTrackbar("desseractDetectContours:", "SourceImage", &desseractDetectContours, 1, on_trackbar);
-    // createTrackbar("whitepaper:", "SourceImage", &whitepaper, 1, on_trackbar);
     createTrackbar("negate:", "Options", &shouldNegate, 1, on_trackbar);
     createTrackbar("enhance details:", "Warped", &enhance, 1, on_trackbar);
-    // createTrackbar("process1:", "Warped", &process1, 1, on_trackbar);
-    createTrackbar("colors:", "Warped", &colors, 1, on_trackbar);
-    createTrackbar("colorsResizeThreshold:", "Warped", &colorsResizeThreshold, 400, on_trackbar);
-    createTrackbar("colorsFilterDistanceThreshold:", "Warped", &colorsFilterDistanceThreshold, 180, on_trackbar);
-    createTrackbar("distanceThreshold:", "Warped", &distanceThreshold, 180, on_trackbar);
-    createTrackbar("colorSpace:", "Warped", &colorSpace, 3, on_trackbar);
-    createTrackbar("paletteColorSpace:", "Warped", &paletteColorSpace, 3, on_trackbar);
-    createTrackbar("paletteNbColors:", "Warped", &paletteNbColors, 8, on_trackbar);
-    // createTrackbar("enhance details after:", "Warped", &enhanceAfter, 1, on_trackbar);
-    createTrackbar("adapThresholdBlockSize:", "Options", &adapThresholdBlockSize, 500, on_trackbar);
-    createTrackbar("adapThresholdC:", "Options", &adapThresholdC, 500, on_trackbar);
-    // createTrackbar("stylization:", "Warped", &toon, 1, on_trackbar);
+
+
+    // Whitepaper
+    createTrackbar("whitepaper:", "WarpedOptions", &whitepaper, 1, on_trackbar);
+    createTrackbar("dogSigma1:", "WarpedOptions", &whitepaperOptions.dogSigma1, 200, on_trackbar);
+    createTrackbar("dogSigma2:", "WarpedOptions", &whitepaperOptions.dogSigma2, 100, on_trackbar);
+    createTrackbar("dogKSize:", "WarpedOptions", &whitepaperOptions.dogKSize, 100, on_trackbar);
+    createTrackbar("csBlackPer:", "WarpedOptions", &whitepaperOptions.csBlackPer, 100, on_trackbar);
+    DoubleTrack().setup("csWhitePer", "WarpedOptions", &whitepaperOptions.csWhitePer, 100, on_double_trackbar);
+    createTrackbar("gaussKSize:", "WarpedOptions", &whitepaperOptions.gaussKSize, 100, on_trackbar);
+    DoubleTrack().setup("gaussSigma", "WarpedOptions", &whitepaperOptions.gaussSigma, 100, on_double_trackbar);
+    DoubleTrack().setup("gammaValue", "WarpedOptions", &whitepaperOptions.gammaValue, 100, on_double_trackbar);
+    // createTrackbar("gaussSigma:", "Warped", &whitepaperOptions.gaussSigma, 100, on_trackbar);
+    // createTrackbar("gammaValue:", "Warped", &whitepaperOptions.gammaValue, 100, on_trackbar);
+
+    // Color
+    // createTrackbar("colors:", "Warped", &colors, 1, on_trackbar);
+    // createTrackbar("colorsResizeThreshold:", "Warped", &colorsResizeThreshold, 400, on_trackbar);
+    // createTrackbar("colorsFilterDistanceThreshold:", "Warped", &colorsFilterDistanceThreshold, 180, on_trackbar);
+    // createTrackbar("distanceThreshold:", "Warped", &distanceThreshold, 180, on_trackbar);
+    // createTrackbar("colorSpace:", "Warped", &colorSpace, 3, on_trackbar);
+    // createTrackbar("paletteColorSpace:", "Warped", &paletteColorSpace, 3, on_trackbar);
+    // createTrackbar("paletteNbColors:", "Warped", &paletteNbColors, 8, on_trackbar);
+    // createTrackbar("adapThresholdBlockSize:", "Options", &adapThresholdBlockSize, 500, on_trackbar);
+    // createTrackbar("adapThresholdC:", "Options", &adapThresholdC, 500, on_trackbar);
+
+
+
     // createTrackbar("dogKSize:", "SourceImage", &dogKSize, 30, on_trackbar);
     // createTrackbar("dogSigma1:", "SourceImage", &dogSigma1, 200, on_trackbar);
     // createTrackbar("dogSigma2:", "SourceImage", &dogSigma2, 200, on_trackbar);
-    // createTrackbar("houghLinesThreshold:", "Options", &houghLinesThreshold, 500, on_trackbar);
-    // createTrackbar("houghLinesMinLineLength:", "Options", &houghLinesMinLineLength, 500, on_trackbar);
-    // createTrackbar("houghLinesMaxLineGap:", "Options", &houghLinesMaxLineGap, 500, on_trackbar);
     int k;
     while (true)
     {
