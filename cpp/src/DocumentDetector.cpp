@@ -94,7 +94,6 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
             if (area > scaledWidth / areaScaleMinFactor * (scaledHeight / areaScaleMinFactor))
             {
 
-
                 double maxCosine = 0.0;
                 double minCosine = 100.0;
                 double meanCosine = 0;
@@ -103,14 +102,14 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                     double cosine = std::abs(angle(approx[j % 4], approx[j - 2], approx[(j - 1) % 4]));
                     maxCosine = std::max(maxCosine, cosine);
                     minCosine = std::min(minCosine, cosine);
-                    meanCosine+=cosine;
+                    meanCosine += cosine;
                 }
                 // Selection of quadrilaterals with large enough angles
                 // std::printf("found contour %f %zu %f %f\n", area, approx.size(), minCosine, maxCosine);
                 if (maxCosine < 0.3)
                 {
                     // we give more weight for low cosinus (closer to 90d angles)
-                    squares.push_back(std::pair<std::vector<cv::Point>, double>(approx, area*weight*(1-meanCosine)));
+                    squares.push_back(std::pair<std::vector<cv::Point>, double>(approx, area * weight * (1 - meanCosine)));
                     if (drawContours)
                     {
                         cv::drawContours(drawImage, approxs, -1, Scalar(0, 255, 0), 1);
@@ -216,11 +215,11 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
 
         Mat out;
         // bilateralFilter is really slow so for now we dont use it
-         cv::bilateralFilter(temp2, out, 15, bilateralFilterValue, bilateralFilterValue);
+        cv::bilateralFilter(temp2, out, 15, bilateralFilterValue, bilateralFilterValue);
         cv::threshold(temp2, edged, thresh, threshMax, cv::THRESH_BINARY);
         cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
         cv::dilate(edged, edged, dilateStruct);
-        findSquares(edged, width, height, foundSquares, image, drawContours, (weight--)/100);
+        findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
         iterration++;
 
         // we test over all channels to find the best contour
@@ -229,7 +228,7 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         {
             cv::Canny(temp2, edged, t, t * 2);
             cv::dilate(edged, edged, dilateStruct);
-            findSquares(edged, width, height, foundSquares, image, drawContours, (weight--)/100);
+            findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
 
             iterration++;
             t -= 10;
@@ -475,13 +474,22 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
 {
     // cout << "applyTransforms = " << transforms << endl;
     std::vector<std::string> transformArray;
-    splitString(transforms, ",", transformArray);
+    splitString(transforms, "|", transformArray);
     for (size_t i = 0; i < transformArray.size(); i++)
     {
         std::string transform = transformArray[i];
         if (transform.starts_with("whitepaper"))
         {
-            whiteboardEnhance(srcMat, srcMat);
+            std::vector<std::string> options;
+            splitString(transform, "_", options);
+            if (options.size() > 1)
+            {
+                whiteboardEnhance(srcMat, srcMat, options[1]);
+            }
+            else
+            {
+                whiteboardEnhance(srcMat, srcMat, "");
+            }
         }
         else if (transform.starts_with("enhance"))
         {
@@ -511,7 +519,7 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
 
                         if (options.size() > 4)
                         {
-                            colorSpace = (ColorSpace)std::stoi(options[4]); 
+                            colorSpace = (ColorSpace)std::stoi(options[4]);
                         }
                     }
                 }

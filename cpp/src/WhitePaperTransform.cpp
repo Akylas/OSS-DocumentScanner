@@ -1,4 +1,5 @@
 #include "./include/WhitePaperTransform.h"
+#include <jsoncons/json.hpp>
 
 cv::Mat normalizeKernel(cv::Mat kernel, int kWidth, int kHeight, double scalingFactor = 1.0)
 {
@@ -97,7 +98,6 @@ void negateImage(const cv::Mat &img, const cv::Mat &res)
 {
     cv::bitwise_not(img, res);
 }
-
 
 std::vector<int> getBlackWhiteIndices(const cv::Mat &hist, int totCount, int blackCount, int whiteCount)
 {
@@ -299,30 +299,68 @@ void colorBalance(const cv::Mat &img, const cv::Mat &res, double lowPer, double 
     cv::merge(csImg, res);
 }
 
-void whiteboardEnhance(const cv::Mat &img, cv::Mat &res)
+void whiteboardEnhance(const cv::Mat &img, cv::Mat &res, const std::string &optionsJson)
 {
-    int csBlackPer = 2;
-    double csWhitePer = 99.5;
-    int gaussKSize = 3;
-    double gaussSigma = 1.0;
-    double gammaValue = 1.1;
-    int cbBlackPer = 2;
-    int cbWhitePer = 1;
-    int dogKSize = 15;
-    int dogSigma1 = 100.0;
-    int dogSigma2 = 0.0;
-    int adapThresholdBlockSize = 11;
-    int adapThresholdC = 12;
+
+    WhitePaperTransformOptions options;
+
+    if (!optionsJson.empty())
+    {
+        jsoncons::json j = jsoncons::json::parse(optionsJson);
+
+        if (j.contains("dogKSize"))
+        {
+            options.dogKSize = j["dogKSize"].as<int>();
+        }
+        if (j.contains("dogSigma1"))
+        {
+            options.dogSigma1 = j["dogSigma1"].as<int>();
+        }
+        if (j.contains("dogSigma2"))
+        {
+            options.dogSigma2 = j["dogSigma2"].as<int>();
+        }
+        if (j.contains("cbBlackPer"))
+        {
+            options.cbBlackPer = j["cbBlackPer"].as<int>();
+        }
+        if (j.contains("cbWhitePer"))
+        {
+            options.cbWhitePer = j["cbWhitePer"].as<int>();
+        }
+        if (j.contains("csBlackPer"))
+        {
+            options.csBlackPer = j["csBlackPer"].as<int>();
+        }
+        if (j.contains("csWhitePer"))
+        {
+            options.csWhitePer = j["csWhitePer"].as<int>();
+        }
+        if (j.contains("gaussKSize"))
+        {
+            options.gaussKSize = j["gaussKSize"].as<int>();
+        }
+        if (j.contains("gaussSigma"))
+        {
+            options.gaussSigma = j["gaussSigma"].as<int>();
+        }
+        if (j.contains("gammaValue"))
+        {
+            options.gammaValue = j["gammaValue"].as<int>();
+        }
+    }
     // Difference of Gaussian (DoG)
-    dog(img, res, dogKSize, dogSigma1, dogSigma2);
+    dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2);
     // Negative of image
     negateImage(res, res);
     // Contrast Stretch (CS)
-   contrastStretch(res, res, csBlackPer, csWhitePer);
+    contrastStretch(res, res, options.csBlackPer, options.csWhitePer);
     // Gaussian Blur
-    fastGaussianBlur(res, res, gaussKSize, gaussSigma);
+    if (options.gaussKSize > 0) {
+        fastGaussianBlur(res, res, options.gaussKSize, options.gaussSigma);
+    }
     // Gamma Correction
-    gamma(res, res, gammaValue);
+    gamma(res, res, options.gammaValue);
     // Color Balance (CB) (also Contrast Stretch)
-    colorBalance(res, res, cbBlackPer, cbWhitePer);
+    colorBalance(res, res, options.cbBlackPer, options.cbWhitePer);
 }
