@@ -115,7 +115,6 @@ export default class SecurityService extends Observable {
             this.biometricEnabled = await this.verifyFingerprint({});
             return this.biometricEnabled;
         } catch (error) {
-            console.error(error);
             throw error;
         }
     }

@@ -404,13 +404,20 @@
                         try {
                             await securityService.enableBiometric();
                         } catch (error) {
+                            console.error('enableBiometric error', error);
                             const checkboxView: CheckBox = event.object;
                             checkboxView.checked = item.value = false;
-                            showError(error);
+                            // showError(error);
                         }
                     } else {
-                        securityService.clear();
-                        securityService.disableBiometric();
+                        try {
+                            securityService.clear();
+                            await securityService.disableBiometric();
+                        } catch (error) {
+                            const checkboxView: CheckBox = event.object;
+                            checkboxView.checked = item.value = true;
+                            // showError(error);
+                        }
                     }
                     break;
                 case 'biometric_auto_lock':
