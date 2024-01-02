@@ -129,6 +129,24 @@
                 //     rightBtnIcon: 'mdi-chevron-right',
                 //     title: lc('share_application')
                 // },
+            ] as any)
+            .concat(
+                PLAY_STORE_BUILD
+                    ? [
+                          {
+                              id: 'share',
+                              rightBtnIcon: 'mdi-chevron-right',
+                              title: lc('share_application')
+                          },
+                          {
+                              id: 'review',
+                              rightBtnIcon: 'mdi-chevron-right',
+                              title: lc('review_application')
+                          }
+                      ]
+                    : ([] as any)
+            )
+            .concat([
                 {
                     id: 'version',
                     title: lc('version'),
@@ -281,9 +299,12 @@
                     await selectTheme();
                     // (collectionView.nativeView as CollectionView).refreshVisibleItems();
                     break;
+                case 'review':
+                    await openLink(STORE_LINK);
+                    break;
                 case 'share':
                     share({
-                        message: STORE_LINK
+                        message: STORE_REVIEW_LINK
                     });
                     break;
                 case 'webdav':

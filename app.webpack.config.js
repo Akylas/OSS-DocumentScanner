@@ -97,6 +97,7 @@ module.exports = (env, params = {}) => {
         fork = true, // --env.fakeall
         accessibility = false, // --env.accessibility
         sveltecheck = true, // --env.sveltecheck
+        playStoreBuild = true, // --env.playStoreBuild
         adhoc, // --env.adhoc
         timeline, // --env.timeline
         locale = 'auto', // --env.locale
@@ -236,6 +237,7 @@ module.exports = (env, params = {}) => {
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
         SUPPORT_URL: `"${package.bugs.url}"`,
+        PLAY_STORE_BUILD: playStoreBuild,
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS

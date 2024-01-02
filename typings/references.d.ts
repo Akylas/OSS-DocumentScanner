@@ -48,6 +48,7 @@ declare const DEFAULT_LOCALE: string;
 declare const DEFAULT_THEME: string;
 declare const GIT_URL: string;
 declare const STORE_LINK: string;
+declare const PLAY_STORE_BUILD: boolean;
 declare const STORE_REVIEW_LINK: string;
 declare const __APP_ID__: string;
 declare const __APP_VERSION__: string;
