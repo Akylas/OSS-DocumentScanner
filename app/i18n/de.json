@@ -143,5 +143,6 @@
     "preview_resize_threshold": "Grenzbereich der Bildergröße",
     "system": "System",
     "whitepaper_desc": "Verbesserung für Dokumente auf weißem Papier",
-    "remote_folder": "Cloud-Ordner"
+    "remote_folder": "Cloud-Ordner",
+    "biometric_auto_lock": "Automatisches biometrisches Sperren"
 }
