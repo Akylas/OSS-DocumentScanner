@@ -206,7 +206,6 @@
                     const point = corners[index2];
                     if (closestQuadIndex === index && closestCornerQuadIndex === index2) {
                         shaderMatrix.reset();
-                        // matrix.postScale(point[0], point[1], 0, 0);
                         shaderMatrix.postScale(4, 4, point[0], point[1]);
                         editingImageShader.setLocalMatrix(shaderMatrix);
                         canvas.drawCircle(point[0], point[1], 30 / drawingRatio, shaderPaint);
