@@ -101,7 +101,7 @@
 
     async function goToView(doc: OCRDocument) {
         if (CARD_APP) {
-            const page = (await import('~/components/CardView.svelte')).default;
+            const page = (await import('~/components/view/CardView.svelte')).default;
             return navigate({
                 page,
                 props: {

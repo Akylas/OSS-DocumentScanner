@@ -16,7 +16,7 @@
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import Camera from '~/components/camera/Camera.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
@@ -196,7 +196,7 @@
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
 
     async function goToView(doc: OCRDocument) {
-        const page = (await import('~/components/CardView.svelte')).default;
+        const page = (await import('~/components/view/CardView.svelte')).default;
         return navigate({
             page,
             // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
