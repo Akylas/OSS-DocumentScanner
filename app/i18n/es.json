@@ -144,5 +144,6 @@
     "no_document_yet": "añada un documento utilizando la cámara o importar uno desde una imagen",
     "get_app_source_code": "vea el código fuente de la app",
     "failed": "fallido",
-    "biometric_auto_lock": "bloqueo biométrico automático"
+    "biometric_auto_lock": "bloqueo biométrico automático",
+    "allow_app_screenshot": "permitir captura de pantalla de la aplicación"
 }
