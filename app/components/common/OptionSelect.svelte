@@ -58,7 +58,6 @@
     let checkboxTapTimer;
 
     async function onTap(item: OptionType, event) {
-
         if (item.isPick) {
             try {
                 const result = await openFilePicker({
