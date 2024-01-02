@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from '~/utils/svelte/ui';
     import { colors, fonts, systemFontScale } from '~/variables';
     const iconPaint = new Paint();
     const linePaint = new Paint();

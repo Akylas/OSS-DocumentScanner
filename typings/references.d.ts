@@ -19,6 +19,10 @@
 //     export default Vue;
 // }
 
+declare module 'svelte/internal' {
+    export function get_current_component();
+}
+
 declare module '*.scss' {
     // const content: any;
 

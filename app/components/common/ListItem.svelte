@@ -1,13 +1,11 @@
 <script lang="ts">
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from '~/utils/svelte/ui';
     import { colors, fonts, systemFontScale } from '~/variables';
     const dispatch = createEventDispatcher();
     let colorOutlineVariant = $colors.colorOutlineVariant;
     let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
-    let colorPrimary = $colors.colorPrimary;
     let colorOnSurface = $colors.colorOnSurface;
-    let colorOnSurfaceDisabled = $colors.colorOnSurfaceDisabled;
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors);
     export let showBottomLine: boolean = true;

@@ -4,7 +4,7 @@
     import { Img } from '@nativescript-community/ui-image';
     import { ImageSource, View, querySelectorAll } from '@nativescript/core';
     import { cropDocument } from 'plugin-nativeprocessor';
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from '~/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CropView from '~/components/common/CropView.svelte';

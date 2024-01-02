@@ -136,7 +136,7 @@
 
     async function onImageRotated(item, event) {
         try {
-            const newRotation = event.detail.detail.newRotation;
+            const newRotation = event.newRotation;
             if (newRotation === undefined) {
                 return;
             }

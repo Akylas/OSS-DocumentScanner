@@ -1,7 +1,8 @@
 <script lang="ts">
     import { Img } from '@nativescript-community/ui-image';
     import { ImageSource } from '@nativescript/core';
-    import { createEventDispatcher, onDestroy } from 'svelte';
+    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { OCRPage } from '~/models/OCRDocument';
     import { showError } from '~/utils/error';

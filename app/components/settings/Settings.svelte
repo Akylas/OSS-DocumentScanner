@@ -215,7 +215,7 @@
     let checkboxTapTimer;
     async function onTap(item, event) {
         try {
-            if (item.type === 'checkbox') {
+            if (item.type === 'checkbox' || item.type === 'switch') {
                 // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
                 const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
                 checkboxTapTimer = setTimeout(() => {
@@ -331,7 +331,7 @@
                     Utils.openUrl(STORE_REVIEW_LINK);
                     break;
                 case 'third_party':
-                    const ThirdPartySoftwareBottomSheet = (await import('~/components/about/ThirdPartySoftwareBottomSheet.svelte')).default;
+                    const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
