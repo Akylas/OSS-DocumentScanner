@@ -102,6 +102,18 @@
                       ]
                     : ([] as any)
             )
+            .concat(
+                __ANDROID__
+                    ? [
+                          {
+                              type: 'switch',
+                              key: 'allow_screenshot',
+                              title: lc('allow_app_screenshot'),
+                              value: ApplicationSettings.getBoolean('allow_screenshot', true)
+                          }
+                      ]
+                    : ([] as any)
+            )
             .concat([
                 {
                     id: 'setting',
@@ -117,7 +129,7 @@
                     rightValue: () => (syncService.enabled ? lc('enabled') : lc('disabled')),
                     title: lc('webdav_sync'),
                     description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
-                },
+                }
                 // {
                 //     id: 'test',
                 //     type: 'checkbox',
@@ -160,21 +172,21 @@
                 },
                 {
                     id: 'third_party',
-                    rightBtnIcon: 'mdi-chevron-right',
+                    // rightBtnIcon: 'mdi-chevron-right',
                     title: lc('third_parties'),
                     description: lc('list_used_third_parties')
                 },
                 {
                     id: 'export_settings',
                     title: lc('export_settings'),
-                    description: lc('export_settings_desc'),
-                    rightBtnIcon: 'mdi-chevron-right'
+                    description: lc('export_settings_desc')
+                    // rightBtnIcon: 'mdi-chevron-right'
                 },
                 {
                     id: 'import_settings',
                     title: lc('import_settings'),
-                    description: lc('import_settings_desc'),
-                    rightBtnIcon: 'mdi-chevron-right'
+                    description: lc('import_settings_desc')
+                    // rightBtnIcon: 'mdi-chevron-right'
                 }
             ] as any);
 

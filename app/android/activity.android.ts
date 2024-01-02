@@ -1,4 +1,5 @@
-import { AndroidActivityCallbacks, Application, Frame, Utils, setActivityCallbacks } from '@nativescript/core';
+import { AndroidActivityCallbacks, Application, ApplicationSettings, Frame, Utils, setActivityCallbacks } from '@nativescript/core';
+import { prefs } from '~/services/preferences';
 
 function getThemeColor(context, colorResId) {
     const ta = context.obtainStyledAttributes([Utils.android.resources.getId(':attr/' + colorResId)]);
@@ -14,6 +15,18 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     private _callbacks: AndroidActivityCallbacks;
 
     public onCreate(savedInstanceState: android.os.Bundle): void {
+        const allowScreenshot = ApplicationSettings.getBoolean('allow_screenshot', true);
+        if (!allowScreenshot) {
+            this.getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE);
+        }
+        prefs.on('key:allow_screenshot', () => {
+            const value = ApplicationSettings.getBoolean('allow_screenshot');
+            if (!value) {
+                this.getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            } else {
+                this.getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            }
+        });
         // Handle the splash screen transition.
         //@ts-ignore
         androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
