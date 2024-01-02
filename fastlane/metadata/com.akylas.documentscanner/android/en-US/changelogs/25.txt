@@ -1,0 +1,8 @@
+*Features*
+- *android:* option to disable app screenshots
+
+*Bug fixes*
+- modal window hiding data while requesting biometrics
+- playstore version show links and review in settings
+- better theme color for some widgets
+- handle cancel while enabling biometrics
