@@ -188,10 +188,19 @@ export function updateThemeColors(theme: string, force = false) {
             } else {
                 currentColors[c] = new Color(nUtils.getColorFromName(activity, c)).hex;
             }
+            // rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
+        });
+        if (theme === 'dark') {
+            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(3).hex;
+            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(6).hex;
+        } else {
+            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(3).hex;
+            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(6).hex;
+        }
+        currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
+        Object.keys(currentColors).forEach((c) => {
             rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
         });
-        currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
-        rootViewStyle?.setUnscopedCssVariable('--colorOnSurfaceDisabled', currentColors.colorOnSurfaceDisabled);
     } else {
         Object.keys(currentColors).forEach((c) => {
             currentColors[c] = rootViewStyle.getCssVariable('--' + c);
