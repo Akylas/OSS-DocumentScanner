@@ -126,6 +126,10 @@ page {
     color: var(--colorOnSurface);
 }
 
+mdbutton {
+    color: var(--colorOnPrimary);
+}
+
 .icon-btn,
 .actionBarButton {
     @extend .mdi;
