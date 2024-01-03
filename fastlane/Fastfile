@@ -122,6 +122,7 @@ lane :build_flavor do |params|
   #     version: sentry_version
   #   )
   # end
+  svelteCheck
   build(flavor: flavor, options: options)
   push_to_git_remote(tags:false)
 
@@ -178,6 +179,11 @@ lane :build_flavor do |params|
     push_git_tags(force: true)
   end
   push_to_git_remote(tags:false)
+end
+
+desc 'Build the Android application.'
+lane :svelteCheck do |params|
+sh("npm", "run", "svelte-check")
 end
 
 

@@ -11,7 +11,6 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
 const Fontmin = require('@akylas/fontmin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
-const SvelteCheckPlugin = require('svelte-check-plugin');
 
 const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus', 'illegal-attribute-character']);
 
@@ -96,7 +95,6 @@ module.exports = (env, params = {}) => {
         profile, // --env.profile
         fork = true, // --env.fakeall
         accessibility = false, // --env.accessibility
-        sveltecheck = true, // --env.sveltecheck
         playStoreBuild = true, // --env.playStoreBuild
         adhoc, // --env.adhoc
         timeline, // --env.timeline
@@ -524,13 +522,6 @@ module.exports = (env, params = {}) => {
             })
         );
 
-        if (sveltecheck) {
-            config.plugins.push(
-                new SvelteCheckPlugin({
-                    args: ['--compiler-warnings', `${[...ignoredSvelteWarnings].map((s) => s + ':ignore').join(',')}`]
-                })
-            );
-        }
     }
 
     if (hiddenSourceMap || sourceMap) {
