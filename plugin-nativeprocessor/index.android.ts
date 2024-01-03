@@ -38,7 +38,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
     });
 }
 export async function getJSONDocumentCornersAndImage(
-    imageProxy: androidx.camera.core.ImageProxy,
+    imageProxy: any /* androidx.camera.core.ImageProxy */,
     processor: com.nativescript.cameraview.ImageAsyncProcessor,
     resizeThreshold = 300,
     imageRotation = 0
