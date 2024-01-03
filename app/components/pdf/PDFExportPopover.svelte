@@ -3,7 +3,7 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
-    import { ApplicationSettings, knownFolders } from '@nativescript/core';
+    import { Application, ApplicationSettings, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { showModal } from 'svelte-native';
     import PopoverBackgroundView from '~/components/common/PopoverBackgroundView.svelte';
@@ -66,7 +66,7 @@
                 DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
                 const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
                 hideLoading();
-                const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
+                const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open'), view: Application.getRootView() });
                 DEV_LOG && console.log('onSnack', onSnack);
                 if (onSnack.reason === 'action') {
                     DEV_LOG && console.log('openFile', filePath);
