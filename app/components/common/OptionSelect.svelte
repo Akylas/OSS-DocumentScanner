@@ -143,7 +143,14 @@
                     subtitle={item.subtitle}
                     title={item.name}
                     on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" boxType={item.boxType} checked={item.value} col={item.boxType === 'circle' ? 0 : 2} on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    <checkbox
+                        id="checkbox"
+                        boxType={item.boxType}
+                        checked={item.value}
+                        col={item.boxType === 'circle' ? 0 : 2}
+                        ios:marginLeft={10}
+                        verticalAlignment="center"
+                        on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </ListItem>
             </Template>
             <Template let:item>
