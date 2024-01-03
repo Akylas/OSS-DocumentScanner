@@ -383,7 +383,9 @@
 
         try {
             const component = (await import('~/components/common/SliderPopover.svelte')).default;
-            const currentValue = item.colorMatrix?.[0] || 1;
+            const current = items.getItem(currentIndex);
+            const currentValue = current.colorMatrix?.[0] || 1;
+            DEV_LOG && console.log('setColorMatrixLevels', currentValue, current.colorMatrix);
             onColorMatrixChange(item.colorType, currentValue);
             await showPopover({
                 backgroundColor: colorSurfaceContainer,
@@ -395,12 +397,12 @@
                     min: 0.5,
                     max: 2,
                     step: 0.1,
-                    // title: 'black_white_level',
-                    // icon: 'mdi-brightness-6',
                     width: '80%',
                     value: currentValue,
                     onChange(value) {
-                        onColorMatrixChange(item.colorType, value);
+                        if (current.colorMatrix?.[0] || 1 !== value) {
+                            onColorMatrixChange(item.colorType, value);
+                        }
                     }
                 }
             });
@@ -550,7 +552,6 @@
     }
 
     async function onRecropTapFinish(cancel = false) {
-        console.log('onRecropTapFinish', cancel, recrop, quadChanged);
         try {
             if (recrop) {
                 // let s see if quads changed and update image
@@ -581,7 +582,6 @@
     }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
-            console.log('onAndroidBackButton', recrop);
             if (recrop) {
                 data.cancel = true;
                 onRecropTapFinish(true);
