@@ -8,6 +8,7 @@ post_install do |installer|
             end
             config.build_settings['SWIFT_VERSION'] = '5.1'
             config.build_settings['DEVELOPMENT_TEAM'] = '3UUB5NM43K'
+            config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
         end
     end
 end
