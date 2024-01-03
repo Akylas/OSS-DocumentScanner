@@ -215,6 +215,7 @@
                         canvas.drawLine(point[0] - arrowWidth, point[1], point[0] + arrowWidth, point[1], cornersPaint);
                         canvas.drawLine(point[0], point[1] - arrowWidth, point[0], point[1] + arrowWidth, cornersPaint);
                     } else {
+                        cornersPaint.strokeWidth = 2 / drawingRatio;
                         canvas.drawCircle(point[0], point[1], 10 / drawingRatio, cornersPaint);
                     }
                 }
