@@ -93,7 +93,7 @@
     }
     function drawPDFPage(item: Item, { canvas }: { canvas: Canvas }) {
         pdfCanvas.canvas = canvas;
-        pdfCanvas.drawPages(item.index, item.pages);
+        pdfCanvas.drawPages(item.index, item.pages, item.loading);
     }
 
     onDestroy(() => {

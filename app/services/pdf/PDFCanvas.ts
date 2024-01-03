@@ -168,7 +168,7 @@ export default class PDFCanvas {
             });
         }
     }
-    drawPages(pdfPageIndex: number, pages: OCRPage[], forExport = false) {
+    drawPages(pdfPageIndex: number, pages: OCRPage[], isLoading = false, forExport = false) {
         const { pagerPagePaddingHorizontal, pagerPagePaddingVertical, paper_size, dpi, page_padding, orientation, items_per_page } = this.options;
         const pagePadding = ptToPixel(page_padding, dpi);
         const canvas = this.canvas;
@@ -181,7 +181,7 @@ export default class PDFCanvas {
         const nbItems = pages.length;
         const srcs = pages.map((page) => page.imagePath);
         // console.log('drawPDFPage', w, h, nbItems, srcs);
-        const isLoading = srcs.some((src) => !this.imagesCache[src]);
+        isLoading = isLoading || srcs.some((src) => !this.imagesCache[src]);
         canvas.translate(dx, dy);
         const canvasRatio = w / h;
         if (paper_size === 'full') {
