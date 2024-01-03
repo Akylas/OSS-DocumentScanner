@@ -1,4 +1,3 @@
-// import InAppBrowser from '@akylas/nativescript-inappbrowser';
 import { request } from '@nativescript-community/perms';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import { AlertDialog, MDCAlertControlerOptions, alert } from '@nativescript-community/ui-material-dialogs';
@@ -15,13 +14,13 @@ import { documentsService } from '~/services/documents';
 import ColorMatrices from './color_matrix';
 import { showError } from './error';
 import { loadImage, recycleImages } from './utils.common';
-
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import { colors, systemFontScale } from '~/variables';
+import * as imagePickerPlugin from '@nativescript/imagepicker';
 
 export interface ComponentInstanceInfo {
     element: NativeViewElementNode<View>;
@@ -489,36 +488,40 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
 }
 export async function importAndScanImage(document?: OCRDocument) {
     await request({ storage: {}, photo: {} });
-    let selection: { files: string[]; ios?; android? };
+    // let selection: { files: string[]; ios?; android? };
+    let selection;
     // let editingImage: ImageSource;
     try {
         // TODO add iOS image filter
-        selection = await openFilePicker({
-            mimeTypes: ['image/*'],
-            documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
-            multipleSelection: true,
-            pickerMode: 0
-        });
-        // selection = await imagepicker
-        //     .create({
-        //         mediaType: 1,
-        //         android: {
-        //             read_external_storage: lc('import_images')
-        //         },
-        //         mode: 'multiple' // use "multiple" for multiple selection
-        //     })
-        //     // on android pressing the back button will trigger an error which we dont want
-        //     .present()
-        //     .catch((err) => null);
-        // if (__IOS__) {
-        //     //we need to wait a bit or the presenting controller
-        //     // is still the image picker and will mix things up
-        //     await timeout(500);
-        // }
-        DEV_LOG && console.log('selection', selection);
-        if (selection?.files?.length) {
-            return await importAndScanImageFromUris(selection?.files, document);
+        // selection = await openFilePicker({
+        //     mimeTypes: ['image/*'],
+        //     documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
+        //     multipleSelection: true,
+        //     pickerMode: 0
+        // });
+        selection = await imagePickerPlugin
+            .create({
+                mediaType: 1,
+                android: {
+                    read_external_storage: lc('import_images')
+                },
+                mode: 'multiple' // use "multiple" for multiple selection
+            })
+            // on android pressing the back button will trigger an error which we dont want
+            .present()
+            .catch((err) => null);
+        if (__IOS__) {
+            //we need to wait a bit or the presenting controller
+            // is still the image picker and will mix things up
+            await timeout(500);
         }
+        DEV_LOG && console.log('selection', selection);
+        if (selection?.length) {
+            return await importAndScanImageFromUris(selection.map(s=>s.path), document);
+        }
+        // if (selection?.files?.length) {
+        //     return await importAndScanImageFromUris(selection?.files, document);
+        // }
     } catch (error) {
         showError(error);
     }
