@@ -26,6 +26,8 @@ firmwares
 **/src/main/res/values*/strings.xml
 **/iOS/*.lproj/Localizable.strings
 **/iOS/*.lproj/InfoPlist.strings
+**/iOS/*.lproj/Root.strings
+**/iOS/Settings.bundle/*.lproj
 
 # NativeScript Template
 !webpack.config.js
