@@ -482,14 +482,14 @@
                 if (currentTransforms.indexOf(type) === -1) {
                     await showLoading(l('computing'));
                     currentTransforms.push(type);
-                    await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
+                    await document.updatePageTransforms(currentIndex, currentTransforms.join(TRANSFORMS_SPLIT));
                 }
             } else {
                 const index = currentTransforms.indexOf(type);
                 if (index !== -1) {
                     await showLoading(l('computing'));
                     currentTransforms.splice(index, 1);
-                    await document.updatePageTransforms(currentIndex, currentTransforms.join(','));
+                    await document.updatePageTransforms(currentIndex, currentTransforms.join(TRANSFORMS_SPLIT));
                 }
             }
             transforms = currentTransforms;
