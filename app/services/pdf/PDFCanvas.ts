@@ -19,10 +19,17 @@ function ptToPixel(value, dpi) {
     return (value / 72) * dpi;
 }
 
+export interface PDFCanvasItem {
+    pages: OCRPage[];
+    index;
+    number;
+    loading?: boolean;
+}
+
 export default class PDFCanvas {
     canvas: Canvas;
     imagesCache: { [k: string]: ImageSource } = {};
-    items: { pages: OCRPage[]; index; number }[];
+    items: PDFCanvasItem[];
     updatePages(documents: OCRDocument[]) {
         let { items_per_page } = this.options;
         if (this.options.paper_size === 'full') {
@@ -38,10 +45,12 @@ export default class PDFCanvas {
         nbPages += (docPagesLength - nbPages) % items_per_page;
         const newItems = [];
         for (let index = 0; index < docPagesLength; index += items_per_page) {
-            newItems.push({
+            const item = {
                 index,
                 pages: pages.slice(index, index + items_per_page)
-            });
+            } as PDFCanvasItem;
+            // item.loading = this.needsLoadImage(index, item);
+            newItems.push(item);
         }
         this.items = newItems;
     }
@@ -74,8 +83,8 @@ export default class PDFCanvas {
             }
         }
     }
-    needsLoadImage(pdfPageIndex) {
-        const item = this.items[pdfPageIndex];
+    needsLoadImage(pdfPageIndex, item?) {
+        item = item || this.items[pdfPageIndex];
         for (let index = 0; index < item.pages.length; index++) {
             const src = item.pages[index].imagePath;
             if (!this.imagesCache[src]) {
@@ -113,7 +122,7 @@ export default class PDFCanvas {
             imageWidth = page.height;
             imageHeight = page.width;
         }
-
+        // DEV_LOG && console.log('drawImageOnCanvas', toDrawWidth, toDrawHeight, imageWidth, imageHeight, this.imagesCache[src]);
         if (forExport && this.options.reduce_image_size) {
             // size is in PT we need to transform to pixels to reduce file size
             const canvasWidth = ptToPixel(Utils.layout.toDevicePixels(toDrawWidth), dpi);

@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-    import { ApplicationSettings, ContentView, ObservableArray, knownFolders } from '@akylas/nativescript';
+    import { Application, ApplicationSettings, ContentView, ObservableArray, Screen, View, knownFolders } from '@nativescript/core';
     import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
@@ -23,7 +23,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import PDFCanvas from '~/services/pdf/PDFCanvas';
+    import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
@@ -31,10 +31,6 @@
     import { colors, fonts } from '~/variables';
 
     $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
-    interface Item {
-        index: number;
-        pages: OCRPage[];
-    }
 
     const pdfCanvas = new PDFCanvas();
     const optionsStore = writable(pdfCanvas.options);
@@ -49,30 +45,32 @@
     // pdfCanvas.updatePages(documents);
     let pager: NativeViewElementNode<Pager>;
     let drawer: DrawerElement;
-    let items: ObservableArray<{ index: number; pages: OCRPage[]; loading?: boolean }>;
+    let items: ObservableArray<PDFCanvasItem>;
     let currentPagerIndex = 0;
 
     const topBarHeight = 50;
 
     async function loadImagesForPage(pdfPageIndex) {
-        if (!pdfCanvas.needsLoadImage(pdfPageIndex)) {
+        const item = items.getItem(pdfPageIndex);
+        if (item.loading || !pdfCanvas.needsLoadImage(pdfPageIndex)) {
             return;
         }
+        DEV_LOG && console.log('loadImagesForPage', pdfPageIndex);
         setTimeout(async () => {
             try {
                 const item = items.getItem(pdfPageIndex);
-                item.loading = true;
-                items.setItem(pdfPageIndex, item);
+                if (!item.loading) {
+                    item.loading = true;
+                    DEV_LOG && console.log('setItem', item.loading);
+                    items.setItem(pdfPageIndex, item);
+                }
                 await pdfCanvas.loadImagesForPage(pdfPageIndex);
-                item.loading = false;
-                items.setItem(pdfPageIndex, item);
-                // if (currentPagerIndex === pdfPageIndex) {
-                // let view = pager?.nativeElement?.getChildView(pdfPageIndex);
-                // if (view instanceof ContentView) {
-                //     view = view.content;
-                // }
-                // (view as CanvasView)?.invalidate();
-                // }
+                // iOS needs a bit of time or it will break UICollectionView
+                setTimeout(() => {
+                    item.loading = false;
+                    DEV_LOG && console.log('setItem1', item.loading);
+                    items.setItem(pdfPageIndex, item);
+                }, 10);
             } catch (error) {
                 console.error(error, error.stack);
             }
@@ -91,7 +89,7 @@
             return true;
         });
     }
-    function drawPDFPage(item: Item, { canvas }: { canvas: Canvas }) {
+    function drawPDFPage(item: PDFCanvasItem, { canvas }: { canvas: Canvas }) {
         pdfCanvas.canvas = canvas;
         pdfCanvas.drawPages(item.index, item.pages, item.loading);
     }
@@ -142,9 +140,17 @@
             showError(error);
         }
     }
-    function onItemLoading({ index }) {
         // DEV_LOG && console.log('onItemLoading', index);
+    function onItemLoading({ index, view }) {
         loadImagesForPage(index);
+        if (__IOS__ && view) {
+            try {
+                const canvasView: CanvasView = (view as View).getViewById('canvas');
+                canvasView?.invalidate();
+            } catch (error) {
+                console.error(error);
+            }
+        }
     }
     const OPTIONS = {
         orientation: {
@@ -245,6 +251,11 @@
             showError(error);
         }
     }
+
+    const tMargin = '4 10 4 10';
+    const tPadding = '0 20 0 20';
+    const tWidth = Screen.mainScreen.widthDIPs / 2 - 40;
+    const tHeight = undefined;
 </script>
 
 <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all">
@@ -262,7 +273,6 @@
                     </label>
                     <label colSpan={2} color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} row={1} text="mdi-chevron-down" textAlignment="center" />
                 </gridlayout>
-                <!-- <gridlayout row={1} rowSpan={2}> -->
                 <pager
                     bind:this={pager}
                     id="pager"
@@ -277,7 +287,7 @@
                     on:selectedIndexChange={onPageIndexChanged}
                     on:itemLoading={onItemLoading}>
                     <Template let:item>
-                        <canvasView on:draw={(e) => drawPDFPage(item, e)}>
+                        <canvasView id="canvas" on:draw={(e) => drawPDFPage(item, e)}>
                             <stacklayout horizontalAlignment="center" verticalAlignment="middle" visibility={item.loading ? 'visible' : 'hidden'}>
                                 <label color="black" text={lc('images_loading')} />
                                 <activityindicator busy={true} />
@@ -285,46 +295,93 @@
                         </canvasView>
                     </Template>
                 </pager>
-                <checkbox checked={draw_ocr_overlay} row={1} text={lc('draw_ocr_overlay')} verticalAlignment="top" on:checkedChange={(e) => updateOption('draw_ocr_overlay', e.value)} />
+                <checkbox checked={draw_ocr_overlay} margin={14} row={1} text={lc('draw_ocr_overlay')} verticalAlignment="top" on:checkedChange={(e) => updateOption('draw_ocr_overlay', e.value)} />
 
                 <pagerindicator horizontalAlignment="center" marginBottom={10} pagerViewId="pager" row={1} type="worm" verticalAlignment="bottom" />
-                <!-- </gridlayout> -->
-
-                <!-- <blurview blurRadius={10} rowSpan={3} height={50}  verticalAlignment="bottom"/> -->
                 <gridlayout backgroundColor={colorSurfaceContainerHigh} columns="*,*" row={2}>
                     <mdbutton text={lc('export')} on:tap={exportPDF} />
                     <mdbutton col={1} text={lc('open')} on:tap={openPDF} />
                 </gridlayout>
             </gridlayout>
 
-            <gridlayout prop:topDrawer , backgroundColor={colorSurface} columns="*,*" height={230} rows="*,*,*,*,auto">
-                <textfield editable={false} hint={lc('orientation')} margin="4 10 4 10" padding="0 20 0 20" text={orientation} variant="outline" on:tap={(e) => selectOption('orientation', e)} />
-                <textfield col={1} editable={false} hint={lc('paper_size')} margin="4 10 4 10" padding="0 20 0 20" text={paper_size} variant="outline" on:tap={(e) => selectOption('paper_size', e)} />
-
-                <textfield editable={false} hint={lc('color')} margin="4 10 4 10" padding="0 20 0 20" row={1} text={color} variant="outline" on:tap={(e) => selectOption('color', e)} />
+            <wraplayout prop:topDrawer , backgroundColor={colorSurface} columns="*,*" rows="*,*,*,*,auto">
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('orientation')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={orientation}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('orientation', e)} />
                 <textfield
                     col={1}
                     editable={false}
+                    height={tHeight}
+                    hint={lc('paper_size')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={paper_size}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('paper_size', e)} />
+
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('color')}
+                    margin={tMargin}
+                    padding={tMargin}
+                    row={1}
+                    text={color}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('color', e)} />
+                <textfield
+                    col={1}
+                    editable={false}
+                    height={tHeight}
                     hint={lc('items_per_page')}
-                    margin="4 10 4 10"
-                    padding="0 20 0 20"
+                    margin={tMargin}
+                    padding={tPadding}
                     row={1}
                     text={items_per_page}
                     variant="outline"
+                    width={tWidth}
                     on:tap={(e) => selectOption('items_per_page', e, parseInt)} />
                 <textfield
                     editable={false}
+                    height={tHeight}
                     hint={lc('page_padding')}
-                    margin="4 10 4 10"
-                    padding="0 20 0 20"
+                    margin={tMargin}
+                    padding={tPadding}
                     row={2}
                     text={page_padding}
                     variant="outline"
+                    width={tWidth}
                     on:tap={(e) => selectSilderOption('page_padding', e)} />
-                <checkbox checked={reduce_image_size} col={1} row={2} text={lc('reduce_image_size')} verticalAlignment="bottom" on:checkedChange={(e) => updateOption('reduce_image_size', e.value)} />
-                <checkbox checked={draw_ocr_text} row={3} text={lc('draw_ocr_text')} verticalAlignment="bottom" on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)} />
+                <checkbox
+                    checked={reduce_image_size}
+                    col={1}
+                    height={tHeight}
+                    row={2}
+                    text={lc('reduce_image_size')}
+                    verticalAlignment="center"
+                    width={tWidth}
+                    on:checkedChange={(e) => updateOption('reduce_image_size', e.value)}
+                    ios:margin={14} />
+                <checkbox
+                    checked={draw_ocr_text}
+                    height={tHeight}
+                    row={3}
+                    text={lc('draw_ocr_text')}
+                    verticalAlignment="center"
+                    width={tWidth}
+                    on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
+                    ios:margin={14} />
                 <label colSpan={2} color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} row={4} text="mdi-chevron-up" textAlignment="center" on:tap={() => drawer?.close()} />
-            </gridlayout>
+            </wraplayout>
         </drawer>
 
         <CActionBar modalWindow={true} title={lc('preview')} />

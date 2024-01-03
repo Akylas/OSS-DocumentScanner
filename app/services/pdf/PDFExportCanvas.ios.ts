@@ -55,6 +55,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);
         const items = this.items;
         for (let index = 0; index < items.length; index++) {
+            const pages = items[index].pages;
             let pageWidth, pageHeight;
             switch (options.paper_size) {
                 case 'a5':
@@ -69,6 +70,10 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
                     pageWidth = 842;
                     pageHeight = 1191;
                     break;
+                case 'full':
+                    pageWidth = pages[0].width;
+                    pageHeight = pages[0].height;
+                    break;
 
                 default:
                     break;
@@ -82,8 +87,8 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
             UIGraphicsBeginPDFPageWithInfo(pageRect, null);
             const context = UIGraphicsGetCurrentContext();
             this.canvas.setContext(context, pageWidth, pageHeight);
-            const scale = Screen.mainScreen.scale;
-            this.canvas.scale(scale, scale);
+            // const scale = __IOS_Screen.mainScreen.scale;
+            // this.canvas.scale(scale, scale);
             await this.loadImagesForPage(index);
             this.drawPages(index, items[index].pages, false, true);
         }

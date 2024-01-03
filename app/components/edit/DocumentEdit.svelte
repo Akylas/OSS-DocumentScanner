@@ -7,7 +7,7 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, TextField, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, Screen, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -212,14 +212,10 @@
                     { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
                 ],
                 vertPos: VerticalPosition.ABOVE,
-
                 anchor: event.object,
-                // onClose: (item) => {
-                //     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
-                // }
                 props: {
-                    width: 380,
-                    containerColumns: 'auto',
+                    rowHeight: 70,
+                    width: Screen.mainScreen.widthDIPs - 50,
                     onCheckBox(item, value, e) {
                         if (updatingTransform) {
                             e.object.checked = !value;
@@ -229,36 +225,6 @@
                     }
                 }
             });
-            // await showPopover({
-            //     backgroundColor: colorSurfaceContainer,
-            //     view: OptionSelect,
-            //     anchor: event.object,
-            //     vertPos: VerticalPosition.ABOVE,
-            //     // disableDimBackground: true,
-            //     props: {
-            //         borderRadius: 10,
-            //         elevation: 4,
-            //         margin: 4,
-            //         backgroundColor: colorSurfaceContainer,
-            //         containerColumns: 'auto',
-            //         rowHeight: 58 * $systemFontScale,
-            //         height: 58 * 3 * $systemFontScale + 8,
-            //         width: 380,
-            //         options: [
-            //             { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
-            //             { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },
-            //             { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
-            //         ],
-            //         onCheckBox(item, value, e) {
-            //             if (updatingTransform) {
-            //                 e.object.checked = !value;
-            //                 return;
-            //             }
-            //             updateTransform(value, null, item.id);
-            //         }
-            //     }
-            //     // trackingScrollView: 'collectionView'
-            // });
         } catch (error) {
             showError(error);
         }

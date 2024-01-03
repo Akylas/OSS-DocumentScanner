@@ -130,17 +130,6 @@
                     title: lc('webdav_sync'),
                     description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
                 }
-                // {
-                //     id: 'test',
-                //     type: 'checkbox',
-                //     title: lc('webdav_sync'),
-                //     value:false
-                // },
-                // {
-                //     id: 'share',
-                //     rightBtnIcon: 'mdi-chevron-right',
-                //     title: lc('share_application')
-                // },
             ] as any)
             .concat(
                 PLAY_STORE_BUILD
@@ -387,6 +376,9 @@
     onLanguageChanged(refresh);
 
     function selectTemplate(item, index, items) {
+        if (item.type === 'prompt') {
+            return 'default';
+        }
         return item.type || 'default';
     }
 
