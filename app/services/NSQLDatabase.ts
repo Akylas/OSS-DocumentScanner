@@ -36,11 +36,10 @@ export default class NSQLDatabase implements DatabaseInterface {
         const compiledQuery = query.compile(this.indexToPlaceholder, formatIdentifier);
         const sqlQuery = compiledQuery.sql.trim();
         const result = await this.db.select(sqlQuery, compiledQuery.params);
-        // console.info('compiledQuery', sqlQuery, compiledQuery.params, result);
         return result as any[];
     }
     async sequence<T>(sequence: (sequenceDb: NSQLDatabase) => Promise<T>): Promise<T> {
-        return this.db.transaction<T>(() => sequence(this));
+        return sequence(this);
     }
 
     async migrate(migrations: { [key: string]: SqlQuery }) {
