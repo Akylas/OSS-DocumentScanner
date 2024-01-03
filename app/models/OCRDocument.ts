@@ -218,7 +218,7 @@ export class OCRDocument extends Observable implements Document {
 
     async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false) {
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePage', pageIndex, data);
+        DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(page));
         if (page) {
             await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
