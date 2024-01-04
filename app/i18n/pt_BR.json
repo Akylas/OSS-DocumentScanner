@@ -144,5 +144,6 @@
     "later": "mais tarde",
     "no_document_yet": "adicione um documento usando a câmera ou importando de uma imagem",
     "get_app_source_code": "acesse o código fonte do aplicativo",
-    "biometric_auto_lock": "bloqueio biométrico automático"
+    "biometric_auto_lock": "bloqueio biométrico automático",
+    "allow_app_screenshot": "permitir captura da tela do aplicativo"
 }
