@@ -136,7 +136,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const realError = typeof err === 'string' ? null : err;
-        DEV_LOG && console.error('showError', reporterEnabled, realError, err, err?.['stack']);
+        DEV_LOG && console.error('showError', reporterEnabled, err['message'] || err, err?.['stack'], err?.['stackTrace']);
 
         const isString = realError === null || realError === undefined;
         const message = isString ? (err as string) : realError.message || realError.toString();
