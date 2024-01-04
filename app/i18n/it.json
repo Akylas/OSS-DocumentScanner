@@ -144,5 +144,6 @@
     "biometric_lock_desc": "bloccare l'applicazione con verifica biometrica / codice PIN",
     "authenticate_security": "autenticazione per accedere all'applicazione",
     "biometric_auto_lock": "blocco biometrico automatico",
-    "biometric_lock": "Sicurezza biometrica"
+    "biometric_lock": "Sicurezza biometrica",
+    "allow_app_screenshot": "Consenti screenshot dell'applicazione"
 }
