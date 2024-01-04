@@ -83,7 +83,7 @@ export class OCRDocument extends Observable implements Document {
         if (sourceImagePath) {
             let baseName = sourceImagePath
                 .split('/')
-                .slice(-1)[0]
+                .pop()
                 .replace(/%[a-zA-Z\d]{2}/, '');
             if (!baseName.endsWith(IMG_FORMAT)) {
                 baseName += '.' + IMG_FORMAT;
@@ -156,7 +156,7 @@ export class OCRDocument extends Observable implements Document {
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
                         .split('/')
-                        .slice(-1)[0]
+                        .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
                     if (!baseName.endsWith(IMG_FORMAT)) {
                         baseName += '.' + IMG_FORMAT;
