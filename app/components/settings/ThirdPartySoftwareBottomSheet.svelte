@@ -6,7 +6,24 @@
 
     const licences = require('~/licenses.json');
 
-    const items = licences.dependencies;
+    const items = [
+        {
+            moduleName: 'OpenCV',
+            moduleUrl: 'https://github.com/opencv/opencv'
+        },
+        {
+            moduleName: 'tesseract',
+            moduleUrl: 'https://github.com/tesseract-ocr/tesseract'
+        },
+        {
+            moduleName: 'ZXing-C++',
+            moduleUrl: 'https://github.com/zxing-cpp/zxing-cpp'
+        },
+        {
+            moduleName: 'jsoncons',
+            moduleUrl: 'https://github.com/danielaparker/jsoncons'
+        }
+    ].concat(licences.dependencies);
 
     function onTap(item) {
         if (item.moduleUrl) {
