@@ -25,7 +25,7 @@
 [<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/com.akylas.documentscanner/releases)
 <div>
 
-<a href="https://testflight.apple.com/join/sxiV4ZKL"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
+<a href="https://apps.apple.com/us/app/oss-document-scanner/id6472918564"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
 </div>
  
 <!-- <p align="center">
