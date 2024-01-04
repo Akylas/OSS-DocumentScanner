@@ -595,15 +595,22 @@
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
-                <gridlayout id={item.text} padding={4} rows="*,25" on:tap={applyImageTransform(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
+                <gridlayout id={item.text} padding={2} on:tap={applyImageTransform(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
                         id="imageView"
+                        borderRadius={4}
                         colorMatrix={getColorMatrix(item.colorType)}
                         decodeHeight={120}
                         decodeWidth={120}
                         imageRotation={currentSelectedImageRotation}
                         src={currentSelectedImagePath} />
-                    <label fontSize={10} row={1} text={item.text} textAlignment="center" />
+                    <label
+                        backgroundImage="linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 90%, rgba(0,0,0,0) 100%)"
+                        color="white"
+                        fontSize={10}
+                        text={item.text}
+                        textAlignment="center"
+                        verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
         </collectionview>
