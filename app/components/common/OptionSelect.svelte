@@ -103,6 +103,16 @@
     function blurTextField() {
         Utils.dismissSoftInput();
     }
+
+    function itemTemplateSelector(item) {
+        if (item.type) {
+            return item.type;
+        }
+        if (item.rightIcon) {
+            return 'righticon';
+        }
+        return 'default';
+    }
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
@@ -134,7 +144,7 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} row={1} {rowHeight}>
+        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight}>
             <Template key="checkbox" let:item>
                 {#if autoSizeListItem}
                     <ListItemAutoSize
@@ -181,6 +191,39 @@
                             ios:marginLeft={10}
                             verticalAlignment="center"
                             on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    </ListItem>
+                {/if}
+            </Template>
+            <Template key="righticon" let:item>
+                {#if autoSizeListItem}
+                    <ListItemAutoSize
+                        {borderRadius}
+                        color={item.color}
+                        {fontSize}
+                        {fontWeight}
+                        {iconFontSize}
+                        leftIcon={item.icon}
+                        showBottomLine={showBorders}
+                        subtitle={item.subtitle}
+                        title={item.name}
+                        on:tap={(event) => onTap(item, event)}>
+                        <mdbutton class="icon-btn" col={2} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
+                    </ListItemAutoSize>
+                {:else}
+                    <ListItem
+                        {borderRadius}
+                        color={item.color}
+                        columns="auto,*,auto"
+                        {fontSize}
+                        {fontWeight}
+                        {iconFontSize}
+                        leftIcon={item.icon}
+                        mainCol={1}
+                        showBottomLine={showBorders}
+                        subtitle={item.subtitle}
+                        title={item.name}
+                        on:tap={(event) => onTap(item, event)}>
+                        <mdbutton class="icon-btn" col={2} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
                     </ListItem>
                 {/if}
             </Template>

@@ -627,11 +627,11 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
         anchor,
         vertPos: VerticalPosition.BELOW,
         props: {
-            width: 300,
-            rows: 'auto',
-            rowHeight: null,
-            height: null,
-            autoSizeListItem: true,
+            width: 250,
+            // rows: 'auto',
+            // rowHeight: null,
+            // height: null,
+            // autoSizeListItem: true,
             onRightIconTap: (item, event) => {
                 try {
                     switch (item.id) {
@@ -830,11 +830,11 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor) {
         anchor,
         vertPos: VerticalPosition.BELOW,
         props: {
-            width: 300,
-            rows: 'auto',
-            rowHeight: null,
-            height: null,
-            autoSizeListItem: true,
+            width: 250,
+            // rows: 'auto',
+            // rowHeight: null,
+            // height: null,
+            // autoSizeListItem: true,
             onRightIconTap: (item, event) => {
                 try {
                     switch (item.id) {

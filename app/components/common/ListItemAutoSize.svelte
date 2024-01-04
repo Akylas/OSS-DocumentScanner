@@ -19,7 +19,6 @@
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;
     export let iconFontSize: number = 24;
-    export let rightIconFontSize: number = 30;
     export let fontSize: number = 17;
     export let fontWeight: any = 'bold';
     export let subtitleFontSize: number = 14;
@@ -28,11 +27,9 @@
     export let subtitleColor: string = colorOnSurfaceVariant;
     export let subtitle: string = null;
     export let leftIcon: string = null;
-    export let rightIcon: string = null;
     export let rightValue: string | Function = null;
     export let columns: string = leftIcon ? `${iconFontSize * 2},*,auto` : 'auto,*,auto';
     export let leftIconFonFamily: string = $fonts.mdi;
-    export let rightIconFonFamily: string = $fonts.mdi;
     export let mainCol = 1;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 
@@ -103,13 +100,11 @@
         col={2}
         color={subtitleColor}
         marginLeft={16}
-        rippleColor={rightIcon ? subtitleColor : undefined}
         textAlignment="right"
         verticalAlignment="center"
-        visibility={!!rightValue || rightIcon ? 'visible' : 'visible'}
+        visibility={!!rightValue ? 'visible' : 'visible'}
         on:tap={(event) => dispatch('rightTap', event)}>
         <cspan fontSize={subtitleFontSize} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
-        <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize} text={rightIcon} />
     </label>
     <!-- <label
         col={2}
