@@ -27,12 +27,15 @@ class PDFExportWorker extends BaseWorker {
     }
 
     async export(id, type, { documents, folder, filename }) {
-        DEV_LOG && console.log(TAG, 'export', id, type, { documents, folder, filename });
-        const exporter = new PDFExportCanvas();
-        const filePath = await exporter.export(documents, folder, filename);
-        // const filePath = 'test';
-        DEV_LOG && console.log(TAG, 'export done ', id, type, filePath);
-        (global as any).postMessage({ id, type, messageData: filePath });
+        try {
+            DEV_LOG && console.log(TAG, 'export', id, type, { documents, folder, filename });
+            const exporter = new PDFExportCanvas();
+            const filePath = await exporter.export(documents, folder, filename);
+            // const filePath = 'test';
+            (global as any).postMessage({ id, type, messageData: filePath });
+        } catch (error) {
+            (global as any).postMessage({ id, type, error: JSON.stringify({ message: error.toString(), stack: error.stack, stackTrace: error.stackTrace }) });
+        }
     }
 }
 

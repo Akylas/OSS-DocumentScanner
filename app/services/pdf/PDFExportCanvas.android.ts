@@ -5,7 +5,7 @@ import { recycleImages } from '~/utils/utils.common';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '') {
+    async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '.pdf') {
         const start = Date.now();
         const options = this.options;
         if (options.paper_size === 'full') {
@@ -56,18 +56,27 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         const stream = new java.io.FileOutputStream(tempFile.path);
         pdfDocument.writeTo(stream);
         pdfDocument.close();
+        DEV_LOG && console.log('tempFile', tempFile.path, tempFile.size);
         if (folder.startsWith('content://')) {
             const tempFile2 = knownFolders.temp().getFile('compressed.pdf');
+            DEV_LOG && console.log('compressPDF', tempFile.path, tempFile2.path);
             com.akylas.documentscanner.PDFUtils.compressPDF(tempFile.path, tempFile2.path, IMG_COMPRESS);
             const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
             const outfile = outdocument.createFile('application/pdf', filename);
             await tempFile2.copy(outfile.getUri().toString());
             return outdocument.getUri().toString();
         } else {
-            const outputPath = path.join(folder, filename);
+            let outputPath;
+            if (knownFolders.temp().path === folder) {
+                outputPath = path.join(folder, Date.now() + '_1.pdf');
+            } else {
+                outputPath = path.join(folder, filename);
+            }
             try {
+                DEV_LOG && console.log('compressPDF', tempFile.path, outputPath);
                 com.akylas.documentscanner.PDFUtils.compressPDF(tempFile.path, outputPath, IMG_COMPRESS);
             } catch (error) {
+                tempFile.copySync(outputPath);
                 console.error('compressPDF error', error, error.stack);
                 throw error;
             }

@@ -8,6 +8,7 @@ export async function exportPDFAsync(documents: OCRDocument[], folder?, filename
     worker.onmessage = function onWorkerMessage(event: {
         data: {
             type: WorkerEventType;
+            error?;
             // result: WorkerResult;
             messageData;
             id?: number;
@@ -41,8 +42,11 @@ export async function exportPDFAsync(documents: OCRDocument[], folder?, filename
                         data.nativeDatas = nativeDatas;
                     }
                 }
-
-                executor.resolve(data);
+                if (data.error) {
+                    executor.reject(JSON.parse(data.error));
+                } else {
+                    executor.resolve(data);
+                }
                 // }
             });
             delete messagePromises[id];
