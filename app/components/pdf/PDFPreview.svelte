@@ -38,6 +38,7 @@
     $: ({ orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = $optionsStore);
     optionsStore.subscribe((newValue) => {
         Object.assign(pdfCanvas.options, newValue);
+        DEV_LOG && console.log('saving options', pdfCanvas.options);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
     // technique for only specific properties to get updated on store change
@@ -61,14 +62,12 @@
                 const item = items.getItem(pdfPageIndex);
                 if (!item.loading) {
                     item.loading = true;
-                    DEV_LOG && console.log('setItem', item.loading);
                     items.setItem(pdfPageIndex, item);
                 }
                 await pdfCanvas.loadImagesForPage(pdfPageIndex);
                 // iOS needs a bit of time or it will break UICollectionView
                 setTimeout(() => {
                     item.loading = false;
-                    DEV_LOG && console.log('setItem1', item.loading);
                     items.setItem(pdfPageIndex, item);
                 }, 10);
             } catch (error) {
@@ -140,7 +139,7 @@
             showError(error);
         }
     }
-        // DEV_LOG && console.log('onItemLoading', index);
+    // DEV_LOG && console.log('onItemLoading', index);
     function onItemLoading({ index, view }) {
         loadImagesForPage(index);
         if (__IOS__ && view) {
@@ -253,9 +252,9 @@
     }
 
     const tMargin = '4 10 4 10';
-    const tPadding = '0 20 0 20';
-    const tWidth = Screen.mainScreen.widthDIPs / 2 - 40;
-    const tHeight = undefined;
+    const tPadding = '10 20 10 20';
+    const tWidth = (Screen.mainScreen.widthDIPs - 41) / 2;
+    const tHeight = 'auto';
 </script>
 
 <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all">
@@ -304,7 +303,7 @@
                 </gridlayout>
             </gridlayout>
 
-            <wraplayout prop:topDrawer , backgroundColor={colorSurface} columns="*,*" rows="*,*,*,*,auto">
+            <wraplayout prop:topDrawer backgroundColor={colorSurface}>
                 <textfield
                     editable={false}
                     height={tHeight}
@@ -316,7 +315,6 @@
                     width={tWidth}
                     on:tap={(e) => selectOption('orientation', e)} />
                 <textfield
-                    col={1}
                     editable={false}
                     height={tHeight}
                     hint={lc('paper_size')}
@@ -332,20 +330,17 @@
                     height={tHeight}
                     hint={lc('color')}
                     margin={tMargin}
-                    padding={tMargin}
-                    row={1}
+                    padding={tPadding}
                     text={color}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('color', e)} />
                 <textfield
-                    col={1}
                     editable={false}
                     height={tHeight}
                     hint={lc('items_per_page')}
                     margin={tMargin}
                     padding={tPadding}
-                    row={1}
                     text={items_per_page}
                     variant="outline"
                     width={tWidth}
@@ -356,16 +351,14 @@
                     hint={lc('page_padding')}
                     margin={tMargin}
                     padding={tPadding}
-                    row={2}
                     text={page_padding}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectSilderOption('page_padding', e)} />
                 <checkbox
                     checked={reduce_image_size}
-                    col={1}
                     height={tHeight}
-                    row={2}
+                    margin={tMargin}
                     text={lc('reduce_image_size')}
                     verticalAlignment="center"
                     width={tWidth}
@@ -374,13 +367,13 @@
                 <checkbox
                     checked={draw_ocr_text}
                     height={tHeight}
-                    row={3}
+                    margin={tMargin}
                     text={lc('draw_ocr_text')}
                     verticalAlignment="center"
                     width={tWidth}
                     on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
                     ios:margin={14} />
-                <label colSpan={2} color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} row={4} text="mdi-chevron-up" textAlignment="center" on:tap={() => drawer?.close()} />
+                <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} text="mdi-chevron-up" textAlignment="center" width="100%" on:tap={() => drawer?.close()} />
             </wraplayout>
         </drawer>
 
