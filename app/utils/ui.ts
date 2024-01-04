@@ -509,7 +509,7 @@ export async function importAndScanImage(document?: OCRDocument) {
             .create({
                 mediaType: 1,
                 android: {
-                    read_external_storage: lc('import_images')
+                    // read_external_storage: lc('import_images')
                 },
                 mode: 'multiple' // use "multiple" for multiple selection
             })
@@ -732,9 +732,6 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             cancelButtonText: lc('cancel'),
             defaultText: Date.now() + '',
             hintText: lc('image_filename'),
-            // textFieldProperties: {
-            //     helper: lc('without_extension')
-            // }
         });
         if (!result?.result || !result?.text?.length) {
             return;

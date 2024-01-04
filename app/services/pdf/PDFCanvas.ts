@@ -228,7 +228,6 @@ export default class PDFCanvas {
             }
 
             if (isLoading) {
-                // canvas.drawText(lc('loading_images'), 0, 100, textPaint);
                 return;
             }
             // if (page.rotation !== 0) {

@@ -29,43 +29,12 @@
 
     let items: ObservableArray<any>;
 
-    // let nbDevModeTap = 0;
-    // let devModeClearTimer;
-    // function onTouch(item, event) {
-    //     if (item.id !== 'version' || event.action !== 'down') {
-    //         return;
-    //     }
-    //     nbDevModeTap += 1;
-    //     if (devModeClearTimer) {
-    //         clearTimeout(devModeClearTimer);
-    //     }
-    //     if (nbDevModeTap === 6) {
-    //         const devMode = (customLayers.devMode = !customLayers.devMode);
-    //         nbDevModeTap = 0;
-    //         showSnack({ message: devMode ? lc('devmode_on') : lc('devmode_off') });
-    //         refresh();
-    //         return;
-    //     }
-    //     devModeClearTimer = setTimeout(() => {
-    //         devModeClearTimer = null;
-    //         nbDevModeTap = 0;
-    //     }, 500);
-    // }
-
     function getTitle(item) {
         switch (item.id) {
             case 'token':
                 return lc(item.token);
             default:
                 return item.title;
-        }
-    }
-    function getSubtitle(item) {
-        switch (item.id) {
-            // case 'token':
-            //     return item.value || lc('click_to_set_key');
-            default:
-                return item.description || '';
         }
     }
     function refresh() {

@@ -247,47 +247,6 @@
             showError(err);
         }
     }
-    // async function shareCurrentItem() {
-    //     try {
-    //         shareItem(items.getItem(currentIndex));
-    //     } catch (error) {
-    //         showError(error);
-    //     }
-    // }
-    // async function saveCurrentImage() {
-    //     if (__ANDROID__) {
-    //         try {
-    //             const imagePath = items.getItem(currentIndex).imagePath;
-    //             const file = File.fromPath(imagePath);
-    //             const destinationPath = path.join(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), file.name);
-    //             await (await ImageSource.fromFile(imagePath)).saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
-    //         } catch (error) {
-    //             showError(error);
-    //         }
-    //     } else {
-    //         try {
-    //             const imagePath = items.getItem(currentIndex).imagePath;
-    //             const imageSource = await ImageSource.fromFile(imagePath);
-    //             await new Promise<void>((resolve, reject) => {
-    //                 PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
-    //                     () => {
-    //                         PHAssetChangeRequest.creationRequestForAssetFromImage(imageSource.ios);
-    //                     },
-    //                     (success, err) => {
-    //                         if (success) {
-    //                             resolve();
-    //                         } else {
-    //                             reject(err);
-    //                         }
-    //                     }
-    //                 );
-    //             });
-    //             showSnack({ message: l('image_saved_gallery') });
-    //         } catch (error) {
-    //             showError(error);
-    //         }
-    //     }
-    // }
 
     async function showCurrentOCRData() {
         try {
