@@ -511,6 +511,6 @@
                 </gridlayout>
             </Template> -->
         </collectionview>
-        <CActionBar canGoBack title={$slc('settings')} />
+        <CActionBar canGoBack title={lc('settings.title')} />
     </gridlayout>
 </page>
