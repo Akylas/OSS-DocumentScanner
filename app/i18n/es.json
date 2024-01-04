@@ -147,5 +147,9 @@
     "biometric_auto_lock": "bloqueo biométrico automático",
     "allow_app_screenshot": "permitir captura de pantalla de la aplicación",
     "cards": "tarjetas",
-    "biometric_auto_lock_desc": "si se activa la aplicación se bloqueará cada vez que la aplicación pasa a segundo plano"
+    "biometric_auto_lock_desc": "si se activa la aplicación se bloqueará cada vez que la aplicación pasa a segundo plano",
+    "export_ios_desc": "se exportará a los documentos de la aplicación",
+    "images_saved": "imágenes guardadas",
+    "limited": "limitado",
+    "share": "compartir"
 }
