@@ -1,0 +1,9 @@
+*Bug fixes*
+- transforms not applied correctly
+- Translated using Weblate (Spanish)
+- better handle of filter level (available through long press)
+- new "menu" to create and pdf and export imagse
+- added missing 3rd party licences
+- better handle of errors while exporting pdf
+- settings title not translated
+- improved edit view layout
