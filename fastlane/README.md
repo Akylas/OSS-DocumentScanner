@@ -67,7 +67,7 @@ Prepare the application.
 [bundle exec] fastlane svelteCheck
 ```
 
-Build the Android application.
+
 
 ### get_changelog
 
