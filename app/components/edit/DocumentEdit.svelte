@@ -23,7 +23,7 @@
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { ColorMatricesTypes, getColorMatrix, hideLoading, showLoading, showPopoverMenu, updateLoadingProgress } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
 
@@ -54,16 +54,7 @@
     // const enhanced = writable(transforms.indexOf('enhance') !== -1);
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    documents: [document]
-                }
-            });
+            await showPDFPopoverMenu([document], event.object);
         } catch (err) {
             showError(err);
         }
@@ -251,16 +242,7 @@
     }
     async function showImageExportPopover(event) {
         try {
-            const component = (await import('~/components/ImageExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    pages: [items.getItem(currentIndex)]
-                }
-            });
+            await showImagePopoverMenu([items.getItem(currentIndex)], event.object);
         } catch (err) {
             showError(err);
         }

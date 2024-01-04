@@ -1,8 +1,9 @@
 <script context="module" lang="ts">
-    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '~/utils/svelte/ui';
     import { colors, fonts, systemFontScale } from '~/variables';
     const iconPaint = new Paint();
+    iconPaint.setTextAlign(Align.CENTER);
     const linePaint = new Paint();
     linePaint.strokeWidth = 1;
 </script>
@@ -29,7 +30,7 @@
     export let leftIcon: string = null;
     export let rightIcon: string = null;
     export let rightValue: string | Function = null;
-    export let columns: string = 'auto,*,auto';
+    export let columns: string = leftIcon ? `${iconFontSize * 2},*,auto` : 'auto,*,auto';
     export let leftIconFonFamily: string = $fonts.mdi;
     export let rightIconFonFamily: string = $fonts.mdi;
     export let mainCol = 1;
@@ -39,14 +40,18 @@
         const canvas = event.canvas;
         const h = canvas.getHeight();
         const w = canvas.getHeight();
-        if (leftIcon) {
-            iconPaint.textSize = iconFontSize * $systemFontScale;
-            iconPaint.color = titleColor;
-            iconPaint.fontFamily = leftIconFonFamily;
-            event.canvas.drawText(leftIcon, 0, 0, iconPaint);
-        }
+
         if (showBottomLine) {
             event.canvas.drawLine(20, h - 1, w, h - 1, linePaint);
+        }
+        if (leftIcon) {
+            const fontSize = iconFontSize * $systemFontScale;
+            iconPaint.textSize = fontSize;
+            iconPaint.color = titleColor;
+            iconPaint.fontFamily = leftIconFonFamily;
+            const staticLayout = new StaticLayout(leftIcon, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+            canvas.translate(fontSize / 2, h / 2 - staticLayout.getHeight() / 2);
+            staticLayout.draw(canvas);
         }
         onDraw?.(event);
     }
@@ -73,7 +78,14 @@
     </gridlayout>
 </gridlayout> -->
 
-<canvasview {columns} padding="10 16 10 16" rippleColor={colorOnSurface} on:tap={(event) => dispatch('tap', event)} on:longPress={(event) => dispatch('longPress', event)}>
+<canvasview
+    {columns}
+    padding="10 16 10 16"
+    rippleColor={colorOnSurface}
+    on:tap={(event) => dispatch('tap', event)}
+    on:longPress={(event) => dispatch('longPress', event)}
+    on:draw={draw}
+    {...$$restProps}>
     <!-- <label
         fontFamily={leftIconFonFamily}
         fontSize={iconFontSize}
@@ -82,12 +94,20 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
         width={iconFontSize * 2} /> -->
-    <label col={mainCol} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
-        <cspan color={titleColor} {fontSize} {fontWeight} text={title} />
+    <label col={mainCol} {fontSize} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
+        <cspan color={titleColor} {fontWeight} text={title} />
         <cspan color={subtitleColor} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
-    <label col={2} color={subtitleColor} marginLeft={16} textAlignment="right" verticalAlignment="center" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
+    <label
+        col={2}
+        color={subtitleColor}
+        marginLeft={16}
+        rippleColor={rightIcon ? subtitleColor : undefined}
+        textAlignment="right"
+        verticalAlignment="center"
+        visibility={!!rightValue || rightIcon ? 'visible' : 'visible'}
+        on:tap={(event) => dispatch('rightTap', event)}>
         <cspan fontSize={subtitleFontSize} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
         <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize} text={rightIcon} />
     </label>

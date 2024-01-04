@@ -23,7 +23,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { hideLoading, importAndScanImage, showLoading, showPDFPopoverMenu } from '~/utils/ui';
     import { recycleImages } from '~/utils/utils.common';
     import { colors, screenWidthDips } from '~/variables';
     export const screenWidthPixels = Screen.mainScreen.widthPixels;
@@ -105,16 +105,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    documents: [document]
-                }
-            });
+            await showPDFPopoverMenu([document], event.object);
         } catch (err) {
             showError(err);
         }

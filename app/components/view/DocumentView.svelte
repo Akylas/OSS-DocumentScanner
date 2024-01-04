@@ -24,7 +24,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, showLoading } from '~/utils/ui';
+    import { hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu } from '~/utils/ui';
     import { colors, screenWidthDips, systemFontScale } from '~/variables';
 
     const rowMargin = 8;
@@ -75,16 +75,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    documents: [document]
-                }
-            });
+            await showPDFPopoverMenu([document], event.object);
         } catch (err) {
             showError(err);
         }
@@ -92,16 +83,7 @@
 
     async function showImageExportPopover(event) {
         try {
-            const component = (await import('~/components/ImageExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    pages: getSelectedPages()
-                }
-            });
+            await showImagePopoverMenu(getSelectedPages(), event.object);
         } catch (err) {
             showError(err);
         }

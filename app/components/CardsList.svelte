@@ -28,7 +28,7 @@
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { importAndScanImage, importAndScanImageFromUris } from '~/utils/ui';
+    import { importAndScanImage, importAndScanImageFromUris, showPDFPopoverMenu } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips } from '~/variables';
 
     const orientation = Application.orientation();
@@ -541,16 +541,7 @@
 
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    documents: getSelectedDocuments()
-                }
-            });
+            await showPDFPopoverMenu(getSelectedDocuments(), event.object);
         } catch (err) {
             showError(err);
         }

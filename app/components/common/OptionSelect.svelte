@@ -2,7 +2,7 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { File, Utils, View } from '@nativescript/core';
+    import { File, ObservableArray, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -10,6 +10,7 @@
     import ListItem from '~/components/common/ListItem.svelte';
     import { lc } from '~/helpers/locale';
     import { actionBarButtonHeight, colors } from '~/variables';
+    import ListItemAutoSize from './ListItemAutoSize.svelte';
     export interface OptionType {
         name: string;
         isPick?: boolean;
@@ -27,14 +28,16 @@
     export let rowHeight = null;
     export let width: string | number = '*';
     export let containerColumns: string = '*';
+    export let autoSizeListItem: boolean = false;
     export let fontWeight = 'bold';
-    export let options: OptionType[];
+    export let options: OptionType[] | ObservableArray<OptionType[]>;
     export let onClose = null;
     export let height: number | string = null;
     export let fontSize = 16;
     export let iconFontSize = 24;
     export let onCheckBox: (item, value, e) => void = null;
-    let filteredOptions: OptionType[] = null;
+    export let onRightIconTap: (item, e) => void = null;
+    let filteredOptions: OptionType[] | ObservableArray<OptionType[]> = null;
     let filter: string = null;
 
     // technique for only specific properties to get updated on store change
@@ -57,6 +60,9 @@
 
     let checkboxTapTimer;
 
+    async function onRightTap(item: OptionType, event) {
+        onRightIconTap?.(item, event);
+    }
     async function onTap(item: OptionType, event) {
         if (item.isPick) {
             try {
@@ -130,42 +136,86 @@
         {/if}
         <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} row={1} {rowHeight}>
             <Template key="checkbox" let:item>
-                <ListItem
-                    {borderRadius}
-                    color={item.color}
-                    columns="auto,*,auto"
-                    {fontSize}
-                    fontWeight={item.fontWeight || fontWeight}
-                    {iconFontSize}
-                    leftIcon={item.icon}
-                    mainCol={1}
-                    showBottomLine={showBorders}
-                    subtitle={item.subtitle}
-                    title={item.name}
-                    on:tap={(event) => onTap(item, event)}>
-                    <checkbox
-                        id="checkbox"
-                        boxType={item.boxType}
-                        checked={item.value}
-                        col={item.boxType === 'circle' ? 0 : 2}
-                        ios:marginLeft={10}
-                        verticalAlignment="center"
-                        on:checkedChange={(e) => onCheckedChanged(item, e)} />
-                </ListItem>
+                {#if autoSizeListItem}
+                    <ListItemAutoSize
+                        {borderRadius}
+                        color={item.color}
+                        columns="auto,*,auto"
+                        {fontSize}
+                        fontWeight={item.fontWeight || fontWeight}
+                        {iconFontSize}
+                        leftIcon={item.icon}
+                        mainCol={1}
+                        showBottomLine={showBorders}
+                        subtitle={item.subtitle}
+                        title={item.name}
+                        on:tap={(event) => onTap(item, event)}>
+                        <checkbox
+                            id="checkbox"
+                            boxType={item.boxType}
+                            checked={item.value}
+                            col={item.boxType === 'circle' ? 0 : 2}
+                            ios:marginLeft={10}
+                            verticalAlignment="center"
+                            on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    </ListItemAutoSize>
+                {:else}
+                    <ListItem
+                        {borderRadius}
+                        color={item.color}
+                        columns="auto,*,auto"
+                        {fontSize}
+                        fontWeight={item.fontWeight || fontWeight}
+                        {iconFontSize}
+                        leftIcon={item.icon}
+                        mainCol={1}
+                        showBottomLine={showBorders}
+                        subtitle={item.subtitle}
+                        title={item.name}
+                        on:tap={(event) => onTap(item, event)}>
+                        <checkbox
+                            id="checkbox"
+                            boxType={item.boxType}
+                            checked={item.value}
+                            col={item.boxType === 'circle' ? 0 : 2}
+                            ios:marginLeft={10}
+                            verticalAlignment="center"
+                            on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    </ListItem>
+                {/if}
             </Template>
             <Template let:item>
-                <ListItem
-                    {borderRadius}
-                    color={item.color}
-                    {fontSize}
-                    {fontWeight}
-                    {iconFontSize}
-                    leftIcon={item.icon}
-                    showBottomLine={showBorders}
-                    subtitle={item.subtitle}
-                    title={item.name}
-                    on:tap={(event) => onTap(item, event)}>
-                </ListItem>
+                {#if autoSizeListItem}
+                    <ListItemAutoSize
+                        {borderRadius}
+                        color={item.color}
+                        {fontSize}
+                        {fontWeight}
+                        {iconFontSize}
+                        leftIcon={item.icon}
+                        rightIcon={item.rightIcon}
+                        showBottomLine={showBorders}
+                        subtitle={item.subtitle}
+                        title={item.name}
+                        on:rightTap={(event) => onRightTap(item, event)}
+                        on:tap={(event) => onTap(item, event)}>
+                    </ListItemAutoSize>
+                {:else}
+                    <ListItem
+                        {borderRadius}
+                        color={item.color}
+                        {fontSize}
+                        {fontWeight}
+                        {iconFontSize}
+                        leftIcon={item.icon}
+                        rightIcon={item.rightIcon}
+                        showBottomLine={showBorders}
+                        subtitle={item.subtitle}
+                        title={item.name}
+                        on:rightTap={(event) => onRightTap(item, event)}
+                        on:tap={(event) => onTap(item, event)}>
+                    </ListItem>
+                {/if}
             </Template>
         </collectionView>
     </gridlayout>

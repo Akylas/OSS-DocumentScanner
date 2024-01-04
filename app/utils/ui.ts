@@ -1,15 +1,15 @@
 import { request } from '@nativescript-community/perms';
-import { openFilePicker } from '@nativescript-community/ui-document-picker';
-import { AlertDialog, MDCAlertControlerOptions, alert } from '@nativescript-community/ui-material-dialogs';
+import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
+import { AlertDialog, MDCAlertControlerOptions, alert, prompt } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { AlertOptions, View } from '@nativescript/core';
-import { openUrl } from '@nativescript/core/utils';
+import { AlertOptions, ApplicationSettings, ImageSource, Observable, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
+import { openFile, openUrl } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
 import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { l, lc } from '~/helpers/locale';
-import { OCRDocument, PageData } from '~/models/OCRDocument';
+import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
 import ColorMatrices from './color_matrix';
 import { showError } from './error';
@@ -21,6 +21,9 @@ import type LoadingIndicator__SvelteComponent_ from '~/components/common/Loading
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import { colors, systemFontScale } from '~/variables';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
+import { exportPDFAsync } from '~/services/pdf/PDFExporter';
+import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
+import { share } from './share';
 
 export interface ComponentInstanceInfo {
     element: NativeViewElementNode<View>;
@@ -492,13 +495,16 @@ export async function importAndScanImage(document?: OCRDocument) {
     let selection;
     // let editingImage: ImageSource;
     try {
-        // TODO add iOS image filter
-        // selection = await openFilePicker({
-        //     mimeTypes: ['image/*'],
-        //     documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
-        //     multipleSelection: true,
-        //     pickerMode: 0
-        // });
+        // if (__ANDROID__) {
+        //     selection = (
+        //         await openFilePicker({
+        //             mimeTypes: ['image/*'],
+        //             documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
+        //             multipleSelection: true,
+        //             pickerMode: 0
+        //         })
+        //     )?.files;
+        // } else {
         selection = await imagePickerPlugin
             .create({
                 mediaType: 1,
@@ -510,18 +516,19 @@ export async function importAndScanImage(document?: OCRDocument) {
             // on android pressing the back button will trigger an error which we dont want
             .present()
             .catch((err) => null);
+        //we need to wait a bit or the presenting controller
+        // is still the image picker and will mix things up
         if (__IOS__) {
-            //we need to wait a bit or the presenting controller
-            // is still the image picker and will mix things up
             await timeout(500);
         }
+        // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {
-            return await importAndScanImageFromUris(selection.map(s=>s.path), document);
+            return await importAndScanImageFromUris(
+                selection.map((s) => s.path),
+                document
+            );
         }
-        // if (selection?.files?.length) {
-        //     return await importAndScanImageFromUris(selection?.files, document);
-        // }
     } catch (error) {
         showError(error);
     }
@@ -556,7 +563,15 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
     }
 }
 
-export async function showPopoverMenu<T = any>({ options, anchor, onClose, props, horizPos, vertPos }: { options; anchor; onClose?; props? } & Partial<PopoverOptions>) {
+export async function showPopoverMenu<T = any>({
+    options,
+    anchor,
+    onClose,
+    props,
+    horizPos,
+    vertPos,
+    closeOnClose = true
+}: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(systemFontScale);
@@ -577,11 +592,320 @@ export async function showPopoverMenu<T = any>({ options, anchor, onClose, props
             width: 150,
             options,
             onClose: (item) => {
-                closePopover();
                 onClose?.(item);
+                if (closeOnClose) {
+                    closePopover();
+                }
             },
             ...(props || {})
         }
     });
     return result;
+}
+
+const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
+    ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+    : knownFolders.externalDocuments().path;
+
+export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
+    let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
+    let exportDirectoryName = exportDirectory;
+    function updateDirectoryName() {
+        exportDirectoryName = exportDirectory.split(/(\/|%3A)/).pop();
+    }
+    updateDirectoryName();
+
+    const options = new ObservableArray(
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
+            { id: 'open', name: lc('open'), icon: 'mdi-eye' },
+            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: __IOS__ ? lc('export_ios_desc') : undefined },
+            { id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }
+        ] as any)
+    );
+    return showPopoverMenu({
+        options,
+        anchor,
+        vertPos: VerticalPosition.BELOW,
+        props: {
+            width: 300,
+            rows: 'auto',
+            rowHeight: null,
+            height: null,
+            autoSizeListItem: true,
+            onRightIconTap: (item, event) => {
+                try {
+                    switch (item.id) {
+                        case 'set_export_directory': {
+                            ApplicationSettings.remove('pdf_export_directory');
+                            exportDirectory = DEFAULT_EXPORT_DIRECTORY;
+                            updateDirectoryName();
+                            const item = options.getItem(0);
+                            item.subtitle = exportDirectoryName;
+                            options.setItem(0, item);
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    showError(error);
+                }
+            }
+        },
+
+        closeOnClose: false,
+        onClose: async (item) => {
+            try {
+                switch (item.id) {
+                    case 'set_export_directory': {
+                        const result = await pickFolder({
+                            multipleSelection: false,
+                            permissions: { write: true, persistable: true }
+                        });
+                        if (result.folders.length) {
+                            exportDirectory = result.folders[0];
+                            ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+                            updateDirectoryName();
+                            const item = options.getItem(0);
+                            item.subtitle = exportDirectoryName;
+                            options.setItem(0, item);
+                        }
+                        break;
+                    }
+                    case 'open':
+                        await closePopover();
+                        await showLoading(l('exporting'));
+                        const filePath = await exportPDFAsync(documents);
+                        hideLoading();
+                        openFile(filePath);
+                        break;
+                    case 'export': {
+                        await closePopover();
+                        const result = await prompt({
+                            okButtonText: lc('ok'),
+                            cancelButtonText: lc('cancel'),
+                            defaultText: Date.now() + '.pdf',
+                            hintText: lc('pdf_filename')
+                        });
+                        if (result?.result && result?.text?.length) {
+                            showLoading(l('exporting'));
+                            DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
+                            const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
+                            hideLoading();
+                            const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
+                            DEV_LOG && console.log('onSnack', onSnack);
+                            if (onSnack.reason === 'action') {
+                                DEV_LOG && console.log('openFile', filePath);
+                                openFile(filePath);
+                            }
+                        }
+                        break;
+                    }
+                    case 'preview':
+                        await closePopover();
+                        const component = (await import('~/components/pdf/PDFPreview.svelte')).default;
+                        await showModal({
+                            page: component,
+                            animated: true,
+                            fullscreen: true,
+                            props: {
+                                documents
+                            }
+                        });
+                        break;
+                }
+            } catch (error) {
+                showError(error);
+            } finally {
+                hideLoading();
+            }
+        }
+    });
+}
+
+async function exportImage(pages: OCRPage[], exportDirectory: string) {
+    const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
+    const imagePaths = sortedPages.map((page) => page.imagePath);
+    const canSetName = imagePaths.length === 1;
+    let outputImageNames = [];
+    if (canSetName) {
+        const result = await prompt({
+            okButtonText: lc('ok'),
+            cancelButtonText: lc('cancel'),
+            defaultText: Date.now() + '',
+            hintText: lc('image_filename'),
+            // textFieldProperties: {
+            //     helper: lc('without_extension')
+            // }
+        });
+        if (!result?.result || !result?.text?.length) {
+            return;
+        }
+        outputImageNames.push(result.text);
+    } else {
+        outputImageNames = sortedPages.map((page) => page.createdDate);
+        // find duplicates and rename if any
+        let lastName;
+        let renameDelta = 1;
+        for (let index = 0; index < outputImageNames.length; index++) {
+            const name = outputImageNames[index];
+            if (name === lastName) {
+                outputImageNames[index] = name + '_' + (renameDelta++ + '').padStart(2, '0');
+                // we dont reset lastName so that we compare to the first one found
+            } else {
+                lastName = name;
+                renameDelta = 1;
+            }
+        }
+    }
+    DEV_LOG && console.log('outputImageNames', outputImageNames);
+    showLoading(l('exporting'));
+    // const destinationPaths = [];
+    let finalMessagePart;
+    await Promise.all(
+        sortedPages.map(
+            (page, index) =>
+                new Promise<void>(async (resolve, reject) => {
+                    let imageSource: ImageSource;
+                    try {
+                        const destinationName = outputImageNames[index] + '.' + IMG_FORMAT;
+                        // const imageSource = await ImageSource.fromFile(imagePath);
+                        imageSource = await getTransformedImage(page);
+                        if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+                            const context = Utils.android.getApplicationContext();
+                            const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
+                            const outfile = outdocument.createFile('image/jpeg', destinationName);
+                            if (!finalMessagePart) {
+                                if (canSetName) {
+                                    finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
+                                } else {
+                                    finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
+                                }
+                            }
+                            const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
+                            (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
+                            // destinationPaths.push(outfile.getUri().toString());
+                        } else {
+                            const destinationPath = path.join(exportDirectory, destinationName);
+                            await imageSource.saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+                            // destinationPaths.push(destinationPath);
+                            if (!finalMessagePart) {
+                                if (canSetName) {
+                                    finalMessagePart = destinationPath;
+                                } else {
+                                    finalMessagePart = exportDirectory;
+                                }
+                            }
+                        }
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    } finally {
+                        recycleImages(imageSource);
+                    }
+                })
+        )
+    );
+    if (outputImageNames.length === 1) {
+        await showSnack({ message: lc('image_saved', finalMessagePart) });
+    } else {
+        await showSnack({ message: lc('images_saved', finalMessagePart) });
+    }
+}
+
+export async function showImagePopoverMenu(pages: OCRPage[], anchor) {
+    let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
+    let exportDirectoryName = exportDirectory;
+    function updateDirectoryName() {
+        exportDirectoryName = exportDirectory.split(/(\/|%3A)/).pop();
+    }
+    updateDirectoryName();
+
+    const options = new ObservableArray(
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
+            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: __IOS__ ? lc('export_ios_desc') : undefined }
+        ] as any)
+    );
+    return showPopoverMenu({
+        options,
+        anchor,
+        vertPos: VerticalPosition.BELOW,
+        props: {
+            width: 300,
+            rows: 'auto',
+            rowHeight: null,
+            height: null,
+            autoSizeListItem: true,
+            onRightIconTap: (item, event) => {
+                try {
+                    switch (item.id) {
+                        case 'set_export_directory': {
+                            ApplicationSettings.remove('image_export_directory');
+                            exportDirectory = DEFAULT_EXPORT_DIRECTORY;
+                            updateDirectoryName();
+                            const item = options.getItem(0);
+                            item.subtitle = exportDirectoryName;
+                            options.setItem(0, item);
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    showError(error);
+                }
+            }
+        },
+
+        closeOnClose: false,
+        onClose: async (item) => {
+            try {
+                switch (item.id) {
+                    case 'set_export_directory': {
+                        const result = await pickFolder({
+                            multipleSelection: false,
+                            permissions: { write: true, persistable: true }
+                        });
+                        if (result.folders.length) {
+                            exportDirectory = result.folders[0];
+                            ApplicationSettings.setString('image_export_directory', exportDirectory);
+                            updateDirectoryName();
+                            const item = options.getItem(0);
+                            item.subtitle = exportDirectoryName;
+                            options.setItem(0, item);
+                        }
+                        break;
+                    }
+                    case 'share':
+                        await closePopover();
+                        const images = [];
+                        const files = [];
+                        try {
+                            for (let index = 0; index < pages.length; index++) {
+                                const page = pages[index];
+                                if (page.colorMatrix) {
+                                    const imageSource = await getTransformedImage(page);
+                                    images.push(imageSource);
+                                } else {
+                                    files.push(page.imagePath);
+                                }
+                            }
+                            await share({ images, files });
+                        } catch (error) {
+                            throw error;
+                        } finally {
+                            recycleImages(images);
+                        }
+                        break;
+                    case 'export': {
+                        await closePopover();
+                        await exportImage(pages, exportDirectory);
+
+                        break;
+                    }
+                }
+            } catch (error) {
+                showError(error);
+            } finally {
+                hideLoading();
+            }
+        }
+    });
 }

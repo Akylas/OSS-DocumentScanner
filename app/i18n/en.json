@@ -54,6 +54,7 @@
     "expanded": "expanded",
     "export": "export",
     "export_folder": "export folder",
+    "export_ios_desc": "file will be exported to the app documents",
     "export_settings": "export settings",
     "export_settings_desc": "export all application settings so that you can import them later",
     "exporting": "exporting",
@@ -67,6 +68,7 @@
     "image_import": "import an image",
     "image_saved": "image saved",
     "images_loading": "images loading...",
+    "images_saved": "images saved",
     "import_settings": "import settings",
     "import_settings_desc": "import all settings from a previous backup",
     "ios": {
@@ -123,6 +125,7 @@
     "settings": {
         "title": "settings"
     },
+    "share": "share",
     "share_application": "share application",
     "source_code": "source code",
     "start": "start",

@@ -31,7 +31,7 @@
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { importAndScanImage, importAndScanImageFromUris, showPopoverMenu } from '~/utils/ui';
+    import { importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
     import { colors, screenWidthDips, systemFontScale } from '~/variables';
 
     const textPaint = new Paint();
@@ -568,16 +568,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const component = (await import('~/components/pdf/PDFExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    documents: getSelectedDocuments()
-                }
-            });
+            await showPDFPopoverMenu(getSelectedDocuments(), event.object);
         } catch (err) {
             showError(err);
         }
@@ -585,19 +576,13 @@
 
     async function showImageExportPopover(event) {
         try {
-            const component = (await import('~/components/ImageExportPopover.svelte')).default;
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                props: {
-                    pages: getSelectedDocuments().reduce((acc, doc) => {
-                        acc.push(...doc.pages);
-                        return acc;
-                    }, [])
-                }
-            });
+            await showImagePopoverMenu(
+                getSelectedDocuments().reduce((acc, doc) => {
+                    acc.push(...doc.pages);
+                    return acc;
+                }, []),
+                event.object
+            );
         } catch (err) {
             showError(err);
         }
