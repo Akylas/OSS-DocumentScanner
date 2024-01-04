@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/cpp/src/**",
+                "${workspaceFolder}/cpp/cpp_test_app/*",
+                "${workspaceFolder}/opencv/android/include/**"
+            ],
+            "defines": [],
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "compilerArgs": ["-stdlib=libstdc++", "-std=c2x", "-march=native", "-Wall", "-Werror", "-Wextra"],
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerPath": "/usr/bin/clang",
+            "configurationProvider": "ms-vscode.cpptools"
+        }
+    ],
+    "version": 4
+}
