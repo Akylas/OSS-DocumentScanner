@@ -145,5 +145,11 @@
     "authenticate_security": "autenticazione per accedere all'applicazione",
     "biometric_auto_lock": "blocco biometrico automatico",
     "biometric_lock": "Sicurezza biometrica",
-    "allow_app_screenshot": "Consenti screenshot dell'applicazione"
+    "allow_app_screenshot": "Consenti screenshot dell'applicazione",
+    "cards": "carte",
+    "export_ios_desc": "il file sarà esportato nei documenti dell'app",
+    "images_saved": "immagini salvate",
+    "limited": "limitato",
+    "biometric_auto_lock_desc": "se abilitato, l'applicazione si bloccherà ogni volta che viene eseguita in background",
+    "share": "condividi"
 }
