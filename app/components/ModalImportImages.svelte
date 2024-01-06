@@ -40,6 +40,7 @@
         </pager>
         <mdbutton
             class="icon-btn"
+            color="white"
             fontSize={46}
             horizontalAlignment="left"
             row={1}
@@ -50,6 +51,7 @@
             on:tap={() => changePage(-1)} />
         <mdbutton
             class="icon-btn"
+            color="white"
             fontSize={46}
             horizontalAlignment="right"
             row={1}
