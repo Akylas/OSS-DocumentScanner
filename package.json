@@ -145,7 +145,6 @@
     ],
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript/webpack": "../NativeScript/dist/packages/nativescript-webpack.tgz",
-        "@nativescript-community/ui-cameraview": "portal:/Volumes/dev/nativescript/ui-cameraview/packages/ui-cameraview"
+        "@nativescript/webpack": "../NativeScript/dist/packages/nativescript-webpack.tgz"
     }
 }
