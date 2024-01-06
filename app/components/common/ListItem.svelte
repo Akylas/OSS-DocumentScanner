@@ -19,11 +19,11 @@
     export let subtitleColor: string = colorOnSurfaceVariant;
     export let subtitle: string = null;
     export let leftIcon: string = null;
-    export let rightIcon: string = null;
+    // export let rightIcon: string = null;
     export let columns: string = '*';
     export let mainCol = 0;
     export let leftIconFonFamily: string = $fonts.mdi;
-    export let rightIconFonFamily: string = $fonts.mdi;
+    // export let rightIconFonFamily: string = $fonts.mdi;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
