@@ -11,7 +11,6 @@ import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { l, lc } from '~/helpers/locale';
 import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
-import ColorMatrices from './color_matrix';
 import { showError } from './error';
 import { loadImage, recycleImages } from './utils.common';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
@@ -24,6 +23,8 @@ import * as imagePickerPlugin from '@nativescript/imagepicker';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { share } from './share';
+
+export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
 export interface ComponentInstanceInfo {
     element: NativeViewElementNode<View>;
@@ -147,38 +148,6 @@ export async function hideLoading() {
     if (loadingIndicator) {
         loadingIndicator.hide();
     }
-}
-
-// export const IMAGE_FILTERS = {
-//     grayscale: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
-//     bw: (value = 1) => [value, value, value, -1, 0, value, value, value, -1, 0, value, value, value, -1, 0, 0, 0, 0, 1, 0],
-//     nightVision: [0.1, 0.4, 0, 0, 0, 0.3, 1, 0.3, 0, 0, 0, 0.4, 0.1, 0, 0, 0, 0, 0, 1, 0],
-//     polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0]
-// };
-
-const sortPriority = ['normal', 'grayscale', 'bw', 'sepia', 'invert', 'polaroid', 'nightvision'];
-export const ColorMatricesTypes = Object.keys(ColorMatrices)
-    .sort((a, b) => {
-        const sortIndexA = sortPriority.indexOf(a);
-        const sortIndexB = sortPriority.indexOf(b);
-        if (sortIndexA !== -1) {
-            if (sortIndexB !== -1) {
-                return sortIndexA - sortIndexB;
-            }
-            return -1;
-        } else if (sortIndexB !== -1) {
-            return 1;
-        }
-        return a.localeCompare(b);
-    })
-    .map((k) => ({
-        id: k,
-        ...ColorMatrices[k]
-    }));
-export type ColorMatricesType = string;
-
-export function getColorMatrix(type: string, ...args): number[] {
-    return ColorMatrices[type]?.fn?.apply(ColorMatrices, args);
 }
 
 // function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues, stopValues, fraction) {
@@ -731,7 +700,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             okButtonText: lc('ok'),
             cancelButtonText: lc('cancel'),
             defaultText: Date.now() + '',
-            hintText: lc('image_filename'),
+            hintText: lc('image_filename')
         });
         if (!result?.result || !result?.text?.length) {
             return;

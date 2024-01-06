@@ -1,9 +1,9 @@
 import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { OCRPage } from '~/models/OCRDocument';
-import { getColorMatrix } from '~/utils/ui';
+import type { OCRPage } from '~/models/OCRDocument';
+import { getColorMatrix } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/utils.common';
 import PDFCanvas from './PDFCanvas';
-import { ImageSource } from '@akylas/nativescript';
+import { ImageSource } from '@nativescript/core';
 
 export async function getTransformedImage(page: OCRPage) {
     const width = page.width * page.scale;
