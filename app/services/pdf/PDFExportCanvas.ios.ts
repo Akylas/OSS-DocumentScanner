@@ -78,7 +78,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
                 default:
                     break;
             }
-            if (options.orientation === 'landscape') {
+            if (options.paper_size !== 'full' && options.orientation === 'landscape') {
                 const temp = pageWidth;
                 pageWidth = pageHeight;
                 pageHeight = temp;

@@ -17,6 +17,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         const pdfDocument = new android.graphics.pdf.PdfDocument();
         const items = this.items;
         for (let index = 0; index < items.length; index++) {
+            const pages = items[index].pages;
             let pageWidth, pageHeight;
             switch (options.paper_size) {
                 case 'a5':
@@ -32,10 +33,15 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
                     pageHeight = 1191;
                     break;
 
+                case 'full':
+                    pageWidth = pages[0].width;
+                    pageHeight = pages[0].height;
+                    break;
+
                 default:
                     break;
             }
-            if (options.orientation === 'landscape') {
+            if (options.paper_size !== 'full' && options.orientation === 'landscape') {
                 const temp = pageWidth;
                 pageWidth = pageHeight;
                 pageHeight = temp;
