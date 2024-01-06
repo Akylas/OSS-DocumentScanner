@@ -10,7 +10,7 @@
 [![GitHub License](https://img.shields.io/github/license/Akylas/com.akylas.documentscanner)](https://github.com/Akylas/com.akylas.documentscanner/blob/master/COPYING)
 [![GitHub All Releases](https://img.shields.io/github/downloads/Akylas/com.akylas.documentscanner/total.svg)](https://github.com/Akylas/com.akylas.documentscanner/releases/)
 [![GitHub release](https://img.shields.io/github/v/release/Akylas/com.akylas.documentscanner?display_name=release)](https://github.com/Akylas/com.akylas.documentscanner/releases/latest)
-[![Small translation badge](https://hosted.weblate.org/widgets/neo-backup/-/svg-badge.svg)](https://hosted.weblate.org/engage/neo-backup/?utm_source=widget)
+[![Small translation badge](https://hosted.weblate.org/widgets/oss-document-scanner/-/svg-badge.svg)](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
 
 <!-- <h1 align="center">Scan all your documents</h1>
 <p align="center">
