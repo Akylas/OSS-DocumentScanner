@@ -37,8 +37,8 @@
     let { orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = pdfCanvas.options;
     $: ({ orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = $optionsStore);
     optionsStore.subscribe((newValue) => {
+        DEV_LOG && console.log('saving options', newValue);
         Object.assign(pdfCanvas.options, newValue);
-        DEV_LOG && console.log('saving options', pdfCanvas.options);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
     // technique for only specific properties to get updated on store change
@@ -213,14 +213,19 @@
     }
 
     function updateOption(option: string, value, fullRefresh = false) {
-        optionsStore.update((state) => {
-            state[option] = value;
-            return state;
-        });
-        if (fullRefresh) {
-            refresh();
-        } else {
-            requestPagesRedraw();
+        try {
+            DEV_LOG && console.log('updateOption', option, value);
+            optionsStore.update((state) => {
+                state[option] = value;
+                return state;
+            });
+            if (fullRefresh) {
+                refresh();
+            } else {
+                requestPagesRedraw();
+            }
+        } catch (error) {
+            showError(error);
         }
     }
     async function selectSilderOption(option: string, event, fullRefresh = false) {
