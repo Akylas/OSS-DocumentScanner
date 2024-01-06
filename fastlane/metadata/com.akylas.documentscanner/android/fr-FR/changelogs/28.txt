@@ -1,0 +1,2 @@
+*Bug fixes*
+- *android:* crash fix on reopening the app
