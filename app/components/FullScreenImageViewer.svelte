@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Application, OrientationChangedEventData } from '@akylas/nativescript';
+    import { Application, OrientationChangedEventData } from '@nativescript/core';
     import { Img } from '@nativescript-community/ui-image';
     import { Pager } from '@nativescript-community/ui-pager';
     import { onDestroy, onMount } from 'svelte';

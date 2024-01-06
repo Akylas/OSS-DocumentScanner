@@ -1,4 +1,4 @@
-import { ImageAsset, ImageSource } from '@akylas/nativescript';
+import { ImageAsset, ImageSource } from '@nativescript/core';
 
 // type Many<T> = T | T[];
 export function pick<T extends object, U extends keyof T>(object: T, ...props: U[]): Pick<T, U> {

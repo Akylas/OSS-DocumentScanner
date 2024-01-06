@@ -1,7 +1,7 @@
 <svelte:options accessors />
 
 <script lang="ts">
-    import { View } from '@akylas/nativescript';
+    import { View } from '@nativescript/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
