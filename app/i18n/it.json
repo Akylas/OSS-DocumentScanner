@@ -100,7 +100,7 @@
     "preferences": "preferenze",
     "preview": "anteprima",
     "preview_resize_threshold": "ridimensionamento immagine fotocamera",
-    "preview_resize_threshold_desc": "dimensione a cui viene ridimensionata l'immagine della fotocamera per rilevare i documenti. Una dimensione maggiore significa un rilevamento migliore, ma più lento",
+    "preview_resize_threshold_desc": "dimensione a cui viene ridimensionata l'immagine della fotocamera per rilevare i documenti. Una dimensione maggiore significa un rilevamento migliore, ma più lento.",
     "quality": "qualità",
     "reduce_image_size": "riduci le dimensioni dell'immagine",
     "remote_folder": "cartella remota",
