@@ -75,3 +75,6 @@ tesseract/ios/**
 *.framework
 /typings/x86_64
 /.sentryclirc
+
+
+/shared
