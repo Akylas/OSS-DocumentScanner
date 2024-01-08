@@ -137,12 +137,19 @@
     "aspect_fit": "aspect ajustement",
     "biometric_auto_lock": "verrouillage automatique biométrique",
     "filters": "filtres",
-    "preview_resize_threshold_desc": "taille à laquelle l'image de la caméra est redimensionnée pour détecter les documents. Une taille plus grande permet une meilleure détection, mais elle est plus lente",
+    "preview_resize_threshold_desc": "Taille à laquelle l'image de la caméra est redimensionnée pour détecter les documents. Une taille plus grande permet une meilleure détection, mais elle est plus lente.",
     "aspect_ratio": "rapport hauteur/largeur",
     "expanded": "élargie",
     "transformations": "transformations",
     "biometric_lock": "Sécurité biométrique",
     "preview_resize_threshold": "seuil de redimensionnement de l'image de la caméra",
     "aspect_fill": "aspect du remplissage",
-    "image_filename": "nom de l'image à exporter"
+    "image_filename": "nom de l'image à exporter",
+    "allow_app_screenshot": "Permettre une capture d'écran de l'appli",
+    "cards": "Cartes",
+    "images_saved": "Images sauvegardées",
+    "limited": "Limité",
+    "off": "Éteint",
+    "share": "Partager",
+    "on": "Allumé"
 }
