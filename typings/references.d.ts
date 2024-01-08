@@ -54,6 +54,7 @@ declare const GIT_URL: string;
 declare const STORE_LINK: string;
 declare const PLAY_STORE_BUILD: boolean;
 declare const STORE_REVIEW_LINK: string;
+declare const SPONSOR_URL: string;
 declare const __APP_ID__: string;
 declare const __APP_VERSION__: string;
 declare const __APP_BUILD_NUMBER__: string;

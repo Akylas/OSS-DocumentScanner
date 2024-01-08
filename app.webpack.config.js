@@ -211,7 +211,6 @@ module.exports = (env, params = {}) => {
         PRODUCTION: !!production,
         process: 'global.process',
         'global.TNS_WEBPACK': 'true',
-        'gVars.platform': `"${platform}"`,
         __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
         __UI_USE_XML_PARSER__: false,
@@ -219,7 +218,6 @@ module.exports = (env, params = {}) => {
         __IOS__: isIOS,
         __ANDROID__: isAndroid,
         'global.autoLoadPolyfills': false,
-        'gVars.internalApp': false,
         TNS_ENV: JSON.stringify(mode),
         __APP_ID__: `"${appId}"`,
         __APP_VERSION__: `"${appVersion}"`,
@@ -242,6 +240,7 @@ module.exports = (env, params = {}) => {
                 ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
                 : `market://details?id=${appId}`
         }"`,
+        SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
         DEV_LOG: !!devlog,
         TEST_LOG: !!devlog || !!testlog
     };
@@ -521,7 +520,6 @@ module.exports = (env, params = {}) => {
                 async: false
             })
         );
-
     }
 
     if (hiddenSourceMap || sourceMap) {

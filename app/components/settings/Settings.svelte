@@ -18,7 +18,7 @@
     import { share } from '~/utils/share';
     import { hideLoading, openLink, showLoading } from '~/utils/ui';
     import { restartApp } from '~/utils/utils';
-    import { colors, navigationBarHeight } from '~/variables';
+    import { colors, fonts, navigationBarHeight } from '~/variables';
 
     let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
     let colorOnSurface = $colors.colorOnSurface;
@@ -39,6 +39,9 @@
     }
     function refresh() {
         const newItems: any[] = [
+            {
+                type: 'header'
+            },
             {
                 id: 'language',
                 description: getLocaleDisplayName(),
@@ -95,7 +98,7 @@
                 },
                 {
                     id: 'webdav',
-                    rightValue: () => (syncService.enabled ? lc('enabled') : lc('disabled')),
+                    rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                     title: lc('webdav_sync'),
                     description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
                 }
@@ -103,11 +106,11 @@
             .concat(
                 PLAY_STORE_BUILD
                     ? [
-                          {
-                              id: 'share',
-                              rightBtnIcon: 'mdi-chevron-right',
-                              title: lc('share_application')
-                          },
+                          //   {
+                          //       id: 'share',
+                          //       rightBtnIcon: 'mdi-chevron-right',
+                          //       title: lc('share_application')
+                          //   },
                           {
                               id: 'review',
                               rightBtnIcon: 'mdi-chevron-right',
@@ -117,17 +120,17 @@
                     : ([] as any)
             )
             .concat([
-                {
-                    id: 'version',
-                    title: lc('version'),
-                    description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
-                },
-                {
-                    id: 'github',
-                    rightBtnIcon: 'mdi-chevron-right',
-                    title: lc('source_code'),
-                    description: lc('get_app_source_code')
-                },
+                // {
+                //     id: 'version',
+                //     title: lc('version'),
+                //     description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
+                // },
+                // {
+                //     id: 'github',
+                //     rightBtnIcon: 'mdi-chevron-right',
+                //     title: lc('source_code'),
+                //     description: lc('get_app_source_code')
+                // },
                 {
                     id: 'third_party',
                     // rightBtnIcon: 'mdi-chevron-right',
@@ -269,12 +272,9 @@
                     await selectTheme();
                     // (collectionView.nativeView as CollectionView).refreshVisibleItems();
                     break;
-                case 'review':
-                    await openLink(STORE_LINK);
-                    break;
                 case 'share':
                     share({
-                        message: STORE_REVIEW_LINK
+                        message: GIT_URL
                     });
                     break;
                 case 'webdav':
@@ -286,7 +286,10 @@
                     });
                     break;
                 case 'review':
-                    Utils.openUrl(STORE_REVIEW_LINK);
+                    openLink(STORE_REVIEW_LINK);
+                    break;
+                case 'sponsor':
+                    openLink(SPONSOR_URL);
                     break;
                 case 'third_party':
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
@@ -412,6 +415,28 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
+            <Template key="header" let:item>
+                <gridlayout rows="auto,auto">
+                    <stacklayout
+                        backgroundColor="#ea4bae"
+                        borderRadius={10}
+                        horizontalAlignment="center"
+                        margin="10 16 0 16"
+                        orientation="horizontal"
+                        padding={10}
+                        rippleColor="white"
+                        verticalAlignment="center"
+                        on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
+                        <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
+                        <label color="white" fontSize={12} text={lc('donate')} verticalAlignment="center" />
+                    </stacklayout>
+
+                    <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
+                        <image borderRadius="50%" height={50} src="res://icon" width={50} />
+                        <label fontSize={13} marginTop={4} text={__APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__} />
+                    </stacklayout>
+                </gridlayout>
+            </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
@@ -480,6 +505,9 @@
                 </gridlayout>
             </Template> -->
         </collectionview>
-        <CActionBar canGoBack title={lc('settings.title')} />
+        <CActionBar canGoBack title={lc('settings.title')}>
+            <mdbutton class="actionBarButton" text="mdi-share-variant" on:tap={(event) => onTap({ id: 'share' }, event)}/>
+            <mdbutton class="actionBarButton" text="mdi-github" on:tap={(event) => onTap({ id: 'github' }, event)}/>
+        </CActionBar>
     </gridlayout>
 </page>
