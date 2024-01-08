@@ -409,13 +409,15 @@
     }
 
     function clearImages() {
+        DEV_LOG && console.log('clearImages');
         // if (editingImage) {
-        recycleImages(editingImage);
-        if (pagesToAdd) {
-            recycleImages(pagesToAdd.map((d) => d.image));
-        }
+        const toRelease = [editingImage, smallImage].concat(pagesToAdd ? pagesToAdd.map((d) => d.image) : []);
         editingImage = null;
         smallImage = null;
+        recycleImages(toRelease);
+        // if (pagesToAdd) {
+        //     recycleImages(pagesToAdd.map((d) => d.image));
+        // }
         // croppedImage = null;
     }
     const pagesToAdd: PageData[] = [];
