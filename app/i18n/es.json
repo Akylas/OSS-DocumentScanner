@@ -14,7 +14,7 @@
     "remote_folder_desc": "carpeta remota para sincronizar los datos desde y hacia",
     "$com.akylas.cardwallet": {
         "app": {
-            "name": "OSS Card Wallet"
+            "name": "Cartera para tarjetas OSS"
         }
     },
     "successful": "completado",
@@ -67,7 +67,7 @@
     "filters": "filtros",
     "delete": "borrar",
     "start": "iniciar",
-    "preview_resize_threshold_desc": "tamaño al que se redimensiona la imagen de la cámara al detectar documentos. Más grande significa mejor detección pero será más lenta",
+    "preview_resize_threshold_desc": "tamaño al que se redimensiona la imagen de la cámara para detectar documentos. Más grande significa mejor detección pero más lenta.",
     "nb_pages": "%1$s páginas",
     "aspect_ratio": "relación de tamaño",
     "version": "versión",
