@@ -151,5 +151,8 @@
     "images_saved": "immagini salvate",
     "limited": "limitato",
     "biometric_auto_lock_desc": "se abilitato, l'applicazione si bloccherà ogni volta che viene eseguita in background",
-    "share": "condividi"
+    "share": "condividi",
+    "off": "disattiva",
+    "donate": "Contribuisci a finanziare il progetto con una piccola donazione",
+    "on": "attiva"
 }
