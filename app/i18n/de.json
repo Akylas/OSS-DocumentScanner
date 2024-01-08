@@ -144,5 +144,12 @@
     "system": "System",
     "whitepaper_desc": "Verbesserung für Dokumente auf weißem Papier",
     "remote_folder": "Cloud-Ordner",
-    "biometric_auto_lock": "Automatisches biometrisches Sperren"
+    "biometric_auto_lock": "Automatisches biometrisches Sperren",
+    "allow_app_screenshot": "Ein App-Bildschirmfoto erlauben",
+    "biometric_auto_lock_desc": "Wenn dies aktiviert ist, wird die App gesperrt, sobald sie im Hintergrund läuft",
+    "export_ios_desc": "Die Datei wird in die App-Dokumente exportiert",
+    "images_saved": "Bilder gespeichert",
+    "limited": "limitiert",
+    "share": "Teilen",
+    "cards": "Karten"
 }

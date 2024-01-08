@@ -113,7 +113,7 @@
     "preferences": "preferences",
     "preview": "preview",
     "preview_resize_threshold": "camera image resize threshold",
-    "preview_resize_threshold_desc": "size to which camera image is resized to detect documents. Bigger means better detection but slower",
+    "preview_resize_threshold_desc": "size to which camera image is resized to detect documents. Bigger means better detection but slower.",
     "quality": "quality",
     "reduce_image_size": "reduce image size",
     "remote_folder": "remote folder",
