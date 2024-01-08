@@ -1,7 +1,9 @@
 import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
+import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
+import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
@@ -9,9 +11,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
-import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { Application, Trace, Utils } from '@nativescript/core';
+import { Application } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
@@ -20,13 +20,11 @@ import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
+import { networkService } from './services/api';
 import { ocrService } from './services/ocr';
+import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
-import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
-import { ImageViewTraceCategory } from '@nativescript-community/ui-image';
-import { securityService } from './services/security';
-import { networkService } from './services/api';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);

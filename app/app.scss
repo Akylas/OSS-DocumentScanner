@@ -135,8 +135,14 @@ mdbutton {
     @extend .mdi;
     shape: round;
     background-color: transparent;
+    padding: 0;
     margin: 0;
-
+    width: var(--actionBarHeight);
+    height: var(--actionBarHeight);
+    font-size: 24;
+    color: var(--colorOnSurface);
+    ripple-color: var(--colorOnSurface);
+    
     &:disabled {
         color: var(--colorOutlineVariant);
         ripple-color: var(--colorOutlineVariant);
@@ -147,14 +153,7 @@ mdbutton {
         ripple-color: var(--colorOnTertiary);
     }
 
-    color: var(--colorOnSurface);
-    ripple-color: var(--colorOnSurface);
 
-    width: 48;
-    height: 48;
-    font-size: 24;
-    margin: 0;
-    padding: 0;
 
 
     &:black {
