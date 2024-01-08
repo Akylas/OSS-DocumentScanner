@@ -151,5 +151,8 @@
     "export_ios_desc": "se exportará a los documentos de la aplicación",
     "images_saved": "imágenes guardadas",
     "limited": "limitado",
-    "share": "compartir"
+    "share": "compartir",
+    "donate": "Por favor, considere hacer una pequeña donación para ayudar a financiar el proyecto",
+    "on": "Encender",
+    "off": "Apagar"
 }
