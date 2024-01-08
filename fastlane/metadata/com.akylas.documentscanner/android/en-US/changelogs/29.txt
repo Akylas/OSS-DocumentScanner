@@ -1,0 +1,9 @@
+*Bug fixes*
+- Translated using Weblate (English)
+- Translated using Weblate (German)
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Portuguese)
+- theme update fix and theme translation fix
+- prevent crash on android 7
