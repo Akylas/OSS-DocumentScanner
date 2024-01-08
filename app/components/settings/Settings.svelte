@@ -506,8 +506,8 @@
             </Template> -->
         </collectionview>
         <CActionBar canGoBack title={lc('settings.title')}>
-            <mdbutton class="actionBarButton" text="mdi-share-variant" on:tap={(event) => onTap({ id: 'share' }, event)}/>
-            <mdbutton class="actionBarButton" text="mdi-github" on:tap={(event) => onTap({ id: 'github' }, event)}/>
+            <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" on:tap={(event) => onTap({ id: 'share' }, event)} />
+            <mdbutton class="actionBarButton" text="mdi-github" variant="text" on:tap={(event) => onTap({ id: 'github' }, event)} />
         </CActionBar>
     </gridlayout>
 </page>
