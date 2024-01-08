@@ -32,6 +32,7 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity);
         }
+        applyTheme(theme);
         updateThemeColors(theme);
         globalObservable.notify({ eventName: 'theme', data: { theme, colors: get(colors) } });
     }
@@ -40,11 +41,11 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
 export function getThemeDisplayName(toDisplay = theme) {
     switch (toDisplay) {
         case 'auto':
-            return lc('system');
+            return lc('theme.auto');
         case 'dark':
-            return lc('dark');
+            return lc('theme.dark');
         case 'light':
-            return lc('light');
+            return lc('theme.light');
     }
 }
 
