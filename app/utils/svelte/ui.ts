@@ -3,7 +3,6 @@ import { onDestroy } from 'svelte';
 import { asSvelteTransition, easings } from 'svelte-native/transitions';
 import { get_current_component } from 'svelte/internal';
 
-
 export const globalObservable = new Observable();
 
 const callbacks = {};
