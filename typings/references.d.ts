@@ -62,13 +62,26 @@ declare const __APP_BUILD_NUMBER__: string;
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-qualifier
 namespace svelteNative.JSX {
-    interface ViewAttributes {
-        rippleColor?: string;
-        sharedTransitionTag?: string;
-        verticalAlignment?: string;
-        dynamicElevationOffset?: string | number;
-        elevation?: string | number;
-    }
+    type Override<What, With> = Omit<What, keyof With> & With;
+    type ViewKeys = keyof TViewAttributes;
+    type TViewAugmentedAttributes = Override<
+        TViewAttributes,
+        {
+            rippleColor?: string;
+            sharedTransitionTag?: string;
+            verticalAlignment?: string;
+            dynamicElevationOffset?: string | number;
+            elevation?: string | number;
+        }
+    >;
+    type ViewAndroidAttributes = {
+        [K in keyof TViewAugmentedAttributes as `android:${K}`]: TViewAugmentedAttributes[k];
+    };
+    type ViewIOSAttributes = {
+        [K in keyof TViewAugmentedAttributes as `ios:${K}`]: TViewAugmentedAttributes[k];
+    };
+    type ViewAttributes = TViewAugmentedAttributes & ViewAndroidAttributes & ViewIOSAttributes;
+
     export interface ButtonAttributes {
         variant?: string;
         shape?: string;
