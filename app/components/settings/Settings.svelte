@@ -38,6 +38,9 @@
                 return item.title;
         }
     }
+    function getDescription(item) {
+        return typeof item.description === 'function' ? item.description() : item.description;
+    }
     function refresh() {
         const newItems: any[] = [
             {
@@ -46,12 +49,12 @@
             },
             {
                 id: 'language',
-                description: getLocaleDisplayName(),
+                description: getLocaleDisplayName,
                 title: lc('language')
             },
             {
                 id: 'dark_mode',
-                description: getThemeDisplayName(),
+                description: getThemeDisplayName,
                 title: lc('theme.title')
             }
         ]
@@ -445,12 +448,12 @@
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <checkbox id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
@@ -460,7 +463,7 @@
                     rightIcon={item.rightBtnIcon}
                     rightValue={item.rightValue}
                     showBottomLine={false}
-                    subtitle={item.description}
+                    subtitle={getDescription(item)}
                     title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}
                     on:longPress={(event) => onLongPress(item, event)}>
