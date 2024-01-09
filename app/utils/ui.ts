@@ -557,7 +557,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight,
-            height: Math.min(rowHeight * options.length, 300),
+            height: Math.min(rowHeight * options.length, 400),
             width: 150,
             options,
             onClose: (item) => {
@@ -587,6 +587,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
             { id: 'open', name: lc('open'), icon: 'mdi-eye' },
+            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
             { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: __IOS__ ? lc('export_ios_desc') : undefined },
             { id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }
         ] as any)
@@ -639,13 +640,22 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                         }
                         break;
                     }
-                    case 'open':
+                    case 'open': {
                         await closePopover();
                         await showLoading(l('exporting'));
                         const filePath = await exportPDFAsync(documents);
                         hideLoading();
                         openFile(filePath);
                         break;
+                    }
+                    case 'share': {
+                        await closePopover();
+                        await showLoading(l('exporting'));
+                        const filePath = await exportPDFAsync(documents);
+                        hideLoading();
+                        share({ file: filePath });
+                        break;
+                    }
                     case 'export': {
                         await closePopover();
                         const result = await prompt({
