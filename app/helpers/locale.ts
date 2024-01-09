@@ -7,7 +7,7 @@ import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
 import { showAlertOptionSelect } from '~/utils/ui';
-import { createGlobalEventListener, globalObservable } from '~/variables';
+import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
 
@@ -54,6 +54,7 @@ function setLang(newLang) {
     }
     if (__IOS__) {
         overrideNativeLocale(actualNewLang);
+        currentLocale = null;
     } else {
         // Application.android.foregroundActivity?.recreate();
         try {
@@ -156,7 +157,7 @@ prefs.on('key:clock_24', () => {
     clock_24 = newValue;
     clock_24Store.set(newValue);
     // we fake a language change to update the UI
-    globalObservable.notify({ eventName: 'language', data: lang });
+    globalObservable.notify({ eventName: 'language', data: lang, clock_24: true });
 });
 
 let currentLocale = null;
@@ -165,7 +166,8 @@ export function getLocaleDisplayName(locale?) {
         if (!currentLocale) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
-        return titlecase(currentLocale.localizedStringForLanguageCode(locale || lang));
+        const localeStr = currentLocale.localizedStringForLanguageCode(locale || lang);
+        return localeStr ? titlecase(localeStr) : locale || lang;
     } else {
         if (!currentLocale) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
@@ -189,7 +191,7 @@ async function internalSelectLanguage() {
     return showAlertOptionSelect(
         component,
         {
-            height: actions.length * 56,
+            height: Math.min(actions.length * 56, 400),
             rowHeight: 56,
             options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
                 ...d,
