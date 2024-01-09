@@ -146,19 +146,19 @@ function getSystemAppearance() {
     return Application.systemAppearance;
 }
 
-export function getRealTheme(theme) {
+export function getRealTheme(th = theme) {
     DEV_LOG && console.log('getRealTheme', theme);
-    if (theme === 'auto') {
+    if (th === 'auto') {
         try {
-            theme = getSystemAppearance();
-            if (autoDarkToBlack && theme === 'dark') {
+            th = getSystemAppearance() as any;
+            if (autoDarkToBlack && th === 'dark') {
                 theme = 'black';
             }
         } catch (err) {
             console.error('getRealTheme', err, err.stack);
         }
     }
-    return theme;
+    return th;
 }
 
 export function getRealThemeAndUpdateColors() {
