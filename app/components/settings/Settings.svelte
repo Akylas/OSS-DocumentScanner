@@ -277,7 +277,7 @@
                     }
                     break;
                 case 'share':
-                    share({
+                    await share({
                         message: GIT_URL
                     });
                     break;
