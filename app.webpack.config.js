@@ -237,7 +237,7 @@ module.exports = (env, params = {}) => {
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS
-                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
+                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+So gftware`
                 : `market://details?id=${appId}`
         }"`,
         SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
@@ -359,7 +359,16 @@ module.exports = (env, params = {}) => {
         { context, from: '**/*.jpg', noErrorOnMissing: true, globOptions },
         { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
         { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
-        { context, from: 'i18n/**/*', globOptions },
+        {
+            context,
+            from: 'i18n/**/*',
+            globOptions,
+            transform: !!production
+                ? {
+                      transformer: (content, path) => Promise.resolve(Buffer.from(JSON.stringify(JSON.parse(content.toString())), 'utf8'))
+                  }
+                : undefined
+        },
         {
             from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
             to: 'fonts',
