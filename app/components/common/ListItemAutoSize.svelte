@@ -23,8 +23,8 @@
     export let fontWeight: any = 'bold';
     export let subtitleFontSize: number = 14;
     export let title: string = null;
-    export let titleColor: string = colorOnSurface;
-    export let subtitleColor: string = colorOnSurfaceVariant;
+    export let titleColor: string = null;
+    export let subtitleColor: string = null;
     export let subtitle: string = null;
     export let leftIcon: string = null;
     export let rightValue: string | Function = null;
@@ -92,8 +92,8 @@
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
         width={iconFontSize * 2} /> -->
     <label col={mainCol} {fontSize} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
-        <cspan color={titleColor} {fontWeight} text={title} />
-        <cspan color={subtitleColor} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
+        <cspan color={titleColor || colorOnSurface} {fontWeight} text={title} />
+        <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
     <label

@@ -64,11 +64,13 @@ export async function share(content: Content, options: Options = {}) {
 
         if (options.anchor) {
             sourceView = options.anchor.nativeViewProtected;
-        } else {
+        } else if (shareController.popoverPresentationController) {
             shareController.popoverPresentationController.permittedArrowDirections = 0 as any;
         }
-        shareController.popoverPresentationController.sourceView = sourceView;
-        shareController.popoverPresentationController.sourceRect = sourceView.bounds;
+        if (shareController.popoverPresentationController) {
+            shareController.popoverPresentationController.sourceView = sourceView;
+            shareController.popoverPresentationController.sourceRect = sourceView.bounds;
+        }
         if (options.tintColor) {
             const color = options.tintColor instanceof Color ? options.tintColor : new Color(options.tintColor);
             shareController.view.tintColor = color.ios;

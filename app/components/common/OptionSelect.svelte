@@ -24,7 +24,7 @@
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
-    export let borderRadius = null;
+    export let borderRadius = 8;
     export let rowHeight = null;
     export let width: string | number = '*';
     export let containerColumns: string = '*';
@@ -165,7 +165,7 @@
                             boxType={item.boxType}
                             checked={item.value}
                             col={item.boxType === 'circle' ? 0 : 2}
-                            ios:marginLeft={10}
+                            ios:marginRight={10}
                             verticalAlignment="center"
                             on:checkedChange={(e) => onCheckedChanged(item, e)} />
                     </ListItemAutoSize>
@@ -188,7 +188,7 @@
                             boxType={item.boxType}
                             checked={item.value}
                             col={item.boxType === 'circle' ? 0 : 2}
-                            ios:marginLeft={10}
+                            ios:marginRight={10}
                             verticalAlignment="center"
                             on:checkedChange={(e) => onCheckedChanged(item, e)} />
                     </ListItem>

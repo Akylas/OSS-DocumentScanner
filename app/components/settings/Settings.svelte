@@ -20,10 +20,11 @@
     import { restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
 
-    let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
-    let colorOnSurface = $colors.colorOnSurface;
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
+    let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors;
+    $: ({ colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
+
+    const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -40,7 +41,8 @@
     function refresh() {
         const newItems: any[] = [
             {
-                type: 'header'
+                type: 'header',
+                title: lc('donate')
             },
             {
                 id: 'language',
@@ -270,10 +272,12 @@
                     break;
                 case 'dark_mode':
                     await selectTheme();
-                    // (collectionView.nativeView as CollectionView).refreshVisibleItems();
+                    if (__IOS__) {
+                        refresh();
+                    }
                     break;
                 case 'share':
-                    share({
+                    await share({
                         message: GIT_URL
                     });
                     break;
@@ -355,6 +359,9 @@
     }
 
     async function onCheckBox(item, event) {
+        if (item.value === event.value) {
+            return;
+        }
         const value = event.value;
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
@@ -409,7 +416,7 @@
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
-    onThemeChanged(refreshCollectionView);
+    // onThemeChanged(refresh);
 </script>
 
 <page actionBarHidden={true}>
@@ -428,18 +435,18 @@
                         verticalAlignment="center"
                         on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
                         <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
-                        <label color="white" fontSize={12} text={lc('donate')} verticalAlignment="center" />
+                        <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
                     </stacklayout>
 
                     <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
-                        <image borderRadius="50%" height={50} src="res://icon" width={50} />
-                        <label fontSize={13} marginTop={4} text={__APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__} />
+                        <image borderRadius="50%" height={50} horizontalAlignment="center" src="res://icon" width={50} />
+                        <label fontSize={13} marginTop={4} text={version} />
                     </stacklayout>
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={item.description} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+                    <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
@@ -505,7 +512,7 @@
                 </gridlayout>
             </Template> -->
         </collectionview>
-        <CActionBar canGoBack title={lc('settings.title')}>
+        <CActionBar canGoBack title={$slc('settings.title')}>
             <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" on:tap={(event) => onTap({ id: 'share' }, event)} />
             <mdbutton class="actionBarButton" text="mdi-github" variant="text" on:tap={(event) => onTap({ id: 'github' }, event)} />
         </CActionBar>

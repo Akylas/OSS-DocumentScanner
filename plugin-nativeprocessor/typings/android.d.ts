@@ -8,7 +8,8 @@ declare namespace com {
                 public static setValue(key: string, value);
             }
             export class Utils {
-                static applyDayNight(context: android.content.Context);
+                static applyDayNight(context: android.content.Context, applyDynamicColors: boolean);
+                static applyDynamicColors(context: android.content.Context);
                 static getDimensionFromInt(context: android.content.Context, intToGet);
                 static getColorFromInt(context: android.content.Context, intToGet);
                 static getColorFromName(context: android.content.Context, intToGet);

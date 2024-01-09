@@ -7,49 +7,6 @@ import { getRealTheme, getRealThemeAndUpdateColors, theme } from './helpers/them
 import { themer } from '@nativescript-community/ui-material-core';
 // const locals = CSSModule.locals;
 
-export const globalObservable = new Observable();
-
-const callbacks = {};
-export function createGlobalEventListener(eventName: string) {
-    return function (callback: Function, once = false) {
-        callbacks[eventName] = callbacks[eventName] || {};
-        let cleaned = false;
-
-        function clean() {
-            if (!cleaned) {
-                cleaned = true;
-                delete callbacks[eventName][callback];
-                globalObservable.off(eventName, eventCallack);
-            }
-        }
-        const eventCallack = (event) => {
-            if (once) {
-                clean();
-            }
-            if (Array.isArray(event.data)) {
-                event.result = callback(...event.data);
-            } else {
-                event.result = callback(event.data);
-            }
-        };
-        callbacks[eventName][callback] = eventCallack;
-        globalObservable.on(eventName, eventCallack);
-
-        onDestroy(() => {
-            clean();
-        });
-        return clean;
-    };
-}
-export function createUnregisterGlobalEventListener(eventName: string) {
-    return function (callback: Function) {
-        if (callbacks[eventName] && callbacks[eventName][callback]) {
-            globalObservable.off(eventName, callbacks[eventName][callback]);
-            delete callbacks[eventName][callback];
-        }
-    };
-}
-
 export const colors = writable({
     colorPrimary: '',
     colorOnPrimary: '',
@@ -145,7 +102,7 @@ const onInitRootView = function () {
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
-        updateThemeColors(getRealTheme(theme));
+        updateThemeColors(theme);
     }
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
     Application.off('initRootView', onInitRootView);
@@ -153,19 +110,12 @@ const onInitRootView = function () {
 };
 Application.on('initRootView', onInitRootView);
 
-export function updateThemeColors(theme: string, force = false) {
-    // DEV_LOG && console.log('updateThemeColors', theme, force);
-    try {
-        if (!force) {
-            theme = Application.systemAppearance();
-            // console.log('systemAppearance', theme);
-        }
-    } catch (err) {
-        console.error('updateThemeColors', err);
-    }
-
+export function updateThemeColors(theme: string) {
     const currentColors = get(colors);
-    const rootView = Application.getRootView();
+    let rootView = Application.getRootView();
+    if (rootView?.parent) {
+        rootView = rootView.parent as any;
+    }
     const rootViewStyle = rootView?.style;
     if (!rootViewStyle) {
         return;
@@ -205,7 +155,7 @@ export function updateThemeColors(theme: string, force = false) {
         Object.keys(currentColors).forEach((c) => {
             currentColors[c] = rootViewStyle.getCssVariable('--' + c);
         });
-        if (theme === 'dark') {
+        if (theme === 'dark' || theme === 'black') {
             currentColors.colorPrimary = '#7DDB82';
             currentColors.colorOnPrimary = '#00390F';
             currentColors.colorPrimaryContainer = '#00531A';
