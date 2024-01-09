@@ -61,12 +61,13 @@ declare const __APP_BUILD_NUMBER__: string;
 // declare const process: { env: any };
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-qualifier
-namespace svelteNative.JSX {
+declare namespace svelteNative.JSX {
     type Override<What, With> = Omit<What, keyof With> & With;
     type ViewKeys = keyof TViewAttributes;
     type TViewAugmentedAttributes = Override<
         TViewAttributes,
         {
+            disableCss?: boolean;
             rippleColor?: string;
             sharedTransitionTag?: string;
             verticalAlignment?: string;
@@ -82,14 +83,11 @@ namespace svelteNative.JSX {
     };
     type ViewAttributes = TViewAugmentedAttributes & ViewAndroidAttributes & ViewIOSAttributes;
 
-    export interface ButtonAttributes {
+    interface ButtonAttributes {
         variant?: string;
         shape?: string;
     }
-    export interface SliderAttributes {
-        stepSize?: number;
-    }
-    export interface ImageAttributes {
+    interface ImageAttributes {
         noCache?: boolean;
         imageRotation?: number;
         colorMatrix?: number[];
@@ -97,7 +95,23 @@ namespace svelteNative.JSX {
         fadeDuration?: number;
         'on:rotateAnimated'?: (args: EventData) => void;
     }
-    export interface LabelAttributes {
+    interface SpanAttributes {
+        verticalAlignment?: string;
+        verticalTextAlignment?: string;
+    }
+    interface SliderAttributes {
+        stepSize?: number;
+        trackBackgroundColor?: string;
+    }
+    interface PageAttributes {
+        statusBarColor?: string;
+        screenOrientation?: string;
+        keepScreenAwake?: boolean;
+        screenBrightness?: number;
+        'on:closingModally'?: (args: ShownModallyData) => void;
+        // "on:shownModally"?: (args: ShownModallyData) => void;
+    }
+    interface LabelAttributes {
         autoFontSize?: boolean;
         verticalTextAlignment?: string;
         maxLines?: number;
@@ -105,14 +119,8 @@ namespace svelteNative.JSX {
         maxFontSize?: number;
         lineBreak?: string;
         html?: string;
-    }
-    interface PageAttributes {
-        statusBarColor?: string;
-        screenOrientation?: string;
-        keepScreenAwake?: boolean;
-        screenBrightness?: number;
-
-        'on:closingModally'?: (args: ShownModallyData) => void;
-        // "on:shownModally"?: (args: ShownModallyData) => void;
+        selectable?: boolean;
+        onlinkTap?;
+        'on:linkTap'?;
     }
 }
