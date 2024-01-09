@@ -32,8 +32,8 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
         }
-        updateThemeColors(theme);
         applyTheme(theme);
+        updateThemeColors(theme);
         //close any popover as they are not updating with theme yet
         closePopover();
         globalObservable.notify({ eventName: 'theme', data: theme });
@@ -207,9 +207,9 @@ export function start() {
         const realTheme = getRealTheme(newTheme);
         currentTheme.set(realTheme);
 
+        applyTheme(newTheme);
         updateThemeColors(realTheme);
         sTheme.set(newTheme);
-        applyTheme(newTheme);
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
         }
@@ -225,8 +225,8 @@ export function start() {
             applyTheme(theme);
         } else {
             Application.on(Application.launchEvent, () => {
-                updateThemeColors(realTheme);
                 applyTheme(theme);
+                updateThemeColors(realTheme);
             });
         }
 

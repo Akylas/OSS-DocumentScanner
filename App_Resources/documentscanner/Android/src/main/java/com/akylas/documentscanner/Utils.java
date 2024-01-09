@@ -22,11 +22,16 @@ public class Utils {
         TypedArray array = context.getTheme().obtainStyledAttributes(new int[]{resId}); 
         return  array.getDimension(0,0);
     }
-    public static void applyDayNight(AppCompatActivity activity) {
+    public static void applyDayNight(AppCompatActivity activity, boolean applyDynamicColors) {
 
         // we need to applyDayNight to update theme thus colors as we dont restart activity (configChanges:uiMode)
         // but then dynamic colors are lost so let s call DynamicColors.applyIfAvailable
         activity.getDelegate().applyDayNight();
+        if (applyDynamicColors) {
+            DynamicColors.applyIfAvailable(activity);
+        }
+    }
+    public static void applyDynamicColors(AppCompatActivity activity) {
         DynamicColors.applyIfAvailable(activity);
     }
 

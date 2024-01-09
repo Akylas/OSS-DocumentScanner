@@ -98,9 +98,13 @@ page {
     background-color: var(--colorBackground);
     status-bar-color: var(--colorBackground);
 
-    .ns-dark &,
-    .ns-black & {
+    .ns-dark & {
         status-bar-style: dark;
+    }
+    .ns-black &   {
+        status-bar-style: dark;
+        status-bar-color: black;
+        background-color: black;
     }
 }
 .actionBar {
@@ -109,7 +113,9 @@ page {
     // elevation:3;
     height: var(--actionBarHeight);
     background-color: var(--colorBackground);
-
+    .ns-black & {
+        background-color: scale-color(black, $alpha: -30%);
+    }
 }
 
 
