@@ -16,9 +16,9 @@
     "main": "app/app",
     "description": "NativeScript Application",
     "license": "MIT",
-    "repository": "https://github.com/Akylas/com.akylas.documentscanner",
+    "repository": "https://github.com/Akylas/OSS-DocumentScanner",
     "bugs": {
-        "url": "https://github.com/Akylas/com.akylas.documentscanner/issues"
+        "url": "https://github.com/Akylas/OSS-DocumentScanner/issues"
     },
     "dependencies": {
         "@akylas/kiss-orm": "2.1.5",
