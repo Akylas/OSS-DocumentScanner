@@ -137,7 +137,7 @@ lane :build_flavor do |params|
 
   tag = "#{app_identifier}/#{platform}/#{flavor}/#{version}/#{versionCode}";
   changelog = get_changelog(platform:platform, flavor:flavor)
-  if (platform == 'android')
+  if (flavor != 'github' && platform == 'android')
     write_changelog(version:versionCode, changelog:changelog);
   end
   case flavor
@@ -191,11 +191,12 @@ lane :get_changelog  do |params|
   flavor = params[:flavor]
   puts "get_changelog "+  platform + " "+  flavor
   ignorePlatform = 'ios'
+  display_links = flavor == 'github'
   if(platform == "ios") 
     ignorePlatform = "android"
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform])
+  logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform])
   puts logs
   logs
 end
