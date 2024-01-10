@@ -41,6 +41,7 @@ namespace detector {
                 int adapThresholdC = 47;          // 53
 
                 bool tesseractDemo = true;
+                bool trim = false;
                 int actualTesseractDetect = 1;
                 int desseractDetectContours = 1;
 

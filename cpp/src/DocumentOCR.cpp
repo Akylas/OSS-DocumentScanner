@@ -278,8 +278,10 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
                 if (word == NULL)
                     continue;
                 DocumentOCR::OCRData data;
-                string stdWord = (string(word));
-                trim(stdWord);
+                string stdWord = string(word);
+                string trimWord = stdWord;
+                trim(trimWord);
+                
                 int wordSize = stdWord.size();
                 if ((wordSize < 2) || (conf < 51) ||
                     ((wordSize == 2) && (stdWord[0] == stdWord[1])) ||
@@ -289,21 +291,21 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
 
                 int x1, y1, x2, y2;
                 ri->BoundingBox(level, &x1, &y1, &x2, &y2);
-                if (!lastBoundRect.empty())
-                {
-                    float lastYSortValue = getYSortValue(lastBoundRect);
-                    float ySortValue = getYSortValue(boundRects[i]);
-                    if (ySortValue == lastYSortValue)
+                if (options.trim) {
+                    std::string separator = "";
+                    if (!lastBoundRect.empty())
                     {
-                        fullText += " " + stdWord;
+                        float lastYSortValue = getYSortValue(lastBoundRect);
+                        float ySortValue = getYSortValue(boundRects[i]);
+                        if (ySortValue == lastYSortValue)
+                        {
+                            separator = " ";
+                        } else {
+                            separator = "\n";
+                        }
                     }
-                    else
-                    {
-                        fullText += "\n" + stdWord;
-                    }
-                }
-                else
-                {
+                    fullText += separator + trimWord;
+                } else {
                     fullText += stdWord;
                 }
                 bool bold;
@@ -321,7 +323,7 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
                 {
                     data.fontFamily = string(font_name);
                 }
-                data.text = stdWord;
+                data.text = trimWord;
                 data.box = Rect(x1, y1, x2 - x1, y2 - y1);
 
                 data.box.x += boundRects[i].x - 15;
@@ -366,6 +368,7 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
         return std::nullopt;
     }
     DocumentOCR::OCRResult result;
+    trim(fullText);
     result.text = fullText;
     result.imageWidth = imageWidth;
     result.imageHeight = imageHeight;
@@ -422,6 +425,10 @@ string DocumentOCR::detectText(const Mat &image, const std::string &optionsJson,
             options.iteratorLevel = j["iteratorLevel"].as<int>();
         }
 
+        if (j.contains("trim"))
+        {
+            options.trim = j["trim"].as<bool>();
+        }
         if (j.contains("adapThresholdBlockSize"))
         {
             options.adapThresholdBlockSize = j["adapThresholdBlockSize"].as<int>();

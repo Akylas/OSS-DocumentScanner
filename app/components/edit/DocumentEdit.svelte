@@ -8,7 +8,7 @@
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, Screen, TextField, View } from '@nativescript/core';
-    import { debounce } from '@nativescript/core/utils';
+    import { copyToClipboard, debounce } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
@@ -519,6 +519,15 @@
             showError(error);
         }
     }
+    function copyText() {
+        try {
+            if (currentItemOCRData) {
+                copyToClipboard(currentItemOCRData.text);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
@@ -541,7 +550,8 @@
             variant="text"
             verticalAlignment="bottom"
             visibility={currentItemOCRData ? 'visible' : 'hidden'}
-            on:tap={() => showCurrentOCRData()} />
+            on:tap={showCurrentOCRData}
+            on:longPress={copyText} />
 
         <stacklayout orientation="horizontal" row={3}>
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />

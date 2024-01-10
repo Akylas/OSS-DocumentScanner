@@ -26,7 +26,7 @@ export type QRCodeData = QRCodeSingleData[];
 export type ColorPaletteData = string[];
 
 export interface DetectOptions {
-    rotation?: number;
+    rotation: number;
     adapThresholdBlockSize: number; // 391
     adapThresholdC: number; // 53
 
@@ -42,6 +42,7 @@ export interface DetectOptions {
     pageSegMode: number;
     iteratorLevel: number;
     oem: number;
+    trim: boolean;
 }
 
 export interface DetectQRCodeOptions {

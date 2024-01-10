@@ -6,6 +6,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { showError } from '~/utils/error';
     import CActionBar from '~/components/common/CActionBar.svelte';
+    import { copyToClipboard } from '@akylas/nativescript/utils';
 
     export let ocrData: OCRData;
     export let imagePath: string;
@@ -181,6 +182,14 @@
     //     textOnImageScale = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth()) / imageWidth;
     //     // console.log('updateTextOnImageScale', imageWidth, e.object.getMeasuredWidth(), textOnImageScale);
     // }
+
+    function copyText() {
+        try {
+            copyToClipboard(text);
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarColor="black" statusBarStyle="dark">
@@ -228,6 +237,7 @@
 
         <textview backgroundColor="#000000cc" color="white" editable={false} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null}>
+            <mdbutton class="actionBarButton" color="white" text="mdi-content-copy" variant="text" on:tap={copyText} />
             <mdbutton class="actionBarButton" color="white" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
         </CActionBar>
     </gridlayout>
