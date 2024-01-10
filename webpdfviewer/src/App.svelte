@@ -130,7 +130,7 @@
                     style:color="white"
                     style:background-color="#00000088"
                     style:position="absolute"
-                    style:font-size={block.fontSize * 3 + 'pt'}
+                    style:font-size={block.fontSize * 2.75 + 'pt'}
                     style:left={block.box.x + 'px'}
                     style:top={block.box.y + 'px'}
                     style:width={block.box.width + 'px'}
