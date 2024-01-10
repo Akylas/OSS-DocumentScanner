@@ -1,5 +1,5 @@
 module.exports = {
-    ignoredNativeDependencies: ['@nativescript-community/sentry'],
+    ignoredNativeDependencies: ['@nativescript-community/sentry', '@nativescript/detox'],
     id: process.env['APP_ID'] || 'com.akylas.documentscanner',
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources/documentscanner',
     buildPath: process.env['APP_BUILD_PATH'] || 'build/documentscanner',
