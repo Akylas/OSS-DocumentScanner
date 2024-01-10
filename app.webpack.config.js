@@ -484,7 +484,7 @@ module.exports = (env, params = {}) => {
                     {
                         loader: 'string-replace-loader',
                         options: {
-                            search: '^__decorate\\(\\[((\\s|\\t|\\n)*?)profile((\\s|\\t|\\n)*?)\\],.*?,.*?,.*?\\);?',
+                            search: /__decorate\(\[((\s|\t|\n)*?)([a-zA-Z]+\.)?profile((\s|\t|\n)*?)\],.*?,.*?,.*?\);?/gm,
                             replace: (match, p1, offset, str) => '',
                             flags: 'gm'
                         }
@@ -513,8 +513,8 @@ module.exports = (env, params = {}) => {
                     {
                         loader: 'string-replace-loader',
                         options: {
-                            search: 'if\\s*\\(\\s*Trace.isEnabled\\(\\)\\s*\\)',
-                            replace: 'if (false)',
+                            search: /if\s*\(\s*Trace.isEnabled\(\)\s*\)/gm,
+                            replace: (match, p1, offset, str) => 'if (false)',
                             flags: 'g'
                         }
                     }
