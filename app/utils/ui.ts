@@ -653,7 +653,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                         await showLoading(l('exporting'));
                         const filePath = await exportPDFAsync(documents);
                         hideLoading();
-                        share({ file: filePath });
+                        share({ file: filePath }, { mimetype: 'application/pdf' });
                         break;
                     }
                     case 'export': {

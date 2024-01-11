@@ -10,6 +10,7 @@ export interface Content {
     url?: string;
 }
 export interface Options {
+    mimetype?: string;
     dialogTitle?: string;
     excludedActivityTypes?: string[];
     tintColor?: string | Color;
