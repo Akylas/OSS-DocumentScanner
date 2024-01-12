@@ -1,0 +1,8 @@
+*Features*
+- allow to copy ocr data quickly. Also brought back spaces and new lines detected by the OCR
+- allow to detect OCR on a document (all pages) throught the ⁝ menu
+
+*Bug fixes*
+- *android:* correctly share pdf "as pdf" so that apps supporting pdf can see it
+- Translated using Weblate (Italian)
+- Translated using Weblate (Arabic)
