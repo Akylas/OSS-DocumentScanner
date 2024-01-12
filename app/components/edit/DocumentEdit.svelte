@@ -23,7 +23,7 @@
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { ColorMatricesTypes, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, updateLoadingProgress } from '~/utils/ui';
+    import { ColorMatricesTypes, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, updateLoadingProgress } from '~/utils/ui';
     import { loadImage, recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
 
@@ -60,15 +60,9 @@
         }
     }
     async function detectOCR() {
-        let ocrImage;
+        // let ocrImage;
         try {
-            if (!(await ocrService.checkOrDownload(ocrService.dataType, ocrService.languages, false))) {
-                return;
-            }
-            showLoading({ text: l('ocr_computing', 0), progress: 0 });
-            const ocrData = await ocrService.ocrPage(document, currentIndex, (progress: number) => {
-                updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
-            });
+            const ocrData = await detectOCROnPage(document, currentIndex);
             if (ocrData) {
                 currentItemOCRData = ocrData;
             } else {
@@ -76,9 +70,6 @@
             }
         } catch (err) {
             showError(err);
-        } finally {
-            hideLoading();
-            recycleImages(ocrImage);
         }
     }
 

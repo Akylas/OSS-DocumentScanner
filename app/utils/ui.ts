@@ -2,7 +2,23 @@ import { request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { AlertDialog, MDCAlertControlerOptions, alert, prompt } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { AlertOptions, ApplicationSettings, ImageSource, Observable, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
+import {
+    AlertOptions,
+    Animation,
+    AnimationDefinition,
+    Application,
+    ApplicationSettings,
+    Frame,
+    GridLayout,
+    ImageSource,
+    Observable,
+    ObservableArray,
+    Utils,
+    View,
+    ViewBase,
+    knownFolders,
+    path
+} from '@nativescript/core';
 import { openFile, openUrl } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
 import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
@@ -15,20 +31,24 @@ import { showError } from './error';
 import { loadImage, recycleImages } from './utils.common';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
+import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
+import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { colors, systemFontScale } from '~/variables';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { share } from './share';
+import { ocrService } from '~/services/ocr';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
-export interface ComponentInstanceInfo {
-    element: NativeViewElementNode<View>;
-    viewInstance: SvelteComponent;
+export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
+    element: NativeViewElementNode<T>;
+    viewInstance: U;
 }
 
 export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
@@ -552,13 +572,14 @@ export async function showPopoverMenu<T = any>({
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
             borderRadius: 10,
-            elevation: 4,
+            elevation: 3,
             margin: 4,
+            fontWeight: 500,
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight,
             height: Math.min(rowHeight * options.length, 400),
-            width: 150,
+            width: 200,
             options,
             onClose: (item) => {
                 onClose?.(item);
@@ -884,4 +905,137 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor) {
             }
         }
     });
+}
+
+export interface ShowSnackMessageOptions {
+    text: string;
+    progress?: number;
+    translateY?: number;
+}
+let snackMessage: ComponentInstanceInfo<GridLayout, BottomSnack__SvelteComponent_>;
+function getSnackMessage(props?) {
+    if (!snackMessage) {
+        snackMessage = resolveComponentElement(BottomSnack, props || {}) as ComponentInstanceInfo<GridLayout, BottomSnack__SvelteComponent_>;
+        try {
+            (Application.getRootView() as GridLayout).addChild(snackMessage.element.nativeView);
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+    }
+    return snackMessage;
+}
+export function updateSnackMessage(msg: Partial<ShowSnackMessageOptions>) {
+    if (snackMessage) {
+        const snackMessage = getSnackMessage();
+        const props = {
+            progress: msg.progress
+        };
+        if (msg.text) {
+            props['text'] = msg.text;
+        }
+        snackMessage.viewInstance.$set(props);
+    }
+}
+export async function showSnackMessage(props: ShowSnackMessageOptions) {
+    DEV_LOG && console.log('showSnackMessage', props);
+    if (snackMessage) {
+        updateSnackMessage(props);
+    } else {
+        const snackMessage = getSnackMessage(props);
+        const animationArgs = [
+            {
+                target: snackMessage.element.nativeView,
+                translate: { x: 0, y: 0 },
+                duration: 100
+            }
+        ];
+        Application.notify({ eventName: 'snackMessageAnimation', animationArgs });
+        // DEV_LOG && console.log('showSnackMessage1', animationArgs.length);
+        await new Animation(animationArgs).play();
+        updateSnackMessage({ translateY: 0 });
+    }
+}
+export async function hideSnackMessage() {
+    if (snackMessage) {
+        const animationArgs: AnimationDefinition[] = [
+            {
+                target: snackMessage.element.nativeView,
+                translate: { x: 0, y: 100 },
+                duration: 100
+            }
+        ];
+        Application.notify({ eventName: 'snackMessageAnimation', animationArgs });
+        await new Animation(animationArgs).play();
+        (Application.getRootView() as GridLayout).removeChild(snackMessage.element.nativeView);
+        snackMessage.element.nativeElement._tearDownUI();
+        snackMessage.viewInstance.$destroy();
+        snackMessage = null;
+    }
+}
+
+export async function detectOCROnPage(document: OCRDocument, index: number) {
+    try {
+        if (!(await ocrService.checkOrDownload(ocrService.dataType, ocrService.languages, false))) {
+            return;
+        }
+        showLoading({ text: l('ocr_computing', 0), progress: 0 });
+        const ocrData = await ocrService.ocrPage(document, index, (progress: number) => {
+            updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
+        });
+        return ocrData;
+    } catch (err) {
+        throw err;
+    } finally {
+        hideLoading();
+        // recycleImages(ocrImage);
+    }
+}
+
+export async function detectOCR(documents: OCRDocument[]) {
+    try {
+        const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;
+        const shouldStart = await showBottomSheet({
+            view: OCRSettingsBottomSheet,
+            props: {}
+        });
+        if (shouldStart) {
+            if (!(await ocrService.checkOrDownload(ocrService.dataType, ocrService.languages, false, true))) {
+                return;
+            }
+
+            // we want to ocr the full document.
+            const progress = 0;
+            const pages: { page: OCRPage; pageIndex: number; document: OCRDocument }[] = [];
+            documents.forEach((document) => {
+                pages.push(...document.pages.reduce((acc, page, pageIndex) => acc.concat([{ page, pageIndex, document }]), []));
+            });
+            const totalPages = pages.length;
+            let pagesDone = 0;
+            showSnackMessage({
+                text: lc('ocr_computing_document', progress),
+                progress: 0
+            });
+            const runnningOcr: { [k: string]: number } = {};
+            await Promise.all(
+                pages.map(async (p, index) => {
+                    const pageId = p.document.pages[p.pageIndex].id;
+                    runnningOcr[pageId] = 0;
+                    await ocrService.ocrPage(p.document, p.pageIndex, (progress: number) => {
+                        runnningOcr[pageId] = progress;
+                        const totalProgress = Math.round((100 / totalPages) * pagesDone + Object.values(runnningOcr).reduce((a, b) => a + b) / totalPages);
+                        updateSnackMessage({
+                            text: lc('ocr_computing_document', totalProgress),
+                            progress: totalProgress
+                        });
+                    });
+                    delete runnningOcr[pageId];
+                    pagesDone += 1;
+                })
+            );
+        }
+    } catch (error) {
+        throw error;
+    } finally {
+        hideSnackMessage();
+    }
 }

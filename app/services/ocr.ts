@@ -6,7 +6,7 @@ import { request } from '@nativescript-community/https';
 import { networkService } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { getCurrentISO3Language, getLocaleDisplayName, l, lc } from '~/helpers/locale';
-import { hideLoading, showLoading, updateLoadingProgress } from '~/utils/ui';
+import { hideLoading, hideSnackMessage, showLoading, showSnackMessage, updateLoadingProgress } from '~/utils/ui';
 
 const languages = {
     afr: 'Afrikaans',
@@ -257,7 +257,7 @@ export class OCRService extends Observable {
         }
     }
 
-    async checkOrDownload(dataType: string, languages: string, hideLoading = true) {
+    async checkOrDownload(dataType: string, languages: string, hideLoading = true, showAsSnackMessage = false) {
         const langArray = languages.split('+');
         const toDownload = [];
         const destinationFolder = Folder.fromPath(this.baseDataPath).getFolder(dataType);
@@ -277,7 +277,7 @@ export class OCRService extends Observable {
                 cancelButtonText: lc('cancel')
             });
             if (result) {
-                await this.downloadLanguages(dataType, toDownload, hideLoading);
+                await this.downloadLanguages(dataType, toDownload, hideLoading, showAsSnackMessage);
             } else {
                 return false;
             }
@@ -285,7 +285,7 @@ export class OCRService extends Observable {
         return true;
     }
 
-    async downloadLanguages(dataType: string, langArray: string[], hideLoadingDialog = true) {
+    async downloadLanguages(dataType: string, langArray: string[], hideLoadingDialog = true, showAsSnackMessage = false) {
         let downloadURL;
         switch (dataType) {
             case 'best':
@@ -297,7 +297,14 @@ export class OCRService extends Observable {
             default:
                 downloadURL = 'https://github.com/tesseract-ocr/tessdata_fast/raw/4.0.0/';
         }
-        showLoading({ text: l('downloading', 0), progress: 0 });
+        function updateProgress(progress) {
+            if (showAsSnackMessage) {
+                showSnackMessage({ text: l('downloading', progress), progress });
+            } else {
+                showLoading({ text: l('downloading', progress), progress });
+            }
+        }
+        updateProgress(0);
         // TODO: show notification
         for (let index = 0; index < langArray.length; index++) {
             const lang = langArray[index];
@@ -308,13 +315,17 @@ export class OCRService extends Observable {
                 method: 'GET',
                 onProgress(current, total) {
                     const progress = Math.round(((index + current / total) / langArray.length) * 100);
-                    updateLoadingProgress({ text: l('downloading', progress), progress });
+                    updateProgress(progress);
                 }
             });
             await result.content.toFile(path.join(destinationFolder.path, lang + '.traineddata'));
         }
         if (hideLoadingDialog) {
-            await hideLoading();
+            if (showAsSnackMessage) {
+                await hideSnackMessage();
+            } else {
+                await hideLoading();
+            }
         }
         this.updateDownloadedLanguages();
     }

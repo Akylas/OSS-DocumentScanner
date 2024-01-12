@@ -24,6 +24,7 @@
     export let subtitleFontSize: number = 14;
     export let title: string = null;
     export let titleColor: string = null;
+    export let color: string = null;
     export let subtitleColor: string = null;
     export let subtitle: string = null;
     export let leftIcon: string = null;
@@ -44,7 +45,7 @@
         if (leftIcon) {
             const fontSize = iconFontSize * $systemFontScale;
             iconPaint.textSize = fontSize;
-            iconPaint.color = titleColor;
+            iconPaint.color = titleColor || color || colorOnSurface;
             iconPaint.fontFamily = leftIconFonFamily;
             const staticLayout = new StaticLayout(leftIcon, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
             canvas.translate(fontSize / 2, h / 2 - staticLayout.getHeight() / 2);
@@ -92,7 +93,7 @@
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
         width={iconFontSize * 2} /> -->
     <label col={mainCol} {fontSize} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
-        <cspan color={titleColor || colorOnSurface} {fontWeight} text={title} />
+        <cspan color={titleColor || color || colorOnSurface} {fontWeight} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
     </label>
 

@@ -25,6 +25,7 @@ import { ocrService } from './services/ocr';
 import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
+import { createElement, initializeDom, navigate } from 'svelte-native/dom';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -150,7 +151,42 @@ try {
     } else {
         Comp = await import('~/components/DocumentsList.svelte');
     }
-    svelteNative(Comp.default, {});
+    // svelteNative(Comp.default, {});
+    // initializeDom();
+    global.__onLiveSyncCore = () => {
+        Application.getRootView()?._onCssStateChange();
+    };
+    let rootFrame;
+    let pageInstance;
+    // we use custom start cause we want gesturerootview as parent of it all to add snacK message view
+    new Promise((resolve, reject) => {
+        //wait for launch
+        Application.on(Application.launchEvent, () => {
+            resolve(pageInstance);
+        });
+        Application.on(Application.exitEvent, () => {
+            pageInstance.$destroy();
+            pageInstance = null;
+        });
+        try {
+            Application.run({
+                create: () => {
+                    const rootGridLayout = createElement('gesturerootview', window.document as any);
+                    const rootFrame = createElement('frame', rootGridLayout.ownerDocument);
+                    rootFrame.setAttribute('id', 'app-root-frame');
+                    pageInstance = navigate({
+                        page: Comp.default,
+                        props: {},
+                        frame: rootFrame as any
+                    });
+                    rootGridLayout.appendChild(rootFrame);
+                    return rootGridLayout['nativeView'];
+                }
+            });
+        } catch (e) {
+            reject(e);
+        }
+    });
 } catch (error) {
     console.error(error, error.stack);
 }

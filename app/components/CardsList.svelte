@@ -9,7 +9,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, Utils, View } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -46,6 +46,7 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     let lottieView: NativeViewElementNode<LottieView>;
+    let fabHolder: NativeViewElementNode<StackLayout>;
 
     let syncEnabled = syncService.enabled;
     // let items: ObservableArray<{
@@ -161,7 +162,19 @@
         colorOnPrimaryContainer
     } = $colors);
 
+    function onSnackMessageAnimation({ animationArgs }: EventData & { animationArgs: AnimationDefinition[] }) {
+        if (fabHolder) {
+            const snackAnimation = animationArgs[0];
+            animationArgs.push({
+                target: fabHolder.nativeView,
+                translate: { x: 0, y: snackAnimation.translate.y === 0 ? -70 : 0 },
+                duration: snackAnimation.duration
+            });
+        }
+    }
+
     onMount(() => {
+        Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             const intent = Application.android['startIntent'];
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -181,6 +194,7 @@
         // refresh();
     });
     onDestroy(() => {
+        Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
@@ -786,7 +800,7 @@
             </gridlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
                 <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>

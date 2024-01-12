@@ -5,7 +5,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Application, Color, ContentView, EventData, ImageSource, ObservableArray, PageTransition, Screen, SharedTransition } from '@nativescript/core';
+    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { QRCodeData, QRCodeSingleData, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
@@ -33,7 +33,7 @@
     const colWidth = screenWidthDips / 2;
     const itemHeight = (colWidth - 2 * rowMargin) * 0.584 + 2 * rowMargin;
 
-    $: qrcodeColorMatrix = isDarkTheme(getRealTheme(theme)) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
+    $: qrcodeColorMatrix = isDarkTheme() ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
     $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurfaceVariant } = $colors);
     interface Item {
@@ -53,6 +53,7 @@
     let currentQRCode: QRCodeSingleData;
     const currentQRCodeIndex = 0;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let fabHolder: NativeViewElementNode<StackLayout>;
     // let items: ObservableArray<Item> = null;
 
     // $: {
@@ -326,7 +327,20 @@
             goBack();
         }
     }
+
+    function onSnackMessageAnimation({ animationArgs }: EventData & { animationArgs: AnimationDefinition[] }) {
+        if (fabHolder) {
+            const snackAnimation = animationArgs[0];
+            animationArgs.push({
+                target: fabHolder.nativeView,
+                translate: { x: 0, y: snackAnimation.translate.y === 0 ? -70 : 0 },
+                duration: snackAnimation.duration
+            });
+        }
+    }
+
     onMount(() => {
+        Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -337,6 +351,7 @@
         // refresh();
     });
     onDestroy(() => {
+        Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -473,7 +488,7 @@
                     on:tap={onQRCodeTap} />
                 <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + currentQRCodeIndex} text={currentQRCode?.text} textAlignment="center" />
             </stacklayout>
-            <stacklayout horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom">
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
                 <mdbutton class="fab" text="mdi-plus" on:tap={addPages} />
             </stacklayout>

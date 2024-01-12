@@ -2,11 +2,12 @@
     import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Application, ContentView, EventData, ObservableArray, PageTransition, SharedTransition } from '@nativescript/core';
+    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -23,15 +24,28 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
+    import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu } from '~/utils/ui';
+    import {
+        detectOCR,
+        detectOCROnPage,
+        hideLoading,
+        hideSnackMessage,
+        importAndScanImage,
+        showImagePopoverMenu,
+        showLoading,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        showSnackMessage,
+        updateSnackMessage
+    } from '~/utils/ui';
     import { colors, screenWidthDips, systemFontScale } from '~/variables';
 
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant, colorBackground } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorError, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant, colorBackground } = $colors);
 
     interface Item {
         page: OCRPage;
@@ -41,6 +55,8 @@
 
     export let document: OCRDocument;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let page: NativeViewElementNode<Page>;
+    let fabHolder: NativeViewElementNode<StackLayout>;
     // let items: ObservableArray<Item> = null;
 
     // $: {
@@ -323,7 +339,20 @@
             goBack();
         }
     }
+
+    function onSnackMessageAnimation({ animationArgs }: EventData & { animationArgs: AnimationDefinition[] }) {
+        if (fabHolder) {
+            const snackAnimation = animationArgs[0];
+            animationArgs.push({
+                target: fabHolder.nativeView,
+                translate: { x: 0, y: snackAnimation.translate.y === 0 ? -70 : 0 },
+                duration: snackAnimation.duration
+            });
+        }
+    }
+
     onMount(() => {
+        Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -335,6 +364,7 @@
         // refresh();
     });
     onDestroy(() => {
+        Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -387,9 +417,37 @@
             showError(error);
         }
     }
+    async function showOptions(event) {
+        const options = new ObservableArray([
+            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+        ] as any);
+        return showPopoverMenu({
+            options,
+            anchor: event.object,
+            vertPos: VerticalPosition.BELOW,
+
+            onClose: async (item) => {
+                try {
+                    switch (item.id) {
+                        case 'ocr':
+                            await detectOCR([document]);
+                            break;
+                        case 'delete':
+                            await deleteDoc();
+                            break;
+                    }
+                } catch (error) {
+                    showError(error);
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+    }
 </script>
 
-<page id="pdfView" actionBarHidden={true}>
+<page bind:this={page} id="pdfView" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar
             forceCanGoBack={nbSelected > 0}
@@ -399,7 +457,8 @@
             titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={showImageExportPopover} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
+            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={deleteSelectedPages} />
+            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" visibility={nbSelected ? 'collapsed' : 'visible'} on:tap={showOptions} />
         </CActionBar>
         {#if editingTitle}
             <CActionBar forceCanGoBack={true} onGoBack={() => (editingTitle = false)} title={null}>
@@ -480,7 +539,7 @@
             </Template>
         </collectionview>
 
-        <stacklayout horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom">
+        <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom">
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importPages} />
             <mdbutton class="fab" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
         </stacklayout>

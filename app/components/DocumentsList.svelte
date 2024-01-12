@@ -10,7 +10,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, SharedTransition } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
@@ -31,17 +31,29 @@
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnackMessage } from '~/utils/ui';
     import { colors, screenWidthDips, systemFontScale } from '~/variables';
 
     const textPaint = new Paint();
 </script>
 
 <script lang="ts">
-    const rowMargin = 8;
-    const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 100;
-
-    const lottieAlpha = __IOS__ ? 100 : 255;
+    // technique for only specific properties to get updated on store change
+    let { colorPrimaryContainer, colorOnBackground } = $colors;
+    $: ({
+        colorSurfaceContainerHigh,
+        colorOnBackground,
+        colorSurfaceContainerLow,
+        colorOnSecondary,
+        colorSurfaceContainer,
+        colorOnSurfaceVariant,
+        colorOutline,
+        colorOutlineVariant,
+        colorSurface,
+        colorPrimaryContainer,
+        colorOnPrimaryContainer,
+        colorError
+    } = $colors);
 
     interface Item {
         doc: OCRDocument;
@@ -53,10 +65,12 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let lottieView: NativeViewElementNode<LottieView>;
+    let fabHolder: NativeViewElementNode<StackLayout>;
 
     let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'expanded');
     $: condensed = viewStyle === 'condensed';
     let syncEnabled = syncService.enabled;
+    let syncRunning = false;
     // let items: ObservableArray<{
     //     doc: OCRDocument; selected: boolean
     // }> = null;
@@ -160,28 +174,24 @@
             }
         }
     }
-    let syncRunning = false;
     function onSyncState(event: EventData & { state: 'running' | 'finished' }) {
         syncRunning = event.state === 'running';
         DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
-    // technique for only specific properties to get updated on store change
-    let { colorPrimaryContainer, colorOnBackground } = $colors;
-    $: ({
-        colorSurfaceContainerHigh,
-        colorOnBackground,
-        colorSurfaceContainerLow,
-        colorOnSecondary,
-        colorSurfaceContainer,
-        colorOnSurfaceVariant,
-        colorOutline,
-        colorOutlineVariant,
-        colorSurface,
-        colorPrimaryContainer,
-        colorOnPrimaryContainer
-    } = $colors);
+
+    function onSnackMessageAnimation({ animationArgs }: EventData & { animationArgs: AnimationDefinition[] }) {
+        if (fabHolder) {
+            const snackAnimation = animationArgs[0];
+            animationArgs.push({
+                target: fabHolder.nativeView,
+                translate: { x: 0, y: snackAnimation.translate.y === 0 ? -70 : 0 },
+                duration: snackAnimation.duration
+            });
+        }
+    }
 
     onMount(() => {
+        Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             const intent = Application.android['startIntent'];
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -200,6 +210,7 @@
         // refresh();
     });
     onDestroy(() => {
+        Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
@@ -636,6 +647,37 @@
         staticLayout.draw(canvas);
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
+
+    async function showOptions(event) {
+        const options = new ObservableArray([
+            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+            { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+        ] as any);
+        return showPopoverMenu({
+            options,
+            anchor: event.object,
+            vertPos: VerticalPosition.BELOW,
+
+            onClose: async (item) => {
+                switch (item.id) {
+                    case 'share':
+                        showImageExportPopover(event);
+                        break;
+                    case 'fullscreen':
+                        fullscreenSelectedDocuments();
+                        break;
+                    case 'ocr':
+                        detectOCR(getSelectedDocuments());
+                        break;
+                    case 'delete':
+                        deleteSelectedDocuments();
+                        break;
+                }
+            }
+        });
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
@@ -688,7 +730,7 @@
             </gridlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
                 <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>
@@ -709,10 +751,9 @@
         <!-- {#if nbSelected > 0} -->
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ maxLines: 1, autoFontSize: true }}>
-                <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
-                <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={showImageExportPopover} />
+                <!-- <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={showImageExportPopover} /> -->
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-                <mdbutton class="actionBarButton" text="mdi-fullscreen" variant="text" on:tap={fullscreenSelectedDocuments} />
+                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             </CActionBar>
         {/if}
     </gridlayout>
