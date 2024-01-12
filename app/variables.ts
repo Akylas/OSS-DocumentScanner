@@ -166,6 +166,8 @@ export function updateThemeColors(theme: string) {
             currentColors.colorOnBackground = '#E2E3DD';
             currentColors.colorSurface = '#121411';
             currentColors.colorOnSurface = '#C6C7C1';
+            currentColors.colorSurfaceInverse = '#F9FAF4';
+            currentColors.colorOnSurfaceInverse = '#121411';
             currentColors.colorOutline = '#8C9388';
             currentColors.colorSurfaceVariant = '#424940';
             currentColors.colorOnSurfaceVariant = '#C2C9BD';
@@ -184,6 +186,8 @@ export function updateThemeColors(theme: string) {
             currentColors.colorOnBackground = '#1A1C19';
             currentColors.colorSurface = '#F9FAF4';
             currentColors.colorOnSurface = '#1A1C19';
+            currentColors.colorSurfaceInverse = '#121411';
+            currentColors.colorOnSurfaceInverse = '#C6C7C1';
             currentColors.colorOutline = '#72796F';
             currentColors.colorSurfaceVariant = '#DEE5D9';
             currentColors.colorOnSurfaceVariant = '#424940';
