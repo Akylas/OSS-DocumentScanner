@@ -161,6 +161,10 @@ export function getRealTheme(th = theme) {
     return th;
 }
 
+export function isDarkTheme(th = getRealTheme(theme)) {
+    return th === 'dark' || th === 'black';
+}
+
 export function getRealThemeAndUpdateColors() {
     const realTheme = getRealTheme(theme);
     updateThemeColors(realTheme);
