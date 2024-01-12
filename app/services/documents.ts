@@ -32,24 +32,26 @@ export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
         if (!migrations) {
             return;
         }
-        const settingsKey = `SQLITE_${this.table}_migrations`;
-        const appliedMigrations = JSON.parse(ApplicationSettings.getString(settingsKey, '[]'));
 
-        const actualMigrations = { ...migrations };
-        for (let index = 0; index < appliedMigrations.length; index++) {
-            delete actualMigrations[appliedMigrations[index]];
-        }
+        // For now disable it as we could have a issue if db is deleted while setting is kept
+        // const settingsKey = `SQLITE_${this.table}_migrations`;
+        // const appliedMigrations = JSON.parse(ApplicationSettings.getString(settingsKey, '[]'));
+
+        // const actualMigrations = { ...migrations };
+        // for (let index = 0; index < appliedMigrations.length; index++) {
+        //     delete actualMigrations[appliedMigrations[index]];
+        // }
 
         // const migrationKeys = Object.keys(migrations).filter((k) => appliedMigrations.indexOf(k) === -1);
         // for (let index = 0; index < migrationKeys.length; index++) {
         try {
-            await this.database.migrate(actualMigrations);
-            appliedMigrations.push(...Object.keys(actualMigrations));
+            await this.database.migrate(migrations);
+            // appliedMigrations.push(...Object.keys(migrations));
         } catch (error) {
             console.error(error, error.stack);
         }
         // }
-        ApplicationSettings.setString(settingsKey, JSON.stringify(appliedMigrations));
+        // ApplicationSettings.setString(settingsKey, JSON.stringify(appliedMigrations));
     }
 }
 
@@ -364,6 +366,9 @@ export class DocumentsService extends Observable {
         this.dataFolder = knownFolders.externalDocuments().getFolder('data');
         const filePath = path.join(knownFolders.externalDocuments().path, 'db.sqlite');
         DEV_LOG && console.log('DocumentsService', 'start', filePath);
+        // if (!File.exists(filePath)) {
+
+        // }
 
         this.db = new NSQLDatabase(filePath, {
             // for now it breaks
