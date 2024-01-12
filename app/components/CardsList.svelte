@@ -674,6 +674,7 @@
             itemOverlap={viewStyle === 'fullcard' ? '-180 0 0 0' : '-30 0 0 0'}
             itemTemplateSelector={() => viewStyle}
             items={documents}
+            paddingBottom={88}
             row={1}
             rowHeight={viewStyle === 'fullcard' ? itemHeight : 150}
             swipeMenuId="swipeMenu"

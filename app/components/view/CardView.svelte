@@ -435,6 +435,7 @@
             height={itemHeight}
             {items}
             orientation="horizontal"
+            paddingBottom={88}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}

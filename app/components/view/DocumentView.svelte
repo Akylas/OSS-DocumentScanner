@@ -423,6 +423,7 @@
             autoReloadItemOnLayout={true}
             colWidth="50%"
             {items}
+            paddingBottom={88}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}

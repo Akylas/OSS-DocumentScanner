@@ -641,7 +641,7 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} items={documents} row={1} rowHeight={getItemRowHeight(viewStyle) * $systemFontScale}>
+        <collectionView bind:this={collectionView} items={documents} paddingBottom={88} row={1} rowHeight={getItemRowHeight(viewStyle) * $systemFontScale}>
             <Template let:item>
                 <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
