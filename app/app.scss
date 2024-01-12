@@ -76,10 +76,12 @@ htmllabel {
     &:onTertiary {
         color: var(--colorOnTertiary);
     }
+
     &:white {
         color: black;
     }
 }
+
 // mdtextfield {
 //     color: black;
 //     // background-color: white;
@@ -101,18 +103,21 @@ page {
     .ns-dark & {
         status-bar-style: dark;
     }
-    .ns-black &   {
+
+    .ns-black & {
         status-bar-style: dark;
         status-bar-color: black;
         background-color: black;
     }
 }
+
 .actionBar {
     z-index: 0;
     border-radius: 0;
     // elevation:3;
     height: var(--actionBarHeight);
     background-color: var(--colorBackground);
+
     .ns-black & {
         background-color: scale-color(black, $alpha: -30%);
     }
@@ -148,7 +153,7 @@ mdbutton {
     font-size: 24;
     color: var(--colorOnSurface);
     ripple-color: var(--colorOnSurface);
-    
+
     &:disabled {
         color: var(--colorOutlineVariant);
         ripple-color: var(--colorOutlineVariant);
