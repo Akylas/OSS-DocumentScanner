@@ -54,16 +54,19 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     public onStart(): void {
+        DEV_LOG && console.log('onStart');
         this._callbacks.onStart(this, super.onStart);
         com.google.android.material.color.DynamicColors.applyIfAvailable(this);
         Application.notify({ eventName: 'activity_started' });
     }
 
     public onStop(): void {
+        DEV_LOG && console.log('onStop');
         this._callbacks.onStop(this, super.onStop);
     }
 
     public onDestroy(): void {
+        DEV_LOG && console.log('onDestroy');
         this._callbacks.onDestroy(this, super.onDestroy);
     }
 
