@@ -32,7 +32,7 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
         }
-        applyTheme(theme);
+        // applyTheme(theme);
         updateThemeColors(theme);
         //close any popover as they are not updating with theme yet
         closePopover();
