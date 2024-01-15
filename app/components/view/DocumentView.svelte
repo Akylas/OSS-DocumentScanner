@@ -57,6 +57,10 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
     let fabHolder: NativeViewElementNode<StackLayout>;
+    let nbSelected = 0;
+    let editingTitle = false;
+    let editingTitleTextField: NativeViewElementNode<TextField>;
+    let ignoreTap = false;
     // let items: ObservableArray<Item> = null;
 
     // $: {
@@ -161,7 +165,6 @@
         }
     }
 
-    let nbSelected = 0;
     function selectItem(item: Item) {
         if (!item.selected) {
             items.some((d, index) => {
@@ -210,7 +213,6 @@
         const index = items.findIndex((p) => p.page === item.page);
         collectionView?.nativeElement.startDragging(index);
     }
-    let ignoreTap = false;
     function onItemLongPress(item: Item, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
         if (event && event.ios && event.ios.state !== 1) {
@@ -393,9 +395,6 @@
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
-
-    let editingTitle = false;
-    let editingTitleTextField: NativeViewElementNode<TextField>;
 
     async function saveDocumentTitle(event) {
         try {
