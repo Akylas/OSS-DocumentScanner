@@ -142,14 +142,6 @@
     // DEV_LOG && console.log('onItemLoading', index);
     function onItemLoading({ index, view }) {
         loadImagesForPage(index);
-        if (__IOS__ && view) {
-            try {
-                const canvasView: CanvasView = (view as View).getViewById('canvas');
-                canvasView?.invalidate();
-            } catch (error) {
-                console.error(error);
-            }
-        }
     }
     const OPTIONS = {
         orientation: {
