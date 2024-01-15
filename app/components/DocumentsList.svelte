@@ -10,7 +10,20 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
+    import {
+        AnimationDefinition,
+        Application,
+        ApplicationSettings,
+        Color,
+        EventData,
+        NavigatedData,
+        ObservableArray,
+        Page,
+        PageTransition,
+        SharedTransition,
+        StackLayout,
+        View
+    } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
@@ -636,6 +649,7 @@
                     text: item.doc.name
                 },
                 {
+                    fontSize: 14 * $systemFontScale,
                     color: colorOnSurfaceVariant,
                     lineHeight: (condensed ? 14 : 26) * $systemFontScale,
                     text: '\n' + dayjs(item.doc.createdDate).format('L LT')
@@ -643,7 +657,7 @@
             ]
         });
         const staticLayout = new StaticLayout(topText, textPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true, 'end');
-        canvas.translate(dx, 4 + 10);
+        canvas.translate(dx, (condensed ? 0 : 10) + 10);
         staticLayout.draw(canvas);
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
