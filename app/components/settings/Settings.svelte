@@ -3,8 +3,8 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { openFilePicker, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { ApplicationSettings, File, ObservableArray, Utils, View } from '@nativescript/core';
+    import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { ApplicationSettings, File, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -17,8 +17,10 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { hideLoading, openLink, showLoading } from '~/utils/ui';
-    import { restartApp } from '~/utils/utils';
+    import { showAlertOptionSelect } from '~/utils/ui';
+    import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { DocumentsService, documentsService } from '~/services/documents';
 
     // technique for only specific properties to get updated on store change
     let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors;
@@ -75,6 +77,63 @@
                               description: lc('biometric_auto_lock_desc'),
                               enabled: securityService.biometricEnabled,
                               value: securityService.biometricEnabled && securityService.autoLockEnabled
+                          }
+                      ]
+                    : ([] as any)
+            )
+            .concat(
+                __ANDROID__ && android.os.Environment.getExternalStorageState() === 'mounted'
+                    ? [
+                          {
+                              id: 'setting',
+                              key: 'data_location',
+                              title: lc('data_location'),
+                              currentValue: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal'),
+                              description: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? lc('sdcard') : lc('internal_storage')),
+                              values: [
+                                  { value: 'internal', title: lc('internal_storage') },
+                                  { value: 'sdcard', title: lc('sdcard') }
+                              ],
+                              onResult: async (data) => {
+                                  try {
+                                      const current = documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal';
+                                      if (current !== data) {
+                                          const confirmed = await confirm({
+                                              title: lc('move_data'),
+                                              message: lc('move_data_desc'),
+                                              okButtonText: lc('ok'),
+                                              cancelButtonText: lc('cancel')
+                                          });
+                                          if (confirmed) {
+                                              const srcFolder = documentsService.rootDataFolder;
+                                              let dstFolder: string;
+                                              if (data === 'sdcard') {
+                                                  dstFolder = knownFolders.externalDocuments().path;
+                                              } else {
+                                                  dstFolder = knownFolders.documents().path;
+                                              }
+                                              DEV_LOG && console.log('confirmed move data to', srcFolder, dstFolder);
+                                              showLoading(lc('moving_files'));
+                                              const srcDbPath = path.join(srcFolder, DocumentsService.DB_NAME);
+                                              await File.fromPath(srcDbPath).copy(path.join(dstFolder, DocumentsService.DB_NAME));
+                                              await copyFolderContent(path.join(srcFolder, 'data'), path.join(dstFolder, 'data'));
+                                              ApplicationSettings.setString('root_data_folder', dstFolder);
+                                              await File.fromPath(srcDbPath).remove();
+                                              await removeFolderContent(path.join(srcFolder, 'data'));
+                                              await alert({
+                                                  cancelable: false,
+                                                  message: lc('restart_app'),
+                                                  okButtonText: lc('restart')
+                                              });
+                                              restartApp();
+                                          }
+                                      }
+                                  } catch (error) {
+                                      showError(error);
+                                  } finally {
+                                      hideLoading();
+                                  }
+                              }
                           }
                       ]
                     : ([] as any)
@@ -328,18 +387,36 @@
                             updateItem(item);
                         }
                     } else {
-                        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-                        const result = await showBottomSheet<any>({
-                            parent: null,
-                            view: OptionSelect,
-                            props: {
-                                options: item.values.map((k) => ({ name: k.title, data: k.value }))
+                        const component = (await import('~/components/common/OptionSelect.svelte')).default;
+                        const result = await showAlertOptionSelect(
+                            component,
+                            {
+                                height: Math.min(item.values.length * 56, 400),
+                                rowHeight: 56,
+                                options: item.values.map((k) => ({
+                                    name: k.title,
+                                    data: k.value,
+                                    boxType: 'circle',
+                                    type: 'checkbox',
+                                    value: (item.currentValue?.() ?? item.currentValue) === k.value
+                                }))
                             },
-                            trackingScrollView: 'collectionView'
-                        });
+                            {
+                                title: item.title,
+                                message: item.full_description
+                            }
+                        );
                         if (result) {
-                            ApplicationSettings.setNumber(item.key, result.data);
-                            updateItem(item);
+                            if (item.onResult) {
+                                item.onResult(result.data);
+                            } else {
+                                if (item.valueType === 'string') {
+                                    ApplicationSettings.setString(item.key, result.data);
+                                } else {
+                                    ApplicationSettings.setNumber(item.key, parseInt(result.data, 10));
+                                }
+                                updateItem(item);
+                            }
                         }
                     }
 

@@ -10,6 +10,8 @@ import NSQLDatabase from './NSQLDatabase';
 import { loadImage, recycleImages } from '~/utils/utils';
 const sql = SqlQuery.createFromTemplateString;
 
+let dataFolder: Folder;
+
 function cleanUndefined(obj) {
     Object.keys(obj).forEach(function (key) {
         if (typeof obj[key] === 'undefined') {
@@ -87,7 +89,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     migrations = Object.assign(
         {
             addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`,
-            transformsSplit: sql`UPDATE Page SET transforms = replace( transforms, ',', '|' ) `
+            transformsSplit: sql`UPDATE Page SET transforms = replace( transforms, ',', '|' )`,
+            removeDataPath: () => sql`UPDATE Page SET imagePath = replace( imagePath, ${dataFolder.path}, '' ), sourceImagePath = replace( sourceImagePath, ${dataFolder.path}, '' )`
         },
         CARD_APP
             ? {
@@ -125,8 +128,11 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
 
     async createPage(page: OCRPage) {
         const createdDate = Date.now();
+        const dataFolder = documentsService.dataFolder.path;
         return this.create({
             ...cleanUndefined(page),
+            imagePath: page.imagePath.replace(dataFolder, ''),
+            sourceImagePath: page.sourceImagePath.replace(dataFolder, ''),
             createdDate,
             pageindex: -1, // we are stuck with this as we cant migrate to remove pageIndex
             modifiedDate: createdDate,
@@ -169,10 +175,14 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         return page;
     }
     async createModelFromAttributes(attributes: Required<any> | OCRPage): Promise<OCRPage> {
-        const { id, document_id, ...other } = attributes;
+        const { id, document_id, imagePath, sourceImagePath, ...other } = attributes;
         const model = new OCRPage(id, document_id);
         Object.assign(model, {
             ...other,
+            // imagePath,
+            // sourceImagePath,
+            imagePath: dataFolder.path + imagePath,
+            sourceImagePath: dataFolder.path + sourceImagePath,
             _crop: other.crop,
             crop: other.crop ? JSON.parse(other.crop) : undefined,
             _colorMatrix: other.colorMatrix,
@@ -351,6 +361,8 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 }
 
 export class DocumentsService extends Observable {
+    static DB_NAME = 'db.sqlite';
+    rootDataFolder: string;
     dataFolder: Folder;
     // connection: Connection;
     started = false;
@@ -363,12 +375,15 @@ export class DocumentsService extends Observable {
             return;
         }
         await request('storage');
-        this.dataFolder = knownFolders.externalDocuments().getFolder('data');
-        const filePath = path.join(knownFolders.externalDocuments().path, 'db.sqlite');
-        DEV_LOG && console.log('DocumentsService', 'start', filePath);
-        // if (!File.exists(filePath)) {
-
-        // }
+        let rootDataFolder = ApplicationSettings.getString('root_data_folder');
+        DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
+        if (!rootDataFolder) {
+            rootDataFolder = knownFolders.externalDocuments().path;
+            ApplicationSettings.setString('root_data_folder', rootDataFolder);
+        }
+        this.rootDataFolder = rootDataFolder;
+        dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
+        const filePath = path.join(rootDataFolder, DocumentsService.DB_NAME);
 
         this.db = new NSQLDatabase(filePath, {
             // for now it breaks

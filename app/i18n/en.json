@@ -40,6 +40,7 @@
     "confirm_delete_page": "are you sure you want to delete page %1$s?",
     "confirm_delete_pages": "are you sure you want to delete those %1$s pages?",
     "dark": "dark",
+    "data_location": "data location",
     "delete": "delete",
     "delete_page": "delete",
     "disabled": "disabled",
@@ -74,6 +75,7 @@
     "images_saved": "images saved",
     "import_settings": "import settings",
     "import_settings_desc": "import all settings from a previous backup",
+    "internal_storage": "internal storage",
     "ios": {
         "info": {
             "plist": {
@@ -92,6 +94,9 @@
     "limited": "limited",
     "list_used_third_parties": "list used third parties",
     "loading": "loading",
+    "move_data": "move data?",
+    "move_data_desc": "all your app data will be moved and an app restart will be enforced at the end",
+    "moving_files": "moving files",
     "nb_pages": "%1$s pages",
     "no_document_found": "no document was found",
     "no_document_yet": "add a document using the camera or import one from an image",
@@ -125,6 +130,7 @@
     "review_application": "review application",
     "save": "save",
     "saving": "saving",
+    "sdcard": "SD Card",
     "search": "search",
     "select_language": "select language",
     "select_theme": "select theme",
