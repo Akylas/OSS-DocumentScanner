@@ -340,7 +340,7 @@ export async function hideLoading() {
 //     });
 // }
 export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
-    const pagesToAdd: PageData[] = [];
+    let pagesToAdd: PageData[] = [];
     DEV_LOG && console.log('importAndScanImageFromUris', uris);
     let items;
     try {
@@ -413,46 +413,48 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                 items = newItems;
                 DEV_LOG && console.log('items after crop', items);
 
-                await Promise.all(
-                    items.map(
-                        (item) =>
-                            new Promise<void>(async (resolve, reject) => {
-                                try {
-                                    DEV_LOG && console.log('about to cropDocument', item.quads);
-                                    const images = await cropDocument(item.editingImage, item.quads);
-                                    let qrcode;
-                                    let colors;
-                                    if (CARD_APP) {
-                                        [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
-                                        DEV_LOG && console.log('qrcode and colors', qrcode, colors);
-                                    }
-                                    if (images?.length) {
-                                        for (let index = 0; index < images.length; index++) {
-                                            const image = images[index];
-                                            pagesToAdd.push({
-                                                image,
-                                                crop: item.quads[index],
-                                                sourceImagePath: item.sourceImagePath,
-                                                width: __ANDROID__ ? image.getWidth() : image.size.width,
-                                                height: __ANDROID__ ? image.getHeight() : image.size.height,
-                                                rotation: item.editingImage.rotationAngle,
-                                                ...(CARD_APP
-                                                    ? {
-                                                          qrcode,
-                                                          colors
-                                                      }
-                                                    : {})
-                                            });
-                                            DEV_LOG && console.log('added page', JSON.stringify(pagesToAdd[pagesToAdd.length - 1]));
+                pagesToAdd = (
+                    await Promise.all(
+                        items.map(
+                            (item) =>
+                                new Promise<PageData[]>(async (resolve, reject) => {
+                                    try {
+                                        DEV_LOG && console.log('about to cropDocument', item.quads);
+                                        const images = await cropDocument(item.editingImage, item.quads);
+                                        let qrcode;
+                                        let colors;
+                                        if (CARD_APP) {
+                                            [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
+                                            DEV_LOG && console.log('qrcode and colors', qrcode, colors);
                                         }
+                                        const result = [];
+                                        if (images?.length) {
+                                            for (let index = 0; index < images.length; index++) {
+                                                const image = images[index];
+                                                result.push({
+                                                    image,
+                                                    crop: item.quads[index],
+                                                    sourceImagePath: item.sourceImagePath,
+                                                    width: __ANDROID__ ? image.getWidth() : image.size.width,
+                                                    height: __ANDROID__ ? image.getHeight() : image.size.height,
+                                                    rotation: item.editingImage.rotationAngle,
+                                                    ...(CARD_APP
+                                                        ? {
+                                                              qrcode,
+                                                              colors
+                                                          }
+                                                        : {})
+                                                });
+                                            }
+                                        }
+                                        resolve(result);
+                                    } catch (error) {
+                                        reject(error);
                                     }
-                                    resolve();
-                                } catch (error) {
-                                    reject(error);
-                                }
-                            })
+                                })
+                        )
                     )
-                );
+                ).flat();
                 DEV_LOG && console.log('pagesToAdd', pagesToAdd);
                 if (pagesToAdd.length) {
                     if (document) {
