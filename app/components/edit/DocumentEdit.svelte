@@ -50,6 +50,15 @@
     let currentSelectedImagePath = firstItem.imagePath;
     let currentSelectedImageRotation = firstItem.rotation || 0;
     let transforms = firstItem.transforms?.split(TRANSFORMS_SPLIT) || [];
+    const colorType = 0;
+    const filters = ColorMatricesTypes.map((k) => ({
+        ...k,
+        text: lc(k.id),
+        colorType: k.id
+    }));
+    let updatingTransform = false;
+    let editingTitle = false;
+    let editingTitleTextField: NativeViewElementNode<TextField>;
     // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     // const enhanced = writable(transforms.indexOf('enhance') !== -1);
     async function showPDFPopover(event) {
@@ -137,7 +146,6 @@
             showError(error);
         }
     }
-    const colorType = 0;
     // $: {
     //     colorType = document.pages[currentIndex].colorType || 0;
     // }
@@ -363,12 +371,6 @@
         refreshCollectionView();
     }
 
-    const filters = ColorMatricesTypes.map((k) => ({
-        ...k,
-        text: lc(k.id),
-        colorType: k.id
-    }));
-    let updatingTransform = false;
     async function updateTransform(value: boolean, store: Writable<boolean>, type: string) {
         if (updatingTransform) {
             store.set(!value);
@@ -487,9 +489,6 @@
         }
     }
 
-    let editingTitle = false;
-    let editingTitleTextField: NativeViewElementNode<TextField>;
-
     async function saveDocumentTitle(event) {
         try {
             DEV_LOG && console.log('saveDocumentTitle', editingTitleTextField.nativeElement.text);
@@ -563,12 +562,15 @@
                         decodeHeight={120}
                         decodeWidth={120}
                         imageRotation={currentSelectedImageRotation}
-                        src={currentSelectedImagePath} />
+                        src={currentSelectedImagePath}
+                        stretch="aspectFill" />
                     <label
                         backgroundImage="linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 90%, rgba(0,0,0,0) 100%)"
                         ios:selectable={true}
+                        borderRadius="0 0 4 4"
                         color="white"
-                        fontSize={10}
+                        fontSize={11}
+                        fontWeight="500"
                         text={item.text}
                         textAlignment="center"
                         verticalAlignment="bottom" />
