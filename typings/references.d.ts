@@ -120,6 +120,7 @@ declare namespace svelteNative.JSX {
         lineBreak?: string;
         html?: string;
         selectable?: boolean;
+        'ios:selectable'?: boolean;
         onlinkTap?;
         'on:linkTap'?;
     }
