@@ -1,0 +1,8 @@
+*Features*
+- *android:* allow to move data between sdcard/internal
+
+*Bug fixes*
+- ensure we do db migrations if db is deleted (dont know why it would though...)
+- ensure order is preserved while importing images as one document
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Finnish)
