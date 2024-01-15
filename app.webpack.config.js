@@ -75,40 +75,6 @@ module.exports = (env, params = {}) => {
             env
         );
     }
-    const nconfig = require('./nativescript.config');
-    const {
-        appPath = nconfig.appPath,
-        appResourcesPath = nconfig.appResourcesPath,
-        hmr, // --env.hmr
-        production, // --env.production
-        sourceMap, // --env.sourceMap
-        hiddenSourceMap, // --env.hiddenSourceMap
-        inlineSourceMap, // --env.inlineSourceMap
-        sentry, // --env.sentry
-        uploadSentry,
-        verbose, // --env.verbose
-        uglify, // --env.uglify
-        noconsole, // --env.noconsole
-        devlog, // --env.devlog
-        testlog, // --env.testlog
-        fakeall, // --env.fakeall
-        profile, // --env.profile
-        fork = true, // --env.fakeall
-        accessibility = false, // --env.accessibility
-        playStoreBuild = true, // --env.playStoreBuild
-        adhoc, // --env.adhoc
-        timeline, // --env.timeline
-        locale = 'auto', // --env.locale
-        theme = 'auto', // --env.theme
-        keep_classnames_functionnames = false,
-        startOnCam = false
-    } = env;
-    // console.log('env', env);
-    env.appPath = appPath;
-    env.appResourcesPath = appResourcesPath;
-    env.appComponents = env.appComponents || [];
-    // env.appComponents.push('~/android/cameraactivity');
-    env.appComponents.push('~/android/activity.android');
 
     nsWebpack.chainWebpack((config, env) => {
         config.module
@@ -136,8 +102,40 @@ module.exports = (env, params = {}) => {
 
         return config;
     });
+
+    env.appComponents = env.appComponents || [];
+    // env.appComponents.push('~/android/cameraactivity');
+    env.appComponents.push('~/android/activity.android');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
+    const {
+        appId,
+        appPath,
+        appResourcesPath,
+        hmr, // --env.hmr
+        production, // --env.production
+        sourceMap, // --env.sourceMap
+        hiddenSourceMap, // --env.hiddenSourceMap
+        inlineSourceMap, // --env.inlineSourceMap
+        sentry, // --env.sentry
+        uploadSentry,
+        verbose, // --env.verbose
+        uglify, // --env.uglify
+        noconsole, // --env.noconsole
+        devlog, // --env.devlog
+        testlog, // --env.testlog
+        fakeall, // --env.fakeall
+        profile, // --env.profile
+        fork = true, // --env.fakeall
+        accessibility = false, // --env.accessibility
+        playStoreBuild = true, // --env.playStoreBuild
+        adhoc, // --env.adhoc
+        timeline, // --env.timeline
+        locale = 'auto', // --env.locale
+        theme = 'auto', // --env.theme
+        keep_classnames_functionnames = false,
+        startOnCam = false
+    } = env;
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const projectRoot = params.projectRoot || __dirname;
@@ -188,7 +186,6 @@ module.exports = (env, params = {}) => {
     Object.assign(config.resolve.alias, {
         'kiss-orm': '@akylas/kiss-orm'
     });
-    const appId = nconfig.id;
     let appVersion;
     let buildNumber;
     if (platform === 'android') {
