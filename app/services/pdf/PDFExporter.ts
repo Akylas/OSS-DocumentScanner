@@ -3,6 +3,9 @@ import type { WorkerEventType, WorkerResult } from '~/workers/BaseWorker';
 
 export async function exportPDFAsync(documents: OCRDocument[], folder?, filename?): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', folder, filename);
+    if (!filename && documents.length === 1) {
+        filename = documents[0].name + '.pdf';
+    }
     const worker = new Worker('~/workers/PDFExportWorker');
     const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
     worker.onmessage = function onWorkerMessage(event: {

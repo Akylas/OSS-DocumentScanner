@@ -3,7 +3,7 @@
 
 .ns-root {
 
-    // --systemFontScale: 1;
+    // --fontScale: 1;
     --colorPrimary: #006E25;
     --colorOnPrimary: #ffffff;
     --colorPrimaryContainer: #98F89C;
@@ -50,6 +50,16 @@
 // mdprogress {
 //     color: var(--colorPrimary);
 // }
+htmllabel,
+canvasview,
+label,
+button,
+textfield,
+mdtextfield,
+checkbox,
+mdbutton {
+    ios-a11y-adjusts-font-size: true;
+}
 
 checkbox {
     color: var(--colorOnSurface);

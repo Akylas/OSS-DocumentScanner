@@ -127,7 +127,7 @@ module.exports = (env, params = {}) => {
         fakeall, // --env.fakeall
         profile, // --env.profile
         fork = true, // --env.fakeall
-        accessibility = false, // --env.accessibility
+        accessibility = true, // --env.accessibility
         playStoreBuild = true, // --env.playStoreBuild
         adhoc, // --env.adhoc
         timeline, // --env.timeline

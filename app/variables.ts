@@ -5,6 +5,7 @@ import { get, writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 import { getRealTheme, getRealThemeAndUpdateColors, theme } from './helpers/theme';
 import { themer } from '@nativescript-community/ui-material-core';
+import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 // const locals = CSSModule.locals;
 
 export const colors = writable({
@@ -58,7 +59,11 @@ export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
-export const systemFontScale = writable(1);
+export const fontScale = writable(1);
+
+function updateSystemFontScale(value) {
+    fontScale.set(value);
+}
 
 const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
@@ -78,7 +83,7 @@ const onInitRootView = function () {
             actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
         }
         const resources = Utils.android.getApplicationContext().getResources();
-        systemFontScale.set(resources.getConfiguration().fontScale);
+        updateSystemFontScale(resources.getConfiguration().fontScale);
         const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
         let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
         if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
@@ -99,6 +104,8 @@ const onInitRootView = function () {
         DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
         // DEV_LOG && console.log('fonts', get(fonts));
+        updateSystemFontScale(getCurrentFontScale());
+        Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
@@ -120,13 +127,13 @@ export function updateThemeColors(theme: string) {
     if (!rootViewStyle) {
         return;
     }
-    // rootViewStyle?.setUnscopedCssVariable('--systemFontScale', systemFontScale + '');
+    // rootViewStyle?.setUnscopedCssVariable('--fontScale', fontScale + '');
     if (__ANDROID__) {
         const nUtils = com.akylas.documentscanner.Utils;
         const activity = Application.android.startActivity;
         Utils.android.getApplicationContext().getResources();
         // we also update system font scale so that our UI updates correcly
-        systemFontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
+        fontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
         Object.keys(currentColors).forEach((c) => {
             if (c.endsWith('Disabled')) {
                 return;

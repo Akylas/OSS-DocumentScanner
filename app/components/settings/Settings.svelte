@@ -58,6 +58,12 @@
                 id: 'dark_mode',
                 description: getThemeDisplayName,
                 title: lc('theme.title')
+            },
+            {
+                type: 'switch',
+                id: 'auto_black',
+                title: lc('auto_black'),
+                value: ApplicationSettings.getBoolean('auto_black', false)
             }
         ]
             .concat(
@@ -406,7 +412,7 @@
                                 message: item.full_description
                             }
                         );
-                        if (result) {
+                        if (result?.data) {
                             if (item.onResult) {
                                 item.onResult(result.data);
                             } else {

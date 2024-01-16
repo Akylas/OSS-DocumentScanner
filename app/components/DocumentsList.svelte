@@ -45,7 +45,7 @@
     import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
     import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnackMessage } from '~/utils/ui';
-    import { colors, screenWidthDips, systemFontScale } from '~/variables';
+    import { colors, fontScale, screenWidthDips } from '~/variables';
 
     const textPaint = new Paint();
 </script>
@@ -628,35 +628,35 @@
     }
 
     $: textPaint.color = colorOnBackground || 'black';
-    $: textPaint.textSize = (condensed ? 11 : 14) * $systemFontScale;
+    $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
 
     function onCanvasDraw(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
         // const w2 = w / 2;
         // const h2 = h / 2;
-        const dx = 10 + getItemImageHeight(viewStyle) * $systemFontScale + 16;
+        const dx = 10 + getItemImageHeight(viewStyle) * $fontScale + 16;
         textPaint.color = colorOnSurfaceVariant;
         canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
         textPaint.color = colorOnBackground;
         const topText = createNativeAttributedString({
             spans: [
                 {
-                    fontSize: 16 * $systemFontScale,
+                    fontSize: 16 * $fontScale,
                     fontWeight: 'bold',
                     lineBreak: 'end',
-                    lineHeight: 18 * $systemFontScale,
+                    lineHeight: 18 * $fontScale,
                     text: item.doc.name
                 },
                 {
-                    fontSize: 14 * $systemFontScale,
+                    fontSize: 14 * $fontScale,
                     color: colorOnSurfaceVariant,
-                    lineHeight: (condensed ? 14 : 26) * $systemFontScale,
+                    lineHeight: (condensed ? 14 : 26) * $fontScale,
                     text: '\n' + dayjs(item.doc.createdDate).format('L LT')
                 }
             ]
         });
-        const staticLayout = new StaticLayout(topText, textPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true, 'end');
+        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true, 'end');
         canvas.translate(dx, (condensed ? 0 : 10) + 10);
         staticLayout.draw(canvas);
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
@@ -697,12 +697,12 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} items={documents} paddingBottom={88} row={1} rowHeight={getItemRowHeight(viewStyle) * $systemFontScale}>
+        <collectionView bind:this={collectionView} items={documents} paddingBottom={88} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
             <Template let:item>
                 <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
                     borderRadius={12}
-                    fontSize={14 * $systemFontScale}
+                    fontSize={14 * $fontScale}
                     margin={8}
                     padding={10}
                     rippleColor={colorSurface}
@@ -718,7 +718,7 @@
                         marginTop={getImageMargin(viewStyle)}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
-                        width={getItemImageHeight(viewStyle) * $systemFontScale} />
+                        width={getItemImageHeight(viewStyle) * $fontScale} />
                     <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
                     <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                     <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />

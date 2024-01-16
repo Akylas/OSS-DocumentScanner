@@ -32,7 +32,6 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
         }
-        // applyTheme(theme);
         updateThemeColors(theme);
         //close any popover as they are not updating with theme yet
         closePopover();
@@ -147,12 +146,12 @@ function getSystemAppearance() {
 }
 
 export function getRealTheme(th = theme) {
-    DEV_LOG && console.log('getRealTheme', theme);
+    DEV_LOG && console.log('getRealTheme', th);
     if (th === 'auto') {
         try {
             th = getSystemAppearance() as any;
             if (autoDarkToBlack && th === 'dark') {
-                theme = 'black';
+                th = 'black';
             }
         } catch (err) {
             console.error('getRealTheme', err, err.stack);
@@ -221,17 +220,19 @@ export function start() {
             globalObservable.notify({ eventName: 'theme', data: realTheme });
         }, 0);
     });
-    const realTheme = getRealTheme(theme);
-    currentTheme.set(realTheme);
+
+    function onReady() {
+        applyTheme(theme);
+        const realTheme = getRealTheme(theme);
+        currentTheme.set(realTheme);
+        updateThemeColors(realTheme);
+    }
     if (__ANDROID__) {
         const context = Utils.android.getApplicationContext();
         if (context) {
-            applyTheme(theme);
+            onReady();
         } else {
-            Application.on(Application.launchEvent, () => {
-                applyTheme(theme);
-                updateThemeColors(realTheme);
-            });
+            Application.once(Application.launchEvent, onReady);
         }
 
         // we need to update the theme on every activity start
@@ -243,15 +244,11 @@ export function start() {
             }
         });
     } else {
-        if (Application.ios && Application.ios.window) {
-            updateThemeColors(realTheme);
-            applyTheme(theme);
+        // without rootController systemAppearance will be null
+        if (Application.ios?.rootController) {
+            onReady();
         } else {
-            updateThemeColors(realTheme);
-            Application.on(Application.displayedEvent, () => {
-                updateThemeColors(realTheme);
-                applyTheme(theme);
-            });
+            Application.once(Application.initRootViewEvent, onReady);
         }
     }
 }

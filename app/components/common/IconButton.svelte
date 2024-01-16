@@ -69,7 +69,7 @@
     }
 </script>
 
-<canvas
+<canvasview
     bind:this={canvas}
     borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
     disableCss={true}

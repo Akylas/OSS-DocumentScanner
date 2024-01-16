@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { colors, fonts, systemFontScale } from '~/variables';
+    import { colors, fontScale, fonts } from '~/variables';
     export let text: string;
     export let defaultPadding = 6;
     // technique for only specific properties to get updated on store change
@@ -12,10 +12,10 @@
     color={colorOnPrimary}
     fontSize={14}
     fontWeight="bold"
-    height={20 * $systemFontScale}
+    height={20 * $fontScale}
     horizontalAlignment="right"
-    paddingLeft={defaultPadding * $systemFontScale}
-    paddingRight={defaultPadding * $systemFontScale}
+    paddingLeft={defaultPadding * $fontScale}
+    paddingRight={defaultPadding * $fontScale}
     rowSpan={2}
     {text}
     textAlignment="center"

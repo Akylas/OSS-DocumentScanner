@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '~/utils/svelte/ui';
-    import { colors, fonts, systemFontScale } from '~/variables';
+    import { colors, fontScale, fonts } from '~/variables';
     const dispatch = createEventDispatcher();
     let colorOutlineVariant = $colors.colorOutlineVariant;
     let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
@@ -31,11 +31,11 @@
 <canvasView {columns} padding="0 16 0 16" rippleColor={colorOnSurface} on:tap={(event) => dispatch('tap', event)} {...$$restProps}>
     <canvaslabel col={mainCol} color={titleColor || color || colorOnSurface} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $systemFontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
+            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $fontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
         </cgroup>
         <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
-            <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
+            <cspan fontSize={fontSize * $fontScale} {fontWeight} text={title} />
+            <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
         </cgroup>
     </canvaslabel>
     <slot />

@@ -1,24 +1,23 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '~/utils/svelte/ui';
-    import { colors, fonts, systemFontScale } from '~/variables';
+    import { colors, fontScale, fonts } from '~/variables';
     const iconPaint = new Paint();
-    iconPaint.setTextAlign(Align.CENTER);
+    // iconPaint.setTextAlign(Align.CENTER);
     const linePaint = new Paint();
     linePaint.strokeWidth = 1;
 </script>
 
 <script lang="ts">
     const dispatch = createEventDispatcher();
-    let colorOutlineVariant = $colors.colorOutlineVariant;
-    let colorOnSurfaceVariant = $colors.colorOnSurfaceVariant;
-    let colorOnSurface = $colors.colorOnSurface;
     // technique for only specific properties to get updated on store change
+    let { colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors;
     $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors);
 
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;
     export let iconFontSize: number = 24;
+    export let rightIconFontSize: number = 30;
     export let fontSize: number = 17;
     export let fontWeight: any = 'bold';
     export let subtitleFontSize: number = 14;
@@ -28,9 +27,12 @@
     export let subtitleColor: string = null;
     export let subtitle: string = null;
     export let leftIcon: string = null;
+    export let rightIcon: string = null;
     export let rightValue: string | Function = null;
-    export let columns: string = leftIcon ? `${iconFontSize * 2},*,auto` : 'auto,*,auto';
+    const leftColumn = iconFontSize * 1.4 * $fontScale;
+    export let columns: string = leftIcon ? `${leftColumn},*,auto` : 'auto,*,auto';
     export let leftIconFonFamily: string = $fonts.mdi;
+    export let rightIconFonFamily: string = $fonts.mdi;
     export let mainCol = 1;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 
@@ -43,16 +45,19 @@
             event.canvas.drawLine(20, h - 1, w, h - 1, linePaint);
         }
         if (leftIcon) {
-            const fontSize = iconFontSize * $systemFontScale;
+            const fontSize = iconFontSize * $fontScale;
             iconPaint.textSize = fontSize;
             iconPaint.color = titleColor || color || colorOnSurface;
             iconPaint.fontFamily = leftIconFonFamily;
-            const staticLayout = new StaticLayout(leftIcon, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
-            canvas.translate(fontSize / 2, h / 2 - staticLayout.getHeight() / 2);
+            const staticLayout = new StaticLayout(leftIcon, iconPaint, leftColumn, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+            canvas.translate(6, h / 2 - staticLayout.getHeight() / 2);
+            // canvas.drawRect(0,0,leftColumn,  staticLayout.getHeight(), iconPaint);
             staticLayout.draw(canvas);
         }
         onDraw?.(event);
     }
+
+    $: addedPadding = subtitle?.length > 0 ? 0 : __ANDROID__ ? 8 : 12;
 </script>
 
 <!-- <gridlayout>
@@ -61,15 +66,15 @@
             <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
                 <cspan
                     fontFamily={leftIconFonFamily}
-                    fontSize={iconFontSize * $systemFontScale}
+                    fontSize={iconFontSize * $fontScale}
                     paddingLeft="10"
                     text={leftIcon}
                     visibility={leftIcon ? 'visible' : 'hidden'}
                     width={iconFontSize * 2} />
             </cgroup>
             <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-                <cspan fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
-                <cspan color={subtitleColor} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
+                <cspan fontSize={fontSize * $fontScale} {fontWeight} text={title} />
+                <cspan color={subtitleColor} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
             </cgroup>
         </canvaslabel>
         <slot />
@@ -79,7 +84,7 @@
 <canvasview
     {columns}
     padding="10 16 10 16"
-    rippleColor={colorOnSurface}
+    rippleColor={color || colorOnSurface}
     on:tap={(event) => dispatch('tap', event)}
     on:longPress={(event) => dispatch('longPress', event)}
     on:draw={draw}
@@ -92,20 +97,14 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
         width={iconFontSize * 2} /> -->
-    <label col={mainCol} {fontSize} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
-        <cspan color={titleColor || color || colorOnSurface} {fontWeight} text={title} />
-        <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
+    <label col={mainCol} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
+        <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
+        <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
-    <label
-        col={2}
-        color={subtitleColor}
-        marginLeft={16}
-        textAlignment="right"
-        verticalAlignment="center"
-        visibility={!!rightValue ? 'visible' : 'visible'}
-        on:tap={(event) => dispatch('rightTap', event)}>
-        <cspan fontSize={subtitleFontSize} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
+    <label col={2} color={subtitleColor} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
+        <cspan fontSize={subtitleFontSize * $fontScale} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
+        <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize * $fontScale} text={rightIcon} />
     </label>
     <!-- <label
         col={2}

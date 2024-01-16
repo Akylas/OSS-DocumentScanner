@@ -97,8 +97,8 @@
             //         margin: 4,
             //         backgroundColor: colorSurfaceContainer,
             //         containerColumns: 'auto',
-            //         rowHeight: 58 * $systemFontScale,
-            //         height: Math.min(58 * options.length * $systemFontScale + 8, 300),
+            //         rowHeight: 58 * $fontScale,
+            //         height: Math.min(58 * options.length * $fontScale + 8, 300),
             //         width: 150,
             //         options,
             //         onClose: (item) => {

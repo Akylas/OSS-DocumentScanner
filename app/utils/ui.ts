@@ -37,7 +37,7 @@ import type LoadingIndicator__SvelteComponent_ from '~/components/common/Loading
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
-import { colors, systemFontScale } from '~/variables';
+import { colors, fontScale } from '~/variables';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
@@ -565,7 +565,7 @@ export async function showPopoverMenu<T = any>({
 }: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-    const rowHeight = (props?.rowHeight || 58) * get(systemFontScale);
+    const rowHeight = (props?.rowHeight || 58) * get(fontScale);
     const result: T = await showPopover({
         backgroundColor: colorSurfaceContainer,
         view: OptionSelect,
@@ -579,9 +579,9 @@ export async function showPopoverMenu<T = any>({
             fontWeight: 500,
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
-            rowHeight,
+            rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
             height: Math.min(rowHeight * options.length, 400),
-            width: 200,
+            width: 200 * get(fontScale),
             options,
             onClose: (item) => {
                 onClose?.(item);
@@ -624,7 +624,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
             // rows: 'auto',
             // rowHeight: null,
             // height: null,
-            // autoSizeListItem: true,
+            autoSizeListItem: true,
             onRightIconTap: (item, event) => {
                 try {
                     switch (item.id) {
@@ -684,7 +684,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                         const result = await prompt({
                             okButtonText: lc('ok'),
                             cancelButtonText: lc('cancel'),
-                            defaultText: Date.now() + '.pdf',
+                            defaultText: (documents.length === 1 ? documents[0].name : Date.now()) + '.pdf',
                             hintText: lc('pdf_filename')
                         });
                         if (result?.result && result?.text?.length) {
