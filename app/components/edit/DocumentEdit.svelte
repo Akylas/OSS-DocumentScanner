@@ -18,7 +18,9 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { OCRDocument, OCRPage, TRANSFORMS_SPLIT } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { TRANSFORMS_SPLIT } from '~/models/constants';
+    import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
     import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
@@ -196,11 +198,10 @@
                 return { type: 'checkbox', id: transformId, value, data: value };
             }
             await showPopoverMenu({
-                options: [
-                    { ...getData('enhance'), name: lc('enhance'), subtitle: lc('enhance_desc') },
-                    { ...getData('whitepaper'), name: lc('whitepaper'), subtitle: lc('whitepaper_desc') },
-                    { ...getData('whitepacolorper'), name: lc('color'), subtitle: lc('color_desc') }
-                ],
+                options: TRANSFORMS.map((i) => ({
+                    ...getData(i.id),
+                    ...i
+                })),
                 vertPos: VerticalPosition.ABOVE,
                 anchor: event.object,
                 props: {

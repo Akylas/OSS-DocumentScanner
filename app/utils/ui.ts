@@ -25,7 +25,7 @@ import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } f
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { l, lc } from '~/helpers/locale';
-import { IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
 import { showError } from './error';
 import { loadImage, recycleImages } from './utils.common';
@@ -43,6 +43,7 @@ import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { share } from './share';
 import { ocrService } from '~/services/ocr';
+import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 

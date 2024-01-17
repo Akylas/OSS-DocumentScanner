@@ -1,8 +1,9 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { IMG_COMPRESS, OCRDocument } from '~/models/OCRDocument';
+import type { OCRDocument } from '~/models/OCRDocument';
 import { recycleImages } from '~/utils/utils.common';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
+import { IMG_COMPRESS } from '~/models/constants';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
     async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '.pdf') {

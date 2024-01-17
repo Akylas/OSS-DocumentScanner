@@ -14,7 +14,8 @@
     import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { l } from '~/helpers/locale';
-    import { OCRDocument, PageData, TRANSFORMS_SPLIT } from '~/models/OCRDocument';
+    import { OCRDocument, PageData } from '~/models/OCRDocument';
+    import { TRANSFORMS_SPLIT } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
@@ -52,6 +53,9 @@
         ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
     });
     $: ({ aspectRatio, stretch, viewsize } = $cameraOptionsStore);
+
+    $: console.log('viewsize', viewsize);
+    $: console.log('aspectRatio', aspectRatio);
 
     // let aspectRatio = ApplicationSettings.getString('camera_aspectratio', '4:3');
     // let stretch = ApplicationSettings.getString('camera_stretch', 'aspectFit');

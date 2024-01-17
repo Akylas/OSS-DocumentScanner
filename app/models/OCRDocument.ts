@@ -3,10 +3,9 @@ import { EventData, File, ImageSource, Observable, ObservableArray, path } from 
 import dayjs from 'dayjs';
 import { ColorPaletteData, OCRData, QRCodeData, cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
-import { ColorMatricesType, timeout } from '~/utils/ui';
+import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/utils';
-
-export const TRANSFORMS_SPLIT = '|';
+import { IMG_COMPRESS, IMG_FORMAT } from './constants';
 
 export interface ImageConfig {
     colorType?: ColorMatricesType;
@@ -18,9 +17,6 @@ export class Tag {
     public readonly id!: string;
     public name: string;
 }
-
-export const IMG_FORMAT = 'jpg';
-export const IMG_COMPRESS = 80;
 
 export interface Document {
     id: string;

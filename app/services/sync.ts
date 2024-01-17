@@ -1,17 +1,15 @@
-import { Application, ApplicationSettings, File, Folder, ImageSource, path } from '@nativescript/core';
-import { Observable } from '@nativescript/core';
-import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';
-import { request as webdavRequest } from '~/webdav/request';
-import { basename } from '~/webdav/tools/path';
-import { documentsService } from './documents';
-import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-import { Document, IMG_COMPRESS, IMG_FORMAT, OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { networkService } from './api';
-import { loadImage, recycleImages } from '~/utils/utils';
-import { cropDocument } from 'plugin-nativeprocessor';
-import { exists } from '~/webdav/operations/exists';
+import { ApplicationSettings, File, Folder, ImageSource, Observable, path } from '@nativescript/core';
 import { debounce } from '@nativescript/core/utils';
+import { cropDocument } from 'plugin-nativeprocessor';
+import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
+import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 import { showError } from '~/utils/error';
+import { loadImage, recycleImages } from '~/utils/utils';
+import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';
+import { exists } from '~/webdav/operations/exists';
+import { basename } from '~/webdav/tools/path';
+import { networkService } from './api';
+import { documentsService } from './documents';
 
 const SETTINGS_KEY = 'webdav_config';
 function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
@@ -95,7 +93,6 @@ export class SyncService extends Observable {
 
     saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password }) {
         if (remoteURL && username && password && remoteFolder) {
-
             // TODO: if we use digest we need a test connection to acquire the ha1
             const context = createContext(remoteURL, { username, password, authType });
             const config = { remoteURL, username, headers: context.headers, remoteFolder, ha1: context.ha1 || context.digest?.ha1, authType };
