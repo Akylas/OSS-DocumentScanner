@@ -4,6 +4,14 @@
             "name": "OSS Kart Cüzdanı"
         }
     },
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "ÖAK Belge Tarayıcı"
+        }
+    },
+    "a3": "a3",
+    "a4": "a4",
+    "about": "hakkında",
     "allow_app_screenshot": "uygulamada ekran görüntüsü alınmasına izin ver",
     "aspect_fill": "en boy doldur",
     "aspect_fit": "en boy sığdır",
