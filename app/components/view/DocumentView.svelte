@@ -208,6 +208,15 @@
         });
         return selected;
     }
+    function getSelectedPagesWithData() {
+        const selected: { page: OCRPage; pageIndex: number; document: OCRDocument }[] = [];
+        items.forEach((d, index) => {
+            if (d.selected) {
+                selected.push({ page: d.page, document, pageIndex: index });
+            }
+        });
+        return selected;
+    }
 
     function startDragging(item: Item) {
         const index = items.findIndex((p) => p.page === item.page);
@@ -417,33 +426,65 @@
         }
     }
     async function showOptions(event) {
-        const options = new ObservableArray([
-            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-        ] as any);
-        return showPopoverMenu({
-            options,
-            anchor: event.object,
-            vertPos: VerticalPosition.BELOW,
+        if (nbSelected > 0) {
+            const options = new ObservableArray([
+                { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+                // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any);
+            return showPopoverMenu({
+                options,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
 
-            onClose: async (item) => {
-                try {
+                onClose: async (item) => {
                     switch (item.id) {
+                        case 'share':
+                            showImageExportPopover(event);
+                            break;
+                        // case 'fullscreen':
+                        //     fullscreenSelectedDocuments();
+                        //     break;
                         case 'ocr':
-                            await detectOCR([document]);
+                            detectOCR({ pages: getSelectedPagesWithData() });
                             break;
                         case 'delete':
-                            await deleteDoc();
+                            deleteSelectedPages();
                             break;
                     }
-                } catch (error) {
-                    showError(error);
-                } finally {
-                    hideLoading();
                 }
-            }
-        });
+            });
+        } else {
+            const options = new ObservableArray([
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any);
+            return showPopoverMenu({
+                options,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+
+                onClose: async (item) => {
+                    try {
+                        switch (item.id) {
+                            case 'ocr':
+                                await detectOCR({ documents: [document] });
+                                break;
+                            case 'delete':
+                                await deleteDoc();
+                                break;
+                        }
+                    } catch (error) {
+                        showError(error);
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            });
+        }
     }
+
 </script>
 
 <page bind:this={page} id="pdfView" actionBarHidden={true}>
@@ -454,10 +495,8 @@
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={showImageExportPopover} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-delete" variant="text" visibility={nbSelected ? 'visible' : 'collapsed'} on:tap={deleteSelectedPages} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" visibility={nbSelected ? 'collapsed' : 'visible'} on:tap={showOptions} />
+            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
         </CActionBar>
         {#if editingTitle}
             <CActionBar forceCanGoBack={true} onGoBack={() => (editingTitle = false)} title={null}>

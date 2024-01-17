@@ -994,6 +994,7 @@ export async function detectOCROnPage(document: OCRDocument, index: number) {
 }
 
 export async function detectOCR(documents: OCRDocument[]) {
+export async function detectOCR({ documents, pages }: { documents?: OCRDocument[]; pages?: { page: OCRPage; pageIndex: number; document: OCRDocument }[] }) {
     try {
         const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;
         const shouldStart = await showBottomSheet({
@@ -1007,10 +1008,12 @@ export async function detectOCR(documents: OCRDocument[]) {
 
             // we want to ocr the full document.
             const progress = 0;
-            const pages: { page: OCRPage; pageIndex: number; document: OCRDocument }[] = [];
-            documents.forEach((document) => {
-                pages.push(...document.pages.reduce((acc, page, pageIndex) => acc.concat([{ page, pageIndex, document }]), []));
-            });
+            if (!pages && documents) {
+                pages = [];
+                documents.forEach((document) => {
+                    pages.push(...document.pages.reduce((acc, page, pageIndex) => acc.concat([{ page, pageIndex, document }]), []));
+                });
+            }
             const totalPages = pages.length;
             let pagesDone = 0;
             showSnackMessage({
@@ -1020,7 +1023,7 @@ export async function detectOCR(documents: OCRDocument[]) {
             const runnningOcr: { [k: string]: number } = {};
             await Promise.all(
                 pages.map(async (p, index) => {
-                    const pageId = p.document.pages[p.pageIndex].id;
+                    const pageId = p.page.id;
                     runnningOcr[pageId] = 0;
                     await ocrService.ocrPage(p.document, p.pageIndex, (progress: number) => {
                         runnningOcr[pageId] = progress;

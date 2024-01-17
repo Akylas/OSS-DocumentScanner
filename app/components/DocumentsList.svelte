@@ -683,7 +683,7 @@
                         fullscreenSelectedDocuments();
                         break;
                     case 'ocr':
-                        detectOCR(getSelectedDocuments());
+                        detectOCR({ documents: getSelectedDocuments() });
                         break;
                     case 'delete':
                         deleteSelectedDocuments();
