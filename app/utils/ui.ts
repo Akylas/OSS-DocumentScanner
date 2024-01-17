@@ -39,7 +39,7 @@ import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { colors, fontScale } from '~/variables';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
-import { exportPDFAsync } from '~/services/pdf/PDFExporter';
+import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { share } from './share';
 import { ocrService } from '~/services/ocr';
@@ -684,7 +684,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                         const result = await prompt({
                             okButtonText: lc('ok'),
                             cancelButtonText: lc('cancel'),
-                            defaultText: (documents.length === 1 ? documents[0].name : Date.now()) + '.pdf',
+                            defaultText: (documents.length === 1 ? cleanFilename(documents[0].name) : Date.now()) + '.pdf',
                             hintText: lc('pdf_filename')
                         });
                         if (result?.result && result?.text?.length) {
