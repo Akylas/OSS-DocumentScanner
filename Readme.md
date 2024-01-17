@@ -78,7 +78,12 @@ The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/o
 
 ### Building
 
-This app uses opencv and tesseract. I did not include the libraries because there are huge and would make the github repo too big.
+This app uses opencv and tesseract. I did not include the libraries in git because there are huge and would make the github repo too big.
+
+There are 2 ways to install them:
+
+* download from [here](https://github.com/Akylas/OSS-DocumentScanner/releases/tag/dev_resources) and uncompress them at the root
+* build them yourself:
 
 #### OpenCV
 
