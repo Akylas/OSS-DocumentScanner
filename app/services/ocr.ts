@@ -7,6 +7,7 @@ import { networkService } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { getCurrentISO3Language, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { hideLoading, hideSnackMessage, showLoading, showSnackMessage, updateLoadingProgress } from '~/utils/ui';
+import { NoNetworkError } from '~/utils/error';
 
 const languages = {
     afr: 'Afrikaans',
@@ -268,15 +269,15 @@ export class OCRService extends Observable {
             }
         }
         if (toDownload.length) {
-            if (!networkService._connected) {
-                throw new Error('missing_ocr_lang_network');
-            }
             const result = await confirm({
                 message: lc('ocr_missing_languages', toDownload.map((l) => this.localizedLanguage(l)).join(',')),
                 okButtonText: lc('download'),
                 cancelButtonText: lc('cancel')
             });
             if (result) {
+                if (!networkService.connected) {
+                    throw new NoNetworkError();
+                }
                 await this.downloadLanguages(dataType, toDownload, hideLoading, showAsSnackMessage);
             } else {
                 return false;
