@@ -539,7 +539,7 @@
         </collectionview>
 
         <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom">
-            <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importPages} />
+            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={importPages} />
             <mdbutton class="fab" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
         </stacklayout>
     </gridlayout>
