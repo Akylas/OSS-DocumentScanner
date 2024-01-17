@@ -21,7 +21,7 @@
         "url": "https://github.com/Akylas/OSS-DocumentScanner/issues"
     },
     "dependencies": {
-        "@akylas/kiss-orm": "2.1.6",
+        "@akylas/kiss-orm": "2.1.7",
         "@akylas/nativescript": "8.6.3",
         "@akylas/panzoom": "4.6.0",
         "@mdi/font": "7.3.67",
