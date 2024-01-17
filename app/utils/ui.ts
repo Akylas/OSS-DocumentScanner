@@ -693,7 +693,6 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                             const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
                             hideLoading();
                             const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
-                            DEV_LOG && console.log('onSnack', onSnack);
                             if (onSnack.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
                                 openFile(filePath);

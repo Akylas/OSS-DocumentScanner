@@ -254,6 +254,7 @@
             // console.log('available', available.length);
             // const test = available[0];
             // console.log('max size', test.width, test.height);
+            DEV_LOG && console.log('takePicture');
             showLoading(l('capturing'));
             const { image, info } = await cameraPreview.nativeView.takePicture({
                 savePhotoToDisk: false,
@@ -262,6 +263,7 @@
                 captureMode: 1
                 // captureMode: batchMode ? 1 : 0
             });
+            DEV_LOG && console.log('takePicture done', image);
             const didAdd = await processAndAddImage(image);
             if (didAdd && !batchMode) {
                 await saveCurrentDocument();
