@@ -235,7 +235,7 @@
             webConsoleEnabled={!PRODUCTION}
             on:loadFinished={onWebViewLoadFinished} />
 
-        <textview backgroundColor="#000000cc" color="white" editable={false} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
+        <textview backgroundColor="#000000cc" color="white" editable={false} fontSize={16} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null}>
             <mdbutton class="actionBarButton" color="white" text="mdi-content-copy" variant="text" on:tap={copyText} />
             <mdbutton class="actionBarButton" color="white" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
