@@ -1,32 +1,57 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: "[BUG]"
-labels: bug
-assignees: ''
+name: Bug Report
+description: File a bug report
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: What version are you using?
+      placeholder: What version are you using?
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: What platform are you using?
+      multiple: true
+      options:
+        - Android
+        - iOS
+  - type: textarea
+    id: os_version
+    attributes:
+      label: OS Version
+      description: What OS version are you running on?
+      placeholder: OS version and possible custom ROM
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "A bug happened!"
+    validations:
+      required: true
 
----
-
-**Describe the bug**
-A clear and concise description of what the bug is.
-
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/Akylas/OSS-DocumentScanner/blob/master/COC.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
