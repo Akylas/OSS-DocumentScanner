@@ -2,14 +2,17 @@
 
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Color } from '@nativescript/core';
+    import { Color, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
+    import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
     import { colors, screenWidthDips } from '~/variables';
+    import ListItem from '../common/ListItem.svelte';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -38,7 +41,8 @@
         } else {
             transforms.push(transform);
         }
-        transforms = transforms;
+        transforms = transforms.filter((s) => !!s && s.length);
+        DEV_LOG && console.log('addOrRemoveTransform', transforms);
     }
 
     function refreshCollectionView() {
@@ -60,29 +64,63 @@
             return state;
         });
     }
-    const OPTIONS = {
-        stretch: {
-            aspectFit: { name: lc('aspect_fit') },
-            aspectFill: { name: lc('aspect_fill') }
+    // const OPTIONS = {
+    //     stretch: {
+    //         aspectFit: { name: lc('aspect_fit') },
+    //         aspectFill: { name: lc('aspect_fill') }
+    //     },
+    //     aspectRatio: {
+    //         '4:3': { name: '4:3' },
+    //         '16:9': { name: '16:9' }
+    //     },
+    //     viewsize: {
+    //         full: { name: lc('full') },
+    //         limited: { name: lc('limited') }
+    //     }
+    // };
+
+    const OPTIONS = [
+        {
+            id: 'stretch',
+            title: lc('camera_preview_stretch'),
+            options: {
+                aspectFit: { name: lc('aspect_fit') },
+                aspectFill: { name: lc('aspect_fill') }
+            }
         },
-        aspectRatio: {
-            '4:3': { name: '4:3' },
-            '16:9': { name: '16:9' }
-        },
-        viewsize: {
-            full: { name: lc('full') },
-            limited: { name: lc('limited') }
+        {
+            id: 'viewsize',
+            title: lc('camera_view_size'),
+            options: {
+                full: { name: lc('full') },
+                limited: { name: lc('limited') }
+            }
         }
-    };
-    async function selectOption(option: string, event, valueTransformer?, fullRefresh = true) {
+    ].concat(
+        __ANDROID__
+            ? [
+                  {
+                      id: 'aspectRatio',
+                      title: lc('aspect_ratio'),
+                      options: {
+                          '4:3': { name: '4:3' },
+                          '16:9': { name: '16:9' }
+                      }
+                  }
+              ]
+            : ([] as any)
+    );
+
+    async function selectOption(item, event, valueTransformer?, fullRefresh = true) {
         try {
             // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
+            const options = Object.keys(item.options).map((k) => ({ ...item.options[k], id: k }));
+            console.log('options', options);
             await showPopoverMenu({
                 options,
                 anchor: event.object,
-                onClose: (item) => {
-                    updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
+                onClose: (value) => {
+                    updateOption(item.id, valueTransformer ? valueTransformer(value.id) : value.id, fullRefresh);
                 }
             });
             // await showPopover({
@@ -115,29 +153,51 @@
     // function toggleAspectRatio() {
     //     updateOption('aspectRatio', aspectRatio === '4:3' ? '16:9' : '4:3');
     // }
+
+    let checkboxTapTimer;
+    function onCheckedChanged(item, event) {
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+        addOrRemoveTransform(item.id);
+    }
+    function onTransformTap(item, event) {
+        const checkboxView: CheckBox = (event.object as View).getViewById('checkbox');
+        checkboxTapTimer = setTimeout(() => {
+            checkboxView.checked = !checkboxView.checked;
+        }, 10);
+    }
 </script>
 
 <gesturerootview padding="10 10 0 10" rows="auto">
     <stacklayout>
         <label fontSize={19} fontWeight="bold" margin={5} text={lc('camera_settings')} />
-        <wraplayout padding="10">
+        <wraplayout padding="10 0 10 0">
+            {#each OPTIONS as item}
+                <textfield editable={false} hint={item.title} margin="4 8 4 8" text={$cameraOptionsStore[item.id]} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption(item, e)} />
+            {/each}
             <!-- <mdbutton class="icon-btn" color="white" fontSize={14} text={aspectRatio} variant="text" on:tap={toggleAspectRatio} /> -->
-            <textfield editable={false} hint={lc('camera_view_size')} text={viewsize} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('viewsize', e)} />
-            <textfield editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('stretch', e)} />
+            <!-- <textfield editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('stretch', e)} />
             {#if isAndroid}
                 <textfield editable={false} hint={lc('aspect_ratio')} text={aspectRatio} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('aspectRatio', e)} />
-            {/if}
+            {/if} -->
         </wraplayout>
         <label fontSize={19} fontWeight="bold" margin={5} text={lc('transformations')} />
-        <stacklayout horizontalAlignment="left" orientation="horizontal" padding="10">
-            <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
+        <stacklayout>
+            {#each TRANSFORMS as item}
+                <ListItem columns="*,auto" height={70} subtitle={item.subtitle} title={item.name} on:tap={(e) => onTransformTap(item, e)}>
+                    <checkbox id="checkbox" checked={transforms.indexOf(item.id) !== -1} col={2} ios:marginRight={10} verticalAlignment="center" on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                </ListItem>
+            {/each}
+            <!-- <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
             <checkbox
                 checked={transforms.indexOf('whitepaper') !== -1}
                 marginLeft={4}
                 text={lc('whitepaper')}
                 verticalAlignment="middle"
                 on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />
-            <checkbox checked={transforms.indexOf('color') !== -1} marginLeft={4} text={lc('color')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('color')} />
+            <checkbox checked={transforms.indexOf('color') !== -1} marginLeft={4} text={lc('color')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('color')} /> -->
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
         <label fontSize={19} fontWeight="bold" margin={5} text={lc('filters')} />

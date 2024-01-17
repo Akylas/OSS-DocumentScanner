@@ -173,6 +173,7 @@
             parent: page,
             view: CameraSettingsBottomSheet,
             backgroundOpacity: 0.8,
+            skipCollapsedState: true,
             closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
                 transforms = bottomsheetComponent.transforms;
                 colorType = bottomsheetComponent.colorType;
