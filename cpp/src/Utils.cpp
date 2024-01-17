@@ -265,7 +265,7 @@ std::vector<std::pair<Vec3b, float>> getPaletteFrom1Row(const Mat &src, int colo
     //    {
     //        __android_log_print(ANDROID_LOG_INFO, "JS", "Color Hue: %d Saturation: %d Value: %d hex: %s Area: %f%\n", itr->first(0), itr->first(1), itr->first(2), rgbHexString(HLStoBGR(itr->first)).c_str(), 100.f * float(itr->second) / n);
     //    }
-    cout << "Palette colors " << pairs.size() << " "  << nbColors<< endl;
+    // cout << "Palette colors " << pairs.size() << " "  << nbColors<< endl;
     if (nbColors > 0 && pairs.size() > nbColors)
     {
         int distanceThreshold = 10;
