@@ -307,7 +307,7 @@
                     hint={lc('orientation')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={orientation}
+                    text={OPTIONS['orientation'][orientation].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('orientation', e)} />
@@ -317,7 +317,7 @@
                     hint={lc('paper_size')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={paper_size}
+                    text={OPTIONS['paper_size'][paper_size].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('paper_size', e)} />
@@ -328,7 +328,7 @@
                     hint={lc('color')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={color}
+                    text={OPTIONS['color'][color].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('color', e)} />
@@ -338,7 +338,7 @@
                     hint={lc('items_per_page')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={items_per_page}
+                    text={OPTIONS['items_per_page'][items_per_page].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('items_per_page', e, parseInt)} />
