@@ -55,7 +55,6 @@ opencv/android/*
 !opencv/android/README.md
 tesseract/android/*
 !tesseract/android/README.md
-zxingcpp    
 
 
 # Visual Studio Code
