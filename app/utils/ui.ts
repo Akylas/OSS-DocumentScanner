@@ -43,7 +43,7 @@ import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { share } from './share';
 import { ocrService } from '~/services/ocr';
-import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
+import { IMG_COMPRESS, IMG_FORMAT, TRANSFORMS_SPLIT } from '~/models/constants';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -939,7 +939,6 @@ export function updateSnackMessage(msg: Partial<ShowSnackMessageOptions>) {
     }
 }
 export async function showSnackMessage(props: ShowSnackMessageOptions) {
-    DEV_LOG && console.log('showSnackMessage', props);
     if (snackMessage) {
         updateSnackMessage(props);
     } else {
@@ -952,7 +951,6 @@ export async function showSnackMessage(props: ShowSnackMessageOptions) {
             }
         ];
         Application.notify({ eventName: 'snackMessageAnimation', animationArgs });
-        // DEV_LOG && console.log('showSnackMessage1', animationArgs.length);
         await new Animation(animationArgs).play();
         updateSnackMessage({ translateY: 0 });
     }
@@ -992,8 +990,52 @@ export async function detectOCROnPage(document: OCRDocument, index: number) {
         // recycleImages(ocrImage);
     }
 }
+export async function transformPages({ documents, pages }: { documents?: OCRDocument[]; pages?: { page: OCRPage; pageIndex: number; document: OCRDocument }[] }) {
+    try {
+        const view = (await import('~/components/common/TransformPagesBottomSheet.svelte')).default;
+        const updateOptions = await showBottomSheet({
+            view
+        });
+        if (updateOptions) {
+            // await showLoading(l('computing'));
 
-export async function detectOCR(documents: OCRDocument[]) {
+            // we want to ocr the full document.
+            const progress = 0;
+            if (!pages && documents) {
+                pages = [];
+                documents.forEach((document) => {
+                    pages.push(...document.pages.reduce((acc, page, pageIndex) => acc.concat([{ page, pageIndex, document }]), []));
+                });
+            }
+            const totalPages = pages.length;
+            let pagesDone = 0;
+            showSnackMessage({
+                text: lc('updating_pages', progress),
+                progress: 0
+            });
+            await Promise.all(
+                pages.map(async (p, index) => {
+                    const pageId = p.page.id;
+                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), null, {
+                        colorType: updateOptions.colorType,
+                        colorMatrix: null
+                    });
+
+                    const progress = Math.round((pagesDone / totalPages) * 100);
+                    updateSnackMessage({
+                        text: lc('updating_pages', progress),
+                        progress
+                    });
+                    pagesDone += 1;
+                })
+            );
+        }
+    } catch (error) {
+        throw error;
+    } finally {
+        hideSnackMessage();
+    }
+}
 export async function detectOCR({ documents, pages }: { documents?: OCRDocument[]; pages?: { page: OCRPage; pageIndex: number; document: OCRDocument }[] }) {
     try {
         const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;

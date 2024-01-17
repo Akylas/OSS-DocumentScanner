@@ -157,7 +157,9 @@
         "title": "theme"
     },
     "third_parties": "third party libraries",
+    "transform_images": "transform images",
     "transformations": "transformations",
+    "updating_pages": "updating pages (%1$s%%)",
     "username": "username",
     "version": "version",
     "webdav_config": "webdav configuration",

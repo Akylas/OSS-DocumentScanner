@@ -37,6 +37,7 @@
         showPDFPopoverMenu,
         showPopoverMenu,
         showSnackMessage,
+        transformPages,
         updateSnackMessage
     } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips } from '~/variables';
@@ -430,6 +431,7 @@
             const options = new ObservableArray([
                 { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
                 // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
             ] as any);
@@ -448,15 +450,21 @@
                         //     break;
                         case 'ocr':
                             detectOCR({ pages: getSelectedPagesWithData() });
+                            unselectAll();
                             break;
                         case 'delete':
                             deleteSelectedPages();
+                            break;
+                        case 'transform':
+                            transformPages({ pages: getSelectedPagesWithData() });
+                            unselectAll();
                             break;
                     }
                 }
             });
         } else {
             const options = new ObservableArray([
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
             ] as any);
@@ -470,6 +478,11 @@
                         switch (item.id) {
                             case 'ocr':
                                 await detectOCR({ documents: [document] });
+                                unselectAll();
+                                break;
+                            case 'transform':
+                                transformPages({ documents: [document] });
+                                unselectAll();
                                 break;
                             case 'delete':
                                 await deleteDoc();
@@ -484,7 +497,6 @@
             });
         }
     }
-
 </script>
 
 <page bind:this={page} id="pdfView" actionBarHidden={true}>

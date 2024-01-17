@@ -44,7 +44,7 @@
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnackMessage } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnackMessage, transformPages } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips } from '~/variables';
 
     const textPaint = new Paint();
@@ -666,6 +666,7 @@
         const options = new ObservableArray([
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
             { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
             { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
             { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
         ] as any);
@@ -681,9 +682,15 @@
                         break;
                     case 'fullscreen':
                         fullscreenSelectedDocuments();
+                        unselectAll();
                         break;
                     case 'ocr':
                         detectOCR({ documents: getSelectedDocuments() });
+                        unselectAll();
+                        break;
+                    case 'transform':
+                        transformPages({ documents: getSelectedDocuments() });
+                        unselectAll();
                         break;
                     case 'delete':
                         deleteSelectedDocuments();

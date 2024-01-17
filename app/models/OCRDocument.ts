@@ -302,7 +302,7 @@ export class OCRDocument extends Observable implements Document {
         //we remove from cache so that everything gets updated
         recycleImages(images);
     }
-    async updatePageTransforms(pageIndex: number, transforms: string, editingImage?: ImageSource) {
+    async updatePageTransforms(pageIndex: number, transforms: string, editingImage?: ImageSource, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
         if (!editingImage) {
             editingImage = await loadImage(page.sourceImagePath);
@@ -316,7 +316,8 @@ export class OCRDocument extends Observable implements Document {
             pageIndex,
             {
                 transforms,
-                size: File.fromPath(croppedImagePath).size
+                size: File.fromPath(croppedImagePath).size,
+                ...optionalUpdates
             },
             true
         );
