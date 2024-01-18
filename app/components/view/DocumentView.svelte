@@ -112,7 +112,8 @@
     async function addPages() {
         try {
             await request('camera');
-            document = await showModal({
+            const oldPagesNumber = document.pages.length;
+            const doc: OCRDocument = await showModal({
                 page: Camera,
                 fullscreen: true,
                 props: {
@@ -120,6 +121,17 @@
                     document
                 }
             });
+            // if more than 1 page was imported stay here so that the user sees the added pages
+            if (doc && doc.pages.length - oldPagesNumber === 1) {
+                const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
+                navigate({
+                    page: component,
+                    props: {
+                        document,
+                        startPageIndex: document.pages.length - 1
+                    }
+                });
+            }
         } catch (error) {
             showError(error);
         }
