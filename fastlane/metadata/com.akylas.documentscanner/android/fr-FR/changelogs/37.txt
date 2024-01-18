@@ -1,0 +1,11 @@
+*Features*
+- allow to "batch" transform selected documents or pages
+
+*Bug fixes*
+- accessibility fixes (text/display size)
+- Translated using Weblate (Italian)
+- some UI fixes
+- exporting a single pdf will use the pdf name (and replace invalid characters)
+- show translated values in PDF Preview options
+- better layout for camera settings
+- better options for selected pages in document
