@@ -54,9 +54,6 @@
     });
     $: ({ aspectRatio, stretch, viewsize } = $cameraOptionsStore);
 
-    $: console.log('viewsize', viewsize);
-    $: console.log('aspectRatio', aspectRatio);
-
     // let aspectRatio = ApplicationSettings.getString('camera_aspectratio', '4:3');
     // let stretch = ApplicationSettings.getString('camera_stretch', 'aspectFit');
     // let collectionView: NativeViewElementNode<CollectionView>;
