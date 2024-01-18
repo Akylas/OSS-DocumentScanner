@@ -157,7 +157,9 @@
         "title": "tema"
     },
     "third_parties": "üçüncü taraf kütüphaneleri",
+    "transform_images": "görüntüleri dönüştür",
     "transformations": "dönüşümler",
+    "updating_pages": "sayfalar güncelleniyor (%1$s%%)",
     "username": "kullanıcı adı",
     "version": "sürüm",
     "webdav_config": "webdav yapılandırması",
