@@ -306,15 +306,12 @@
                             indexes.push(index);
                         }
                     });
-                    let minDeleteIndex = Number.MAX_SAFE_INTEGER;
-                    for (let index = 0; index < indexes.length; index++) {
+                    DEV_LOG && console.log('deleting pages', indexes, items.length);
+                    for (let index = indexes.length - 1; index >= 0; index--) {
                         const toRemoveIndex = indexes[index];
-                        minDeleteIndex = Math.min(minDeleteIndex, toRemoveIndex);
                         await document.deletePage(toRemoveIndex);
-
-                        items.splice(toRemoveIndex, 1);
                     }
-                    refreshCollectionView();
+                    // refreshCollectionView();
                     nbSelected = 0;
                 }
             } catch (error) {
@@ -351,7 +348,12 @@
         }
         const index = event.pageIndex;
         items.splice(index, 1);
-        items.forEach((item, index) => (item.index = index + 1));
+        for (let i = index; i < items.length; i++) {
+            const item = items.getItem(i);
+            item.index -= 1;
+            items.setItem(i, item);
+        }
+        // items.forEac/h((item, index) => (item.index = index + 1));
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         if (document === event.doc) {
