@@ -197,6 +197,9 @@ lane :get_changelog  do |params|
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
   logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform])
+  if (!display_links)
+    logs = logs.gsub(/\*\w:\*/, '')
+  end
   puts logs
   logs
 end
