@@ -234,7 +234,7 @@
             editingImage = await loadImage(item.sourceImagePath);
             // editingImage = await ImageSource.fromFile(item.sourceImagePath);
 
-            quad = item.crop;
+            quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
         } catch (error) {
             showError(error);
