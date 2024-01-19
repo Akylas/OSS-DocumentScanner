@@ -49,7 +49,6 @@
         JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited"}'))
     );
     cameraOptionsStore.subscribe((newValue) => {
-        console.log('cameraOptionsStore changed', newValue);
         ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
     });
     $: ({ aspectRatio, stretch, viewsize } = $cameraOptionsStore);
