@@ -651,15 +651,14 @@
                 {
                     fontSize: 14 * $fontScale,
                     color: colorOnSurfaceVariant,
-                    lineHeight: (condensed ? 14 : 26) * $fontScale,
+                    lineHeight: (condensed ? 14 : 20) * $fontScale,
                     text: '\n' + dayjs(item.doc.createdDate).format('L LT')
                 }
             ]
         });
-        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true, 'end');
+        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
         canvas.translate(dx, (condensed ? 0 : 10) + 10);
         staticLayout.draw(canvas);
-        // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
 
     async function showOptions(event) {
