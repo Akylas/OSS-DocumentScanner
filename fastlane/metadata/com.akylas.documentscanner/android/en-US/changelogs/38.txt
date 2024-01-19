@@ -1,0 +1,12 @@
+### Bug fixes
+- opening camera from document view would break future import of images
+- deleting pages in document would crash and would not render correctly
+- Translated using Weblate (Italian)
+- Translated using Weblate (German)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Turkish)
+- don't retain crop change when canceling and c
