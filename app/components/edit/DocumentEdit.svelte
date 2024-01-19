@@ -63,6 +63,7 @@
     let editingTitleTextField: NativeViewElementNode<TextField>;
     // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     // const enhanced = writable(transforms.indexOf('enhance') !== -1);
+
     async function showPDFPopover(event) {
         try {
             await showPDFPopoverMenu([document], event.object);
@@ -578,8 +579,9 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto" visibility={recrop ? 'visible' : 'hidden'}>
+        <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto,auto" visibility={recrop ? 'visible' : 'hidden'}>
             <CropView {editingImage} bind:quadChanged bind:quads />
+            <label fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
         </gridlayout>
         <CActionBar {onGoBack} onTitleTap={() => (editingTitle = true)} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>

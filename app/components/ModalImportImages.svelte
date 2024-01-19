@@ -1,12 +1,13 @@
 <script lang="ts">
-    import { Page } from '@nativescript/core';
-    import { closeModal } from 'svelte-native';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import CropView from '~/components/common/CropView.svelte';
-    import CActionBar from '~/components/common/CActionBar.svelte';
-    import { QRCodeData } from 'plugin-nativeprocessor';
-    import { Template } from 'svelte-native/components';
     import { Pager } from '@nativescript-community/ui-pager';
+    import { Page } from '@nativescript/core';
+    import { QRCodeData } from 'plugin-nativeprocessor';
+    import { closeModal } from 'svelte-native';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import CropView from '~/components/common/CropView.svelte';
+    import { lc } from '~/helpers/locale';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
@@ -32,7 +33,7 @@
 </script>
 
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark">
-    <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
+    <gridlayout backgroundColor="black" rows="auto,*,auto,auto,auto">
         <pager bind:this={pager} id="pager" disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <CropView {...item} rowSpan={2} />
@@ -61,7 +62,8 @@
             visibility={currentIndex < items.length - 1 ? 'visible' : 'hidden'}
             on:tap={() => changePage(1)} />
         <pagerindicator horizontalAlignment="center" marginBottom={10} pagerViewId="pager" row={2} type="worm" verticalAlignment="bottom" />
-        <mdbutton class="fab" elevation={0} horizontalAlignment="center" rippleColor="white" row={3} text="mdi-check" variant="text" on:tap={onTapFinish} />
+        <label fontSize={13} marginBottom={10} row={3} text={lc('crop_edit_doc')} textAlignment="center" />
+        <mdbutton class="fab" elevation={0} horizontalAlignment="center" rippleColor="white" row={4} text="mdi-check" variant="text" on:tap={onTapFinish} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null} />
     </gridlayout>
 </page>
