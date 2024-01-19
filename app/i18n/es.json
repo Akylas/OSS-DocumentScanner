@@ -18,6 +18,7 @@
     "aspect_ratio": "relación de tamaño",
     "authenticate_security": "autentifique para acceder a la aplicación",
     "auto": "auto",
+    "auto_black": "Utilizar el color negro para el tema oscuro automático",
     "biometric_auto_lock": "bloqueo biométrico automático",
     "biometric_auto_lock_desc": "si se activa la aplicación se bloqueará cada vez que la aplicación pasa a segundo plano",
     "biometric_lock": "Seguridad biométrica",
@@ -40,6 +41,7 @@
     "confirm_delete_page": "¿está seguro de que desea borrar la página %1$s?",
     "confirm_delete_pages": "¿está seguro de que desea borrar esas %1$s páginas?",
     "dark": "oscuro",
+    "data_location": "ubicación de los datos",
     "delete": "borrar",
     "delete_page": "borrar",
     "disabled": "desactivado",
@@ -74,6 +76,7 @@
     "images_saved": "imágenes guardadas",
     "import_settings": "importar ajustes",
     "import_settings_desc": "importa todos los ajustes de una copia de seguridad anterior",
+    "internal_storage": "memoria interna",
     "ios": {
         "info": {
             "plist": {
@@ -92,6 +95,9 @@
     "limited": "limitado",
     "list_used_third_parties": "lista de librerías de terceros usadas",
     "loading": "cargando",
+    "move_data": "¿mover los datos?",
+    "move_data_desc": "todos los datos de la aplicación se moverán y se reiniciará la aplicación al final",
+    "moving_files": "moviendo los archivos",
     "nb_pages": "%1$s páginas",
     "no_document_found": "no se encontró el documento",
     "no_document_yet": "añada un documento utilizando la cámara o importar uno desde una imagen",
@@ -125,6 +131,7 @@
     "review_application": "reseñar aplicación",
     "save": "guardar",
     "saving": "guardando",
+    "sdcard": "Tarjeta SD",
     "search": "buscar",
     "select_language": "seleccionar idioma",
     "select_theme": "seleccionar tema",
@@ -150,7 +157,9 @@
         "title": "tema"
     },
     "third_parties": "librerías de terceros",
+    "transform_images": "transformar imágenes",
     "transformations": "transformaciones",
+    "updating_pages": "actualizando páginas (%1$s%%)",
     "username": "nombre usuario",
     "version": "versión",
     "webdav_config": "configuración webdav",
