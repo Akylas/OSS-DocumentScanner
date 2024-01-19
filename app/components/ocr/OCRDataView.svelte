@@ -4,9 +4,9 @@
     import { Page } from '@nativescript/core';
     import { OCRData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { showError } from '~/utils/error';
     import CActionBar from '~/components/common/CActionBar.svelte';
-    import { copyToClipboard } from '@akylas/nativescript/utils';
+    import { showError } from '~/utils/error';
+    import { copyTextToClipboard } from '~/utils/utils.common';
 
     export let ocrData: OCRData;
     export let imagePath: string;
@@ -185,7 +185,7 @@
 
     function copyText() {
         try {
-            copyToClipboard(text);
+            copyTextToClipboard(text);
         } catch (error) {
             showError(error);
         }

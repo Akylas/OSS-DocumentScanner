@@ -1,4 +1,8 @@
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { ImageAsset, ImageSource } from '@nativescript/core';
+import { SDK_VERSION, copyToClipboard } from '@nativescript/core/utils';
+import { lc } from '~/helpers/locale';
+import { showToast } from './utils';
 
 // type Many<T> = T | T[];
 export function pick<T extends object, U extends keyof T>(object: T, ...props: U[]): Pick<T, U> {
@@ -52,4 +56,9 @@ export function recycleImages(...args) {
             }
         }
     }
+}
+
+export function copyTextToClipboard(text) {
+    copyToClipboard(text);
+    showToast(lc('copied'));
 }

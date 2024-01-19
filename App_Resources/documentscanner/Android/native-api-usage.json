@@ -24,7 +24,8 @@
         "android.graphics.pdf:PdfDocument",
         "android.graphics.pdf:PdfDocument.PageInfo",
         "android.graphics.pdf:PdfDocument.PageInfo.Builder",
-        "android.graphics.pdf:PdfDocument.Page"
+        "android.graphics.pdf:PdfDocument.Page",
+        "android.widget:Toast"
     ],
     "blacklist": [
         "org.ow2.asmdex*:*",

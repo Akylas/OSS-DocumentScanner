@@ -40,6 +40,7 @@
     "confirm_delete_documents": "are you sure you want to delete those %1$s documents?",
     "confirm_delete_page": "are you sure you want to delete page %1$s?",
     "confirm_delete_pages": "are you sure you want to delete those %1$s pages?",
+    "copied": "copied",
     "crop_edit_doc": "touch the screen close to a corner but not on so that you see the magnifying glass. The app will select the closest corner",
     "dark": "dark",
     "data_location": "data location",

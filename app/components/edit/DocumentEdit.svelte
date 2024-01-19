@@ -8,7 +8,7 @@
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, Screen, TextField, View } from '@nativescript/core';
-    import { copyToClipboard, debounce } from '@nativescript/core/utils';
+    import { debounce } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
@@ -22,11 +22,10 @@
     import { TRANSFORMS_SPLIT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
-    import { ocrService } from '~/services/ocr';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { ColorMatricesTypes, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, updateLoadingProgress } from '~/utils/ui';
-    import { loadImage, recycleImages } from '~/utils/utils.common';
+    import { ColorMatricesTypes, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
+    import { copyTextToClipboard, loadImage, recycleImages } from '~/utils/utils.common';
     import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -514,7 +513,7 @@
     function copyText() {
         try {
             if (currentItemOCRData) {
-                copyToClipboard(currentItemOCRData.text);
+                copyTextToClipboard(currentItemOCRData.text);
             }
         } catch (error) {
             showError(error);

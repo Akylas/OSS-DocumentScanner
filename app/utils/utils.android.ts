@@ -1,3 +1,4 @@
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { Application, File, Folder, Utils, path } from '@nativescript/core';
 
 export * from './utils.common';
@@ -34,4 +35,8 @@ export async function copyFolderContent(src: string, dst: string) {
 export async function removeFolderContent(src: string) {
     const folder = Folder.fromPath(src);
     return Promise.all((await folder.getEntities()).map((e) => e.remove()));
+}
+
+export function showToast(text: string) {
+    android.widget.Toast.makeText(Utils.android.getApplicationContext(), text, android.widget.Toast.LENGTH_SHORT).show();
 }
