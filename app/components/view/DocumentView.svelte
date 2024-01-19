@@ -250,6 +250,18 @@
             selectItem(item);
         }
     }
+    async function onPan(item: Item, event) {
+        const extraData = event.eventData.extraData;
+        if (Math.abs(extraData.velocityX) > 1000 || Math.abs(extraData.velocityY) > 1000 || Math.abs(extraData.translationX) > 100 || Math.abs(extraData.translationY) > 100) {
+            event.handler?.cancel();
+            return;
+        }
+
+        if (Math.abs(extraData.translationX) > 30 || Math.abs(extraData.translationY) > 30) {
+            event.handler?.cancel();
+            startDragging(item);
+        }
+    }
     async function onItemTap(item: Item) {
         try {
             if (ignoreTap) {
@@ -353,7 +365,6 @@
             item.index -= 1;
             items.setItem(i, item);
         }
-        // items.forEac/h((item, index) => (item.index = index + 1));
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         if (document === event.doc) {
@@ -403,7 +414,8 @@
     // onThemeChanged(refreshCollectionView);
 
     async function onItemReordered(e) {
-        (e.view as ContentView).content.opacity = 1;
+        const view = (e.view as ContentView).content;
+        view.animate({ duration: 100, opacity: 1, scale: { x: 1, y: 1 } });
         try {
             await document.movePage(e.index, e.data.targetIndex);
             collectionView?.nativeView?.refreshVisibleItems();
@@ -412,7 +424,8 @@
         }
     }
     async function onItemReorderStarting(e) {
-        (e.view as ContentView).content.opacity = 0.6;
+        const view = (e.view as ContentView).content;
+        view.animate({ duration: 100, opacity: 0.8, scale: { x: 1.05, y: 1.05 } });
     }
 
     function refreshCollectionView() {
@@ -582,6 +595,7 @@
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
                     on:tap={() => onItemTap(item)}
+                    on:pan={(e) => onPan(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
                     <RotableImageView
