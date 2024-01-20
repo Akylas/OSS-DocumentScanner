@@ -40,6 +40,8 @@
     "confirm_delete_documents": "¿está seguro de que desea borrar esos %1$s documentos?",
     "confirm_delete_page": "¿está seguro de que desea borrar la página %1$s?",
     "confirm_delete_pages": "¿está seguro de que desea borrar esas %1$s páginas?",
+    "copied": "copiado",
+    "crop_edit_doc": "toca la pantalla cerca de una esquina, pero no sobre ella, para que veas la lupa. La aplicación seleccionará la esquina más cercana",
     "dark": "oscuro",
     "data_location": "ubicación de los datos",
     "delete": "borrar",
