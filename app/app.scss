@@ -121,10 +121,13 @@ page {
     }
 }
 
+frame {
+    background-color: var(--colorBackground);
+}
+
 .actionBar {
     z-index: 0;
     border-radius: 0;
-    // elevation:3;
     height: var(--actionBarHeight);
     background-color: var(--colorBackground);
 
