@@ -71,7 +71,7 @@ const onInitRootView = function () {
         // setTimeout(() => {
         const rootView = Application.getRootView();
         const rootViewStyle = rootView?.style;
-        // DEV_LOG && console.log('initRootView', rootView);
+        DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
         // DEV_LOG && console.log('fonts', get(fonts));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));

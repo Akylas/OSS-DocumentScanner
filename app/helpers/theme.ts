@@ -238,10 +238,7 @@ export function start() {
         // we need to update the theme on every activity start
         // to get dynamic colors
         Application.on('activity_started', () => {
-            DEV_LOG && console.log('activity_started');
-            if (Application.getRootView()) {
-                getRealThemeAndUpdateColors();
-            }
+            getRealThemeAndUpdateColors();
         });
     } else {
         // without rootController systemAppearance will be null

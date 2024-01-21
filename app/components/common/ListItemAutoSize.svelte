@@ -83,7 +83,10 @@
 
 <canvasview
     {columns}
-    padding="10 16 10 16"
+    paddingBottom={subtitle ? 0 : 10}
+    paddingLeft={16}
+    paddingRight={16}
+    paddingTop={subtitle ? 0 : 10}
     rippleColor={color || colorOnSurface}
     on:tap={(event) => dispatch('tap', event)}
     on:longPress={(event) => dispatch('longPress', event)}
