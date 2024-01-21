@@ -40,6 +40,8 @@
     "confirm_delete_documents": "bu %1$s belgeyi silmek istediğinize emin misiniz?",
     "confirm_delete_page": "%1$s. sayfayı silmek istediğinize emin misiniz?",
     "confirm_delete_pages": "Bu %1$s sayfayı silmek istediğinize emin misiniz?",
+    "copied": "kopyalandı",
+    "crop_edit_doc": "Büyüteci görebilmeniz için belgenin tam olarak köşesine değil, köşesine yakın bir yere dokunun. Uygulama en yakın köşeyi seçecektir",
     "dark": "koyu",
     "data_location": "veri konumu",
     "delete": "sil",
