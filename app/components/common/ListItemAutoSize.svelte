@@ -57,7 +57,7 @@
         onDraw?.(event);
     }
 
-    $: addedPadding = subtitle?.length > 0 ? 0 : __ANDROID__ ? 8 : 12;
+    $: addedPadding = (subtitle?.length > 0 ? 0 : 10) + (__ANDROID__ ? 8 : 12);
 </script>
 
 <!-- <gridlayout>
@@ -83,10 +83,9 @@
 
 <canvasview
     {columns}
-    paddingBottom={subtitle ? 0 : 10}
+    disableCss={true}
     paddingLeft={16}
     paddingRight={16}
-    paddingTop={subtitle ? 0 : 10}
     rippleColor={color || colorOnSurface}
     on:tap={(event) => dispatch('tap', event)}
     on:longPress={(event) => dispatch('longPress', event)}
@@ -100,12 +99,12 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapsed'}
         width={iconFontSize * 2} /> -->
-    <label col={mainCol} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
+    <label col={mainCol} disableCss={true} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
         <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
-    <label col={2} color={subtitleColor} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
+    <label col={2} color={subtitleColor} disableCss={true} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
         <cspan fontSize={subtitleFontSize * $fontScale} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
         <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize * $fontScale} text={rightIcon} />
     </label>
