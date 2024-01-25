@@ -1,0 +1,78 @@
+plugins {
+    id 'com.android.test'
+    id 'org.jetbrains.kotlin.android'
+    id 'androidx.baselineprofile'
+}
+
+android {
+    namespace 'com.example.baselineprofile'
+    compileSdk 34
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        minSdk 28
+        targetSdk 34
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    targetProjectPath = ":app"
+    experimentalProperties["android.experimental.self-instrumenting"] = true
+}
+
+// This is the configuration block for the Baseline Profile plugin.
+// You can specify to run the generators on a managed devices or connected devices.
+baselineProfile {
+    useConnectedDevices = true
+}
+
+dependencies {
+    implementation 'androidx.test.ext:junit:1.1.5'
+    implementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+    implementation 'androidx.benchmark:benchmark-macro-junit4:1.2.2'
+    implementation 'androidx.test:rules:1.5.0'
+}
+
+// duplicated from app. should be refactored
+def externalRuntimeExists = !findProject(':runtime').is(null)
+def pluginDependencies
+
+repositories {
+    // used for local *.AAR files
+    pluginDependencies = nativescriptDependencies.collect {
+        "$rootDir/${it.directory}/$PLATFORMS_ANDROID"
+    }
+
+    // some plugins may have their android dependencies in a /libs subdirectory
+    pluginDependencies.addAll(nativescriptDependencies.collect {
+        "$rootDir/${it.directory}/$PLATFORMS_ANDROID/libs"
+    })
+
+    if (!externalRuntimeExists) {
+        pluginDependencies.add("$rootDir/app/libs/runtime-libs")
+    }
+
+    def appResourcesPath = getAppResourcesPath()
+    def localAppResourcesLibraries = "$appResourcesPath/Android/libs"
+
+    pluginDependencies.add(localAppResourcesLibraries)
+
+    if (pluginDependencies.size() > 0) {
+
+        flatDir {
+            dirs pluginDependencies
+        }
+    }
+
+    mavenCentral()
+	maven { url 'https://jitpack.io' }
+}

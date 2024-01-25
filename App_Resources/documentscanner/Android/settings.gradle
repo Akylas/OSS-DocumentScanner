@@ -1,5 +1,5 @@
 
-include ':benchmark'
+include ':baselineprofile'
 // include ':nativeprocessor'
 // project(':nativeprocessor').projectDir = new File("/home/mguillon/dev/nativescript/com.akylas.documentscanner/plugin-nativeprocessor/src-native/android/nativeprocessor")
 include ':android-metadata-generator'

@@ -1,6 +1,7 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "android.text:Spannable",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
         "org.deejdev.twowaynestedscrollview:TwoWayNestedScrollView",
@@ -28,6 +29,24 @@
         "android.widget:Toast"
     ],
     "blacklist": [
+        "android.widget:DatePicker",
+        "android.widget:DatePicker.OnDateChangedListener",
+        "android.widget:NumberPicker",
+        "android.widget:NumberPicker.Formatter",
+        "android.widget:NumberPicker.OnValueChangeListener",
+        "android.widget:TabHost",
+        "android.widget:TabHost.OnTabChangeListener",
+        "android.widget:TabHost.TabContentFactory",
+        "android.widget:TabHost.TabSpec",
+        "android.widget:TabWidget",
+        "android.widget:TimePicker",
+        "android.widget:TimePicker.OnTimeChangedListener",
+        "androidx.appcompat.widget:SearchView",
+        "androidx.appcompat.widget:SearchView.OnCloseListener",
+        "androidx.appcompat.widget:SearchView.OnQueryTextListener",
+        "androidx.appcompat.widget:Toolbar.OnMenuItemClickListener",
+        "androidx.appcompat.widget:AppCompatTextView",
+
         "org.ow2.asmdex*:*",
         "org.nativescript.widgets:TabItemSpec*",
         "org.nativescript.widgets:TabsBar*",

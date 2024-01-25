@@ -133,6 +133,7 @@ android {
   //     resConfigs "en", "fr", "es"
   //   }
   // }
+    experimentalProperties["android.experimental.r8.dex-startup-optimization"] = true
 }
 
 task createProguard {
@@ -186,8 +187,8 @@ dependencies {
     }
 
     implementation "androidx.profileinstaller:profileinstaller:1.3.1"
-    baselineProfile project(':benchmark')
-    
+    baselineProfile project(':baselineprofile')
+
     implementation 'com.itextpdf.android:kernel-android:7.2.3'
 }
 repositories {
