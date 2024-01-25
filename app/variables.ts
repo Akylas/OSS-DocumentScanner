@@ -1,12 +1,9 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
-import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
-import { get, writable } from 'svelte/store';
-// import CSSModule from '~/variables.module.scss';
-import { onDestroy } from 'svelte';
-import { getRealTheme, getRealThemeAndUpdateColors, theme } from './helpers/theme';
 import { themer } from '@nativescript-community/ui-material-core';
+import { Application, Color, Screen, Utils } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
-// const locals = CSSModule.locals;
+import { get, writable } from 'svelte/store';
+import { getRealTheme, theme } from './helpers/theme';
 
 export const colors = writable({
     colorPrimary: '',
@@ -71,9 +68,7 @@ const onInitRootView = function () {
         // setTimeout(() => {
         const rootView = Application.getRootView();
         const rootViewStyle = rootView?.style;
-        DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
-        // DEV_LOG && console.log('fonts', get(fonts));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         const activity = Application.android.startActivity;
@@ -103,14 +98,19 @@ const onInitRootView = function () {
         const rootViewStyle = rootView?.style;
         DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
-        // DEV_LOG && console.log('fonts', get(fonts));
+
+        const currentColors = get(colors);
+        Object.keys(currentColors).forEach((c) => {
+            currentColors[c] = rootViewStyle.getCssVariable('--' + c);
+        });
+        colors.set(currentColors);
         updateSystemFontScale(getCurrentFontScale());
         Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
-        updateThemeColors(theme);
     }
+    updateThemeColors(getRealTheme(theme));
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
     Application.off('initRootView', onInitRootView);
     // getRealThemeAndUpdateColors();
@@ -145,23 +145,8 @@ export function updateThemeColors(theme: string) {
             } else {
                 currentColors[c] = new Color(nUtils.getColorFromName(activity, c)).hex;
             }
-            // rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
-        });
-        if (theme === 'dark') {
-            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(3).hex;
-            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(6).hex;
-        } else {
-            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(3).hex;
-            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(6).hex;
-        }
-        currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
-        Object.keys(currentColors).forEach((c) => {
-            rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
         });
     } else {
-        Object.keys(currentColors).forEach((c) => {
-            currentColors[c] = rootViewStyle.getCssVariable('--' + c);
-        });
         if (theme === 'dark' || theme === 'black') {
             currentColors.colorPrimary = '#7DDB82';
             currentColors.colorOnPrimary = '#00390F';
@@ -179,9 +164,6 @@ export function updateThemeColors(theme: string) {
             currentColors.colorSurfaceVariant = '#424940';
             currentColors.colorOnSurfaceVariant = '#C2C9BD';
             currentColors.colorSurfaceContainer = '#424940';
-
-            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(3).hex;
-            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(6).hex;
         } else {
             currentColors.colorPrimary = '#006E25';
             currentColors.colorOnPrimary = '#FFFFFF';
@@ -199,14 +181,7 @@ export function updateThemeColors(theme: string) {
             currentColors.colorSurfaceVariant = '#DEE5D9';
             currentColors.colorOnSurfaceVariant = '#424940';
             currentColors.colorSurfaceContainer = '#DEE5D9';
-
-            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(3).hex;
-            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(6).hex;
         }
-        currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
-        Object.keys(currentColors).forEach((c) => {
-            rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
-        });
 
         themer.setPrimaryColor(currentColors.colorPrimary);
         themer.setOnPrimaryColor(currentColors.colorOnPrimary);
@@ -215,8 +190,20 @@ export function updateThemeColors(theme: string) {
         themer.setSurfaceColor(currentColors.colorSurface);
         themer.setOnSurfaceColor(currentColors.colorOnSurface);
     }
-    currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
+
+    if (theme === 'dark') {
+        currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
+        currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
+    } else {
+        currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(10).hex;
+        currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(20).hex;
+    }
+    currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
+    Object.keys(currentColors).forEach((c) => {
+        rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
+    });
     colors.set(currentColors);
-    // DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
+    Application.notify({ eventName: 'colorsChange', colors: currentColors });
+    DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
 }
