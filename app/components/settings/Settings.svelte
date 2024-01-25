@@ -507,7 +507,7 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
+        <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">
                     <stacklayout
