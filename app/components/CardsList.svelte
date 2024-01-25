@@ -785,6 +785,7 @@
             <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
                 <lottie
                     bind:this={lottieView}
+                    async={true}
                     autoPlay={true}
                     keyPathColors={{
                         'background|**': lottieDarkFColor,
