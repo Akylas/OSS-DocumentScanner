@@ -50,12 +50,8 @@ module.exports = (env, params = {}) => {
             {},
             {
                 production: true,
-                sentry: false,
-                uploadSentry: false,
                 noconsole: true,
-                apiKeys: true,
                 sourceMap: false,
-                testlog: false,
                 uglify: true
             },
             env
@@ -65,9 +61,7 @@ module.exports = (env, params = {}) => {
             {},
             {
                 production: true,
-                sentry: false,
                 noconsole: false,
-                uploadSentry: false,
                 keep_classnames_functionnames: true,
                 sourceMap: false,
                 uglify: true
@@ -210,6 +204,7 @@ module.exports = (env, params = {}) => {
         'global.TNS_WEBPACK': 'true',
         __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
+        __ACCESSIBILITY_DEFAULT_ENABLED__: false,
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
         __IOS__: isIOS,
