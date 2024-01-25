@@ -6,7 +6,7 @@
     },
     "$com.akylas.documentscanner": {
         "app": {
-            "name": "ÖAK Belge Tarayıcı"
+            "name": "OSS Belge Tarayıcı"
         }
     },
     "a3": "a3",
@@ -40,13 +40,15 @@
     "confirm_delete_documents": "bu %1$s belgeyi silmek istediğinize emin misiniz?",
     "confirm_delete_page": "%1$s. sayfayı silmek istediğinize emin misiniz?",
     "confirm_delete_pages": "Bu %1$s sayfayı silmek istediğinize emin misiniz?",
+    "copied": "kopyalandı",
+    "crop_edit_doc": "Büyüteci görebilmeniz için belgenin tam olarak köşesine değil, köşesine yakın bir yere dokunun. Uygulama en yakın köşeyi seçecektir",
     "dark": "koyu",
     "data_location": "veri konumu",
     "delete": "sil",
     "delete_page": "sil",
     "disabled": "devre dışı",
-    "documents": "dökümanlar",
-    "donate": "Projenin finansmanına yardımcı olmak için lütfen küçük bir bağış yapmayı düşünün",
+    "documents": "belgeler",
+    "donate": "Projenin finansmanına katkıda bulunmak için lütfen küçük bir bağış yapmayı düşünün",
     "download": "indir",
     "downloading": "indiriliyor (%1$s%%)…",
     "draw_ocr_overlay": "OCR katmanı ekle",
@@ -114,7 +116,7 @@
     "page_padding": "sayfa dolgusu",
     "paper_size": "kağıt boyutu",
     "password": "şifre",
-    "password_not_saved": "şifre kaydedilmedi",
+    "password_not_saved": "şifre kayıtlı değil",
     "pdf_filename": "dışa aktarılan pdf için dosya adı",
     "pdf_saved": "pdf %1$s konumuna kaydedildi",
     "portrait": "dikey",
@@ -131,14 +133,14 @@
     "review_application": "uygulamayı değerlendir",
     "save": "kaydet",
     "saving": "kaydediliyor",
-    "sdcard": "SD Kart",
+    "sdcard": "Hafıza kartı",
     "search": "ara",
     "select_language": "dil seç",
     "select_theme": "tema seç",
     "selected": "%1$s seçildi",
     "server_address": "sunucu adresi",
     "settings": {
-        "title": "ayarar"
+        "title": "ayarlar"
     },
     "share": "paylaş",
     "share_application": "uygulamayı paylaş",
@@ -163,7 +165,7 @@
     "username": "kullanıcı adı",
     "version": "sürüm",
     "webdav_config": "webdav yapılandırması",
-    "webdav_sync": "webdav belgeleri senkronizasyonu",
+    "webdav_sync": "webdav belge senkronizasyonu",
     "webdav_sync_desc": "webdav'ın belgelerinizi senkronize etmesini etkinleştirin (yedekleme)",
     "whitepaper": "beyaz kağıt",
     "whitepaper_desc": "beyaz kağıt belgeler için iyileştirme"
