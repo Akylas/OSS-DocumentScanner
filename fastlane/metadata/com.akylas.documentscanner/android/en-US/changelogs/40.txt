@@ -1,0 +1,10 @@
+### Bug fixes
+- Translated using Weblate (Turkish)
+- prevent background flashing on navigation after theme change
+- Translated using Weblate (Italian)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Turkish)
+- settings layout fix
+- Translated using Weblate (German)
+- Translated using Weblate (Hindi)
+- **android:** removed unecessary `READ_EXTERNAL_STORAGE` permission
