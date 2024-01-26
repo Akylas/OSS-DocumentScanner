@@ -3,6 +3,7 @@ const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
 const { dirname, join, isAbsolute, relative, resolve } = require('path');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -120,6 +121,7 @@ module.exports = (env, params = {}) => {
         testlog, // --env.testlog
         fakeall, // --env.fakeall
         profile, // --env.profile
+        report,
         fork = true, // --env.fakeall
         accessibility = true, // --env.accessibility
         playStoreBuild = true, // --env.playStoreBuild
@@ -519,6 +521,19 @@ module.exports = (env, params = {}) => {
         config.plugins.push(
             new ForkTsCheckerWebpackPlugin({
                 async: false
+            })
+        );
+    }
+
+    if (report) {
+        // Generate report files for bundles content
+        config.plugins.push(
+            new BundleAnalyzerPlugin({
+                analyzerMode: 'static',
+                openAnalyzer: false,
+                generateStatsFile: true,
+                reportFilename: resolve(projectRoot, 'report', 'report.html'),
+                statsFilename: resolve(projectRoot, 'report', 'stats.json')
             })
         );
     }
