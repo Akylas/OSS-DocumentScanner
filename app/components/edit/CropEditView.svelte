@@ -105,7 +105,7 @@
 <gridlayout bind:this={topView} backgroundColor="black" rows="*,auto,auto" {...$$restProps}>
     <RotableImageView bind:this={rotableImageView} {item} zoomable={true} />
     <CropView {editingImage} rowSpan={2} visibility={recrop ? 'visible' : 'hidden'} bind:quadChanged bind:quads />
-    <gridlayout row="1" rows="auto,auto" visibility={recrop ? 'collapsed' : 'visible'}>
+    <gridlayout row="1" rows="auto,auto" visibility={recrop ? 'collapse' : 'visible'}>
         <stacklayout orientation="horizontal" verticalAlignment="top">
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => (recrop = true)} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />

@@ -117,7 +117,7 @@
 <gesturerootview columns="auto">
     <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} margin={margin || elevation + 2} rows="auto,340" {width}>
         <!-- <CActionBar title={lc('search')} modalWindow>
-            <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
+            <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} />
         </CActionBar> -->
         <textfield
             bind:this={textField}
@@ -134,9 +134,9 @@
         <collectionview {items} row={1} rowHeight={56}>
             <Template let:item>
                 <gridlayout columns="auto,*,auto" padding={16} rippleColor={colorPrimary} on:tap={() => close(item)}>
-                    <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapsed'} />
+                    <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapse'} />
                     <label col={1} fontSize={17} text={item.name} verticalTextAlignment="middle" />
-                    <label col={2} fontFamily={$fonts.mdi} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapsed'} />
+                    <label col={2} fontFamily={$fonts.mdi} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapse'} />
                 </gridlayout>
             </Template>
         </collectionview>

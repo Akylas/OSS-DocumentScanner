@@ -97,14 +97,14 @@
         marginLeft="-10"
         text={leftIcon}
         verticalAlignment="middle"
-        visibility={!!leftIcon ? 'visible' : 'collapsed'}
+        visibility={!!leftIcon ? 'visible' : 'collapse'}
         width={iconFontSize * 2} /> -->
     <label col={mainCol} disableCss={true} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
         <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
-    <label col={2} color={subtitleColor} disableCss={true} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
+    <label col={2} color={subtitleColor} disableCss={true} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapse'}>
         <cspan fontSize={subtitleFontSize * $fontScale} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
         <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize * $fontScale} text={rightIcon} />
     </label>

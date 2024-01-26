@@ -74,7 +74,7 @@
     borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
     disableCss={true}
     rippleColor={actualColor}
-    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
+    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
     on:draw={onCanvasDraw}
     {...$$restProps}
     height={height || size}
@@ -89,7 +89,7 @@
     disableCss={true}
     rippleColor={actualColor}
     {fontFamily}
-    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
+    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
     color={isSelected ? selectedColor : actualColor}
     {...$$restProps}
     on:tap

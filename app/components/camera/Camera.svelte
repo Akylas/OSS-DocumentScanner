@@ -638,8 +638,8 @@
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showDocumentsList} />
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" visibility={startOnCam ? 'visible' : 'collapsed'} on:tap={showSettings} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showDocumentsList} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showSettings} />
         </CActionBar>
 
         <!-- <gridlayout padding="10" row={1} rows="*,auto"> -->
@@ -648,7 +648,7 @@
             <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
             <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
         </stacklayout>
-        <mdbutton class="icon-btn" color="white" horizontalAlignment="right" row={2} text="mdi-tune" variant="text" visibility={startOnCam ? 'collapsed' : 'visible'} on:tap={showCameraSettings} />
+        <mdbutton class="icon-btn" color="white" horizontalAlignment="right" row={2} text="mdi-tune" variant="text" visibility={startOnCam ? 'collapse' : 'visible'} on:tap={showCameraSettings} />
 
         <gridlayout columns="60,*,auto,*,60" row={3}>
             <mdbutton
@@ -722,7 +722,7 @@
             {editingImage}
             quad={currentQuad}
             rowSpan={4}
-            visibility={editing ? 'visible' : 'collapsed'}
+            visibility={editing ? 'visible' : 'collapse'}
             bind:croppedImageRotation
             bind:colorType
             on:finished={onFinishEditing} /> -->

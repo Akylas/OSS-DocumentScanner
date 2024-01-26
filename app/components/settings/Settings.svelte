@@ -562,7 +562,7 @@
                             lineBreak="end"
                             text={item.description}
                             verticalTextAlignment="top"
-                            visibility={item.description?.length > 0 ? 'visible' : 'collapsed'} />
+                            visibility={item.description?.length > 0 ? 'visible' : 'collapse'} />
                     </stacklayout>
                     <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                 </gridlayout>
@@ -582,7 +582,7 @@
                         marginRight={16}
                         text={item.rightValue && item.rightValue()}
                         verticalAlignment="center"
-                        visibility={!!item.rightValue ? 'visible' : 'collapsed'} />
+                        visibility={!!item.rightValue ? 'visible' : 'collapse'} />
                     <label
                         col={2}
                         color={colorOutlineVariant}

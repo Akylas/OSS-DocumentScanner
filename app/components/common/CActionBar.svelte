@@ -43,7 +43,7 @@
         }
     }
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
-    $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
+    $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapse';
 </script>
 
 <gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 300 }}>

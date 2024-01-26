@@ -25,10 +25,10 @@
             maxLines={subtitleMaxLines}
             text={subtitle}
             verticalTextAlignment="top"
-            visibility={subtitleColor?.length > 0 ? 'visible' : 'collapsed'} />
+            visibility={subtitleColor?.length > 0 ? 'visible' : 'collapse'} />
     </stacklayout>
 
-    <label col={2} color={colorOnSurfaceVariant} marginLeft={16} marginRight={16} text={rightValue?.()} verticalAlignment="middle" visibility={!!rightValue ? 'visible' : 'collapsed'} />
+    <label col={2} color={colorOnSurfaceVariant} marginLeft={16} marginRight={16} text={rightValue?.()} verticalAlignment="middle" visibility={!!rightValue ? 'visible' : 'collapse'} />
     <label
         col={2}
         color={colorOutlineVariant}
