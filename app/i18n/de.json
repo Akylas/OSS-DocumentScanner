@@ -40,6 +40,8 @@
     "confirm_delete_documents": "Sind Sie sicher, dass Sie diese %1$s Dokumente löschen wollen?",
     "confirm_delete_page": "Sind Sie sicher, dass Sie Seite %1$s löschen möchten?",
     "confirm_delete_pages": "Sind Sie sicher, dass Sie diese %1$s Seiten löschen wollen?",
+    "copied": "Kopiert",
+    "crop_edit_doc": "Berühre den Bildschirm nahe einer Ecke, so dass Sie die Lupe sehen. Die App wählt die nächstgelegene Ecke aus",
     "dark": "Dunkel",
     "data_location": "Speicherort",
     "delete": "Löschen",
@@ -157,7 +159,9 @@
         "title": "Thema"
     },
     "third_parties": "Drittanbieter-Bibliotheken",
+    "transform_images": "Bilder umwandeln",
     "transformations": "Veränderungen",
+    "updating_pages": "Seiten aktualisieren (%1$s%%)",
     "username": "Benutzername",
     "version": "Version",
     "webdav_config": "WebDAV-Einstellungen",
