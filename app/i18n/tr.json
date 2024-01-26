@@ -105,7 +105,7 @@
     "no_document_yet": "kamerayı kullanarak bir belge ekleyin veya bir görüntüden içe belge aktarın",
     "no_text_found_in_page": "belgenizde metin algılanamadı",
     "ocr_computing": "metin algılanıyor (%1$s%%)...",
-    "ocr_computing_document": "döküman(lar)da metin algılanıyor (%1$s%%)",
+    "ocr_computing_document": "belge(ler)de metin algılanıyor (%1$s%%)",
     "ocr_document": "metni algıla",
     "ocr_missing_languages": "OCR modelleri eksik, indirilecekler: %1$s",
     "off": "kapalı",
