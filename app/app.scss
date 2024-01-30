@@ -110,14 +110,8 @@ page {
     background-color: var(--colorBackground);
     status-bar-color: var(--colorBackground);
 
-    .ns-dark & {
+    .ns-dark &, .ns-black & {
         status-bar-style: dark;
-    }
-
-    .ns-black & {
-        status-bar-style: dark;
-        status-bar-color: black;
-        background-color: black;
     }
 }
 
@@ -134,6 +128,13 @@ frame {
     .ns-black & {
         background-color: scale-color(black, $alpha: -30%);
     }
+}
+
+.sectionHeader {
+    font-size: 15;
+    font-weight: bold;
+    color: var(--colorPrimary);
+    padding: 5 5 5 16;
 }
 
 

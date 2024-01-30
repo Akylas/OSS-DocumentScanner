@@ -459,6 +459,7 @@
             return;
         }
         const value = event.value;
+        item.value = value;
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
             checkboxTapTimer = null;
@@ -502,7 +503,8 @@
                     break;
 
                 default:
-                    ApplicationSettings.setBoolean(item.key, value);
+                    DEV_LOG && console.log('updating setting for checkbox', item.id, item.key, value);
+                    ApplicationSettings.setBoolean(item.key || item.id, value);
                     break;
             }
         } catch (error) {

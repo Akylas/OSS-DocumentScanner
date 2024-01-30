@@ -131,7 +131,6 @@ export function updateThemeColors(theme: string) {
     if (__ANDROID__) {
         const nUtils = com.akylas.documentscanner.Utils;
         const activity = Application.android.startActivity;
-        Utils.android.getApplicationContext().getResources();
         // we also update system font scale so that our UI updates correcly
         fontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
         Object.keys(currentColors).forEach((c) => {
@@ -154,7 +153,6 @@ export function updateThemeColors(theme: string) {
             currentColors.colorOnPrimaryContainer = '#98F89C';
             currentColors.colorSecondary = '#B9CCB4';
             currentColors.colorOnSecondary = '#243424';
-            currentColors.colorBackground = '#1A1C19';
             currentColors.colorOnBackground = '#E2E3DD';
             currentColors.colorSurface = '#121411';
             currentColors.colorOnSurface = '#C6C7C1';
@@ -190,7 +188,9 @@ export function updateThemeColors(theme: string) {
         themer.setSurfaceColor(currentColors.colorSurface);
         themer.setOnSurfaceColor(currentColors.colorOnSurface);
     }
-
+    if (theme === 'black') {
+        currentColors.colorBackground = '#000000';
+    }
     if (theme === 'dark') {
         currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
         currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
@@ -204,6 +204,6 @@ export function updateThemeColors(theme: string) {
     });
     colors.set(currentColors);
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
-    DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
+    DEV_LOG && console.log('changed colors', rootView, theme, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
 }
