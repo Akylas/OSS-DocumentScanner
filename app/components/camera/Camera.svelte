@@ -3,6 +3,7 @@
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
@@ -587,15 +588,32 @@
             }
         }
     }
-    function toggleAutoScan() {
+    function toggleAutoScan(apply = true) {
         autoScan = !autoScan;
         ApplicationSettings.setBoolean('autoScan', autoScan);
-        applyAutoScan(autoScan);
+        if (apply) {
+            applyAutoScan(autoScan);
+        }
     }
     let processor;
     async function applyProcessor() {
         if (processor) {
             return;
+        }
+
+        const showAutoScanWarning = ApplicationSettings.getBoolean('showAutoScanWarning', true);
+        if (showAutoScanWarning) {
+            if (autoScan) {
+                const result = await confirm({
+                    message: lc('auto_scan_first_use'),
+                    okButtonText: lc('enable'),
+                    cancelButtonText: lc('disable')
+                });
+                if (!result && autoScan) {
+                    toggleAutoScan(false);
+                }
+            }
+            ApplicationSettings.setBoolean('showAutoScanWarning', false);
         }
         try {
             const nCropView = cropView.nativeView.nativeViewProtected;
