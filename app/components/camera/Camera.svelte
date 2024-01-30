@@ -630,11 +630,12 @@
             </gridlayout>
 
             <mdbutton
-                class="fab"
-                col={3}
+                class="icon-btn"
+                col={4}
+                color="white"
                 elevation={0}
-                horizontalAlignment="center"
-                rippleColor="white"
+                horizontalAlignment="right"
+                ripple-color="white"
                 text="mdi-check"
                 variant="text"
                 verticalAlignment="center"
