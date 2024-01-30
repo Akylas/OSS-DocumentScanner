@@ -40,7 +40,7 @@
 
 <gesturerootview margin={10} {...$$restProps} rows="auto">
     <stacklayout>
-        <label fontSize={19} fontWeight="bold" margin={5} text={lc('webdav_config')} />
+        <label class="sectionHeader" fontSize={19} text={lc('webdav_config')} />
         <textfield
             autocapitalizationType="none"
             hint={lc('server_address')}

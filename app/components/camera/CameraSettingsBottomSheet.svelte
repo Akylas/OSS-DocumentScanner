@@ -172,7 +172,7 @@
 
 <gesturerootview padding="10 10 0 10" rows="auto">
     <stacklayout>
-        <label fontSize={19} fontWeight="bold" margin={5} text={lc('camera_settings')} />
+        <label class="sectionHeader" text={lc('camera_settings')} />
         <wraplayout padding="10 0 10 0">
             {#each OPTIONS as item}
                 <textfield editable={false} hint={item.title} margin="4 8 4 8" text={$cameraOptionsStore[item.id]} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption(item, e)} />
@@ -183,7 +183,7 @@
                 <textfield editable={false} hint={lc('aspect_ratio')} text={aspectRatio} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('aspectRatio', e)} />
             {/if} -->
         </wraplayout>
-        <label fontSize={19} fontWeight="bold" margin={5} text={lc('transformations')} />
+        <label class="sectionHeader" text={lc('transformations')} />
         <stacklayout>
             {#each TRANSFORMS as item}
                 <ListItem columns="*,auto" height={70} subtitle={item.subtitle} title={item.name} on:tap={(e) => onTransformTap(item, e)}>
@@ -200,7 +200,7 @@
             <checkbox checked={transforms.indexOf('color') !== -1} marginLeft={4} text={lc('color')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('color')} /> -->
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
-        <label fontSize={19} fontWeight="bold" margin={5} text={lc('filters')} />
+        <label class="sectionHeader" text={lc('filters')} />
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
             <Template let:item>
                 <gridlayout backgroundColor={getBackgroundColor(item)} padding={4} rows="*,25" on:tap={() => setColorType(item.colorType)}>
