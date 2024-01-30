@@ -47,6 +47,8 @@
     "delete": "delete",
     "delete_page": "delete",
     "disabled": "disabled",
+    "document_not_detected_margin": "no document margin",
+    "document_not_detected_margin_desc": "if no document is found, corners are set to image size with a slight margin",
     "documents": "documents",
     "donate": "Please consider making a small donation to help fund the project",
     "download": "download",

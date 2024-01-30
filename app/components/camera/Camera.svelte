@@ -15,7 +15,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { l } from '~/helpers/locale';
     import { OCRDocument, PageData } from '~/models/OCRDocument';
-    import { TRANSFORMS_SPLIT } from '~/models/constants';
+    import { DOCUMENT_NOT_DETECTED_MARGIN, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
@@ -71,6 +71,8 @@
     let smallImage: string | ImageSource = null;
     let smallImageRotation: number = 0;
     // let croppedImageRotation: number = 0;
+    const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
+    const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
@@ -189,21 +191,12 @@
     }
 
     let editingImage: ImageSource;
-    // let quads;
-    let currentQuad;
 
     async function processAndAddImage(image) {
-        // if (!File.exists(imagePath)) {
-        //     console.error('cant find image', imagePath);
-        //     return;
-        // }
         try {
-            // stopPreview();
             showLoading(l('computing'));
-            // editingImage = await loadImage(imagePath);
             editingImage = new ImageSource(image);
-            // eslint-disable-next-line prefer-const
-            let quads = await getJSONDocumentCorners(editingImage, 300, 0);
+            let quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
 
             if (quads.length === 0) {
                 let items = [
@@ -211,10 +204,10 @@
                         editingImage,
                         quads: [
                             [
-                                [100, 100],
-                                [editingImage.width - 100, 100],
-                                [editingImage.width - 100, editingImage.height - 100],
-                                [100, editingImage.height - 100]
+                                [noDetectionMargin, noDetectionMargin],
+                                [editingImage.width - noDetectionMargin, noDetectionMargin],
+                                [editingImage.width - noDetectionMargin, editingImage.height - noDetectionMargin],
+                                [noDetectionMargin, editingImage.height - noDetectionMargin]
                             ]
                         ] as [number, number][][]
                     }
@@ -240,7 +233,6 @@
             showError(err);
         } finally {
             takingPicture = false;
-            // startPreview();
             hideLoading();
         }
     }
@@ -250,19 +242,11 @@
         }
         takingPicture = true;
         try {
-            // const start = Date.now();
-            // const available = cameraPreview.nativeView.getAllAvailablePictureSizes();
-            // console.log('available', available.length);
-            // const test = available[0];
-            // console.log('max size', test.width, test.height);
             DEV_LOG && console.log('takePicture');
             showLoading(l('capturing'));
             const { image, info } = await cameraPreview.nativeView.takePicture({
                 savePhotoToDisk: false,
-                // returnImageProxy: true,
-                // pictureSize: { width: test.width, height: test.height },
                 captureMode: 1
-                // captureMode: batchMode ? 1 : 0
             });
             DEV_LOG && console.log('takePicture done', image);
             const didAdd = await processAndAddImage(image);
@@ -305,13 +289,10 @@
         } else {
             documentsService.once('started', startPreview);
         }
-        // documentsService.start().catch(showError);
-        // switchTorch();
     });
     onDestroy(() => {
         clearImages();
         document = null;
-        // croppedImageRotation = 0;
         nbPages = 0;
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -359,7 +340,6 @@
         })();
     }
     function onBackground() {
-        // DEV_LOG && console.log('onBackground', !!cameraPreview);
         stopPreview();
     }
     function onForeground() {
@@ -418,10 +398,6 @@
         editingImage = null;
         smallImage = null;
         recycleImages(toRelease);
-        // if (pagesToAdd) {
-        //     recycleImages(pagesToAdd.map((d) => d.image));
-        // }
-        // croppedImage = null;
     }
     const pagesToAdd: PageData[] = [];
 
@@ -436,12 +412,9 @@
             let qrcode;
             let colors;
             if (CARD_APP) {
-                [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
+                [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
                 DEV_LOG && console.log('qrcode and colors', qrcode, colors);
             }
-            // const start = Date.now();
-            // const qrCode = await detectQRCode(images[0], {});
-            // console.log('detected qrcode', qrCode, Date.now() - start, 'ms');
             for (let index = 0; index < images.length; index++) {
                 const image = images[index];
                 pagesToAdd.push({
@@ -458,24 +431,10 @@
                 });
             }
 
-            //TODO:
-            // if (!document) {
-            //     document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-            // } else {
-            //     await document.addPages(pagesToAdd);
-            // }
-            // if (!pages) {
-            //     pages = document.getObservablePages();
-            // }
-            // recycleImages(images);
             images = null;
             nbPages = pagesToAdd.length;
             startPreview();
-            // if (editing) {
-            //     toggleEditing();
-            // }
             const lastPage = pagesToAdd[pagesToAdd.length - 1];
-            currentQuad = lastPage.crop;
             setCurrentImage(new ImageSource(lastPage.image), lastPage.rotation, true);
         } catch (error) {
             showError(error);
@@ -555,9 +514,6 @@
     function focusCamera(e) {
         cameraPreview.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
-    function onCollectionLayoutChanged(e) {
-        // console.log('onCameraLayoutChanged', e.object.getMeasuredWidth(), e.object.getMeasuredHeight(), e.object.getMeasuredWidth() / e.object.getMeasuredHeight());
-    }
     let processor;
     async function applyProcessor() {
         if (processor) {
@@ -571,16 +527,7 @@
                 processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(cropView.nativeView.nativeViewProtected);
                 cameraPreview.nativeView.processor = processor;
             }
-            processor['previewResizeThreshold'] = ApplicationSettings.getNumber('previewResizeThreshold', 200);
-            // if (documentsService.started) {
-            //     processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
-            //     // toggleEditing();
-            // } else {
-            //     documentsService.once('started', () => {
-            //         processAndAddImage('/storage/9016-4EF8/Android/data/com.akylas.documentscanner/files/data/1696507798228/1696507798273_0/PIC_20231005140955.jpg');
-            //         // toggleEditing();
-            //     });
-            // }
+            processor['previewResizeThreshold'] = previewResizeThreshold;
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -589,10 +536,6 @@
     function onFinishEditing() {
         toggleEditing();
     }
-    // function onCroppedImageChanged() {
-    //     //current cropped image was modified
-    //     smallImageView?.nativeView?.updateImageUri();
-    // }
 
     function toggleEditing() {
         editing = !editing;

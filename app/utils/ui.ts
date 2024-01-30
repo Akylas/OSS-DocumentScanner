@@ -43,7 +43,7 @@ import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { share } from './share';
 import { ocrService } from '~/services/ocr';
-import { IMG_COMPRESS, IMG_FORMAT, TRANSFORMS_SPLIT } from '~/models/constants';
+import { DOCUMENT_NOT_DETECTED_MARGIN, IMG_COMPRESS, IMG_FORMAT, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -358,18 +358,21 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                             if (!editingImage) {
                                 throw new Error('failed to read imported image');
                             }
-                            const quads = await getJSONDocumentCorners(editingImage, 300, 0);
+
+                            const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
+                            const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+                            const quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
                             let qrcode;
                             if (CARD_APP) {
                                 // try to get the qrcode to show it in the import screen
-                                qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
+                                qrcode = await detectQRCode(editingImage, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
                             }
                             if (quads.length === 0) {
                                 quads.push([
-                                    [100, 100],
-                                    [editingImage.width - 100, 100],
-                                    [editingImage.width - 100, editingImage.height - 100],
-                                    [100, editingImage.height - 100]
+                                    [noDetectionMargin, noDetectionMargin],
+                                    [editingImage.width - noDetectionMargin, noDetectionMargin],
+                                    [editingImage.width - noDetectionMargin, editingImage.height - noDetectionMargin],
+                                    [noDetectionMargin, editingImage.height - noDetectionMargin]
                                 ]);
                             }
                             resolve({ editingImage, quads, sourceImagePath, qrcode });

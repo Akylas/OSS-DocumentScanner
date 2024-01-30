@@ -21,6 +21,7 @@
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import { DocumentsService, documentsService } from '~/services/documents';
+    import { DOCUMENT_NOT_DETECTED_MARGIN, PREVIEW_RESIZE_THRESHOLD } from '~/models/constants';
 
     // technique for only specific properties to get updated on store change
     let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors;
@@ -162,8 +163,17 @@
                     key: 'previewResizeThreshold',
                     title: lc('preview_resize_threshold'),
                     full_description: lc('preview_resize_threshold_desc'),
-                    default: ApplicationSettings.getNumber('previewResizeThreshold', 200),
-                    rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', 200),
+                    default: ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
+                    rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
+                    type: 'prompt'
+                },
+                {
+                    id: 'setting',
+                    key: 'documentNotDetectedMargin',
+                    title: lc('document_not_detected_margin'),
+                    full_description: lc('document_not_detected_margin_desc'),
+                    default: ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
+                    rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
                     type: 'prompt'
                 },
                 {
