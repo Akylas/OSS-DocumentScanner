@@ -1,0 +1,9 @@
+### Features
+- allow to customize margin applied when no document is found
+- button to reset crop
+- auto scan support. You can disable it through settings or with a long press on the capture button
+
+### Bug fixes
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Turkish)
+- black theme mode fix
