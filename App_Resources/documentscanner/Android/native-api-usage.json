@@ -1,7 +1,6 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
-        "android.text:Spannable",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
         "org.deejdev.twowaynestedscrollview:TwoWayNestedScrollView",
