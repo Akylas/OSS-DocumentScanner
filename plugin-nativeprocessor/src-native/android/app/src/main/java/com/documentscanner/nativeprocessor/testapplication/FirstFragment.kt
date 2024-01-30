@@ -2,6 +2,7 @@ package com.documentscanner.nativeprocessor.testapplication
 
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Point
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -15,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.palette.graphics.Palette
+import com.akylas.documentscanner.AutoScanHandler
 import com.akylas.documentscanner.CustomImageAnalysisCallback
 import com.documentscanner.nativeprocessor.testapplication.databinding.FragmentFirstBinding
 import com.google.android.material.snackbar.Snackbar
@@ -167,6 +169,11 @@ class FirstFragment : Fragment() {
 //                }
 //            }
         ))
+        (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).autoScanHandler = AutoScanHandler(this.requireActivity(), binding.cropView, onAutoScan = object: AutoScanHandler.OnAutoScan {
+            override fun onAutoScan(corners: String) {
+                Log.d("CameraView", "onAutoScan $corners")
+            }
+        })
         (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).previewResizeThreshold =
             200.0;
         (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).detectQRCode = true
