@@ -21,6 +21,8 @@ declare namespace com {
             }
             export class CustomImageAnalysisCallback {
                 constructor(context: android.content.Context, cropView);
+                autoScanHandler?: AutoScanHandler;
+                previewResizeThreshold: number;
             }
             export namespace CustomImageAnalysisCallback {
                 export class Companion {
@@ -41,6 +43,19 @@ declare namespace com {
                 export class FunctionCallbackProgress {
                     onProgress(p);
                     constructor(args: { onProgress: (p) => void });
+                }
+            }
+            export class AutoScanHandler {
+                constructor(context: android.content.Context, cropView, onAutoScan?: AutoScanHandler.OnAutoScan);
+                enabled: boolean;
+                preAutoScanDelay: number;
+                distanceThreshod: number;
+                autoScanDuration: number;
+            }
+            export namespace AutoScanHandler {
+                export class OnAutoScan {
+                    onAutoScan(result);
+                    constructor(args: { onAutoScan: (result) => void });
                 }
             }
         }

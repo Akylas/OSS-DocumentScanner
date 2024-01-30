@@ -1,0 +1,11 @@
+{
+    "uses":[
+        "com.akylas.documentscanner:CropView",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallback",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallbackProgress",
+        "com.akylas.documentscanner:CustomImageAnalysisCallback.Companion",
+        "com.akylas.documentscanner:AutoScanHandler",
+        "com.akylas.documentscanner:AutoScanHandler.OnAutoScan"
+    ]
+}

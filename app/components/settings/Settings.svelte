@@ -21,7 +21,7 @@
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import { DocumentsService, documentsService } from '~/services/documents';
-    import { DOCUMENT_NOT_DETECTED_MARGIN, PREVIEW_RESIZE_THRESHOLD } from '~/models/constants';
+    import { AUTO_SCAN_DELAY, AUTO_SCAN_DISTANCETHRESHOLD, AUTO_SCAN_DURATION, AUTO_SCAN_ENABLED, DOCUMENT_NOT_DETECTED_MARGIN, PREVIEW_RESIZE_THRESHOLD } from '~/models/constants';
 
     // technique for only specific properties to get updated on store change
     let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors;
@@ -51,6 +51,10 @@
                 title: lc('donate')
             },
             {
+                type: 'sectionheader',
+                title: lc('general')
+            },
+            {
                 id: 'language',
                 description: getLocaleDisplayName,
                 title: lc('language')
@@ -68,22 +72,13 @@
             }
         ]
             .concat(
-                securityService.biometricsAvailable
+                __ANDROID__
                     ? [
                           {
                               type: 'switch',
-                              id: 'biometric_lock',
-                              title: lc('biometric_lock'),
-                              description: lc('biometric_lock_desc'),
-                              value: securityService.biometricEnabled
-                          },
-                          {
-                              type: 'switch',
-                              id: 'biometric_auto_lock',
-                              title: lc('biometric_auto_lock'),
-                              description: lc('biometric_auto_lock_desc'),
-                              enabled: securityService.biometricEnabled,
-                              value: securityService.biometricEnabled && securityService.autoLockEnabled
+                              key: 'allow_screenshot',
+                              title: lc('allow_app_screenshot'),
+                              value: ApplicationSettings.getBoolean('allow_screenshot', true)
                           }
                       ]
                     : ([] as any)
@@ -145,42 +140,12 @@
                       ]
                     : ([] as any)
             )
-            .concat(
-                __ANDROID__
-                    ? [
-                          {
-                              type: 'switch',
-                              key: 'allow_screenshot',
-                              title: lc('allow_app_screenshot'),
-                              value: ApplicationSettings.getBoolean('allow_screenshot', true)
-                          }
-                      ]
-                    : ([] as any)
-            )
             .concat([
                 {
-                    id: 'setting',
-                    key: 'previewResizeThreshold',
-                    title: lc('preview_resize_threshold'),
-                    full_description: lc('preview_resize_threshold_desc'),
-                    default: ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
-                    rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
-                    type: 'prompt'
-                },
-                {
-                    id: 'setting',
-                    key: 'documentNotDetectedMargin',
-                    title: lc('document_not_detected_margin'),
-                    full_description: lc('document_not_detected_margin_desc'),
-                    default: ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
-                    rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
-                    type: 'prompt'
-                },
-                {
-                    id: 'webdav',
-                    rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
-                    title: lc('webdav_sync'),
-                    description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
+                    id: 'third_party',
+                    // rightBtnIcon: 'mdi-chevron-right',
+                    title: lc('third_parties'),
+                    description: lc('list_used_third_parties')
                 }
             ] as any)
             .concat(
@@ -199,7 +164,111 @@
                       ]
                     : ([] as any)
             )
+            .concat(
+                securityService.biometricsAvailable
+                    ? [
+                          {
+                              type: 'sectionheader',
+                              title: lc('security')
+                          },
+                          {
+                              type: 'switch',
+                              id: 'biometric_lock',
+                              title: lc('biometric_lock'),
+                              description: lc('biometric_lock_desc'),
+                              value: securityService.biometricEnabled
+                          },
+                          {
+                              type: 'switch',
+                              id: 'biometric_auto_lock',
+                              title: lc('biometric_auto_lock'),
+                              description: lc('biometric_auto_lock_desc'),
+                              enabled: securityService.biometricEnabled,
+                              value: securityService.biometricEnabled && securityService.autoLockEnabled
+                          }
+                      ]
+                    : ([] as any)
+            )
             .concat([
+                {
+                    type: 'sectionheader',
+                    title: lc('document_detection')
+                },
+                {
+                    id: 'setting',
+                    key: 'previewResizeThreshold',
+                    title: lc('preview_resize_threshold'),
+                    full_description: lc('preview_resize_threshold_desc'),
+                    rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
+                    type: 'prompt'
+                },
+                {
+                    id: 'setting',
+                    key: 'documentNotDetectedMargin',
+                    title: lc('document_not_detected_margin'),
+                    full_description: lc('document_not_detected_margin_desc'),
+                    rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
+                    type: 'prompt'
+                }
+            ] as any)
+            // TODO: implement autoScan on iOS
+            .concat(
+                __ANDROID__
+                    ? [
+                          {
+                              type: 'sectionheader',
+                              title: lc('autoscan')
+                          },
+                          {
+                              type: 'switch',
+                              id: 'autoScan',
+                              title: lc('auto_scan'),
+                              value: ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED)
+                          },
+                          {
+                              id: 'setting',
+                              key: 'autoScan_distanceThreshold',
+                              title: lc('auto_scan_distance_threshold'),
+                              full_description: lc('auto_scan_distance_threshold_desc'),
+                              rightValue: () => ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD),
+                              type: 'prompt'
+                          },
+                          {
+                              id: 'setting',
+                              key: 'autoScan_autoScanDuration',
+                              title: lc('auto_scan_duration'),
+                              full_description: lc('auto_scan_duration_desc'),
+                              rightValue: () => ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION),
+                              type: 'prompt'
+                          },
+                          {
+                              id: 'setting',
+                              key: 'autoScan_preAutoScanDelay',
+                              title: lc('auto_scan_delay'),
+                              full_description: lc('auto_scan_delay_desc'),
+                              rightValue: () => ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY),
+                              type: 'prompt'
+                          }
+                      ]
+                    : ([] as any)
+            )
+            .concat([
+                {
+                    type: 'sectionheader',
+                    title: lc('sync')
+                },
+                {
+                    id: 'webdav',
+                    rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
+                    title: lc('webdav_sync'),
+                    description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
+                }
+            ] as any)
+            .concat([
+                {
+                    type: 'sectionheader',
+                    title: lc('backup_restore')
+                },
                 // {
                 //     id: 'version',
                 //     title: lc('version'),
@@ -211,12 +280,6 @@
                 //     title: lc('source_code'),
                 //     description: lc('get_app_source_code')
                 // },
-                {
-                    id: 'third_party',
-                    // rightBtnIcon: 'mdi-chevron-right',
-                    title: lc('third_parties'),
-                    description: lc('list_used_third_parties')
-                },
                 {
                     id: 'export_settings',
                     title: lc('export_settings'),
@@ -391,7 +454,7 @@
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
-                            defaultText: ApplicationSettings.getNumber(item.key, item.default) + ''
+                            defaultText: (typeof item.rightValue === 'function' ? item.rightValue() : item.default) + ''
                         });
                         Utils.dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
@@ -541,6 +604,9 @@
                         <label fontSize={13} marginTop={4} text={version} />
                     </stacklayout>
                 </gridlayout>
+            </Template>
+            <Template key="sectionheader" let:item>
+                <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>

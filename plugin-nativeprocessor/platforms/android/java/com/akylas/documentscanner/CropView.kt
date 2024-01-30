@@ -11,11 +11,13 @@ import android.graphics.Point
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.UiThread
+import kotlinx.coroutines.Job
 
 
 class CropView
 @JvmOverloads
 constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attrs, defStyleAttr) {
+    private var autoScanProgress: MaxSizeHashMap<Long, Int> = MaxSizeHashMap(10)
 
     var imageWidth: Int = 0
     var imageHeight: Int = 0
@@ -36,6 +38,42 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
      * the image container ratio then there's blank space either at the top and bottom of the
      * image or the left and right of the image
      */
+
+    /**
+     * @property quad the 4 document corners
+     */
+
+    private var mQuads: List<List<Point>>? = null
+    var scale: Float = 1.0f
+    var quads: List<List<Point>>?
+        get() {return this.mQuads}
+        set(value) {
+            (context as Activity).runOnUiThread {
+                setQuadsAnimated(value)
+            }
+        }
+    private var animationQuads: ArrayList<List<Point>>? = null
+    private var startAnimationQuads: List<List<Point>>? = null
+    private var mAnimator: ValueAnimator? = null
+
+    val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    var fillPaint: Paint? = null
+    var progressFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    var colors = listOf<Int>(0xFF007AFF.toInt())
+    var strokeWidth = 2
+    var animationDuration = 200L
+    var drawFill = true
+
+    init {
+        // set cropper style
+        progressFillPaint.style = Paint.Style.FILL
+        progressFillPaint.alpha = 100
+        linePaint.style = Paint.Style.STROKE
+        linePaint.strokeWidth = resources.displayMetrics.density * strokeWidth
+        linePaint.strokeJoin = Paint.Join.ROUND
+        linePaint.strokeCap = Paint.Cap.ROUND
+        setWillNotDraw(false)
+    }
 //    val imagePreviewBounds: RectF
 //        get() {
 //            // image container width to height ratio
@@ -87,37 +125,6 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         }
         imagePreviewWidth = screenWidth
     }
-    /**
-     * @property quad the 4 document corners
-     */
-
-    private var mQuads: List<List<Point>>? = null
-    public var scale: Float = 1.0f
-    public var quads: List<List<Point>>?
-        get() {return this.mQuads}
-        set(value) {
-            (context as Activity).runOnUiThread {
-                setQuadsAnimated(value)
-            }
-            }
-    private var animationQuads: ArrayList<List<Point>>? = null
-    private var startAnimationQuads: List<List<Point>>? = null
-    private var mAnimator: ValueAnimator? = null
-
-    val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    var fillPaint: Paint? = null
-    var colors = listOf<Int>(0xFF007AFF.toInt())
-    var strokeWidth = 2
-    var animationDuration = 200L
-
-    init {
-        // set cropper style
-        linePaint.style = Paint.Style.STROKE
-        linePaint.strokeWidth = resources.displayMetrics.density * strokeWidth
-        linePaint.strokeJoin = Paint.Join.ROUND
-        linePaint.strokeCap = Paint.Cap.ROUND
-        setWillNotDraw(false)
-    }
 
     fun interpolatePoint(point1: Point, point2: Point, value: Float): Point {
         return Point(
@@ -149,9 +156,6 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                 endQuads!!.forEachIndexed { index, quad ->
                     val startAnimationQuad  = startAnimationQuads!!.get(index)
                     val value = animation.animatedFraction
-                    if (value > 0 && value < 1) {
-                        print("test")
-                    }
                     val topLeftCorner = interpolatePoint(startAnimationQuad[0], quad[0],value)
                     animationQuads!!.add(listOf(
                         topLeftCorner,
@@ -190,17 +194,33 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             canvas.translate(horizontalOffset, verticalOffset)
             canvas.scale(scale, scale)
             actualQuads!!.forEachIndexed { index, quad ->
-                linePaint.color = colors[index.mod(colors.size)]
+                val hash = if (mQuads != null && mQuads!!.size > index) AutoScanHandler.getHash(
+                    mQuads!![index]
+                ) else null
+                val progress = if (hash != null) autoScanProgress[hash] else null
 
-                if (fillPaint != null) {
-                    val alpha = fillPaint!!.alpha
-                    fillPaint!!.color = linePaint.color
-                    fillPaint!!.alpha = alpha
-                    // draw fill quad
-                    canvas.drawQuadSimple(
+                linePaint.color = colors[index.mod(colors.size)]
+                if (progress != null) {
+                    val alpha = progressFillPaint!!.alpha
+                    progressFillPaint!!.color = linePaint.color
+                    progressFillPaint!!.alpha = alpha
+                    canvas.drawQuadSimpleProgress(
                         quad!!,
-                        fillPaint!!
+                        progress,
+                        progressFillPaint!!
                     )
+                }
+                else  {
+                    if (drawFill && fillPaint != null){
+                        val alpha = fillPaint!!.alpha
+                        fillPaint!!.color = linePaint.color
+                        fillPaint!!.alpha = alpha
+                        // draw fill quad
+                        canvas.drawQuadSimple(
+                            quad!!,
+                            fillPaint!!
+                        )
+                    }
                 }
                 // draw 4 corners and connecting lines
                 canvas.drawQuadSimple(
@@ -212,4 +232,24 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         }
 
     }
+
+    fun updateProgress(hash: Long, i: Int) {
+        if (i == 0 || i == 100) {
+            autoScanProgress.remove(hash)
+        } else {
+            autoScanProgress[hash] = i;
+        }
+        invalidate()
+    }
+    fun replaceProgressHash(oldValue: Long, newValue:Long) {
+        if(autoScanProgress.containsKey(oldValue) ) {
+            autoScanProgress[newValue] = autoScanProgress[oldValue]!!
+            // we dont remove as the MaxSizeHashMap will handle it
+            // as AutoScanHandler process and this drawing are async
+            // we might need to keep old values to ensure we find the progress
+            // which is why we use MaxSizeHashMap
+//            autoScanProgress.remove(oldValue)
+        }
+    }
+
 }

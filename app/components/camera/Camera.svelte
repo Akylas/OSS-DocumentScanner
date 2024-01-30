@@ -1,7 +1,9 @@
 <script lang="ts">
     import { CameraView } from '@nativescript-community/ui-cameraview';
+    import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import dayjs from 'dayjs';
@@ -13,9 +15,18 @@
     import { writable } from 'svelte/store';
     import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
-    import { l } from '~/helpers/locale';
+    import { l, lc } from '~/helpers/locale';
     import { OCRDocument, PageData } from '~/models/OCRDocument';
-    import { DOCUMENT_NOT_DETECTED_MARGIN, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
+    import {
+        AUTO_SCAN_DELAY,
+        AUTO_SCAN_DISTANCETHRESHOLD,
+        AUTO_SCAN_DURATION,
+        AUTO_SCAN_ENABLED,
+        DOCUMENT_NOT_DETECTED_MARGIN,
+        PREVIEW_RESIZE_THRESHOLD,
+        QRCODE_RESIZE_THRESHOLD,
+        TRANSFORMS_SPLIT
+    } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
@@ -41,6 +52,7 @@
     };
     let page: NativeViewElementNode<Page>;
     let cameraPreview: NativeViewElementNode<CameraView>;
+    let takPictureBtnCanvas: NativeViewElementNode<CanvasView>;
     let cropView: NativeViewElementNode<CropView>;
     let fullImageView: NativeViewElementNode<Img>;
     let smallImageView: NativeViewElementNode<Img>;
@@ -192,12 +204,12 @@
 
     let editingImage: ImageSource;
 
-    async function processAndAddImage(image) {
+    async function processAndAddImage(image, autoScan = false) {
         try {
             showLoading(l('computing'));
             editingImage = new ImageSource(image);
             let quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
-
+            DEV_LOG && console.log('processAndAddImage', image, previewResizeThreshold, quads, autoScan);
             if (quads.length === 0) {
                 let items = [
                     {
@@ -212,21 +224,24 @@
                         ] as [number, number][][]
                     }
                 ];
-                const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
-                items = await showModal({
-                    page: ModalImportImage,
-                    animated: true,
-                    fullscreen: true,
-                    props: {
-                        items
-                    }
-                });
-                quads = items ? items[0].quads : undefined;
+                if (autoScan === false) {
+                    const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
+                    items = await showModal({
+                        page: ModalImportImage,
+                        animated: true,
+                        fullscreen: true,
+                        props: {
+                            items
+                        }
+                    });
+                    quads = items ? items[0].quads : undefined;
+                }
             }
             if (quads?.length) {
                 await addCurrentImageToDocument(image, quads);
                 return true;
             }
+            showSnack({ message: lc('no_document_found') });
             return false;
         } catch (err) {
             console.error(err, err.stack);
@@ -236,11 +251,29 @@
             hideLoading();
         }
     }
-    async function takePicture() {
+
+    function pauseAutoScan() {
+        if (__ANDROID__) {
+            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).autoScanHandler.enabled = false;
+        } else {
+            // TODO: implement autoScan on iOS
+        }
+    }
+    function resumeAutoScan() {
+        if (__ANDROID__) {
+            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).autoScanHandler.enabled = true;
+        } else {
+            // TODO: implement autoScan on iOS
+        }
+    }
+    async function takePicture(autoScan = false) {
         if (takingPicture) {
             return;
         }
         takingPicture = true;
+        if (autoScan) {
+            pauseAutoScan();
+        }
         try {
             DEV_LOG && console.log('takePicture');
             showLoading(l('capturing'));
@@ -248,8 +281,8 @@
                 savePhotoToDisk: false,
                 captureMode: 1
             });
-            DEV_LOG && console.log('takePicture done', image);
-            const didAdd = await processAndAddImage(image);
+            const didAdd = await processAndAddImage(image, autoScan);
+            DEV_LOG && console.log('takePicture done', image, didAdd);
             if (didAdd && !batchMode) {
                 await saveCurrentDocument();
             }
@@ -258,6 +291,9 @@
             showError(err);
         } finally {
             takingPicture = false;
+            if (autoScan) {
+                resumeAutoScan();
+            }
             hideLoading();
         }
     }
@@ -514,19 +550,64 @@
     function focusCamera(e) {
         cameraPreview.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
+
+    // TODO: implement autoScan on iOS
+    let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
+
+    function applyAutoScan(value: boolean) {
+        DEV_LOG && console.log('applyAutoScan', value);
+        if (value) {
+            if (__ANDROID__) {
+                const context = Utils.android.getApplicationContext();
+                const nCropView = cropView.nativeView.nativeViewProtected;
+                const AutoScanHandler = com.akylas.documentscanner.AutoScanHandler;
+                DEV_LOG && console.log('creating autoScan handler', value);
+                const autoScanHandler = new AutoScanHandler(
+                    context,
+                    nCropView,
+                    new AutoScanHandler.OnAutoScan({
+                        onAutoScan: (result) => {
+                            DEV_LOG && console.log('onAutoScan', result);
+                            takePicture(true);
+                        }
+                    })
+                );
+                autoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
+                autoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
+                autoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
+                processor.autoScanHandler = autoScanHandler;
+            } else {
+                // TODO: implement autoScan on iOS
+            }
+        } else {
+            if (__ANDROID__) {
+                processor.autoScanHandler = null;
+            } else {
+                // TODO: implement autoScan on iOS
+            }
+        }
+    }
+    function toggleAutoScan() {
+        autoScan = !autoScan;
+        ApplicationSettings.setBoolean('autoScan', autoScan);
+        applyAutoScan(autoScan);
+    }
     let processor;
     async function applyProcessor() {
         if (processor) {
             return;
         }
         try {
+            const nCropView = cropView.nativeView.nativeViewProtected;
             if (__ANDROID__) {
-                processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(Utils.android.getApplicationContext(), cropView.nativeView.nativeViewProtected);
+                const context = Utils.android.getApplicationContext();
+                processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(context, nCropView);
                 cameraPreview.nativeView.processor = processor;
             } else {
-                processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(cropView.nativeView.nativeViewProtected);
+                processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(nCropView);
                 cameraPreview.nativeView.processor = processor;
             }
+            applyAutoScan(autoScan);
             processor['previewResizeThreshold'] = previewResizeThreshold;
         } catch (error) {
             console.error(error, error.stack);
@@ -561,6 +642,45 @@
                 return 'mdi-flash-red-eye';
             case 4:
                 return 'mdi-flashlight';
+        }
+    }
+
+    let borderStroke = 3;
+    const borderPaint = new Paint();
+    borderPaint.strokeWidth = borderStroke;
+    borderPaint.style = Style.STROKE;
+    borderPaint.color = 'white';
+    $: {
+        borderStroke = autoScan ? 4 : 3;
+        borderPaint.strokeWidth = borderStroke;
+        if (takPictureBtnCanvas?.nativeView) {
+            takPictureBtnCanvas.nativeView.invalidate();
+            if (autoScan) {
+                // without the timeout it wont start
+                setTimeout(() => {
+                    takPictureBtnCanvas?.nativeView
+                        .animate({
+                            curve: CoreTypes.AnimationCurve.linear,
+                            duration: 1500,
+                            rotate: 360,
+                            iterations: Number.POSITIVE_INFINITY
+                        })
+                        .catch((err) => console.error(err, err.stack));
+                }, 300);
+            } else {
+                takPictureBtnCanvas.nativeView.cancelAllAnimations();
+            }
+        }
+    }
+    function drawTakePictureBtnBorder({ canvas }: { canvas: Canvas }) {
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
+        if (autoScan) {
+            const radius = Math.min(w, h) - borderStroke / 2;
+            canvas.drawArc(0, 0, radius, radius, 0, 90, false, borderPaint);
+        } else {
+            const radius = Math.min(w, h) / 2 - borderStroke / 2;
+            canvas.drawCircle(w / 2, h / 2, radius, borderPaint);
         }
     }
 </script>
@@ -599,6 +719,7 @@
                 color="white"
                 horizontalAlignment="left"
                 marginLeft={10}
+                ripple-color="white"
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
                 variant="text"
                 verticalAlignment="center"
@@ -616,7 +737,8 @@
                 stretch="aspectFit"
                 verticalAlignment="center"
                 width={60} />
-            <gridlayout borderColor="white" borderRadius="50%" borderWidth={3} col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
+            <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
+                <canvasView bind:this={takPictureBtnCanvas} on:draw={drawTakePictureBtnBorder}> </canvasView>
                 <gridlayout
                     backgroundColor={colorPrimary}
                     borderRadius="50%"
@@ -625,7 +747,8 @@
                     ignoreTouchAnimation={false}
                     touchAnimation={touchAnimationShrink}
                     width={54}
-                    on:tap={takePicture} />
+                    on:tap={() => takePicture()}
+                    on:longPress={toggleAutoScan} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 

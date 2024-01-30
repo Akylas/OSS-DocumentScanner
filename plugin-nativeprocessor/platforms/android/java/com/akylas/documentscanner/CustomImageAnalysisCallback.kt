@@ -27,6 +27,7 @@ constructor(
     ImageAnalysisCallback {
 
     var previewResizeThreshold = 200.0
+    var autoScanHandler: AutoScanHandler? = null
     var detectQRCode = false
     var detectQRCodeOptions = "{\"resizeThreshold\":500}"
 
@@ -540,53 +541,15 @@ constructor(
             val image = imageProxy.image!!
             val planes = image.planes
             val chromaPixelStride = planes[1].pixelStride
-            val start = System.nanoTime()
-//            val previewBitmap = imageProxy.toBitmap(context)
-//            if (onTestBitmap != null) {
-//                onTestBitmap.onTestBitmap(previewBitmap!!)
-//            }
-//            if (previewBitmap == null) {
-//                processor.finished()
-//                return
-//            }
-//            val result = nativeScanAndQRCode(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees, "");
-//            val jsonRes = JSONObject(result)
-//            var pointsList: MutableList<List<Point>>? =  pointsFromJSONArray(jsonRes.getJSONArray("points"))
-//
-//
-//            val qrcodeRes = jsonRes.getJSONArray("qrcodes")
-//            if (pointsList != null && pointsList.size > 0 && qrcodeRes.length() > 0) {
-//                val qrcode =qrcodeRes.getJSONObject(0)
-//                pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position"),
-//                    jsonRes.getDouble("resizeScale").toFloat()
-//                ))
-//            }
 
-//            if (testBitmap != null) {
-//                testBitmap!!.recycle()
-//
-//            }
-//            testBitmap =
-//                Bitmap.createBitmap(
-//                    image.width, image.height,
-//                    Bitmap.Config.ARGB_8888
-//                )
-//            testImageProxyToBitmap(image.width, image.height, chromaPixelStride, planes[0].buffer,
-//                planes[0].rowStride, planes[1].buffer,
-//                planes[1].rowStride, planes[2].buffer,
-//                planes[2].rowStride, testBitmap!!)
-//            if (onTestBitmap != null) {
-//                onTestBitmap.onTestBitmap(testBitmap!!)
-//            }
             val result = nativeBufferScanJSON(
                 image.width, image.height, chromaPixelStride, planes[0].buffer,
                 planes[0].rowStride, planes[1].buffer,
                 planes[1].rowStride, planes[2].buffer,
                 planes[2].rowStride, previewResizeThreshold.toInt(), info.rotationDegrees
             );
-//            val result = nativeScanJSON(previewBitmap, previewResizeThreshold.toInt(), info.rotationDegrees);
             var pointsList: MutableList<List<Point>>? = pointsFromJSONArray(JSONArray(result))
-//            Log.d("JS", "getDocumentCorners ${(System.nanoTime() - start) / 1000000}ms");
+
             if (detectQRCode) {
                 val qrcodeResult = nativeQRCodeReadBuffer(
                     image.width, image.height, info.rotationDegrees, planes[0].buffer,
@@ -601,17 +564,11 @@ constructor(
                     }
                     pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
                     onQRCode?.onQRCode(qrcode.getString("text"), qrcode.getString("format"))
-//                    Log.d("JS", "onQRCode ${(System.nanoTime() - start) / 1000000}ms");
                 }
             }
 
-//            val pointsList: List<List<Point>>? =
-//                getDocumentCorners(
-//                    previewBitmap,
-//                    previewResizeThreshold,
-//                    info.rotationDegrees,
-//                    false
-//                )
+            // pointsList is sorted by area
+            autoScanHandler?.process(pointsList)
             if (pointsList != null) {
                 if (info.rotationDegrees == 180 ||
                     info.rotationDegrees ==
@@ -633,7 +590,6 @@ constructor(
                 cropView.quads = null
             }
             cropView.invalidate()
-//            previewBitmap.recycle()
             processor.finished()
         } catch (exception: Exception) {
             exception.printStackTrace()
