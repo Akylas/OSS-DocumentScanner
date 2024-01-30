@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Pager } from '@nativescript-community/ui-pager';
-    import { Page } from '@nativescript/core';
+    import { ApplicationSettings, Page } from '@nativescript/core';
     import { QRCodeData } from 'plugin-nativeprocessor';
     import { closeModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
@@ -8,6 +8,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
+    import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/models/constants';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
@@ -29,6 +30,18 @@
     }
     function changePage(delta) {
         currentIndex += delta;
+    }
+
+    function resetCrop() {
+        const item = items[currentIndex];
+        const editingImage = item.editingImage;
+        item.quads = item.quads.map((quad) => [
+            [0, 0],
+            [editingImage.width - 0, 0],
+            [editingImage.width - 0, editingImage.height - 0],
+            [0, editingImage.height - 0]
+        ]);
+        pager.nativeView.refreshVisibleItems();
     }
 </script>
 
@@ -64,6 +77,7 @@
         <pagerindicator horizontalAlignment="center" marginBottom={10} pagerViewId="pager" row={2} type="worm" verticalAlignment="bottom" />
         <label fontSize={13} marginBottom={10} row={3} text={lc('crop_edit_doc')} textAlignment="center" />
         <mdbutton class="fab" elevation={0} horizontalAlignment="center" rippleColor="white" row={4} text="mdi-check" variant="text" on:tap={onTapFinish} />
+        <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={4} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null} />
     </gridlayout>
 </page>

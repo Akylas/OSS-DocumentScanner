@@ -470,6 +470,14 @@
             showError(error);
         }
     }
+    function resetCrop() {
+        quad = [
+            [0, 0],
+            [editingImage.width - 0, 0],
+            [editingImage.width - 0, editingImage.height - 0],
+            [0, editingImage.height - 0]
+        ];
+    }
     function refreshPager() {
         pager?.nativeView?.refresh();
     }
@@ -582,6 +590,7 @@
             <CropView {editingImage} bind:quadChanged bind:quads />
             <label fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" rippleColor="white" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
+            <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={2} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
         </gridlayout>
         <CActionBar {onGoBack} onTitleTap={() => (editingTitle = true)} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />

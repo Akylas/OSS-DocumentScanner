@@ -36,6 +36,12 @@
 
     $: updateMatrix(canvasView, editingImage);
 
+    $: if (quads && canvasView) {
+        updateMatrix(canvasView, editingImage);
+        quadChanged = true;
+        canvasView.nativeView.invalidate();
+    }
+
     function distance(x1, y1, x2, y2) {
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     }
