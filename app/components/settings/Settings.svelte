@@ -413,9 +413,9 @@
                     break;
                 case 'dark_mode':
                     await selectTheme();
-                    if (__IOS__) {
-                        refresh();
-                    }
+                    // if (__IOS__) {
+                    //     refresh();
+                    // }
                     break;
                 case 'share':
                     await share({
@@ -577,7 +577,7 @@
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
-    // onThemeChanged(refresh);
+    onThemeChanged(refreshCollectionView);
 </script>
 
 <page actionBarHidden={true}>

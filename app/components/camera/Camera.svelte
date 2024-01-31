@@ -52,19 +52,21 @@
         }
     };
     let page: NativeViewElementNode<Page>;
-    let cameraPreview: NativeViewElementNode<CameraView>;
+    let cameraView: NativeViewElementNode<CameraView>;
     let takPictureBtnCanvas: NativeViewElementNode<CanvasView>;
     let cropView: NativeViewElementNode<CropView>;
     let fullImageView: NativeViewElementNode<Img>;
     let smallImageView: NativeViewElementNode<Img>;
 
-    const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string }>(
-        JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited"}'))
+    const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
+        JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
     cameraOptionsStore.subscribe((newValue) => {
         ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
     });
-    $: ({ aspectRatio, stretch, viewsize } = $cameraOptionsStore);
+    $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
+    $: DEV_LOG && console.log('aspectRatio', aspectRatio);
+    $: DEV_LOG && console.log('pictureSize', pictureSize);
 
     // let aspectRatio = ApplicationSettings.getString('camera_aspectratio', '4:3');
     // let stretch = ApplicationSettings.getString('camera_stretch', 'aspectFit');
@@ -180,6 +182,12 @@
     // }
 
     async function showCameraSettings() {
+        const addedProps: any = __ANDROID__
+            ? {
+                  resolutions: cameraView.nativeView.getAllAvailablePictureSizes(),
+                  currentResolution: cameraView.nativeView.getCurrentResolutionInfo()
+              }
+            : {};
         const result: { icon: string; id: string; text: string } = await showBottomSheet({
             parent: page,
             view: CameraSettingsBottomSheet,
@@ -194,7 +202,8 @@
             props: {
                 cameraOptionsStore,
                 colorType,
-                transforms
+                transforms,
+                ...addedProps
             }
         });
     }
@@ -278,7 +287,7 @@
         try {
             DEV_LOG && console.log('takePicture');
             showLoading(l('capturing'));
-            const { image, info } = await cameraPreview.nativeView.takePicture({
+            const { image, info } = await cameraView.nativeView.takePicture({
                 savePhotoToDisk: false,
                 captureMode: 1
             });
@@ -300,17 +309,17 @@
     }
 
     function setTorchEnabled(enabled: boolean) {
-        cameraPreview.nativeView.flashMode = enabled ? 'torch' : (flashMode as any);
+        cameraView.nativeView.flashMode = enabled ? 'torch' : (flashMode as any);
     }
     function switchTorch() {
-        if (cameraPreview) {
-            const current = cameraPreview.nativeView.flashMode;
+        if (cameraView) {
+            const current = cameraView.nativeView.flashMode;
             torchEnabled = !(current === 'torch');
             setTorchEnabled(torchEnabled);
         }
     }
     function toggleCamera() {
-        cameraPreview.nativeView.toggleCamera();
+        cameraView.nativeView.toggleCamera();
     }
 
     onMount(async () => {
@@ -354,20 +363,20 @@
     function startPreview() {
         if (!previewStarted) {
             previewStarted = true;
-            cameraPreview?.nativeView.startPreview();
+            cameraView?.nativeView.startPreview();
         }
     }
     function stopPreview() {
         if (previewStarted) {
             previewStarted = false;
-            cameraPreview?.nativeView.stopPreview();
+            cameraView?.nativeView.stopPreview();
             if (cropView?.nativeView) {
                 cropView.nativeView.quads = null;
             }
         }
     }
     function onNavigatedTo() {
-        DEV_LOG && console.log('onNavigatedTo', !!cameraPreview);
+        DEV_LOG && console.log('onNavigatedTo', !!cameraView);
         (async () => {
             try {
                 startPreview();
@@ -380,7 +389,7 @@
         stopPreview();
     }
     function onForeground() {
-        DEV_LOG && console.log('onForeground', !!cameraPreview);
+        DEV_LOG && console.log('onForeground', !!cameraView);
         startPreview();
     }
     async function saveCurrentDocument() {
@@ -546,10 +555,10 @@
     $: canSaveDoc = nbPages > 0;
 
     function onCameraLayoutChanged() {
-        cameraScreenRatio = cameraPreview.nativeElement.getMeasuredWidth() / cameraPreview.nativeElement.getMeasuredHeight();
+        cameraScreenRatio = cameraView.nativeElement.getMeasuredWidth() / cameraView.nativeElement.getMeasuredHeight();
     }
     function focusCamera(e) {
-        cameraPreview.nativeElement.focusAtPoint(e.getX(), e.getY());
+        cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
 
     // TODO: implement autoScan on iOS
@@ -620,10 +629,10 @@
             if (__ANDROID__) {
                 const context = Utils.android.getApplicationContext();
                 processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(context, nCropView);
-                cameraPreview.nativeView.processor = processor;
+                cameraView.nativeView.processor = processor;
             } else {
                 processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(nCropView);
-                cameraPreview.nativeView.processor = processor;
+                cameraView.nativeView.processor = processor;
             }
             applyAutoScan(autoScan);
             processor['previewResizeThreshold'] = previewResizeThreshold;
@@ -701,18 +710,35 @@
             canvas.drawCircle(w / 2, h / 2, radius, borderPaint);
         }
     }
+    let cameraOpened = false;
+    function onCameraOpen({ object }: { object: CameraView }) {
+        console.log('onCameraOpen', object);
+        if (__ANDROID__) {
+            const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
+            if (currentResolution) {
+                cameraOptionsStore.update((state) => {
+                    state['aspectRatio'] = currentResolution.aspectRatio;
+                    state['pictureSize'] = currentResolution.pictureSize;
+                    return state;
+                });
+            }
+        }
+        cameraOpened = true;
+    }
 </script>
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout backgroundColor="black" paddingBottom={30} rows="auto,*,auto,auto">
         <cameraView
-            bind:this={cameraPreview}
+            bind:this={cameraView}
             {aspectRatio}
             autoFocus={true}
             enablePinchZoom={true}
             {flashMode}
+            {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
             {stretch}
+            on:cameraOpen={onCameraOpen}
             on:layoutChanged={onCameraLayoutChanged}
             on:loaded={applyProcessor}
             on:tap={focusCamera} />
@@ -729,7 +755,16 @@
             <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
             <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
         </stacklayout>
-        <mdbutton class="icon-btn" color="white" horizontalAlignment="right" row={2} text="mdi-tune" variant="text" visibility={startOnCam ? 'collapse' : 'visible'} on:tap={showCameraSettings} />
+        <mdbutton
+            class="icon-btn"
+            color="white"
+            horizontalAlignment="right"
+            isEnabled={cameraOpened}
+            row={2}
+            text="mdi-tune"
+            variant="text"
+            visibility={startOnCam ? 'collapse' : 'visible'}
+            on:tap={showCameraSettings} />
 
         <gridlayout columns="60,*,auto,*,60" row={3}>
             <mdbutton

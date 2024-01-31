@@ -21,10 +21,15 @@
     const textFieldWidth = (screenWidthDips - 20 - 22 - 16) / 2;
 
     export let transforms = [];
-    export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string }>;
+    export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>;
     export let colorType;
+    export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
+    export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
 
-    $: ({ aspectRatio, stretch, viewsize } = $cameraOptionsStore);
+    DEV_LOG && console.log('resolutions', resolutions);
+    DEV_LOG && console.log('currentResolutions', currentResolution);
+
+    // $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -58,9 +63,16 @@
         return result;
     }
 
-    function updateOption(option: string, value, fullRefresh = false) {
+    function updateOption(option: string, value, item) {
+        DEV_LOG && console.log(updateOption,option, value, item);
         cameraOptionsStore.update((state) => {
             state[option] = value;
+            if (option === 'pictureSize') {
+                state['aspectRatio'] = item.aspectRatio;
+            } else if (option === 'aspectRatio') {
+                state['pictureSize'] = null;
+            }
+
             return state;
         });
     }
@@ -79,7 +91,7 @@
     //     }
     // };
 
-    const OPTIONS = [
+    const OPTIONS: any[] = [
         {
             id: 'stretch',
             title: lc('camera_preview_stretch'),
@@ -106,6 +118,15 @@
                           '4:3': { name: '4:3' },
                           '16:9': { name: '16:9' }
                       }
+                  },
+                  {
+                      id: 'pictureSize',
+                      title: lc('picture_size'),
+                      default: currentResolution.pictureSize,
+                      options: resolutions.reduce((acc, current) => {
+                          acc[current.pictureSize] = { ...current, name: `${current.pictureSize} (${current.aspectRatio})` };
+                          return acc;
+                      }, {})
                   }
               ]
             : ([] as any)
@@ -115,12 +136,11 @@
         try {
             // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             const options = Object.keys(item.options).map((k) => ({ ...item.options[k], id: k }));
-            console.log('options', options);
             await showPopoverMenu({
                 options,
                 anchor: event.object,
                 onClose: (value) => {
-                    updateOption(item.id, valueTransformer ? valueTransformer(value.id) : value.id, fullRefresh);
+                    updateOption(item.id, valueTransformer ? valueTransformer(value.id) : value.id, value);
                 }
             });
             // await showPopover({
@@ -175,7 +195,14 @@
         <label class="sectionHeader" text={lc('camera_settings')} />
         <wraplayout padding="10 0 10 0">
             {#each OPTIONS as item}
-                <textfield editable={false} hint={item.title} margin="4 8 4 8" text={$cameraOptionsStore[item.id]} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption(item, e)} />
+                <textfield
+                    editable={false}
+                    hint={item.title}
+                    margin="4 8 4 8"
+                    text={$cameraOptionsStore[item.id] || item.default}
+                    variant="outline"
+                    width={textFieldWidth}
+                    on:tap={(e) => selectOption(item, e)} />
             {/each}
             <!-- <mdbutton class="icon-btn" color="white" fontSize={14} text={aspectRatio} variant="text" on:tap={toggleAspectRatio} /> -->
             <!-- <textfield editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('stretch', e)} />
