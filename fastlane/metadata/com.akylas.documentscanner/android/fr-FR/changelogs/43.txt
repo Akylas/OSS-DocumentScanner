@@ -1,0 +1,9 @@
+### Features
+- **android:** you can now set the picture resolution. This could also enable you to change the back camera used (hopefully)
+
+### Bug fixes
+- Translated using Weblate (Chinese (Simplified))
+- Translated using Weblate (Arabic)
+- a lot of theme fixes
+- some button text not showing correctly
+- default to not draw ocr overlay
