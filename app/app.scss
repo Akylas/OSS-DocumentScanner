@@ -61,6 +61,12 @@ mdbutton {
     ios-a11y-adjusts-font-size: true;
 }
 
+mdtextfield {
+    stroke-color: var(--colorOutline);
+    placeholder-color: var(--colorOutline);
+    color: var(--colorOnSurface);
+}
+
 checkbox {
     color: var(--colorOnSurface);
     fill-color: var(--colorPrimary);

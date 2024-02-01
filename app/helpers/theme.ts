@@ -1,5 +1,5 @@
 import Theme from '@nativescript-community/css-theme';
-import { Application, Device, EventData, Utils } from '@nativescript/core';
+import { Application, Device, EventData, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
@@ -22,20 +22,22 @@ let started = false;
 let autoDarkToBlack = getBoolean('auto_black', false);
 const ThemeBlack = 'ns-black';
 
-Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { newValue }) => {
+Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanceChangedEventData) => {
     DEV_LOG && console.log('systemAppearanceChangedEvent', theme, event.newValue, autoDarkToBlack);
     if (theme === 'auto') {
-        let theme = event.newValue;
-        if (autoDarkToBlack && theme === 'dark') {
-            theme = 'black';
+        event.cancel = true;
+        let realTheme = event.newValue as Themes;
+        if (autoDarkToBlack && realTheme === 'dark') {
+            realTheme = 'black';
         }
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
         }
-        updateThemeColors(theme);
+        Theme.setMode(Theme.Auto, undefined, realTheme, false);
+        updateThemeColors(realTheme);
         //close any popover as they are not updating with theme yet
         closePopover();
-        globalObservable.notify({ eventName: 'theme', data: theme });
+        globalObservable.notify({ eventName: 'theme', data: realTheme });
     }
 });
 

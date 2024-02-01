@@ -198,12 +198,15 @@ export function updateThemeColors(theme: string) {
         currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(10).hex;
         currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(20).hex;
     }
+    currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
     currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
     Object.keys(currentColors).forEach((c) => {
         rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
     });
     colors.set(currentColors);
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
-    DEV_LOG && console.log('changed colors', rootView, theme, JSON.stringify(currentColors));
+    DEV_LOG && console.log('changed colors', rootView, [...rootView?.cssClasses], theme, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
+    const rootModalViews = rootView?._getRootModalViews();
+    rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());
 }
