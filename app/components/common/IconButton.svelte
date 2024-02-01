@@ -2,6 +2,7 @@
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { conditionalEvent } from '~/utils/svelte/ui';
+    import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
     const iconPaint = new Paint();
 </script>
@@ -46,7 +47,7 @@
                   if (onLongPress) {
                       onLongPress(event);
                   } else {
-                      //   showToolTip(tooltip);
+                      showToolTip(tooltip);
                   }
               }
             : null;
@@ -71,7 +72,7 @@
 
 <canvasview
     bind:this={canvas}
-    borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
+    borderRadius={shape === 'round' || (rounded && !shape) ? '50%' : null}
     disableCss={true}
     rippleColor={actualColor}
     visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}

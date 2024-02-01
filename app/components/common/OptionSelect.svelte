@@ -207,7 +207,7 @@
                         subtitle={item.subtitle}
                         title={item.name}
                         on:tap={(event) => onTap(item, event)}>
-                        <mdbutton class="icon-btn" col={2} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
+                        <IconButton col={2} text={item.rightIcon} on:tap={(event) => onRightTap(item, event)} />
                     </ListItemAutoSize>
                 {:else}
                     <ListItem

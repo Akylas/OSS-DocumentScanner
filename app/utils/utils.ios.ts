@@ -1,3 +1,4 @@
+import { View } from '@akylas/nativescript';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
 export * from './utils.common';
@@ -15,4 +16,8 @@ export async function removeFolderContent(src: string, dst: string) {
 
 export function showToast(text: string) {
     showSnack({ message: text });
+}
+
+export function showToolTip(tooltip: string, view?: View) {
+    showSnack({ message: tooltip });
 }
