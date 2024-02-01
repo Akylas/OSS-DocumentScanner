@@ -264,14 +264,13 @@
 
     function pauseAutoScan() {
         if (__ANDROID__) {
-            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).autoScanHandler.enabled = false;
-        } else {
+            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).getAutoScanHandler().setEnabled(false);
             // TODO: implement autoScan on iOS
         }
     }
     function resumeAutoScan() {
         if (__ANDROID__) {
-            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).autoScanHandler.enabled = true;
+            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).getAutoScanHandler().setEnabled(true);
         } else {
             // TODO: implement autoScan on iOS
         }
@@ -582,10 +581,10 @@
                         }
                     })
                 );
-                autoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
-                autoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
-                autoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
-                processor.autoScanHandler = autoScanHandler;
+                autoScanHandler.setDistanceThreshod(ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD));
+                autoScanHandler.setAutoScanDuration(ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION));
+                autoScanHandler.setPreAutoScanDelay(ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY));
+                processor.setAutoScanHandler(autoScanHandler);
             } else {
                 // TODO: implement autoScan on iOS
             }
