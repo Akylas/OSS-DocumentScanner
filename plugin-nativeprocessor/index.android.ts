@@ -37,33 +37,33 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         );
     });
 }
-export async function getJSONDocumentCornersAndImage(
-    imageProxy: androidx.camera.core.ImageProxy,
-    processor: com.nativescript.cameraview.ImageAsyncProcessor,
-    resizeThreshold = 300,
-    imageRotation = 0
-): Promise<[android.graphics.Bitmap, [number, number][][]]> {
-    return new Promise((resolve, reject) => {
-        com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersAndImage(
-            imageProxy,
-            processor,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
-                onResult(e, result: java.util.HashMap<string, any>) {
-                    if (e) {
-                        reject(e);
-                    } else {
-                        //
-                        const image = result.get('image');
-                        const corners = result.get('corners');
-                        resolve([image, corners ? JSON.parse(corners) : []]);
-                    }
-                }
-            }),
-            resizeThreshold,
-            imageRotation
-        );
-    });
-}
+// export async function getJSONDocumentCornersAndImage(
+//     imageProxy: androidx.camera.core.ImageProxy,
+//     processor: com.nativescript.cameraview.ImageAsyncProcessor,
+//     resizeThreshold = 300,
+//     imageRotation = 0
+// ): Promise<[android.graphics.Bitmap, [number, number][][]]> {
+//     return new Promise((resolve, reject) => {
+//         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersAndImage(
+//             imageProxy,
+//             processor,
+//             new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+//                 onResult(e, result: java.util.HashMap<string, any>) {
+//                     if (e) {
+//                         reject(e);
+//                     } else {
+//                         //
+//                         const image = result.get('image');
+//                         const corners = result.get('corners');
+//                         resolve([image, corners ? JSON.parse(corners) : []]);
+//                     }
+//                 }
+//             }),
+//             resizeThreshold,
+//             imageRotation
+//         );
+//     });
+// }
 
 export async function getColorPalette(
     editingImage: ImageSource,
