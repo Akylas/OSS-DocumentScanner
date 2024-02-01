@@ -6,6 +6,9 @@
         "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallbackProgress",
         "com.akylas.documentscanner:CustomImageAnalysisCallback.Companion",
         "com.akylas.documentscanner:AutoScanHandler",
-        "com.akylas.documentscanner:AutoScanHandler.OnAutoScan"
+        "com.akylas.documentscanner:AutoScanHandler.OnAutoScan",
+        "com.akylas.documentscanner:ImagePicker",
+        "com.akylas.documentscanner:ImagePicker.Companion",
+        "com.akylas.documentscanner:ImagePicker.OnResult"
     ]
 }

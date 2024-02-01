@@ -491,14 +491,29 @@ export async function importAndScanImage(document?: OCRDocument) {
     // let editingImage: ImageSource;
     try {
         // if (__ANDROID__) {
-        //     selection = (
-        //         await openFilePicker({
-        //             mimeTypes: ['image/*'],
-        //             documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
-        //             multipleSelection: true,
-        //             pickerMode: 0
-        //         })
-        //     )?.files;
+        //     // selection = (
+        //     //     await openFilePicker({
+        //     //         mimeTypes: ['image/*'],
+        //     //         documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
+        //     //         multipleSelection: true,
+        //     //         pickerMode: 0
+        //     //     })
+        //     // )?.files;
+        //     await new Promise((resolve, reject) => {
+        //         com.akylas.documentscanner.ImagePicker.Companion.pickImagesVideos(
+        //             Application.android.startActivity,
+        //             new com.akylas.documentscanner.ImagePicker.OnResult({
+        //                 onResult: (err, result) => {
+        //                     if (err) {
+        //                         reject(err);
+        //                     } else {
+        //                         resolve(result);
+        //                     }
+        //                 }
+        //             }),
+        //             ''
+        //         );
+        //     });
         // } else {
         selection = await imagePickerPlugin
             .create({
@@ -511,6 +526,7 @@ export async function importAndScanImage(document?: OCRDocument) {
             // on android pressing the back button will trigger an error which we dont want
             .present()
             .catch((err) => null);
+        // }
         //we need to wait a bit or the presenting controller
         // is still the image picker and will mix things up
         if (__IOS__) {

@@ -34,6 +34,12 @@ dependencies {
     def kotlinCoroutine =  project.hasProperty("kotlinCoroutine") ? project.kotlinCoroutine : "1.6.4"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutine"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutine"
+
+    def androidXActivityVersion =  project.hasProperty("androidXActivityVersion") ? project.androidXActivityVersion : "1.8.2"
+    implementation "androidx.activity:activity-ktx:$androidXActivityVersion"
+
+    def androidXAppCompat =  project.hasProperty("androidXAppCompat") ? project.androidXAppCompat : "1.1.0"
+	implementation "androidx.appcompat:appcompat:$androidXAppCompat"
     // def androidxVersion =  project.hasProperty("coreKtxVersion") ? project.coreKtxVersion : "1.12.0"
     // implementation "androidx.core:core-ktx:$coreKtxVersion"
 }
