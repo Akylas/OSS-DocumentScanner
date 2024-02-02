@@ -23,9 +23,9 @@ private val onAutoScan: AutoScanHandler.OnAutoScan? = null
 
         fun getHash(points: List<Point>): Long {
             return points[0].hashCode() +
-                    1000000L + points[1].hashCode() +
-                    2000000L + points[2].hashCode() +
-                    3000000L + points[3].hashCode();
+                    10000L * points[1].hashCode() +
+                    100000L * points[2].hashCode() +
+                    1000000L * points[3].hashCode();
         }
     }
     var distanceThreshod = 50.0f;

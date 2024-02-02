@@ -1,5 +1,6 @@
-import { ImageSource } from '@nativescript/core';
+import { ImageSource, Utils } from '@nativescript/core';
 import { DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, OCRData } from '.';
+import { CropView } from './CropView';
 
 export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
     return new Promise<any[]>((resolve, reject) => {
@@ -152,4 +153,15 @@ export async function generateQRCodeImage(text: string, format: string, width: n
 
 export function generateQRCodeImageSync(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSync(text, format, width, height, options ? JSON.stringify(options) : '');
+}
+
+export function createAutoScanHandler(cropView: CropView, block: (result) => void): any {
+    const AutoScanHandler = com.akylas.documentscanner.AutoScanHandler;
+    return new AutoScanHandler(
+        Utils.android.getApplicationContext(),
+        cropView.nativeViewProtected,
+        new AutoScanHandler.OnAutoScan({
+            onAutoScan: block
+        })
+    );
 }

@@ -8,7 +8,7 @@
     import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import dayjs from 'dayjs';
-    import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import { createAutoScanHandler, cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
     import { closeModal, showModal } from 'svelte-native';
@@ -263,16 +263,15 @@
     }
 
     function pauseAutoScan() {
-        if (__ANDROID__) {
-            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).getAutoScanHandler().setEnabled(false);
-            // TODO: implement autoScan on iOS
+        DEV_LOG && console.log('pauseAutoScan', processor?.autoScanHanlder?.enabled);
+        if (processor?.autoScanHanlder) {
+            processor.autoScanHanlder.enabled = false;
         }
     }
     function resumeAutoScan() {
-        if (__ANDROID__) {
-            (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).getAutoScanHandler().setEnabled(true);
-        } else {
-            // TODO: implement autoScan on iOS
+        DEV_LOG && console.log('resumeAutoScan', processor?.autoScanHanlder?.enabled);
+        if (processor?.autoScanHanlder) {
+            processor.autoScanHanlder.enabled = true;
         }
     }
     async function takePicture(autoScan = false) {
@@ -560,43 +559,31 @@
         cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
 
-    // TODO: implement autoScan on iOS
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
 
     function applyAutoScan(value: boolean) {
         DEV_LOG && console.log('applyAutoScan', value);
         if (value) {
-            if (__ANDROID__) {
-                const context = Utils.android.getApplicationContext();
-                const nCropView = cropView.nativeView.nativeViewProtected;
-                const AutoScanHandler = com.akylas.documentscanner.AutoScanHandler;
-                DEV_LOG && console.log('creating autoScan handler', value);
-                const autoScanHandler = new AutoScanHandler(
-                    context,
-                    nCropView,
-                    new AutoScanHandler.OnAutoScan({
-                        onAutoScan: (result) => {
-                            DEV_LOG && console.log('onAutoScan', result);
-                            takePicture(true);
-                        }
-                    })
-                );
-                autoScanHandler.setDistanceThreshod(ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD));
-                autoScanHandler.setAutoScanDuration(ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION));
-                autoScanHandler.setPreAutoScanDelay(ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY));
-                processor.setAutoScanHandler(autoScanHandler);
-            } else {
-                // TODO: implement autoScan on iOS
-            }
+            const nCropView = cropView.nativeView;
+            const autoScanHandler = createAutoScanHandler(nCropView, (result) => {
+                DEV_LOG && console.log('onAutoScan', result);
+                takePicture(true);
+            });
+            autoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
+            autoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
+            autoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
+            DEV_LOG && console.log('creating autoScan handler', autoScanHandler, processor.autoScanHandler, processor.setAutoScanHandler);
+            processor.autoScanHandler = autoScanHandler;
         } else {
             if (__ANDROID__) {
                 processor.autoScanHandler = null;
             } else {
-                // TODO: implement autoScan on iOS
+                processor.autoScanHandler = null;
             }
         }
     }
     function toggleAutoScan(apply = true) {
+        DEV_LOG && console.log('toggleAutoScan', autoScan, apply);
         autoScan = !autoScan;
         ApplicationSettings.setBoolean('autoScan', autoScan);
         if (apply) {
@@ -633,8 +620,9 @@
                 processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(nCropView);
                 cameraView.nativeView.processor = processor;
             }
+            DEV_LOG && console.log('applyProcessor', processor, previewResizeThreshold);
             applyAutoScan(autoScan);
-            processor['previewResizeThreshold'] = previewResizeThreshold;
+            processor.previewResizeThreshold = previewResizeThreshold;
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -679,6 +667,8 @@
     $: {
         borderStroke = autoScan ? 4 : 3;
         borderPaint.strokeWidth = borderStroke;
+        DEV_LOG && console.log('autoScan changed', autoScan, takPictureBtnCanvas?.nativeView);
+
         if (takPictureBtnCanvas?.nativeView) {
             takPictureBtnCanvas.nativeView.invalidate();
             if (autoScan) {
@@ -711,7 +701,6 @@
     }
     let cameraOpened = false;
     function onCameraOpen({ object }: { object: CameraView }) {
-        console.log('onCameraOpen', object);
         if (__ANDROID__) {
             const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
             if (currentResolution) {
@@ -791,16 +780,7 @@
                 width={60} />
             <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
                 <canvasView bind:this={takPictureBtnCanvas} on:draw={drawTakePictureBtnBorder}> </canvasView>
-                <gridlayout
-                    backgroundColor={colorPrimary}
-                    borderRadius="50%"
-                    height={54}
-                    horizontalAlignment="center"
-                    ignoreTouchAnimation={false}
-                    touchAnimation={touchAnimationShrink}
-                    width={54}
-                    on:tap={() => takePicture()}
-                    on:longPress={toggleAutoScan} />
+                <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 

@@ -51,5 +51,7 @@
     <string>Camera is used to scan your documents</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
   </dict>
 </plist>

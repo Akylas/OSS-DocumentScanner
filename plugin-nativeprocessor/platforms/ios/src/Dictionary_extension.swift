@@ -7,3 +7,8 @@
 //
 
 import Foundation
+extension Dictionary where Value: Equatable {
+    subscript(firstKeyFor value: Value) -> Key?  { first { $0.value == value }?.key }
+    func allKeys(for value: Value) -> [Key] { compactMap { $0.value == value ? $0.key : nil } }
+  
+}
