@@ -126,14 +126,9 @@ frame {
 }
 
 .actionBar {
-    z-index: 0;
     border-radius: 0;
     height: var(--actionBarHeight);
     background-color: var(--colorBackground);
-
-    .ns-black & {
-        background-color: scale-color(black, $alpha: -30%);
-    }
 }
 
 .sectionHeader {
