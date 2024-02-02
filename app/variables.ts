@@ -153,6 +153,9 @@ export function updateThemeColors(theme: string) {
             currentColors.colorOnPrimaryContainer = '#98F89C';
             currentColors.colorSecondary = '#B9CCB4';
             currentColors.colorOnSecondary = '#243424';
+            currentColors.colorSecondaryContainer = '#3A4B39';
+            currentColors.colorOnSecondaryContainer = '#D5E8D0';
+            currentColors.colorBackground = '#1A1C19';
             currentColors.colorOnBackground = '#E2E3DD';
             currentColors.colorSurface = '#121411';
             currentColors.colorOnSurface = '#C6C7C1';
@@ -161,7 +164,7 @@ export function updateThemeColors(theme: string) {
             currentColors.colorOutline = '#8C9388';
             currentColors.colorSurfaceVariant = '#424940';
             currentColors.colorOnSurfaceVariant = '#C2C9BD';
-            currentColors.colorSurfaceContainer = '#424940';
+            currentColors.colorSurfaceContainer = '#121411';
         } else {
             currentColors.colorPrimary = '#006E25';
             currentColors.colorOnPrimary = '#FFFFFF';
@@ -169,6 +172,8 @@ export function updateThemeColors(theme: string) {
             currentColors.colorOnPrimaryContainer = '#002106';
             currentColors.colorSecondary = '#526350';
             currentColors.colorOnSecondary = '#FFFFFF';
+            currentColors.colorSecondaryContainer = '#D5E8D0';
+            currentColors.colorOnSecondaryContainer = '#101F10';
             currentColors.colorBackground = '#FCFDF7';
             currentColors.colorOnBackground = '#1A1C19';
             currentColors.colorSurface = '#F9FAF4';
@@ -205,7 +210,7 @@ export function updateThemeColors(theme: string) {
     });
     colors.set(currentColors);
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
-    DEV_LOG && console.log('changed colors', rootView, [...rootView?.cssClasses], theme, JSON.stringify(currentColors));
+    DEV_LOG && console.log('changed colors', theme, rootView, [...rootView?.cssClasses], theme, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
     const rootModalViews = rootView?._getRootModalViews();
     rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());
