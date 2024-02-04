@@ -298,9 +298,9 @@
     }
     refresh();
 
-    async function onLongPress(item, event) {
+    async function onLongPress(id, event) {
         try {
-            switch (item.id) {
+            switch (id) {
                 case 'version':
                     if (SENTRY_ENABLED) {
                         throw new Error('test error');
@@ -601,7 +601,7 @@
 
                     <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
                         <image borderRadius="50%" height={50} horizontalAlignment="center" src="res://icon" width={50} />
-                        <label fontSize={13} marginTop={4} text={version} />
+                        <label fontSize={13} marginTop={4} text={version} on:longPress={(event) => onLongPress('version', event)} />
                     </stacklayout>
                 </gridlayout>
             </Template>
@@ -626,8 +626,7 @@
                     showBottomLine={false}
                     subtitle={getDescription(item)}
                     title={getTitle(item)}
-                    on:tap={(event) => onTap(item, event)}
-                    on:longPress={(event) => onLongPress(item, event)}>
+                    on:tap={(event) => onTap(item, event)}>
                 </ListItemAutoSize>
             </Template>
             <!-- <Template key="switch" let:item>
