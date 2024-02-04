@@ -7,9 +7,10 @@
 
 @implementation OpencvDocumentProcessDelegate
 
-- (instancetype)initWithCropView:(NSCropView*) view {
+- (instancetype)initWithCropView:(NSCropView*) view{
   self.cropView = view;
   self.previewResizeThreshold = 300;
+  self.autoScanHandler = nil;
   return [self init];
 }
 
@@ -363,29 +364,33 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 - (void)cameraView:(NSCameraView *)cameraView willProcessRawVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer onQueue:(dispatch_queue_t)queue
 {
   cv::Mat mat = [self matFromBuffer:sampleBuffer];
-  self.cropView.quads = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0];
-  //  detector::DocumentDetector docDetector(mat, self.previewResizeThreshold, 0);
-  //  std::vector<std::vector<cv::Point>> scanPointsList = docDetector.scanPoint();
-  //  unsigned long count = scanPointsList.size();
-  //  if (count > 0) {
-  //    NSMutableArray* objcScanPointsList = [[NSMutableArray alloc] initWithCapacity:count];
-  //    for (int i = 0; i < count; i++) {
-  //      std::vector<cv::Point> quad = scanPointsList[i];
-  //      NSMutableArray* objcQuad =[[NSMutableArray alloc] initWithCapacity:quad.size()];
-  //      for (int j = 0; j < quad.size(); j++) {
-  //        [objcQuad addObject:[NSValue valueWithCGPoint:CGPointMake(quad[j].x, quad[j].y)]];
-  //      }
-  //      [objcScanPointsList addObject:objcQuad];
-  //    }
-  //    self.cropView.quads = objcScanPointsList;
-  //  } else {
-  //    self.cropView.quads = nil;
-  //  }
+  int videoOrientation =  cameraView.videoOrientation;
+  UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+  int rotation = 0;
+  switch (orientation) {
+    case UIDeviceOrientationPortraitUpsideDown:
+      rotation = 180;
+      break;
+    case UIDeviceOrientationLandscapeLeft:
+      rotation = 90;
+      break;
+    case UIDeviceOrientationLandscapeRight:
+      rotation = -90;
+      break;
+    default:
+      break;
+  }
+  NSArray* points = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0];
+  if ([self.autoScanHandler isKindOfClass: [AutoScanHandler class]]) {
+    [((AutoScanHandler*)self.autoScanHandler) processWithPoints: points];
+  }
+  
+  
+  self.cropView.videoGravity = cameraView.videoGravity;
   self.cropView.imageSize = CGSizeMake(mat.size().width, mat.size().height);
+  self.cropView.quads = points;
+  
   mat.release();
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self.cropView setNeedsDisplay];
-  });
 }
 - (void)cameraView:(NSCameraView *)cameraView renderToCustomContextWithImageBuffer:(CVPixelBufferRef)imageBuffer onQueue:(dispatch_queue_t)queue {
   // we do nothing here

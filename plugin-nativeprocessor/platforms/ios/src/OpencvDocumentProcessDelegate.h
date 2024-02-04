@@ -3,11 +3,11 @@
 #import <CoreVideo/CoreVideo.h>
 #import <Webkit/Webkit.h>
 #import "nsdocumentscanner-Swift.h"
-#import "NSCropView.h"
 #import "OCRDelegate.h"
 
 @interface OpencvDocumentProcessDelegate : NSObject <ProcessRawVideoSampleBufferDelegate>
-@property (strong, nonatomic) NSCropView *cropView;
+@property (nullable, retain, nonatomic) NSCropView *cropView;
+@property (nullable, retain, nonatomic) NSObject *autoScanHandler;
 @property (nonatomic, assign) NSInteger  previewResizeThreshold;
 
 - (instancetype)initWithCropView:(NSCropView*) view;

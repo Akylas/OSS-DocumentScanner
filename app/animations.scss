@@ -1,0 +1,28 @@
+.infinite-rotate {
+    animation-name: rotate;
+    animation-duration: 1500ms;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-timing-function:linear;
+}
+
+@keyframes rotate {
+    0% {
+        rotate: 0;
+    }
+
+    25% {
+        rotate: 90;
+    }
+    50% {
+        rotate: 180;
+    }
+
+    75% {
+        rotate: 270;
+    }
+
+    100% {
+        rotate: 360;
+    }
+}

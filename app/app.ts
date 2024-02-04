@@ -26,6 +26,7 @@ import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
 import { createElement, initializeDom, navigate } from 'svelte-native/dom';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);

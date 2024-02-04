@@ -15,17 +15,21 @@ declare class NSCropView extends UIView {
 
     static new(): NSCropView; // inherited from NSObject
 
-    colors: NSArray<any>;
+    colors: NSArray<UIColor>;
+
+    drawFill: boolean;
 
     fillAlpha: number;
 
-    image: UIImage;
-
     imageSize: CGSize;
 
-    quads: NSArray<any>;
+    quads: NSArray<NSArray<NSValue>>;
 
     strokeWidth: number;
+
+    replaceProgressHashWithOldHashNewHash(oldHash: number, newHash: number): void;
+
+    updateProgressWithHashProgress(hash: number, progress: number): void;
 }
 
 interface OCRDelegate {
@@ -33,7 +37,7 @@ interface OCRDelegate {
 
     onProgress(progress: number): void;
 }
-declare let OCRDelegate: {
+declare const OCRDelegate: {
     prototype: OCRDelegate;
 };
 
@@ -52,11 +56,42 @@ declare class OpencvDocumentProcessDelegate extends NSObject {
 
     static ocrDocumentOptionsDelegate(image: UIImage, options: string, delegate: OCRDelegate): void;
 
+    previewResizeThreshold: number;
+    autoScanHandler: AutoScanHandler;
+
+    constructor(o: { cropView: any; onAutoScan: any });
+
+    initWithCropView(view: any): this;
+}
+
+declare class AutoScanHandler extends NSObject {
+    static alloc(): AutoScanHandler; // inherited from NSObject
+
+    static getHashWithPoints(points: NSArray<NSValue> | NSValue[]): number;
+
+    static new(): AutoScanHandler; // inherited from NSObject
+
     cropView: NSCropView;
 
-    previewResizeThreshold: number;
+    onAutoScan: OnAutoScan;
 
-    constructor(o: { cropView: NSCropView });
+    constructor(o: { cropView: NSCropView; onAutoScan: OnAutoScan });
 
-    initWithCropView(view: NSCropView): this;
+    clearAll(): void;
+
+    initWithCropViewOnAutoScan(cropView: NSCropView, onAutoScan: OnAutoScan): this;
+
+    processWithPoints(points: NSArray<NSArray<NSValue>> | NSArray<NSValue>[]): void;
+
+    replaceHashWithOldValueNewValue(oldValue: number, newValue: number): void;
+
+    startAutoScanJobWithPoints(points: NSArray<NSValue> | NSValue[]): void;
+
+    startAutoScanPreJobWithPoints(points: NSArray<NSValue> | NSValue[]): void;
 }
+interface OnAutoScan {
+    onAutoScan(corners: string): void;
+}
+declare const OnAutoScan: {
+    prototype: OnAutoScan;
+};

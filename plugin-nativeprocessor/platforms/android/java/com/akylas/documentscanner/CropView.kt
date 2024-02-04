@@ -135,14 +135,14 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
     @UiThread
     fun setQuadsAnimated(quads: List<List<Point>>?) {
-    if (quads == null || this.mQuads == null || this.mQuads!!.size == 0 || this.mQuads!!.size != quads.size) {
-        this.mQuads = quads
-        invalidate()
-        return;
-    }
         if (mAnimator != null) {
             mAnimator!!.removeAllListeners()
             mAnimator!!.cancel()
+        }
+        if (quads == null || this.mQuads == null || this.mQuads!!.size == 0 || this.mQuads!!.size != quads.size) {
+            this.mQuads = quads
+            invalidate()
+            return;
         }
         startAnimationQuads = if (animationQuads != null)   animationQuads else  this.mQuads
         animationQuads = null

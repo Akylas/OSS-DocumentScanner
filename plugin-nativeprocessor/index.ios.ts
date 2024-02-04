@@ -1,5 +1,6 @@
 import { Color, ImageSource } from '@nativescript/core';
 import { DetectOptions, GenerateQRCodeOptions, OCRData } from '.';
+import { CropView } from './CropView';
 
 @NativeClass
 class OCRDelegateDelegateImpl extends NSObject implements OCRDelegate {
@@ -172,4 +173,22 @@ export async function generateQRCodeImage(text: string, format: string, width: n
         }
     }
     return null;
+}
+
+@NativeClass
+class OnAutoScanImpl extends NSObject implements OnAutoScan {
+    static ObjCProtocols = [OnAutoScan];
+    callback;
+    onAutoScan(corners: string): void {
+        this.callback(corners);
+    }
+
+    static initWithCallback(callback) {
+        const delegate = OnAutoScanImpl.new() as OnAutoScanImpl;
+        delegate.callback = callback;
+        return delegate;
+    }
+}
+export function createAutoScanHandler(cropView: CropView, block: (result) => void) {
+    return AutoScanHandler.alloc().initWithCropViewOnAutoScan(cropView.nativeViewProtected, OnAutoScanImpl.initWithCallback(block));
 }

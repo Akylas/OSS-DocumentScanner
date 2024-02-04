@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { Frame } from '@nativescript/core/ui/frame';
+    import { Frame } from '@nativescript/core';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from 'svelte-native';
     import { showError } from '~/utils/error';
     import { conditionalEvent, fade } from '~/utils/svelte/ui';
+
     export let title: string = null;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;
