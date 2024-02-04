@@ -659,43 +659,25 @@
         }
     }
 
-    let borderStroke = 3;
+    const borderStroke = 3;
     const borderPaint = new Paint();
     borderPaint.strokeWidth = borderStroke;
     borderPaint.style = Style.STROKE;
     borderPaint.color = 'white';
-    $: {
-        borderStroke = autoScan ? 4 : 3;
-        borderPaint.strokeWidth = borderStroke;
-        DEV_LOG && console.log('autoScan changed', autoScan, takPictureBtnCanvas?.nativeView);
 
+    function onAutoScanChanged(value) {
         if (takPictureBtnCanvas?.nativeView) {
             takPictureBtnCanvas.nativeView.invalidate();
-            if (autoScan) {
-                // without the timeout it wont start
-                setTimeout(() => {
-                    takPictureBtnCanvas?.nativeView
-                        .animate({
-                            curve: CoreTypes.AnimationCurve.linear,
-                            duration: 1500,
-                            rotate: 360,
-                            iterations: Number.POSITIVE_INFINITY
-                        })
-                        .catch((err) => console.error(err, err.stack));
-                }, 300);
-            } else {
-                takPictureBtnCanvas.nativeView.cancelAllAnimations();
-            }
         }
     }
+    $: onAutoScanChanged(autoScan);
     function drawTakePictureBtnBorder({ canvas }: { canvas: Canvas }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
+        const radius = Math.min(w, h) / 2 - borderStroke / 2;
         if (autoScan) {
-            const radius = Math.min(w, h) - borderStroke / 2;
-            canvas.drawArc(0, 0, radius, radius, 0, 90, false, borderPaint);
+            canvas.drawArc(w / 2 - radius, h / 2 - radius, w / 2 + radius, h / 2 + radius, 0, 270, false, borderPaint);
         } else {
-            const radius = Math.min(w, h) / 2 - borderStroke / 2;
             canvas.drawCircle(w / 2, h / 2, radius, borderPaint);
         }
     }
@@ -779,7 +761,7 @@
                 verticalAlignment="center"
                 width={60} />
             <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
-                <canvasView bind:this={takPictureBtnCanvas} on:draw={drawTakePictureBtnBorder}> </canvasView>
+                <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
                 <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
