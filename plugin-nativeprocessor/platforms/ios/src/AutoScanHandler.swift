@@ -48,12 +48,12 @@ class AutoScanHandler : NSObject {
   }
   
   func clearAll() {
-    //        scope.sync(flags: .barrier) {
+    //        scope.sync() {
     autoScanJobs.forEach { it in
       it.value.cancel()
       let hash = it.key
       let progressHash = hashMapping[firstKeyFor:hash] ?? hash
-      DispatchQueue.main.sync() {
+      DispatchQueue.main.async() {
         self.cropView?.updateProgress(hash: progressHash, progress: 0)
       }
     }
@@ -67,7 +67,7 @@ class AutoScanHandler : NSObject {
   }
   
   func process(points: [[NSValue]]?) {
-    //        scope.sync(flags: .barrier) {
+    //        scope.sync() {
     guard enabled else { return }
     
     if let points = points, !points.isEmpty {
@@ -94,7 +94,9 @@ class AutoScanHandler : NSObject {
                 mutableList.removeAll { $0 == comparingPointList }
               } else {
                 let newHash = AutoScanHandler.getHash(points: comparingPointList)
-                cropView?.replaceProgressHash(oldHash: hash, newHash: newHash)
+                DispatchQueue.main.async() {
+                  self.cropView?.replaceProgressHash(oldHash: hash, newHash: newHash)
+                }
                 replaceHash(oldValue: hash, newValue: newHash)
                 mutableList.removeAll { $0 == comparingPointList }
               }
@@ -107,8 +109,8 @@ class AutoScanHandler : NSObject {
             if let job = autoScanJobs[originalHash] {
               job.cancel()
               autoScanJobs.removeValue(forKey: originalHash)
-              DispatchQueue.main.sync() {
-                cropView?.updateProgress(hash: hash, progress: 0)
+              DispatchQueue.main.async() {
+                self.cropView?.updateProgress(hash: hash, progress: 0)
               }
             }
             
@@ -153,7 +155,7 @@ class AutoScanHandler : NSObject {
       for i in 0...100 {
         Thread.sleep(forTimeInterval: delayMs)
         let updateKey = hashMapping[firstKeyFor: hash] ?? hash
-        DispatchQueue.main.sync() {
+        DispatchQueue.main.async() {
           cropView?.updateProgress(hash: updateKey, progress: i)
         }
       }
@@ -172,7 +174,7 @@ class AutoScanHandler : NSObject {
       
       self.autoScanJobs.removeValue(forKey: hash)
       let updateKey = originalKey ?? hash
-      DispatchQueue.main.sync() {
+      DispatchQueue.main.async() {
         cropView?.updateProgress(hash: updateKey, progress: 0)
       }
     }

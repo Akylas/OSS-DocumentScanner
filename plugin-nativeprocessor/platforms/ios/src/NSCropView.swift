@@ -65,8 +65,8 @@ class NSCropView: UIView {
       return self.mQuads
     }
     set {
-      DispatchQueue.main.sync() {
-        self.mQuads = newValue
+      DispatchQueue.main.async() {
+//        self.mQuads = newValue
 //        self.setNeedsDisplay()
         self.setQuadsAnimated(points: newValue)
       }
@@ -84,7 +84,7 @@ class NSCropView: UIView {
   }
   var strokeWidth: CGFloat = 1.0
   var drawFill: Bool = true
-  var animationDuration = 200.0
+  var animationDuration = 50.0
   
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -139,6 +139,7 @@ class NSCropView: UIView {
     
     context.translateBy(x: deltaX, y: deltaY - addedDeltaY)
     context.setLineWidth(strokeWidth)
+    context.setLineJoin(.round)
     
     quads.enumerated().forEach { (idx, quad) in
       context.setStrokeColor(colors[idx % colors.count].cgColor)

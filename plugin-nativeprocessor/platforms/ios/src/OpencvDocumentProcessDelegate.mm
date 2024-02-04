@@ -364,6 +364,22 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 - (void)cameraView:(NSCameraView *)cameraView willProcessRawVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer onQueue:(dispatch_queue_t)queue
 {
   cv::Mat mat = [self matFromBuffer:sampleBuffer];
+  int videoOrientation =  cameraView.videoOrientation;
+  UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+  int rotation = 0;
+  switch (orientation) {
+    case UIDeviceOrientationPortraitUpsideDown:
+      rotation = 180;
+      break;
+    case UIDeviceOrientationLandscapeLeft:
+      rotation = 90;
+      break;
+    case UIDeviceOrientationLandscapeRight:
+      rotation = -90;
+      break;
+    default:
+      break;
+  }
   NSArray* points = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0];
   if ([self.autoScanHandler isKindOfClass: [AutoScanHandler class]]) {
     [((AutoScanHandler*)self.autoScanHandler) processWithPoints: points];
