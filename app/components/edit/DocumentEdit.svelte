@@ -260,8 +260,8 @@
                     ocrData: items.getItem(currentIndex).ocrData,
                     imagePath: item.imagePath,
                     // image: editingImage || (await loadImage(item.imagePath)),
-                    // imageWidth: item.width,
-                    // imageHeight: item.height,
+                    imageWidth: item.width,
+                    imageHeight: item.height,
                     rotation: item.rotation
                     // colorMatrix: getColorMatrix(item.colorType)
                 }

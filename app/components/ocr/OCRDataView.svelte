@@ -14,14 +14,15 @@
     // export let image: ImageSource;
     // export let rotation: number;
     // export let colorMatrix: number[];
-    // export let imageWidth: number;
-    // export let imageHeight: number;
+    export let imageWidth: number;
+    export let imageHeight: number;
     let webView: NativeViewElementNode<AWebView>;
 
     // console.log('ocrData', JSON.stringify(ocrData));
     function onWebViewLoadFinished() {
+        console.log('onWebViewLoadFinished');
         try {
-            webView?.nativeView.executeJavaScript(`document.updateOCRData('${imagePath}', ${rotation}, ${JSON.stringify(ocrData)})`);
+            webView?.nativeView.executeJavaScript(`document.updateOCRData('${imagePath}', ${imageWidth}, ${imageHeight}, ${rotation}, ${JSON.stringify(ocrData)})`);
         } catch (error) {
             showError(error);
         }
