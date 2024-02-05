@@ -36,11 +36,3 @@ export async function removeFolderContent(src: string) {
     const folder = Folder.fromPath(src);
     return Promise.all((await folder.getEntities()).map((e) => e.remove()));
 }
-
-export function showToast(text: string) {
-    android.widget.Toast.makeText(Utils.android.getApplicationContext(), text, android.widget.Toast.LENGTH_SHORT).show();
-}
-
-export function showToolTip(tooltip: string, view?: View) {
-    android.widget.Toast.makeText(Utils.android.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
-}

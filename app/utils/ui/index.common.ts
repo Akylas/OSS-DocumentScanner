@@ -1,17 +1,18 @@
 import { request } from '@nativescript-community/perms';
-import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
+import { pickFolder } from '@nativescript-community/ui-document-picker';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { AlertDialog, MDCAlertControlerOptions, alert, prompt } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
+import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
     AlertOptions,
     Animation,
     AnimationDefinition,
     Application,
     ApplicationSettings,
-    Frame,
     GridLayout,
     ImageSource,
-    Observable,
     ObservableArray,
     Utils,
     View,
@@ -19,31 +20,29 @@ import {
     knownFolders,
     path
 } from '@nativescript/core';
-import { openFile, openUrl } from '@nativescript/core/utils';
+import { copyToClipboard, openFile, openUrl } from '@nativescript/core/utils';
+import * as imagePickerPlugin from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
 import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
-import { l, lc } from '~/helpers/locale';
-import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import { documentsService } from '~/services/documents';
-import { showError } from './error';
-import { loadImage, recycleImages } from './utils.common';
-import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
-import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
-import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
+import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
-import { colors, fontScale } from '~/variables';
-import * as imagePickerPlugin from '@nativescript/imagepicker';
-import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
-import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
-import { share } from './share';
-import { ocrService } from '~/services/ocr';
+import { l, lc } from '~/helpers/locale';
+import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { DOCUMENT_NOT_DETECTED_MARGIN, IMG_COMPRESS, IMG_FORMAT, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
+import { documentsService } from '~/services/documents';
+import { ocrService } from '~/services/ocr';
+import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
+import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
+import { showError } from '~/utils/error';
+import { loadImage, recycleImages } from '~/utils/images';
+import { share } from '~/utils/share';
+import { showToast } from '~/utils/ui';
+import { colors, fontScale } from '~/variables';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -1104,4 +1103,9 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
     } finally {
         hideSnackMessage();
     }
+}
+
+export function copyTextToClipboard(text) {
+    copyToClipboard(text);
+    showToast(lc('copied'));
 }

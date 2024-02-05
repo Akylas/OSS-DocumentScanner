@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { ColorPaletteData, OCRData, QRCodeData, cropDocument } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
-import { loadImage, recycleImages } from '~/utils/utils';
+import { loadImage, recycleImages } from '~/utils/images';
 import { IMG_COMPRESS, IMG_FORMAT } from './constants';
 
 export interface ImageConfig {

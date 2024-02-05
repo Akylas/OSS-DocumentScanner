@@ -2,7 +2,7 @@ import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } 
 import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/core';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/matrix';
-import { loadImage, recycleImages } from '~/utils/utils.common';
+import { loadImage, recycleImages } from '~/utils/images';
 let bitmapPaint: Paint;
 const textPaint = new Paint();
 

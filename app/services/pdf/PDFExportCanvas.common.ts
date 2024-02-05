@@ -1,7 +1,7 @@
 import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
 import type { OCRPage } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/matrix';
-import { loadImage, recycleImages } from '~/utils/utils.common';
+import { loadImage, recycleImages } from '~/utils/images';
 import PDFCanvas from './PDFCanvas';
 import { ImageSource } from '@nativescript/core';
 

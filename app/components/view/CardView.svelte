@@ -24,7 +24,7 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { hideLoading, importAndScanImage, showLoading, showPDFPopoverMenu } from '~/utils/ui';
-    import { recycleImages } from '~/utils/utils.common';
+    import { recycleImages } from '~/utils/images';
     import { colors, screenWidthDips } from '~/variables';
     export const screenWidthPixels = Screen.mainScreen.widthPixels;
     export const screenHeightPixels = Screen.mainScreen.heightPixels;

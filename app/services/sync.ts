@@ -4,7 +4,7 @@ import { cropDocument } from 'plugin-nativeprocessor';
 import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 import { showError } from '~/utils/error';
-import { loadImage, recycleImages } from '~/utils/utils';
+import { loadImage, recycleImages } from '~/utils/images';
 import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';
 import { exists } from '~/webdav/operations/exists';
 import { basename } from '~/webdav/tools/path';

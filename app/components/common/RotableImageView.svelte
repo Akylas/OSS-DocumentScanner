@@ -7,7 +7,7 @@
     import { OCRPage } from '~/models/OCRDocument';
     import { showError } from '~/utils/error';
     import { getColorMatrix } from '~/utils/ui';
-    import { recycleImages } from '~/utils/utils.common';
+    import { recycleImages } from '~/utils/images';
 
     const dispatch = createEventDispatcher();
     export let zoomable = false;

@@ -13,11 +13,3 @@ export async function copyFolderContent(src: string, dst: string) {
 export async function removeFolderContent(src: string, dst: string) {
     throw new Error('not implemented on iOS');
 }
-
-export function showToast(text: string) {
-    showSnack({ message: text });
-}
-
-export function showToolTip(tooltip: string, view?: View) {
-    showSnack({ message: tooltip });
-}

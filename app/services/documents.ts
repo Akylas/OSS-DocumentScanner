@@ -1,13 +1,10 @@
 import { request } from '@nativescript-community/perms';
-import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
-import { ApplicationSettings, File, Folder, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, Folder, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
-import { getColorMatrix } from '~/utils/ui';
 import NSQLDatabase from './NSQLDatabase';
-import { loadImage, recycleImages } from '~/utils/utils';
 const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;

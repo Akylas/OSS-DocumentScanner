@@ -1,5 +1,5 @@
 import { Application, Device, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
-import { Content, Options } from './share';
+import { Content, Options } from '.';
 
 let numberOfImagesCreated = 0;
 const sdkVersionInt = parseInt(Device.sdkVersion, 10);

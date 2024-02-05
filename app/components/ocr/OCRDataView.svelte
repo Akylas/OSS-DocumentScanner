@@ -6,7 +6,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { showError } from '~/utils/error';
-    import { copyTextToClipboard } from '~/utils/utils.common';
+    import { copyTextToClipboard } from '~/utils/ui';
 
     export let ocrData: OCRData;
     export let imagePath: string;

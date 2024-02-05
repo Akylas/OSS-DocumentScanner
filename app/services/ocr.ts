@@ -1,7 +1,7 @@
 import { ApplicationSettings, File, Folder, ImageSource, Observable, knownFolders, path } from '@nativescript/core';
 import { ocrDocument } from 'plugin-nativeprocessor';
 import { OCRDocument } from '~/models/OCRDocument';
-import { loadImage, recycleImages } from '~/utils/utils';
+import { loadImage, recycleImages } from '~/utils/images';
 import { request } from '@nativescript-community/https';
 import { networkService } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';

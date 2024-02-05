@@ -31,7 +31,7 @@
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
-    import { recycleImages } from '~/utils/utils.common';
+    import { recycleImages } from '~/utils/images';
     import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change

@@ -27,7 +27,7 @@
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
     import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
-    import { recycleImages } from '~/utils/utils.common';
+    import { recycleImages } from '~/utils/images';
     import { colors, fonts } from '~/variables';
 
     $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);

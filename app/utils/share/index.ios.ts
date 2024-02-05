@@ -1,5 +1,5 @@
 import { Application, Color } from '@nativescript/core';
-import { Content, Options } from './share';
+import { Content, Options } from '.';
 
 export async function share(content: Content, options: Options = {}) {
     if (content == null) {

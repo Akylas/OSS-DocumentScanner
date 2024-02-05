@@ -23,9 +23,9 @@
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
+    import { loadImage, recycleImages } from '~/utils/images';
     import { share } from '~/utils/share';
-    import { ColorMatricesTypes, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
-    import { copyTextToClipboard, loadImage, recycleImages } from '~/utils/utils.common';
+    import { ColorMatricesTypes, copyTextToClipboard, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
     import { colors } from '~/variables';
 
     // technique for only specific properties to get updated on store change

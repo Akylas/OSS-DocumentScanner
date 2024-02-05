@@ -10,7 +10,7 @@
     import CropView from '~/components/common/CropView.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { recycleImages } from '~/utils/utils.common';
+    import { recycleImages } from '~/utils/images';
     import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 
     let recrop = false;
