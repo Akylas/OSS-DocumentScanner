@@ -20,7 +20,7 @@ import {
     knownFolders,
     path
 } from '@nativescript/core';
-import { copyToClipboard, openFile, openUrl } from '@nativescript/core/utils';
+import { SDK_VERSION, copyToClipboard, openFile, openUrl } from '@nativescript/core/utils';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
 import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
@@ -1107,5 +1107,7 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
 
 export function copyTextToClipboard(text) {
     copyToClipboard(text);
-    showToast(lc('copied'));
+    if (__IOS__ || (__ANDROID__ && SDK_VERSION < 13)) {
+        showToast(lc('copied'));
+    }
 }
