@@ -14,6 +14,24 @@
   return [self init];
 }
 
+- (NSObject*) autoScanHandler
+{
+  return self.innerAutoScanHandler;
+}
+//  Setters
+- (void) setAutoScanHandler:(NSObject *)value
+{
+  if (value == nil || [value isKindOfClass:[AutoScanHandler class]]) {
+    if(self.innerAutoScanHandler != nil) {
+      self.innerAutoScanHandler.enabled = false;
+    }
+    if(self.cropView != nil) {
+      self.cropView.drawFill = value == nil;
+    }
+    self.innerAutoScanHandler = (AutoScanHandler*)value;
+  }
+}
+
 CGImageRef MatToCGImage(const cv::Mat& image) {
   NSData *data = [NSData dataWithBytes:image.data
                                 length:image.step.p[0] * image.rows];
@@ -381,8 +399,8 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       break;
   }
   NSArray* points = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0];
-  if ([self.autoScanHandler isKindOfClass: [AutoScanHandler class]]) {
-    [((AutoScanHandler*)self.autoScanHandler) processWithPoints: points];
+  if (self.innerAutoScanHandler != nil) {
+    [((AutoScanHandler*)self.innerAutoScanHandler) processWithPoints: points];
   }
   
   

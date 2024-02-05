@@ -63,12 +63,11 @@ class AutoScanHandler : NSObject {
     preAutoScanJobs.removeAll()
     
     currentPoints = nil
-    //        }
   }
   
   func process(points: [[NSValue]]?) {
     //        scope.sync() {
-    guard enabled else { return }
+    guard _enabled else { return }
     
     if let points = points, !points.isEmpty {
       if currentPoints == nil {
@@ -123,7 +122,7 @@ class AutoScanHandler : NSObject {
         
         mutableList.forEach { startAutoScanPreJob(points: $0) }
       }
-    } else {
+    } else if (currentPoints != nil) {
       clearAll()
     }
     
@@ -137,10 +136,11 @@ class AutoScanHandler : NSObject {
     let workItem = DispatchWorkItem { [weak self] in
       guard let self = self else { return }
       Thread.sleep(forTimeInterval: delayMs)
-      self.startAutoScanJob(points: points)
-      self.preAutoScanJobs.removeValue(forKey: hash)
+      if (preAutoScanJobs[hash] != nil) {
+        self.startAutoScanJob(points: points)
+        self.preAutoScanJobs.removeValue(forKey: hash)
+      }
     }
-    
     scope.async(execute: workItem)
     preAutoScanJobs[hash] = workItem
   }
@@ -160,27 +160,30 @@ class AutoScanHandler : NSObject {
         }
       }
       
-      let originalKey = hashMapping[firstKeyFor: hash]
-      if originalKey != nil {
-        if let onAutoScan = self.onAutoScan {
-          let jsonArray = try? JSONSerialization.data(withJSONObject: points.map { [$0.cgPointValue.x, $0.cgPointValue.y] })
-          if let jsonArray = jsonArray, let result = String(data: jsonArray, encoding: .utf8) {
-            DispatchQueue.main.async() {
-              onAutoScan.onAutoScan(result)
+      if (self.autoScanJobs[hash] != nil) {
+        let originalKey = hashMapping[firstKeyFor: hash]
+        if (_enabled && originalKey != nil) {
+          if let onAutoScan = self.onAutoScan {
+            let jsonArray = try? JSONSerialization.data(withJSONObject: points.map { [$0.cgPointValue.x, $0.cgPointValue.y] })
+            if let jsonArray = jsonArray, let result = String(data: jsonArray, encoding: .utf8) {
+              DispatchQueue.main.async() {
+                onAutoScan.onAutoScan(result)
+              }
             }
           }
         }
+        
+        self.autoScanJobs.removeValue(forKey: hash)
+        let updateKey = originalKey ?? hash
+        DispatchQueue.main.async() {
+          cropView?.updateProgress(hash: updateKey, progress: 0)
+        }
       }
       
-      self.autoScanJobs.removeValue(forKey: hash)
-      let updateKey = originalKey ?? hash
-      DispatchQueue.main.async() {
-        cropView?.updateProgress(hash: updateKey, progress: 0)
-      }
     }
     
-    scope.async(execute: workItem)
     autoScanJobs[hash] = workItem
+    scope.async(execute: workItem)
   }
   static func getPointHash(_ point: CGPoint) -> Int {
     return Int(31 * point.x + point.y)

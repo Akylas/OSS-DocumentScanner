@@ -7,10 +7,12 @@
 
 @interface OpencvDocumentProcessDelegate : NSObject <ProcessRawVideoSampleBufferDelegate>
 @property (nullable, retain, nonatomic) NSCropView *cropView;
+@property (nullable, retain, nonatomic) AutoScanHandler *innerAutoScanHandler;
 @property (nullable, retain, nonatomic) NSObject *autoScanHandler;
 @property (nonatomic, assign) NSInteger  previewResizeThreshold;
 
 - (instancetype)initWithCropView:(NSCropView*) view;
+- (void) setAutoScanHandler:(NSObject *)value;
 
 
 +(NSArray*)findDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation;

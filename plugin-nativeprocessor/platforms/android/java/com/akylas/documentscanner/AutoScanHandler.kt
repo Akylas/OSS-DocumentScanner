@@ -179,7 +179,7 @@ private val onAutoScan: AutoScanHandler.OnAutoScan? = null
                     e.printStackTrace()
                 }
             }
-            if (hashMapping.containsValue(hash)) {
+            if (enabled && hashMapping.containsValue(hash)) {
                 if (onAutoScan != null) {
                     val jsonArray = JSONArray(points.map {
                          listOf(it.x, it.y)

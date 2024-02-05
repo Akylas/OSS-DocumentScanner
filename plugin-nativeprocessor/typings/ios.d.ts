@@ -31,7 +31,6 @@ declare class NSCropView extends UIView {
 
     updateProgressWithHashProgress(hash: number, progress: number): void;
 }
-
 interface OCRDelegate {
     onCompleteError(result: NSObject, error: NSError): void;
 
@@ -56,12 +55,15 @@ declare class OpencvDocumentProcessDelegate extends NSObject {
 
     static ocrDocumentOptionsDelegate(image: UIImage, options: string, delegate: OCRDelegate): void;
 
-    previewResizeThreshold: number;
-    autoScanHandler: AutoScanHandler;
+    autoScanHandler: NSObject;
 
-    constructor(o: { cropView: any; onAutoScan: any });
+    previewResizeThreshold: number;
+
+    constructor(o: { cropView: any });
 
     initWithCropView(view: any): this;
+
+    setAutoScanHandler(value: NSObject): void;
 }
 
 declare class AutoScanHandler extends NSObject {
