@@ -91,6 +91,7 @@
     let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
+    let _actualFlashMode = flashMode;
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
@@ -265,13 +266,13 @@
     function pauseAutoScan() {
         DEV_LOG && console.log('pauseAutoScan', processor?.autoScanHanlder?.enabled);
         if (processor?.autoScanHanlder) {
-            processor.autoScanHanlder.enabled = false;
+            processor.autoScanHanlder.setEnabled(false);
         }
     }
     function resumeAutoScan() {
         DEV_LOG && console.log('resumeAutoScan', processor?.autoScanHanlder?.enabled);
         if (processor?.autoScanHanlder) {
-            processor.autoScanHanlder.enabled = true;
+            processor.autoScanHanlder.setEnabled(true);
         }
     }
     async function takePicture(autoScan = false) {
@@ -283,11 +284,10 @@
             pauseAutoScan();
         }
         try {
-            DEV_LOG && console.log('takePicture');
-            showLoading(l('capturing'));
+            DEV_LOG && console.log('takePicture', autoScan);
+            await showLoading(l('capturing'));
             const { image, info } = await cameraView.nativeView.takePicture({
-                savePhotoToDisk: false,
-                captureMode: 1
+                savePhotoToDisk: false
             });
             const didAdd = await processAndAddImage(image, autoScan);
             DEV_LOG && console.log('takePicture done', image, didAdd);
@@ -306,14 +306,13 @@
         }
     }
 
-    function setTorchEnabled(enabled: boolean) {
-        cameraView.nativeView.flashMode = enabled ? 'torch' : (flashMode as any);
+    $: {
+        _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
     }
+
     function switchTorch() {
         if (cameraView) {
-            const current = cameraView.nativeView.flashMode;
-            torchEnabled = !(current === 'torch');
-            setTorchEnabled(torchEnabled);
+            torchEnabled = !torchEnabled;
         }
     }
     function toggleCamera() {
@@ -347,7 +346,7 @@
     function onNavigatedFrom() {
         DEV_LOG && console.log('onNavigatedFrom');
         if (torchEnabled) {
-            setTorchEnabled(false);
+            // setTorchEnabled(false);
         }
         stopPreview();
         if (document) {
@@ -556,13 +555,14 @@
         cameraScreenRatio = cameraView.nativeElement.getMeasuredWidth() / cameraView.nativeElement.getMeasuredHeight();
     }
     function focusCamera(e) {
+        DEV_LOG && console.log('focusCamera', e.getX(), e.getY());
         cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
 
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
 
     function applyAutoScan(value: boolean) {
-        DEV_LOG && console.log('applyAutoScan', value);
+        DEV_LOG && console.log('applyAutoScan', value, processor.autoScanHanlder);
         if (value) {
             const nCropView = cropView.nativeView;
             const autoScanHandler = createAutoScanHandler(nCropView, (result) => {
@@ -575,11 +575,7 @@
             DEV_LOG && console.log('creating autoScan handler', autoScanHandler, processor.autoScanHandler, processor.setAutoScanHandler);
             processor.autoScanHandler = autoScanHandler;
         } else {
-            if (__ANDROID__) {
-                processor.autoScanHandler = null;
-            } else {
-                processor.autoScanHandler = null;
-            }
+            processor.setAutoScanHandler(null);
         }
     }
     function toggleAutoScan(apply = true) {
@@ -635,7 +631,7 @@
     function toggleEditing() {
         editing = !editing;
         if (torchEnabled) {
-            setTorchEnabled(!editing);
+            // setTorchEnabled(!editing);
         }
         if (editing) {
             stopPreview();
@@ -703,8 +699,10 @@
             bind:this={cameraView}
             {aspectRatio}
             autoFocus={true}
+            captureMode={1}
             enablePinchZoom={true}
-            {flashMode}
+            flashMode={_actualFlashMode}
+            iosCaptureMode="videoWithoutAudio"
             {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
             {stretch}
@@ -712,7 +710,7 @@
             on:layoutChanged={onCameraLayoutChanged}
             on:loaded={applyProcessor}
             on:tap={focusCamera} />
-        <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} rowSpan="2" strokeWidth={3} />
+        <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
             <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showDocumentsList} />
