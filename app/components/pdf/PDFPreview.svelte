@@ -15,7 +15,7 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { openFile } from '@nativescript/core/utils';
+    import { debounce, openFile } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -37,7 +37,7 @@
     let { orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = pdfCanvas.options;
     $: ({ orientation, paper_size, color, items_per_page, page_padding, reduce_image_size, draw_ocr_overlay, draw_ocr_text } = $optionsStore);
     optionsStore.subscribe((newValue) => {
-        DEV_LOG && console.log('saving options', newValue);
+        // DEV_LOG && console.log('saving options', newValue);
         Object.assign(pdfCanvas.options, newValue);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
@@ -141,7 +141,15 @@
     }
     // DEV_LOG && console.log('onItemLoading', index);
     function onItemLoading({ index, view }) {
-        loadImagesForPage(index);
+        const item = items.getItem(index);
+        if (!item.loading && !pdfCanvas.needsLoadImage(index)) {
+            if (view instanceof ContentView) {
+                view = view.content;
+            }
+            (view as CanvasView)?.invalidate();
+        } else {
+            loadImagesForPage(index);
+        }
     }
     const OPTIONS = {
         orientation: {
@@ -236,9 +244,9 @@
                     step: 1,
                     width: '80%',
                     value: pdfCanvas.options[option],
-                    onChange: (value) => {
+                    onChange: debounce((value) => {
                         updateOption(option, value, fullRefresh);
-                    }
+                    }, 100)
                 }
 
                 // trackingScrollView: 'collectionView'
