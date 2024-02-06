@@ -145,6 +145,6 @@
         <!-- <gridlayout , backgroundColor="" borderRadius="50%" columns="*,auto">
             <textfield hint={lc('languages')} placeholder={lc('languages')} returnKeyType="search" variant="none" verticalTextAlignment="center" />
         </gridlayout> -->
-        <mdbutton row={1} text={lc('start')} on:tap={startOCR} />
+        <mdbutton id="start" horizontalAlignment="right" row={1} text={lc('start')} on:tap={startOCR} />
     </stacklayout>
 </gesturerootview>
