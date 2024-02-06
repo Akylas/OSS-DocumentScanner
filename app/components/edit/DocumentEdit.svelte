@@ -138,7 +138,7 @@
                 {
                     rotation: newRotation % 360
                 },
-                __IOS__
+                false
             );
 
             currentSelectedImageRotation = item.rotation;
@@ -270,8 +270,9 @@
             showError(error);
         }
     }
-
+    let ignoreNextCollectionViewRefresh = false;
     const saveCurrentItemColorType = debounce(function (index, colorMatrix) {
+        ignoreNextCollectionViewRefresh = true;
         document.updatePage(index, {
             colorMatrix
         });
@@ -360,10 +361,15 @@
     async function applyImageTransform(i) {
         const current = items.getItem(currentIndex);
         current.colorType = i.colorType;
-        document.updatePage(currentIndex, {
-            colorType: i.colorType,
-            colorMatrix: null
-        });
+        ignoreNextCollectionViewRefresh = true;
+        document.updatePage(
+            currentIndex,
+            {
+                colorType: i.colorType,
+                colorMatrix: null
+            },
+            false
+        );
     }
 
     async function updateImageUris() {
@@ -412,10 +418,14 @@
         if (index === currentIndex) {
             DEV_LOG && console.log('edit onDocumentPageUpdated', index, event.imageUpdated);
             // TODO: fix the pager something is wrong if we
+            items.setItem(index, items.getItem(index));
             if (!!event.imageUpdated) {
                 await updateImageUris();
             } else {
-                items.setItem(index, items.getItem(index));
+                if (ignoreNextCollectionViewRefresh) {
+                    ignoreNextCollectionViewRefresh = false;
+                    return;
+                }
                 refreshCollectionView();
             }
         }
