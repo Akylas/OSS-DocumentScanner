@@ -20,7 +20,6 @@
 
     // console.log('ocrData', JSON.stringify(ocrData));
     function onWebViewLoadFinished() {
-        console.log('onWebViewLoadFinished');
         try {
             webView?.nativeView.executeJavaScript(`document.updateOCRData('${imagePath}', ${imageWidth}, ${imageHeight}, ${rotation}, ${JSON.stringify(ocrData)})`);
         } catch (error) {
