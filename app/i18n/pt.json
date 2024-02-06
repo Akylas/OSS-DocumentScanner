@@ -18,6 +18,8 @@
     "aspect_ratio": "proporção",
     "authenticate_security": "autentique para aceder a app",
     "auto": "automático",
+    "auto_scan_delay": "atraso de escaneamento automático",
+    "auto_scan_delay_desc": "atraso antes de iniciar escaneamento automático de um documento encontrado",
     "biometric_auto_lock": "bloqueio biométrico automático",
     "biometric_auto_lock_desc": "se estiver ativado a app irá bloquear-se sempre que a app vai para o fundo",
     "biometric_lock": "Segurança por biometria",
