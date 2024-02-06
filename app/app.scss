@@ -53,8 +53,6 @@
 htmllabel,
 canvasview,
 label,
-button,
-textfield,
 mdtextfield,
 checkbox,
 mdbutton {
@@ -73,6 +71,27 @@ checkbox {
     on-check-color: var(--colorOnPrimary);
     on-tint-color: var(--colorPrimary);
 }
+
+
+mdbutton {
+    color: var(--colorOnPrimary);
+}
+
+.ns-ios mdbutton {
+    // material3 basic design
+    shape: round;
+}
+
+.ns-ios .fab {
+    shape: medium;
+    elevation: 2;
+}
+.ns-ios .small-fab {
+    shape: medium;
+    elevation: 2;
+}
+
+
 
 label,
 canvaslabel,
@@ -116,7 +135,8 @@ page {
     background-color: var(--colorBackground);
     status-bar-color: var(--colorBackground);
 
-    .ns-dark &, .ns-black & {
+    .ns-dark &,
+    .ns-black & {
         status-bar-style: dark;
     }
 }
@@ -152,9 +172,6 @@ frame {
     color: var(--colorOnSurface);
 }
 
-mdbutton {
-    color: var(--colorOnPrimary);
-}
 
 .icon-btn,
 .actionBarButton {
