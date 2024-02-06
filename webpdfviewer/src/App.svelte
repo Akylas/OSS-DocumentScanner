@@ -136,7 +136,7 @@
 </script>
 
 <div style="width:100%;height:100%;padding:0;margin:0;">
-    <div style:width={imageWidth + 'px'} style:height={imageHeight + 'px'} style:background-color="red" use:initPanzoom>
+    <div style:width={imageWidth + 'px'} style:height={imageHeight + 'px'} use:initPanzoom>
         <img bind:this={img} style:position="absolute" style:transform={rotation !== 0 ? `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)` : null} alt="test" src={imgPath} />
         {#if ocrData}
             {#each ocrData.blocks as block}
