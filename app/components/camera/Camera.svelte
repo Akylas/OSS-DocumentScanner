@@ -236,6 +236,9 @@
                     }
                 ];
                 if (autoScan === false) {
+                    if (torchEnabled) {
+                        forceTorchDisabled(true);
+                    }
                     const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
                     items = await showModal({
                         page: ModalImportImage,
@@ -246,6 +249,9 @@
                         }
                     });
                     quads = items ? items[0].quads : undefined;
+                    if (torchEnabled) {
+                        forceTorchDisabled(false);
+                    }
                 }
             }
             if (quads?.length) {
@@ -264,15 +270,15 @@
     }
 
     function pauseAutoScan() {
-        DEV_LOG && console.log('pauseAutoScan', processor?.autoScanHanlder?.enabled);
-        if (processor?.autoScanHanlder) {
-            processor.autoScanHanlder.setEnabled(false);
+        DEV_LOG && console.log('pauseAutoScan', autoScanHandler, autoScanHandler?.enabled);
+        if (autoScanHandler) {
+            autoScanHandler.enabled = false;
         }
     }
     function resumeAutoScan() {
-        DEV_LOG && console.log('resumeAutoScan', processor?.autoScanHanlder?.enabled);
-        if (processor?.autoScanHanlder) {
-            processor.autoScanHanlder.setEnabled(true);
+        DEV_LOG && console.log('resumeAutoScan', autoScanHandler, autoScanHandler?.enabled);
+        if (autoScanHandler) {
+            autoScanHandler.enabled = true;
         }
     }
     async function takePicture(autoScan = false) {
@@ -280,7 +286,7 @@
             return;
         }
         takingPicture = true;
-        if (autoScan) {
+        if (autoScanHandler) {
             pauseAutoScan();
         }
         try {
@@ -299,7 +305,7 @@
             showError(err);
         } finally {
             takingPicture = false;
-            if (autoScan) {
+            if (autoScanHandler) {
                 resumeAutoScan();
             }
             hideLoading();
@@ -309,7 +315,14 @@
     $: {
         _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
     }
-
+    function forceTorchDisabled(value) {
+        console.log('forceTorchDisabled', value);
+        if (value) {
+            _actualFlashMode = flashMode;
+        } else {
+            _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
+        }
+    }
     function switchTorch() {
         if (cameraView) {
             torchEnabled = !torchEnabled;
@@ -346,7 +359,7 @@
     function onNavigatedFrom() {
         DEV_LOG && console.log('onNavigatedFrom');
         if (torchEnabled) {
-            // setTorchEnabled(false);
+            forceTorchDisabled(true);
         }
         stopPreview();
         if (document) {
@@ -560,22 +573,24 @@
     }
 
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
-
+    let processor;
+    let autoScanHandler;
     function applyAutoScan(value: boolean) {
         DEV_LOG && console.log('applyAutoScan', value, processor.autoScanHanlder);
         if (value) {
             const nCropView = cropView.nativeView;
-            const autoScanHandler = createAutoScanHandler(nCropView, (result) => {
+            const newAautoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 takePicture(true);
             });
-            autoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
-            autoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
-            autoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
-            DEV_LOG && console.log('creating autoScan handler', autoScanHandler, processor.autoScanHandler, processor.setAutoScanHandler);
-            processor.autoScanHandler = autoScanHandler;
+            newAautoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
+            newAautoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
+            newAautoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
+            DEV_LOG && console.log('creating autoScan handler', newAautoScanHandler, processor.autoScanHandler, processor.setAutoScanHandler);
+            autoScanHandler = processor.autoScanHandler = newAautoScanHandler;
         } else {
-            processor.setAutoScanHandler(null);
+            processor.autoScanHandler = null;
+            autoScanHandler = null;
         }
     }
     function toggleAutoScan(apply = true) {
@@ -586,7 +601,6 @@
             applyAutoScan(autoScan);
         }
     }
-    let processor;
     async function applyProcessor() {
         if (processor) {
             return;
@@ -631,7 +645,7 @@
     function toggleEditing() {
         editing = !editing;
         if (torchEnabled) {
-            // setTorchEnabled(!editing);
+            forceTorchDisabled(editing);
         }
         if (editing) {
             stopPreview();
@@ -702,7 +716,7 @@
             captureMode={1}
             enablePinchZoom={true}
             flashMode={_actualFlashMode}
-            iosCaptureMode="videoWithoutAudio"
+            iosCaptureMode="videoPhotoWithoutAudio"
             {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
             {stretch}
