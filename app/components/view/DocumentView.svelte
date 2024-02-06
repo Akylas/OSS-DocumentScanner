@@ -346,12 +346,14 @@
         }
         const index = event.pageIndex;
         const current = items.getItem(index);
-        const page = document.getObservablePages().getItem(index);
-        items.setItem(index, { selected: current.selected, page, index: current.index });
-        DEV_LOG && console.log('view onDocumentPageUpdated', index, event.imageUpdated);
-        if (!!event.imageUpdated) {
-            const imageView = getImageView(index);
-            imageView?.updateImageUri();
+        if (current) {
+            const page = document.getObservablePages().getItem(index);
+            items.setItem(index, { selected: current.selected, page, index: current.index });
+            DEV_LOG && console.log('view onDocumentPageUpdated', index, current.index, event.imageUpdated);
+            if (!!event.imageUpdated) {
+                const imageView = getImageView(index);
+                imageView?.updateImageUri();
+            }
         }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
