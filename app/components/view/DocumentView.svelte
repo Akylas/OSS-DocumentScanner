@@ -614,7 +614,7 @@
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator rowSpan={2} text={item.index + 1} on:longPress={() => startDragging(item)} />
+                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
                 </gridlayout>
             </Template>
         </collectionview>
