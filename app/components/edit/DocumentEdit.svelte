@@ -7,7 +7,7 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, Screen, TextField, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -438,7 +438,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
-            goBack();
+            goBack({
+                // null is important to say no transition! (override enter transition)
+                transition: null
+            });
         }
     }
     onMount(() => {
@@ -492,18 +495,34 @@
         pager?.nativeView?.refresh();
     }
     onThemeChanged(refreshPager);
+
     function onGoBack() {
         if (recrop) {
             onRecropTapFinish(true);
         } else {
-            goBack();
+            const item = items.getItem(currentIndex);
+
+            //we use a new transition to transition the selected item
+            goBack({
+                transition: __ANDROID__
+                    ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
+                          pageStart: {
+                              sharedTransitionTags: {
+                                  [`document_${document.id}_${item.id}`]: {}
+                              }
+                          }
+                      })
+                    : undefined
+            } as any);
         }
     }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
+            data.cancel = true;
             if (recrop) {
-                data.cancel = true;
                 onRecropTapFinish(true);
+            } else {
+                onGoBack();
             }
         }
     }

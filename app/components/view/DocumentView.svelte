@@ -375,7 +375,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
-            goBack();
+            goBack({
+                // null is important to say no transition! (override enter transition)
+                transition: null
+            });
         }
     }
 
