@@ -19,7 +19,12 @@ module.exports = {
         markingMode: 'none',
         codeCache: true,
         enableMultithreadedJavascript: false,
-        forceLog: loggingEnabled
+        ...(loggingEnabled
+            ? {
+                  forceLog: true,
+                  maxLogcatObjectSize: 40096
+              }
+            : {})
     },
     cssParser: 'rework',
     hooks: [

@@ -57,6 +57,7 @@ export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
 export const fontScale = writable(1);
+export const isRTL = writable(false);
 
 function updateSystemFontScale(value) {
     fontScale.set(value);
@@ -84,6 +85,9 @@ const onInitRootView = function () {
         if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
             navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
         }
+        isRTL.set(resources.getConfiguration().getLayoutDirection() === 1);
+        console.log('isRTL', get(isRTL));
+
         resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
         if (id > 0 && resourceId > 0) {
             innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
@@ -116,6 +120,12 @@ const onInitRootView = function () {
     // getRealThemeAndUpdateColors();
 };
 Application.on('initRootView', onInitRootView);
+Application.on('activity_started', () => {
+    if (__ANDROID__) {
+        const resources = Utils.android.getApplicationContext().getResources();
+        isRTL.set(resources.getConfiguration().getLayoutDirection() === 1);
+    }
+});
 
 export function updateThemeColors(theme: string) {
     const currentColors = get(colors);

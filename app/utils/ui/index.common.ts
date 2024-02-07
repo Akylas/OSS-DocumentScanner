@@ -534,6 +534,7 @@ export async function importAndScanImage(document?: OCRDocument) {
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {
+            showLoading(l('computing'));
             return await importAndScanImageFromUris(
                 selection.map((s) => s.path),
                 document
@@ -541,6 +542,8 @@ export async function importAndScanImage(document?: OCRDocument) {
         }
     } catch (error) {
         showError(error);
+    } finally {
+        hideLoading();
     }
 }
 
