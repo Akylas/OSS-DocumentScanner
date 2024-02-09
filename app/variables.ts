@@ -86,7 +86,6 @@ const onInitRootView = function () {
             navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
         }
         isRTL.set(resources.getConfiguration().getLayoutDirection() === 1);
-        console.log('isRTL', get(isRTL));
 
         resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
         if (id > 0 && resourceId > 0) {
@@ -116,10 +115,10 @@ const onInitRootView = function () {
     }
     updateThemeColors(getRealTheme(theme));
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
-    Application.off('initRootView', onInitRootView);
+    Application.off(Application.initRootViewEvent, onInitRootView);
     // getRealThemeAndUpdateColors();
 };
-Application.on('initRootView', onInitRootView);
+Application.on(Application.initRootViewEvent, onInitRootView);
 Application.on('activity_started', () => {
     if (__ANDROID__) {
         const resources = Utils.android.getApplicationContext().getResources();
