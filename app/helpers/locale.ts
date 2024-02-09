@@ -209,6 +209,7 @@ export async function selectLanguage() {
     }
 }
 
+// TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
 
 Application.on('activity_started', () => {
