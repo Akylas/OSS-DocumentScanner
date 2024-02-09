@@ -33,7 +33,6 @@ android {
     androidResources {
       generateLocaleConfig = true
     }
-
   }
   ndkVersion = project.ndkVersion
   
@@ -119,21 +118,12 @@ android {
     exclude "com/itextpdf/**"
     exclude "org/bouncycastle/**"
     exclude "license/**"
-    // resources.excludes += "assets/com/tom_roush/fontbox/resources/cmap/*"
   }
-  // flavorDimensions "stage"
-  // productFlavors {
-  //   dev {
-  //     dimension "stage"
-  //     versionNameSuffix "-dev"
-  //     resConfigs "en", "xxhdpi"
-  //   }
-  //   prod {
-  //     dimension "stage"
-  //     resConfigs "en", "fr", "es"
-  //   }
-  // }
-    experimentalProperties["android.experimental.r8.dex-startup-optimization"] = true
+  dependenciesInfo {
+    // Disables dependency metadata when building APKs.
+    includeInApk = false
+  }
+  experimentalProperties["android.experimental.r8.dex-startup-optimization"] = true
 }
 
 task createProguard {

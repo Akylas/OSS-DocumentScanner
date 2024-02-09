@@ -14,14 +14,14 @@ android {
     versionCode 1
     versionName "1.0.0"
 
-    if (project.hasProperty('resConfigs')) {
-      def resConfigs = project.findProperty('resConfigs')
-      reset()
-      include resConfigs.split(',')
-    } else {
-      // do we need other languages for this app?
-      resConfigs "en"
-    }
+    // if (project.hasProperty('resConfigs')) {
+    //   def resConfigs = project.findProperty('resConfigs')
+    //   reset()
+    //   include resConfigs.split(',')
+    // } else {
+    //   // do we need other languages for this app?
+    //   resConfigs "en"
+    // }
     ndk {
       if (splitEnabled || project.hasProperty('abiFilters')) {
         abiFilters.clear()
@@ -29,6 +29,9 @@ android {
           abiFilters.addAll(project.findProperty('abiFilters').split(',').collect{it as String})
         }
       }
+    }
+    androidResources {
+      generateLocaleConfig = true
     }
   }
   ndkVersion = project.ndkVersion
@@ -112,23 +115,13 @@ android {
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
     exclude "com/itextpdf/**"
-    exclude "org/apache/**"
     exclude "org/bouncycastle/**"
     exclude "license/**"
-
   }
-  // flavorDimensions "stage"
-  // productFlavors {
-  //   dev {
-  //     dimension "stage"
-  //     versionNameSuffix "-dev"
-  //     resConfigs "en", "xxhdpi"
-  //   }
-  //   prod {
-  //     dimension "stage"
-  //     resConfigs "en", "fr", "es"
-  //   }
-  // }
+  dependenciesInfo {
+    // Disables dependency metadata when building APKs.
+    includeInApk = false
+  }
 }
 
 task createProguard {
