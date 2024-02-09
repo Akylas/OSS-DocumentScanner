@@ -1,0 +1,9 @@
+### Features
+- allow to export only selected pages as PDF
+
+### Bug fixes
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Hindi)
+- **android:** page jumping on PDF Preview
+- **android:** some autoScan improvements
