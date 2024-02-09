@@ -39,7 +39,7 @@
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { OCRDocument } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
@@ -472,6 +472,19 @@
         });
         return selected;
     }
+    function getSelectedPagesAndPossibleSingleDocument(): [OCRPage[], OCRDocument?] {
+        const selected: OCRPage[] = [];
+        const docs: OCRDocument[] = [];
+        let doc;
+        documents.forEach((d, index) => {
+            if (d.selected) {
+                doc = d.doc;
+                docs.push(doc);
+                selected.push(...doc.pages);
+            }
+        });
+        return [selected, docs.length === 1 ? docs[0] : undefined];
+    }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
             try {
@@ -592,7 +605,8 @@
     }
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu(getSelectedDocuments(), event.object);
+            const data = getSelectedPagesAndPossibleSingleDocument();
+            await showPDFPopoverMenu(data[0], data[1], event.object);
         } catch (err) {
             showError(err);
         }
@@ -600,13 +614,9 @@
 
     async function showImageExportPopover(event) {
         try {
-            await showImagePopoverMenu(
-                getSelectedDocuments().reduce((acc, doc) => {
-                    acc.push(...doc.pages);
-                    return acc;
-                }, []),
-                event.object
-            );
+            const data = getSelectedPagesAndPossibleSingleDocument();
+
+            await showImagePopoverMenu(data[0], event.object);
         } catch (err) {
             showError(err);
         }
@@ -663,7 +673,7 @@
 
     async function showOptions(event) {
         const options = new ObservableArray([
-            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+            { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
             { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
             { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
             { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },

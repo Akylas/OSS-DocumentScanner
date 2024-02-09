@@ -1,19 +1,19 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Screen, Utils, knownFolders, path } from '@nativescript/core';
-import type { OCRDocument } from '~/models/OCRDocument';
+import type { OCRPage } from '~/models/OCRDocument';
+import { IMG_COMPRESS } from '~/models/constants';
 import { recycleImages } from '~/utils/images';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
-import { IMG_COMPRESS } from '~/models/constants';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '.pdf') {
+    async export(pages: OCRPage[], folder = knownFolders.temp().path, filename = Date.now() + '.pdf') {
         const start = Date.now();
         const options = this.options;
         if (options.paper_size === 'full') {
             // we enforce 1 item per page
             options.items_per_page = 1;
         }
-        this.updatePages(documents);
+        this.updatePages(pages);
         this.canvas = new Canvas();
         const pdfDocument = new android.graphics.pdf.PdfDocument();
         const items = this.items;

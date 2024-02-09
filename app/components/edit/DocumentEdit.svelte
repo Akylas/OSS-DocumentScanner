@@ -65,7 +65,7 @@
 
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu([document], event.object);
+            await showPDFPopoverMenu(document.pages, document, event.object);
         } catch (err) {
             showError(err);
         }

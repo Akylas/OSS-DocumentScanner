@@ -42,7 +42,8 @@
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
     // technique for only specific properties to get updated on store change
-    export let documents: OCRDocument[];
+    export let pages: OCRPage[];
+    export let document: OCRDocument = null;
     // pdfCanvas.updatePages(documents);
     let pager: NativeViewElementNode<Pager>;
     let drawer: DrawerElement;
@@ -76,7 +77,7 @@
         }, 0);
     }
     function refresh() {
-        pdfCanvas.updatePages(documents);
+        pdfCanvas.updatePages(pages);
         items = new ObservableArray(pdfCanvas.items);
     }
     function requestPagesRedraw() {
@@ -99,6 +100,7 @@
     });
 
     function onPageIndexChanged(event) {
+        // DEV_LOG && console.log('onPageIndexChanged', event.object.selectedIndex, new Error().stack);
         currentPagerIndex = event.object.selectedIndex;
         // loadImagesForPage(currentPagerIndex);
     }
@@ -118,7 +120,7 @@
                     'pdf_export_directory',
                     __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
                 );
-                const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
+                const filePath = await exportPDFAsync(pages, document, exportDirectory, result.text);
                 hideLoading();
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                 if (onSnack.reason === 'action') {
@@ -132,7 +134,7 @@
     async function openPDF() {
         try {
             showLoading(l('exporting'));
-            const filePath = await exportPDFAsync(documents);
+            const filePath = await exportPDFAsync(pages, document);
             hideLoading();
             openFile(filePath);
         } catch (error) {

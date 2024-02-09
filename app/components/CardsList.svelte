@@ -8,7 +8,6 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import { filesize } from 'filesize';
@@ -16,19 +15,19 @@
     import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CActionBar from '~/components/common/CActionBar.svelte';
     import Camera from '~/components/camera/Camera.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { OCRDocument } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { importAndScanImage, importAndScanImageFromUris, showPDFPopoverMenu } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips } from '~/variables';
 
     const orientation = Application.orientation();
@@ -159,7 +158,8 @@
         colorOutline,
         colorSurface,
         colorPrimaryContainer,
-        colorOnPrimaryContainer
+        colorOnPrimaryContainer,
+        colorError
     } = $colors);
 
     function onSnackMessageAnimation({ animationArgs }: EventData & { animationArgs: AnimationDefinition[] }) {
@@ -535,6 +535,40 @@
         });
         return selected;
     }
+    function getSelectedPagesAndPossibleSingleDocument(): [OCRPage[], OCRDocument?] {
+        const selected: OCRPage[] = [];
+        const docs: OCRDocument[] = [];
+        let doc;
+        documents.forEach((d, index) => {
+            if (d.selected) {
+                doc = d.doc;
+                docs.push(doc);
+                selected.push(...doc.pages);
+            }
+        });
+        return [selected, docs.length === 1 ? docs[0] : undefined];
+    }
+    async function fullscreenSelectedDocuments() {
+        const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
+        navigate({
+            page: component,
+            // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
+            props: {
+                images: getSelectedDocuments().reduce((acc, doc) => {
+                    doc.pages.forEach((page) =>
+                        acc.push({
+                            // sharedTransitionTag: `document_${doc.id}_${page.id}`,
+                            name: page.name || doc.name,
+                            image: page.imagePath,
+                            ...page
+                        })
+                    );
+                    return acc;
+                }, []),
+                startPageIndex: 0
+            }
+        });
+    }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
             try {
@@ -555,7 +589,17 @@
 
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu(getSelectedDocuments(), event.object);
+            const data = getSelectedPagesAndPossibleSingleDocument();
+            await showPDFPopoverMenu(data[0], data[1], event.object);
+        } catch (err) {
+            showError(err);
+        }
+    }
+    async function showImageExportPopover(event) {
+        try {
+            const data = getSelectedPagesAndPossibleSingleDocument();
+
+            await showImagePopoverMenu(data[0], event.object);
         } catch (err) {
             showError(err);
         }
@@ -677,6 +721,44 @@
         };
 
         return result;
+    }
+
+    async function showOptions(event) {
+        const options = new ObservableArray([
+            { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
+            { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+        ] as any);
+        return showPopoverMenu({
+            options,
+            anchor: event.object,
+            vertPos: VerticalPosition.BELOW,
+
+            onClose: async (item) => {
+                switch (item.id) {
+                    case 'share':
+                        showImageExportPopover(event);
+                        break;
+                    case 'fullscreen':
+                        fullscreenSelectedDocuments();
+                        unselectAll();
+                        break;
+                    case 'ocr':
+                        detectOCR({ documents: getSelectedDocuments() });
+                        unselectAll();
+                        break;
+                    case 'transform':
+                        transformPages({ documents: getSelectedDocuments() });
+                        unselectAll();
+                        break;
+                    case 'delete':
+                        deleteSelectedDocuments();
+                        break;
+                }
+            }
+        });
     }
 </script>
 
@@ -823,7 +905,7 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ maxLines: 1, autoFontSize: true }}>
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-                <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteSelectedDocuments} />
+                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             </CActionBar>
         {/if}
     </gridlayout>

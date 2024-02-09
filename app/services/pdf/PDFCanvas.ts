@@ -30,16 +30,16 @@ export default class PDFCanvas {
     canvas: Canvas;
     imagesCache: { [k: string]: ImageSource } = {};
     items: PDFCanvasItem[];
-    updatePages(documents: OCRDocument[]) {
+    updatePages(pages: OCRPage[]) {
         let { items_per_page } = this.options;
         if (this.options.paper_size === 'full') {
             items_per_page = 1;
         }
 
-        const pages = documents.reduce((acc, doc) => {
-            acc.push(...doc.pages);
-            return acc;
-        }, []);
+        // const pages = documents.reduce((acc, doc) => {
+        //     acc.push(...doc.pages);
+        //     return acc;
+        // }, []);
         const docPagesLength = pages.length;
         let nbPages = Math.floor(docPagesLength / items_per_page);
         nbPages += (docPagesLength - nbPages) % items_per_page;

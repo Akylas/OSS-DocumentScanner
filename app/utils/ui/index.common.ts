@@ -621,7 +621,7 @@ const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
     ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
     : knownFolders.externalDocuments().path;
 
-export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
+export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocument, anchor?) {
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
@@ -688,7 +688,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                     case 'open': {
                         await closePopover();
                         await showLoading(l('exporting'));
-                        const filePath = await exportPDFAsync(documents);
+                        const filePath = await exportPDFAsync(pages, document);
                         hideLoading();
                         openFile(filePath);
                         break;
@@ -696,7 +696,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                     case 'share': {
                         await closePopover();
                         await showLoading(l('exporting'));
-                        const filePath = await exportPDFAsync(documents);
+                        const filePath = await exportPDFAsync(pages, document);
                         hideLoading();
                         share({ file: filePath }, { mimetype: 'application/pdf' });
                         break;
@@ -706,13 +706,13 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                         const result = await prompt({
                             okButtonText: lc('ok'),
                             cancelButtonText: lc('cancel'),
-                            defaultText: (documents.length === 1 ? cleanFilename(documents[0].name) : Date.now()) + '.pdf',
+                            defaultText: (document ? cleanFilename(document.name) : Date.now()) + '.pdf',
                             hintText: lc('pdf_filename')
                         });
                         if (result?.result && result?.text?.length) {
                             showLoading(l('exporting'));
                             DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                            const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
+                            const filePath = await exportPDFAsync(pages, document, exportDirectory, result.text);
                             hideLoading();
                             const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
@@ -730,7 +730,8 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                             animated: true,
                             fullscreen: true,
                             props: {
-                                documents
+                                pages,
+                                document
                             }
                         });
                         break;

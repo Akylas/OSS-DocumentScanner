@@ -1,17 +1,17 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
-import { Folder, Screen, knownFolders } from '@nativescript/core';
-import { OCRDocument } from '~/models/OCRDocument';
+import { Folder, knownFolders } from '@nativescript/core';
+import type { OCRPage } from '~/models/OCRDocument';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '') {
+    async export(pages: OCRPage[], folder = knownFolders.temp().path, filename = Date.now() + '') {
         const start = Date.now();
         const options = this.options;
         if (options.paper_size === 'full') {
             // we enforce 1 item per page
             options.items_per_page = 1;
         }
-        this.updatePages(documents);
+        this.updatePages(pages);
         const pdfData = NSMutableData.alloc().init();
         // const canvas = new Canvas(0, 0);
         // UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);

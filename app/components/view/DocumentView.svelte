@@ -96,7 +96,8 @@
     }
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu([document], event.object);
+            const pages = nbSelected > 0 ? getSelectedPages() :document.pages;
+            await showPDFPopoverMenu(pages, document, event.object);
         } catch (err) {
             showError(err);
         }
@@ -461,7 +462,7 @@
     async function showOptions(event) {
         if (nbSelected > 0) {
             const options = new ObservableArray([
-                { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
                 // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
