@@ -53,5 +53,7 @@
     <false/>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
+    <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+    <true/>
   </dict>
 </plist>
