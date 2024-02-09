@@ -208,6 +208,7 @@ module.exports = (env, params = {}) => {
         __UI_USE_EXTERNAL_RENDERER__: true,
         __ACCESSIBILITY_DEFAULT_ENABLED__: false,
         __UI_USE_XML_PARSER__: false,
+        __ONLY_ALLOW_ROOT_VARIABLES__: true,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
         __IOS__: isIOS,
         __ANDROID__: isAndroid,
