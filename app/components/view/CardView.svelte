@@ -528,12 +528,15 @@
 <page id="cardview" actionBarHidden={true} statusBarColor={topBackgroundColor} {statusBarStyle}>
     <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
         <CActionBar
+            backgroundColor={topBackgroundColor}
+            buttonsDefaultVisualState={statusBarStyle}
             forceCanGoBack={nbSelected > 0}
+            labelsDefaultVisualState={statusBarStyle}
             onGoBack={nbSelected ? unselectAll : null}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
         </CActionBar>
 
         <collectionview
@@ -570,7 +573,7 @@
             </Template>
         </collectionview>
         <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" padding={16} row={2} rows="auto,auto,*">
-            <stacklayout visibility={currentQRCode ? 'visible' : 'hidden'}>
+            <stacklayout visibility={currentQRCode ? 'visible' : 'hidden'} on:tap={onQRCodeTap}>
                 <image
                     colorMatrix={qrcodeColorMatrix}
                     height={screenWidthDips * 0.4}
@@ -578,8 +581,7 @@
                     src={currentQRCodeImage}
                     stretch="aspectFit"
                     verticalAlignment="top"
-                    width="100%"
-                    on:tap={onQRCodeTap} />
+                    width="100%" />
                 <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + currentQRCodeIndex} text={currentQRCode?.text} textAlignment="center" />
             </stacklayout>
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom">
