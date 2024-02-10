@@ -46,12 +46,7 @@ $lang.subscribe((newLang: string) => {
 function setLang(newLang) {
     let actualNewLang = getActualLanguage(newLang);
     DEV_LOG && console.log('setLang', newLang, actualNewLang);
-    if (supportedLanguages.indexOf(actualNewLang) === -1) {
-        actualNewLang = actualNewLang.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(actualNewLang) === -1) {
-            actualNewLang = 'en';
-        }
-    }
+
     if (__IOS__) {
         overrideNativeLocale(actualNewLang);
         currentLocale = null;
@@ -90,14 +85,23 @@ function getActualLanguage(language) {
     }
     switch (language) {
         case 'cs':
-            return 'cz';
+            language = 'cz';
+            break;
         case 'jp':
-            return 'ja';
+            language = 'ja';
+            break;
         case 'lv':
-            return 'la';
-        default:
-            return language;
+            language = 'la';
+            break;
     }
+
+    if (supportedLanguages.indexOf(language) === -1) {
+        language = language.split('-')[0].toLowerCase();
+        if (supportedLanguages.indexOf(language) === -1) {
+            language = 'en';
+        }
+    }
+    return language;
 }
 
 // const rtf = new Intl.RelativeTimeFormat('es');
