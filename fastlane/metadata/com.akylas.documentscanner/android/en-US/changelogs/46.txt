@@ -1,0 +1,8 @@
+### Bug fixes
+- language not set to english when device locale is not supported
+- Translated using Weblate (French)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- allow longpress on camera button to get tooltip about the meaning of the button
+- changed default PDF page size to "full" (each page the size of its image)
+- settings layout change (more in line with Material3)
