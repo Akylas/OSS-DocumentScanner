@@ -6,7 +6,7 @@
     },
     "$com.akylas.documentscanner": {
         "app": {
-            "name": "OSS Scanneur"
+            "name": "OSS Docs Scanneur"
         }
     },
     "a3": "a3",
@@ -27,12 +27,12 @@
     "auto_scan_duration": "durée du scan automatique",
     "auto_scan_duration_desc": "durée en millisecondes avant l'ajout du document",
     "auto_scan_first_use": "une nouvelle fonction de scan automatique est activée par défaut. Il scannera les documents tout seul. En raison de la nature de la fonctionnalité, vous ne serez pas invité à modifier les coins du document.\nVoulez-vous garder le scan automatique activé?\n(vous pouvez l'activer dans les réglages de la caméra ou avec un appui long sur le bouton de capture)",
-    "autoscan": "scan automatique",
+    "autoscan": "scan auto",
     "backup_restore": "sauvegarde / restauration",
-    "biometric_auto_lock": "verrouillage automatique biométrique",
-    "biometric_auto_lock_desc": "si activé l'application verrouillera chaque fois que l'application va en arrière plan",
+    "biometric_auto_lock": "auto-verrouillage biométrique",
+    "biometric_auto_lock_desc": "si activé l'app se verrouillera chaque fois qu'elle passe en arrière plan",
     "biometric_lock": "Sécurité biométrique",
-    "biometric_lock_desc": "Verrouiller l'application à l'aide de la biométrie ou d'un code PIN",
+    "biometric_lock_desc": "Verrouiller l'app à l'aide de la biométrie ou d'un code PIN",
     "black_white": "noir et blanc",
     "camera_permission_needed": "l'autorisation de l'appareil photo est nécessaire pour prendre des photos",
     "camera_preview_stretch": "aperçu de l'étirement",
@@ -140,7 +140,7 @@
     "preferences": "préférences",
     "preview": "Aperçu",
     "preview_resize_threshold": "seuil de redimensionnement de l'image de la caméra",
-    "preview_resize_threshold_desc": "taille à laquelle l'image de la caméra est redimensionnée pour détecter les documents. Une taille plus grande permet une meilleure détection, mais elle est plus lente",
+    "preview_resize_threshold_desc": "taille de la caméra redimensionnée pour détecter les documents. Plus grand est la taille meilleure est la détection, mais plus lente.",
     "quality": "qualité",
     "reduce_image_size": "réduire la taille de l'image",
     "remote_folder": "dossier distant",
@@ -162,6 +162,7 @@
     },
     "share": "Partager",
     "share_application": "partager l'application",
+    "share_images": "partager les images",
     "show_fullscreen_images": "plein écran",
     "source_code": "code source",
     "start": "Commencez",
@@ -181,7 +182,7 @@
     "transform_images": "transformer des images",
     "transformations": "transformations",
     "updating_pages": "pages de mise à jour (%1$%)",
-    "username": "username",
+    "username": "nom d'utilisateur",
     "version": "version",
     "webdav_config": "configuration webdav",
     "webdav_sync": "synchronisation webdav des documents",
