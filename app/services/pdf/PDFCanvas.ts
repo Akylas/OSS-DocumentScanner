@@ -70,7 +70,7 @@ export default class PDFCanvas {
     } = JSON.parse(
         ApplicationSettings.getString(
             'default_export_options',
-            '{"pagerPagePaddingHorizontal":16,"pagerPagePaddingVertical":8,"paper_size":"a4","color":"color","orientation":"portrait","page_padding":10,"items_per_page":1,"dpi":96, "reduce_image_size":false, "draw_ocr_text":true, "draw_ocr_overlay":false}'
+            '{"pagerPagePaddingHorizontal":16,"pagerPagePaddingVertical":8,"paper_size":"full","color":"color","orientation":"portrait","page_padding":10,"items_per_page":1,"dpi":96, "reduce_image_size":false, "draw_ocr_text":true, "draw_ocr_overlay":false}'
         )
     );
 
