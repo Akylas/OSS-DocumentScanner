@@ -33,6 +33,7 @@
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors } from '~/variables';
+    import IconButton from '~/components/common/IconButton.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -727,36 +728,28 @@
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showDocumentsList} />
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showSettings} />
+            {#if startOnCam}
+                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-image-plus" on:tap={showDocumentsList} />
+                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" on:tap={showSettings} />
+            {/if}
         </CActionBar>
 
-        <!-- <gridlayout padding="10" row={1} rows="*,auto"> -->
         <stacklayout horizontalAlignment="left" orientation="horizontal" row={2} verticalAlignment="center">
-            <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
-            <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
-            <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
+            <IconButton color="white" text={getFlashIcon(flashMode)} tooltip={lc('flash_mode')} on:tap={() => (flashMode = (flashMode + 1) % 4)} />
+            <IconButton color="white" isSelected={torchEnabled} selectedColor={colorPrimary} text="mdi-flashlight" tooltip={lc('torch')} on:tap={switchTorch} />
+            <IconButton color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
         </stacklayout>
-        <mdbutton
-            class="icon-btn"
-            color="white"
-            horizontalAlignment="right"
-            isEnabled={cameraOpened}
-            row={2}
-            text="mdi-tune"
-            variant="text"
-            visibility={startOnCam ? 'collapse' : 'visible'}
-            on:tap={showCameraSettings} />
+        {#if !startOnCam}
+            <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
+        {/if}
 
         <gridlayout columns="60,*,auto,*,60" row={3}>
-            <mdbutton
-                class="icon-btn"
+            <IconButton
                 color="white"
                 horizontalAlignment="left"
                 marginLeft={10}
-                ripple-color="white"
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
-                variant="text"
+                tooltip={lc('batch_mode')}
                 verticalAlignment="center"
                 on:tap={() => (batchMode = !batchMode)} />
 
@@ -778,15 +771,12 @@
                 <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 
-            <mdbutton
-                class="icon-btn"
+            <IconButton
                 col={4}
                 color="white"
-                elevation={0}
                 horizontalAlignment="right"
-                ripple-color="white"
                 text="mdi-check"
-                variant="text"
+                tooltip={lc('finish')}
                 verticalAlignment="center"
                 visibility={canSaveDoc ? 'visible' : 'hidden'}
                 on:tap={() => saveCurrentDocument()} />
@@ -801,23 +791,5 @@
             stretch="aspectFit"
             visibility={showingFullScreenImage ? 'visible' : 'hidden'} /> -->
 
-        <!-- <mdbutton
-                row={1}
-                visibility={pauseProcessing ? 'visible' : 'hidden'}
-                text="reset"
-                on:tap={() => (pauseProcessing = !pauseProcessing)}
-                verticalAlignment="bottom"
-                horizontalAlignment="left"
-            /> -->
-        <!-- </gridlayout> -->
-        <!-- <CropEditView
-            croppedImagePath={croppedImage}
-            {editingImage}
-            quad={currentQuad}
-            rowSpan={4}
-            visibility={editing ? 'visible' : 'collapse'}
-            bind:croppedImageRotation
-            bind:colorType
-            on:finished={onFinishEditing} /> -->
     </gridlayout>
 </page>
