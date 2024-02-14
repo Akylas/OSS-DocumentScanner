@@ -69,7 +69,13 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
             DEV_LOG && console.log('compressPDF', tempFile.path, tempFile2.path);
             com.akylas.documentscanner.PDFUtils.compressPDF(tempFile.path, tempFile2.path, IMG_COMPRESS);
             const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
-            const outfile = outdocument.createFile('application/pdf', filename);
+            let outfile = outdocument.createFile('application/pdf', filename);
+            if (outfile == null) {
+                outfile = outdocument.findFile(filename);
+            }
+            if (!outfile) {
+                throw new Error(`error creating file "${filename}" in "${folder}"`);
+            }
             await tempFile2.copy(outfile.getUri().toString());
             return outdocument.getUri().toString();
         } else {

@@ -793,7 +793,13 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
                         if (__ANDROID__ && exportDirectory.startsWith('content://')) {
                             const context = Utils.android.getApplicationContext();
                             const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
-                            const outfile = outdocument.createFile('image/jpeg', destinationName);
+                            let outfile = outdocument.createFile('image/jpeg', destinationName);
+                            if (outfile == null) {
+                                outfile = outdocument.findFile(destinationName);
+                            }
+                            if (!outfile) {
+                                throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
+                            }
                             if (!finalMessagePart) {
                                 if (canSetName) {
                                     finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
