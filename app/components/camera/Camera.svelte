@@ -294,7 +294,10 @@
             DEV_LOG && console.log('takePicture', autoScan);
             await showLoading(l('capturing'));
             const { image, info } = await cameraView.nativeView.takePicture({
-                savePhotoToDisk: false
+                savePhotoToDisk: false,
+                flashMode: _actualFlashMode,
+                maxWidth: 5000,
+                maxHeight: 5000
             });
             const didAdd = await processAndAddImage(image, autoScan);
             DEV_LOG && console.log('takePicture done', image, didAdd);
