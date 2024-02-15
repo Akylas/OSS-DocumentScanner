@@ -171,9 +171,16 @@ export class OCRService extends Observable {
     }
 
     updateDownloadedLanguages() {
-        this.mDownloadedLanguages = Folder.fromPath(this.currentDataPath)
-            .getEntitiesSync()
-            .map((e) => e.name.split('.').slice(0, -1).join('.'));
+        const setting = ApplicationSettings.getString(`tesseract_data_${this.mDataType}`, null);
+        if (setting === null) {
+            this.mDownloadedLanguages = Folder.fromPath(this.currentDataPath)
+                .getEntitiesSync()
+                .map((e) => e.name.split('.').slice(0, -1).join('.'));
+            ApplicationSettings.setString(`tesseract_data_${this.mDataType}`, JSON.stringify(this.mDownloadedLanguages));
+        } else {
+            this.mDownloadedLanguages = JSON.parse(setting);
+        }
+        return this.mDownloadedLanguages;
     }
     set dataType(value) {
         this.mDataType = value;
@@ -311,15 +318,26 @@ export class OCRService extends Observable {
             const lang = langArray[index];
             const url = downloadURL + lang + '.traineddata';
             const destinationFolder = Folder.fromPath(this.baseDataPath).getFolder(dataType);
-            const result = await request({
-                url,
-                method: 'GET',
-                onProgress(current, total) {
-                    const progress = Math.round(((index + current / total) / langArray.length) * 100);
-                    updateProgress(progress);
+            const destinationFile = path.join(destinationFolder.path, lang + '.traineddata');
+            try {
+                const result = await request({
+                    url,
+                    method: 'GET',
+                    onProgress(current, total) {
+                        const progress = Math.round(((index + current / total) / langArray.length) * 100);
+                        updateProgress(progress);
+                    }
+                });
+                await result.content.toFile(destinationFile);
+                this.mDownloadedLanguages.push(lang);
+                ApplicationSettings.setString(`tesseract_data_${this.mDataType}`, JSON.stringify(this.mDownloadedLanguages));
+            } catch (error) {
+                console.error(error);
+                if (File.exists(destinationFile)) {
+                    File.fromPath(destinationFile).remove();
                 }
-            });
-            await result.content.toFile(path.join(destinationFolder.path, lang + '.traineddata'));
+                throw error;
+            }
         }
         if (hideLoadingDialog) {
             if (showAsSnackMessage) {
