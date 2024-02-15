@@ -221,7 +221,7 @@
             showLoading(l('computing'));
             editingImage = new ImageSource(image);
             let quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
-            DEV_LOG && console.log('processAndAddImage', image, previewResizeThreshold, quads, autoScan);
+            DEV_LOG && console.log('processAndAddImage', image, previewResizeThreshold, quads, autoScan, editingImage.width, editingImage.height);
             if (quads.length === 0) {
                 let items = [
                     {
@@ -318,6 +318,7 @@
 
     $: {
         _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
+        console.log('_actualFlashMode', torchEnabled, flashMode, _actualFlashMode);
     }
     function forceTorchDisabled(value) {
         console.log('forceTorchDisabled', value);
@@ -328,9 +329,8 @@
         }
     }
     function switchTorch() {
-        if (cameraView) {
-            torchEnabled = !torchEnabled;
-        }
+        console.log('switchTorch', torchEnabled);
+        torchEnabled = !torchEnabled;
     }
     function toggleCamera() {
         cameraView.nativeView.toggleCamera();
@@ -793,6 +793,5 @@
             src={smallImage}
             stretch="aspectFit"
             visibility={showingFullScreenImage ? 'visible' : 'hidden'} /> -->
-
     </gridlayout>
 </page>
