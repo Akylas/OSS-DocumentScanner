@@ -1,0 +1,12 @@
+### Bug fixes
+- **android:** throw error if we fail to create destination file for export
+- **android:** preview scan not clearing when no more document
+- **android:** wrong size image when going back from edit after scanning a new document
+- Translated using Weblate (French)
+- Translated using Weblate (Italian)
+- Translated using Weblate (German)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- don
