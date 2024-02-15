@@ -263,7 +263,8 @@
                     navigate({
                         page: component,
                         props: {
-                            document
+                            document,
+                            transitionOnBack: false
                         }
                     });
                 } else {
@@ -312,7 +313,9 @@
             navigate({
                 page: component,
                 props: {
-                    document: doc
+                    document: doc,
+                    //@ts-ignore
+                    transitionOnBack: false
                 }
             });
         } catch (error) {

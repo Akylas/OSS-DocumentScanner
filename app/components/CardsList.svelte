@@ -517,7 +517,8 @@
                     navigate({
                         page: component,
                         props: {
-                            document: doc
+                            document: doc,
+                            transitionOnBack: false
                         }
                     });
                 }

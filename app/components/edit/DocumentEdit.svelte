@@ -33,6 +33,7 @@
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
+    export let transitionOnBack = true;
     let pager: NativeViewElementNode<Pager>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
@@ -232,7 +233,6 @@
             const item = items.getItem(currentIndex);
 
             editingImage = await loadImage(item.sourceImagePath);
-            // editingImage = await ImageSource.fromFile(item.sourceImagePath);
 
             quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
@@ -504,15 +504,16 @@
 
             //we use a new transition to transition the selected item
             goBack({
-                transition: __ANDROID__
-                    ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
-                          pageStart: {
-                              sharedTransitionTags: {
-                                  [`document_${document.id}_${item.id}`]: {}
+                transition:
+                    __ANDROID__ && transitionOnBack
+                        ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
+                              pageStart: {
+                                  sharedTransitionTags: {
+                                      [`document_${document.id}_${item.id}`]: {}
+                                  }
                               }
-                          }
-                      })
-                    : undefined
+                          })
+                        : undefined
             } as any);
         }
     }
