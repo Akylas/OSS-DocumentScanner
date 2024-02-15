@@ -578,7 +578,7 @@ constructor(
 
             // pointsList is sorted by area
             autoScanHandler?.process(pointsList)
-            if (pointsList != null) {
+            if (pointsList != null && pointsList.size > 0) {
                 if (info.rotationDegrees == 180 ||
                     info.rotationDegrees ==
                     0
