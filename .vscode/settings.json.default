@@ -3,6 +3,7 @@
         "IOS_APP_ID": "6472918564",
         "SENTRY_PREFIX": "app:///",
         "SOURCEMAP_REL_DIR": "../../sourcemaps",
+        "SENTRY_DSN": "https://c4e72fdf55391b486beba48b16a90b7b@bugs.akylas.fr/2",
         "SENTRY_URL": "https://bugs.akylas.fr",
         "SENTRY_ORG": "akylas"
     },
@@ -10,6 +11,7 @@
         "IOS_APP_ID": "6472918564",
         "SENTRY_PREFIX": "app:///",
         "SOURCEMAP_REL_DIR": "../../sourcemaps",
+        "SENTRY_DSN": "https://c4e72fdf55391b486beba48b16a90b7b@bugs.akylas.fr/2",
         "SENTRY_URL": "https://bugs.akylas.fr",
         "SENTRY_ORG": "akylas"
     },
