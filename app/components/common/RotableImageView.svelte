@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Img } from '@nativescript-community/ui-image';
-    import { ImageSource } from '@nativescript/core';
+    import { ImageSource, Screen } from '@nativescript/core';
     import { createEventDispatcher } from '~/utils/svelte/ui';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -9,6 +9,7 @@
     import { getColorMatrix } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
 
+    const IMAGE_DECODE_HEIGHT = (Screen.mainScreen.scale * Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels)) / 2;
     const dispatch = createEventDispatcher();
     export let zoomable = false;
     export let item: OCRPage & { image?: ImageSource };
@@ -83,6 +84,7 @@
         {...$$restProps}
         bind:this={SVImageView}
         colorMatrix={getItemColorMatrix(item)}
+        decodeWidth={IMAGE_DECODE_HEIGHT}
         imageRotation={item.rotation}
         maxZoom={10}
         src={getImageSrc(item)}

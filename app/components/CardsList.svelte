@@ -800,7 +800,6 @@
                             <RotableImageView
                                 id="imageView"
                                 borderRadius={12}
-                                decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
                                 decodeWidth={Utils.layout.toDevicePixels(itemWidth) * 0.584}
                                 fadeDuration={100}
                                 item={item.doc.pages[0]}

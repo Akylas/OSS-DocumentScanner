@@ -20,8 +20,10 @@
         ObservableArray,
         Page,
         PageTransition,
+        Screen,
         SharedTransition,
         StackLayout,
+        Utils,
         View
     } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
@@ -625,7 +627,7 @@
         }
     }
     function getItemImageHeight(viewStyle) {
-        return condensed ? 44 : 94;
+        return (condensed ? 44 : 94) * $fontScale;
     }
     function getItemRowHeight(viewStyle) {
         return condensed ? 80 : 150;
@@ -648,7 +650,7 @@
         const h = canvas.getHeight();
         // const w2 = w / 2;
         // const h2 = h / 2;
-        const dx = 10 + getItemImageHeight(viewStyle) * $fontScale + 16;
+        const dx = 10 + getItemImageHeight(viewStyle) + 16;
         textPaint.color = colorOnSurfaceVariant;
         canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
         textPaint.color = colorOnBackground;
@@ -731,13 +733,14 @@
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
+                        decodeWidth={Utils.layout.toDevicePixels(100)}
                         horizontalAlignment="left"
                         item={item.doc.pages[0]}
                         marginBottom={getImageMargin(viewStyle)}
                         marginTop={getImageMargin(viewStyle)}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
-                        width={getItemImageHeight(viewStyle) * $fontScale} />
+                        width={getItemImageHeight(viewStyle)} />
                     <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
                     <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                     <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />
