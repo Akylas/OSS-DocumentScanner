@@ -75,7 +75,7 @@ try {
     SwipeMenuElement.register();
     DrawerElement.register();
     startSentry();
-    initialize();
+    initialize({ isDownsampleEnabled: true });
     // Trace.addCategories(Trace.categories.NativeLifecycle);
     // Trace.addCategories(Trace.categories.Accessibility);
     // Trace.addCategories(CollectionViewTraceCategory);
