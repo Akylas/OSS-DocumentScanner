@@ -85,7 +85,11 @@ desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
   sh("rm", "-fr", File.join(".", app_build_path, platform))
-  sh("ns", "prepare", platform, "--release", "--env.adhoc")
+  if (platform == 'ios')
+    sh("npm", "run", "prepare.ios.sentry")
+  else
+    sh("ns", "prepare", platform, "--release", "--env.adhoc")
+  end
 end
 
 lane :build_flavor do |params| 
