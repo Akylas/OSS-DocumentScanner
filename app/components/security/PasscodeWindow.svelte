@@ -248,7 +248,7 @@
                         col={i - 1}
                         fontSize={50}
                         height={80}
-                        isUserInteractionEnabled="false"
+                        isUserInteractionEnabled={false}
                         margin="0 10 0 10"
                         text={currentArray[i - 1] !== undefined ? '•' : ' '}
                         textAlignment="center"
