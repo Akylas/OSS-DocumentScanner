@@ -221,7 +221,17 @@
             showLoading(l('computing'));
             editingImage = new ImageSource(image);
             let quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
-            DEV_LOG && console.log('processAndAddImage', image, previewResizeThreshold, quads, autoScan, editingImage.width, editingImage.height);
+            DEV_LOG &&
+                console.log(
+                    'processAndAddImage',
+                    image,
+                    __ANDROID__ ? (image as android.graphics.Bitmap).getByteCount() : undefined,
+                    previewResizeThreshold,
+                    quads,
+                    autoScan,
+                    editingImage.width,
+                    editingImage.height
+                );
             if (quads.length === 0) {
                 let items = [
                     {
@@ -296,8 +306,8 @@
             const { image, info } = await cameraView.nativeView.takePicture({
                 savePhotoToDisk: false,
                 flashMode: _actualFlashMode,
-                maxWidth: 5000,
-                maxHeight: 5000
+                maxWidth: 4500,
+                maxHeight: 4500
             });
             const didAdd = await processAndAddImage(image, autoScan);
             DEV_LOG && console.log('takePicture done', image, didAdd);
@@ -761,6 +771,7 @@
                 borderColor="white"
                 col={1}
                 colorMatrix={getColorMatrix(colorType)}
+                decodeWidth={Utils.layout.toDevicePixels(60)}
                 height={60}
                 horizontalAlignment="center"
                 imageRotation={smallImageRotation}
