@@ -84,6 +84,7 @@
     "failed": "fallido",
     "filters": "filtros",
     "finish": "terminar",
+    "flash_mode": "modo con flash",
     "format": "formato",
     "french": "francés",
     "full": "completo",
@@ -181,6 +182,8 @@
         "title": "tema"
     },
     "third_parties": "librerías de terceros",
+    "toggle_camera": "cambiar de cámara",
+    "torch": "flash",
     "transform_images": "transformar imágenes",
     "transformations": "transformaciones",
     "updating_pages": "actualizando páginas (%1$s%%)",
