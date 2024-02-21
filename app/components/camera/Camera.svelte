@@ -90,6 +90,7 @@
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    let colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
     let _actualFlashMode = flashMode;
@@ -198,12 +199,19 @@
             closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
                 transforms = bottomsheetComponent.transforms;
                 colorType = bottomsheetComponent.colorType;
+                colorMatrix = bottomsheetComponent.colorMatrix;
                 ApplicationSettings.setString('defaultColorType', colorType);
+                if (colorMatrix) {
+                    ApplicationSettings.setString('defaultColorMatrix', JSON.stringify(colorMatrix));
+                } else {
+                    ApplicationSettings.remove('defaultColorMatrix');
+                }
                 ApplicationSettings.setString('defaultTransforms', transforms.join(TRANSFORMS_SPLIT));
             },
             props: {
                 cameraOptionsStore,
                 colorType,
+                colorMatrix,
                 transforms,
                 ...addedProps
             }
@@ -491,6 +499,7 @@
                     image,
                     crop: quads[index],
                     colorType,
+                    colorMatrix,
                     colors,
                     qrcode,
                     transforms: strTransforms,

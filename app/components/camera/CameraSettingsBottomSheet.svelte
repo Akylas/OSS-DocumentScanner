@@ -10,9 +10,11 @@
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
-    import { colors, screenWidthDips } from '~/variables';
+    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips, statusBarHeight } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -23,6 +25,7 @@
     export let transforms = [];
     export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>;
     export let colorType;
+    export let colorMatrix;
     export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
     export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
 
@@ -56,15 +59,55 @@
 
     function setColorType(type) {
         colorType = type;
+        colorMatrix = null;
         refreshCollectionView();
     }
-    function getBackgroundColor(item) {
-        const result = colorType === item.colorType ? new Color(colorPrimary).setAlpha(100).hex : undefined;
-        return result;
+    function onColorMatrixChange(type, value, refreshCV = false) {
+        colorType = type;
+        colorMatrix = getColorMatrix(colorType, value);
+        if (refreshCV) {
+            refreshCollectionView();
+        }
+    }
+    async function setColorMatrixLevels(item, event) {
+        if (!item.range) {
+            return;
+        }
+
+        try {
+            const component = (await import('~/components/common/SliderPopover.svelte')).default;
+            const currentValue = 1;
+            DEV_LOG && console.log('setColorMatrixLevels', currentValue, colorMatrix);
+            onColorMatrixChange(item.colorType, currentValue, true);
+            await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                view: component,
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                props: {
+                    min: 0.5,
+                    max: 2,
+                    step: 0.1,
+                    width: '80%',
+                    value: currentValue,
+                    onChange(value) {
+                        if (colorMatrix?.[0] || 1 !== value) {
+                            onColorMatrixChange(item.colorType, value);
+                        }
+                    }
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
+    function isCurrentColorType(i) {
+        return colorType === i.colorType;
     }
 
     function updateOption(option: string, value, item) {
-        DEV_LOG && console.log(updateOption,option, value, item);
+        DEV_LOG && console.log(updateOption, option, value, item);
         cameraOptionsStore.update((state) => {
             state[option] = value;
             if (option === 'pictureSize') {
@@ -188,36 +231,46 @@
             checkboxView.checked = !checkboxView.checked;
         }, 10);
     }
+
+    const maxHeight = 40 + (Object.keys(OPTIONS).length / 2) * 50 + 40 + Object.keys(TRANSFORMS).length * 70 + 80;
+    const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
 </script>
 
-<gesturerootview padding="10 10 0 10" rows="auto">
-    <stacklayout>
-        <label class="sectionHeader" text={lc('camera_settings')} />
-        <wraplayout padding="10 0 10 0">
-            {#each OPTIONS as item}
-                <textfield
-                    editable={false}
-                    hint={item.title}
-                    margin="4 8 4 8"
-                    text={$cameraOptionsStore[item.id] || item.default}
-                    variant="outline"
-                    width={textFieldWidth}
-                    on:tap={(e) => selectOption(item, e)} />
-            {/each}
-            <!-- <mdbutton class="icon-btn" color="white" fontSize={14} text={aspectRatio} variant="text" on:tap={toggleAspectRatio} /> -->
-            <!-- <textfield editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('stretch', e)} />
+<gesturerootview maxHeight={screenHeightDips} padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'}>
+    <scrollview>
+        <stacklayout>
+            <label class="sectionHeader" text={lc('camera_settings')} />
+            <wraplayout padding="10 0 10 0">
+                {#each OPTIONS as item}
+                    <textfield
+                        editable={false}
+                        hint={item.title}
+                        margin="4 8 4 8"
+                        text={$cameraOptionsStore[item.id] || item.default}
+                        variant="outline"
+                        width={textFieldWidth}
+                        on:tap={(e) => selectOption(item, e)} />
+                {/each}
+                <!-- <mdbutton class="icon-btn" color="white" fontSize={14} text={aspectRatio} variant="text" on:tap={toggleAspectRatio} /> -->
+                <!-- <textfield editable={false} hint={lc('camera_preview_stretch')} marginLeft={16} text={stretch} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('stretch', e)} />
             {#if isAndroid}
                 <textfield editable={false} hint={lc('aspect_ratio')} text={aspectRatio} variant="outline" width={textFieldWidth} on:tap={(e) => selectOption('aspectRatio', e)} />
             {/if} -->
-        </wraplayout>
-        <label class="sectionHeader" text={lc('transformations')} />
-        <stacklayout>
-            {#each TRANSFORMS as item}
-                <ListItem columns="*,auto" height={70} subtitle={item.subtitle} title={item.name} on:tap={(e) => onTransformTap(item, e)}>
-                    <checkbox id="checkbox" checked={transforms.indexOf(item.id) !== -1} col={2} ios:marginRight={10} verticalAlignment="center" on:checkedChange={(e) => onCheckedChanged(item, e)} />
-                </ListItem>
-            {/each}
-            <!-- <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
+            </wraplayout>
+            <label class="sectionHeader" text={lc('transformations')} />
+            <stacklayout>
+                {#each TRANSFORMS as item}
+                    <ListItem columns="*,auto" height={70} subtitle={item.subtitle} title={item.name} on:tap={(e) => onTransformTap(item, e)}>
+                        <checkbox
+                            id="checkbox"
+                            checked={transforms.indexOf(item.id) !== -1}
+                            col={2}
+                            ios:marginRight={10}
+                            verticalAlignment="center"
+                            on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    </ListItem>
+                {/each}
+                <!-- <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
             <checkbox
                 checked={transforms.indexOf('whitepaper') !== -1}
                 marginLeft={4}
@@ -225,16 +278,31 @@
                 verticalAlignment="middle"
                 on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />
             <checkbox checked={transforms.indexOf('color') !== -1} marginLeft={4} text={lc('color')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('color')} /> -->
-            <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
+                <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
+            </stacklayout>
+            <label class="sectionHeader" text={lc('filters')} />
+            <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
+                <Template let:item>
+                    <gridlayout padding={2} on:tap={() => setColorType(item.colorType)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
+                        <image
+                            borderColor={colorPrimary}
+                            borderRadius={4}
+                            borderWidth={isCurrentColorType(item) ? 3 : 0}
+                            colorMatrix={getColorMatrix(item.colorType)}
+                            src="~/assets/images/filter_color.png" />
+                        <label
+                            backgroundImage="linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 90%, rgba(0,0,0,0) 100%)"
+                            ios:selectable={true}
+                            borderRadius="0 0 4 4"
+                            color="white"
+                            fontSize={11}
+                            fontWeight="500"
+                            text={item.text}
+                            textAlignment="center"
+                            verticalAlignment="bottom" />
+                    </gridlayout>
+                </Template>
+            </collectionview>
         </stacklayout>
-        <label class="sectionHeader" text={lc('filters')} />
-        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
-            <Template let:item>
-                <gridlayout backgroundColor={getBackgroundColor(item)} padding={4} rows="*,25" on:tap={() => setColorType(item.colorType)}>
-                    <image colorMatrix={getColorMatrix(item.colorType)} src="~/assets/images/filter_color.png" />
-                    <label fontSize={10} row={1} text={item.text} textAlignment="center" />
-                </gridlayout>
-            </Template>
-        </collectionview>
-    </stacklayout>
+    </scrollview>
 </gesturerootview>

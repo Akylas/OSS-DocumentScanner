@@ -40,6 +40,7 @@ try {
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
     registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
+    registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
     registerElement('Frame', () => new FrameElement());
     registerElement('Page', () => new PageElement());
     registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);

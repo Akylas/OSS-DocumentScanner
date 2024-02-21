@@ -283,6 +283,7 @@
     }, 500);
     function onColorMatrixChange(colorType, value) {
         const current = items.getItem(currentIndex);
+        current.colorType = colorType;
         current.colorMatrix = getColorMatrix(colorType, value);
         items.setItem(currentIndex, current);
         saveCurrentItemColorType(currentIndex, current.colorMatrix);
@@ -368,6 +369,7 @@
 
     async function applyImageColorMatrix(i) {
         const current = items.getItem(currentIndex);
+        current.colorMatrix = null;
         current.colorType = i.colorType;
         collectionView.nativeView.refreshVisibleItems();
         ignoreNextCollectionViewRefresh = true;

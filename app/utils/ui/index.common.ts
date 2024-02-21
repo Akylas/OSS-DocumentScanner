@@ -1022,7 +1022,8 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
     try {
         const view = (await import('~/components/common/TransformPagesBottomSheet.svelte')).default;
         const updateOptions = await showBottomSheet({
-            view
+            view,
+            skipCollapsedState: true
         });
         if (updateOptions) {
             // await showLoading(l('computing'));
@@ -1046,7 +1047,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
                     const pageId = p.page.id;
                     await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), null, {
                         colorType: updateOptions.colorType,
-                        colorMatrix: null
+                        colorMatrix: updateOptions.colorMatrix
                     });
 
                     const progress = Math.round((pagesDone / totalPages) * 100);
@@ -1069,6 +1070,7 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
         const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;
         const shouldStart = await showBottomSheet({
             view: OCRSettingsBottomSheet,
+            skipCollapsedState: true,
             props: {}
         });
         if (shouldStart) {

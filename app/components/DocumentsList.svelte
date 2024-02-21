@@ -748,11 +748,12 @@
             </Template>
         </collectionView>
         {#if showNoDocument}
-            <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
+            <flexlayout flexDirection="column" marginBottom="30%" paddingLeft={16} paddingRight={16} row={1} width="80%" transition:fade={{ duration: 200 }}>
                 <lottie
                     bind:this={lottieView}
                     async={true}
                     autoPlay={true}
+                    flexShrink={2}
                     keyPathColors={{
                         'background|**': lottieDarkFColor,
                         'full|**': lottieLightColor,
@@ -760,11 +761,9 @@
                         'lines|**': lottieDarkFColor
                     }}
                     loop={true}
-                    marginBottom={20}
-                    src="~/assets/lottie/scanning.lottie"
-                    width="80%" />
-                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} verticalAlignment="bottom" width="80%" />
-            </gridlayout>
+                    src="~/assets/lottie/scanning.lottie" />
+                <label color={colorOnSurfaceVariant} flexShrink={0} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} />
+            </flexlayout>
         {/if}
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">

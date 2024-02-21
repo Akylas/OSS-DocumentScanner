@@ -96,7 +96,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const pages = nbSelected > 0 ? getSelectedPages() :document.pages;
+            const pages = nbSelected > 0 ? getSelectedPages() : document.pages;
             await showPDFPopoverMenu(pages, document, event.object);
         } catch (err) {
             showError(err);
@@ -482,14 +482,14 @@
                         //     fullscreenSelectedDocuments();
                         //     break;
                         case 'ocr':
-                            detectOCR({ pages: getSelectedPagesWithData() });
+                            await detectOCR({ pages: getSelectedPagesWithData() });
                             unselectAll();
                             break;
                         case 'delete':
                             deleteSelectedPages();
                             break;
                         case 'transform':
-                            transformPages({ pages: getSelectedPagesWithData() });
+                            await transformPages({ pages: getSelectedPagesWithData() });
                             unselectAll();
                             break;
                     }
@@ -514,7 +514,7 @@
                                 unselectAll();
                                 break;
                             case 'transform':
-                                transformPages({ documents: [document] });
+                                await transformPages({ documents: [document] });
                                 unselectAll();
                                 break;
                             case 'delete':
