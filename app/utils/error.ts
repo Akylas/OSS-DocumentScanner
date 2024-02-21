@@ -140,7 +140,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
         const isString = realError === null || realError === undefined;
         const message = isString ? (err as string) : realError.message || realError.toString();
 
-        if (message.startsWith('java.net.')) {
+        if (message?.startsWith('java.net.')) {
             if (message.indexOf('SocketTimeoutException') !== -1) {
                 realError = new TimeoutError();
             } else {
