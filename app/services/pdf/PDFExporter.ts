@@ -93,7 +93,7 @@ export async function exportPDFAsync(pages: OCRPage[], document?: OCRDocument, f
                 // nativeDataKeys: keys,
                 type
             };
-            DEV_LOG && console.log('postMessage', data);
+            // DEV_LOG && console.log('postMessage', data);
             worker.postMessage(data);
         });
     }
