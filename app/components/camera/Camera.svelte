@@ -327,7 +327,7 @@
     }
 
     $: {
-        _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
+        _actualFlashMode = torchEnabled ? 4 : (flashMode as any);
         console.log('_actualFlashMode', torchEnabled, flashMode, _actualFlashMode);
     }
     function forceTorchDisabled(value) {
@@ -335,7 +335,7 @@
         if (value) {
             _actualFlashMode = flashMode;
         } else {
-            _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
+            _actualFlashMode = torchEnabled ? 4 : (flashMode as any);
         }
     }
     function switchTorch() {
