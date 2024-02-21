@@ -9,6 +9,7 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
+    import { OCRData } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
@@ -46,13 +47,13 @@
     $: quads = quad ? [quad] : [];
     let quadChanged = false;
     let currentIndex = startPageIndex;
-    const firstItem = items.getItem(currentIndex);
-    let currentItemOCRData = firstItem.ocrData;
-    let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
-    let currentSelectedImagePath = firstItem.imagePath;
-    let currentSelectedImageRotation = firstItem.rotation || 0;
-    let transforms = firstItem.transforms?.split(TRANSFORMS_SPLIT) || [];
-    const colorType = 0;
+    let currentItem: OCRPage;
+    let currentItemOCRData: OCRData;
+    let currentItemSubtitle: string;
+    let currentSelectedImagePath: string;
+    let currentSelectedImageRotation: number;
+    let transforms: string[];
+    updateCurrentItem(items.getItem(currentIndex));
     const filters = ColorMatricesTypes.map((k) => ({
         ...k,
         text: lc(k.id),
@@ -100,14 +101,17 @@
             showError(error);
         }
     }
+    function updateCurrentItem(item) {
+        currentItem = item;
+        currentItemSubtitle = `${currentItem.width} x ${currentItem.height}`;
+        currentSelectedImagePath = currentItem.imagePath;
+        currentSelectedImageRotation = currentItem.rotation || 0;
+        currentItemOCRData = currentItem.ocrData;
+        transforms = currentItem.transforms?.split(TRANSFORMS_SPLIT) || [];
+    }
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
-        const item = items.getItem(currentIndex);
-        currentItemSubtitle = `${item.width} x ${item.height}`;
-        currentSelectedImagePath = item.imagePath;
-        currentSelectedImageRotation = item.rotation || 0;
-        currentItemOCRData = item.ocrData;
-        transforms = item.transforms?.split(TRANSFORMS_SPLIT) || [];
+        updateCurrentItem(items.getItem(currentIndex));
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;
         // $enhanced = transforms.indexOf('enhance') !== -1;
         console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
@@ -358,9 +362,14 @@
         }
     }
 
-    async function applyImageTransform(i) {
+    function isCurrentColorType(i) {
+        return currentItem.colorType === i.colorType;
+    }
+
+    async function applyImageColorMatrix(i) {
         const current = items.getItem(currentIndex);
         current.colorType = i.colorType;
+        collectionView.nativeView.refreshVisibleItems();
         ignoreNextCollectionViewRefresh = true;
         document.updatePage(
             currentIndex,
@@ -593,10 +602,12 @@
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
-                <gridlayout id={item.text} padding={2} on:tap={applyImageTransform(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
+                <gridlayout id={item.text} padding={2} on:tap={applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
                         id="imageView"
+                        borderColor={colorPrimary}
                         borderRadius={4}
+                        borderWidth={isCurrentColorType(item) ? 3 : 0}
                         colorMatrix={getColorMatrix(item.colorType)}
                         decodeHeight={120}
                         decodeWidth={120}
