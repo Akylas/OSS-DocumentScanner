@@ -23,6 +23,7 @@
         AUTO_SCAN_DISTANCETHRESHOLD,
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
+        CROP_ENABLED,
         DOCUMENT_NOT_DETECTED_MARGIN,
         PREVIEW_RESIZE_THRESHOLD,
         QRCODE_RESIZE_THRESHOLD,
@@ -228,7 +229,11 @@
         try {
             showLoading(l('computing'));
             editingImage = new ImageSource(image);
-            let quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
+            const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+            let quads: [number, number][][];
+            if (cropEnabled) {
+                quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
+            }
             DEV_LOG &&
                 console.log(
                     'processAndAddImage',
@@ -240,7 +245,7 @@
                     editingImage.width,
                     editingImage.height
                 );
-            if (quads.length === 0) {
+            if (cropEnabled && quads.length === 0) {
                 let items = [
                     {
                         editingImage,
@@ -273,7 +278,7 @@
                     }
                 }
             }
-            if (quads?.length) {
+            if (!cropEnabled || quads?.length) {
                 await addCurrentImageToDocument(image, quads);
                 return true;
             }
@@ -486,7 +491,7 @@
             }
             const strTransforms = transforms.join(',');
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
-            let images = await cropDocument(editingImage, quads, strTransforms);
+            let images = quads ? await cropDocument(editingImage, quads, strTransforms) : [__IOS__ ? editingImage.ios : editingImage.android];
             let qrcode;
             let colors;
             if (CARD_APP) {
@@ -497,7 +502,12 @@
                 const image = images[index];
                 pagesToAdd.push({
                     image,
-                    crop: quads[index],
+                    crop: quads?.[index] || [
+                        [0, 0],
+                        [editingImage.width - 0, 0],
+                        [editingImage.width - 0, editingImage.height - 0],
+                        [0, editingImage.height - 0]
+                    ],
                     colorType,
                     colorMatrix,
                     colors,

@@ -33,7 +33,7 @@ import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
 import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import { DOCUMENT_NOT_DETECTED_MARGIN, IMG_COMPRESS, IMG_FORMAT, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
+import { CROP_ENABLED, DOCUMENT_NOT_DETECTED_MARGIN, IMG_COMPRESS, IMG_FORMAT, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
 import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
@@ -345,6 +345,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
     let items;
     try {
         await showLoading(l('computing'));
+        const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
 
         items = await Promise.all(
             uris.map(
@@ -360,13 +361,13 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
 
                             const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                             const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
-                            const quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
+                            const quads = cropEnabled ? await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0) : undefined;
                             let qrcode;
                             if (CARD_APP) {
                                 // try to get the qrcode to show it in the import screen
                                 qrcode = await detectQRCode(editingImage, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
                             }
-                            if (quads.length === 0) {
+                            if (cropEnabled && quads.length === 0) {
                                 quads.push([
                                     [noDetectionMargin, noDetectionMargin],
                                     [editingImage.width - noDetectionMargin, noDetectionMargin],
@@ -403,17 +404,19 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
         //     ]);
         // }
         if (items?.length) {
-            const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
-            const newItems = await showModal({
-                page: ModalImportImage,
-                animated: true,
-                fullscreen: true,
-                props: {
-                    items
-                }
-            });
-            if (newItems) {
+            if (cropEnabled) {
+                const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
+                const newItems = await showModal({
+                    page: ModalImportImage,
+                    animated: true,
+                    fullscreen: true,
+                    props: {
+                        items
+                    }
+                });
                 items = newItems;
+            }
+            if (items) {
                 DEV_LOG && console.log('items after crop', items);
 
                 pagesToAdd = (
@@ -423,7 +426,8 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                                 new Promise<PageData[]>(async (resolve, reject) => {
                                     try {
                                         DEV_LOG && console.log('about to cropDocument', item.quads);
-                                        const images = await cropDocument(item.editingImage, item.quads);
+                                        const editingImage = item.editingImage;
+                                        const images = cropEnabled ? await cropDocument(editingImage, item.quads) : [__IOS__ ? editingImage.ios : editingImage.android];
                                         let qrcode;
                                         let colors;
                                         if (CARD_APP) {
@@ -436,11 +440,16 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                                                 const image = images[index];
                                                 result.push({
                                                     image,
-                                                    crop: item.quads[index],
+                                                    crop: item.quads?.[index] || [
+                                                        [0, 0],
+                                                        [editingImage.width - 0, 0],
+                                                        [editingImage.width - 0, editingImage.height - 0],
+                                                        [0, editingImage.height - 0]
+                                                    ],
                                                     sourceImagePath: item.sourceImagePath,
                                                     width: __ANDROID__ ? image.getWidth() : image.size.width,
                                                     height: __ANDROID__ ? image.getHeight() : image.size.height,
-                                                    rotation: item.editingImage.rotationAngle,
+                                                    rotation: editingImage.rotationAngle,
                                                     ...(CARD_APP
                                                         ? {
                                                               qrcode,
