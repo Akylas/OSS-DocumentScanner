@@ -55,6 +55,7 @@
     }
 
     export let document: OCRDocument;
+    export let transitionOnBack = true;
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
     let fabHolder: NativeViewElementNode<StackLayout>;
@@ -169,7 +170,10 @@
                 try {
                     await documentsService.deleteDocuments([document]);
                     items = null;
-                    goBack();
+                    goBack({
+                        // null is important to say no transition! (override enter transition)
+                        transition: null
+                    });
                 } catch (err) {
                     console.error(err.err.stack);
                 }
@@ -295,11 +299,22 @@
             showError(error);
         }
     }
+    function onGoBack() {
+        goBack(
+            transitionOnBack
+                ? undefined
+                : {
+                      transition: null
+                  }
+        );
+    }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
+            data.cancel = true;
             if (nbSelected > 0) {
-                data.cancel = true;
                 unselectAll();
+            } else {
+                onGoBack();
             }
         }
     }

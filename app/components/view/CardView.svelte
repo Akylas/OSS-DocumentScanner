@@ -26,8 +26,8 @@
     import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors, screenWidthDips } from '~/variables';
-    export const screenWidthPixels = Screen.mainScreen.widthPixels;
-    export const screenHeightPixels = Screen.mainScreen.heightPixels;
+    const screenWidthPixels = Screen.mainScreen.widthPixels;
+    const screenHeightPixels = Screen.mainScreen.heightPixels;
 
     const rowMargin = 8;
     const colWidth = screenWidthDips / 2;
@@ -43,10 +43,9 @@
     }
 
     export let document: OCRDocument;
+    export let transitionOnBack = true;
     const topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
     const statusBarStyle = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
-    console.log('statusBarStyle', topBackgroundColor, new Color(topBackgroundColor).getBrightness(), statusBarStyle);
-    const defaultVisualState = statusBarStyle === 'light' ? 'white' : null;
 
     let qrcodes: QRCodeData;
     let currentQRCodeImage: ImageSource;
@@ -185,7 +184,10 @@
                 try {
                     await documentsService.deleteDocuments([document]);
                     items = null;
-                    goBack();
+                    goBack({
+                        // null is important to say no transition! (override enter transition)
+                        transition: null
+                    });
                 } catch (err) {
                     console.error(err.err.stack);
                 }
@@ -277,11 +279,22 @@
             showError(error);
         }
     }
+    function onGoBack() {
+        goBack(
+            transitionOnBack
+                ? undefined
+                : {
+                      transition: null
+                  }
+        );
+    }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
+            data.cancel = true;
             if (nbSelected > 0) {
-                data.cancel = true;
                 unselectAll();
+            } else {
+                onGoBack();
             }
         }
     }
@@ -350,7 +363,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
-            goBack();
+            goBack({
+                // null is important to say no transition! (override enter transition)
+                transition: null
+            });
         }
     }
 

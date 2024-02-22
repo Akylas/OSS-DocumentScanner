@@ -316,7 +316,6 @@
                 page: component,
                 props: {
                     document: doc,
-                    //@ts-ignore
                     transitionOnBack: false
                 }
             });
