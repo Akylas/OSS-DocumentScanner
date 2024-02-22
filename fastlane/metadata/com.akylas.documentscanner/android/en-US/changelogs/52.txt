@@ -1,0 +1,8 @@
+### Features
+- allow to fully disable crop feature
+
+### Bug fixes
+- Translated using Weblate (Chinese (Simplified))
+- Translated using Weblate (Chinese (Simplified))
+- new settings page. You can now access all PDF settings through there.
+- **android:** wrong text rendering on android < 28
