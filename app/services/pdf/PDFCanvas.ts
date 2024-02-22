@@ -3,6 +3,7 @@ import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/c
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
+import { DEFAULT_PDF_OPTIONS } from '~/models/constants';
 let bitmapPaint: Paint;
 const textPaint = new Paint();
 
@@ -67,12 +68,7 @@ export default class PDFCanvas {
         dpi: number;
         draw_ocr_text: boolean;
         draw_ocr_overlay: boolean;
-    } = JSON.parse(
-        ApplicationSettings.getString(
-            'default_export_options',
-            '{"pagerPagePaddingHorizontal":16,"pagerPagePaddingVertical":8,"paper_size":"full","color":"color","orientation":"portrait","page_padding":10,"items_per_page":1,"dpi":96, "reduce_image_size":false, "draw_ocr_text":true, "draw_ocr_overlay":false}'
-        )
-    );
+    } = JSON.parse(ApplicationSettings.getString('default_export_options', DEFAULT_PDF_OPTIONS));
 
     async loadImagesForPage(pdfPageIndex) {
         const item = this.items[pdfPageIndex];

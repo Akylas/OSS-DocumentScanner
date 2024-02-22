@@ -33,7 +33,16 @@ import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
 import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import { CROP_ENABLED, DOCUMENT_NOT_DETECTED_MARGIN, IMG_COMPRESS, IMG_FORMAT, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
+import {
+    CROP_ENABLED,
+    DEFAULT_EXPORT_DIRECTORY,
+    DOCUMENT_NOT_DETECTED_MARGIN,
+    IMG_COMPRESS,
+    IMG_FORMAT,
+    PREVIEW_RESIZE_THRESHOLD,
+    QRCODE_RESIZE_THRESHOLD,
+    TRANSFORMS_SPLIT
+} from '~/models/constants';
 import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
@@ -625,10 +634,6 @@ export async function showPopoverMenu<T = any>({
     });
     return result;
 }
-
-const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
-    ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-    : knownFolders.externalDocuments().path;
 
 export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocument, anchor?) {
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);

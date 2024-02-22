@@ -236,11 +236,9 @@
                         {fontWeight}
                         {iconFontSize}
                         leftIcon={item.icon}
-                        rightIcon={item.rightIcon}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
                         title={item.name}
-                        on:rightTap={(event) => onRightTap(item, event)}
                         on:tap={(event) => onTap(item, event)}>
                     </ListItemAutoSize>
                 {:else}
@@ -251,11 +249,9 @@
                         {fontWeight}
                         {iconFontSize}
                         leftIcon={item.icon}
-                        rightIcon={item.rightIcon}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
                         title={item.name}
-                        on:rightTap={(event) => onRightTap(item, event)}
                         on:tap={(event) => onTap(item, event)}>
                     </ListItem>
                 {/if}

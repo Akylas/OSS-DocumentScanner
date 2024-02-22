@@ -1,3 +1,5 @@
+import { knownFolders } from '@nativescript/core';
+
 export const TRANSFORMS_SPLIT = '|';
 
 export const IMG_FORMAT = 'jpg';
@@ -10,4 +12,8 @@ export const AUTO_SCAN_ENABLED = true;
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
-
+export const DEFAULT_PDF_OPTIONS =
+    '{"pagerPagePaddingHorizontal":16,"pagerPagePaddingVertical":8,"paper_size":"full","color":"color","orientation":"portrait","page_padding":10,"items_per_page":1,"dpi":96, "reduce_image_size":false, "draw_ocr_text":true, "draw_ocr_overlay":false}';
+export const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
+    ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+    : knownFolders.externalDocuments().path;
