@@ -11,8 +11,6 @@ import android.graphics.Point
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.UiThread
-import kotlinx.coroutines.Job
-
 
 class CropView
 @JvmOverloads
@@ -33,15 +31,6 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
      * after we set the image
      */
     private var imagePreviewWidth = width
-    /**
-     * @property imagePreviewBounds image coordinates - if the image ratio is different than
-     * the image container ratio then there's blank space either at the top and bottom of the
-     * image or the left and right of the image
-     */
-
-    /**
-     * @property quad the 4 document corners
-     */
 
     private var mQuads: List<List<Point>>? = null
     var scale: Float = 1.0f
@@ -59,7 +48,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     var fillPaint: Paint? = null
     var progressFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    var colors = listOf<Int>(0xFF007AFF.toInt())
+    var colors = listOf(0xFF007AFF.toInt())
     var strokeWidth = 2
     var animationDuration = 200L
     var drawFill = true
@@ -103,28 +92,28 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 //
 //            return RectF(left, top, right, bottom)
 //        }
-    /**
-     * Initially the image preview height is 0. This calculates the height by using the photo
-     * dimensions. It maintains the photo aspect ratio (we likely need to scale the photo down
-     * to fit the preview container).
-     *
-     * @param photo the original photo with a rectangular document
-     * @param screenWidth the device width
-     */
-    fun setImagePreviewBounds(photoWidth: Int, photoHeight: Int, screenWidth: Int, screenHeight: Int) {
-        // image width to height aspect ratio
-        val imageRatio = photoWidth.toFloat() / photoHeight.toFloat()
-
-        imagePreviewHeight = if (photoHeight > photoWidth) {
-            // if user takes the photo in portrait
-            (screenWidth.toFloat() / imageRatio).toInt()
-        } else {
-            // if user takes the photo in landscape
-            // if user takes the photo in landscape
-            (screenWidth.toFloat() * imageRatio).toInt()
-        }
-        imagePreviewWidth = screenWidth
-    }
+//    /**
+//     * Initially the image preview height is 0. This calculates the height by using the photo
+//     * dimensions. It maintains the photo aspect ratio (we likely need to scale the photo down
+//     * to fit the preview container).
+//     *
+//     * @param photo the original photo with a rectangular document
+//     * @param screenWidth the device width
+//     */
+//    fun setImagePreviewBounds(photoWidth: Int, photoHeight: Int, screenWidth: Int, screenHeight: Int) {
+//        // image width to height aspect ratio
+//        val imageRatio = photoWidth.toFloat() / photoHeight.toFloat()
+//
+//        imagePreviewHeight = if (photoHeight > photoWidth) {
+//            // if user takes the photo in portrait
+//            (screenWidth.toFloat() / imageRatio).toInt()
+//        } else {
+//            // if user takes the photo in landscape
+//            // if user takes the photo in landscape
+//            (screenWidth.toFloat() * imageRatio).toInt()
+//        }
+//        imagePreviewWidth = screenWidth
+//    }
 
     fun interpolatePoint(point1: Point, point2: Point, value: Float): Point {
         return Point(
@@ -139,10 +128,12 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             mAnimator!!.removeAllListeners()
             mAnimator!!.cancel()
         }
-        if (quads == null || this.mQuads == null || this.mQuads!!.size == 0 || this.mQuads!!.size != quads.size) {
+        if (quads == null || this.mQuads == null || this.mQuads!!.isEmpty() || this.mQuads!!.size != quads.size) {
             this.mQuads = quads
+            this.animationQuads = null
+            this.startAnimationQuads = null
             invalidate()
-            return;
+            return
         }
         startAnimationQuads = if (animationQuads != null)   animationQuads else  this.mQuads
         animationQuads = null
@@ -150,23 +141,23 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         mAnimator = ValueAnimator.ofFloat(0.0f, 100.0f)
         mAnimator!!.setDuration(animationDuration)
         val endQuads = this.mQuads
-        mAnimator!!.addUpdateListener(object: ValueAnimator.AnimatorUpdateListener {
-            override fun onAnimationUpdate(animation: ValueAnimator) {
-                animationQuads = ArrayList()
-                endQuads!!.forEachIndexed { index, quad ->
-                    val startAnimationQuad  = startAnimationQuads!!.get(index)
-                    val value = animation.animatedFraction
-                    val topLeftCorner = interpolatePoint(startAnimationQuad[0], quad[0],value)
-                    animationQuads!!.add(listOf(
+        mAnimator!!.addUpdateListener { animation ->
+            animationQuads = ArrayList()
+            endQuads!!.forEachIndexed { index, quad ->
+                val startAnimationQuad = startAnimationQuads!![index]
+                val value = animation.animatedFraction
+                val topLeftCorner = interpolatePoint(startAnimationQuad[0], quad[0], value)
+                animationQuads!!.add(
+                    listOf(
                         topLeftCorner,
-                        interpolatePoint(startAnimationQuad[1], quad[1],value),
-                        interpolatePoint(startAnimationQuad[2], quad[2],value),
-                        interpolatePoint(startAnimationQuad[3], quad[3],value)
-                    ))
-                }
-                invalidate()
+                        interpolatePoint(startAnimationQuad[1], quad[1], value),
+                        interpolatePoint(startAnimationQuad[2], quad[2], value),
+                        interpolatePoint(startAnimationQuad[3], quad[3], value)
+                    )
+                )
             }
-        })
+            invalidate()
+        }
         mAnimator!!.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
@@ -186,14 +177,14 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
      */
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val actualQuads = if (animationQuads != null)   animationQuads else  mQuads;
+        val actualQuads = if (animationQuads != null)   animationQuads else  mQuads
         if (actualQuads !== null) {
-            val verticalOffset = ((canvas.height - imageHeight*scale) / 2)
-            val horizontalOffset = ((canvas.width - imageWidth*scale) / 2)
+            val verticalOffset = ((height - imageHeight*scale) / 2)
+            val horizontalOffset = ((width - imageWidth*scale) / 2)
 
             canvas.translate(horizontalOffset, verticalOffset)
             canvas.scale(scale, scale)
-            actualQuads!!.forEachIndexed { index, quad ->
+            actualQuads.forEachIndexed { index, quad ->
                 val hash = if (mQuads != null && mQuads!!.size > index) AutoScanHandler.getHash(
                     mQuads!![index]
                 ) else null
@@ -201,13 +192,13 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
                 linePaint.color = colors[index.mod(colors.size)]
                 if (progress != null) {
-                    val alpha = progressFillPaint!!.alpha
-                    progressFillPaint!!.color = linePaint.color
-                    progressFillPaint!!.alpha = alpha
+                    val alpha = progressFillPaint.alpha
+                    progressFillPaint.color = linePaint.color
+                    progressFillPaint.alpha = alpha
                     canvas.drawQuadSimpleProgress(
-                        quad!!,
+                        quad,
                         progress,
-                        progressFillPaint!!
+                        progressFillPaint
                     )
                 }
                 else  {
@@ -217,14 +208,14 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                         fillPaint!!.alpha = alpha
                         // draw fill quad
                         canvas.drawQuadSimple(
-                            quad!!,
+                            quad,
                             fillPaint!!
                         )
                     }
                 }
                 // draw 4 corners and connecting lines
                 canvas.drawQuadSimple(
-                    quad!!,
+                    quad,
                     linePaint
                 )
 
@@ -237,14 +228,14 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         if (i == 0 || i == 100) {
             autoScanProgress.remove(hash)
         } else {
-            autoScanProgress[hash] = i;
+            autoScanProgress[hash] = i
         }
         invalidate()
     }
     fun replaceProgressHash(oldValue: Long, newValue:Long) {
         if(autoScanProgress.containsKey(oldValue) ) {
             autoScanProgress[newValue] = autoScanProgress[oldValue]!!
-            // we dont remove as the MaxSizeHashMap will handle it
+            // we don't remove as the MaxSizeHashMap will handle it
             // as AutoScanHandler process and this drawing are async
             // we might need to keep old values to ensure we find the progress
             // which is why we use MaxSizeHashMap

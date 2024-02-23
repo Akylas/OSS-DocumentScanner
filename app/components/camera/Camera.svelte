@@ -23,6 +23,7 @@
         AUTO_SCAN_DISTANCETHRESHOLD,
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
+        CROP_ENABLED,
         DOCUMENT_NOT_DETECTED_MARGIN,
         PREVIEW_RESIZE_THRESHOLD,
         QRCODE_RESIZE_THRESHOLD,
@@ -33,6 +34,7 @@
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors } from '~/variables';
+    import IconButton from '~/components/common/IconButton.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -89,6 +91,7 @@
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    let colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
     let _actualFlashMode = flashMode;
@@ -197,12 +200,19 @@
             closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
                 transforms = bottomsheetComponent.transforms;
                 colorType = bottomsheetComponent.colorType;
+                colorMatrix = bottomsheetComponent.colorMatrix;
                 ApplicationSettings.setString('defaultColorType', colorType);
+                if (colorMatrix) {
+                    ApplicationSettings.setString('defaultColorMatrix', JSON.stringify(colorMatrix));
+                } else {
+                    ApplicationSettings.remove('defaultColorMatrix');
+                }
                 ApplicationSettings.setString('defaultTransforms', transforms.join(TRANSFORMS_SPLIT));
             },
             props: {
                 cameraOptionsStore,
                 colorType,
+                colorMatrix,
                 transforms,
                 ...addedProps
             }
@@ -219,9 +229,23 @@
         try {
             showLoading(l('computing'));
             editingImage = new ImageSource(image);
-            let quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
-            DEV_LOG && console.log('processAndAddImage', image, previewResizeThreshold, quads, autoScan);
-            if (quads.length === 0) {
+            const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+            let quads: [number, number][][];
+            if (cropEnabled) {
+                quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
+            }
+            DEV_LOG &&
+                console.log(
+                    'processAndAddImage',
+                    image,
+                    __ANDROID__ ? (image as android.graphics.Bitmap).getByteCount() : undefined,
+                    previewResizeThreshold,
+                    quads,
+                    autoScan,
+                    editingImage.width,
+                    editingImage.height
+                );
+            if (cropEnabled && quads.length === 0) {
                 let items = [
                     {
                         editingImage,
@@ -254,7 +278,7 @@
                     }
                 }
             }
-            if (quads?.length) {
+            if (!cropEnabled || quads?.length) {
                 await addCurrentImageToDocument(image, quads);
                 return true;
             }
@@ -293,7 +317,10 @@
             DEV_LOG && console.log('takePicture', autoScan);
             await showLoading(l('capturing'));
             const { image, info } = await cameraView.nativeView.takePicture({
-                savePhotoToDisk: false
+                savePhotoToDisk: false,
+                flashMode: _actualFlashMode,
+                maxWidth: 4500,
+                maxHeight: 4500
             });
             const didAdd = await processAndAddImage(image, autoScan);
             DEV_LOG && console.log('takePicture done', image, didAdd);
@@ -313,20 +340,20 @@
     }
 
     $: {
-        _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
+        _actualFlashMode = torchEnabled ? 4 : (flashMode as any);
+        console.log('_actualFlashMode', torchEnabled, flashMode, _actualFlashMode);
     }
     function forceTorchDisabled(value) {
         console.log('forceTorchDisabled', value);
         if (value) {
             _actualFlashMode = flashMode;
         } else {
-            _actualFlashMode = torchEnabled ? 'torch' : (flashMode as any);
+            _actualFlashMode = torchEnabled ? 4 : (flashMode as any);
         }
     }
     function switchTorch() {
-        if (cameraView) {
-            torchEnabled = !torchEnabled;
-        }
+        console.log('switchTorch', torchEnabled);
+        torchEnabled = !torchEnabled;
     }
     function toggleCamera() {
         cameraView.nativeView.toggleCamera();
@@ -464,7 +491,7 @@
             }
             const strTransforms = transforms.join(',');
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
-            let images = await cropDocument(editingImage, quads, strTransforms);
+            let images = quads ? await cropDocument(editingImage, quads, strTransforms) : [__IOS__ ? editingImage.ios : editingImage.android];
             let qrcode;
             let colors;
             if (CARD_APP) {
@@ -475,8 +502,14 @@
                 const image = images[index];
                 pagesToAdd.push({
                     image,
-                    crop: quads[index],
+                    crop: quads?.[index] || [
+                        [0, 0],
+                        [editingImage.width - 0, 0],
+                        [editingImage.width - 0, editingImage.height - 0],
+                        [0, editingImage.height - 0]
+                    ],
                     colorType,
+                    colorMatrix,
                     colors,
                     qrcode,
                     transforms: strTransforms,
@@ -727,36 +760,28 @@
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-file-document" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showDocumentsList} />
-            <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" visibility={startOnCam ? 'visible' : 'collapse'} on:tap={showSettings} />
+            {#if startOnCam}
+                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-image-plus" on:tap={showDocumentsList} />
+                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" on:tap={showSettings} />
+            {/if}
         </CActionBar>
 
-        <!-- <gridlayout padding="10" row={1} rows="*,auto"> -->
         <stacklayout horizontalAlignment="left" orientation="horizontal" row={2} verticalAlignment="center">
-            <mdbutton class="icon-btn" color="white" text={getFlashIcon(flashMode)} variant="text" on:tap={() => (flashMode = (flashMode + 1) % 4)} />
-            <mdbutton class="icon-btn" color={torchEnabled ? colorPrimary : 'white'} text="mdi-flashlight" variant="text" on:tap={switchTorch} />
-            <mdbutton class="icon-btn" color="white" text="mdi-camera-flip" variant="text" on:tap={toggleCamera} />
+            <IconButton color="white" text={getFlashIcon(flashMode)} tooltip={lc('flash_mode')} on:tap={() => (flashMode = (flashMode + 1) % 4)} />
+            <IconButton color="white" isSelected={torchEnabled} selectedColor={colorPrimary} text="mdi-flashlight" tooltip={lc('torch')} on:tap={switchTorch} />
+            <IconButton color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
         </stacklayout>
-        <mdbutton
-            class="icon-btn"
-            color="white"
-            horizontalAlignment="right"
-            isEnabled={cameraOpened}
-            row={2}
-            text="mdi-tune"
-            variant="text"
-            visibility={startOnCam ? 'collapse' : 'visible'}
-            on:tap={showCameraSettings} />
+        {#if !startOnCam}
+            <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
+        {/if}
 
         <gridlayout columns="60,*,auto,*,60" row={3}>
-            <mdbutton
-                class="icon-btn"
+            <IconButton
                 color="white"
                 horizontalAlignment="left"
                 marginLeft={10}
-                ripple-color="white"
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
-                variant="text"
+                tooltip={lc('batch_mode')}
                 verticalAlignment="center"
                 on:tap={() => (batchMode = !batchMode)} />
 
@@ -765,6 +790,7 @@
                 borderColor="white"
                 col={1}
                 colorMatrix={getColorMatrix(colorType)}
+                decodeWidth={Utils.layout.toDevicePixels(60)}
                 height={60}
                 horizontalAlignment="center"
                 imageRotation={smallImageRotation}
@@ -775,18 +801,15 @@
             <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
                 <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
                 <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
-                <label color="white" fontSize={20} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
+                <label color="white" fontSize={20} isUserInteractionEnabled={false} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 
-            <mdbutton
-                class="icon-btn"
+            <IconButton
                 col={4}
                 color="white"
-                elevation={0}
                 horizontalAlignment="right"
-                ripple-color="white"
                 text="mdi-check"
-                variant="text"
+                tooltip={lc('finish')}
                 verticalAlignment="center"
                 visibility={canSaveDoc ? 'visible' : 'hidden'}
                 on:tap={() => saveCurrentDocument()} />
@@ -800,24 +823,5 @@
             src={smallImage}
             stretch="aspectFit"
             visibility={showingFullScreenImage ? 'visible' : 'hidden'} /> -->
-
-        <!-- <mdbutton
-                row={1}
-                visibility={pauseProcessing ? 'visible' : 'hidden'}
-                text="reset"
-                on:tap={() => (pauseProcessing = !pauseProcessing)}
-                verticalAlignment="bottom"
-                horizontalAlignment="left"
-            /> -->
-        <!-- </gridlayout> -->
-        <!-- <CropEditView
-            croppedImagePath={croppedImage}
-            {editingImage}
-            quad={currentQuad}
-            rowSpan={4}
-            visibility={editing ? 'visible' : 'collapse'}
-            bind:croppedImageRotation
-            bind:colorType
-            on:finished={onFinishEditing} /> -->
     </gridlayout>
 </page>

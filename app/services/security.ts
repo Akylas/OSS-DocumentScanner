@@ -38,17 +38,7 @@ export default class SecurityService extends Observable {
         const r = await this.biometricAuth.available();
         this.biometricsAvailable = r.biometrics || r.touch || r.face;
         if (this.biometricsAvailable) {
-            // const onResume = () => {
-            //     Application.off(Application.resumeEvent, onResume, this);
-            //     DEV_LOG && console.log('resume');
-            // setTimeout(() => {
-                this.validateSecurityOrClose();
-            // }, 500);
-            // };
-            // Application.on(Application.resumeEvent, onResume, this);
-            // we need to delay it or the fact that the activity gets resumed will cancel it thus close the app
-            // setTimeout(() => {
-            // }, 500);
+            this.validateSecurityOrClose();
         }
     }
     stop() {

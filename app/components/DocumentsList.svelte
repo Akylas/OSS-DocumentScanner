@@ -20,8 +20,10 @@
         ObservableArray,
         Page,
         PageTransition,
+        Screen,
         SharedTransition,
         StackLayout,
+        Utils,
         View
     } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
@@ -39,7 +41,7 @@
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { OCRDocument } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
@@ -263,7 +265,8 @@
                     navigate({
                         page: component,
                         props: {
-                            document
+                            document,
+                            transitionOnBack: false
                         }
                     });
                 } else {
@@ -312,7 +315,8 @@
             navigate({
                 page: component,
                 props: {
-                    document: doc
+                    document: doc,
+                    transitionOnBack: false
                 }
             });
         } catch (error) {
@@ -472,6 +476,19 @@
         });
         return selected;
     }
+    function getSelectedPagesAndPossibleSingleDocument(): [OCRPage[], OCRDocument?] {
+        const selected: OCRPage[] = [];
+        const docs: OCRDocument[] = [];
+        let doc;
+        documents.forEach((d, index) => {
+            if (d.selected) {
+                doc = d.doc;
+                docs.push(doc);
+                selected.push(...doc.pages);
+            }
+        });
+        return [selected, docs.length === 1 ? docs[0] : undefined];
+    }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
             try {
@@ -592,7 +609,8 @@
     }
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu(getSelectedDocuments(), event.object);
+            const data = getSelectedPagesAndPossibleSingleDocument();
+            await showPDFPopoverMenu(data[0], data[1], event.object);
         } catch (err) {
             showError(err);
         }
@@ -600,19 +618,15 @@
 
     async function showImageExportPopover(event) {
         try {
-            await showImagePopoverMenu(
-                getSelectedDocuments().reduce((acc, doc) => {
-                    acc.push(...doc.pages);
-                    return acc;
-                }, []),
-                event.object
-            );
+            const data = getSelectedPagesAndPossibleSingleDocument();
+
+            await showImagePopoverMenu(data[0], event.object);
         } catch (err) {
             showError(err);
         }
     }
     function getItemImageHeight(viewStyle) {
-        return condensed ? 44 : 94;
+        return (condensed ? 44 : 94) * $fontScale;
     }
     function getItemRowHeight(viewStyle) {
         return condensed ? 80 : 150;
@@ -635,7 +649,7 @@
         const h = canvas.getHeight();
         // const w2 = w / 2;
         // const h2 = h / 2;
-        const dx = 10 + getItemImageHeight(viewStyle) * $fontScale + 16;
+        const dx = 10 + getItemImageHeight(viewStyle) + 16;
         textPaint.color = colorOnSurfaceVariant;
         canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
         textPaint.color = colorOnBackground;
@@ -663,7 +677,7 @@
 
     async function showOptions(event) {
         const options = new ObservableArray([
-            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+            { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
             { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
             { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
             { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
@@ -718,13 +732,14 @@
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
+                        decodeWidth={Utils.layout.toDevicePixels(100)}
                         horizontalAlignment="left"
                         item={item.doc.pages[0]}
                         marginBottom={getImageMargin(viewStyle)}
                         marginTop={getImageMargin(viewStyle)}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                         stretch="aspectFill"
-                        width={getItemImageHeight(viewStyle) * $fontScale} />
+                        width={getItemImageHeight(viewStyle)} />
                     <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
                     <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                     <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />
@@ -732,11 +747,12 @@
             </Template>
         </collectionView>
         {#if showNoDocument}
-            <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
+            <flexlayout flexDirection="column" marginBottom="30%" paddingLeft={16} paddingRight={16} row={1} verticalAlignment="center" width="80%" transition:fade={{ duration: 200 }}>
                 <lottie
                     bind:this={lottieView}
                     async={true}
                     autoPlay={true}
+                    flexShrink={2}
                     keyPathColors={{
                         'background|**': lottieDarkFColor,
                         'full|**': lottieLightColor,
@@ -744,11 +760,9 @@
                         'lines|**': lottieDarkFColor
                     }}
                     loop={true}
-                    marginBottom={20}
-                    src="~/assets/lottie/scanning.lottie"
-                    width="80%" />
-                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} verticalAlignment="bottom" width="80%" />
-            </gridlayout>
+                    src="~/assets/lottie/scanning.lottie" />
+                <label color={colorOnSurfaceVariant} flexShrink={0} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} />
+            </flexlayout>
         {/if}
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">

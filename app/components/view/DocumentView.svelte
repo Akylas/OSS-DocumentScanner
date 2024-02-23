@@ -55,6 +55,7 @@
     }
 
     export let document: OCRDocument;
+    export let transitionOnBack = true;
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
     let fabHolder: NativeViewElementNode<StackLayout>;
@@ -96,7 +97,8 @@
     }
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu([document], event.object);
+            const pages = nbSelected > 0 ? getSelectedPages() : document.pages;
+            await showPDFPopoverMenu(pages, document, event.object);
         } catch (err) {
             showError(err);
         }
@@ -168,7 +170,10 @@
                 try {
                     await documentsService.deleteDocuments([document]);
                     items = null;
-                    goBack();
+                    goBack({
+                        // null is important to say no transition! (override enter transition)
+                        transition: null
+                    });
                 } catch (err) {
                     console.error(err.err.stack);
                 }
@@ -294,11 +299,22 @@
             showError(error);
         }
     }
+    function onGoBack() {
+        goBack(
+            transitionOnBack
+                ? undefined
+                : {
+                      transition: null
+                  }
+        );
+    }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
+            data.cancel = true;
             if (nbSelected > 0) {
-                data.cancel = true;
                 unselectAll();
+            } else {
+                onGoBack();
             }
         }
     }
@@ -375,7 +391,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
-            goBack();
+            goBack({
+                // null is important to say no transition! (override enter transition)
+                transition: null
+            });
         }
     }
 
@@ -458,7 +477,7 @@
     async function showOptions(event) {
         if (nbSelected > 0) {
             const options = new ObservableArray([
-                { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
                 // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
@@ -478,14 +497,14 @@
                         //     fullscreenSelectedDocuments();
                         //     break;
                         case 'ocr':
-                            detectOCR({ pages: getSelectedPagesWithData() });
+                            await detectOCR({ pages: getSelectedPagesWithData() });
                             unselectAll();
                             break;
                         case 'delete':
                             deleteSelectedPages();
                             break;
                         case 'transform':
-                            transformPages({ pages: getSelectedPagesWithData() });
+                            await transformPages({ pages: getSelectedPagesWithData() });
                             unselectAll();
                             break;
                     }
@@ -510,7 +529,7 @@
                                 unselectAll();
                                 break;
                             case 'transform':
-                                transformPages({ documents: [document] });
+                                await transformPages({ documents: [document] });
                                 unselectAll();
                                 break;
                             case 'delete':
@@ -614,7 +633,7 @@
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator rowSpan={2} text={item.index + 1} on:longPress={() => startDragging(item)} />
+                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
                 </gridlayout>
             </Template>
         </collectionview>

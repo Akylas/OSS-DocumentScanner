@@ -28,6 +28,15 @@ constructor(
 
     var previewResizeThreshold = 200.0
     var autoScanHandler: AutoScanHandler? = null
+        set(value) {
+            if (field != null) {
+                (field as AutoScanHandler).enabled = false
+            }
+            if (cropView != null) {
+                cropView.drawFill = value == null
+            }
+            field = value
+        }
     var detectQRCode = false
     var detectQRCodeOptions = "{\"resizeThreshold\":500}"
 
@@ -569,7 +578,7 @@ constructor(
 
             // pointsList is sorted by area
             autoScanHandler?.process(pointsList)
-            if (pointsList != null) {
+            if (pointsList != null && pointsList.size > 0) {
                 if (info.rotationDegrees == 180 ||
                     info.rotationDegrees ==
                     0

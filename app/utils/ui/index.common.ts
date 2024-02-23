@@ -33,7 +33,16 @@ import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
 import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import { DOCUMENT_NOT_DETECTED_MARGIN, IMG_COMPRESS, IMG_FORMAT, PREVIEW_RESIZE_THRESHOLD, QRCODE_RESIZE_THRESHOLD, TRANSFORMS_SPLIT } from '~/models/constants';
+import {
+    CROP_ENABLED,
+    DEFAULT_EXPORT_DIRECTORY,
+    DOCUMENT_NOT_DETECTED_MARGIN,
+    IMG_COMPRESS,
+    IMG_FORMAT,
+    PREVIEW_RESIZE_THRESHOLD,
+    QRCODE_RESIZE_THRESHOLD,
+    TRANSFORMS_SPLIT
+} from '~/models/constants';
 import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
@@ -345,6 +354,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
     let items;
     try {
         await showLoading(l('computing'));
+        const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
 
         items = await Promise.all(
             uris.map(
@@ -360,13 +370,13 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
 
                             const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                             const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
-                            const quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
+                            const quads = cropEnabled ? await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0) : undefined;
                             let qrcode;
                             if (CARD_APP) {
                                 // try to get the qrcode to show it in the import screen
                                 qrcode = await detectQRCode(editingImage, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
                             }
-                            if (quads.length === 0) {
+                            if (cropEnabled && quads.length === 0) {
                                 quads.push([
                                     [noDetectionMargin, noDetectionMargin],
                                     [editingImage.width - noDetectionMargin, noDetectionMargin],
@@ -403,17 +413,19 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
         //     ]);
         // }
         if (items?.length) {
-            const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
-            const newItems = await showModal({
-                page: ModalImportImage,
-                animated: true,
-                fullscreen: true,
-                props: {
-                    items
-                }
-            });
-            if (newItems) {
+            if (cropEnabled) {
+                const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
+                const newItems = await showModal({
+                    page: ModalImportImage,
+                    animated: true,
+                    fullscreen: true,
+                    props: {
+                        items
+                    }
+                });
                 items = newItems;
+            }
+            if (items) {
                 DEV_LOG && console.log('items after crop', items);
 
                 pagesToAdd = (
@@ -423,7 +435,8 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                                 new Promise<PageData[]>(async (resolve, reject) => {
                                     try {
                                         DEV_LOG && console.log('about to cropDocument', item.quads);
-                                        const images = await cropDocument(item.editingImage, item.quads);
+                                        const editingImage = item.editingImage;
+                                        const images = cropEnabled ? await cropDocument(editingImage, item.quads) : [__IOS__ ? editingImage.ios : editingImage.android];
                                         let qrcode;
                                         let colors;
                                         if (CARD_APP) {
@@ -436,11 +449,16 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                                                 const image = images[index];
                                                 result.push({
                                                     image,
-                                                    crop: item.quads[index],
+                                                    crop: item.quads?.[index] || [
+                                                        [0, 0],
+                                                        [editingImage.width - 0, 0],
+                                                        [editingImage.width - 0, editingImage.height - 0],
+                                                        [0, editingImage.height - 0]
+                                                    ],
                                                     sourceImagePath: item.sourceImagePath,
                                                     width: __ANDROID__ ? image.getWidth() : image.size.width,
                                                     height: __ANDROID__ ? image.getHeight() : image.size.height,
-                                                    rotation: item.editingImage.rotationAngle,
+                                                    rotation: editingImage.rotationAngle,
                                                     ...(CARD_APP
                                                         ? {
                                                               qrcode,
@@ -534,6 +552,7 @@ export async function importAndScanImage(document?: OCRDocument) {
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {
+            showLoading(l('computing'));
             return await importAndScanImageFromUris(
                 selection.map((s) => s.path),
                 document
@@ -541,6 +560,8 @@ export async function importAndScanImage(document?: OCRDocument) {
         }
     } catch (error) {
         showError(error);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -614,11 +635,7 @@ export async function showPopoverMenu<T = any>({
     return result;
 }
 
-const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
-    ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-    : knownFolders.externalDocuments().path;
-
-export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
+export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocument, anchor?) {
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
@@ -685,7 +702,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                     case 'open': {
                         await closePopover();
                         await showLoading(l('exporting'));
-                        const filePath = await exportPDFAsync(documents);
+                        const filePath = await exportPDFAsync(pages, document);
                         hideLoading();
                         openFile(filePath);
                         break;
@@ -693,7 +710,7 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                     case 'share': {
                         await closePopover();
                         await showLoading(l('exporting'));
-                        const filePath = await exportPDFAsync(documents);
+                        const filePath = await exportPDFAsync(pages, document);
                         hideLoading();
                         share({ file: filePath }, { mimetype: 'application/pdf' });
                         break;
@@ -703,13 +720,13 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                         const result = await prompt({
                             okButtonText: lc('ok'),
                             cancelButtonText: lc('cancel'),
-                            defaultText: (documents.length === 1 ? cleanFilename(documents[0].name) : Date.now()) + '.pdf',
+                            defaultText: (document ? cleanFilename(document.name) : Date.now()) + '.pdf',
                             hintText: lc('pdf_filename')
                         });
                         if (result?.result && result?.text?.length) {
                             showLoading(l('exporting'));
                             DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                            const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
+                            const filePath = await exportPDFAsync(pages, document, exportDirectory, result.text);
                             hideLoading();
                             const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
@@ -727,7 +744,8 @@ export async function showPDFPopoverMenu(documents: OCRDocument[], anchor) {
                             animated: true,
                             fullscreen: true,
                             props: {
-                                documents
+                                pages,
+                                document
                             }
                         });
                         break;
@@ -789,7 +807,13 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
                         if (__ANDROID__ && exportDirectory.startsWith('content://')) {
                             const context = Utils.android.getApplicationContext();
                             const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
-                            const outfile = outdocument.createFile('image/jpeg', destinationName);
+                            let outfile = outdocument.createFile('image/jpeg', destinationName);
+                            if (outfile == null) {
+                                outfile = outdocument.findFile(destinationName);
+                            }
+                            if (!outfile) {
+                                throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
+                            }
                             if (!finalMessagePart) {
                                 if (canSetName) {
                                     finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
@@ -1012,7 +1036,8 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
     try {
         const view = (await import('~/components/common/TransformPagesBottomSheet.svelte')).default;
         const updateOptions = await showBottomSheet({
-            view
+            view,
+            skipCollapsedState: true
         });
         if (updateOptions) {
             // await showLoading(l('computing'));
@@ -1036,7 +1061,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
                     const pageId = p.page.id;
                     await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), null, {
                         colorType: updateOptions.colorType,
-                        colorMatrix: null
+                        colorMatrix: updateOptions.colorMatrix
                     });
 
                     const progress = Math.round((pagesDone / totalPages) * 100);
@@ -1059,6 +1084,7 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
         const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;
         const shouldStart = await showBottomSheet({
             view: OCRSettingsBottomSheet,
+            skipCollapsedState: true,
             props: {}
         });
         if (shouldStart) {

@@ -40,6 +40,7 @@ try {
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
     registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
+    registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
     registerElement('Frame', () => new FrameElement());
     registerElement('Page', () => new PageElement());
     registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
@@ -75,7 +76,7 @@ try {
     SwipeMenuElement.register();
     DrawerElement.register();
     startSentry();
-    initialize();
+    initialize({ isDownsampleEnabled: true });
     // Trace.addCategories(Trace.categories.NativeLifecycle);
     // Trace.addCategories(Trace.categories.Accessibility);
     // Trace.addCategories(CollectionViewTraceCategory);

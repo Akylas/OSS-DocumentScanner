@@ -1,14 +1,14 @@
-import { OCRDocument } from '~/models/OCRDocument';
+import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import type { WorkerEventType, WorkerResult } from '~/workers/BaseWorker';
 
 export function cleanFilename(str) {
     return str.replace(/[|\\?*<\":>+\[\]\/'"]+/g, '').replace(/[\s\t\n]+/g, '_');
 }
 
-export async function exportPDFAsync(documents: OCRDocument[], folder?, filename?): Promise<string> {
+export async function exportPDFAsync(pages: OCRPage[], document?: OCRDocument, folder?, filename?): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', folder, filename);
-    if (!filename && documents.length === 1) {
-        filename = cleanFilename(documents[0].name) + '.pdf';
+    if (!filename && document) {
+        filename = cleanFilename(document.name) + '.pdf';
     }
     const worker = new Worker('~/workers/PDFExportWorker');
     const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
@@ -93,11 +93,11 @@ export async function exportPDFAsync(documents: OCRDocument[], folder?, filename
                 // nativeDataKeys: keys,
                 type
             };
-            DEV_LOG && console.log('postMessage', data);
+            // DEV_LOG && console.log('postMessage', data);
             worker.postMessage(data);
         });
     }
-    const result = await sendMessageToWorker('export', { documents, folder, filename }, Date.now());
+    const result = await sendMessageToWorker('export', { pages, folder, filename }, Date.now());
     DEV_LOG && console.log('result', result);
     return result.messageData;
 }

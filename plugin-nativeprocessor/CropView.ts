@@ -43,9 +43,9 @@ export class CropView extends View {
     }
     [strokeWidthProperty.setNative](value: number) {
         if (__ANDROID__) {
-            this.nativeViewProtected.linePaint.setStrokeWidth(Utils.layout.toDevicePixels(value));
+            this.nativeViewProtected.linePaint.setStrokeWidth(value);
         } else {
-            this.nativeViewProtected.strokeWidth = Utils.layout.toDevicePixels(value);
+            this.nativeViewProtected.strokeWidth = value;
         }
     }
     [fillAlphaProperty.setNative](value: number) {

@@ -135,17 +135,24 @@ export async function showError(err: Error | string, showAsSnack = false) {
             return;
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
-        const realError = typeof err === 'string' ? null : err;
-        DEV_LOG && console.error('showError', reporterEnabled, err['message'] || err, err?.['stack'], err?.['stackTrace']);
+        let realError = typeof err === 'string' ? null : err;
 
         const isString = realError === null || realError === undefined;
         const message = isString ? (err as string) : realError.message || realError.toString();
+
+        if (message?.startsWith('java.net.')) {
+            if (message.indexOf('SocketTimeoutException') !== -1) {
+                realError = new TimeoutError();
+            } else {
+                realError = new Error(message);
+            }
+        }
+
+        DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError), message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
+
         if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
             showSnack({ message });
             return;
-        }
-        if (reporterEnabled) {
-            Sentry.captureException(err);
         }
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
         const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
@@ -155,6 +162,11 @@ export async function showError(err: Error | string, showAsSnack = false) {
         label.style.padding = '10 20 0 20';
         label.style.color = new Color(255, 138, 138, 138);
         label.html = message.trim();
+
+        if (realError && reporterEnabled) {
+            Sentry.captureException(realError);
+        }
+
         return mdAlert({
             okButtonText: lc('ok'),
             title,

@@ -153,9 +153,18 @@ frame {
 
 .sectionHeader {
     font-size: 15;
-    font-weight: bold;
+    font-weight: 500;
     color: var(--colorPrimary);
     padding: 5 5 5 16;
+}
+
+
+
+.sectionBigHeader {
+    font-size: 20;
+    font-weight: 500;
+    color: var(--colorPrimary);
+    padding: 4 0 10 0;
 }
 
 
@@ -165,11 +174,25 @@ frame {
     font-weight: 400;
     padding: 0 16 0 16;
     color: var(--colorOnSurface);
+    &:black, &:dark {
+        color: white;
+    }
+
+    &:white {
+        color: black;
+    }
 }
 
 .actionBarSubtitle {
     font-size: 13;
     color: var(--colorOnSurface);
+    &:black, &:dark {
+        ripple-color: white;
+    }
+
+    &:white {
+        color: black;
+    }
 }
 
 
@@ -199,7 +222,7 @@ frame {
 
 
 
-    &:black {
+    &:black, &:dark {
 
         color: white;
         ripple-color: white;

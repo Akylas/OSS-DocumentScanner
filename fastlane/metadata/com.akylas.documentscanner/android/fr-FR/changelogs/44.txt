@@ -1,0 +1,13 @@
+### Bug fixes
+- Translated using Weblate (Italian)
+- Translated using Weblate (German)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Turkish)
+- **android:** dnot show copy snack on android 13 (already shown)
+- **android:** declare large heap app to try and prevent out of memory crashes
+- flashMode/torchMode fix
+- Translated using Weblate (German)
+- Translated using Weblate (German)
+- Translated using Weblate (Portuguese)
+- Translated using 

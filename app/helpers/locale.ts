@@ -1,9 +1,9 @@
 import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
-import { ApplicationSettings, Device, File, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
 import { showAlertOptionSelect } from '~/utils/ui';
@@ -46,12 +46,7 @@ $lang.subscribe((newLang: string) => {
 function setLang(newLang) {
     let actualNewLang = getActualLanguage(newLang);
     DEV_LOG && console.log('setLang', newLang, actualNewLang);
-    if (supportedLanguages.indexOf(actualNewLang) === -1) {
-        actualNewLang = actualNewLang.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(actualNewLang) === -1) {
-            actualNewLang = 'en';
-        }
-    }
+
     if (__IOS__) {
         overrideNativeLocale(actualNewLang);
         currentLocale = null;
@@ -82,15 +77,7 @@ function getActualLanguage(language) {
     if (language === 'auto') {
         if (__ANDROID__) {
             // N Device.language reads app config which thus does return locale app language and not device language
-            DEV_LOG &&
-                console.log(
-                    'getActualLanguage',
-                    language,
-                    java.util.Locale.getDefault().getLanguage(),
-                    com.akylas.documentscanner.Utils.getSystemLocale().getLanguage(),
-                    Device.language,
-                    androidx.appcompat.app.AppCompatDelegate['getApplicationLocales']()
-                );
+            DEV_LOG && console.log('getActualLanguage', language, java.util.Locale.getDefault().getLanguage(), get($lang));
             language = java.util.Locale.getDefault().getLanguage();
         } else {
             language = Device.language;
@@ -98,14 +85,23 @@ function getActualLanguage(language) {
     }
     switch (language) {
         case 'cs':
-            return 'cz';
+            language = 'cz';
+            break;
         case 'jp':
-            return 'ja';
+            language = 'ja';
+            break;
         case 'lv':
-            return 'la';
-        default:
-            return language;
+            language = 'la';
+            break;
     }
+
+    if (supportedLanguages.indexOf(language) === -1) {
+        language = language.split('-')[0].toLowerCase();
+        if (supportedLanguages.indexOf(language) === -1) {
+            language = 'en';
+        }
+    }
+    return language;
 }
 
 // const rtf = new Intl.RelativeTimeFormat('es');
@@ -219,6 +215,20 @@ export async function selectLanguage() {
 
 // TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
+
+Application.on('activity_started', () => {
+    // on android after switching to auto we dont get the actual language
+    // before an activity restart
+    if (__ANDROID__) {
+        const lang = ApplicationSettings.getString('language');
+        if (lang === 'auto') {
+            const actualNewLang = getActualLanguage(lang);
+            if (actualNewLang !== get($lang)) {
+                $lang.set(actualNewLang);
+            }
+        }
+    }
+});
 
 export { l, lc, lt, lu };
 export const sl = derived([$lang], () => l);

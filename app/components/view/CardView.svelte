@@ -23,11 +23,11 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
-    import { hideLoading, importAndScanImage, showLoading, showPDFPopoverMenu } from '~/utils/ui';
+    import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors, screenWidthDips } from '~/variables';
-    export const screenWidthPixels = Screen.mainScreen.widthPixels;
-    export const screenHeightPixels = Screen.mainScreen.heightPixels;
+    const screenWidthPixels = Screen.mainScreen.widthPixels;
+    const screenHeightPixels = Screen.mainScreen.heightPixels;
 
     const rowMargin = 8;
     const colWidth = screenWidthDips / 2;
@@ -35,7 +35,7 @@
 
     $: qrcodeColorMatrix = isDarkTheme() ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurfaceVariant, colorError } = $colors);
     interface Item {
         page: OCRPage;
         selected: boolean;
@@ -43,10 +43,9 @@
     }
 
     export let document: OCRDocument;
+    export let transitionOnBack = true;
     const topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
     const statusBarStyle = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
-    console.log('statusBarStyle', topBackgroundColor, new Color(topBackgroundColor).getBrightness(), statusBarStyle);
-    const defaultVisualState = statusBarStyle === 'light' ? 'white' : null;
 
     let qrcodes: QRCodeData;
     let currentQRCodeImage: ImageSource;
@@ -104,9 +103,35 @@
             showError(err);
         }
     }
+    function getSelectedPages() {
+        const selected = [];
+        items.forEach((d, index) => {
+            if (d.selected) {
+                selected.push(d.page);
+            }
+        });
+        return selected;
+    }
+    function getSelectedPagesWithData() {
+        const selected: { page: OCRPage; pageIndex: number; document: OCRDocument }[] = [];
+        items.forEach((d, index) => {
+            if (d.selected) {
+                selected.push({ page: d.page, document, pageIndex: index });
+            }
+        });
+        return selected;
+    }
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu([document], event.object);
+            const pages = nbSelected > 0 ? getSelectedPages() : document.pages;
+            await showPDFPopoverMenu(pages, document, event.object);
+        } catch (err) {
+            showError(err);
+        }
+    }
+    async function showImageExportPopover(event) {
+        try {
+            await showImagePopoverMenu(getSelectedPages(), event.object);
         } catch (err) {
             showError(err);
         }
@@ -159,7 +184,10 @@
                 try {
                     await documentsService.deleteDocuments([document]);
                     items = null;
-                    goBack();
+                    goBack({
+                        // null is important to say no transition! (override enter transition)
+                        transition: null
+                    });
                 } catch (err) {
                     console.error(err.err.stack);
                 }
@@ -251,11 +279,22 @@
             showError(error);
         }
     }
+    function onGoBack() {
+        goBack(
+            transitionOnBack
+                ? undefined
+                : {
+                      transition: null
+                  }
+        );
+    }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
+            data.cancel = true;
             if (nbSelected > 0) {
-                data.cancel = true;
                 unselectAll();
+            } else {
+                onGoBack();
             }
         }
     }
@@ -324,7 +363,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
-            goBack();
+            goBack({
+                // null is important to say no transition! (override enter transition)
+                transition: null
+            });
         }
     }
 
@@ -426,20 +468,91 @@
             showError(error);
         }
     }
+    async function showOptions(event) {
+        if (nbSelected > 0) {
+            const options = new ObservableArray([
+                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
+                // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any);
+            return showPopoverMenu({
+                options,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+
+                onClose: async (item) => {
+                    switch (item.id) {
+                        case 'share':
+                            showImageExportPopover(event);
+                            break;
+                        // case 'fullscreen':
+                        //     fullscreenSelectedDocuments();
+                        //     break;
+                        case 'ocr':
+                            detectOCR({ pages: getSelectedPagesWithData() });
+                            unselectAll();
+                            break;
+                        case 'delete':
+                            deleteSelectedPages();
+                            break;
+                        case 'transform':
+                            transformPages({ pages: getSelectedPagesWithData() });
+                            unselectAll();
+                            break;
+                    }
+                }
+            });
+        } else {
+            const options = new ObservableArray([
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any);
+            return showPopoverMenu({
+                options,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+
+                onClose: async (item) => {
+                    try {
+                        switch (item.id) {
+                            case 'ocr':
+                                await detectOCR({ documents: [document] });
+                                unselectAll();
+                                break;
+                            case 'transform':
+                                transformPages({ documents: [document] });
+                                unselectAll();
+                                break;
+                            case 'delete':
+                                await deleteDoc();
+                                break;
+                        }
+                    } catch (error) {
+                        showError(error);
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            });
+        }
+    }
 </script>
 
 <page id="cardview" actionBarHidden={true} statusBarColor={topBackgroundColor} {statusBarStyle}>
     <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
         <CActionBar
-            backgroundColor="transparent"
-            buttonsDefaultVisualState={defaultVisualState}
+            backgroundColor={topBackgroundColor}
+            buttonsDefaultVisualState={statusBarStyle}
             forceCanGoBack={nbSelected > 0}
-            labelsDefaultVisualState={defaultVisualState}
+            labelsDefaultVisualState={statusBarStyle}
             onGoBack={nbSelected ? unselectAll : null}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" {defaultVisualState} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" {defaultVisualState} text="mdi-delete" variant="text" on:tap={nbSelected ? deleteSelectedPages : deleteDoc} />
+            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
         </CActionBar>
 
         <collectionview
@@ -476,7 +589,7 @@
             </Template>
         </collectionview>
         <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" padding={16} row={2} rows="auto,auto,*">
-            <stacklayout visibility={currentQRCode ? 'visible' : 'hidden'}>
+            <stacklayout visibility={currentQRCode ? 'visible' : 'hidden'} on:tap={onQRCodeTap}>
                 <image
                     colorMatrix={qrcodeColorMatrix}
                     height={screenWidthDips * 0.4}
@@ -484,8 +597,7 @@
                     src={currentQRCodeImage}
                     stretch="aspectFit"
                     verticalAlignment="top"
-                    width="100%"
-                    on:tap={onQRCodeTap} />
+                    width="100%" />
                 <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + currentQRCodeIndex} text={currentQRCode?.text} textAlignment="center" />
             </stacklayout>
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom">

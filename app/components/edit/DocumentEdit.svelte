@@ -7,8 +7,9 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, Screen, TextField, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
+    import { OCRData } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
@@ -33,6 +34,7 @@
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
+    export let transitionOnBack = true;
     let pager: NativeViewElementNode<Pager>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
@@ -45,13 +47,13 @@
     $: quads = quad ? [quad] : [];
     let quadChanged = false;
     let currentIndex = startPageIndex;
-    const firstItem = items.getItem(currentIndex);
-    let currentItemOCRData = firstItem.ocrData;
-    let currentItemSubtitle = `${firstItem.width} x ${firstItem.height}`;
-    let currentSelectedImagePath = firstItem.imagePath;
-    let currentSelectedImageRotation = firstItem.rotation || 0;
-    let transforms = firstItem.transforms?.split(TRANSFORMS_SPLIT) || [];
-    const colorType = 0;
+    let currentItem: OCRPage;
+    let currentItemOCRData: OCRData;
+    let currentItemSubtitle: string;
+    let currentSelectedImagePath: string;
+    let currentSelectedImageRotation: number;
+    let transforms: string[];
+    updateCurrentItem(items.getItem(currentIndex));
     const filters = ColorMatricesTypes.map((k) => ({
         ...k,
         text: lc(k.id),
@@ -65,7 +67,7 @@
 
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu([document], event.object);
+            await showPDFPopoverMenu(document.pages, document, event.object);
         } catch (err) {
             showError(err);
         }
@@ -99,14 +101,17 @@
             showError(error);
         }
     }
+    function updateCurrentItem(item) {
+        currentItem = item;
+        currentItemSubtitle = `${currentItem.width} x ${currentItem.height}`;
+        currentSelectedImagePath = currentItem.imagePath;
+        currentSelectedImageRotation = currentItem.rotation || 0;
+        currentItemOCRData = currentItem.ocrData;
+        transforms = currentItem.transforms?.split(TRANSFORMS_SPLIT) || [];
+    }
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
-        const item = items.getItem(currentIndex);
-        currentItemSubtitle = `${item.width} x ${item.height}`;
-        currentSelectedImagePath = item.imagePath;
-        currentSelectedImageRotation = item.rotation || 0;
-        currentItemOCRData = item.ocrData;
-        transforms = item.transforms?.split(TRANSFORMS_SPLIT) || [];
+        updateCurrentItem(items.getItem(currentIndex));
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;
         // $enhanced = transforms.indexOf('enhance') !== -1;
         console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
@@ -232,7 +237,6 @@
             const item = items.getItem(currentIndex);
 
             editingImage = await loadImage(item.sourceImagePath);
-            // editingImage = await ImageSource.fromFile(item.sourceImagePath);
 
             quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
@@ -279,6 +283,7 @@
     }, 500);
     function onColorMatrixChange(colorType, value) {
         const current = items.getItem(currentIndex);
+        current.colorType = colorType;
         current.colorMatrix = getColorMatrix(colorType, value);
         items.setItem(currentIndex, current);
         saveCurrentItemColorType(currentIndex, current.colorMatrix);
@@ -358,9 +363,15 @@
         }
     }
 
-    async function applyImageTransform(i) {
+    function isCurrentColorType(i) {
+        return currentItem.colorType === i.colorType;
+    }
+
+    async function applyImageColorMatrix(i) {
         const current = items.getItem(currentIndex);
+        current.colorMatrix = null;
         current.colorType = i.colorType;
+        collectionView.nativeView.refreshVisibleItems();
         ignoreNextCollectionViewRefresh = true;
         document.updatePage(
             currentIndex,
@@ -438,7 +449,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
-            goBack();
+            goBack({
+                // null is important to say no transition! (override enter transition)
+                transition: null
+            });
         }
     }
     onMount(() => {
@@ -492,18 +506,35 @@
         pager?.nativeView?.refresh();
     }
     onThemeChanged(refreshPager);
+
     function onGoBack() {
         if (recrop) {
             onRecropTapFinish(true);
         } else {
-            goBack();
+            const item = items.getItem(currentIndex);
+
+            //we use a new transition to transition the selected item
+            goBack({
+                transition:
+                    __ANDROID__ && transitionOnBack
+                        ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
+                              pageStart: {
+                                  sharedTransitionTags: {
+                                      [`document_${document.id}_${item.id}`]: {}
+                                  }
+                              }
+                          })
+                        : undefined
+            } as any);
         }
     }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
+            data.cancel = true;
             if (recrop) {
-                data.cancel = true;
                 onRecropTapFinish(true);
+            } else {
+                onGoBack();
             }
         }
     }
@@ -573,10 +604,12 @@
         </stacklayout>
         <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
-                <gridlayout id={item.text} padding={2} on:tap={applyImageTransform(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
+                <gridlayout id={item.text} padding={2} on:tap={applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
                         id="imageView"
+                        borderColor={colorPrimary}
                         borderRadius={4}
+                        borderWidth={isCurrentColorType(item) ? 3 : 0}
                         colorMatrix={getColorMatrix(item.colorType)}
                         decodeHeight={120}
                         decodeWidth={120}

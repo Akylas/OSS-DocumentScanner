@@ -1,0 +1,12 @@
+### Bug fixes
+- Translated using Weblate (Italian)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Portuguese (Brazil))
+- Translated using Weblate (Turkish)
+- Translated using Weblate (French)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Arabic)
+- prevent error while taking picture with flashMode on #136 DOCUMENTSCANNER-1X
+- show which color filter is currently applied to a page
+- fixed pages transform dialog and camera sett

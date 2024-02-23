@@ -29,6 +29,7 @@
     import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors, fonts } from '~/variables';
+    import { PDF_OPTIONS } from '~/models/localized_constant';
 
     $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
 
@@ -41,15 +42,12 @@
         Object.assign(pdfCanvas.options, newValue);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
-    // technique for only specific properties to get updated on store change
-    export let documents: OCRDocument[];
-    // pdfCanvas.updatePages(documents);
+    export let pages: OCRPage[];
+    export let document: OCRDocument = null;
     let pager: NativeViewElementNode<Pager>;
     let drawer: DrawerElement;
     let items: ObservableArray<PDFCanvasItem>;
     let currentPagerIndex = 0;
-
-    const topBarHeight = 50;
 
     async function loadImagesForPage(pdfPageIndex) {
         const item = items.getItem(pdfPageIndex);
@@ -76,7 +74,7 @@
         }, 0);
     }
     function refresh() {
-        pdfCanvas.updatePages(documents);
+        pdfCanvas.updatePages(pages);
         items = new ObservableArray(pdfCanvas.items);
     }
     function requestPagesRedraw() {
@@ -99,6 +97,7 @@
     });
 
     function onPageIndexChanged(event) {
+        // DEV_LOG && console.log('onPageIndexChanged', event.object.selectedIndex, new Error().stack);
         currentPagerIndex = event.object.selectedIndex;
         // loadImagesForPage(currentPagerIndex);
     }
@@ -118,7 +117,7 @@
                     'pdf_export_directory',
                     __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
                 );
-                const filePath = await exportPDFAsync(documents, exportDirectory, result.text);
+                const filePath = await exportPDFAsync(pages, document, exportDirectory, result.text);
                 hideLoading();
                 const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
                 if (onSnack.reason === 'action') {
@@ -132,7 +131,7 @@
     async function openPDF() {
         try {
             showLoading(l('exporting'));
-            const filePath = await exportPDFAsync(documents);
+            const filePath = await exportPDFAsync(pages, document);
             hideLoading();
             openFile(filePath);
         } catch (error) {
@@ -151,33 +150,11 @@
             loadImagesForPage(index);
         }
     }
-    const OPTIONS = {
-        orientation: {
-            portrait: { name: lc('portrait') },
-            landscape: { name: lc('landscape') }
-        },
-        paper_size: {
-            full: { name: lc('full') },
-            a4: { name: lc('a4') },
-            a3: { name: lc('a3') }
-        },
-        color: {
-            color: { name: lc('color') },
-            black_white: { name: lc('black_white') }
-        },
-        items_per_page: {
-            1: { name: 1 },
-            2: { name: 2 },
-            3: { name: 3 },
-            4: { name: 4 },
-            5: { name: 5 },
-            6: { name: 6 }
-        }
-    };
+
     async function selectOption(option: string, event, valueTransformer?, fullRefresh = true) {
         try {
             // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
+            const options = Object.keys(PDF_OPTIONS[option]).map((k) => ({ ...PDF_OPTIONS[option][k], id: k }));
             await showPopoverMenu({
                 options,
                 anchor: event.object,
@@ -269,11 +246,11 @@
                 <gridlayout backgroundColor={colorSurface} columns="*,*" padding={5} rows="auto,auto" on:tap={() => drawer?.open()}>
                     <label color={colorOnSurface} fontSize={15}>
                         <span text={lc('orientation') + ': '} />
-                        <span color={colorOnSurfaceVariant2} fontWeight="bold" text={OPTIONS['orientation'][orientation].name} />
+                        <span color={colorOnSurfaceVariant2} fontWeight="bold" text={PDF_OPTIONS['orientation'][orientation].name} />
                     </label>
                     <label col={1} color={colorOnSurface} fontSize={15}>
                         <span text={lc('paper_size') + ': '} />
-                        <span color={colorOnSurfaceVariant2} fontWeight="bold" text={OPTIONS['paper_size'][paper_size].name} />
+                        <span color={colorOnSurfaceVariant2} fontWeight="bold" text={PDF_OPTIONS['paper_size'][paper_size].name} />
                     </label>
                     <label colSpan={2} color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} row={1} text="mdi-chevron-down" textAlignment="center" />
                 </gridlayout>
@@ -315,7 +292,7 @@
                     hint={lc('orientation')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={OPTIONS['orientation'][orientation].name}
+                    text={PDF_OPTIONS['orientation'][orientation].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('orientation', e)} />
@@ -325,7 +302,7 @@
                     hint={lc('paper_size')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={OPTIONS['paper_size'][paper_size].name}
+                    text={PDF_OPTIONS['paper_size'][paper_size].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('paper_size', e)} />
@@ -336,7 +313,7 @@
                     hint={lc('color')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={OPTIONS['color'][color].name}
+                    text={PDF_OPTIONS['color'][color].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('color', e)} />
@@ -346,7 +323,7 @@
                     hint={lc('items_per_page')}
                     margin={tMargin}
                     padding={tPadding}
-                    text={OPTIONS['items_per_page'][items_per_page].name}
+                    text={PDF_OPTIONS['items_per_page'][items_per_page].name}
                     variant="outline"
                     width={tWidth}
                     on:tap={(e) => selectOption('items_per_page', e, parseInt)} />

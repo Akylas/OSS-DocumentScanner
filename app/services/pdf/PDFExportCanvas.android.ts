@@ -1,19 +1,19 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Screen, Utils, knownFolders, path } from '@nativescript/core';
-import type { OCRDocument } from '~/models/OCRDocument';
+import type { OCRPage } from '~/models/OCRDocument';
+import { IMG_COMPRESS } from '~/models/constants';
 import { recycleImages } from '~/utils/images';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
-import { IMG_COMPRESS } from '~/models/constants';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export(documents: OCRDocument[], folder = knownFolders.temp().path, filename = Date.now() + '.pdf') {
+    async export(pages: OCRPage[], folder = knownFolders.temp().path, filename = Date.now() + '.pdf') {
         const start = Date.now();
         const options = this.options;
         if (options.paper_size === 'full') {
             // we enforce 1 item per page
             options.items_per_page = 1;
         }
-        this.updatePages(documents);
+        this.updatePages(pages);
         this.canvas = new Canvas();
         const pdfDocument = new android.graphics.pdf.PdfDocument();
         const items = this.items;
@@ -69,7 +69,13 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
             DEV_LOG && console.log('compressPDF', tempFile.path, tempFile2.path);
             com.akylas.documentscanner.PDFUtils.compressPDF(tempFile.path, tempFile2.path, IMG_COMPRESS);
             const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
-            const outfile = outdocument.createFile('application/pdf', filename);
+            let outfile = outdocument.createFile('application/pdf', filename);
+            if (outfile == null) {
+                outfile = outdocument.findFile(filename);
+            }
+            if (!outfile) {
+                throw new Error(`error creating file "${filename}" in "${folder}"`);
+            }
             await tempFile2.copy(outfile.getUri().toString());
             return outdocument.getUri().toString();
         } else {

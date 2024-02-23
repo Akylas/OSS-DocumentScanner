@@ -4,6 +4,7 @@ export async function loadImage(sourceImagePath) {
     // if (__ANDROID__) {
     // we need to use ImageAsset to correctly load images with content:
     // we also need it cause it loads the image "rotated"
+    // Another reason is that it is the only way to do it the true async way
     const asset = new ImageAsset(sourceImagePath);
     asset.options = { autoScaleFactor: false };
     const bitmap = await new Promise((resolve, reject) => {

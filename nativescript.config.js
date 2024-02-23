@@ -1,6 +1,6 @@
 const timelineEnabled = !!process.env['NS_TIMELINE'];
 const sentryEnabled = !!process.env['NS_SENTRY'];
-const loggingEnabled = sentryEnabled || !!process.env['NS_LOGGING'];
+const loggingEnabled = !!process.env['NS_LOGGING'];
 
 module.exports = {
     ignoredNativeDependencies: ['@nativescript/detox'].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']),
@@ -19,7 +19,12 @@ module.exports = {
         markingMode: 'none',
         codeCache: true,
         enableMultithreadedJavascript: false,
-        forceLog: loggingEnabled
+        ...(loggingEnabled
+            ? {
+                  forceLog: true,
+                  maxLogcatObjectSize: 40096
+              }
+            : {})
     },
     cssParser: 'rework',
     hooks: [

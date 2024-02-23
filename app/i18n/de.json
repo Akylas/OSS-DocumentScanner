@@ -1,4 +1,18 @@
 {
+    "$com": {
+        "akylas": {
+            "cardwallet": {
+                "app": {
+                    "name": "OSS-Kartenetui"
+                }
+            },
+            "documentscanner": {
+                "app": {
+                    "name": "OSS-Dokumentenscanner"
+                }
+            }
+        }
+    },
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Kartenetui"
@@ -18,7 +32,7 @@
     "aspect_ratio": "Proportion",
     "authenticate_security": "Anmelden, um auf die App zugreifen zu können",
     "auto": "Automatisch",
-    "auto_black": "Nutze echtes schwarz für das dunkle Theme",
+    "auto_black": "Nutze echtes schwarz für das dunkle Thema",
     "auto_scan": "Entdecke und füge Dokumente automatisch hinzu",
     "auto_scan_delay": "Autoscan Verzögerung",
     "auto_scan_delay_desc": "Verzögerung vor dem Start des automatischen Scanvorgangs bei einem erkannten Dokument",
@@ -28,7 +42,9 @@
     "auto_scan_duration_desc": "Dauer in Millisekunden bevor ein Dokument hinzugefügt wird",
     "auto_scan_first_use": "Eine neue Funktion zum automatischen Scannen ist standardmäßig aktiviert. Damit werden Dokumente automatisch gescannt. Es wird keine Aufforderung geben, die Dokumentenecken zu ändern.\nSoll das automatische Scannen aktiviert bleiben?\n(Dies kann in den Einstellungen oder durch einen langen Druck auf die Erfassungstaste geändert werden)",
     "autoscan": "Autoscan",
+    "autoscan_settings": "Einstellungen für den automatischen Scan",
     "backup_restore": "Backup / Wiederherstellen",
+    "batch_mode": "Batch-Modus",
     "biometric_auto_lock": "Automatisches biometrisches Sperren",
     "biometric_auto_lock_desc": "Wenn dies aktiviert ist, wird die App gesperrt, sobald sie im Hintergrund läuft",
     "biometric_lock": "Biometrische Sicherheit",
@@ -52,6 +68,7 @@
     "confirm_delete_pages": "Sind Sie sicher, dass Sie diese %1$s Seiten löschen wollen?",
     "copied": "Kopiert",
     "crop_edit_doc": "Berühre den Bildschirm nahe einer Ecke, so dass die Lupe erscheint. Die App wählt die nächstgelegene Ecke aus",
+    "crop_enabled": "Dokumentkanten erkennen und zuschneiden",
     "dark": "Dunkel",
     "data_location": "Speicherort",
     "delete": "Löschen",
@@ -59,6 +76,7 @@
     "disable": "Deaktivieren",
     "disabled": "deaktiviert",
     "document_detection": "Dokumentenerkennung",
+    "document_detection_settings": "Einstellungen zur Dokumenterkennung",
     "document_not_detected_margin": "kein Dokumentenrand",
     "document_not_detected_margin_desc": "wenn kein Dokument gefunden wird, werden die Ecken auf die Bildgröße mit einem leichten Versatz gesetzt",
     "documents": "Dokumente",
@@ -82,6 +100,8 @@
     "exporting": "Exportieren",
     "failed": "Fehlgeschlagen",
     "filters": "Filter",
+    "finish": "beenden",
+    "flash_mode": "Blitzmodus",
     "format": "Format",
     "french": "Französisch",
     "full": "Voll",
@@ -133,6 +153,8 @@
     "paper_size": "Seitengröße",
     "password": "Passwort",
     "password_not_saved": "Das Passwort wurde nicht gespeichert",
+    "pdf_export": "PDF-Export",
+    "pdf_export_settings": "PDF-Exporteinstellungen",
     "pdf_filename": "Dateiname für das exportierte PDF",
     "pdf_saved": "PDF gespeichert unter %1$s",
     "picture_size": "Größe des Bildes",
@@ -153,6 +175,7 @@
     "sdcard": "SD-Karte",
     "search": "Suche",
     "security": "Sicherheit",
+    "security_settings": "Sicherheitseinstellungen",
     "select_language": "Sprache wählen",
     "select_theme": "Thema auswählen",
     "selected": "%1$s ausgewählt",
@@ -162,6 +185,7 @@
     },
     "share": "Teilen",
     "share_application": "App teilen",
+    "share_images": "Bilder teilen",
     "show_fullscreen_images": "Vollbild",
     "source_code": "Quellcode",
     "start": "Start",
@@ -178,6 +202,8 @@
         "title": "Thema"
     },
     "third_parties": "Drittanbieter-Bibliotheken",
+    "toggle_camera": "Kamera umschalten",
+    "torch": "Fackel",
     "transform_images": "Bilder umwandeln",
     "transformations": "Veränderungen",
     "updating_pages": "Seiten aktualisieren (%1$s%%)",

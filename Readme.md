@@ -76,12 +76,12 @@ The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/o
   </a>
 </p>
 
-### Building
+### Building Setup
 
-This app uses opencv and tesseract. I did not include the libraries in git because there are huge and would make the github repo too big.
+This app is using [Nativescript](https://github.com/NativeScript/NativeScript) which is a cross platform framework to build apps for iOS/Android
 
+This app also uses opencv and tesseract. I did not include the libraries in git because there are huge and would make the github repo too big.
 There are 2 ways to install them:
-
 * download from [here](https://github.com/Akylas/OSS-DocumentScanner/releases/tag/dev_resources) and uncompress them at the root
 * build them yourself:
 
@@ -117,3 +117,12 @@ It is a bit trickier for Tesseract as we need to compile it
 
 You need to use yarn with this project as it uses the `portal:` protocol for some dependencies.
 Note that the project has some `yarn link` for easy local dev for me. The best is for you to remove the `resolutions` part of the `package.json`
+
+### Building
+
+Now that all is setup and that you prepared the 3rd party libraries you can actually build and run the app:
+
+* `yarn`
+* `ns run android --no-hmr --env.devlog` (replace by `ios` for iOS...)
+
+This will run the app on the first discovered device or emulator.

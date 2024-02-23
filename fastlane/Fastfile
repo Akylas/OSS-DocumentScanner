@@ -85,7 +85,11 @@ desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
   sh("rm", "-fr", File.join(".", app_build_path, platform))
-  sh("ns", "prepare", platform, "--release", "--env.adhoc")
+  if (platform == 'ios')
+    sh("npm", "run", "prepare.ios.sentry")
+  else
+    sh("ns", "prepare", platform, "--release", "--env.adhoc")
+  end
 end
 
 lane :build_flavor do |params| 
@@ -197,7 +201,7 @@ lane :get_changelog  do |params|
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
   logs = conventional_changelog(format: 'markdown', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform])
-  if (!display_links)
+  if (!display_links && !logs.nil? && !logs.empty?)
     logs = logs.gsub(/\*\w:\*/, '')
   end
   puts logs
@@ -299,6 +303,7 @@ platform :android do
 
   desc 'Build the Android application.'
   lane :build do |params|
+    puts "build app_build_path:" + app_build_path
     sh("rm", "-fr", File.join(".", app_build_path, "android"))
     options = params[:options]
     puts "build flavor:"  + params[:flavor]
@@ -310,10 +315,9 @@ platform :android do
       else 
         sh("npm", "run", "build.android.production.fdroid")
       end
-    when 'alpha'
-      sh("npm", "run", "build.android.production", "--", "--aab", "--env.reportall", "--env.testlog")
     else
-      sh("npm", "run", "build.android.production", "--", "--aab")
+      # for now we build sentry releases for playstore to get bug reports
+      sh("npm", "run", "build.android.production.sentry")
     end
   end
 
