@@ -16,7 +16,7 @@
 
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;
-    export let iconFontSize: number = 24;
+    // export let iconFontSize: number = 24;
     export let fontSize: number = 17;
     export let fontWeight: any = 'normal';
     export let subtitleFontSize: number = 14;
@@ -25,11 +25,11 @@
     export let color: string = null;
     export let subtitleColor: string = null;
     export let subtitle: string = null;
-    export let leftIcon: string = null;
+    // export let leftIcon: string = null;
     export let rightValue: string | Function = null;
-    const leftColumn = iconFontSize * 1.4 * $fontScale;
-    export let columns: string = leftIcon ? `${leftColumn},*,auto` : 'auto,*,auto';
-    export let leftIconFonFamily: string = $fonts.mdi;
+    // const leftColumn = iconFontSize * 1.4 * $fontScale;
+    export let columns: string = 'auto,*,auto';
+    // export let leftIconFonFamily: string = $fonts.mdi;
     export let mainCol = 1;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 
@@ -41,16 +41,16 @@
         if (showBottomLine) {
             event.canvas.drawLine(20, h - 1, w, h - 1, linePaint);
         }
-        if (leftIcon) {
-            const fontSize = iconFontSize * $fontScale;
-            iconPaint.textSize = fontSize;
-            iconPaint.color = titleColor || color || colorOnSurface;
-            iconPaint.fontFamily = leftIconFonFamily;
-            const staticLayout = new StaticLayout(leftIcon, iconPaint, leftColumn, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
-            canvas.translate(6, h / 2 - staticLayout.getHeight() / 2);
-            // canvas.drawRect(0,0,leftColumn,  staticLayout.getHeight(), iconPaint);
-            staticLayout.draw(canvas);
-        }
+        // if (leftIcon) {
+        //     const fontSize = iconFontSize * $fontScale;
+        //     iconPaint.textSize = fontSize;
+        //     iconPaint.color = titleColor || color || colorOnSurface;
+        //     iconPaint.fontFamily = leftIconFonFamily;
+        //     const staticLayout = new StaticLayout(leftIcon, iconPaint, leftColumn, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+        //     canvas.translate(6, h / 2 - staticLayout.getHeight() / 2);
+        //     // canvas.drawRect(0,0,leftColumn,  staticLayout.getHeight(), iconPaint);
+        //     staticLayout.draw(canvas);
+        // }
         onDraw?.(event);
     }
 

@@ -188,7 +188,7 @@
                               //       title: lc('share_application')
                               //   },
                               {
-                                  type: 'rightBtn',
+                                  type: 'rightIcon',
                                   id: 'review',
                                   rightBtnIcon: 'mdi-chevron-right',
                                   title: lc('review_application')
@@ -670,10 +670,16 @@
     onLanguageChanged(refresh);
 
     function selectTemplate(item, index, items) {
-        if (item.type === 'prompt') {
-            return 'default';
+        if (item.type) {
+            if (item.type === 'prompt') {
+                return 'default';
+            }
+            return item.type;
         }
-        return item.type || 'default';
+        if (item.icon) {
+            return 'leftIcon';
+        }
+        return 'default';
     }
 
     async function onCheckBox(item, event) {
@@ -777,18 +783,12 @@
                     <checkbox id="checkbox" checked={item.value} col={2} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
-            <Template let:item>
-                <ListItemAutoSize
-                    fontSize={20}
-                    leftIcon={item.icon}
-                    rightValue={item.rightValue}
-                    showBottomLine={false}
-                    subtitle={getDescription(item)}
-                    title={getTitle(item)}
-                    on:tap={(event) => onTap(item, event)}>
+            <Template key="rightIcon" let:item>
+                <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <IconButton col={2} text={item.rightBtnIcon} on:tap={(event) => onRightIconTap(item, event)} />
                 </ListItemAutoSize>
             </Template>
-            <Template key="rightIcon" let:item>
+            <Template key="leftIcon" let:item>
                 <ListItemAutoSize
                     fontSize={20}
                     leftIcon={item.icon}
@@ -797,7 +797,11 @@
                     subtitle={getDescription(item)}
                     title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}>
-                    <IconButton col={2} text={item.rightBtnIcon} on:tap={(event) => onRightIconTap(item, event)} />
+                    <label col={0} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} />
+                </ListItemAutoSize>
+            </Template>
+            <Template let:item>
+                <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                 </ListItemAutoSize>
             </Template>
         </collectionview>
