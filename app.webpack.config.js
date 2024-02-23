@@ -207,6 +207,7 @@ module.exports = (env, params = {}) => {
         __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
         __ACCESSIBILITY_DEFAULT_ENABLED__: false,
+        __ONLY_ALLOW_ROOT_VARIABLES__: true,
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
         __IOS__: isIOS,
