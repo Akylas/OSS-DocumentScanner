@@ -747,7 +747,16 @@
             </Template>
         </collectionView>
         {#if showNoDocument}
-            <flexlayout flexDirection="column" marginBottom="30%" paddingLeft={16} paddingRight={16} row={1} verticalAlignment="center" width="80%" transition:fade={{ duration: 200 }}>
+            <flexlayout
+                flexDirection="column"
+                horizontalAlignment="center"
+                marginBottom="30%"
+                paddingLeft={16}
+                paddingRight={16}
+                row={1}
+                verticalAlignment="center"
+                width="80%"
+                transition:fade={{ duration: 200 }}>
                 <lottie
                     bind:this={lottieView}
                     async={true}
