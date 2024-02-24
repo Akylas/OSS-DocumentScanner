@@ -6,7 +6,7 @@ export async function loadImage(sourceImagePath) {
     // we also need it cause it loads the image "rotated"
     // Another reason is that it is the only way to do it the true async way
     const asset = new ImageAsset(sourceImagePath);
-    asset.options = { autoScaleFactor: false };
+    asset.options = { autoScaleFactor: false, keepAspectRatio: true, maxWidth: 4500, maxHeight: 4500 };
     const bitmap = await new Promise((resolve, reject) => {
         asset.getImageAsync((image, error) => {
             if (error) {
