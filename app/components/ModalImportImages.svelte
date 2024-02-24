@@ -75,7 +75,7 @@
             visibility={currentIndex < items.length - 1 ? 'visible' : 'hidden'}
             on:tap={() => changePage(1)} />
         <pagerindicator horizontalAlignment="center" marginBottom={10} pagerViewId="pager" row={2} type="worm" verticalAlignment="bottom" />
-        <label fontSize={13} marginBottom={10} row={3} text={lc('crop_edit_doc')} textAlignment="center" />
+        <label color="white" fontSize={13} marginBottom={10} row={3} text={lc('crop_edit_doc')} textAlignment="center" />
         <mdbutton class="fab" elevation={0} horizontalAlignment="center" row={4} text="mdi-check" variant="text" on:tap={onTapFinish} />
         <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={4} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null} />

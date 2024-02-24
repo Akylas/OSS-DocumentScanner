@@ -437,7 +437,6 @@
             } else {
                 await document.addPages(pagesToAdd);
             }
-            DEV_LOG && console.log('saveCurrentDocument1', newDocument, !!document);
             if (document) {
                 await document.save({}, false);
                 if (newDocument) {
