@@ -27,6 +27,7 @@ import { syncService } from './services/sync';
 import { showError } from './utils/error';
 import { createElement, initializeDom, navigate } from 'svelte-native/dom';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+import { lc } from '~/helpers/locale';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
@@ -77,7 +78,8 @@ try {
     DrawerElement.register();
     startSentry();
     initialize({ isDownsampleEnabled: true });
-    // Trace.addCategories(Trace.categories.NativeLifecycle);
+    // Trace.addCategories(Trace.categories.Navigation);
+    // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Accessibility);
     // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
@@ -100,7 +102,7 @@ try {
                 console.error('start sync error', error, error.stack);
             }
         } catch (error) {
-            showError(error);
+            showError(error, { forcedMessage: lc('startup_error') });
         }
     }
     Application.on(Application.launchEvent, async () => {

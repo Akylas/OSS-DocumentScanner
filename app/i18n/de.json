@@ -190,6 +190,7 @@
     "source_code": "Quellcode",
     "start": "Start",
     "start_on_cam": "Die App im Fotomodus starten",
+    "startup_error": "Beim Starten der App ist ein Fehler aufgetreten. \nBitte starten Sie die App neu, um es erneut zu versuchen. \nWenn das Problem weiterhin besteht, melden Sie es bitte",
     "successful": "Erfolgreich",
     "sync": "Synchronisation",
     "system": "System",

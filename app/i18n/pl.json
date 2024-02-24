@@ -176,6 +176,7 @@
     "source_code": "kod źródłowy",
     "start": "początek",
     "start_on_cam": "uruchom aplikację na ekranie aparatu",
+    "startup_error": "wystąpił błąd podczas uruchamiania aplikacji. \nUruchom ponownie aplikację, aby spróbować ponownie. \nJeśli problem będzie się powtarzał, zgłoś to",
     "successful": "udany",
     "sync": "synchronizacja",
     "system": "system",

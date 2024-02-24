@@ -176,6 +176,7 @@
     "source_code": "lähtekood",
     "start": "alustada",
     "start_on_cam": "käivitage rakendus kaamera ekraanil",
+    "startup_error": "rakenduse käivitamisel ilmnes viga. \nUuesti proovimiseks taaskäivitage rakendus. \nKui see püsib, andke sellest teada",
     "successful": "edukas",
     "sync": "sünkroonimine",
     "system": "süsteem",

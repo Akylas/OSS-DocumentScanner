@@ -176,6 +176,7 @@
     "source_code": "kaynak kodu",
     "start": "başlat",
     "start_on_cam": "uygulamayı kamera ekranında başlat",
+    "startup_error": "Uygulama başlatılırken bir hata oluştu. \nTekrar denemek için lütfen uygulamayı yeniden başlatın. \nDevam ederse lütfen bildirin",
     "successful": "başarılı",
     "sync": "senkronizasyon",
     "system": "sistem",

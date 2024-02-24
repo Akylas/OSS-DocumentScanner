@@ -176,6 +176,7 @@
     "source_code": "codice sorgente",
     "start": "inizia",
     "start_on_cam": "avvia l'app sullo schermo della fotocamera",
+    "startup_error": "si è verificato un errore durante l'avvio dell'app. \nRiavvia l'app per riprovare. \nSe persiste segnalacelo",
     "successful": "riuscito",
     "sync": "sincronizzazione",
     "system": "sistema",

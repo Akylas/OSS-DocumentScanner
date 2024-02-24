@@ -176,6 +176,7 @@
     "source_code": "code source",
     "start": "Commencez",
     "start_on_cam": "Démarrer l'application directement sur la caméra",
+    "startup_error": "une erreur s'est produite lors du démarrage de l'application. \nVeuillez redémarrer l'application pour réessayer. \nSi cela persiste merci de le signaler",
     "successful": "succès",
     "sync": "sync",
     "system": "système",

@@ -176,6 +176,7 @@
     "source_code": "lähdekoodi",
     "start": "aloitus",
     "start_on_cam": "aloita sovellus kameranäkymässä",
+    "startup_error": "sovellusta käynnistettäessä tapahtui virhe. \nKäynnistä sovellus uudelleen ja yritä uudelleen. \nJos se jatkuu, ilmoita siitä",
     "successful": "valmis",
     "sync": "synkronoida",
     "system": "järjestelmä",

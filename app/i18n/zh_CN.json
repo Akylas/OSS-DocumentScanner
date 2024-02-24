@@ -176,6 +176,7 @@
     "source_code": "源代码",
     "start": "开始",
     "start_on_cam": "开启应用时打开相机界面",
+    "startup_error": "启动应用程序时出错。\n请重新启动应用程序以重试。\n如果仍然存在，请报告",
     "successful": "成功",
     "sync": "同步",
     "system": "系统",

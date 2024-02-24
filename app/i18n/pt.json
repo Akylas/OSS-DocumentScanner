@@ -141,6 +141,7 @@
     "source_code": "código fonte",
     "start": "iniciar",
     "start_on_cam": "inicie a app no ecrã da câmara",
+    "startup_error": "houve um erro ao iniciar o aplicativo. \nReinicie o aplicativo para tentar novamente. \nSe persistir por favor denuncie",
     "successful": "sucesso",
     "system": "sistema",
     "test": "teste",
