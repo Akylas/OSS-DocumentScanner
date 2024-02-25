@@ -627,7 +627,7 @@
                                 message: item.full_description
                             }
                         );
-                        if (result?.data) {
+                        if (result?.data !== undefined) {
                             if (item.onResult) {
                                 item.onResult(result.data);
                             } else {
