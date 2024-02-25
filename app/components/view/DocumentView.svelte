@@ -279,7 +279,7 @@
                 const index = items.findIndex((p) => p.page === item.page);
                 navigate({
                     page: PdfEdit,
-                    transition: __ANDROID__
+                    transition: __ANDROID__ && !CARD_APP
                         ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
                               pageStart: {
                                   sharedTransitionTags: {

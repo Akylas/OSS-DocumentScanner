@@ -243,7 +243,7 @@
         const page = (await import('~/components/view/DocumentView.svelte')).default;
         return navigate({
             page,
-            transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
+            transition: __ANDROID__ && !CARD_APP ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
             props: {
                 document: doc
             }
@@ -311,7 +311,10 @@
             if (!doc) {
                 return;
             }
-            const component = doc.pages.length > 1 ? (await import('~/components/view/DocumentView.svelte')).default : (await import('~/components/edit/DocumentEdit.svelte')).default;
+            const component =
+                doc.pages.length > 1
+                    ? (await import(CARD_APP ? '~/components/view/CardView.svelte' : '~/components/view/DocumentView.svelte')).default
+                    : (await import('~/components/edit/DocumentEdit.svelte')).default;
             navigate({
                 page: component,
                 props: {

@@ -516,7 +516,7 @@
             //we use a new transition to transition the selected item
             goBack({
                 transition:
-                    __ANDROID__ && transitionOnBack
+                    __ANDROID__ && !CARD_APP && transitionOnBack
                         ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
                               pageStart: {
                                   sharedTransitionTags: {
