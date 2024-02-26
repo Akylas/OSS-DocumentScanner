@@ -4,6 +4,7 @@ import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
+import { l, lc } from '~/helpers/locale';
 import NSQLDatabase from './NSQLDatabase';
 const sql = SqlQuery.createFromTemplateString;
 
@@ -371,7 +372,10 @@ export class DocumentsService extends Observable {
         if (this.started) {
             return;
         }
-        await request('storage');
+        // const result = await request('storage');
+        //     if (result[0] !== 'authorized') {
+        //         throw new Error(lc('storage_permission_needed'));
+        //     }
         let rootDataFolder = ApplicationSettings.getString('root_data_folder');
         DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
         if (!rootDataFolder) {
