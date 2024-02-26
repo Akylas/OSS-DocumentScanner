@@ -55,7 +55,7 @@ export class OCRDocument extends Observable implements Document {
         // DEV_LOG && console.log('createDocument pages added');
         // no need to notify on create. Will be done in documentAdded
         await doc.save({}, false, false);
-        documentsService.notify({ eventName: 'documentAdded', doc: document });
+        documentsService.notify({ eventName: 'documentAdded', doc });
         return doc;
     }
 
@@ -284,6 +284,7 @@ export class OCRDocument extends Observable implements Document {
 
     async updatePageCrop(pageIndex: number, quad: any, editingImage: ImageSource) {
         const page = this.pages[pageIndex];
+        DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
         const images = await cropDocument(editingImage, [quad], page.transforms || '');
         const image = images[0];
         const croppedImagePath = page.imagePath;
@@ -308,6 +309,7 @@ export class OCRDocument extends Observable implements Document {
     }
     async updatePageTransforms(pageIndex: number, transforms: string, editingImage?: ImageSource, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
+        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms);
         if (!editingImage) {
             editingImage = await loadImage(page.sourceImagePath);
         }
@@ -315,7 +317,6 @@ export class OCRDocument extends Observable implements Document {
 
         const croppedImagePath = page.imagePath;
         await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
-        DEV_LOG && console.log('update image', croppedImagePath);
         await this.updatePage(
             pageIndex,
             {
