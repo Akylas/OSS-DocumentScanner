@@ -483,8 +483,6 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                         await document.save({}, false);
                     } else {
                         document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-                        DEV_LOG && console.log('documentAdded', document);
-                        documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc: document });
                     }
                     return document;
                 }
@@ -623,11 +621,16 @@ export async function showPopoverMenu<T = any>({
             height: Math.min(rowHeight * options.length, 400),
             width: 200 * get(fontScale),
             options,
-            onClose: (item) => {
-                onClose?.(item);
+            onClose: async (item) => {
                 if (closeOnClose) {
-                    closePopover();
+                    if (__IOS__) {
+                        // on iOS we need to wait or if onClose shows an alert dialog it wont work
+                        await closePopover();
+                    } else {
+                        closePopover();
+                    }
                 }
+                onClose?.(item);
             },
             ...(props || {})
         }
