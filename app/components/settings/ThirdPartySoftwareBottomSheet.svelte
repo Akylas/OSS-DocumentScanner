@@ -22,6 +22,14 @@
         {
             moduleName: 'jsoncons',
             moduleUrl: 'https://github.com/danielaparker/jsoncons'
+        },
+        {
+            moduleName: 'Material Design Icons',
+            moduleUrl: 'https://pictogrammers.com/library/mdi/'
+        },
+        {
+            moduleName: 'NativeScript',
+            moduleUrl: 'https://github.com/NativeScript/NativeScript'
         }
     ].concat(licences.dependencies);
 
