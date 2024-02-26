@@ -138,19 +138,10 @@ export async function showError(
             return;
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
-        let realError = typeof err === 'string' ? null : err;
+        const realError = typeof err === 'string' ? null : err;
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();
-
-        if (__ANDROID__ && message && /java.*Exception/.test(message)) {
-            if (message.indexOf('SocketTimeoutException') !== -1) {
-                realError = new TimeoutError();
-            } else {
-                realError = new Error(message);
-            }
-        }
-
         DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError), message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
         message = forcedMessage || message;
         if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
@@ -162,12 +153,17 @@ export async function showError(
         // if (!PRODUCTION) {
         // }
         const label = new Label();
-        label.style.padding = '10 20 0 20';
-        label.style.color = new Color(255, 138, 138, 138);
+        label.padding = '10 20 0 20';
+        label.textWrap = true;
+        label.color = new Color(255, 138, 138, 138);
         label.html = message.trim();
 
         if (realError && reporterEnabled) {
-            Sentry.captureException(realError);
+            try {
+                Sentry.captureException(realError);
+            } catch (error) {
+                console.error(error);
+            }
         }
 
         return mdAlert({
