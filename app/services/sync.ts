@@ -190,7 +190,7 @@ export class SyncService extends Observable {
             page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
         });
         await doc.addPages(pages);
-        await doc.save({}, true);
+        await doc.save({}, true, false);
         await this.importFolderFromWebdav(data.filename, docDataFolder, ['data.json']);
         TEST_LOG && console.log('importFolderFromWebdav done');
         documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc });

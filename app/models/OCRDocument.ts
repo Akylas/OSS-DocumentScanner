@@ -53,7 +53,9 @@ export class OCRDocument extends Observable implements Document {
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
         await doc.addPages(pagesData);
         // DEV_LOG && console.log('createDocument pages added');
-        await doc.save({}, false);
+        // no need to notify on create. Will be done in documentAdded
+        await doc.save({}, false, false);
+        documentsService.notify({ eventName: 'documentAdded', doc: document });
         return doc;
     }
 
@@ -264,10 +266,12 @@ export class OCRDocument extends Observable implements Document {
         return this.#observables;
     }
 
-    async save(data: Partial<OCRDocument> = {}, updateModifiedDate = false) {
+    async save(data: Partial<OCRDocument> = {}, updateModifiedDate = false, notify = true) {
         data.pagesOrder = this.pages.map((p) => p.id);
         await documentsService.documentRepository.update(this, data, updateModifiedDate);
-        documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this, updateModifiedDate });
+        if (notify) {
+            documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this, updateModifiedDate });
+        }
     }
 
     toString() {
