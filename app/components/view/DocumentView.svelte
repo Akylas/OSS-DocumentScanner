@@ -113,7 +113,10 @@
     }
     async function addPages() {
         try {
-            await request('camera');
+            const result = await request('camera');
+            if (result[0] !== 'authorized') {
+                throw new Error(lc('camera_permission_needed'));
+            }
             const oldPagesNumber = document.pages.length;
             const doc: OCRDocument = await showModal({
                 page: Camera,

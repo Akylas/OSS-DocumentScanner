@@ -223,6 +223,9 @@
     async function onStartCam() {
         try {
             const result = await request('camera');
+            if (result[0] !== 'authorized') {
+                throw new Error(lc('camera_permission_needed'));
+            }
             const document: OCRDocument = await showModal({
                 page: Camera,
                 fullscreen: true
@@ -230,36 +233,9 @@
             if (document) {
                 await goToView(document);
             }
-            // const documentScanner = new DocumentScanner({
-            //     showColorFilters: false,
-            //     maxNumSimultaneousDocuments: 1
-            // });
-
-            // const result = await documentScanner.startScan();
-            // if (result?.length) {
-            //     const document = await OCRDocument.createDocument(
-            //         dayjs().format('L LT'),
-            //         __ANDROID__ ? result.map((s) => ({ ...s, colorType: 1, imagePath: s.imagePath.replace('file://', '') })) : result.map((s) => ({ ...s, colorType: 1 }))
-            //     );
-            //     document.save();
-            //     documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
-            //     // const images = data.nativeDatas.images.map((image, i) => ({ image, mat: data.nativeDatas.mats[i] }));
-            //     const PDFView = (await import('~/components/DocumentView.svelte')).default;
-            //     navigate({
-            //         page: PDFView,
-            //         transition: SharedTransition.custom(new PageTransition(300)),
-            //         props: {
-            //             document: document
-            //         }
-            //     });
-            // }
         } catch (error) {
             showError(error);
         }
-        // showModal({
-        //     page: Camera,
-        //     fullscreen: true
-        // });
     }
 
     async function importDocument() {

@@ -138,7 +138,10 @@
     }
     async function addPages() {
         try {
-            await request('camera');
+            const result = await request('camera');
+            if (result[0] !== 'authorized') {
+                throw new Error(lc('camera_permission_needed'));
+            }
             document = await showModal({
                 page: Camera,
                 fullscreen: true,
