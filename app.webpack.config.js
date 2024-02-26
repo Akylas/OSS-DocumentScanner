@@ -462,15 +462,15 @@ module.exports = (env, params = {}) => {
                 }
             })
         );
-        if (!sentry) {
-            config.plugins.push(
-                new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
-                    if (resource.context.match(nativescriptReplace)) {
-                        resource.request = '~/shims/trace';
-                    }
-                })
-            );
-        }
+        // if (!sentry) {
+        config.plugins.push(
+            new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/trace';
+                }
+            })
+        );
+        // }
         config.module.rules.push(
             {
                 // rules to replace mdi icons and not use nativescript-font-icon
