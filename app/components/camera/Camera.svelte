@@ -376,6 +376,11 @@
         clearImages();
         document = null;
         nbPages = 0;
+        if (processor) {
+            processor.autoScanHandler = null;
+            processor = null;
+        }
+        autoScanHandler = null;
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -606,7 +611,10 @@
             const nCropView = cropView.nativeView;
             const newAautoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
-                takePicture(true);
+                // TODO: safeguard though should never happen
+                if (cameraView.nativeView) {
+                    takePicture(true);
+                }
             });
             newAautoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
             newAautoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
