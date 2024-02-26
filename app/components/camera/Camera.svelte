@@ -78,7 +78,6 @@
     export let document: OCRDocument = null;
     // export let outputUri; // android only
     // export let forActivityResult = false; //android only
-    const newDocument = !document;
 
     const contours: [number, number][][] = null;
     // let pages: ObservableArray<OCRPage>;
@@ -413,7 +412,6 @@
         }
     }
     function onNavigatedTo() {
-        DEV_LOG && console.log('onNavigatedTo', !!cameraView);
         (async () => {
             try {
                 startPreview();
@@ -430,24 +428,21 @@
         startPreview();
     }
     async function saveCurrentDocument() {
+        const newDocument = !document;
         try {
             DEV_LOG && console.log('saveCurrentDocument', newDocument, !!document);
             if (!document) {
                 document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                if (startOnCam) {
+                    await goToView(document);
+                } else {
+                    // we should already be in edit so closing should go back there
+                }
             } else {
                 await document.addPages(pagesToAdd);
+                await document.save({}, false);
             }
             if (document) {
-                await document.save({}, false);
-                if (newDocument) {
-                    documentsService.notify({ eventName: 'documentAdded', object: this, doc: document });
-                    if (startOnCam) {
-                        await goToView(document);
-                    } else {
-                        // we should already be in edit so closing should go back there
-                    }
-                }
-
                 if (!startOnCam) {
                     closeModal(document);
                 }
@@ -740,7 +735,7 @@
 </script>
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
-    <gridlayout backgroundColor="black" paddingBottom={30} rows="auto,*,auto,auto">
+    <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
         <cameraView
             bind:this={cameraView}
             {aspectRatio}
@@ -774,11 +769,11 @@
             <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
         {/if}
 
-        <gridlayout columns="60,*,auto,*,60" row={3}>
+        <gridlayout columns="60,*,auto,*,60" paddingBottom={30} paddingTop={30} row={3}>
             <IconButton
                 color="white"
                 horizontalAlignment="left"
-                marginLeft={10}
+                marginLeft={16}
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
                 tooltip={lc('batch_mode')}
                 verticalAlignment="center"
@@ -807,6 +802,7 @@
                 col={4}
                 color="white"
                 horizontalAlignment="right"
+                marginRight={16}
                 text="mdi-check"
                 tooltip={lc('finish')}
                 verticalAlignment="center"
