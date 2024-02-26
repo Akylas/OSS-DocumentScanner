@@ -383,7 +383,6 @@
         Application.off(Application.foregroundEvent, onForeground);
     });
     function onNavigatedFrom() {
-        DEV_LOG && console.log('onNavigatedFrom');
         if (torchEnabled) {
             forceTorchDisabled(true);
         }
@@ -603,7 +602,6 @@
     let processor;
     let autoScanHandler;
     function applyAutoScan(value: boolean) {
-        DEV_LOG && console.log('applyAutoScan', value, processor.autoScanHanlder);
         if (value) {
             const nCropView = cropView.nativeView;
             const newAautoScanHandler = createAutoScanHandler(nCropView, (result) => {
@@ -613,7 +611,6 @@
             newAautoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
             newAautoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
             newAautoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
-            DEV_LOG && console.log('creating autoScan handler', newAautoScanHandler, processor.autoScanHandler, processor.setAutoScanHandler);
             autoScanHandler = processor.autoScanHandler = newAautoScanHandler;
         } else {
             processor.autoScanHandler = null;
