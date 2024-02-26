@@ -163,12 +163,12 @@ export function getLocaleDisplayName(locale?) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
         const localeStr = currentLocale.localizedStringForLanguageCode(locale || lang);
-        return localeStr ? titlecase(localeStr) : locale || lang;
+        return localeStr ? capitalize(localeStr) : locale || lang;
     } else {
         if (!currentLocale) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
         }
-        return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
+        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
     }
 }
 export function getCurrentISO3Language() {
