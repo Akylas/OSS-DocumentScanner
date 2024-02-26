@@ -174,6 +174,8 @@ export function updateThemeColors(theme: string) {
             currentColors.colorSurfaceVariant = '#424940';
             currentColors.colorOnSurfaceVariant = '#C2C9BD';
             currentColors.colorSurfaceContainer = '#121411';
+            currentColors.colorError = '#FFB4AB';
+            currentColors.colorOnError = '#690005';
         } else {
             currentColors.colorPrimary = '#006E25';
             currentColors.colorOnPrimary = '#FFFFFF';
@@ -193,6 +195,8 @@ export function updateThemeColors(theme: string) {
             currentColors.colorSurfaceVariant = '#DEE5D9';
             currentColors.colorOnSurfaceVariant = '#424940';
             currentColors.colorSurfaceContainer = '#DEE5D9';
+            currentColors.colorError = '#BA1A1A';
+            currentColors.colorOnError = '#FFFFFF';
         }
 
         themer.setPrimaryColor(currentColors.colorPrimary);
