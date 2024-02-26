@@ -7,15 +7,7 @@ export async function loadImage(sourceImagePath) {
     // Another reason is that it is the only way to do it the true async way
     const asset = new ImageAsset(sourceImagePath);
     asset.options = { autoScaleFactor: false, keepAspectRatio: true, maxWidth: 4500, maxHeight: 4500 };
-    const bitmap = await new Promise((resolve, reject) => {
-        asset.getImageAsync((image, error) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(image);
-            }
-        });
-    });
+    const bitmap = await asset.getImage();
     return new ImageSource(bitmap);
     // } else {
     //     return ImageSource.fromFile(sourceImagePath);
