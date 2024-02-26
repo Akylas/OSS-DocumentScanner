@@ -237,7 +237,6 @@
             const item = items.getItem(currentIndex);
 
             editingImage = await loadImage(item.sourceImagePath);
-
             quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
         } catch (error) {

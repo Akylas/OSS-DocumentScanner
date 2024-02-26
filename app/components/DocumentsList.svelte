@@ -387,7 +387,6 @@
             try {
                 const uris = [];
                 const intent = event.intent as android.content.Intent;
-                DEV_LOG && console.log('onAndroidNewItent', intent.getAction());
                 switch (intent.getAction()) {
                     case 'android.intent.action.SEND':
                         const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
@@ -408,7 +407,10 @@
                     if (!doc) {
                         return;
                     }
-                    const component = doc.pages.length > 1 ? (await import('~/components/view/DocumentView.svelte')).default : (await import('~/components/edit/DocumentEdit.svelte')).default;
+                    const component =
+                        doc.pages.length > 1
+                            ? (await import(CARD_APP ? '~/components/view/CardView.svelte' : '~/components/view/DocumentView.svelte')).default
+                            : (await import('~/components/edit/DocumentEdit.svelte')).default;
                     navigate({
                         page: component,
                         props: {
