@@ -473,7 +473,6 @@
     }
 
     function clearImages() {
-        DEV_LOG && console.log('clearImages');
         // if (editingImage) {
         const toRelease = [editingImage, smallImage].concat(pagesToAdd ? pagesToAdd.map((d) => d.image) : []);
         editingImage = null;

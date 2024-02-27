@@ -149,7 +149,7 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc, index, event.doc.pages.length);
+        DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc.id, index, event.doc.pages.length);
         if (index >= 0) {
             const item = documents.getItem(index);
             item.doc = event.doc;

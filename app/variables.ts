@@ -223,7 +223,7 @@ export function updateThemeColors(theme: string) {
     });
     colors.set(currentColors);
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
-    DEV_LOG && console.log('changed colors', theme, rootView, [...rootView?.cssClasses], theme, JSON.stringify(currentColors));
+    // DEV_LOG && console.log('changed colors', theme, rootView, [...rootView?.cssClasses], theme, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
     const rootModalViews = rootView?._getRootModalViews();
     rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());

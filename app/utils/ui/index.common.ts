@@ -686,6 +686,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
         closeOnClose: false,
         onClose: async (item) => {
             try {
+                DEV_LOG && console.log('showPDFPopoverMenu', 'action', item.id);
                 switch (item.id) {
                     case 'set_export_directory': {
                         const result = await pickFolder({
