@@ -1,0 +1,7 @@
+### Bug fixes
+- ensure instruction label is always visible while editing crop
+- limit import image size
+- handle startup error (should not happen though)
+- prevent camera if permission missing
+- wrong local display in settings
+- prevent autoScan happening while cameraView just closed
