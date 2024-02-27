@@ -570,8 +570,6 @@
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
-                        ignoreTopSafeArea: true,
-                        trackingScrollView: 'trackingScrollView'
                     });
                     break;
 

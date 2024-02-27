@@ -1,0 +1,26 @@
+### Features
+- allow to export only selected pages as PDF
+- allow to fully disable crop feature
+
+### Bug fixes
+- show loading dialog while importing images
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Hindi)
+- image picker fix on iOS 14
+- language not set to english when device locale is not supported
+- Translated using Weblate (French)
+- Translated using Weblate (Turkish)
+- allow longpress on camera button to get tooltip about the meaning of the button
+- changed default PDF page size to "full" (each page the size of its image)
+- settings layout change (more in line with Material3)
+- Translated using Weblate (Italian)
+- Translated using Weblate (German)
+- Translated using Weblate (Arabic)
+- dont mark OCR data file as available unless download completed successfuly
+- set max size to image taken from camera to prevent memory overflow
+- Translated using Weblate (Portuguese (Brazil))
+- prevent error while taking picture with flashMode on #136 DOCUMENTSCANNER-1X
+- show which color filter is currently applied to a page
+- fixed pages transform dialog and camera settings dialogs to better fit all screens
+- Translated using Weblate (Chinese (Simplified))
+- new settings page. You can now access all PDF settings through there.

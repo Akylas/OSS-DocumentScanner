@@ -127,6 +127,7 @@ Application.on('activity_started', () => {
 });
 
 export function updateThemeColors(theme: string) {
+    DEV_LOG && console.log('updateThemeColors', theme);
     const currentColors = get(colors);
     let rootView = Application.getRootView();
     if (rootView?.parent) {

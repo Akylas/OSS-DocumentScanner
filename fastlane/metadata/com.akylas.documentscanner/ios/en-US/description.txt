@@ -1,0 +1,1 @@
+Scan documents, tickets, bills, cards ...  anything you want!Then you can detect text in them, share the detected text or the whole document as a PDF.The whole app is open source!
