@@ -55,5 +55,7 @@
     <true/>
     <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
     <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
   </dict>
 </plist>
