@@ -376,11 +376,28 @@ export class DocumentsService extends Observable {
         //     if (result[0] !== 'authorized') {
         //         throw new Error(lc('storage_permission_needed'));
         //     }
-        let rootDataFolder = ApplicationSettings.getString('root_data_folder');
-        DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
-        if (!rootDataFolder) {
+        DEV_LOG &&
+            console.log(
+                'DocumentsService',
+                'start test',
+                knownFolders.externalDocuments().path,
+                Folder.exists(knownFolders.externalDocuments().path),
+                knownFolders.documents().path,
+                Folder.exists(knownFolders.documents().path),
+                knownFolders.currentApp().path,
+                Folder.exists(knownFolders.currentApp().path)
+            );
+        let rootDataFolder;
+        if (__ANDROID__) {
+            rootDataFolder = ApplicationSettings.getString('root_data_folder');
+            DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
+            if (!rootDataFolder) {
+                rootDataFolder = knownFolders.externalDocuments().path;
+                ApplicationSettings.setString('root_data_folder', rootDataFolder);
+            }
+        } else {
+            // on iOS we cant store any knownFolders cause their path can change upon app upgrade
             rootDataFolder = knownFolders.externalDocuments().path;
-            ApplicationSettings.setString('root_data_folder', rootDataFolder);
         }
         this.rootDataFolder = rootDataFolder;
         dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
