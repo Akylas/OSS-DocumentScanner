@@ -226,10 +226,13 @@ platform :ios do
         automatic_release: true,
         reject_if_possible: true,
         submit_for_review: false,
-        skip_app_version_update: true,
+        skip_metadata: true,
+        skip_screenshots: true,
         release_notes: {
           'default' => params[:changelog]
-        }
+        },
+        submission_information: { export_compliance_uses_encryption: false,
+                                  add_id_info_uses_idfa: false }
       )
     else
       upload_to_testflight(
