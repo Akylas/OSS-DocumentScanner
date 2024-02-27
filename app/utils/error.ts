@@ -94,6 +94,19 @@ export class TimeoutError extends CustomError {
         );
     }
 }
+export class PermissionError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'permission_error'
+                },
+                props
+            ),
+            'PermissionError'
+        );
+    }
+}
 
 export class NoNetworkError extends CustomError {
     constructor(props?) {
@@ -158,7 +171,7 @@ export async function showError(
         label.color = new Color(255, 138, 138, 138);
         label.html = message.trim();
 
-        if (realError && reporterEnabled) {
+        if (realError && reporterEnabled && !(realError instanceof PermissionError)) {
             try {
                 Sentry.captureException(realError);
             } catch (error) {

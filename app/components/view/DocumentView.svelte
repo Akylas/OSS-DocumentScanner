@@ -25,7 +25,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { ocrService } from '~/services/ocr';
-    import { showError } from '~/utils/error';
+    import { PermissionError, showError } from '~/utils/error';
     import {
         detectOCR,
         detectOCROnPage,
@@ -115,7 +115,7 @@
         try {
             const result = await request('camera');
             if (result[0] !== 'authorized') {
-                throw new Error(lc('camera_permission_needed'));
+                throw new PermissionError(lc('camera_permission_needed'));
             }
             const oldPagesNumber = document.pages.length;
             const doc: OCRDocument = await showModal({

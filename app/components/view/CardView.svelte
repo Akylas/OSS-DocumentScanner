@@ -22,7 +22,7 @@
     import { getRealTheme, isDarkTheme, onThemeChanged, theme } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
-    import { showError } from '~/utils/error';
+    import { PermissionError, showError } from '~/utils/error';
     import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors, screenWidthDips } from '~/variables';
@@ -140,7 +140,7 @@
         try {
             const result = await request('camera');
             if (result[0] !== 'authorized') {
-                throw new Error(lc('camera_permission_needed'));
+                throw new PermissionError(lc('camera_permission_needed'));
             }
             document = await showModal({
                 page: Camera,
