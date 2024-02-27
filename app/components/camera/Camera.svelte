@@ -313,7 +313,7 @@
             pauseAutoScan();
         }
         try {
-            DEV_LOG && console.log('takePicture', autoScan);
+            DEV_LOG && console.log('takePicture', autoScan, _actualFlashMode);
             await showLoading(l('capturing'));
             const { image, info } = await cameraView.nativeView.takePicture({
                 savePhotoToDisk: false,
@@ -340,10 +340,8 @@
 
     $: {
         _actualFlashMode = torchEnabled ? 4 : (flashMode as any);
-        console.log('_actualFlashMode', torchEnabled, flashMode, _actualFlashMode);
     }
     function forceTorchDisabled(value) {
-        console.log('forceTorchDisabled', value);
         if (value) {
             _actualFlashMode = flashMode;
         } else {
@@ -351,7 +349,6 @@
         }
     }
     function switchTorch() {
-        console.log('switchTorch', torchEnabled);
         torchEnabled = !torchEnabled;
     }
     function toggleCamera() {

@@ -91,7 +91,6 @@ export async function selectTheme() {
 const AppCompatDelegate = __ANDROID__ ? androidx.appcompat.app.AppCompatDelegate : undefined;
 export function applyTheme(theme: Themes) {
     try {
-        DEV_LOG && console.log('applyTheme', theme);
         switch (theme) {
             case 'auto':
                 Theme.setMode(Theme.Auto);
@@ -148,7 +147,6 @@ function getSystemAppearance() {
 }
 
 export function getRealTheme(th = theme) {
-    DEV_LOG && console.log('getRealTheme', th);
     if (th === 'auto') {
         try {
             th = getSystemAppearance() as any;
