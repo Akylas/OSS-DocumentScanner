@@ -224,7 +224,9 @@ platform :ios do
         reject_if_possible: true,
         submit_for_review: false,
         skip_app_version_update: true,
-        release_notes: params[:changelog]
+        release_notes: {
+          'default' => params[:changelog]
+        }
       )
     else
       upload_to_testflight(
