@@ -219,6 +219,8 @@ platform :ios do
   lane :upload_store  do |params| 
     if (params[:flavor] == "production")
       upload_to_app_store(
+        metadata_path:File.join(".", "fastlane/metadata", app_identifier, "ios"),
+        screenshots_path:File.join(".", "fastlane/metadata", app_identifier, "ios", "screenshots"),
         force: true,
         automatic_release: true,
         reject_if_possible: true,
