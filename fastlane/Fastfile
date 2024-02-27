@@ -174,7 +174,7 @@ lane :build_flavor do |params|
   #       file_paths: Dir.glob(File.expand_path("../platforms/android/app/build/outputs/apk/release/*.apk")),
   #     )
   #   end
-  when 'alpha','beta'
+  when 'alpha','beta','production'
     upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor)
   end
   
@@ -217,13 +217,23 @@ platform :ios do
     )
   end
   lane :upload_store  do |params| 
-    upload_to_testflight(
-        app_identifier: app_identifier,
-        changelog:params[:changelog],
-        distribute_external: true,
-        groups: [params[:flavor]],
-        notify_external_testers: true
+    if (params[:flavor] == "production")
+      upload_to_app_store(
+        force: true,
+        automatic_release: true,
+        reject_if_possible: true,
+        submit_for_review: false,
+        skip_app_version_update: true,
+        release_notes: params[:changelog]
       )
+    else
+      upload_to_testflight(
+          changelog:params[:changelog],
+          distribute_external: true,
+          groups: [params[:flavor]],
+          notify_external_testers: true
+        )
+    end
     
   end
   desc 'Fetch certificates and provisioning profiles'
@@ -261,6 +271,13 @@ platform :ios do
     # checkGitStatus
     npm_installl(platform:'ios')
     build_flavor(platform:'ios', flavor:'alpha', options:options)
+  end
+  desc 'Ship iOS build to AppStore.'
+  lane :production do |options|
+    checkSentryClitatus
+    # checkGitStatus
+    npm_installl(platform:'ios')
+    build_flavor(platform:'ios', flavor:'production', options:options)
   end
 end
 
