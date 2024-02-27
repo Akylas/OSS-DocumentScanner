@@ -413,6 +413,7 @@
     }
 
     onMount(() => {
+        DEV_LOG && console.log('DocumentView', 'onMount');
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -425,6 +426,7 @@
         // refresh();
     });
     onDestroy(() => {
+        DEV_LOG && console.log('DocumentView', 'onDestroy', !!document);
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -433,7 +435,7 @@
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageDeleted', onDocumentPageDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        document?.off('pagesAdded', onPagesAdded);
+        document.off('pagesAdded', onPagesAdded);
     });
     // onThemeChanged(refreshCollectionView);
 
