@@ -10,6 +10,7 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { colors } from '~/variables';
+    import { OCRPage } from '~/models/OCRDocument';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorOnBackground } = $colors);
@@ -75,9 +76,9 @@
         return pager?.nativeView?.getChildView(currentIndex)?.getViewById<Img>('imageView');
     }
 
-    async function shareItem(item) {
+    async function shareItem(item: OCRPage) {
         try {
-            await share({ file: await item.imagePath });
+            await share({ file: item.imagePath });
         } catch (error) {
             showError(error);
         }

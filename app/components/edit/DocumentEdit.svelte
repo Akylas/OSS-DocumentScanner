@@ -225,9 +225,9 @@
             showError(error);
         }
     }
-    async function shareItem(item) {
+    async function shareItem(item: OCRPage) {
         try {
-            await share({ file: await item.imagePath });
+            await share({ file: item.imagePath });
         } catch (error) {
             showError(error);
         }
