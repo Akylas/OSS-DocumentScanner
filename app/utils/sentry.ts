@@ -1,4 +1,4 @@
-import { NavigatedData, Page, View } from '@nativescript/core';
+import { Application, NavigatedData, Page, Trace, TraceErrorHandler, View } from '@nativescript/core';
 import * as SentryType from '@nativescript-community/sentry';
 import { install } from '~/utils/logging';
 
@@ -13,6 +13,7 @@ export async function startSentry() {
                 debug: DEV_LOG,
                 dsn: SENTRY_DSN,
                 appPrefix: '~/',
+                // appPrefix: SENTRY_PREFIX,
                 release: `${__APP_ID__}@${__APP_VERSION__}+${__APP_BUILD_NUMBER__}`,
                 dist: `${__APP_BUILD_NUMBER__}.${__ANDROID__ ? 'android' : 'ios'}`,
                 colnoOffset: 4,
@@ -24,6 +25,14 @@ export async function startSentry() {
                 enableAppLifecycleBreadcrumbs: false
             });
             install();
+            const errorHandler: TraceErrorHandler = {
+                handlerError(err) {
+                    Sentry.captureException(err);
+                }
+            };
+            Application.on(Application.uncaughtErrorEvent, (event) => Sentry.captureException(event.error));
+            Application.on(Application.discardedErrorEvent, (event) => Sentry.captureException(event.error));
+            Trace.setErrorHandler(errorHandler);
             isSentryEnabled = true;
             Page.on('navigatingTo', (event: NavigatedData) => {
                 Sentry.addBreadcrumb({
