@@ -41,7 +41,7 @@
 </script>
 
 <gesturerootview rows="auto">
-    <collectionView id="trackingScrollView" height="300" itemIdGenerator={(item, i) => i} {items}>
+    <collectionView id="trackingScrollView" height="300" ios:contentInsetAdjustmentBehavior={2} itemIdGenerator={(item, i) => i} {items}>
         <Template let:item>
             <ListItemAutoSize subtitle={item.moduleUrl} title={item.moduleName} on:tap={() => onTap(item)} />
         </Template>
