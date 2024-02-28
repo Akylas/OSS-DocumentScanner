@@ -167,6 +167,9 @@ export function showingLoading() {
     return showLoadingStartTime !== null;
 }
 export async function hideLoading() {
+    if (!loadingIndicator) {
+        return;
+    }
     const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
     if (__IOS__ && delta >= 0 && delta < 1000) {
         setTimeout(() => hideLoading(), 1000 - delta);
@@ -423,7 +426,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                         items
                     }
                 });
-                items = newItems;
+                DEV_LOG && console.log('items after crop1', newItems, items);
             }
             if (items) {
                 DEV_LOG && console.log('items after crop', items);
@@ -618,7 +621,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
-            height: Math.min(rowHeight * options.length, 400),
+            height: Math.min(rowHeight * options.length, props?.maxHeight || 400),
             width: 200 * get(fontScale),
             options,
             onClose: async (item) => {
@@ -630,7 +633,13 @@ export async function showPopoverMenu<T = any>({
                         closePopover();
                     }
                 }
-                onClose?.(item);
+                try {
+                    await onClose?.(item);
+                } catch (error) {
+                    showError(error);
+                } finally {
+                    hideLoading();
+                }
             },
             ...(props || {})
         }

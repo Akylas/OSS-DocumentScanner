@@ -527,7 +527,6 @@
                 vertPos: VerticalPosition.BELOW,
 
                 onClose: async (item) => {
-                    try {
                         switch (item.id) {
                             case 'ocr':
                                 await detectOCR({ documents: [document] });
@@ -541,11 +540,6 @@
                                 await deleteDoc();
                                 break;
                         }
-                    } catch (error) {
-                        showError(error);
-                    } finally {
-                        hideLoading();
-                    }
                 }
             });
         }
