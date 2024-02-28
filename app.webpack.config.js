@@ -171,6 +171,8 @@ module.exports = (env, params = {}) => {
         config.externals.push(`~/i18n/${l}.json`);
     });
 
+    // disable resolve of symlinks so that stack dont use real path but node_modules ones
+    config.resolve.symlinks = false;
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
     if (fork) {
         config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
@@ -571,9 +573,7 @@ module.exports = (env, params = {}) => {
                     // debug: true,
                     sourcemaps: {
                         // assets: './**/*.nonexistent'
-                        // rewriteSources: (source, map) => {
-                        //     return source.replace('webpack:///', '');
-                        // },
+                        rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
                         ignore: ['tns-java-classes', 'hot-update'],
                         assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
                     }
