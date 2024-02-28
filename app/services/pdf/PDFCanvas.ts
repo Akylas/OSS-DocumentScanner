@@ -158,7 +158,7 @@ export default class PDFCanvas {
             const ocrScale = toDrawWidth / page.ocrData.imageWidth;
             canvas.scale(ocrScale, ocrScale, 0, 0);
             const drawOverlay = this.options.draw_ocr_overlay && !forExport;
-            textPaint.color = drawOverlay ? 'white' : DEV_LOG ? '#ff000088' : '#ffffff01';
+            textPaint.color = drawOverlay ? 'white' : !PRODUCTION && DEV_LOG ? '#ff000088' : '#ffffff01';
             page.ocrData.blocks.forEach((block) => {
                 canvas.save();
                 // TODO: understand why that kind of scale is necessary
