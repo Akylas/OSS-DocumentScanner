@@ -141,7 +141,16 @@ export class HTTPError extends CustomError {
         );
     }
 }
-
+function wrapNativeException(ex) {
+    if (__ANDROID__ && ex instanceof java.lang.Exception) {
+        const err = new Error(ex.toString());
+        err['nativeException'] = ex;
+        //@ts-ignore
+        err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
+        return err;
+    }
+    return ex;
+}
 export async function showError(
     err: Error | string,
     { showAsSnack = false, forcedMessage, alertOptions = {} }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions } = {}
@@ -151,7 +160,7 @@ export async function showError(
             return;
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
-        const realError = typeof err === 'string' ? null : err;
+        const realError = typeof err === 'string' ? null : wrapNativeException(err);
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();

@@ -1,6 +1,7 @@
 import { Application, NavigatedData, Page, Trace, TraceErrorHandler, View } from '@nativescript/core';
 import * as SentryType from '@nativescript-community/sentry';
 import { install } from '~/utils/logging';
+import * as Tracing from '@nativescript-community/sentry/tracing';
 
 export let Sentry: typeof SentryType;
 export let isSentryEnabled = false;
@@ -17,6 +18,10 @@ export async function startSentry() {
                 release: `${__APP_ID__}@${__APP_VERSION__}+${__APP_BUILD_NUMBER__}`,
                 dist: `${__APP_BUILD_NUMBER__}.${__ANDROID__ ? 'android' : 'ios'}`,
                 colnoOffset: 4,
+                disabledNativeIntegrations: ['io.sentry.UncaughtExceptionHandlerIntegration', 'io.sentry.android.fragment.FragmentLifecycleIntegration'],
+                flushSendEvent: true,
+                enableNativeCrashHandling: true,
+                attachScreenshot: true,
                 enableUIViewControllerTracing: false,
                 enableUserInteractionTracing: false,
                 enableAutoBreadcrumbTracking: false,
@@ -30,8 +35,12 @@ export async function startSentry() {
                     Sentry.captureException(err);
                 }
             };
-            Application.on(Application.uncaughtErrorEvent, (event) => Sentry.captureException(event.error));
-            Application.on(Application.discardedErrorEvent, (event) => Sentry.captureException(event.error));
+            Application.on(Application.uncaughtErrorEvent, (event) => {
+                Sentry.captureException(event.error);
+            });
+            Application.on(Application.discardedErrorEvent, (event) => {
+                Sentry.captureException(event.error);
+            });
             Trace.setErrorHandler(errorHandler);
             isSentryEnabled = true;
             Page.on('navigatingTo', (event: NavigatedData) => {
