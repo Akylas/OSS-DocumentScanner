@@ -35,6 +35,7 @@
     import { recycleImages } from '~/utils/images';
     import { colors } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
+    import { wrapJavaException } from '@akylas/nativescript/utils/android';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -327,8 +328,8 @@
                 await saveCurrentDocument();
             }
         } catch (err) {
-            console.error(err, err.stack);
-            showError(err);
+            // we can get a native error here
+            showError(wrapJavaException(err));
         } finally {
             takingPicture = false;
             if (autoScanHandler) {
