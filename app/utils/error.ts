@@ -153,7 +153,12 @@ function wrapNativeException(ex) {
 }
 export async function showError(
     err: Error | string,
-    { showAsSnack = false, forcedMessage, alertOptions = {} }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions } = {}
+    {
+        showAsSnack = false,
+        forcedMessage,
+        alertOptions = {},
+        silent = false
+    }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions; silent?: boolean } = {}
 ) {
     try {
         if (!err) {
@@ -172,13 +177,6 @@ export async function showError(
         }
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
         const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
-        // if (!PRODUCTION) {
-        // }
-        const label = new Label();
-        label.padding = '10 20 0 20';
-        label.textWrap = true;
-        label.color = new Color(255, 138, 138, 138);
-        label.html = message.trim();
 
         if (realError && reporterEnabled && !(realError instanceof PermissionError)) {
             try {
@@ -187,6 +185,14 @@ export async function showError(
                 console.error(error);
             }
         }
+        if (silent) {
+            return;
+        }
+        const label = new Label();
+        label.padding = '10 20 0 20';
+        label.textWrap = true;
+        label.color = new Color(255, 138, 138, 138);
+        label.html = message.trim();
 
         return mdAlert({
             okButtonText: lc('ok'),

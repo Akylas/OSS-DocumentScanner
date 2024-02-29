@@ -1,4 +1,4 @@
-<script lang="ts">
+<script context="module" lang="ts">
     import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
@@ -41,18 +41,20 @@
         updateSnackMessage
     } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips } from '~/variables';
-
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
-
-    // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorError, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant, colorBackground } = $colors);
-
     interface Item {
         page: OCRPage;
         selected: boolean;
         index: number;
     }
+
+    let VIEW_ID = 0;
+</script>
+
+<script lang="ts">
+    // technique for only specific properties to get updated on store change
+    $: ({ colorSurfaceContainerHigh, colorError, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant, colorBackground } = $colors);
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
@@ -357,8 +359,13 @@
     }
 
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
-        const length = items.length;
-        items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
+        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
+        try {
+            const length = items.length;
+            items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
+        } catch (error) {
+            showError(error, { silent: true });
+        }
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         if (event.object !== document) {
@@ -414,7 +421,7 @@
     }
 
     onMount(() => {
-        DEV_LOG && console.log('DocumentView', 'onMount');
+        DEV_LOG && console.log('DocumentView', 'onMount', VIEW_ID++);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -427,7 +434,7 @@
         // refresh();
     });
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentView', 'onDestroy', !!document);
+        DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
