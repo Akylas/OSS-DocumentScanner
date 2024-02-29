@@ -138,6 +138,7 @@
             if (newRotation === undefined) {
                 return;
             }
+            DEV_LOG && console.log('onImageRotated', newRotation);
             await document.updatePage(
                 currentIndex,
                 {
@@ -147,7 +148,6 @@
             );
 
             currentSelectedImageRotation = item.rotation;
-            DEV_LOG && console.log('onImageRotated', currentSelectedImageRotation);
             // items.setItem(currentIndex, item);
         } catch (error) {
             showError(error);
@@ -276,6 +276,7 @@
     let ignoreNextCollectionViewRefresh = false;
     const saveCurrentItemColorType = debounce(function (index, colorMatrix) {
         ignoreNextCollectionViewRefresh = true;
+        DEV_LOG && console.log('colorMatrix changed', colorMatrix);
         document.updatePage(index, {
             colorMatrix
         });
@@ -323,7 +324,12 @@
         }
     }
     onDestroy(() => {
+        DEV_LOG && console.log('DocumentEdit', 'onDestroy', !!editingImage);
         // document.clearObservableArray(items);
+        if (editingImage) {
+            recycleImages(editingImage);
+            editingImage = null;
+        }
     });
 
     async function deleteCurrentPage() {
@@ -372,6 +378,7 @@
         current.colorType = i.colorType;
         collectionView.nativeView.refreshVisibleItems();
         ignoreNextCollectionViewRefresh = true;
+        DEV_LOG && console.log('applyImageColorMatrix', i.colorType);
         document.updatePage(
             currentIndex,
             {
@@ -478,6 +485,7 @@
     async function onRecropTapFinish(cancel = false) {
         try {
             if (recrop) {
+                DEV_LOG && console.log('onRecropTapFinish', cancel, quadChanged, quad);
                 // let s see if quads changed and update image
                 if (quadChanged && !cancel) {
                     await document.updatePageCrop(currentIndex, quad, editingImage);
