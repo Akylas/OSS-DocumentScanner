@@ -282,15 +282,16 @@
                 const index = items.findIndex((p) => p.page === item.page);
                 navigate({
                     page: PdfEdit,
-                    transition: __ANDROID__ && !CARD_APP
-                        ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
-                              pageStart: {
-                                  sharedTransitionTags: {
-                                      [`document_${document.id}_${item.page.id}`]: {}
+                    transition:
+                        __ANDROID__ && !CARD_APP
+                            ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
+                                  pageStart: {
+                                      sharedTransitionTags: {
+                                          [`document_${document.id}_${item.page.id}`]: {}
+                                      }
                                   }
-                              }
-                          })
-                        : undefined,
+                              })
+                            : undefined,
                     // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                     props: {
                         document,
@@ -527,19 +528,19 @@
                 vertPos: VerticalPosition.BELOW,
 
                 onClose: async (item) => {
-                        switch (item.id) {
-                            case 'ocr':
-                                await detectOCR({ documents: [document] });
-                                unselectAll();
-                                break;
-                            case 'transform':
-                                await transformPages({ documents: [document] });
-                                unselectAll();
-                                break;
-                            case 'delete':
-                                await deleteDoc();
-                                break;
-                        }
+                    switch (item.id) {
+                        case 'ocr':
+                            await detectOCR({ documents: [document] });
+                            unselectAll();
+                            break;
+                        case 'transform':
+                            await transformPages({ documents: [document] });
+                            unselectAll();
+                            break;
+                        case 'delete':
+                            await deleteDoc();
+                            break;
+                    }
                 }
             });
         }
