@@ -25,6 +25,7 @@ export default class SecurityService extends Observable {
     @booleanProperty({ default: false }) pincodeEnabled: boolean;
     @booleanProperty({ default: false }) autoLockEnabled: boolean;
     biometricsAvailable = true;
+    mIgnoreNextValidation = false;
     started = false;
     async start() {
         if (this.started) {
@@ -83,8 +84,19 @@ export default class SecurityService extends Observable {
         return !!this.storedPassword;
     }
     validating = false;
+
+    public ignoreNextValidation() {
+        if (!this.biometricEnabled) {
+            return;
+        }
+        this.mIgnoreNextValidation = true;
+    }
     async validateSecurityOrClose(options = {}) {
-        DEV_LOG && console.log('validateSecurityOrClose', this.validating);
+        DEV_LOG && console.log('validateSecurityOrClose', this.validating, this.mIgnoreNextValidation);
+        if (this.mIgnoreNextValidation) {
+            this.mIgnoreNextValidation = false;
+            return;
+        }
         try {
             await this.validateSecurity({ closeOnBack: true, ...options });
         } catch (error) {
