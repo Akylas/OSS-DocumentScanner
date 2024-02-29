@@ -569,7 +569,7 @@
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
                         parent: this,
-                        view: ThirdPartySoftwareBottomSheet,
+                        view: ThirdPartySoftwareBottomSheet
                     });
                     break;
 
@@ -795,7 +795,7 @@
                     subtitle={getDescription(item)}
                     title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}>
-                    <label col={0} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} />
+                    <label col={0} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
