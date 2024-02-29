@@ -1,12 +1,66 @@
 import { Application, Color } from '@nativescript/core';
 import { Content, Options } from '.';
 
+@NativeClass
+class ItemSource extends NSObject implements UIActivityItemSource {
+    static ObjCProtocols = [UIActivityItemSource];
+    data;
+    placeholder;
+    subject;
+    metadata?: { title: string; image?; icon?; originalURL? };
+    static initWithData(data, placeholder, subject, metadata) {
+        const delegate = ItemSource.new() as ItemSource;
+        delegate.data = data;
+        delegate.placeholder = placeholder;
+        delegate.subject = subject;
+        delegate.metadata = metadata;
+        return delegate;
+    }
+
+    // activityViewControllerDataTypeIdentifierForActivityType?(activityViewController: UIActivityViewController, activityType: string): string {
+    //     throw new Error('Method not implemented.');
+    // }
+    activityViewControllerItemForActivityType(activityViewController: UIActivityViewController, activityType: string) {
+        return this.data;
+    }
+    activityViewControllerLinkMetadata?(activityViewController: UIActivityViewController) {
+        if (this.metadata) {
+            const metadata = LPLinkMetadata.new();
+            metadata.title = this.metadata.title;
+            if (this.metadata.image) {
+                metadata.imageProvider = NSItemProvider.alloc().initWithObject(this.metadata.image);
+                metadata.iconProvider = metadata.imageProvider;
+            }
+            if (this.metadata.icon) {
+                metadata.iconProvider = NSItemProvider.alloc().initWithObject(this.metadata.icon);
+            }
+            if (this.metadata.originalURL) {
+                metadata.originalURL = NSURL.alloc().initWithString(this.metadata.originalURL);
+            }
+            return metadata;
+        }
+        return null;
+    }
+    activityViewControllerPlaceholderItem(activityViewController: UIActivityViewController) {
+        return this.placeholder;
+    }
+    activityViewControllerSubjectForActivityType?(activityViewController: UIActivityViewController, activityType: string): string {
+        return this.subject;
+    }
+    // activityViewControllerThumbnailImageForActivityTypeSuggestedSize?(activityViewController: UIActivityViewController, activityType: string, size: any): UIImage {
+    // }
+}
+
 export async function share(content: Content, options: Options = {}) {
     if (content == null) {
         throw new Error('missing_content');
     }
 
     return new Promise((resolve, reject) => {
+        let metadata;
+        if (content.title) {
+            metadata = { title: content.title };
+        }
         const items = [];
         if (content.url) {
             const url = NSURL.URLWithString(content.url);
@@ -35,7 +89,11 @@ export async function share(content: Content, options: Options = {}) {
         if (content.files) {
             content.files.forEach((file) => items.push(file));
         }
-        const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
+        // const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
+        const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(
+            items.map((i) => ItemSource.initWithData(i, null, options.subject, metadata)),
+            null
+        );
         if (options.subject) {
             shareController.setValueForKey(options.subject, 'subject');
         }
