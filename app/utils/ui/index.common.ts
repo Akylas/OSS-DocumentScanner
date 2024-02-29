@@ -47,6 +47,7 @@ import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
+import { securityService } from '~/services/security';
 import { showError } from '~/utils/error';
 import { loadImage, recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
@@ -533,6 +534,10 @@ export async function importAndScanImage(document?: OCRDocument) {
         //         );
         //     });
         // } else {
+        if (__ANDROID__) {
+            // on android a background event will trigger while picking a file
+            securityService.ignoreNextValidation();
+        }
         selection = await imagePickerPlugin
             .create({
                 mediaType: 1,

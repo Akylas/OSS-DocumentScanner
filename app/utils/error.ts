@@ -8,6 +8,8 @@ import { l } from '~/helpers/locale';
 import type { HTTPSOptions } from '~/services/api';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
 
+Error.stackTraceLimit = Infinity;
+
 function evalTemplateString(resource: string, obj: {}) {
     if (!obj) {
         return resource;
@@ -141,8 +143,8 @@ export class HTTPError extends CustomError {
         );
     }
 }
-function wrapNativeException(ex) {
-    if (__ANDROID__ && ex instanceof java.lang.Exception) {
+export function wrapNativeException(ex, errorType) {
+    if (__ANDROID__ && !(ex instanceof Error) && errorType === 'object') {
         const err = new Error(ex.toString());
         err['nativeException'] = ex;
         //@ts-ignore
@@ -153,18 +155,24 @@ function wrapNativeException(ex) {
 }
 export async function showError(
     err: Error | string,
-    { showAsSnack = false, forcedMessage, alertOptions = {} }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions } = {}
+    {
+        showAsSnack = false,
+        forcedMessage,
+        alertOptions = {},
+        silent = false
+    }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions; silent?: boolean } = {}
 ) {
     try {
         if (!err) {
             return;
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
-        const realError = typeof err === 'string' ? null : wrapNativeException(err);
+        const errorType = typeof err;
+        const realError = errorType === 'string' ? null : wrapNativeException(err, errorType);
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();
-        DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError), message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
+        DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError), message, realError?.['stack'], realError?.['stackTrace'], realError?.['nativeException']);
         message = forcedMessage || message;
         if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
             showSnack({ message });
@@ -172,13 +180,6 @@ export async function showError(
         }
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
         const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
-        // if (!PRODUCTION) {
-        // }
-        const label = new Label();
-        label.padding = '10 20 0 20';
-        label.textWrap = true;
-        label.color = new Color(255, 138, 138, 138);
-        label.html = message.trim();
 
         if (realError && reporterEnabled && !(realError instanceof PermissionError)) {
             try {
@@ -187,6 +188,14 @@ export async function showError(
                 console.error(error);
             }
         }
+        if (silent) {
+            return;
+        }
+        const label = new Label();
+        label.padding = '10 20 0 20';
+        label.textWrap = true;
+        label.color = new Color(255, 138, 138, 138);
+        label.html = message.trim();
 
         return mdAlert({
             okButtonText: lc('ok'),

@@ -89,7 +89,7 @@
                 break;
             }
             case 'move': {
-                if (closestCornerQuadIndex !== -1) {
+                if (editingImage && closestCornerQuadIndex !== -1) {
                     const quad = mappedQuads[closestQuadIndex];
                     const touchMoveXDistance = x - prevTouchPoint[0];
                     const touchMoveYDistance = y - prevTouchPoint[1];
@@ -129,7 +129,7 @@
     }
 
     function getRotation() {
-        return rotation || editingImage.rotationAngle || 0;
+        return rotation || editingImage?.rotationAngle || 0;
     }
     function updateMatrix(canvas = canvasView, image = editingImage) {
         try {

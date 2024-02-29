@@ -124,7 +124,6 @@
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         let index = -1;
-        DEV_LOG && console.log('onDocumentPageUpdated', event.pageIndex, event.imageUpdated);
         if (event.pageIndex === 0) {
             documents.some((d, i) => {
                 if (d.doc === (event.object as any)) {

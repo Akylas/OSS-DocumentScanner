@@ -171,7 +171,6 @@
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         // let index = -1;
-        DEV_LOG && console.log('onDocumentPageUpdated', event.pageIndex, event.imageUpdated);
         const document = event.object as OCRDocument;
         if (event.pageIndex === 0) {
             const index = documents.findIndex((d) => d.doc === document);
