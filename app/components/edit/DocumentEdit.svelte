@@ -114,7 +114,7 @@
         updateCurrentItem(items.getItem(currentIndex));
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;
         // $enhanced = transforms.indexOf('enhance') !== -1;
-        console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
+        DEV_LOG && console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
         refreshCollectionView();
     }
     // function onFirstLayout(item, e) {
@@ -334,6 +334,7 @@
 
     async function deleteCurrentPage() {
         try {
+            DEV_LOG && console.log('deleteCurrentPage', currentIndex, document.pages.length);
             let result;
             const deleteDocument = document.pages.length === 1;
             if (deleteDocument) {
@@ -357,7 +358,8 @@
                         await documentsService.deleteDocuments([document]);
                     } else {
                         await document.deletePage(currentIndex);
-                        pager.nativeView.scrollToIndexAnimated(currentIndex, true);
+                        const newIndex = currentIndex < items.length - 1 ? currentIndex : currentIndex - 1;
+                        pager.nativeView.scrollToIndexAnimated(newIndex, true);
                     }
                 } catch (err) {
                     showError(err, err.stack);
@@ -519,11 +521,11 @@
             onRecropTapFinish(true);
         } else {
             const item = items.getItem(currentIndex);
-
+            DEV_LOG && console.log('onGoBack', currentIndex, !!items, item);
             //we use a new transition to transition the selected item
             goBack({
                 transition:
-                    __ANDROID__ && !CARD_APP && transitionOnBack
+                    __ANDROID__ && !CARD_APP && transitionOnBack && item
                         ? SharedTransition.custom(new PageTransition(300, undefined, 10), {
                               pageStart: {
                                   sharedTransitionTags: {
