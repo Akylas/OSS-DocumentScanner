@@ -484,7 +484,7 @@
             if (!editingImage) {
                 return;
             }
-            const strTransforms = transforms.join(',');
+            const strTransforms = transforms.join(TRANSFORMS_SPLIT);
             DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
             let images = quads ? await cropDocument(editingImage, quads, strTransforms) : [__IOS__ ? editingImage.ios : editingImage.android];
             let qrcode;
