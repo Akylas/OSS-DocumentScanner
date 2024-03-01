@@ -462,12 +462,12 @@
                 }
                 case 'export_settings':
                     const jsonStr = ApplicationSettings.getAllJSON();
-                    DEV_LOG && console.log('export_settings', jsonStr);
                     if (jsonStr) {
-                        await saveFile({
+                        const result = await saveFile({
                             name: `${__APP_ID__}_settings_${dayjs().format('YYYY-MM-DD')}.json`,
                             data: jsonStr
                         });
+                        DEV_LOG && console.log('export_settings done', result, jsonStr);
                     }
                     break;
                 case 'import_settings':
