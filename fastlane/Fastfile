@@ -200,10 +200,18 @@ lane :get_changelog  do |params|
     ignorePlatform = "android"
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: 'markdown', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform])
-  if (!display_links && !logs.nil? && !logs.empty?)
-    logs = logs.gsub(/\*\w:\*/, '')
-  end
+  logs = conventional_changelog(format: 'markdown', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform]).split(/[\n]/).uniq
+  logs = logs.map {|l| 
+    if (!display_links)
+      # remove github issues
+      l = l.gsub(/\s\#\d*/, '')
+    end
+    # remove platform tags
+    l = l.gsub(/\*\*\w*:\*\*\s/, '')
+    # remove sentry references
+    l = l.gsub(/[A-Z]+-[A-Z0-9]+(?=$|\s\()/, '')
+    l
+  }.join("\n")
   puts logs
   logs
 end
