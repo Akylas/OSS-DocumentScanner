@@ -379,14 +379,10 @@
         collectionView.nativeView.refreshVisibleItems();
         ignoreNextCollectionViewRefresh = true;
         DEV_LOG && console.log('applyImageColorMatrix', i.colorType);
-        document.updatePage(
-            currentIndex,
-            {
-                colorType: i.colorType,
-                colorMatrix: null
-            },
-            false
-        );
+        document.updatePage(currentIndex, {
+            colorType: i.colorType,
+            colorMatrix: null
+        });
     }
 
     async function updateImageUris() {
