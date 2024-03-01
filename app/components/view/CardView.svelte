@@ -26,6 +26,7 @@
     import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors, screenWidthDips } from '~/variables';
+    import { throttle } from '@nativescript/core/utils';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -253,7 +254,7 @@
             selectItem(item);
         }
     }
-    async function onItemTap(item: Item) {
+    const onItemTap = throttle(async function(item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -285,7 +286,7 @@
         } catch (error) {
             showError(error);
         }
-    }
+    }, 500);
     function onGoBack() {
         goBack(
             transitionOnBack

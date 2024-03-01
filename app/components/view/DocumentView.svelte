@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+    import { debounce, throttle } from '@nativescript/core/utils';
     import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
@@ -272,7 +273,8 @@
             startDragging(item);
         }
     }
-    async function onItemTap(item: Item) {
+    const onItemTap = throttle(async function(item: Item) {
+        DEV_LOG && console.log('onItemTap', Date.now());
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -304,7 +306,7 @@
         } catch (error) {
             showError(error);
         }
-    }
+    }, 500);
     function onGoBack() {
         goBack(
             transitionOnBack

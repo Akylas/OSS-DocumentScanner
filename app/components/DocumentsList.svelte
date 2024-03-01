@@ -1,5 +1,6 @@
 <script context="module" lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+    import { throttle } from '@nativescript/core/utils';
     import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
@@ -357,7 +358,7 @@
             selectItem(item);
         }
     }
-    async function onItemTap(item: Item) {
+    const onItemTap = throttle(async function(item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -372,7 +373,7 @@
         } catch (error) {
             showError(error);
         }
-    }
+    }, 500);
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
             if (nbSelected > 0) {
