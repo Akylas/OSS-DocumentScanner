@@ -1,0 +1,11 @@
+### Bug fixes
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- dont show red text overlay on PDF
+- Translated using Weblate (Czech)
+- miss aligned icons
+- trying to prevent crash on too big images
+- prevent fingerprint check (and error) while getting image from file picker
+- better native error handling
+- prevent error on pdf preview
+- transforms not applied correctly while applied from camera
