@@ -142,7 +142,7 @@
     "pdf_export": "PDF export",
     "pdf_export_settings": "PDF export settings",
     "pdf_filename": "filename for the exported pdf",
-    "pdf_saved": "pdf saved at %1$s",
+    "pdf_saved": "pdf saved: %1$s",
     "picture_size": "picture size",
     "portrait": "portrait",
     "preferences": "preferences",
