@@ -15,14 +15,7 @@
             moduleName: 'tesseract',
             moduleUrl: 'https://github.com/tesseract-ocr/tesseract'
         },
-        {
-            moduleName: 'ZXing-C++',
-            moduleUrl: 'https://github.com/zxing-cpp/zxing-cpp'
-        },
-        {
-            moduleName: 'jsoncons',
-            moduleUrl: 'https://github.com/danielaparker/jsoncons'
-        },
+
         {
             moduleName: 'Material Design Icons',
             moduleUrl: 'https://pictogrammers.com/library/mdi/'
@@ -31,7 +24,28 @@
             moduleName: 'NativeScript',
             moduleUrl: 'https://github.com/NativeScript/NativeScript'
         }
-    ].concat(licences.dependencies);
+    ]
+        .concat(
+            __ANDROID__ && CARD_APP
+                ? [
+                      {
+                          moduleName: 'ZXing-C++',
+                          moduleUrl: 'https://github.com/zxing-cpp/zxing-cpp'
+                      }
+                  ]
+                : []
+        )
+        .concat(
+            __ANDROID__
+                ? [
+                      {
+                          moduleName: 'jsoncons',
+                          moduleUrl: 'https://github.com/danielaparker/jsoncons'
+                      }
+                  ]
+                : []
+        )
+        .concat(licences.dependencies);
 
     function onTap(item) {
         if (item.moduleUrl) {
