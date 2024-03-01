@@ -175,7 +175,6 @@
             if (result) {
                 try {
                     await documentsService.deleteDocuments([document]);
-                    items = null;
                     goBack({
                         // null is important to say no transition! (override enter transition)
                         transition: null
@@ -436,6 +435,7 @@
         // refresh();
     });
     onDestroy(() => {
+        items = null;
         DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
