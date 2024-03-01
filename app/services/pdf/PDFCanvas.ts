@@ -95,16 +95,22 @@ export default class PDFCanvas {
         });
     }
     updateBitmapPaint(page: OCRPage) {
+        DEV_LOG && console.log('updateBitmapPaint', this.options.color, page);
         if (this.options.color === 'black_white') {
             if (!bitmapPaint) {
                 bitmapPaint = new Paint();
             }
             bitmapPaint.setColorFilter(new ColorMatrixColorFilter(getColorMatrix('grayscale')));
         } else if (page.colorType || page.colorMatrix) {
-            if (!bitmapPaint) {
-                bitmapPaint = new Paint();
+            const matrix = page.colorMatrix || getColorMatrix(page.colorType);
+            if (matrix) {
+                if (!bitmapPaint) {
+                    bitmapPaint = new Paint();
+                }
+                bitmapPaint.setColorFilter(new ColorMatrixColorFilter(matrix));
+            } else if (bitmapPaint) {
+                bitmapPaint.setColorFilter(null);
             }
-            bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
         } else if (bitmapPaint) {
             bitmapPaint.setColorFilter(null);
         }
