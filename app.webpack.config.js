@@ -132,6 +132,7 @@ module.exports = (env, params = {}) => {
         keep_classnames_functionnames = false,
         startOnCam = false
     } = env;
+    console.log('env', env);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const projectRoot = params.projectRoot || __dirname;
