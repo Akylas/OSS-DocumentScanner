@@ -84,16 +84,17 @@ export async function share(content: Content, options: Options = {}) {
             content.images.forEach((image) => items.push(image.ios));
         }
         if (content.file) {
-            items.push(content.file);
+            items.push(NSURL.fileURLWithPath(content.file));
         }
         if (content.files) {
-            content.files.forEach((file) => items.push(file));
+            content.files.forEach((file) => items.push(NSURL.fileURLWithPath(file)));
         }
-        // const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
-        const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(
-            items.map((i) => ItemSource.initWithData(i, null, options.subject, metadata)),
-            null
-        );
+        const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
+        // should we use UIActivityItemSource?
+        // const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(
+        //     items.map((i) => ItemSource.initWithData(i, i, options.subject, metadata)),
+        //     null
+        // );
         if (options.subject) {
             shareController.setValueForKey(options.subject, 'subject');
         }

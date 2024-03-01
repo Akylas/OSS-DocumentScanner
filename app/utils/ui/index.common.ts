@@ -664,7 +664,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
             { id: 'open', name: lc('open'), icon: 'mdi-eye' },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
-            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: __IOS__ ? lc('export_ios_desc') : undefined },
+            { id: 'export', name: lc('export'), icon: 'mdi-export' },
             { id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }
         ] as any)
     );
@@ -881,7 +881,7 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor) {
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
-            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: __IOS__ ? lc('export_ios_desc') : undefined }
+            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined }
         ] as any)
     );
     return showPopoverMenu({
