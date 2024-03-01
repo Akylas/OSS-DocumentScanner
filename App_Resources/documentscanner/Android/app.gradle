@@ -11,7 +11,7 @@ android {
   defaultConfig {  
     multiDexEnabled false
     minSdkVersion 22
-    versionCode 53
+    versionCode 54
     versionName "1.4.13"
 
     // if (project.hasProperty('resConfigs')) {
