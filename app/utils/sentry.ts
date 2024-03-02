@@ -2,6 +2,7 @@ import { Application, NavigatedData, Page, Trace, TraceErrorHandler, View } from
 import * as SentryType from '@nativescript-community/sentry';
 import { install } from '~/utils/logging';
 import * as Tracing from '@nativescript-community/sentry/tracing';
+import { GestureRootView } from '@nativescript-community/gesturehandler';
 
 export let Sentry: typeof SentryType;
 export let isSentryEnabled = false;
@@ -43,42 +44,25 @@ export async function startSentry() {
             });
             Trace.setErrorHandler(errorHandler);
             isSentryEnabled = true;
-            Page.on('navigatingTo', (event: NavigatedData) => {
+
+            function createNavigatioTransaction(object, isBackNavigation, customMessage?: string) {
                 Sentry.addBreadcrumb({
                     category: 'navigation',
                     type: 'navigation',
                     // We assume that context.name is the name of the route.
-                    message: `Navigation to ${event.object}`,
+                    message: customMessage ? customMessage + ` ${object}` : `Navigation to ${object}`,
                     data: {
-                        isBackNavigation: event.isBackNavigation,
+                        isBackNavigation,
                         // from: `${(event.object as Page).frame?.currentPage}`,
-                        to: `${event.object}`
+                        to: `${object}`
                     }
                 });
-            });
-            View.on('showingModally', (event: NavigatedData) => {
-                Sentry.addBreadcrumb({
-                    category: 'navigation',
-                    type: 'navigation',
-                    // We assume that context.name is the name of the route.
-                    message: `Navigation to Modal ${event.object}`,
-                    data: {
-                        // from: `${(event.object as View)._modalParent}`,
-                        to: `${event.object}`
-                    }
-                });
-            });
-            View.on('closingModally', (event: NavigatedData) => {
-                Sentry.addBreadcrumb({
-                    category: 'navigation',
-                    type: 'navigation',
-                    // We assume that context.name is the name of the route.
-                    message: `Closing modal ${event.object}`,
-                    data: {
-                        from: `${event.object as View}`
-                    }
-                });
-            });
+            }
+            Page.on('navigatingTo', (event: NavigatedData) => createNavigatioTransaction(event.object, event.isBackNavigation));
+            Page.on('showingModally', (event: NavigatedData) => createNavigatioTransaction(event.object, false, 'Navigation to Modal'));
+            Page.on('closingModally', (event: NavigatedData) => createNavigatioTransaction(event.object, true, 'Closing modal'));
+            GestureRootView.on('shownInBottomSheet', (event: NavigatedData) => createNavigatioTransaction(event.object, false, 'Opening BottomSheet'));
+            GestureRootView.on('closedBottomSheet', (event: NavigatedData) => createNavigatioTransaction(event.object, true, 'Closing BottomSheet'));
         }
     } catch (err) {
         console.error('startSentry', err, err['stack']);

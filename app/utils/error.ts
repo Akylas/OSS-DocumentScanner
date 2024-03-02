@@ -143,7 +143,7 @@ export class HTTPError extends CustomError {
         );
     }
 }
-export function wrapNativeException(ex, errorType) {
+export function wrapNativeException(ex, errorType = typeof ex) {
     if (__ANDROID__ && !(ex instanceof Error) && errorType === 'object') {
         const err = new Error(ex.toString());
         err['nativeException'] = ex;
