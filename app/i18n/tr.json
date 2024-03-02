@@ -142,7 +142,7 @@
     "pdf_export": "PDF'yi dışa aktarma",
     "pdf_export_settings": "PDF dışa aktarma ayarları",
     "pdf_filename": "dışa aktarılan pdf için dosya adı",
-    "pdf_saved": "pdf %1$s konumuna kaydedildi",
+    "pdf_saved": "pdf kaydedildi: %1$s",
     "picture_size": "görüntü boyutu",
     "portrait": "dikey",
     "preferences": "tercihler",
