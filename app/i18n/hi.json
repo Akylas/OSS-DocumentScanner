@@ -142,7 +142,7 @@
     "pdf_export": "पीडीएफ निर्यात",
     "pdf_export_settings": "पीडीएफ निर्यात सेटिंग्स",
     "pdf_filename": "निर्यातित PDF के लिए फाइल नाम",
-    "pdf_saved": "PDF को %1$s पर सहेजा गया",
+    "pdf_saved": "PDF सहेजा गया: %1$s",
     "picture_size": "चित्र का आकार",
     "portrait": "पोर्ट्रेट",
     "preferences": "प्राथमिकताएँ",
