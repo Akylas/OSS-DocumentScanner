@@ -142,7 +142,7 @@
     "pdf_export": "Exportación de PDF",
     "pdf_export_settings": "Configuración de exportación de PDF",
     "pdf_filename": "nombre del archivo pdf exportado",
-    "pdf_saved": "pdf guardado como %1$s",
+    "pdf_saved": "pdf guardado: %1$s",
     "picture_size": "tamaño de la imagen",
     "portrait": "retrato",
     "preferences": "preferencias",
