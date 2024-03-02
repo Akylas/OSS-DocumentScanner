@@ -667,7 +667,7 @@
                         showImageExportPopover(event);
                         break;
                     case 'fullscreen':
-                        fullscreenSelectedDocuments();
+                        await fullscreenSelectedDocuments();
                         unselectAll();
                         break;
                     case 'ocr':
