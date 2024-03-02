@@ -427,6 +427,9 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                         items
                     }
                 });
+                if (!newItems) {
+                    return;
+                }
                 DEV_LOG && console.log('items after crop1', newItems, items);
             }
             if (items) {
