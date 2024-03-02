@@ -31,12 +31,11 @@
         TRANSFORMS_SPLIT
     } from '~/models/constants';
     import { documentsService } from '~/services/documents';
-    import { showError } from '~/utils/error';
+    import { showError, wrapNativeException } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
     import { colors } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
-    import { wrapJavaException } from '@akylas/nativescript/utils/android';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -330,7 +329,7 @@
             }
         } catch (err) {
             // we can get a native error here
-            showError(wrapJavaException(err));
+            showError(wrapNativeException(err));
         } finally {
             takingPicture = false;
             if (autoScanHandler) {
