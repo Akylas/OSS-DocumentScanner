@@ -142,7 +142,7 @@
     "pdf_export": "export do PDF",
     "pdf_export_settings": "nastavení exportu do PDF",
     "pdf_filename": "název souboru pro exportované PDF",
-    "pdf_saved": "PDF uloženo do %1$s",
+    "pdf_saved": "PDF uloženo: %1$s",
     "picture_size": "velikost obrázku",
     "portrait": "na výšku",
     "preferences": "předvolby",
