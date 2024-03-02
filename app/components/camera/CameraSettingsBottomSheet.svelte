@@ -15,6 +15,7 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/models/constants';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -281,7 +282,7 @@
                 <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
             </stacklayout>
             <label class="sectionHeader" text={lc('filters')} />
-            <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
+            <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={1}>
                 <Template let:item>
                     <gridlayout padding={2} on:tap={() => setColorType(item.colorType)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                         <image

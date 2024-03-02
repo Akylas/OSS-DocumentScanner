@@ -19,6 +19,7 @@
     import { l, lc } from '~/helpers/locale';
     import { isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { CARD_RATIO } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { PermissionError, showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
@@ -30,7 +31,7 @@
 
     const rowMargin = 8;
     const colWidth = screenWidthDips / 2;
-    const itemHeight = (colWidth - 2 * rowMargin) * 0.584 + 2 * rowMargin;
+    const itemHeight = (colWidth - 2 * rowMargin) * CARD_RATIO + 2 * rowMargin;
     interface Item {
         page: OCRPage;
         selected: boolean;
@@ -253,6 +254,7 @@
         }
     }
     async function onItemTap(item: Item) {
+        DEV_LOG && console.log('onItemTap', ignoreTap, item);
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -262,6 +264,7 @@
                 onItemLongPress(item);
             } else {
                 const index = items.findIndex((p) => p.page === item.page);
+                DEV_LOG && console.log('index', index);
                 navigate({
                     page: PdfEdit,
                     transition:
@@ -284,7 +287,7 @@
         } catch (error) {
             showError(error);
         }
-    };
+    }
     function onGoBack() {
         goBack(
             transitionOnBack
@@ -303,6 +306,22 @@
                 onGoBack();
             }
         }
+    }
+    async function fullscreenSelectedPages() {
+        const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
+        navigate({
+            page: component,
+            // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
+            props: {
+                images: getSelectedPages().map((page) => ({
+                    // sharedTransitionTag: `document_${doc.id}_${page.id}`,
+                    name: page.name || document.name,
+                    image: page.imagePath,
+                    ...page
+                })),
+                startPageIndex: 0
+            }
+        });
     }
     async function deleteSelectedPages() {
         if (nbSelected > 0) {
@@ -343,9 +362,13 @@
 
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
         DEV_LOG && console.log('onPagesAdded', VIEW_ID);
-        if (items) {
-            const length = items.length;
-            items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
+        try {
+            if (items) {
+                const length = items.length;
+                items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
+            }
+        } catch (error) {
+            showError(error, { silent: true });
         }
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
@@ -354,12 +377,14 @@
         }
         const index = event.pageIndex;
         const current = items.getItem(index);
-        const page = document.getObservablePages().getItem(index);
-        items.setItem(index, { selected: current.selected, page, index: current.index });
-        DEV_LOG && console.log('view onDocumentPageUpdated', index, event.imageUpdated);
-        if (!!event.imageUpdated) {
-            const imageView = getImageView(index);
-            imageView?.updateImageUri();
+        if (current) {
+            const page = document.getObservablePages().getItem(index);
+            items.setItem(index, { selected: current.selected, page, index: current.index });
+            DEV_LOG && console.log('view onDocumentPageUpdated', index, event.imageUpdated, page);
+            if (!!event.imageUpdated) {
+                const imageView = getImageView(index);
+                imageView?.updateImageUri();
+            }
         }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
@@ -491,7 +516,7 @@
         if (nbSelected > 0) {
             const options = new ObservableArray([
                 { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-                // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -506,9 +531,9 @@
                         case 'share':
                             showImageExportPopover(event);
                             break;
-                        // case 'fullscreen':
-                        //     fullscreenSelectedDocuments();
-                        //     break;
+                        case 'fullscreen':
+                            await fullscreenSelectedPages();
+                            break;
                         case 'ocr':
                             detectOCR({ pages: getSelectedPagesWithData() });
                             unselectAll();

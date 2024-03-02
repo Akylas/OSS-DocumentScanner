@@ -3,6 +3,10 @@ import { knownFolders } from '@nativescript/core';
 export const TRANSFORMS_SPLIT = '|';
 
 export const IMG_FORMAT = 'jpg';
+export const CARD_RATIO = 0.629;
+
+export const FILTER_ROW_HEIGHT = CARD_APP ? 55 : 85;
+export const FILTER_COL_WIDTH = CARD_APP ? FILTER_ROW_HEIGHT / CARD_RATIO : 60;
 export const IMG_COMPRESS = 80;
 export const PREVIEW_RESIZE_THRESHOLD = 200;
 export const QRCODE_RESIZE_THRESHOLD = 900;

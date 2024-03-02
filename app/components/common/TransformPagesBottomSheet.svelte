@@ -1,21 +1,21 @@
 <svelte:options accessors />
 
 <script lang="ts">
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Color, View } from '@nativescript/core';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
-    import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips, statusBarHeight } from '~/variables';
+    import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
+    import { colors, navigationBarHeight, screenHeightDips, statusBarHeight } from '~/variables';
     import ListItem from './ListItem.svelte';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -123,7 +123,6 @@
     }
     const maxHeight = 40 + Object.keys(TRANSFORMS).length * 70 + 80;
     const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
-    console.log('maxHeight', maxHeight, maxScreenHeight, screenHeightDips);
 </script>
 
 <gesturerootview padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
@@ -153,7 +152,7 @@
                 <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
             </stacklayout>
             <label class="sectionBigHeader" text={lc('filters')} />
-            <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal">
+            <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal">
                 <Template let:item>
                     <gridlayout padding={2} on:tap={() => setColorType(item.colorType)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                         <image

@@ -20,7 +20,7 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { TRANSFORMS_SPLIT } from '~/models/constants';
+    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
     import { showError } from '~/utils/error';
@@ -517,7 +517,7 @@
             onRecropTapFinish(true);
         } else {
             const item = items.getItem(currentIndex);
-            DEV_LOG && console.log('onGoBack', currentIndex, !!items, item);
+            DEV_LOG && console.log('onGoBack', currentIndex, !!items, !!item);
             //we use a new transition to transition the selected item
             goBack({
                 transition:
@@ -529,7 +529,9 @@
                                   }
                               }
                           })
-                        : undefined
+                        : CARD_APP
+                          ? null
+                          : undefined
             } as any);
         }
     }
@@ -607,7 +609,7 @@
             <!-- <checkbox checked={$whitepaper} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => ($whitepaper = e.value)} /> -->
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
-        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={4}>
+        <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
                 <gridlayout id={item.text} padding={2} on:tap={applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image

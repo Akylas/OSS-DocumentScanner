@@ -11,7 +11,7 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
-    import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 
     let recrop = false;
     let topView: NativeViewElementNode<View>;
@@ -111,7 +111,7 @@
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
         </stacklayout>
-        <collectionview bind:this={collectionView} colWidth={60} height={85} items={filters} orientation="horizontal" row={1}>
+        <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={1}>
             <Template let:item>
                 <gridlayout padding={4} rows="*,24" on:tap={applyImageTransform(item)}>
                     <image colorMatrix={getColorMatrix(item.colorType)} imageRotation={croppedImageRotation} src={croppedImagePath} />

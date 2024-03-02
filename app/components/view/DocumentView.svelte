@@ -345,8 +345,10 @@
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
         DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         try {
-            const length = items.length;
-            items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
+            if (items) {
+                const length = items.length;
+                items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
+            }
         } catch (error) {
             showError(error, { silent: true });
         }

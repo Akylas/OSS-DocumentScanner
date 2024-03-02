@@ -30,11 +30,12 @@
     import { fade } from '~/utils/svelte/ui';
     import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
+    import { CARD_RATIO } from '~/models/constants';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
     const itemWidth = (orientation === 'landscape' ? screenHeightDips : screenWidthDips) - 2 * rowMargin;
-    const itemHeight = itemWidth * 0.584 + 2 * rowMargin;
+    const itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
 
     interface Item {
         doc: OCRDocument;
@@ -510,6 +511,7 @@
                 selected.push(d.doc);
             }
         });
+        DEV_LOG && console.log('getSelectedDocuments', selected.length);
         return selected;
     }
     function getSelectedPagesAndPossibleSingleDocument(): [OCRPage[], OCRDocument?] {
@@ -540,6 +542,7 @@
                             ...page
                         })
                     );
+        DEV_LOG && console.log('acc', acc.length);
                     return acc;
                 }, []),
                 startPageIndex: 0
@@ -678,7 +681,7 @@
             }
         }
     }
-    let viewStyle: string = ApplicationSettings.getString('cardViewStyle', 'default');
+    let viewStyle: string = ApplicationSettings.getString('cardViewStyle', 'fullcard');
 
     function fullCardDrawerTranslationFunction(side, width, value, delta, progress) {
         const result = {
@@ -719,7 +722,7 @@
                         showImageExportPopover(event);
                         break;
                     case 'fullscreen':
-                        fullscreenSelectedDocuments();
+                        await fullscreenSelectedDocuments();
                         unselectAll();
                         break;
                     case 'ocr':
@@ -776,7 +779,7 @@
                             <RotableImageView
                                 id="imageView"
                                 borderRadius={12}
-                                decodeWidth={Utils.layout.toDevicePixels(itemWidth) * 0.584}
+                                decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
                                 fadeDuration={100}
                                 item={item.doc.pages[0]}
                                 sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
@@ -814,7 +817,7 @@
                             id="imageView"
                             borderRadius={12}
                             decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
-                            decodeWidth={Utils.layout.toDevicePixels(itemWidth) * 0.584}
+                            decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
                             fadeDuration={100}
                             item={item.doc.pages[0]}
                             sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
@@ -840,11 +843,21 @@
             </Template>
         </collectionView>
         {#if showNoDocument}
-            <gridlayout marginBottom={150} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center" transition:fade={{ duration: 200 }}>
+            <flexlayout
+                flexDirection="column"
+                horizontalAlignment="center"
+                marginBottom="30%"
+                paddingLeft={16}
+                paddingRight={16}
+                row={1}
+                verticalAlignment="center"
+                width="80%"
+                transition:fade={{ duration: 200 }}>
                 <lottie
                     bind:this={lottieView}
                     async={true}
                     autoPlay={true}
+                    flexShrink={2}
                     keyPathColors={{
                         'background|**': lottieDarkFColor,
                         'full|**': lottieLightColor,
@@ -852,11 +865,9 @@
                         'lines|**': lottieDarkFColor
                     }}
                     loop={true}
-                    marginBottom={20}
-                    src="~/assets/lottie/scanning.lottie"
-                    width="80%" />
-                <label color={colorOnSurfaceVariant} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} verticalAlignment="bottom" width="80%" />
-            </gridlayout>
+                    src="~/assets/lottie/scanning.lottie" />
+                <label color={colorOnSurfaceVariant} flexShrink={0} fontSize={19} text={lc('no_card_yet')} textAlignment="center" textWrap={true} />
+            </flexlayout>
         {/if}
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
