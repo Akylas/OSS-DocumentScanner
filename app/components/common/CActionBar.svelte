@@ -1,9 +1,10 @@
 <script lang="ts">
     import { Frame } from '@nativescript/core';
     import { onMount } from 'svelte';
-    import { closeModal, goBack } from 'svelte-native';
+    import { closeModal, goBack } from '~/utils/svelte/ui';
     import { showError } from '~/utils/error';
     import { conditionalEvent, fade } from '~/utils/svelte/ui';
+    import { statusBarHeight } from '~/variables';
 
     export let title: string = null;
     export let showMenuIcon: boolean = false;
@@ -31,13 +32,6 @@
             } else if (modalWindow) {
                 closeModal(undefined);
             } else {
-                const frame = Frame.topmost();
-                // this means the frame is animating
-                // doing goBack would mean boing back up 2 levels because
-                // the animating context is not yet in the backStack
-                if (frame['_executingContext']) {
-                    return;
-                }
                 goBack();
             }
         } catch (error) {
@@ -55,7 +49,7 @@
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapse';
 </script>
 
-<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 300 }}>
+<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 300 }} android:marginTop={$statusBarHeight}>
     <label
         class={'actionBarTitle ' + clazz}
         col={1}

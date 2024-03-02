@@ -1,18 +1,14 @@
 <script context="module" lang="ts">
-    import { debounce, throttle } from '@nativescript/core/utils';
     import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
-    import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
@@ -25,23 +21,9 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
-    import { ocrService } from '~/services/ocr';
     import { PermissionError, showError } from '~/utils/error';
-    import {
-        detectOCR,
-        detectOCROnPage,
-        hideLoading,
-        hideSnackMessage,
-        importAndScanImage,
-        showImagePopoverMenu,
-        showLoading,
-        showPDFPopoverMenu,
-        showPopoverMenu,
-        showSnackMessage,
-        transformPages,
-        updateSnackMessage
-    } from '~/utils/ui';
-    import { colors, fontScale, screenWidthDips } from '~/variables';
+    import { goBack, navigate } from '~/utils/svelte/ui';
+    import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -273,7 +255,7 @@
             startDragging(item);
         }
     }
-    const onItemTap = throttle(async function(item: Item) {
+    async function onItemTap(item: Item) {
         DEV_LOG && console.log('onItemTap', Date.now());
         try {
             if (ignoreTap) {
@@ -306,7 +288,7 @@
         } catch (error) {
             showError(error);
         }
-    }, 500);
+    }
     function onGoBack() {
         goBack(
             transitionOnBack

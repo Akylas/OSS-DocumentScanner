@@ -1,4 +1,4 @@
-import { install as installGestures } from '@nativescript-community/gesturehandler';
+import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
@@ -13,21 +13,19 @@ import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import { Application, NavigatedData, Page } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
-import { svelteNative } from 'svelte-native';
-import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
+import { FrameElement, PageElement, createElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '~/NestedScrollView';
+import { lc } from '~/helpers/locale';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
+import { navigate } from '~/utils/svelte/ui';
 import { networkService } from './services/api';
 import { ocrService } from './services/ocr';
 import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
-import { createElement, initializeDom, navigate } from 'svelte-native/dom';
-import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
-import { lc } from '~/helpers/locale';
 
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);

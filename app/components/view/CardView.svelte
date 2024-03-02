@@ -4,12 +4,10 @@
     import { Img } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { QRCodeData, QRCodeSingleData, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
-    import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
@@ -19,10 +17,12 @@
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { getRealTheme, isDarkTheme, onThemeChanged, theme } from '~/helpers/theme';
+    import { isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { PermissionError, showError } from '~/utils/error';
+    import { recycleImages } from '~/utils/images';
+    import { goBack, navigate } from '~/utils/svelte/ui';
     import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, navigationBarHeight, screenWidthDips } from '~/variables';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
@@ -252,7 +252,7 @@
             selectItem(item);
         }
     }
-    const onItemTap = throttle(async function(item: Item) {
+    async function onItemTap(item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -284,7 +284,7 @@
         } catch (error) {
             showError(error);
         }
-    }, 500);
+    };
     function onGoBack() {
         goBack(
             transitionOnBack

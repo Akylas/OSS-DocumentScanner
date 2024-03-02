@@ -12,7 +12,8 @@
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
     import { closeModal, showModal } from 'svelte-native';
-    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { navigate } from '~/utils/svelte/ui';
     import { writable } from 'svelte/store';
     import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';

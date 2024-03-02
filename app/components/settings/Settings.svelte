@@ -4,23 +4,15 @@
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, File, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
-    import { securityService } from '~/services/security';
-    import { syncService } from '~/services/sync';
-    import { showError } from '~/utils/error';
-    import { share } from '~/utils/share';
-    import { hideLoading, openLink, showLoading } from '~/utils/ui';
-    import { showAlertOptionSelect } from '~/utils/ui';
-    import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
-    import { DocumentsService, documentsService } from '~/services/documents';
     import {
         AUTO_SCAN_DELAY,
         AUTO_SCAN_DISTANCETHRESHOLD,
@@ -33,7 +25,15 @@
         PREVIEW_RESIZE_THRESHOLD
     } from '~/models/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
-    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
+    import { DocumentsService, documentsService } from '~/services/documents';
+    import { securityService } from '~/services/security';
+    import { syncService } from '~/services/sync';
+    import { showError } from '~/utils/error';
+    import { share } from '~/utils/share';
+    import { navigate } from '~/utils/svelte/ui';
+    import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui';
+    import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
+    import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};

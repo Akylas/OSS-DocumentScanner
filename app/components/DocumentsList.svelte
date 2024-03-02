@@ -1,6 +1,5 @@
 <script context="module" lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-    import { throttle } from '@nativescript/core/utils';
     import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
@@ -10,7 +9,6 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import {
         AnimationDefinition,
         Application,
@@ -21,17 +19,14 @@
         ObservableArray,
         Page,
         PageTransition,
-        Screen,
         SharedTransition,
         StackLayout,
-        Utils,
-        View
+        Utils
     } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
-    import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
@@ -46,9 +41,8 @@
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import { PermissionError, showError } from '~/utils/error';
-    import { fade } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnackMessage, transformPages } from '~/utils/ui';
-    import { colors, fontScale, screenWidthDips } from '~/variables';
+    import { fade, navigate, showModal } from '~/utils/svelte/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight } from '~/variables';
 
     const textPaint = new Paint();
@@ -359,7 +353,7 @@
             selectItem(item);
         }
     }
-    const onItemTap = throttle(async function(item: Item) {
+    async function onItemTap(item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -374,7 +368,7 @@
         } catch (error) {
             showError(error);
         }
-    }, 500);
+    }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (__ANDROID__) {
             if (nbSelected > 0) {
