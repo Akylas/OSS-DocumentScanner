@@ -1,0 +1,86 @@
+{
+    "terminal.integrated.env.osx": {
+        "KEYSTORE_PATH": "certs/upload.keystore",
+        "SENTRY_PREFIX": "app:///",
+        "SOURCEMAP_REL_DIR": "../../sourcemaps",
+        "SENTRY_URL": "https://bugs.akylas.fr",
+        "SENTRY_ORG": "akylas"
+    },
+    "terminal.integrated.env.linux": {
+        "KEYSTORE_PATH": "certs/upload.keystore",
+        "SENTRY_PREFIX": "app:///",
+        "SOURCEMAP_REL_DIR": "../../sourcemaps",
+        "SENTRY_URL": "https://bugs.akylas.fr",
+        "SENTRY_ORG": "akylas"
+    },
+    "i18n-ally.keystyle": "nested",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
+    "cmake.buildDirectory": "${workspaceFolder}/cpp/cpp_test_app/build",
+    "cmake.debugConfig": {
+        "args": ["/home/mguillon/Desktop/test_images"]
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc-12",
+    "svelte.plugin.svelte.compilerWarnings": {
+        "a11y-aria-attributes": "ignore",
+        "a11y-incorrect-aria-attribute-type": "ignore",
+        "a11y-unknown-aria-attribute": "ignore",
+        "a11y-hidden": "ignore",
+        "a11y-misplaced-role": "ignore",
+        "a11y-unknown-role": "ignore",
+        "a11y-no-abstract-role": "ignore",
+        "a11y-no-redundant-roles": "ignore",
+        "a11y-role-has-required-aria-props": "ignore",
+        "a11y-accesskey": "ignore",
+        "a11y-autofocus": "ignore",
+        "a11y-misplaced-scope": "ignore",
+        "a11y-positive-tabindex": "ignore",
+        "a11y-invalid-attribute": "ignore",
+        "a11y-missing-attribute": "ignore",
+        "a11y-img-redundant-alt": "ignore",
+        "a11y-label-has-associated-control": "ignore",
+        "a11y-media-has-caption": "ignore",
+        "a11y-distracting-elements": "ignore",
+        "a11y-structure": "ignore",
+        "a11y-mouse-events-have-key-events": "ignore",
+        "a11y-missing-content": "ignore",
+        "illegal-attribute-character": "ignore"
+    },
+    "C_Cpp.errorSquiggles": "disabled",
+    "terminal.integrated.defaultProfile.linux": "documentscanner",
+    "terminal.integrated.defaultProfile.osx": "documentscanner",
+    "terminal.integrated.profiles.linux": {
+        "fish": null,
+        "documentscanner": {
+            "env": {
+                "ZSH_DOTENV_FILE": ".env.documentscanner"
+            },
+            "path": "zsh",
+            "args": ["-l"]
+        },
+        "cardwallet": {
+            "env": {
+                "ZSH_DOTENV_FILE": ".env.cardwallet"
+            },
+            "path": "zsh",
+            "args": ["-l"]
+        }
+    },
+    "terminal.integrated.profiles.osx": {
+        "fish": null,
+        "documentscanner": {
+            "env": {
+                "ZSH_DOTENV_FILE": ".env.documentscanner"
+            },
+            "path": "zsh",
+            "args": ["-l"]
+        },
+        "cardwallet": {
+            "env": {
+                "ZSH_DOTENV_FILE": ".env.cardwallet"
+            },
+            "path": "zsh",
+            "args": ["-l"]
+        }
+    }
+}

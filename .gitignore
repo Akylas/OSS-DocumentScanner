@@ -48,6 +48,7 @@ yarn-error.log*
 .cloud
 .project
 .yarn
+.env*
 yarn.lock
 tmp/
 # typings/
@@ -58,8 +59,10 @@ tesseract/android/*
 
 
 # Visual Studio Code
-.vscode/settings.json
-.vscode/extensions.json
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/i18n-ally-custom-framework.yml
 .sentryclirc
 *.zip
 dist
@@ -68,7 +71,6 @@ dist
 .history
 /app/assets/peakfinder/webapp.js
 /app/assets/webpdfviewer
-/.vscode/settings.json
 
 tesseract/ios/**
 *.framework

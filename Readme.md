@@ -53,17 +53,17 @@ Open Source app to scan your documents.
 
 | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
 
-### Having issues, suggestions and feedback?
+## Having issues, suggestions and feedback?
 
 You can,
 - [Create an issue here](https://github.com/Akylas/OSS-DocumentScanner/issues)
 
-### Contributors
+## Contributors
 
 Thanks to our contributors:
 * [Enrico Dell'Oste](https://www.smartpixel.it/)
 
-### Languages: [<img align="right" src="https://hosted.weblate.org/widgets/oss-document-scanner/-/287x66-white.png" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
+## Languages: [<img align="right" src="https://hosted.weblate.org/widgets/oss-document-scanner/-/287x66-white.png" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
 
 [<img src="https://hosted.weblate.org/widgets/oss-document-scanner/-/multi-auto.svg" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/)
 
@@ -76,9 +76,32 @@ The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/o
   </a>
 </p>
 
-### Building Setup
+## Building Setup
 
-This app is using [Nativescript](https://github.com/NativeScript/NativeScript) which is a cross platform framework to build apps for iOS/Android
+This repo can be used to build 2 different apps: `OSS DocumentScanner` and `OSS CardWallet`
+
+Those apps are using [Nativescript](https://github.com/NativeScript/NativeScript) which is a cross platform framework to build apps for iOS/Android
+
+### Setup / Environment
+
+This project uses a few environment variables. While most are for publishing and thus not necessary for most, some are used to decide which app to build: 
+* `APP_ID`: `com.akylas.documentscanner` or `com.akylas.cardwallet`
+* `APP_BUILD_PATH`: `build/documentscanner` or `build/cardwallet`
+* `APP_RESOURCES`: `App_Resources/documentscanner` or `App_Resources/cardwallet`
+
+You can either define them yourself. If you are using vscode the `vscode/settings.json` of this repo defines different custom shells which will try to source `.env.documentscanner` and `.env.cardwallet`. To do this it use the plugin `dotenv` from omzsh [here](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/dotenv)
+If those variables are not define the project will default to variables for `OSS DocumentScanner`
+
+### Nativescript
+
+First [setup Nativescript](https://docs.nativescript.org/setup/linux)
+
+This project is optimized to be built with [Akylas Fork](https://github.com/Akylas/NativeScript). Though it would work with main it is best to use this fork. The `package.json` defines a resolution to `../NativeScript/dist/packages/core` so clone the fork and build it using `npm run setup:yarn && npm run ui-mobile-base:build && npm run core:build`
+
+Another change is that this project uses new features of the Nativescript [cli](https://github.com/farfromrefug/nativescript-cli) which were not released yet.
+So for now you need to clone [it](https://github.com/farfromrefug/nativescript-cli), build with `npm run setup` then use it with `PATH_TO_CLI_FOLDER/bin/ns`
+
+### 3rd parties
 
 This app also uses opencv and tesseract. I did not include the libraries in git because there are huge and would make the github repo too big.
 There are 2 ways to install them:
@@ -113,7 +136,7 @@ It is a bit trickier for Tesseract as we need to compile it
     - build with `./Scripts/Build_All.sh`
     - copy everything from `Root` to the `tesseract/ios` at the root of this repo
 
-#### Yarn
+### Yarn
 
 You need to use yarn with this project as it uses the `portal:` protocol for some dependencies.
 Note that the project has some `yarn link` for easy local dev for me. The best is for you to remove the `resolutions` part of the `package.json`
@@ -125,4 +148,4 @@ Now that all is setup and that you prepared the 3rd party libraries you can actu
 * `yarn`
 * `ns run android --no-hmr --env.devlog` (replace by `ios` for iOS...)
 
-This will run the app on the first discovered device or emulator.
+This should run the app on the first discovered device or emulator.
