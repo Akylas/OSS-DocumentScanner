@@ -9,7 +9,7 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { colors } from '~/variables';
+    import { colors, navigationBarHeight, statusBarHeight } from '~/variables';
     import { OCRPage } from '~/models/OCRDocument';
 
     // technique for only specific properties to get updated on store change
@@ -30,6 +30,7 @@
     let currentIndex = startPageIndex;
     const firstItem = images[currentIndex];
 
+    DEV_LOG && console.log('images', images);
     // let currentImageSrc = firstItem.image;
     // let currentImageRotation = firstItem.rotation;
     // let currentImageColorMatrix = firstItem.colorMatrix || getColorMatrix(firstItem.colorType);
@@ -102,10 +103,18 @@
 </script>
 
 <page actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" {statusBarStyle}>
-    <gridlayout rows="auto,*">
+    <gridlayout rows="auto,*" android:paddingBottom={$navigationBarHeight}>
         <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
 
-        <pager bind:this={pager} items={images} preserveIndexOnItemsChange={true} rowSpan={2} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
+        <pager
+            bind:this={pager}
+            items={images}
+            preserveIndexOnItemsChange={true}
+            rowSpan={2}
+            selectedIndex={startPageIndex}
+            transformers="zoomOut"
+            on:selectedIndexChange={onSelectedIndex}
+            android:marginTop={$statusBarHeight}>
             <Template let:item>
                 <gridlayout rows="*,auto" width="100%">
                     <RotableImageView id="imageView" {imageFunctionArg} {item} margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} zoomable={true} />
