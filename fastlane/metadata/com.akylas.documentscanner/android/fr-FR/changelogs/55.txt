@@ -1,0 +1,11 @@
+### Bug fixes
+- show only name of pdf in complete snack
+- prevent quick taps to open multiple windows
+- correct behavior when deleting pages in edit view
+- transparent navigationbar
+- Translated using Weblate (French)
+- correctly expand behing navigationBar. Still have to find how to expand behind status bar
+- throttle navigation to prevent opening views multiple times
+- crash fix in camera view
+- regression fix while cancelling import of image
+- transparent status bar
