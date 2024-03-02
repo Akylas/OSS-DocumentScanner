@@ -7,6 +7,8 @@ function getThemeColor(context, colorResId) {
     ta.recycle();
     return color;
 }
+
+const FLAG_SECURE = 2; // android.view.WindowManager.LayoutParams.FLAG_SECURE
 @NativeClass()
 @JavaProxy('__PACKAGE__.MainActivity')
 export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
@@ -17,19 +19,19 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     public onCreate(savedInstanceState: android.os.Bundle): void {
         const allowScreenshot = ApplicationSettings.getBoolean('allow_screenshot', true);
         if (!allowScreenshot) {
-            this.getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            this.getWindow().setFlags(FLAG_SECURE, FLAG_SECURE);
         }
         prefs.on('key:allow_screenshot', () => {
             const value = ApplicationSettings.getBoolean('allow_screenshot');
             if (!value) {
-                this.getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE);
+                this.getWindow().setFlags(FLAG_SECURE, FLAG_SECURE);
             } else {
-                this.getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+                this.getWindow().clearFlags(FLAG_SECURE);
             }
         });
         // Handle the splash screen transition.
         //@ts-ignore
-        androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
+        // androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         Application.android.init(this.getApplication());
         // Set the isNativeScriptActivity in onCreate (as done in the original NativeScript activity code)
         // The JS constructor might not be called because the activity is created from Android.
@@ -40,8 +42,16 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
 
         this._callbacks.onCreate(this, savedInstanceState, this.getIntent(), super.onCreate);
 
+        // androidx.core.view.WindowCompat.setDecorFitsSystemWindows(this.getWindow(), false);
+
         // DynamicColors
-        com.google.android.material.color.DynamicColors.applyIfAvailable(this);
+        // com.google.android.material.color.DynamicColors.applyIfAvailable(this);
+        try {
+            DEV_LOG && console.log('prepareActivity', this);
+            com.akylas.documentscanner.Utils.prepareActivity(this);
+        } catch (error) {
+            console.error(error);
+        }
         this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
     }
 

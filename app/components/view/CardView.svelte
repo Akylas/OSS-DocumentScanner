@@ -24,9 +24,7 @@
     import { documentsService } from '~/services/documents';
     import { PermissionError, showError } from '~/utils/error';
     import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
-    import { recycleImages } from '~/utils/images';
-    import { colors, screenWidthDips } from '~/variables';
-    import { throttle } from '@nativescript/core/utils';
+    import { colors, navigationBarHeight, screenWidthDips } from '~/variables';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -556,7 +554,7 @@
     }
 </script>
 
-<page id="cardview" actionBarHidden={true} statusBarColor={topBackgroundColor} {statusBarStyle}>
+<page id="cardview" actionBarHidden={true} {statusBarStyle}>
     <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
         <CActionBar
             backgroundColor={topBackgroundColor}
@@ -615,7 +613,7 @@
                     width="100%" />
                 <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + currentQRCodeIndex} text={currentQRCode?.text} textAlignment="center" />
             </stacklayout>
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
                 <mdbutton class="fab" text="mdi-plus" on:tap={addPages} />
             </stacklayout>

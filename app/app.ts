@@ -11,7 +11,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, Frame, Trace } from '@nativescript/core';
+import { Application, NavigatedData, Page } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
@@ -148,6 +148,36 @@ try {
         cornerFamily: 'rounded' as any,
         cornerSize: 12
     });
+    if (__ANDROID__) {
+        Page.on('shownModally', function (event) {
+            DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
+            com.akylas.documentscanner.Utils.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
+        });
+        // GestureRootView.on('shownInBottomSheet', function (event) {
+        //     const _bottomSheetFragment = event.object['_bottomSheetFragment'];
+        //     DEV_LOG && console.log('shownInBottomSheet', _bottomSheetFragment, _bottomSheetFragment.getDialog().getWindow());
+        //     if (_bottomSheetFragment) {
+        //         com.akylas.documentscanner.Utils.prepareWindow(_bottomSheetFragment.getDialog().getWindow());
+        //     }
+        // });
+    }
+    if (!PRODUCTION && DEV_LOG) {
+        Page.on('navigatingTo', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'to', event.object, event.isBackNavigation);
+        });
+        Page.on('showingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Page.on('closingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
+        });
+        GestureRootView.on('shownInBottomSheet', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'BOTTOMSHEET', event.object, event.isBackNavigation);
+        });
+        GestureRootView.on('closedBottomSheet', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING BOTTOMSHEET', event.object, event.isBackNavigation);
+        });
+    }
     let Comp;
     const startOnCam = START_ON_CAM; /* ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) */
     if (startOnCam) {

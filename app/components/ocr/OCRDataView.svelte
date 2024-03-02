@@ -192,7 +192,7 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarColor="black" statusBarStyle="dark">
+<page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarStyle="dark">
     <gridlayout rows="auto,*">
         <!-- <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
             <absolutelayout

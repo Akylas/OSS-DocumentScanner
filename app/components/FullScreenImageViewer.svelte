@@ -101,7 +101,7 @@
     });
 </script>
 
-<page actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" statusBarColor={backgroundColor} {statusBarStyle}>
+<page actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" {statusBarStyle}>
     <gridlayout rows="auto,*">
         <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
 

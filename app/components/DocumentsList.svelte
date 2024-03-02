@@ -49,6 +49,7 @@
     import { fade } from '~/utils/svelte/ui';
     import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnackMessage, transformPages } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips } from '~/variables';
+    import { colors, fontScale, navigationBarHeight } from '~/variables';
 
     const textPaint = new Paint();
 </script>
@@ -752,7 +753,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
                 <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>

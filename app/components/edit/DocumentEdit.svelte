@@ -27,7 +27,7 @@
     import { loadImage, recycleImages } from '~/utils/images';
     import { share } from '~/utils/share';
     import { ColorMatricesTypes, copyTextToClipboard, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
-    import { colors } from '~/variables';
+    import { colors, navigationBarHeight } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer, colorBackground } = $colors);
@@ -576,7 +576,7 @@
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,auto,auto">
+    <gridlayout rows="auto,*,auto,auto,auto" android:paddingBottom={$navigationBarHeight}>
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">

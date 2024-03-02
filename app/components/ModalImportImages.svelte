@@ -9,6 +9,7 @@
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
     import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/models/constants';
+    import { navigationBarHeight } from '~/variables';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
@@ -45,8 +46,8 @@
     }
 </script>
 
-<page bind:this={page} id="modalImport" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark">
-    <gridlayout backgroundColor="black" rows="auto,*,auto,auto,auto">
+<page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
+    <gridlayout backgroundColor="black" rows="auto,*,auto,auto,auto" android:paddingBottom={$navigationBarHeight}>
         <pager bind:this={pager} id="pager" disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <CropView {...item} rowSpan={2} />

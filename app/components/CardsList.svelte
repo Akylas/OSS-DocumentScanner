@@ -13,7 +13,7 @@
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
-    import { navigate, showModal } from 'svelte-native';
+    import { navigate, showModal } from '~/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
@@ -29,7 +29,7 @@
     import { PermissionError, showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
     import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
-    import { colors, screenHeightDips, screenWidthDips } from '~/variables';
+    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -439,7 +439,7 @@
                 break;
         }
     }
-    const onItemTap = throttle(async function(item: Item) {
+    const onItemTap = throttle(async function (item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -859,7 +859,7 @@
             </gridlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
                 <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
             </stacklayout>

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
+import android.view.Window;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.color.DynamicColors;
 import java.util.Locale;
@@ -46,5 +47,12 @@ public class Utils {
     public static Locale getSystemLocale() {
         return androidx.core.os.ConfigurationCompat.getLocales(android.content.res.Resources.getSystem().getConfiguration()).get(0);
     }
-
+    public static void prepareActivity(AppCompatActivity activity) {
+        com.google.android.material.color.DynamicColors.applyIfAvailable(activity);
+        androidx.core.splashscreen.SplashScreen.installSplashScreen(activity);
+        prepareWindow(activity.getWindow());
+    }
+    public static void prepareWindow(Window window) {
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false);
+    }
 }

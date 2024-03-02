@@ -736,7 +736,7 @@
     }
 </script>
 
-<page bind:this={page} id="camera" actionBarHidden={true} statusBarColor="black" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
+<page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
         <cameraView
             bind:this={cameraView}
