@@ -152,6 +152,7 @@
         colorBackground,
         colorSurfaceContainerHigh,
         colorOnBackground,
+        colorOnPrimary,
         colorSurfaceContainerLow,
         colorOnSecondary,
         colorSurfaceContainer,
@@ -245,7 +246,10 @@
             if (!doc) {
                 return;
             }
-            const component = doc.pages.length > 1 ? (await import('~/components/view/DocumentView.svelte')).default : (await import('~/components/edit/DocumentEdit.svelte')).default;
+            const component =
+                doc.pages.length > 1
+                    ? (await import(CARD_APP ? '~/components/view/CardView.svelte' : '~/components/view/DocumentView.svelte')).default
+                    : (await import('~/components/edit/DocumentEdit.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -542,7 +546,7 @@
                             ...page
                         })
                     );
-        DEV_LOG && console.log('acc', acc.length);
+                    DEV_LOG && console.log('acc', acc.length);
                     return acc;
                 }, []),
                 startPageIndex: 0
@@ -584,20 +588,20 @@
             showError(err);
         }
     }
-    async function switchLayout() {
-        try {
-            await collectionView?.nativeElement.closeCurrentMenu();
-            if (viewStyle === 'default') {
-                viewStyle = 'fullcard';
-            } else {
-                viewStyle = 'default';
-            }
-            ApplicationSettings.setString('cardViewStyle', viewStyle);
-            collectionView?.nativeView.refresh();
-        } catch (error) {
-            showError(error);
-        }
-    }
+    // async function switchLayout() {
+    //     try {
+    //         await collectionView?.nativeElement.closeCurrentMenu();
+    //         if (viewStyle === 'default') {
+    //             viewStyle = 'fullcard';
+    //         } else {
+    //             viewStyle = 'default';
+    //         }
+    //         ApplicationSettings.setString('cardViewStyle', viewStyle);
+    //         collectionView?.nativeView.refresh();
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
     async function showSettings() {
         try {
             const Settings = (await import('~/components/settings/Settings.svelte')).default;
@@ -681,7 +685,7 @@
             }
         }
     }
-    let viewStyle: string = ApplicationSettings.getString('cardViewStyle', 'fullcard');
+    let viewStyle: string = ApplicationSettings.getString('cardViewStyle', 'full');
 
     function fullCardDrawerTranslationFunction(side, width, value, delta, progress) {
         const result = {
@@ -689,10 +693,10 @@
                 translateX: side === 'right' ? -delta : delta
             },
             rightDrawer: {
-                translateX: width + (side === 'right' ? -delta : delta)
+                // translateX: width + (side === 'right' ? -delta : delta)
             },
             leftDrawer: {
-                translateX: (side === 'right' ? -delta : delta) - width
+                // translateX: (side === 'right' ? -delta : delta) - width
             },
             backDrop: {
                 translateX: side === 'right' ? -delta : delta,
@@ -740,6 +744,64 @@
             }
         });
     }
+    async function selectViewStyle(event) {
+        try {
+            // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
+            await showPopoverMenu({
+                options: [
+                    { id: 'cardholder', name: lc('cardholder'), icon: 'mdi-view-agenda' },
+                    { id: 'full', name: lc('full'), icon: 'mdi-view-split-horizontal' },
+                    { id: 'list', name: lc('list'), icon: 'mdi-view-grid' }
+                ],
+                anchor: event.object,
+                onClose: (item) => {
+                    viewStyle = item.id;
+                    DEV_LOG && console.log('selectViewStyle', viewStyle);
+                    ApplicationSettings.setString('documents_list_view_style', viewStyle);
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    function getColWidth(viewStyle) {
+        switch (viewStyle) {
+            case 'list':
+                return screenWidthDips / 2;
+            default:
+                return screenWidthDips;
+        }
+    }
+    function getRowHeight(viewStyle) {
+        switch (viewStyle) {
+            case 'full':
+                return itemHeight;
+            case 'cardholder':
+                return 150;
+            case 'list':
+                return (screenWidthDips / 2) * CARD_RATIO;
+        }
+    }
+    function getItemOverlap(viewStyle) {
+        switch (viewStyle) {
+            case 'full':
+                return '-180 0 0 0';
+            case 'cardholder':
+                return '-30 0 0 0';
+            case 'list':
+                return '0 0 0 0';
+        }
+    }
+    function itemTemplateSelector(item) {
+        switch (viewStyle) {
+            case 'full':
+            case 'list':
+                return 'full';
+            default:
+                return viewStyle;
+        }
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
@@ -747,15 +809,17 @@
         <!-- {/if} -->
         <collectionView
             bind:this={collectionView}
-            itemOverlap={viewStyle === 'fullcard' ? '-180 0 0 0' : '-30 0 0 0'}
-            itemTemplateSelector={() => viewStyle}
+            id="list"
+            colWidth={getColWidth(viewStyle)}
+            itemOverlap={getItemOverlap(viewStyle)}
+            {itemTemplateSelector}
             items={documents}
             paddingBottom={88}
             row={1}
-            rowHeight={viewStyle === 'fullcard' ? itemHeight : 150}
+            rowHeight={getRowHeight(viewStyle)}
             swipeMenuId="swipeMenu"
             on:swipeMenuClose={(e) => handleTouchAction(e.index, { action: 'up' })}>
-            <Template let:item>
+            <Template key="cardholder" let:item>
                 <!-- TODO: make this a canvas -->
                 <absolutelayout height="150">
                     <swipemenu
@@ -794,11 +858,12 @@
                     <absolutelayout boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top={150} width="100%" />
                 </absolutelayout>
             </Template>
-            <Template key="fullcard" let:item>
+            <Template key="full" let:item>
                 <!-- TODO: make this a canvas -->
                 <swipemenu
                     id="swipeMenu"
                     openAnimationDuration={100}
+                    rightDrawerMode="under"
                     rightSwipeDistance={0}
                     startingSide={item.startingSide}
                     translationFunction={fullCardDrawerTranslationFunction}
@@ -808,8 +873,7 @@
                         prop:mainContent
                         backgroundColor={item.doc.pages[0].colors?.[0]}
                         borderRadius={12}
-                        dynamicElevationOffset={3}
-                        elevation={6}
+                        boxShadow="0 0 8 rgba(0, 0, 0, 0.8)"
                         margin="16 16 16 16"
                         on:tap={() => onItemTap(item)}
                         on:longPress={(e) => onItemLongPress(item, e)}>
@@ -828,7 +892,58 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
+                    <stackLayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                        <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
+                    </stackLayout>
+
+                    <!-- <canvaslabel col={1} padding="16 0 0 16">
+                        <cgroup>
+                            <cspan color={colorOnBackground} fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
+                            <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
+                        </cgroup>
+
+                        <cspan color={colorOnSurfaceVariant} fontSize={14} paddingBottom={0} text={getSize(item)} verticalAlignment="bottom" />
+                    </canvaslabel> -->
+                    <!-- <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} /> -->
+                </swipemenu>
+            </Template>
+            <Template key="list" let:item>
+                <!-- TODO: make this a canvas -->
+                <swipemenu
+                    id="swipeMenu"
+                    openAnimationDuration={100}
+                    rightDrawerMode="under"
+                    rightSwipeDistance={0}
+                    startingSide={item.startingSide}
+                    translationFunction={fullCardDrawerTranslationFunction}
+                    on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
+                    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
+                    <gridlayout
+                        prop:mainContent
+                        backgroundColor={item.doc.pages[0].colors?.[0]}
+                        borderRadius={12}
+                        boxShadow="0 0 8 rgba(0, 0, 0, 0.8)"
+                        margin="16 16 16 16"
+                        on:tap={() => onItemTap(item)}
+                        on:longPress={(e) => onItemLongPress(item, e)}>
+                        <RotableImageView
+                            id="imageView"
+                            borderRadius={12}
+                            decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
+                            decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
+                            fadeDuration={100}
+                            item={item.doc.pages[0]}
+                            sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
+                            stretch="aspectFill" />
+                        <gridlayout style="z-index:10;" margin="10 20 0 0">
+                            <SelectedIndicator selected={item.selected} />
+                            <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                        </gridlayout>
+                    </gridlayout>
+
+                    <stackLayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                        <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
+                    </stackLayout>
 
                     <!-- <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
@@ -886,7 +1001,7 @@
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
 
-            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={switchLayout} />
+            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showSettings} />
         </CActionBar>
         {#if nbSelected > 0}

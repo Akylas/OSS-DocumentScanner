@@ -245,7 +245,7 @@ export class OCRDocument extends Observable implements Document {
             this.#observables.splice(oldIndex, 1);
             this.#observables.splice(newIndex, 0, item);
         }
-        this.save();
+        return this.save();
     }
     onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
         page.notify({ eventName: 'updated', object: page });

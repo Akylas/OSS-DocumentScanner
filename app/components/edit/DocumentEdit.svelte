@@ -9,7 +9,7 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
-    import { OCRData } from 'plugin-nativeprocessor';
+    import { OCRData, QRCodeData } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
@@ -23,6 +23,7 @@
     import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
+    import { qrcodeService } from '~/services/qrcode';
     import { showError } from '~/utils/error';
     import { loadImage, recycleImages } from '~/utils/images';
     import { share } from '~/utils/share';
@@ -49,6 +50,7 @@
     let currentIndex = startPageIndex;
     let currentItem: OCRPage;
     let currentItemOCRData: OCRData;
+    let currentItemQRCodeData: QRCodeData;
     let currentItemSubtitle: string;
     let currentSelectedImagePath: string;
     let currentSelectedImageRotation: number;
@@ -101,12 +103,28 @@
             showError(error);
         }
     }
+    async function detectQRCode() {
+        if (CARD_APP) {
+            try {
+                const qrcode = await qrcodeService.detectQRcode(document, currentIndex);
+                if (!qrcode?.length) {
+                    showSnack({ message: lc('no_qrcode_found') });
+                } else {
+                    currentItemQRCodeData = qrcode;
+                    showSnack({ message: lc('qrcode_found') });
+                }
+            } catch (error) {
+                showError(error);
+            }
+        }
+    }
     function updateCurrentItem(item) {
         currentItem = item;
         currentItemSubtitle = `${currentItem.width} x ${currentItem.height}`;
         currentSelectedImagePath = currentItem.imagePath;
         currentSelectedImageRotation = currentItem.rotation || 0;
         currentItemOCRData = currentItem.ocrData;
+        currentItemQRCodeData = currentItem.qrcode;
         transforms = currentItem.transforms?.split(TRANSFORMS_SPLIT) || [];
     }
     function onSelectedIndex(event) {
@@ -114,7 +132,7 @@
         updateCurrentItem(items.getItem(currentIndex));
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;
         // $enhanced = transforms.indexOf('enhance') !== -1;
-        DEV_LOG && console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation);
+        DEV_LOG && console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation, currentItemQRCodeData);
         refreshCollectionView();
     }
     // function onFirstLayout(item, e) {
@@ -233,6 +251,7 @@
         }
     }
     async function cropEdit() {
+        //TODO: recrop into modal window
         try {
             const item = items.getItem(currentIndex);
 
@@ -272,6 +291,10 @@
         } catch (error) {
             showError(error);
         }
+    }
+
+    async function showCurrentQRCodeData() {
+        await qrcodeService.showQRCode([document.pages[currentIndex]], document, currentIndex);
     }
     let ignoreNextCollectionViewRefresh = false;
     const saveCurrentItemColorType = debounce(function (index, colorMatrix) {
@@ -441,7 +464,7 @@
                     ignoreNextCollectionViewRefresh = false;
                     return;
                 }
-                refreshCollectionView();
+                // refreshCollectionView();
             }
         }
     }
@@ -575,6 +598,15 @@
             showError(error);
         }
     }
+    function copyQRCodeText() {
+        try {
+            if (currentItemQRCodeData) {
+                copyTextToClipboard(currentItemQRCodeData[0].text);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
@@ -599,17 +631,34 @@
             visibility={currentItemOCRData ? 'visible' : 'hidden'}
             on:tap={showCurrentOCRData}
             on:longPress={copyText} />
+        {#if CARD_APP}
+            <mdbutton
+                class="icon-btn"
+                horizontalAlignment="right"
+                marginRight={80}
+                row={2}
+                text="mdi-qrcode"
+                variant="text"
+                verticalAlignment="bottom"
+                visibility={currentItemQRCodeData?.length ? 'visible' : 'hidden'}
+                on:tap={showCurrentQRCodeData}
+                on:longPress={copyQRCodeText} />
+        {/if}
 
         <stacklayout orientation="horizontal" row={3}>
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
             <mdbutton class="icon-btn" text="mdi-auto-fix" variant="text" on:tap={showEnhancements} />
+            {#if CARD_APP}
+                <mdbutton class="actionBarButton" text="mdi-qrcode-scan" variant="text" on:tap={detectQRCode} />
+            {/if}
+            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
             <!-- <checkbox checked={$enhanced} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => ($enhanced = e.value)} /> -->
             <!-- <checkbox checked={$whitepaper} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => ($whitepaper = e.value)} /> -->
             <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
-        <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
+        <collectionview bind:this={collectionView} id="filters" colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
                 <gridlayout id={item.text} padding={2} on:tap={applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
@@ -638,12 +687,11 @@
         </collectionview>
         <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto,auto" visibility={recrop ? 'visible' : 'hidden'}>
             <CropView {editingImage} bind:quadChanged bind:quads />
-            <label fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
+            <label color="white" fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
             <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={2} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
         </gridlayout>
         <CActionBar {onGoBack} onTitleTap={() => (editingTitle = true)} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
         </CActionBar>

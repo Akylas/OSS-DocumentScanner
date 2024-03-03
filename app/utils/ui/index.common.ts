@@ -366,6 +366,8 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                     new Promise(async (resolve, reject) => {
                         try {
                             const sourceImagePath = s;
+                            // const resizeThreshold = Math.max(QRCODE_RESIZE_THRESHOLD, PREVIEW_RESIZE_THRESHOLD);
+                            // we load directly at the max of QRCODE_RESIZE_THRESHOLD and PREVIEW_RESIZE_THRESHOLD
                             const editingImage = await loadImage(sourceImagePath);
 
                             if (!editingImage) {
@@ -374,6 +376,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
 
                             const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                             const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+                            // TODO: detect JSON and QRCode in one go
                             const quads = cropEnabled ? await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0) : undefined;
                             let qrcode;
                             if (CARD_APP) {

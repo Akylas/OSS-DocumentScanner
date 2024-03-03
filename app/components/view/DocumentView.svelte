@@ -360,9 +360,9 @@
         const index = event.pageIndex;
         const current = items.getItem(index);
         if (current) {
-            const page = document.getObservablePages().getItem(index);
-            items.setItem(index, { selected: current.selected, page, index: current.index });
             DEV_LOG && console.log('view onDocumentPageUpdated', index, current.index, event.imageUpdated);
+            const page = document.getObservablePages().getItem(index);
+            items.setItem(index, { ...current, page });
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
                 imageView?.updateImageUri();
@@ -494,8 +494,8 @@
                             showImageExportPopover(event);
                             break;
                         // case 'fullscreen':
-                        //     fullscreenSelectedDocuments();
-                        //     break;
+                            // await fullscreenSelectedDocuments();
+                            // break;
                         case 'ocr':
                             await detectOCR({ pages: getSelectedPagesWithData() });
                             unselectAll();
