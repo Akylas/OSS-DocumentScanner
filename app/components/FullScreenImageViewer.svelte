@@ -22,7 +22,7 @@
     export let backgroundColor = 'black';
     export let labelColor = 'white';
     export let statusBarStyle: any = 'dark';
-    export let actionBarStyle: any = backgroundColor === 'black' ? 'black' : '';
+    export let actionBarStyle: any = backgroundColor;
     export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation? }[];
     let pager: NativeViewElementNode<Pager>;
     let imageFunctionArg = Application.orientation();
