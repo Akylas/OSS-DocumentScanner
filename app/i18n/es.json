@@ -123,6 +123,7 @@
     "move_data_desc": "todos los datos de la aplicación se moverán y se reiniciará la aplicación al final",
     "moving_files": "moviendo los archivos",
     "nb_pages": "%1$s páginas",
+    "no_card_yet": "añadir una tarjeta con la cámara o importar una desde una imagen",
     "no_document_found": "no se encontró el documento",
     "no_document_yet": "añada un documento utilizando la cámara o importar uno desde una imagen",
     "no_text_found_in_page": "no se ha detectado ningún texto en su documento",
