@@ -201,7 +201,6 @@ frame {
 .actionBarButton {
     @extend .mdi;
     shape: round;
-    background-color: transparent;
     padding: 0;
     margin: 0;
     width: var(--actionBarHeight);
