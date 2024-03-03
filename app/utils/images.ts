@@ -1,12 +1,12 @@
 import { ImageAsset, ImageSource } from '@nativescript/core';
 
-export async function loadImage(sourceImagePath) {
+export async function loadImage(sourceImagePath, maxSize = 4500) {
     // if (__ANDROID__) {
     // we need to use ImageAsset to correctly load images with content:
     // we also need it cause it loads the image "rotated"
     // Another reason is that it is the only way to do it the true async way
     const asset = new ImageAsset(sourceImagePath);
-    asset.options = { autoScaleFactor: false, keepAspectRatio: true, maxWidth: 4500, maxHeight: 4500 };
+    asset.options = { autoScaleFactor: false, keepAspectRatio: true, maxWidth: maxSize, maxHeight: maxSize };
     const bitmap = await asset.getImage();
     return new ImageSource(bitmap);
     // } else {
