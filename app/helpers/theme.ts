@@ -15,8 +15,8 @@ export type Themes = 'auto' | 'light' | 'dark' | 'black';
 
 export const onThemeChanged = createGlobalEventListener('theme');
 export let theme: Themes;
-export const sTheme = writable('auto');
 export const currentTheme = writable('auto');
+export const currentRealTheme = writable('auto');
 
 let started = false;
 let autoDarkToBlack = getBoolean('auto_black', false);
@@ -37,6 +37,7 @@ Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanc
         updateThemeColors(realTheme);
         //close any popover as they are not updating with theme yet
         closePopover();
+        currentRealTheme.set(realTheme);
         globalObservable.notify({ eventName: 'theme', data: realTheme });
     }
 });
@@ -160,7 +161,7 @@ export function getRealTheme(th = theme) {
     return th;
 }
 
-export function isDarkTheme(th = getRealTheme(theme)) {
+export function isDarkTheme(th: string = getRealTheme(theme)) {
     return th === 'dark' || th === 'black';
 }
 
@@ -212,10 +213,10 @@ export function start() {
 
         applyTheme(newTheme);
         updateThemeColors(realTheme);
-        sTheme.set(newTheme);
         if (__ANDROID__) {
             com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
         }
+        currentRealTheme.set(realTheme);
         setTimeout(() => {
             globalObservable.notify({ eventName: 'theme', data: realTheme });
         }, 0);
@@ -225,6 +226,7 @@ export function start() {
         applyTheme(theme);
         const realTheme = getRealTheme(theme);
         currentTheme.set(realTheme);
+        currentRealTheme.set(realTheme);
         updateThemeColors(realTheme);
     }
     if (__ANDROID__) {
