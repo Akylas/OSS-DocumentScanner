@@ -1,12 +1,12 @@
 {
     "$com.akylas.cardwallet": {
         "app": {
-            "name": "OSS Card Wallet"
+            "name": "OSS Portafoglio Carte"
         }
     },
     "$com.akylas.documentscanner": {
         "app": {
-            "name": "OSS Document Scanner"
+            "name": "OSS Scanner Documenti"
         }
     },
     "a3": "a3",
@@ -123,6 +123,7 @@
     "move_data_desc": "tutti i dati dell'app saranno spostati e alla fine verrà eseguito il riavvio dell'app",
     "moving_files": "spostamento dei files",
     "nb_pages": "%1$s pagine",
+    "no_card_yet": "aggiungi una carta utilizzando la fotocamera o importarne una da un'immagine",
     "no_document_found": "nessun documento trovato",
     "no_document_yet": "aggiungi un documento utilizzando la fotocamera o importarne uno da un'immagine",
     "no_text_found_in_page": "non è stato rilevato alcun testo nel documento",
@@ -199,6 +200,6 @@
     "webdav_config": "configurazione webdav",
     "webdav_sync": "sincronizzazione dei documenti webdav",
     "webdav_sync_desc": "abilita webdav per sincronizzare i documenti (backup)",
-    "whitepaper": "whitepaper",
+    "whitepaper": "white paper",
     "whitepaper_desc": "migliora i documenti di tipo whitepaper"
 }
