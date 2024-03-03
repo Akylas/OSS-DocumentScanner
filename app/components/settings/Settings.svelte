@@ -79,7 +79,7 @@
             [
                 {
                     type: 'header',
-                    title: lc('donate')
+                    title: __IOS__ ? lc('show_love') : lc('donate')
                 },
                 {
                     type: 'sectionheader',
@@ -563,7 +563,9 @@
                     openLink(STORE_REVIEW_LINK);
                     break;
                 case 'sponsor':
-                    openLink(SPONSOR_URL);
+                    // Apple wants us to use in-app purchase for donations => taking 30% ...
+                    // so lets just open github and ask for love...
+                    openLink(__IOS__ ? GIT_URL : SPONSOR_URL);
                     break;
                 case 'third_party':
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
