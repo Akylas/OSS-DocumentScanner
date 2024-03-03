@@ -359,16 +359,20 @@ JSONCONS_ENUM_TRAITS(ZXing::BarcodeFormat, None, Aztec, Codabar, Code39, Code93,
 JSONCONS_ALL_MEMBER_TRAITS(ZXing::PointI, x, y);
 JSONCONS_N_CTOR_GETTER_TRAITS(ZXing::Result, 1, text, format, ecLevel, orientation, isMirrored, isInverted, position);
 
-ZXing::Results ReadQRCode(JNIEnv *env, Mat &srcMat, jint rotation, jstring options_)
+ZXing::Results ReadQRCode(JNIEnv *env, Mat &srcMat, jint jRotation, jstring options_)
 {
     auto hints = ZXing::DecodeHints().setFormats(ZXing::BarcodeFormat::Any).setMaxNumberOfSymbols(1);
     std::string options{jstringToString(env, options_)};
     double scale = 1.0f;
+    int rotation = jRotation;
     if (!options.empty()) {
         jsoncons::json j = jsoncons::json::parse(options);
 
         if (j.contains("tryHarder")) {
             hints = hints.setTryHarder(j["tryHarder"].as<bool>());
+        }
+        if (j.contains("rotation")) {
+            rotation = j["rotation"].as<int>();
         }
         if (j.contains("resizeThreshold")) {
             double resizeThreshold = j["resizeThreshold"].as<double>();

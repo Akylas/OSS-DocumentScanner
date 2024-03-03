@@ -1,5 +1,5 @@
 import { ImageSource, Utils } from '@nativescript/core';
-import { DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, OCRData } from '.';
+import { DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, OCRData, QRCodeData } from '.';
 import { CropView } from './CropView';
 
 export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
@@ -112,8 +112,8 @@ export async function ocrDocument(editingImage: ImageSource, options?: Partial<D
     });
 }
 
-export async function detectQRCode(editingImage: ImageSource | android.graphics.Bitmap, options?: Partial<DetectQRCodeOptions>, onProgress?: (progress: number) => void) {
-    return new Promise<any>((resolve, reject) => {
+export async function detectQRCode(editingImage: ImageSource | android.graphics.Bitmap, options?: Partial<DetectQRCodeOptions>) {
+    return new Promise<QRCodeData>((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCode(
             editingImage['android'] || editingImage,
             new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({

@@ -47,6 +47,7 @@ export interface DetectOptions {
 
 export interface DetectQRCodeOptions {
     resizeThreshold?: number;
+    rotation?: number;
 }
 
 export interface GenerateColorOptions {
