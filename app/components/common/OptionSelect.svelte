@@ -32,6 +32,7 @@
     export let fontWeight = 'bold';
     export let options: OptionType[] | ObservableArray<OptionType[]>;
     export let onClose = null;
+    export let selectedIndex = -1;
     export let height: number | string = null;
     export let fontSize = 16;
     export let iconFontSize = 24;
@@ -113,6 +114,12 @@
         }
         return 'default';
     }
+
+    function onDataPopulated(event) {
+        if (selectedIndex > 0) {
+            event.object.scrollToIndex(selectedIndex, false);
+        }
+    }
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
@@ -144,7 +151,7 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight}>
+        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight} on:dataPopulated={onDataPopulated}>
             <Template key="checkbox" let:item>
                 {#if autoSizeListItem}
                     <ListItemAutoSize

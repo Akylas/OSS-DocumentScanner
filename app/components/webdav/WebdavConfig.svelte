@@ -38,7 +38,7 @@
     }
 </script>
 
-<gesturerootview margin={10} {...$$restProps} rows="auto">
+<gesturerootview id="webdavConfig" margin={10} {...$$restProps} rows="auto">
     <stacklayout>
         <label class="sectionHeader" fontSize={19} text={lc('webdav_config')} />
         <textfield

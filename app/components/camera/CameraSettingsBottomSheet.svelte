@@ -237,7 +237,7 @@
     const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
 </script>
 
-<gesturerootview maxHeight={screenHeightDips} padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'}>
+<gesturerootview id="cameraSettingsBottomSheet" maxHeight={screenHeightDips} padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'}>
     <scrollview>
         <stacklayout>
             <label class="sectionHeader" text={lc('camera_settings')} />

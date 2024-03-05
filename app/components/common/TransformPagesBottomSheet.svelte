@@ -125,7 +125,7 @@
     const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
 </script>
 
-<gesturerootview padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
+<gesturerootview id="transformBottomSheet" padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
     <scrollview>
         <stacklayout>
             <label class="sectionBigHeader" text={lc('transformations')} />

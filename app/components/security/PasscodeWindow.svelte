@@ -235,7 +235,7 @@
     }
 </script>
 
-<page actionBarHidden={true}>
+<page id="passCodeWindow" actionBarHidden={true}>
     {#if securityService.pincodeEnabled}
         <gridlayout columns="*,*,*" rows="3*,*,*,*,*" on:layoutChanged={onLayoutChanged}>
             <gridlayout backgroundColor={colorPrimary} colSpan="3" columns="*,*,*,*" orientation="horizontal" row="0">
