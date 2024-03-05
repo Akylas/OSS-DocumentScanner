@@ -252,8 +252,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        if (items) {
+            nbSelected = 0;
+            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);

@@ -329,8 +329,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+        if (documents) {
+            nbSelected = 0;
+            documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);

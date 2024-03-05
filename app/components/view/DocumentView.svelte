@@ -196,8 +196,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        if (items) {
+            nbSelected = 0;
+            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);
@@ -420,8 +422,8 @@
         // refresh();
     });
     onDestroy(() => {
-        items = null;
         DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
+        items = null;
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -494,8 +496,8 @@
                             showImageExportPopover(event);
                             break;
                         // case 'fullscreen':
-                            // await fullscreenSelectedDocuments();
-                            // break;
+                        // await fullscreenSelectedDocuments();
+                        // break;
                         case 'ocr':
                             await detectOCR({ pages: getSelectedPagesWithData() });
                             unselectAll();
