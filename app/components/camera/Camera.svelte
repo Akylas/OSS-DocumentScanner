@@ -34,7 +34,7 @@
     import { showError, wrapNativeException } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
-    import { colors } from '~/variables';
+    import { colors, navigationBarHeight } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
 
     // technique for only specific properties to get updated on store change
@@ -771,7 +771,7 @@
             <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
         {/if}
 
-        <gridlayout columns="60,*,auto,*,60" paddingBottom={30} paddingTop={30} row={3}>
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $navigationBarHeight} paddingTop={30} row={3}>
             <IconButton
                 color="white"
                 horizontalAlignment="left"
