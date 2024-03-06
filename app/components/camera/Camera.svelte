@@ -376,11 +376,14 @@
         clearImages();
         document = null;
         nbPages = 0;
+        if (autoScanHandler) {
+            autoScanHandler.enabled = false;
+            autoScanHandler = null;
+        }
         if (processor) {
             processor.autoScanHandler = null;
             processor = null;
         }
-        autoScanHandler = null;
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -611,17 +614,17 @@
     function applyAutoScan(value: boolean) {
         if (value) {
             const nCropView = cropView.nativeView;
-            const newAautoScanHandler = createAutoScanHandler(nCropView, (result) => {
+            const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
-                if (cameraView.nativeView) {
+                if (cameraView?.nativeView) {
                     takePicture(true);
                 }
             });
-            newAautoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
-            newAautoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
-            newAautoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
-            autoScanHandler = processor.autoScanHandler = newAautoScanHandler;
+            newAutoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
+            newAutoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
+            newAutoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
+            autoScanHandler = processor.autoScanHandler = newAutoScanHandler;
         } else {
             processor.autoScanHandler = null;
             autoScanHandler = null;
