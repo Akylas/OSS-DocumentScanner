@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.util.Log
 import androidx.camera.core.ImageInfo
 import androidx.camera.core.ImageProxy
+import androidx.camera.view.PreviewView
 import com.akylas.documentscanner.extensions.toBitmap
 import com.nativescript.cameraview.ImageAnalysisCallback
 import com.nativescript.cameraview.ImageAsyncProcessor
@@ -16,6 +17,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.nio.ByteBuffer
 import kotlin.math.max
+import kotlin.math.min
 
 class CustomImageAnalysisCallback
 @JvmOverloads
@@ -593,7 +595,10 @@ constructor(
                 }
                 val scaleX = cropView.height.toFloat() / image.width.toFloat()
                 val scaleY = cropView.width.toFloat() / image.height.toFloat()
-                cropView.scale = max(scaleX, scaleY)
+                when (cropView.scaleType) {
+                    PreviewView.ScaleType.FILL_END, PreviewView.ScaleType.FILL_START, PreviewView.ScaleType.FILL_CENTER -> cropView.scale = max(scaleX, scaleY)
+                    PreviewView.ScaleType.FIT_END, PreviewView.ScaleType.FIT_START, PreviewView.ScaleType.FIT_CENTER -> cropView.scale = min(scaleX, scaleY)
+                }
                 cropView.quads = pointsList
             } else {
                 cropView.quads = null

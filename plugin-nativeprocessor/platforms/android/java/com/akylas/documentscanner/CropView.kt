@@ -11,6 +11,8 @@ import android.graphics.Point
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.UiThread
+import androidx.camera.view.PreviewView
+import com.nativescript.cameraview.CameraFlashMode
 
 class CropView
 @JvmOverloads
@@ -19,6 +21,14 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
     var imageWidth: Int = 0
     var imageHeight: Int = 0
+
+    var scaleType: PreviewView.ScaleType = PreviewView.ScaleType.FIT_CENTER
+        get() {
+            return field
+        }
+        set(value) {
+            field = value
+        }
 
     /**
      * @property imagePreviewHeight this is needed because height doesn't update immediately
