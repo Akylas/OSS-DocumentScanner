@@ -1,0 +1,14 @@
+### Bug fixes
+- showing full screen images not working
+- full screen images layout fix
+- Translated using Weblate (Italian)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Czech)
+- Translated using Weblate (Portuguese (Brazil))
+- Translated using Weblate (Polish)
+- camera UX drawing under the navigation bar
+- Translated using Weblate (German)
+- Translated using Weblate (Arabic)
+- use 1.0 zoom by default. It 
