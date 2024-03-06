@@ -86,7 +86,7 @@
     //     doc: OCRDocument; selected: boolean
     // }> = null;
 
-    async function refresh() {
+    async function refreshSyncState() {
         try {
             syncEnabled = syncService.enabled;
             DEV_LOG && console.log('syncEnabled', syncEnabled);
@@ -216,7 +216,7 @@
         documentsService.on('documentUpdated', onDocumentUpdated);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         syncService.on('syncState', onSyncState);
-        syncService.on('state', refresh);
+        syncService.on('state', refreshSyncState);
         // refresh();
     });
     onDestroy(() => {
@@ -231,6 +231,7 @@
         documentsService.off('documentAdded', onDocumentAdded);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         syncService.off('syncState', onSyncState);
+        syncService.off('state', refreshSyncState);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -297,9 +298,9 @@
     async function onNavigatedTo(e: NavigatedData) {
         if (!e.isBackNavigation) {
             if (documentsService.started) {
-                refresh();
+                refreshSyncState();
             } else {
-                documentsService.once('started', refresh);
+                documentsService.once('started', refreshSyncState);
             }
         }
     }
@@ -758,10 +759,10 @@
         <CActionBar title={l('documents')}>
             <mdbutton
                 class="actionBarButton"
-                defaultVisualState={syncEnabled ? 'normal' : 'disabled'}
                 isEnabled={!syncRunning}
                 text="mdi-sync"
                 variant="text"
+                visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />

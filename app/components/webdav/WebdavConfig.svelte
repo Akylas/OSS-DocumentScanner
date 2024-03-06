@@ -3,14 +3,17 @@
     import { lc } from '~/helpers/locale';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';
+    import { showPopoverMenu } from '~/utils/ui';
     import { colors } from '~/variables';
     import { AuthType } from '~/webdav';
     // technique for only specific properties to get updated on store change
     $: ({ colorError, colorSecondary, colorOnError, colorOnSurfaceVariant } = $colors);
 
     let remoteURL = syncService.remoteURL;
+    let token = syncService.token;
+    let authType = syncService.authType || AuthType.Password;
     let username = syncService.username;
-    let password = username ? 'fakepassworddata' : undefined;
+    let password = syncService.password;
     let remoteFolder = syncService.remoteFolder;
     let testing = false;
     let testConnectionSuccess = 0;
@@ -21,7 +24,7 @@
     async function testConnection() {
         try {
             testing = true;
-            const result = await syncService.testConnection({ username, password, remoteURL, remoteFolder });
+            const result = await syncService.testConnection({ username, password, remoteURL, remoteFolder, token, authType });
             testConnectionSuccess = result ? 1 : -1;
         } catch (error) {
             console.error('error');
@@ -32,9 +35,41 @@
     }
     async function save() {
         // if (testConnectionSuccess > 0) {
-        syncService.saveData({ username, password, remoteURL, remoteFolder, authType: AuthType.Digest });
-        closeBottomSheet();
+        syncService.saveData({ username, password, remoteURL, remoteFolder, authType, token });
+        closeBottomSheet(true);
         // }
+    }
+    async function selectAuthentication(event) {
+        try {
+            // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            const options = [
+                {
+                    id: AuthType.Password,
+                    name: lc('password')
+                },
+                {
+                    id: AuthType.None,
+                    name: lc('none')
+                },
+                {
+                    id: AuthType.Token,
+                    name: lc('token')
+                }
+                // {
+                //     id: AuthType.Digest,
+                //     name: lc('digest')
+                // }
+            ];
+            await showPopoverMenu({
+                options,
+                anchor: event.object,
+                onClose: (value) => {
+                    authType = value.id;
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
 </script>
 
@@ -52,6 +87,22 @@
             {variant}
             on:returnPress={() => focusTextfield('username')}
             on:textChange={(e) => (remoteURL = e['value'])} />
+        <gridLayout columns="auto,*">
+            <textfield editable={false} hint={lc('authentication')} margin="4 8 4 8" text={authType} textTransform="uppercase" width={130} on:tap={(e) => selectAuthentication(e)} />
+            <textfield
+                autocapitalizationType="none"
+                autocorrect={false}
+                col={1}
+                enabled={authType === AuthType.Token}
+                hint={lc('token')}
+                margin={5}
+                placeholder={lc('token')}
+                returnKeyType="next"
+                text={token}
+                {variant}
+                on:returnPress={() => focusTextfield('username')}
+                on:textChange={(e) => (token = e['value'])} />
+        </gridLayout>
         <textfield
             autocapitalizationType="none"
             autocorrect={false}

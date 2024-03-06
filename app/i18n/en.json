@@ -17,6 +17,7 @@
     "aspect_fit": "aspect fit",
     "aspect_ratio": "aspect ratio",
     "authenticate_security": "authenticate to access the application",
+    "authentication": "auth",
     "auto": "auto",
     "auto_black": "Use true black for auto-dark theme",
     "auto_scan": "discover and add documents automatically",

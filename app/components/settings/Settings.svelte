@@ -5,7 +5,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { ApplicationSettings, File, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { ApplicationSettings, File, Folder, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -119,8 +119,8 @@
                         ? [
                               {
                                   id: 'setting',
-                                  key: 'data_location',
-                                  title: lc('data_location'),
+                                  key: 'storage_location',
+                                  title: lc('storage_location'),
                                   currentValue: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal'),
                                   description: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? lc('sdcard') : lc('internal_storage')),
                                   values: [
@@ -171,6 +171,58 @@
                           ]
                         : ([] as any)
                 )
+                // .concat(
+                //     __ANDROID__
+                //         ? [
+                //               {
+                //                   key: 'custom_data_location',
+                //                   title: lc('data_location'),
+                //                   currentValue: () => documentsService.rootDataFolder,
+                //                   description: () => documentsService.rootDataFolder,
+                //                   onTap: async (data) => {
+                //                       try {
+                //                           const result = await pickFolder({
+                //                               multipleSelection: false,
+                //                               permissions: { write: true, persistable: true, recursive: true }
+                //                           });
+                //                           if (result.folders.length) {
+                //                               const confirmed = await confirm({
+                //                                   title: lc('move_data'),
+                //                                   message: lc('move_data_desc'),
+                //                                   okButtonText: lc('ok'),
+                //                                   cancelButtonText: lc('cancel')
+                //                               });
+                //                               if (confirmed) {
+                //                                   const srcFolderStr = documentsService.rootDataFolder;
+                //                                   const dstFolderStr = result.folders[0];
+                //                                   DEV_LOG && console.log('confirmed move data to', srcFolderStr, dstFolderStr);
+                //                                   showLoading(lc('moving_files'));
+                //                                   const srcFolder = Folder.fromPath(srcFolderStr);
+                //                                   const dstFolder = Folder.fromPath(dstFolderStr);
+                //                                   const srcDbPath = srcFolder.getFile(DocumentsService.DB_NAME).path;
+                //                                   await File.fromPath(srcDbPath).copy(dstFolder.getFile(DocumentsService.DB_NAME).path);
+                //                                   await copyFolderContent(srcFolder.getFolder('data').path, dstFolder.getFolder('data').path);
+                //                                   ApplicationSettings.setString('root_data_folder', dstFolderStr);
+                //                                   await File.fromPath(srcDbPath).remove();
+                //                                   await removeFolderContent(srcFolder.getFolder('data').path);
+                //                                   await alert({
+                //                                       cancelable: false,
+                //                                       message: lc('restart_app'),
+                //                                       okButtonText: lc('restart')
+                //                                   });
+                //                                   restartApp();
+                //                               }
+                //                           }
+                //                       } catch (error) {
+                //                           showError(error);
+                //                       } finally {
+                //                           hideLoading();
+                //                       }
+                //                   }
+                //               }
+                //           ]
+                //         : ([] as any)
+                // )
                 .concat([
                     {
                         id: 'third_party',
@@ -370,7 +422,7 @@
                         id: 'webdav',
                         rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                         title: lc('webdav_sync'),
-                        description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
+                        description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
                     }
                 ] as any)
                 .concat([
@@ -553,11 +605,16 @@
                     break;
                 case 'webdav':
                     const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-                    await showBottomSheet({
+                    const saved = await showBottomSheet({
                         parent: this,
                         view: WebdavConfig,
                         ignoreTopSafeArea: true
                     });
+                    if (saved) {
+                        const index = items.indexOf(item);
+                        DEV_LOG && console.log('webdav done', item, index);
+                        items.setItem(index, item);
+                    }
                     break;
                 case 'review':
                     openLink(STORE_REVIEW_LINK);
