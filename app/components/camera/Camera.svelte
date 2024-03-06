@@ -36,6 +36,7 @@
     import { recycleImages } from '~/utils/images';
     import { colors, navigationBarHeight } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
+    import { debounce } from '@nativescript/core/utils';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -94,6 +95,7 @@
     let colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
+    const zoom = ApplicationSettings.getNumber('defaultZoom', 1);
     let _actualFlashMode = flashMode;
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
@@ -599,6 +601,9 @@
         DEV_LOG && console.log('focusCamera', e.getX(), e.getY());
         cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
+    const onZoom = debounce(function onZoom(event) {
+        ApplicationSettings.setNumber('defaultZoom', event.zoom);
+    }, 500);
 
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
     let processor;
@@ -749,9 +754,11 @@
             {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
             {stretch}
+            {zoom}
             on:cameraOpen={onCameraOpen}
             on:layoutChanged={onCameraLayoutChanged}
             on:loaded={applyProcessor}
+            on:zoom={onZoom}
             on:tap={focusCamera} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
