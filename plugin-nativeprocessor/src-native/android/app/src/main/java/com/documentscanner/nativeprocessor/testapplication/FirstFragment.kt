@@ -133,9 +133,9 @@ class FirstFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.cameraView.aspectRatio = "4:3"
         binding.cameraView.enablePinchZoom = true
-        binding.cameraView.zoom = 4.0F
-//        binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
-        binding.cameraView.scaleType = PreviewView.ScaleType.FILL_CENTER
+        binding.cameraView.zoom = 1.0F
+        binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
+        binding.cropView.scaleType = binding.cameraView.scaleType
         binding.cameraView.savePhotoToDisk = false
         val activity = this.requireActivity()
         var lastQRCode: String? = null
