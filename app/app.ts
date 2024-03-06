@@ -196,11 +196,15 @@ try {
     new Promise((resolve, reject) => {
         //wait for launch
         Application.on(Application.launchEvent, () => {
+            DEV_LOG && console.log('launch', !!pageInstance);
             resolve(pageInstance);
         });
         Application.on(Application.exitEvent, () => {
-            pageInstance.$destroy();
-            pageInstance = null;
+            DEV_LOG && console.log('exit', !!pageInstance);
+            if (pageInstance) {
+                pageInstance.$destroy();
+                pageInstance = null;
+            }
         });
         try {
             Application.run({
