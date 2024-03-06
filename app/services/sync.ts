@@ -1,5 +1,5 @@
 import { ApplicationSettings, File, Folder, ImageSource, Observable, path } from '@nativescript/core';
-import { debounce } from '@nativescript/core/utils';
+import { debounce, throttle } from '@nativescript/core/utils';
 import { cropDocument } from 'plugin-nativeprocessor';
 import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
@@ -353,7 +353,7 @@ export class SyncService extends Observable {
         }
     }
     syncRunning = false;
-    syncDocuments = debounce(async (bothWays = false) => {
+    syncDocuments = throttle(async (bothWays = false) => {
         try {
             if (!networkService.connected || !this.client || this.syncRunning) {
                 return;

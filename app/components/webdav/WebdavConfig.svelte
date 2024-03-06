@@ -93,7 +93,7 @@
                 autocapitalizationType="none"
                 autocorrect={false}
                 col={1}
-                enabled={authType === AuthType.Token}
+                editable={authType === AuthType.Token}
                 hint={lc('token')}
                 margin={5}
                 placeholder={lc('token')}
