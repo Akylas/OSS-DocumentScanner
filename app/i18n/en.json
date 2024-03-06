@@ -183,6 +183,7 @@
     "start": "start",
     "start_on_cam": "start the app on camera screen",
     "startup_error": "there was an error while starting the app. Please restart the app to try again. If it persists please report it",
+    "storage_location": "storage_location",
     "successful": "successful",
     "sync": "sync",
     "system": "system",

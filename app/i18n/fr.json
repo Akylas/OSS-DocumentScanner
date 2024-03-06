@@ -81,7 +81,7 @@
     "export": "exporter",
     "export_folder": "dossier d'exportation",
     "export_ios_desc": "le fichier sera exporté vers les documents de l'application",
-    "export_settings": "Paramètres d'exportation",
+    "export_settings": "Exportation des paramètres ",
     "export_settings_desc": "exporter tous les paramètres de l'application afin que vous puissiez les importer plus tard",
     "exporting": "exportation",
     "failed": "échoué",
