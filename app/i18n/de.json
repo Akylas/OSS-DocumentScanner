@@ -195,6 +195,7 @@
     "start": "Start",
     "start_on_cam": "Die App im Fotomodus starten",
     "startup_error": "Beim Starten der App ist ein Fehler aufgetreten.\nStarten Sie die App bitte neu.\nBitte melden Sie das Problem, falls es weiterhin auftritt.",
+    "storage_location": "Speicherort",
     "successful": "Erfolgreich",
     "sync": "Synchronisation",
     "system": "System",
