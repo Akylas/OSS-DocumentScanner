@@ -1,6 +1,5 @@
 const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character'];
 module.exports = {
-    globals: { SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true, __ANDROID__: true, __IOS__: true, LatLonKeys: true, DEV_LOG: true },
     extends: ['plugin:prettier/recommended', 'plugin:@typescript-eslint/recommended-type-checked', 'plugin:svelte/recommended'],
     env: {
         es6: true,
