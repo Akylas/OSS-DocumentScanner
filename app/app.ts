@@ -11,7 +11,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, NavigatedData, Page } from '@nativescript/core';
+import { Application, Frame, NavigatedData, Page } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '~/NestedScrollView';
@@ -148,7 +148,11 @@ try {
     if (__ANDROID__) {
         Page.on('shownModally', function (event) {
             DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
-            com.akylas.documentscanner.Utils.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
+            com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
+        });
+        Frame.on('shownModally', function (event) {
+            DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
+            com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
         });
         // GestureRootView.on('shownInBottomSheet', function (event) {
         //     const _bottomSheetFragment = event.object['_bottomSheetFragment'];
@@ -164,6 +168,12 @@ try {
         });
         Page.on('showingModally', (event: NavigatedData) => {
             DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Frame.on('showingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Frame.on('closingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
         });
         Page.on('closingModally', (event: NavigatedData) => {
             DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
