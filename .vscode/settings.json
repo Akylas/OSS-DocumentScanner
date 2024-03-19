@@ -22,6 +22,7 @@
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc-12",
     "svelte.plugin.svelte.compilerWarnings": {
+        "missing-declaration": "ignore",
         "a11y-aria-attributes": "ignore",
         "a11y-incorrect-aria-attribute-type": "ignore",
         "a11y-unknown-aria-attribute": "ignore",
