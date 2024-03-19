@@ -556,6 +556,7 @@ module.exports = (env, params = {}) => {
             console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
             config.plugins.push(
                 sentryWebpackPlugin({
+                    telemetry: false,
                     org: process.env.SENTRY_ORG,
                     url: process.env.SENTRY_URL,
                     project: process.env.SENTRY_PROJECT,
