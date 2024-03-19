@@ -23,7 +23,7 @@
     import { documentsService } from '~/services/documents';
     import { PermissionError, showError } from '~/utils/error';
     import { goBack, navigate } from '~/utils/svelte/ui';
-    import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -300,16 +300,16 @@
                   }
         );
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             data.cancel = true;
             if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
             }
-        }
-    }
+        });
     async function deleteSelectedPages() {
         if (nbSelected > 0) {
             try {

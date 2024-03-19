@@ -28,7 +28,7 @@
     import { syncService } from '~/services/sync';
     import { PermissionError, showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSettings, transformPages } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
     import { CARD_RATIO } from '~/models/constants';
 
@@ -463,14 +463,14 @@
             showError(error);
         }
     }, 500);
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
             }
-        }
-    }
+        });
     async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
         if (__ANDROID__) {
             try {

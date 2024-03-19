@@ -27,7 +27,7 @@
     import { PermissionError, showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
     import { goBack, navigate } from '~/utils/svelte/ui';
-    import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
@@ -322,16 +322,15 @@
                   }
         );
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             data.cancel = true;
             if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
             }
-        }
-    }
+        });
     async function fullscreenSelectedPages() {
         const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
         navigate({

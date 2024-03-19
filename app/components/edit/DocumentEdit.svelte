@@ -558,16 +558,15 @@
             } as any);
         }
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             data.cancel = true;
             if (recrop) {
                 onRecropTapFinish(true);
             } else {
                 onGoBack();
             }
-        }
-    }
+        });
 
     async function saveDocumentTitle(event) {
         try {

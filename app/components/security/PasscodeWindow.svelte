@@ -8,6 +8,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { getRealTheme } from '~/helpers/theme';
+    import { onBackButton } from '~/utils/ui';
 
     $: ({ colorPrimary, colorOnBackground, colorPrimaryContainer } = $colors);
 
@@ -64,15 +65,15 @@
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
     });
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             if (creation || change) {
                 data.cancel = true;
             } else if (closeOnBack) {
                 Application.android.startActivity.finish();
             }
-        }
-    }
+        });
     async function onLayoutChanged() {
         if (!firstLayout) {
             return;
