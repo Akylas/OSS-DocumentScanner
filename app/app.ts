@@ -13,14 +13,13 @@ import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import { Application, NavigatedData, Page } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
-import { FrameElement, PageElement, createElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
+import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '~/NestedScrollView';
 import { lc } from '~/helpers/locale';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
-import { navigate } from '~/utils/svelte/ui';
 import { networkService } from './services/api';
 import { ocrService } from './services/ocr';
 import { securityService } from './services/security';
@@ -212,11 +211,14 @@ try {
                     const rootGridLayout = createElement('gesturerootview', window.document as any);
                     const rootFrame = createElement('frame', rootGridLayout.ownerDocument);
                     rootFrame.setAttribute('id', 'app-root-frame');
+                    //very important here to use svelte-native navigate
+                    // the throttle one wont return the pageInstance
                     pageInstance = navigate({
                         page: Comp.default,
                         props: {},
                         frame: rootFrame as any
                     });
+                    DEV_LOG && console.log('Application.run', !!pageInstance);
                     rootGridLayout.appendChild(rootFrame);
                     return rootGridLayout['nativeView'];
                 }
