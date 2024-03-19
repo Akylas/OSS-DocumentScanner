@@ -40,6 +40,10 @@ dependencies {
 
     def androidXAppCompat =  project.hasProperty("androidXAppCompat") ? project.androidXAppCompat : "1.1.0"
 	implementation "androidx.appcompat:appcompat:$androidXAppCompat"
+
+    def androidXExifInterfaceVersion =  project.hasProperty("androidXExifInterfaceVersion") ? project.androidXExifInterfaceVersion : "1.3.3"
+    implementation "androidx.exifinterface:exifinterface:$androidXExifInterfaceVersion"
+
     // def androidxVersion =  project.hasProperty("coreKtxVersion") ? project.coreKtxVersion : "1.12.0"
     // implementation "androidx.core:core-ktx:$coreKtxVersion"
 }

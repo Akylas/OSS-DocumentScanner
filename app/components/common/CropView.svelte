@@ -1,14 +1,23 @@
-<script lang="ts">
+<script context="module" lang="ts">
+    import { debounce } from '@nativescript/core/utils';
     import { BitmapShader, Canvas, CanvasView, Matrix, Paint, Style, TileMode } from '@nativescript-community/ui-canvas';
-    import { ImageSource, TouchGestureEventData, Utils } from '@nativescript/core';
+    import { ImageSource, Screen, TouchGestureEventData, Utils } from '@nativescript/core';
     import { QRCodeData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { colors } from '~/variables';
+    import { loadImage, recycleImages } from '~/utils/images';
+    import { IMAGE_DECODE_HEIGHT } from '~/models/constants';
+    import { onDestroy } from 'svelte';
+    const padding = 20;
+    const ZOOOM_GLASS_SIZE = 50;
+    const ZOOM_IMAGE_MAX_SIZE = Math.max(Screen.mainScreen.widthDIPs, Screen.mainScreen.heightDIPs);
+</script>
+
+<script lang="ts">
     let { colorPrimary, colorSecondary } = $colors;
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSecondary } = $colors);
 
-    const padding = 20;
     let canvasView: NativeViewElementNode<CanvasView>;
     let prevTouchPoint;
     let drawingRatio: number;
@@ -26,18 +35,42 @@
     shaderPaint.style = Style.FILL;
     shaderPaint.color = 'black';
 
-    export let editingImage: ImageSource;
-    let rotation = 0;
+    export let imagePath: string = null;
+    export let imageWidth: number = null;
+    export let imageHeight: number = null;
+    export let imageRotation: number = null;
     export let quads;
     export let quadChanged = false;
     export let qrcode: QRCodeData = null;
-    let editingImageShader: BitmapShader;
-    let mappedQuads;
 
-    $: updateMatrix(canvasView, editingImage);
+    let actualWidth = imageWidth;
+    let actualHeight = imageHeight;
+    let needRotation = false;
+    $: {
+        const theRotation = rotation || imageRotation || 0;
+        needRotation = theRotation && theRotation % 180 !== 0;
+        if (needRotation) {
+            actualWidth = imageHeight;
+            actualHeight = imageWidth;
+        } else {
+            actualWidth = imageWidth;
+            actualHeight = imageHeight;
+        }
+    }
+
+    let currentQuads = quads;
+    $: currentQuads = quads;
+
+    const rotation = 0;
+    let zoomImageShader: BitmapShader;
+    let zoomImage: ImageSource;
+    let zoomImagePath: string;
+    let zoomImageScale: number = 1;
+    let mappedQuads;
+    $: updateMatrix(canvasView, imagePath, actualWidth, actualHeight);
 
     $: if (quads && canvasView) {
-        updateMatrix(canvasView, editingImage);
+        updateMatrix(canvasView, imagePath, actualWidth, actualHeight);
         quadChanged = true;
         canvasView.nativeView.invalidate();
     }
@@ -89,7 +122,7 @@
                 break;
             }
             case 'move': {
-                if (editingImage && closestCornerQuadIndex !== -1) {
+                if (closestCornerQuadIndex !== -1) {
                     const quad = mappedQuads[closestQuadIndex];
                     const touchMoveXDistance = x - prevTouchPoint[0];
                     const touchMoveYDistance = y - prevTouchPoint[1];
@@ -99,11 +132,11 @@
                     const cornerNewPosition = getMatrixMappedPoint(inversedCurrentMatrix, [newX, newY]);
                     // console.log('cornerNewPosition', x, y, quad[closestCornerQuadIndex], newX, newY, cornerNewPosition);
                     // make sure the user doesn't drag the corner outside the image preview container
-                    if (cornerNewPosition[0] >= 0 && cornerNewPosition[0] < editingImage.width && cornerNewPosition[1] >= 0 && cornerNewPosition[1] < editingImage.height) {
+                    if (cornerNewPosition[0] >= 0 && cornerNewPosition[0] < actualWidth && cornerNewPosition[1] >= 0 && cornerNewPosition[1] < actualHeight) {
                         quad[closestCornerQuadIndex][0] = newX;
                         quad[closestCornerQuadIndex][1] = newY;
-                        quads[closestQuadIndex][closestCornerQuadIndex][0] = Math.round(cornerNewPosition[0]);
-                        quads[closestQuadIndex][closestCornerQuadIndex][1] = Math.round(cornerNewPosition[1]);
+                        currentQuads[closestQuadIndex][closestCornerQuadIndex][0] = Math.round(cornerNewPosition[0]);
+                        currentQuads[closestQuadIndex][closestCornerQuadIndex][1] = Math.round(cornerNewPosition[1]);
                         quadChanged = true;
                     }
                     prevTouchPoint = [x, y];
@@ -128,39 +161,54 @@
         }
     }
 
-    function getRotation() {
-        return rotation || editingImage?.rotationAngle || 0;
+    // function getRotation() {
+    //     return rotation || imageRotation || 0;
+    // }
+    function clearImages() {
+        if (zoomImage) {
+            recycleImages(zoomImage);
+            zoomImage = null;
+        }
     }
-    function updateMatrix(canvas = canvasView, image = editingImage) {
+    onDestroy(() => {
+        clearImages();
+    });
+    const updateMatrix = debounce(async function updateMatrix(canvas = canvasView, image = imagePath, width = actualWidth, height = actualHeight) {
         try {
-            if (!canvas?.nativeView || !image) {
+            const nCanvas = canvas?.nativeView;
+            if (!nCanvas || !image) {
                 return;
             }
-            editingImageShader = new BitmapShader(image, TileMode.CLAMP, TileMode.CLAMP);
-            shaderPaint.setShader(editingImageShader);
-            const w = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredWidth()) - 2 * padding;
-            const h = Utils.layout.toDeviceIndependentPixels(canvas.nativeView.getMeasuredHeight()) - 2 * padding;
+
+            if (!zoomImage || zoomImagePath !== image) {
+                clearImages();
+                zoomImagePath = image;
+                zoomImage = await loadImage(imagePath, ZOOM_IMAGE_MAX_SIZE);
+                zoomImageScale = width / zoomImage.width;
+                zoomImageShader = new BitmapShader(zoomImage, TileMode.CLAMP, TileMode.CLAMP);
+                shaderPaint.setShader(zoomImageShader);
+            }
+            const w = Utils.layout.toDeviceIndependentPixels(nCanvas.getMeasuredWidth()) - 2 * padding;
+            const h = Utils.layout.toDeviceIndependentPixels(nCanvas.getMeasuredHeight()) - 2 * padding;
             if (w <= 0 || h <= 0) {
                 return;
             }
             const canvasRatio = w / h;
-            let imageWidth = image.width;
-            let imageHeight = image.height;
-            rotation = getRotation();
-            const needRotation = rotation && rotation % 180 !== 0;
-            // const needRotation = false ;
-            if (needRotation) {
-                imageWidth = image.height;
-                imageHeight = image.width;
-            }
-            const imageRatio = imageWidth / imageHeight;
+            // let imageWidth = width;
+            // let imageHeight = height;
+            // // const needRotation = false ;
+            // if (needRotation) {
+            //     imageWidth = height;
+            //     imageHeight = width;
+            // }
+            const imageRatio = width / height;
             let cx = padding;
             let cy = padding;
             if (imageRatio < canvasRatio) {
-                drawingRatio = h / imageHeight;
+                drawingRatio = h / height;
                 cx += (w - h * imageRatio) / 2;
             } else {
-                drawingRatio = w / imageWidth;
+                drawingRatio = w / width;
                 cy += (h - w / imageRatio) / 2;
             }
             currentImageMatrix.reset();
@@ -178,17 +226,45 @@
             // inversedCurrentMatrix = new Matrix();
             currentCropMatrix.invert(inversedCurrentMatrix);
             mappedQuads = quads.map((quad) => quad.map((p) => getMatrixMappedPoint(currentCropMatrix, p)));
-            canvas?.nativeView.invalidate();
+            nCanvas.invalidate();
         } catch (error) {
             console.error(error);
         }
+    }, 1);
+    function drawZoomGlass(canvas: Canvas, point: [number, number]) {
+        //find where to draw the zoom glass
+        const drawingPosition = point;
+        // if (distance(prevTouchPoint[0], prevTouchPoint[1], point[0], point[1]) <= ZOOOM_GLASS_SIZE) {
+        // if (prevTouchPoint[1] > ZOOOM_GLASS_SIZE + 20) {
+        //     drawingPosition[1] = 10 + ZOOOM_GLASS_SIZE / 2;
+        // } else {
+        // }
+        // if (prevTouchPoint[0] < ZOOOM_GLASS_SIZE + 20) {
+        //     drawingPosition[0] = canvas.getWidth() - 10 - ZOOOM_GLASS_SIZE / 2;
+        // } else {
+        //     drawingPosition[0] = 10 + ZOOOM_GLASS_SIZE / 2;
+        // }
+        // }
+        shaderMatrix.reset();
+        shaderMatrix.postScale(zoomImageScale, zoomImageScale, 0, 0);
+        shaderMatrix.postScale(2, 2, point[0], point[1]);
+        zoomImageShader.setLocalMatrix(shaderMatrix);
+        canvas.drawCircle(drawingPosition[0], drawingPosition[1], ZOOOM_GLASS_SIZE / drawingRatio, shaderPaint);
+        canvas.drawCircle(drawingPosition[0], drawingPosition[1], ZOOOM_GLASS_SIZE / drawingRatio, cornersPaint);
+        cornersPaint.strokeWidth = 1 / drawingRatio;
+        const arrowWidth = 10 / drawingRatio;
+        canvas.drawLine(drawingPosition[0] - arrowWidth, drawingPosition[1], drawingPosition[0] + arrowWidth, point[1], cornersPaint);
+        canvas.drawLine(drawingPosition[0], drawingPosition[1] - arrowWidth, drawingPosition[0], drawingPosition[1] + arrowWidth, cornersPaint);
     }
     function onCanvasDraw({ canvas }: { canvas: Canvas }) {
+        if (!drawingRatio) {
+            return;
+        }
         // canvas.save();
         canvas.concat(currentImageMatrix);
-        if (editingImage) {
-            canvas.drawBitmap(editingImage, 0, 0, null);
-        }
+        // if (editingImage) {
+        //     canvas.drawBitmap(editingImage, 0, 0, null);
+        // }
         cornersPaint.color = colorPrimary;
 
         // canvas.restore();
@@ -210,20 +286,14 @@
                 //draw corner indicators
                 for (let index2 = 0; index2 < corners.length; index2++) {
                     const point = corners[index2];
-                    if (closestQuadIndex === index && closestCornerQuadIndex === index2) {
-                        shaderMatrix.reset();
-                        shaderMatrix.postScale(4, 4, point[0], point[1]);
-                        editingImageShader.setLocalMatrix(shaderMatrix);
-                        canvas.drawCircle(point[0], point[1], 30 / drawingRatio, shaderPaint);
-                        canvas.drawCircle(point[0], point[1], 30 / drawingRatio, cornersPaint);
-                        cornersPaint.strokeWidth = 1 / drawingRatio;
-                        const arrowWidth = 10 / drawingRatio;
-                        canvas.drawLine(point[0] - arrowWidth, point[1], point[0] + arrowWidth, point[1], cornersPaint);
-                        canvas.drawLine(point[0], point[1] - arrowWidth, point[0], point[1] + arrowWidth, cornersPaint);
-                    } else {
-                        cornersPaint.strokeWidth = 2 / drawingRatio;
-                        canvas.drawCircle(point[0], point[1], 10 / drawingRatio, cornersPaint);
-                    }
+
+                    // } else {
+                    cornersPaint.strokeWidth = 2 / drawingRatio;
+                    canvas.drawCircle(point[0], point[1], 10 / drawingRatio, cornersPaint);
+                    // }
+                }
+                if (closestQuadIndex === index) {
+                    drawZoomGlass(canvas, corners[closestCornerQuadIndex]);
                 }
             }
         }
@@ -244,4 +314,6 @@
     }
 </script>
 
-<canvasView bind:this={canvasView} backgroundColor="black" on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} {...$$restProps} />
+<canvasView bind:this={canvasView} backgroundColor="black" {padding} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} {...$$restProps}>
+    <image decodeWidth={IMAGE_DECODE_HEIGHT} src={imagePath} stretch="aspectFit" />
+</canvasView>

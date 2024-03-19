@@ -6,7 +6,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
+    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { QRCodeData, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
@@ -58,6 +58,7 @@
     // let currentQRCodeImage: ImageSource;
     // let currentQRCode: QRCodeSingleData;
     let currentQRCodeIndex = 0;
+    let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
@@ -591,7 +592,7 @@
     }
 </script>
 
-<page id="cardview" actionBarHidden={true} {statusBarStyle}>
+<page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
     <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
         <CActionBar
             backgroundColor={topBackgroundColor}

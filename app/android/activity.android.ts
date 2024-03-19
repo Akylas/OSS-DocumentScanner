@@ -8,6 +8,7 @@ function getThemeColor(context, colorResId) {
     return color;
 }
 
+const TAG = '[MainActivity]';
 const FLAG_SECURE = 2; // android.view.WindowManager.LayoutParams.FLAG_SECURE
 @NativeClass()
 @JavaProxy('__PACKAGE__.MainActivity')
@@ -29,9 +30,6 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
                 this.getWindow().clearFlags(FLAG_SECURE);
             }
         });
-        // Handle the splash screen transition.
-        //@ts-ignore
-        // androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         Application.android.init(this.getApplication());
         // Set the isNativeScriptActivity in onCreate (as done in the original NativeScript activity code)
         // The JS constructor might not be called because the activity is created from Android.
@@ -47,8 +45,8 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         // DynamicColors
         // com.google.android.material.color.DynamicColors.applyIfAvailable(this);
         try {
-            DEV_LOG && console.log('prepareActivity', this);
-            com.akylas.documentscanner.Utils.prepareActivity(this);
+            DEV_LOG && console.log(TAG, 'prepareActivity', this);
+            com.akylas.documentscanner.Utils.Companion.prepareActivity(this);
         } catch (error) {
             console.error(error);
         }
@@ -64,19 +62,19 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     public onStart(): void {
-        DEV_LOG && console.log('onStart');
+        DEV_LOG && console.log(TAG, 'onStart');
         this._callbacks.onStart(this, super.onStart);
         com.google.android.material.color.DynamicColors.applyIfAvailable(this);
         Application.notify({ eventName: 'activity_started' });
     }
 
     public onStop(): void {
-        DEV_LOG && console.log('onStop');
+        DEV_LOG && console.log(TAG, 'onStop');
         this._callbacks.onStop(this, super.onStop);
     }
 
     public onDestroy(): void {
-        DEV_LOG && console.log('onDestroy');
+        DEV_LOG && console.log(TAG, 'onDestroy');
         this._callbacks.onDestroy(this, super.onDestroy);
     }
 

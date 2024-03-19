@@ -70,7 +70,7 @@
     "download": "изтегли",
     "downloading": "изтегля се (%1$s%%)...",
     "draw_ocr_overlay": "начертаване на ocr слой",
-    "draw_ocr_text": "начертаване на ocr текст",
+    "draw_ocr_text": "прозрачен OCR текст в PDF",
     "enable": "активирайте",
     "enabled": "активно",
     "english": "Английски",

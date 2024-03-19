@@ -21,6 +21,9 @@
         node.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
     }
     export function updateOCRData(imagePath: string, imgWidth, imgHeight, ro, data: any) {
+        imgPath = imagePath;
+        rotation = ro;
+        ocrData = data;
         if (rotation % 180 !== 0) {
             imageWidth = imgHeight;
             imageHeight = imgWidth;

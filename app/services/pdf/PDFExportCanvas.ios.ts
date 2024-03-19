@@ -1,10 +1,10 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Folder, knownFolders } from '@nativescript/core';
-import type { OCRPage } from '~/models/OCRDocument';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
+import { PDFExportOptions } from './PDFCanvas';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export(pages: OCRPage[], folder = knownFolders.temp().path, filename = Date.now() + '') {
+    async export({ pages, folder = knownFolders.temp().path, filename = Date.now() + '.pdf' }: PDFExportOptions) {
         const start = Date.now();
         const options = this.options;
         if (options.paper_size === 'full') {

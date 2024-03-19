@@ -71,7 +71,7 @@
     "download": "download",
     "downloading": "scaricamento (%1$s%%)…",
     "draw_ocr_overlay": "disegno la sovrapposizione ocr",
-    "draw_ocr_text": "disegno il testo ocr",
+    "draw_ocr_text": "testo OCR trasparente in PDF",
     "enable": "abilita",
     "enabled": "abilitato",
     "english": "inglese",

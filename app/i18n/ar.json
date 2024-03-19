@@ -71,7 +71,7 @@
     "download": "تنزيل",
     "downloading": "يتم التنزيل (%1$s%%)…",
     "draw_ocr_overlay": "رسم طبقة OCR",
-    "draw_ocr_text": "رسم نص OCR",
+    "draw_ocr_text": "نص OCR شفاف في PDF",
     "enable": "تفعيل",
     "enabled": "مفعل",
     "english": "الإنجليزية",

@@ -1,4 +1,4 @@
-import { Color } from '@nativescript/core';
+// import { Color } from '@nativescript/core';
 
 export type Matrix = [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
 
@@ -9,12 +9,12 @@ function clamp(value, min, max) {
     return min < max ? (value < min ? min : value > max ? max : value) : value < max ? max : value > min ? min : value;
 }
 
-function colorToRGB(color: string | Color | number) {
-    if (!(color instanceof Color)) {
-        color = new Color(color as any);
-    }
-    return [color.r / 255, color.g / 255, color.b / 255];
-}
+// function colorToRGB(color: string | Color | number) {
+//     if (!(color instanceof Color)) {
+//         color = new Color(color as any);
+//     }
+//     return [color.r / 255, color.g / 255, color.b / 255];
+// }
 
 const staticFilters: { [key: string]: Matrix } = {
     normal: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],

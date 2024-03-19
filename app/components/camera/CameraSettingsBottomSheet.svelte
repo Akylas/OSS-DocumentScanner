@@ -9,7 +9,7 @@
     import { lc } from '~/helpers/locale';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
-    import { ColorMatricesTypes, getColorMatrix, showPopoverMenu } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu, showSliderPopover } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips, statusBarHeight } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
@@ -60,7 +60,7 @@
 
     function setColorType(type) {
         colorType = type;
-        colorMatrix = null;
+        colorMatrix = getColorMatrix(type);
         refreshCollectionView();
     }
     function onColorMatrixChange(type, value, refreshCV = false) {
@@ -71,31 +71,18 @@
         }
     }
     async function setColorMatrixLevels(item, event) {
-        if (!item.range) {
-            return;
-        }
 
         try {
-            const component = (await import('~/components/common/SliderPopover.svelte')).default;
             const currentValue = 1;
             DEV_LOG && console.log('setColorMatrixLevels', currentValue, colorMatrix);
             onColorMatrixChange(item.colorType, currentValue, true);
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
+            await showMatrixLevelPopover({
+                item,
                 anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                horizPos: HorizontalPosition.ALIGN_LEFT,
-                props: {
-                    min: 0.5,
-                    max: 2,
-                    step: 0.1,
-                    width: '80%',
-                    value: currentValue,
-                    onChange(value) {
-                        if (colorMatrix?.[0] || 1 !== value) {
-                            onColorMatrixChange(item.colorType, value);
-                        }
+                currentValue,
+                onChange(value) {
+                    if (colorMatrix?.[0] || 1 !== value) {
+                        onColorMatrixChange(item.colorType, value);
                     }
                 }
             });

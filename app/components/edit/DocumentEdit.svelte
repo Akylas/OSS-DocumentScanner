@@ -5,9 +5,8 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { AndroidActivityBackPressedEventData, Application, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { OCRData, QRCodeData } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
@@ -20,14 +19,26 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { showError } from '~/utils/error';
-    import { loadImage, recycleImages } from '~/utils/images';
     import { share } from '~/utils/share';
-    import { ColorMatricesTypes, copyTextToClipboard, detectOCROnPage, getColorMatrix, hideLoading, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu } from '~/utils/ui';
+    import {
+        ColorMatricesTypes,
+        copyTextToClipboard,
+        detectOCROnPage,
+        getColorMatrix,
+        hideLoading,
+        onBackButton,
+        showImagePopoverMenu,
+        showLoading,
+        showMatrixLevelPopover,
+        showPDFPopoverMenu,
+        showPopoverMenu
+    } from '~/utils/ui';
+    import { getImageSize } from '~/utils/utils';
     import { colors, navigationBarHeight } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -42,7 +53,7 @@
 
     const items: ObservableArray<OCRPage> = document.getObservablePages();
     let recrop = false;
-    let editingImage: ImageSource;
+    // let editingImage: ImageSource;
     let quad;
     let quads;
     $: quads = quad ? [quad] : [];
@@ -250,12 +261,29 @@
             showError(error);
         }
     }
+    let cropItem: {
+        imagePath?: string;
+        imageWidth?: number;
+        imageHeight?: number;
+        imageRotation?;
+    } = {};
     async function cropEdit() {
         //TODO: recrop into modal window
         try {
             const item = items.getItem(currentIndex);
-
-            editingImage = await loadImage(item.sourceImagePath);
+            if (!item.sourceImageWidth) {
+                const size = getImageSize(item.sourceImagePath);
+                item.sourceImageWidth = size.width;
+                item.sourceImageHeight = size.height;
+                item.sourceImageRotation = 0;
+            }
+            cropItem = {
+                imagePath: item.sourceImagePath,
+                imageWidth: item.sourceImageWidth,
+                imageHeight: item.sourceImageHeight,
+                imageRotation: item.sourceImageRotation
+            };
+            // editingImage = await loadImage(item.sourceImagePath);
             quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
         } catch (error) {
@@ -264,7 +292,7 @@
     }
     async function showImageExportPopover(event) {
         try {
-            await showImagePopoverMenu([items.getItem(currentIndex)], event.object);
+            await showImagePopoverMenu([items.getItem(currentIndex)], event.object, VerticalPosition.ABOVE);
         } catch (err) {
             showError(err);
         }
@@ -318,27 +346,18 @@
         }
 
         try {
-            const component = (await import('~/components/common/SliderPopover.svelte')).default;
             const current = items.getItem(currentIndex);
             const currentValue = current.colorMatrix?.[0] || 1;
             DEV_LOG && console.log('setColorMatrixLevels', currentValue, current.colorMatrix);
             onColorMatrixChange(item.colorType, currentValue);
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
+
+            await showMatrixLevelPopover({
+                item,
                 anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                horizPos: HorizontalPosition.ALIGN_LEFT,
-                props: {
-                    min: 0.5,
-                    max: 2,
-                    step: 0.1,
-                    width: '80%',
-                    value: currentValue,
-                    onChange(value) {
-                        if (current.colorMatrix?.[0] || 1 !== value) {
-                            onColorMatrixChange(item.colorType, value);
-                        }
+                currentValue,
+                onChange(value) {
+                    if (current.colorMatrix?.[0] || 1 !== value) {
+                        onColorMatrixChange(item.colorType, value);
                     }
                 }
             });
@@ -347,12 +366,12 @@
         }
     }
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentEdit', 'onDestroy', !!editingImage);
+        DEV_LOG && console.log('DocumentEdit', 'onDestroy');
         // document.clearObservableArray(items);
-        if (editingImage) {
-            recycleImages(editingImage);
-            editingImage = null;
-        }
+        // if (editingImage) {
+        //     recycleImages(editingImage);
+        //     editingImage = null;
+        // }
     });
 
     async function deleteCurrentPage() {
@@ -406,7 +425,7 @@
         DEV_LOG && console.log('applyImageColorMatrix', i.colorType);
         document.updatePage(currentIndex, {
             colorType: i.colorType,
-            colorMatrix: null
+            colorMatrix: getColorMatrix(i.colorType)
         });
     }
 
@@ -455,8 +474,10 @@
         const index = event.pageIndex;
         if (index === currentIndex) {
             DEV_LOG && console.log('edit onDocumentPageUpdated', index, event.imageUpdated);
+            const item = items.getItem(index);
+            updateCurrentItem(item);
             // TODO: fix the pager something is wrong if we
-            items.setItem(index, items.getItem(index));
+            items.setItem(index, item);
             if (!!event.imageUpdated) {
                 await updateImageUris();
             } else {
@@ -464,7 +485,7 @@
                     ignoreNextCollectionViewRefresh = false;
                     return;
                 }
-                // refreshCollectionView();
+                refreshCollectionView();
             }
         }
     }
@@ -509,13 +530,14 @@
                 DEV_LOG && console.log('onRecropTapFinish', cancel, quadChanged, quad);
                 // let s see if quads changed and update image
                 if (quadChanged && !cancel) {
-                    await document.updatePageCrop(currentIndex, quad, editingImage);
+                    await document.updatePageCrop(currentIndex, quad);
                     updateImageUris();
                     quadChanged = false;
                     quads = [];
                 }
-                recycleImages(editingImage);
-                editingImage = null;
+                cropItem = {};
+                // recycleImages(editingImage);
+                // editingImage = null;
                 recrop = false;
             }
         } catch (error) {
@@ -525,9 +547,9 @@
     function resetCrop() {
         quad = [
             [0, 0],
-            [editingImage.width - 0, 0],
-            [editingImage.width - 0, editingImage.height - 0],
-            [0, editingImage.height - 0]
+            [cropItem.imageWidth - 0, 0],
+            [cropItem.imageWidth - 0, cropItem.imageHeight - 0],
+            [0, cropItem.imageHeight - 0]
         ];
     }
     function refreshPager() {
@@ -685,7 +707,7 @@
             </Template>
         </collectionview>
         <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto,auto" visibility={recrop ? 'visible' : 'hidden'}>
-            <CropView {editingImage} bind:quadChanged bind:quads />
+            <CropView {...cropItem ? cropItem : null} bind:quadChanged bind:quads />
             <label color="white" fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
             <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
             <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={2} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />

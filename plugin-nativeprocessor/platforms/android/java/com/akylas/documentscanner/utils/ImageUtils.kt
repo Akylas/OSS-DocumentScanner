@@ -1,20 +1,19 @@
 package com.akylas.documentscanner.utils
 
 import android.content.ContentResolver
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.ColorFilter
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
 import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.RectF
-import android.media.ExifInterface
 import android.net.Uri
-import java.io.File
-import kotlin.math.max
+import android.os.ParcelFileDescriptor
+import androidx.exifinterface.media.ExifInterface
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.FileDescriptor
+import java.io.FileNotFoundException
+import java.io.IOException
+import kotlin.math.floor
 import kotlin.math.min
 
 
@@ -24,90 +23,340 @@ import kotlin.math.min
  * @constructor creates image util
  */
 class ImageUtil {
-    companion object {
 
-        private fun getExifRotation(filePath: String): Int {
-            val orientation = ExifInterface(filePath).getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL
-            )
+    class LoadImageOptions {
+        var width = 0
+        var maxWidth = 0
+        var height = 0
+        var maxHeight = 0
+        var keepAspectRatio = true
+        var autoScaleFactor = true
 
-            val rotation = when (orientation) {
-                ExifInterface.ORIENTATION_ROTATE_90 -> 90
-                ExifInterface.ORIENTATION_ROTATE_180 -> 180
-                ExifInterface.ORIENTATION_ROTATE_270 -> 270
-                else -> 0
+        fun initWithJSON(jsonOpts: JSONObject)
+        {
+            if (jsonOpts.has("resizeThreshold")) {
+                maxWidth = jsonOpts.optInt("resizeThreshold", maxWidth)
+                maxHeight = maxWidth
+            } else if (jsonOpts.has("maxSize")) {
+                maxWidth = jsonOpts.optInt("maxSize", maxWidth)
+                maxHeight = maxWidth
             }
-            return rotation
+            if (jsonOpts.has("width")) {
+                width = jsonOpts.optInt("width", width)
+            } else if (jsonOpts.has("maxWidth")) {
+                maxWidth = jsonOpts.optInt("maxWidth", maxWidth)
+            }
+            if (jsonOpts.has("height")) {
+                height = jsonOpts.optInt("height", height)
+            } else if (jsonOpts.has("maxHeight")) {
+                maxHeight = jsonOpts.optInt("maxHeight", maxHeight)
+            }
+            keepAspectRatio = jsonOpts.optBoolean("keepAspectRatio", keepAspectRatio)
+            autoScaleFactor = jsonOpts.optBoolean("autoScaleFactor", autoScaleFactor)
+
         }
-
-        private fun readBitmapFromFile(file: File, rotation: Int, maxWidth: Int): Bitmap {
-            val opts = BitmapFactory.Options()
-            opts.inJustDecodeBounds = true
-            opts.inMutable = rotation != 0
-            file.inputStream()
-                .use { BitmapFactory.decodeStream(it, null, opts) }
-            val bitmapRect = Rect(0, 0, opts.outWidth, opts.outHeight)
-            opts.inJustDecodeBounds = false
-            val width =
-                if (rotation == 90 || rotation == 270) bitmapRect.height() else bitmapRect.width()
-            opts.inSampleSize = max(1, width / maxWidth)
-            val bitmap = file.inputStream().use {
-                BitmapFactory.decodeStream(it, null, opts)!!
-            }
-            return if (rotation != 0) {
-                val rotated = Bitmap.createBitmap(
-                    bitmap,
-                    0,
-                    0,
-                    bitmap.width,
-                    bitmap.height,
-                    Matrix().apply { postRotate(1f * rotation) },
-                    true
-                )
-                if (bitmap !== rotated) {
-                    bitmap.recycle()
+        constructor(options: String?) {
+            if (options != null) {
+                try {
+                    val jsonOpts = JSONObject(options)
+                    initWithJSON(jsonOpts)
+                } catch (ignored: JSONException) {
                 }
-                rotated
-            } else bitmap
+            }
+        }
+        constructor(jsonOpts: JSONObject) {
+            initWithJSON(jsonOpts)
         }
 
+        var resizeThreshold = 0
+            get() { return min(maxWidth, maxHeight)}
+
+
+    }
+
+    class ImageAssetOptions {
+        var width = 0
+        var height = 0
+        var keepAspectRatio = true
+        var autoScaleFactor = true
+
+        constructor(bitmapOptions: BitmapFactory.Options) {
+            width = bitmapOptions.outWidth
+            height = bitmapOptions.outHeight
+        }
+        constructor(bitmapOptions: BitmapFactory.Options, options: LoadImageOptions?) {
+            width = bitmapOptions.outWidth
+            height = bitmapOptions.outHeight
+            if (options != null) {
+                if (options.width > 0) {
+                    width = options.width
+                }
+                if (options.height > 0) {
+                    height = options.height
+                }
+                if (options.maxWidth > 0) {
+                    width = min(
+                        width,
+                        options.maxWidth
+                    )
+                }
+                if (options.maxHeight > 0) {
+                    height = min(
+                        height,
+                        options.maxHeight
+                    )
+                }
+                keepAspectRatio = options.keepAspectRatio
+                autoScaleFactor = options.autoScaleFactor
+            }
+        }
+    }
+    companion object {
+        fun getTargetFormat(format: String?): Bitmap.CompressFormat {
+            return when (format) {
+                "jpeg", "jpg" -> Bitmap.CompressFormat.JPEG
+                else -> Bitmap.CompressFormat.PNG
+            }
+        }
         /**
-         * get bitmap image from file path
+         * Calculate an inSampleSize for use in a [BitmapFactory.Options] object when decoding
+         * bitmaps using the decode* methods from [BitmapFactory]. This implementation calculates
+         * the closest inSampleSize that is a power of 2 and will result in the final decoded bitmap
+         * having a width and height equal to or larger than the requested width and height.
          *
-         * @param file image is saved here
-         * @return image bitmap
+         * @param imageWidth  The original width of the resulting bitmap
+         * @param imageHeight The original height of the resulting bitmap
+         * @param reqWidth    The requested width of the resulting bitmap
+         * @param reqHeight   The requested height of the resulting bitmap
+         * @return The value to be used for inSampleSize
          */
-        fun getImageFromFile(file: File, maxWidth: Int): Bitmap {
-            if (!file.exists()) {
-                throw Exception("File doesn't exist - $file")
-            }
+        fun calculateInSampleSize(
+            imageWidth: Int,
+            imageHeight: Int,
+            reqWidth: Int,
+            reqHeight: Int
+        ): Int {
+            // BEGIN_INCLUDE (calculate_sample_size)
+            // Raw height and width of image
+            var reqWidth = reqWidth
+            var reqHeight = reqHeight
+            reqWidth = if (reqWidth > 0) reqWidth else imageWidth
+            reqHeight = if (reqHeight > 0) reqHeight else imageHeight
+            var inSampleSize = 1
+            if (imageHeight > reqHeight || imageWidth > reqWidth) {
+                val halfHeight = imageHeight / 2
+                val halfWidth = imageWidth / 2
 
-            if (file.length() == 0L) {
-                throw Exception("File is empty $file")
-            }
+                // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                // height and width larger than the requested height and width.
+                while (halfHeight / inSampleSize > reqHeight && halfWidth / inSampleSize > reqWidth) {
+                    inSampleSize *= 2
+                }
 
-            if (!file.canRead()) {
-                throw Exception("You don't have permission to read $file")
+                // This offers some additional logic in case the image has a strange
+                // aspect ratio. For example, a panorama may have a much larger
+                // width than height. In these cases the total pixels might still
+                // end up being too large to fit comfortably in memory, so we should
+                // be more aggressive with sample down the image (=larger inSampleSize).
+                var totalPixels =
+                    (imageWidth / inSampleSize * (imageHeight / inSampleSize)).toLong()
+
+                // Anything more than 2x the requested pixels we'll sample down further
+                val totalReqPixelsCap = (reqWidth * reqHeight * 2).toLong()
+                while (totalPixels > totalReqPixelsCap) {
+                    inSampleSize *= 2
+                    totalPixels =
+                        (imageWidth / inSampleSize * (imageHeight / inSampleSize)).toLong()
+                }
             }
-            val rotation = getExifRotation(file.absolutePath)
-            return readBitmapFromFile(file, rotation, maxWidth = maxWidth)
+            return inSampleSize
+            // END_INCLUDE (calculate_sample_size)
         }
 
-
-        /**
-         * get bitmap image from file uri
-         *
-         * @param fileUriString image is saved here and starts with file:///
-         * @return bitmap image
-         */
-        fun readBitmapFromFileUriString(
-            fileUriString: String,
-            contentResolver: ContentResolver
-        ): Bitmap {
-            return BitmapFactory.decodeStream(
-                contentResolver.openInputStream(Uri.parse(fileUriString))
+        private fun getAspectSafeDimensions(
+            sourceWidth: Int,
+            sourceHeight: Int,
+            reqWidth: Int,
+            reqHeight: Int
+        ): Pair<Int, Int> {
+            val widthCoef = sourceWidth.toDouble() / reqWidth.toDouble()
+            val heightCoef = sourceHeight.toDouble() / reqHeight.toDouble()
+            val aspectCoef = min(widthCoef, heightCoef)
+            return Pair(
+                floor((sourceWidth / aspectCoef)).toInt(),
+                floor((sourceHeight / aspectCoef)).toInt()
             )
+        }
+        private fun getRequestedImageSize(
+            src: Pair<Int, Int>,
+            options: ImageAssetOptions
+        ): Pair<Int, Int> {
+            var reqWidth = options.width
+            if (reqWidth <= 0) {
+                reqWidth = src.first
+            }
+            var reqHeight = options.height
+            if (reqHeight <= 0) {
+                reqHeight = src.second
+            }
+            if (options.keepAspectRatio) {
+                val (first, second) = getAspectSafeDimensions(
+                    src.first,
+                    src.second,
+                    reqWidth,
+                    reqHeight
+                )
+                reqWidth = first
+                reqHeight = second
+            }
+            return Pair(reqWidth, reqHeight)
+        }
+
+        private fun closePfd(pfd: ParcelFileDescriptor?) {
+            if (pfd != null) {
+                try {
+                    pfd.close()
+                } catch (ignored: IOException) {
+                }
+            }
+        }
+
+        private fun calculateAngleFromFile(filename: String): Int {
+            var rotationAngle = 0
+            val ei: ExifInterface
+            try {
+                ei = ExifInterface(filename)
+                val orientation = ei.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
+                )
+                when (orientation) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> rotationAngle = 90
+                    ExifInterface.ORIENTATION_ROTATE_180 -> rotationAngle = 180
+                    ExifInterface.ORIENTATION_ROTATE_270 -> rotationAngle = 270
+                }
+            } catch (ignored: IOException) {
+            }
+            return rotationAngle
+        }
+
+
+        private fun calculateAngleFromFileDescriptor(fd: FileDescriptor): Int {
+            var rotationAngle = 0
+            val ei: ExifInterface
+            try {
+                ei = ExifInterface(fd)
+                val orientation = ei.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
+                )
+                when (orientation) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> rotationAngle = 90
+                    ExifInterface.ORIENTATION_ROTATE_180 -> rotationAngle = 180
+                    ExifInterface.ORIENTATION_ROTATE_270 -> rotationAngle = 270
+                }
+            } catch (ignored: IOException) {
+            }
+            return rotationAngle
+        }
+        fun getImageSize(context: Context, src: String): IntArray {
+            val bitmapOptions = BitmapFactory.Options()
+            bitmapOptions.inJustDecodeBounds = true
+            var pfd: ParcelFileDescriptor? = null
+            if (src.startsWith("content://")) {
+                val uri = Uri.parse(src)
+                val resolver: ContentResolver = context.getContentResolver()
+                pfd = try {
+                    resolver.openFileDescriptor(uri, "r")
+                } catch (e: FileNotFoundException) {
+                    closePfd(pfd)
+                    throw e;
+                }
+                BitmapFactory.decodeFileDescriptor(pfd!!.fileDescriptor, null, bitmapOptions)
+            } else {
+                BitmapFactory.decodeFile(src, bitmapOptions)
+            }
+            val rotationAngle: Int
+            if (pfd != null) {
+                rotationAngle = calculateAngleFromFileDescriptor(pfd.fileDescriptor)
+                closePfd(pfd)
+            } else {
+                rotationAngle = calculateAngleFromFile(src)
+            }
+            return intArrayOf(bitmapOptions.outWidth, bitmapOptions.outHeight, rotationAngle)
+        }
+
+        fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?): Bitmap? {
+            var imageSize = getImageSize(context, src)
+            val bitmapOptions = BitmapFactory.Options()
+            bitmapOptions.inJustDecodeBounds = true
+            var bitmap: Bitmap?
+
+            var pfd: ParcelFileDescriptor? = null
+            if (src.startsWith("content://")) {
+                val uri = Uri.parse(src)
+                val resolver: ContentResolver = context.getContentResolver()
+                pfd = try {
+                    resolver.openFileDescriptor(uri, "r")
+                } catch (e: FileNotFoundException) {
+                    closePfd(pfd)
+                    throw e;
+                }
+                BitmapFactory.decodeFileDescriptor(pfd!!.fileDescriptor, null, bitmapOptions)
+            } else {
+                BitmapFactory.decodeFile(src, bitmapOptions)
+            }
+            val opts = ImageAssetOptions(bitmapOptions, options)
+            val sourceSize = Pair(bitmapOptions.outWidth, bitmapOptions.outHeight)
+            val (first, second) = getRequestedImageSize(sourceSize, opts)
+            val sampleSize: Int = calculateInSampleSize(
+                bitmapOptions.outWidth, bitmapOptions.outHeight,
+                first,
+                second
+            )
+            val finalBitmapOptions = BitmapFactory.Options()
+            finalBitmapOptions.inSampleSize = sampleSize
+            var error: String? = null
+            // read as minimum bitmap as possible (slightly bigger than the requested size)
+            bitmap = if (pfd != null) {
+                BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor, null, finalBitmapOptions)
+            } else {
+                BitmapFactory.decodeFile(src, finalBitmapOptions)
+            }
+            if (bitmap != null) {
+                if (first !== bitmap.getWidth() || second !== bitmap.getHeight()) {
+                    // scale to exact size
+                    bitmap = Bitmap.createScaledBitmap(
+                        bitmap,
+                        first, second, true
+                    )
+                }
+                val rotationAngle: Int
+                if (pfd != null) {
+                    rotationAngle = calculateAngleFromFileDescriptor(pfd.fileDescriptor)
+                    closePfd(pfd)
+                } else {
+                    rotationAngle = calculateAngleFromFile(src)
+                }
+                if (rotationAngle != 0) {
+                    val matrix = Matrix()
+                    matrix.postRotate(rotationAngle.toFloat())
+                    bitmap = Bitmap.createBitmap(
+                        bitmap,
+                        0,
+                        0,
+                        bitmap.getWidth(),
+                        bitmap.getHeight(),
+                        matrix,
+                        true
+                    )
+                }
+            }
+            return bitmap
+        }
+
+        fun readBitmapFromFile(context: Context, src: String, opts: String?): Bitmap? {
+            return readBitmapFromFile(context, src, LoadImageOptions(opts))
         }
     }
 }

@@ -228,147 +228,84 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   return [self findDocumentCornersInMat:mat shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation];
 }
 
-+(void) getJSONDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
++(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
 {
-  
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    @try {
-      NSArray* quads = [OpencvDocumentProcessDelegate findDocumentCorners:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation];
-      NSMutableArray* result = [NSMutableArray arrayWithCapacity:[quads count]];
-      [quads enumerateObjectsUsingBlock:^(NSArray*  _Nonnull quad, NSUInteger idx, BOOL * _Nonnull stop) {
-        // sort by Y
-        NSArray* sortedQuadsY = [quad sortedArrayUsingComparator:^NSComparisonResult(NSValue*  _Nonnull obj1, NSValue*  _Nonnull obj2) {
-          CGFloat y1 = [obj1 CGPointValue].y;
-          CGFloat y2 = [obj2 CGPointValue].y;
-          if (y1 > y2) {
-            return (NSComparisonResult)NSOrderedDescending;
-          } else if (y1 < y2) {
-            return (NSComparisonResult)NSOrderedAscending;
-          }
-          return (NSComparisonResult)NSOrderedSame;
-        }];
-        // split by chunk of 2
-        // sort by X
-        NSArray* chunk1 =[[sortedQuadsY subarrayWithRange:NSMakeRange(0, 2)] sortedArrayUsingComparator:^NSComparisonResult(NSValue*  _Nonnull obj1, NSValue*  _Nonnull obj2) {
-          CGFloat x1 = [obj1 CGPointValue].x;
-          CGFloat x2 = [obj2 CGPointValue].x;
-          if (x1 > x2) {
-            return (NSComparisonResult)NSOrderedDescending;
-          } else if (x1 < x2) {
-            return (NSComparisonResult)NSOrderedAscending;
-          }
-          return (NSComparisonResult)NSOrderedSame;
-        }];
-        // sort by reversed X
-        NSArray* chunk2 = [[sortedQuadsY subarrayWithRange:NSMakeRange(2, 2)] sortedArrayUsingComparator:^NSComparisonResult(NSValue*  _Nonnull obj1, NSValue*  _Nonnull obj2) {
-          CGFloat x1 = [obj2 CGPointValue].x;
-          CGFloat x2 = [obj1 CGPointValue].x;
-          if (x1 > x2) {
-            return (NSComparisonResult)NSOrderedDescending;
-          } else if (x1 < x2) {
-            return (NSComparisonResult)NSOrderedAscending;
-          }
-          return (NSComparisonResult)NSOrderedSame;
-        }];
-        NSMutableArray* result2 = [NSMutableArray arrayWithCapacity:[quads count]];
-        [chunk1 enumerateObjectsUsingBlock:^(NSValue*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-          [result2 addObject:[NSString stringWithFormat:@"[%f,%f]",[obj CGPointValue].x, [obj CGPointValue].y ]];
-        }];
-        [chunk2 enumerateObjectsUsingBlock:^(NSValue*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-          [result2 addObject:[NSString stringWithFormat:@"[%f,%f]",[obj CGPointValue].x, [obj CGPointValue].y ]];
-        }];
-        [result addObject:[NSString stringWithFormat:@"[%@]", [result2 componentsJoinedByString:@","]]];
+  @try {
+    NSArray* quads = [OpencvDocumentProcessDelegate findDocumentCorners:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation];
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity:[quads count]];
+    [quads enumerateObjectsUsingBlock:^(NSArray*  _Nonnull quad, NSUInteger idx, BOOL * _Nonnull stop) {
+      // sort by Y
+      NSArray* sortedQuadsY = [quad sortedArrayUsingComparator:^NSComparisonResult(NSValue*  _Nonnull obj1, NSValue*  _Nonnull obj2) {
+        CGFloat y1 = [obj1 CGPointValue].y;
+        CGFloat y2 = [obj2 CGPointValue].y;
+        if (y1 > y2) {
+          return (NSComparisonResult)NSOrderedDescending;
+        } else if (y1 < y2) {
+          return (NSComparisonResult)NSOrderedAscending;
+        }
+        return (NSComparisonResult)NSOrderedSame;
       }];
-      NSString* stringResult = [NSString stringWithFormat:@"[%@]", [result componentsJoinedByString:@","]];
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [delegate onComplete:stringResult error:nil];
-        
-      });
-    }
-    @catch (NSException *exception) {
-      NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+      // split by chunk of 2
+      // sort by X
+      NSArray* chunk1 =[[sortedQuadsY subarrayWithRange:NSMakeRange(0, 2)] sortedArrayUsingComparator:^NSComparisonResult(NSValue*  _Nonnull obj1, NSValue*  _Nonnull obj2) {
+        CGFloat x1 = [obj1 CGPointValue].x;
+        CGFloat x2 = [obj2 CGPointValue].x;
+        if (x1 > x2) {
+          return (NSComparisonResult)NSOrderedDescending;
+        } else if (x1 < x2) {
+          return (NSComparisonResult)NSOrderedAscending;
+        }
+        return (NSComparisonResult)NSOrderedSame;
+      }];
+      // sort by reversed X
+      NSArray* chunk2 = [[sortedQuadsY subarrayWithRange:NSMakeRange(2, 2)] sortedArrayUsingComparator:^NSComparisonResult(NSValue*  _Nonnull obj1, NSValue*  _Nonnull obj2) {
+        CGFloat x1 = [obj2 CGPointValue].x;
+        CGFloat x2 = [obj1 CGPointValue].x;
+        if (x1 > x2) {
+          return (NSComparisonResult)NSOrderedDescending;
+        } else if (x1 < x2) {
+          return (NSComparisonResult)NSOrderedAscending;
+        }
+        return (NSComparisonResult)NSOrderedSame;
+      }];
+      NSMutableArray* result2 = [NSMutableArray arrayWithCapacity:[quads count]];
+      [chunk1 enumerateObjectsUsingBlock:^(NSValue*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [result2 addObject:[NSString stringWithFormat:@"[%f,%f]",[obj CGPointValue].x, [obj CGPointValue].y ]];
+      }];
+      [chunk2 enumerateObjectsUsingBlock:^(NSValue*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [result2 addObject:[NSString stringWithFormat:@"[%f,%f]",[obj CGPointValue].x, [obj CGPointValue].y ]];
+      }];
+      [result addObject:[NSString stringWithFormat:@"[%@]", [result2 componentsJoinedByString:@","]]];
+    }];
+    NSString* stringResult = [NSString stringWithFormat:@"[%@]", [result componentsJoinedByString:@","]];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:stringResult error:nil];
       
-      [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
-      [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
-      NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [delegate onComplete:nil error:err];
-        
-      });
-    }
+    });
+  }
+  @catch (NSException *exception) {
+    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+    
+    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:nil error:err];
+      
+    });
+  }
+}
++(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self cropDocumentSync:image quads:quads transforms:nil delegate:delegate];
   });
-  
-  
 }
 
-
-+(void) cropDocument:(UIImage*) image quads:(NSString*)quads transforms:(NSString*)transforms delegate:(id<OCRDelegate>)delegate {
++(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads transforms:(NSString*)transforms delegate:(id<OCRDelegate>)delegate options:(NSString*)options {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    @try {
-      NSError *error = nil;
-      NSArray* quadsArray = [NSJSONSerialization JSONObjectWithData:[quads dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
-      NSMutableArray* images = [NSMutableArray array];
-      //  std::vector<std::vector<cv::Point>> scanPointsList;
-      cv::Mat srcBitmapMat;
-      UIImageToMat(image, srcBitmapMat);
-      
-      for (NSArray* quad in quadsArray) {
-        std::vector<cv::Point> points;
-        for (NSArray* point in quad) {
-          cv::Point cvpoint([[point objectAtIndex:0] intValue], [[point objectAtIndex:1] intValue]);
-          points.push_back(cvpoint);
-        };
-        cv::Point leftTop = points[0];
-        cv::Point  rightTop = points[1];
-        cv::Point rightBottom = points[2];
-        cv::Point  leftBottom = points[3];
-        int newWidth = (cv::norm(leftTop-rightTop) + cv::norm(leftBottom-rightBottom)) / 2.0f;
-        int newHeight = (cv::norm(leftTop-leftBottom) + cv::norm(rightTop-rightBottom)) / 2.0f;
-        
-        Mat dstBitmapMat;
-        dstBitmapMat = Mat::zeros(newHeight, newWidth, srcBitmapMat.type());
-        
-        std::vector<Point2f> srcTriangle;
-        std::vector<Point2f> dstTriangle;
-        
-        srcTriangle.push_back(Point2f(leftTop.x, leftTop.y));
-        srcTriangle.push_back(Point2f(rightTop.x, rightTop.y));
-        srcTriangle.push_back(Point2f(leftBottom.x, leftBottom.y));
-        srcTriangle.push_back(Point2f(rightBottom.x, rightBottom.y));
-        
-        dstTriangle.push_back(Point2f(0, 0));
-        dstTriangle.push_back(Point2f(newWidth, 0));
-        dstTriangle.push_back(Point2f(0, newHeight));
-        dstTriangle.push_back(Point2f(newWidth, newHeight));
-        
-        Mat transform = getPerspectiveTransform(srcTriangle, dstTriangle);
-        cv::warpPerspective(srcBitmapMat, dstBitmapMat, transform, dstBitmapMat.size());
-        if (transforms != nil) {
-          std::string transformsStd = std::string([transforms UTF8String]);
-          if (transformsStd.length() > 0)
-          {
-            detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd);
-          }
-        }
-        
-        [images addObject:MatToUIImage(dstBitmapMat)];
-      };
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [delegate onComplete:images error:nil];
-        
-      });
-    }
-    @catch (NSException *exception) {
-      NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
-      
-      [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
-      [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
-      NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [delegate onComplete:nil error:err];
-        
-      });
-    }
+    UIImage* image = [ImageUtils.loadImageWithOptions(src, options)];
+    [self cropDocumentSync:image quads:quads transforms:nil delegate:delegate];
   });
 }
 
@@ -376,6 +313,15 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 +(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
   
   [self cropDocument:image quads:quads transforms:nil delegate:delegate];
+}
+
++(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate options:(NSString*) options {
+  
+  [self cropDocumentFromFile:src quads:quads transforms:nil delegate:delegate options:options];
+}
++(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
+  
+  [self cropDocumentFromFile:src quads:quads transforms:nil delegate:delegate options:nil];
 }
 
 

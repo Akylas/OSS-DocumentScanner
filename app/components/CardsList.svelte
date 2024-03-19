@@ -605,14 +605,6 @@
     //         showError(error);
     //     }
     // }
-    async function showSettings() {
-        try {
-            const Settings = (await import('~/components/settings/Settings.svelte')).default;
-            navigate({ page: Settings });
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function syncDocuments() {
         try {
             if (!syncEnabled) {
@@ -895,9 +887,9 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <stackLayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                    <stacklayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-                    </stackLayout>
+                    </stacklayout>
 
                     <!-- <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
@@ -944,9 +936,9 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <stackLayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                    <stacklayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-                    </stackLayout>
+                    </stacklayout>
 
                     <!-- <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>

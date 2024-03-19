@@ -70,7 +70,7 @@
     "download": "下载",
     "downloading": "下载 （%1$s%%）…",
     "draw_ocr_overlay": "绘制 OCR 层",
-    "draw_ocr_text": "绘制 OCR 文本",
+    "draw_ocr_text": "PDF 中的透明 OCR 文本",
     "enable": "使能够",
     "enabled": "已启用",
     "english": "英语",

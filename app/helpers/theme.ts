@@ -31,7 +31,7 @@ Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanc
             realTheme = 'black';
         }
         if (__ANDROID__) {
-            com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
+            com.akylas.documentscanner.Utils.Companion.applyDayNight(Application.android.startActivity, true);
         }
         Theme.setMode(Theme.Auto, undefined, realTheme, false);
         updateThemeColors(realTheme);
@@ -214,7 +214,7 @@ export function start() {
         applyTheme(newTheme);
         updateThemeColors(realTheme);
         if (__ANDROID__) {
-            com.akylas.documentscanner.Utils.applyDayNight(Application.android.startActivity, true);
+            com.akylas.documentscanner.Utils.Companion.applyDayNight(Application.android.startActivity, true);
         }
         currentRealTheme.set(realTheme);
         setTimeout(() => {

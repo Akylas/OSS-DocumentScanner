@@ -4,7 +4,7 @@ import { Application, File, Folder, Utils, View, path } from '@nativescript/core
 export * from './utils.common';
 
 export function restartApp() {
-    com.akylas.documentscanner.Utils.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
+    com.akylas.documentscanner.Utils.Companion.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
 }
 
 export async function copyFolderContent(src: string, dst: string) {
@@ -35,4 +35,9 @@ export async function copyFolderContent(src: string, dst: string) {
 export async function removeFolderContent(src: string) {
     const folder = Folder.fromPath(src);
     return Promise.all((await folder.getEntities()).map((e) => e.remove()));
+}
+
+export function getImageSize(imagePath: string) {
+    const result = com.akylas.documentscanner.utils.ImageUtil.Companion.getImageSize(Utils.android.getApplicationContext(), imagePath);
+    return { width: result[0], height: result[1], rotation: result[2] };
 }

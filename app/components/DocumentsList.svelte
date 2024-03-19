@@ -2,7 +2,7 @@
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
@@ -86,7 +86,7 @@
     //     doc: OCRDocument; selected: boolean
     // }> = null;
 
-    async function refreshSyncState() {
+    async function refresh() {
         try {
             syncEnabled = syncService.enabled;
             DEV_LOG && console.log('syncEnabled', syncEnabled);
@@ -130,16 +130,17 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: EventData & { doc }) {
-        documents.unshift({
+        documents?.unshift({
             doc: event.doc,
             selected: false
         } as Item);
         updateNoDocument();
+        collectionView?.nativeElement.scrollToIndex(0, false);
         DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         let index = -1;
-        documents.some((d, i) => {
+        documents?.some((d, i) => {
             if (d.doc.id === event.doc.id) {
                 index = i;
                 return true;
@@ -147,9 +148,11 @@
         });
         DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc.id, index, event.doc.pages.length);
         if (index >= 0) {
-            const item = documents.getItem(index);
-            item.doc = event.doc;
-            documents.setItem(index, item);
+            const item = documents?.getItem(index);
+            if (item) {
+                item.doc = event.doc;
+                documents.setItem(index, item);
+            }
         }
     }
     function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
@@ -201,6 +204,7 @@
     }
 
     onMount(() => {
+        DEV_LOG && console.log('DocumentList', 'onMount');
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             const intent = Application.android['startIntent'];
@@ -216,10 +220,11 @@
         documentsService.on('documentUpdated', onDocumentUpdated);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         syncService.on('syncState', onSyncState);
-        syncService.on('state', refreshSyncState);
+        syncService.on('state', refresh);
         // refresh();
     });
     onDestroy(() => {
+        DEV_LOG && console.log('DocumentList', 'onDestroy');
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -231,7 +236,7 @@
         documentsService.off('documentAdded', onDocumentAdded);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         syncService.off('syncState', onSyncState);
-        syncService.off('state', refreshSyncState);
+        syncService.off('state', refresh);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -298,9 +303,9 @@
     async function onNavigatedTo(e: NavigatedData) {
         if (!e.isBackNavigation) {
             if (documentsService.started) {
-                refreshSyncState();
+                refresh();
             } else {
-                documentsService.once('started', refreshSyncState);
+                documentsService.once('started', refresh);
             }
         }
     }
@@ -481,14 +486,6 @@
             }
         }
     }
-    async function showSettings() {
-        try {
-            const Settings = (await import('~/components/settings/Settings.svelte')).default;
-            navigate({ page: Settings });
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function selectViewStyle(event) {
         try {
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
@@ -498,6 +495,7 @@
                     { id: 'condensed', name: lc('condensed') }
                 ],
                 anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
                 onClose: (item) => {
                     viewStyle = item.id;
                     ApplicationSettings.setString('documents_list_view_style', viewStyle);

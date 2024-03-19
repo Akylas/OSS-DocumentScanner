@@ -85,7 +85,7 @@
     "download": "Herunterladen",
     "downloading": "Herunterladen (%1$s%%) …",
     "draw_ocr_overlay": "OCR-Überlagerung zeichnen",
-    "draw_ocr_text": "OCR-Text umreißen",
+    "draw_ocr_text": "transparenter OCR-Text im PDF",
     "enable": "Aktivieren",
     "enabled": "Aktiviert",
     "english": "Englisch",

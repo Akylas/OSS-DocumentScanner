@@ -5,7 +5,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
+    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -543,7 +543,7 @@
     }
 </script>
 
-<page bind:this={page} id="pdfView" actionBarHidden={true}>
+<page bind:this={page} id="documentView" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar
             forceCanGoBack={nbSelected > 0}

@@ -15,7 +15,10 @@
     let pager: NativeViewElementNode<Pager>;
 
     export let items: {
-        editingImage;
+        imagePath: string;
+        imageWidth: number;
+        imageHeight: number;
+        imageRotation: number;
         quads;
         qrcode?: QRCodeData;
     }[] = [];
@@ -35,12 +38,12 @@
 
     function resetCrop() {
         const item = items[currentIndex];
-        const editingImage = item.editingImage;
+        // const editingImage = item.editingImage;
         item.quads = item.quads.map((quad) => [
             [0, 0],
-            [editingImage.width - 0, 0],
-            [editingImage.width - 0, editingImage.height - 0],
-            [0, editingImage.height - 0]
+            [item.imageWidth - 0, 0],
+            [item.imageWidth - 0, item.imageHeight - 0],
+            [0, item.imageHeight - 0]
         ]);
         pager.nativeView.refreshVisibleItems();
     }

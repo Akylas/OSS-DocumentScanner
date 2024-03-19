@@ -8,8 +8,8 @@
     import { showError } from '~/utils/error';
     import { getColorMatrix } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
+    import { IMAGE_DECODE_HEIGHT } from '~/models/constants';
 
-    const IMAGE_DECODE_HEIGHT = (Screen.mainScreen.scale * Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels)) / 2;
     const dispatch = createEventDispatcher();
     export let zoomable = false;
     export let item: OCRPage & { image?: ImageSource };

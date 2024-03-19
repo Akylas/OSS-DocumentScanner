@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { AndroidActivityBackPressedEventData, AndroidApplication, Application, Color } from '@nativescript/core';
+    import { LottieView } from '@nativescript-community/ui-lottie';
+    import { AndroidActivityBackPressedEventData, Application, Color, Page } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
-    import { colors } from '~/variables';
-    import { l, lc } from '~/helpers/locale';
-    import { securityService } from '~/services/security';
     import { closeModal } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { LottieView } from '@nativescript-community/ui-lottie';
+    import { lc } from '~/helpers/locale';
     import { getRealTheme } from '~/helpers/theme';
+    import { securityService } from '~/services/security';
     import { onBackButton } from '~/utils/ui';
+    import { colors } from '~/variables';
 
     $: ({ colorPrimary, colorOnBackground, colorPrimaryContainer } = $colors);
 
@@ -24,6 +24,7 @@
     export let allowClose = false;
     export let storePassword: string;
 
+    let page: NativeViewElementNode<Page>;
     let lottieView: NativeViewElementNode<LottieView>;
     let title: string = null;
     let message: string = null;
@@ -236,7 +237,7 @@
     }
 </script>
 
-<page id="passCodeWindow" actionBarHidden={true}>
+<page bind:this={page} id="passCodeWindow" actionBarHidden={true}>
     {#if securityService.pincodeEnabled}
         <gridlayout columns="*,*,*" rows="3*,*,*,*,*" on:layoutChanged={onLayoutChanged}>
             <gridlayout backgroundColor={colorPrimary} colSpan="3" columns="*,*,*,*" orientation="horizontal" row="0">

@@ -3,7 +3,42 @@ import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/c
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { getColorMatrix } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
-import { DEFAULT_PDF_OPTIONS } from '~/models/constants';
+import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/models/constants';
+
+export interface PDFExportBaseOptions {
+    reduce_image_size: boolean;
+    pagerPagePaddingHorizontal: number;
+    pagerPagePaddingVertical: number;
+    paper_size: string;
+    color: string;
+    orientation: string;
+    page_padding: number;
+    imageLoadScale: number;
+    imageSizeThreshold: number;
+    image_page_scale: number;
+    items_per_page: number;
+    dpi: number;
+    draw_ocr_text: boolean;
+    draw_ocr_overlay: boolean;
+}
+export interface PDFExportOptions {
+    pages: OCRPage[];
+    document?: OCRDocument;
+    folder?: string;
+    filename?: string;
+    compress?: boolean;
+}
+
+export function getPDFDefaultExportOptions() {
+    const result = JSON.parse(ApplicationSettings.getString('default_export_options', DEFAULT_PDF_OPTIONS_STRING)) as PDFExportBaseOptions;
+    Object.keys(DEFAULT_PDF_OPTIONS).forEach((k) => {
+        if (result[k] === undefined) {
+            result[k] = DEFAULT_PDF_OPTIONS[k];
+        }
+    });
+    return result;
+}
+
 let bitmapPaint: Paint;
 const textPaint = new Paint();
 
@@ -25,6 +60,8 @@ export interface PDFCanvasItem {
     index;
     number;
     loading?: boolean;
+    pageWidth?;
+    pageHeight?;
 }
 
 export default class PDFCanvas {
@@ -56,19 +93,7 @@ export default class PDFCanvas {
         this.items = newItems;
     }
 
-    options: {
-        reduce_image_size: boolean;
-        pagerPagePaddingHorizontal: number;
-        pagerPagePaddingVertical: number;
-        paper_size: string;
-        color: string;
-        orientation: string;
-        page_padding: number;
-        items_per_page: number;
-        dpi: number;
-        draw_ocr_text: boolean;
-        draw_ocr_overlay: boolean;
-    } = JSON.parse(ApplicationSettings.getString('default_export_options', DEFAULT_PDF_OPTIONS));
+    options: PDFExportBaseOptions = getPDFDefaultExportOptions();
 
     async loadImagesForPage(pdfPageIndex) {
         const item = this.items[pdfPageIndex];
@@ -95,7 +120,6 @@ export default class PDFCanvas {
         });
     }
     updateBitmapPaint(page: OCRPage) {
-        DEV_LOG && console.log('updateBitmapPaint', this.options.color, page);
         if (this.options.color === 'black_white') {
             if (!bitmapPaint) {
                 bitmapPaint = new Paint();
