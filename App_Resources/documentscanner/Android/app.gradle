@@ -116,13 +116,13 @@ android {
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
     exclude "assets/app/**/*.js.map"
-    // exclude "com/itextpdf/**"
     exclude "com/itextpdf/**/afm/Courier*.afm"
     exclude "com/itextpdf/**/afm/Times*.afm"
     exclude "com/itextpdf/**/afm/Symbol*.afm"
     exclude "com/itextpdf/**/afm/Zap*.afm"
+    exclude "com/itextpdf/**/afm/Helvetica-*.afm"
     exclude "com/itextpdf/**/*.html"
-    exclude "com/itextpdf/**/*.txt"
+    // exclude "com/itextpdf/**/*.txt"
     exclude "org/bouncycastle/**"
     exclude "license/**"
   }
