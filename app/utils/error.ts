@@ -161,7 +161,6 @@ export function wrapNativeException(ex, errorType = typeof ex) {
     if (__ANDROID__ && !(ex instanceof Error) && errorType === 'object') {
         const err = new Error(ex.toString());
         err['nativeException'] = ex;
-        //@ts-ignore
         err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
         return err;
     }
