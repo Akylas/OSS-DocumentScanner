@@ -152,29 +152,33 @@ export function updateLoadingProgress(msg: Partial<ShowLoadingOptions>) {
     }
 }
 export async function showLoading(msg?: string | ShowLoadingOptions) {
-    const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
-    const loadingIndicator = getLoadingIndicator();
-    loadingIndicator.instance.onButtonTap = msg['onButtonTap'];
-    // if (!!msg?.['onButtonTap']) {
-    //     loadingIndicator.instance.$on('tap', msg['onButtonTap']);
-    // } else {
-    //     loadingIndicator.instance.$off('tap');
-    // }
-    const props = {
-        showButton: !!msg?.['onButtonTap'],
-        text,
-        title: (msg as any)?.title,
-        progress: null
-    };
-    if (msg && typeof msg !== 'string' && msg?.hasOwnProperty('progress')) {
-        props.progress = msg.progress;
-    } else {
-        props.progress = null;
-    }
-    loadingIndicator.instance.$set(props);
-    if (showLoadingStartTime === null) {
-        showLoadingStartTime = Date.now();
-        loadingIndicator.show();
+    try {
+        const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
+        const indicator = getLoadingIndicator();
+        indicator.instance.onButtonTap = msg?.['onButtonTap'];
+        // if (!!msg?.['onButtonTap']) {
+        //     loadingIndicator.instance.$on('tap', msg['onButtonTap']);
+        // } else {
+        //     loadingIndicator.instance.$off('tap');
+        // }
+        const props = {
+            showButton: !!msg?.['onButtonTap'],
+            text,
+            title: (msg as any)?.title,
+            progress: null
+        };
+        if (msg && typeof msg !== 'string' && msg?.hasOwnProperty('progress')) {
+            props.progress = msg.progress;
+        } else {
+            props.progress = null;
+        }
+        indicator.instance.$set(props);
+        if (showLoadingStartTime === null) {
+            showLoadingStartTime = Date.now();
+            indicator.show();
+        }
+    } catch (error) {
+        showError(error, { silent: true });
     }
 }
 export function showingLoading() {
@@ -387,13 +391,6 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                     new Promise(async (resolve, reject) => {
                         try {
                             const imageSize = getImageSize(sourceImagePath);
-                            // const resizeThreshold = Math.max(QRCODE_RESIZE_THRESHOLD, PREVIEW_RESIZE_THRESHOLD);
-                            // we load directly at the max of QRCODE_RESIZE_THRESHOLD and PREVIEW_RESIZE_THRESHOLD
-                            // const editingImage = await loadImage(sourceImagePath);
-
-                            // if (!editingImage) {
-                            //     throw new Error('failed to read imported image');
-                            // }
 
                             const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                             const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
@@ -617,9 +614,6 @@ export async function importAndScanImage(document?: OCRDocument) {
         selection = await imagePickerPlugin
             .create({
                 mediaType: 1,
-                android: {
-                    // read_external_storage: lc('import_images')
-                },
                 mode: 'multiple' // use "multiple" for multiple selection
             })
             // on android pressing the back button will trigger an error which we dont want
@@ -1168,8 +1162,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
             });
             await Promise.all(
                 pages.map(async (p, index) => {
-                    const pageId = p.page.id;
-                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), null, {
+                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
                         colorType: updateOptions.colorType,
                         colorMatrix: updateOptions.colorMatrix
                     });

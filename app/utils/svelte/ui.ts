@@ -97,7 +97,7 @@ export function goBack(options?: BackNavigationOptions) {
 }
 type NavigateFunc = <T>(options: NavigationOptions<T>) => SvelteComponent<T>;
 const throttledSNavigate = throttle(sNavigate, 500) as NavigateFunc;
-export function navigate<T>(options: NavigationOptions<T>): SvelteComponent<T> {
+export function navigate<T>(options: NavigationOptions<T>) {
     return throttledSNavigate<T>(options);
 }
 

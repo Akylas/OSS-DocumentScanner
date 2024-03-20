@@ -11,7 +11,8 @@
     import { OCRData, QRCodeData } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { goBack, showModal } from '~/utils/svelte/ui';
     import { Writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
@@ -283,7 +284,6 @@
                 imageHeight: item.sourceImageHeight,
                 imageRotation: item.sourceImageRotation
             };
-            // editingImage = await loadImage(item.sourceImagePath);
             quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
         } catch (error) {
@@ -309,11 +309,10 @@
                 props: {
                     ocrData: items.getItem(currentIndex).ocrData,
                     imagePath: item.imagePath,
-                    // image: editingImage || (await loadImage(item.imagePath)),
                     imageWidth: item.width,
                     imageHeight: item.height,
-                    rotation: item.rotation
-                    // colorMatrix: getColorMatrix(item.colorType)
+                    rotation: item.rotation,
+                    colorMatrix: getColorMatrix(item.colorType)
                 }
             });
         } catch (error) {
@@ -527,6 +526,7 @@
     async function onRecropTapFinish(cancel = false) {
         try {
             if (recrop) {
+                showLoading();
                 DEV_LOG && console.log('onRecropTapFinish', cancel, quadChanged, quad);
                 // let s see if quads changed and update image
                 if (quadChanged && !cancel) {
@@ -536,12 +536,12 @@
                     quads = [];
                 }
                 cropItem = {};
-                // recycleImages(editingImage);
-                // editingImage = null;
                 recrop = false;
             }
         } catch (error) {
             showError(error);
+        } finally {
+            hideLoading();
         }
     }
     function resetCrop() {

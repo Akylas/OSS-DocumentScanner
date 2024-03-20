@@ -10,7 +10,7 @@
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
@@ -22,7 +22,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { PermissionError, showError } from '~/utils/error';
-    import { goBack, navigate } from '~/utils/svelte/ui';
+    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
     import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
     const rowMargin = 8;

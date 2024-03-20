@@ -375,10 +375,6 @@ export class DocumentsService extends Observable {
         if (this.started) {
             return;
         }
-        // const result = await request('storage');
-        //     if (result[0] !== 'authorized') {
-        //         throw new Error(lc('storage_permission_needed'));
-        //     }
         DEV_LOG &&
             console.log(
                 'DocumentsService',

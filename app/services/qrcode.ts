@@ -1,5 +1,5 @@
 import { ImageSource, Observable, PageTransition, Screen, SharedTransition } from '@nativescript/core';
-import { detectQRCode, generateQRCodeImage } from 'plugin-nativeprocessor';
+import { detectQRCode, detectQRCodeFromFile, generateQRCodeImage } from 'plugin-nativeprocessor';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { QRCODE_RESIZE_THRESHOLD } from '~/models/constants';
 import { loadImage, recycleImages } from '~/utils/images';
@@ -12,24 +12,16 @@ const screenHeightPixels = Screen.mainScreen.heightPixels;
 
 export class QRCodeService extends Observable {
     async detectQRcode(document: OCRDocument, pageIndex: number) {
-        let pageImage: ImageSource;
-        try {
-            const page = document.pages[pageIndex];
-            pageImage = await loadImage(page.imagePath, QRCODE_RESIZE_THRESHOLD);
-            const qrcode = await detectQRCode(pageImage, {
-                rotation: page.rotation
+        const page = document.pages[pageIndex];
+        const qrcode = await detectQRCodeFromFile(page.imagePath, {
+            resizeThreshold: QRCODE_RESIZE_THRESHOLD,
+            rotation: page.rotation
+        });
+        if (qrcode) {
+            await document.updatePage(pageIndex, {
+                qrcode
             });
-            if (qrcode) {
-                await document.updatePage(pageIndex, {
-                    qrcode
-                });
-                return qrcode;
-            }
-            return null;
-        } catch (error) {
-            throw error;
-        } finally {
-            recycleImages(pageImage);
+            return qrcode;
         }
     }
 

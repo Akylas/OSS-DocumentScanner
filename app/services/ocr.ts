@@ -1,5 +1,5 @@
 import { ApplicationSettings, File, Folder, ImageSource, Observable, knownFolders, path } from '@nativescript/core';
-import { ocrDocument } from 'plugin-nativeprocessor';
+import { ocrDocument, ocrDocumentFromFile } from 'plugin-nativeprocessor';
 import { OCRDocument } from '~/models/OCRDocument';
 import { loadImage, recycleImages } from '~/utils/images';
 import { request } from '@nativescript-community/https';
@@ -234,34 +234,25 @@ export class OCRService extends Observable {
     }
 
     async ocrPage(document: OCRDocument, pageIndex: number, onProgress?: (progress: number) => void) {
-        let ocrImage: ImageSource;
-        try {
-            const page = document.pages[pageIndex];
-            ocrImage = await loadImage(page.imagePath);
-            // TODO: apply colorMatrix to image before doing OCR
-            const ocrData = await ocrDocument(
-                ocrImage,
-                {
-                    dataPath: this.currentDataPath,
-                    language: this.mLanguages,
-                    rotation: page.rotation,
-                    // oem: 0,
-                    detectContours: 0,
-                    trim: false
-                },
-                onProgress
-            );
-            if (ocrData?.blocks?.length) {
-                await document.updatePage(pageIndex, {
-                    ocrData
-                });
-                return ocrData;
-            }
-            return null;
-        } catch (error) {
-            throw error;
-        } finally {
-            recycleImages(ocrImage);
+        const page = document.pages[pageIndex];
+        // TODO: apply colorMatrix to image before doing OCR
+        const ocrData = await ocrDocumentFromFile(
+            page.imagePath,
+            {
+                dataPath: this.currentDataPath,
+                language: this.mLanguages,
+                rotation: page.rotation,
+                // oem: 0,
+                detectContours: 0,
+                trim: false
+            },
+            onProgress
+        );
+        if (ocrData?.blocks?.length) {
+            await document.updatePage(pageIndex, {
+                ocrData
+            });
+            return ocrData;
         }
     }
 

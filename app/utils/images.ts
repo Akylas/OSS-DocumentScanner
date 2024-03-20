@@ -1,7 +1,6 @@
 import { ImageAsset, ImageSource } from '@nativescript/core';
 
 export async function loadImage(sourceImagePath, maxSize = 4500) {
-    DEV_LOG && console.log('loadImage', sourceImagePath, maxSize);
     // if (__ANDROID__) {
     // we need to use ImageAsset to correctly load images with content:
     // we also need it cause it loads the image "rotated"

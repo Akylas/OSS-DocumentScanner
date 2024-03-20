@@ -303,7 +303,6 @@ export default class PDFCanvas {
                 canvas.drawRect(0, 0, availableWidth, availableHeight, bgPaint);
             }
             if (isLoading) {
-                // canvas.drawText(lc('loading_images'), 0, 100, textPaint);
                 return;
             }
             // compute space diivision

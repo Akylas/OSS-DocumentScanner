@@ -1,6 +1,6 @@
 import { ApplicationSettings, File, Folder, ImageSource, Observable, path } from '@nativescript/core';
 import { debounce, throttle } from '@nativescript/core/utils';
-import { cropDocument } from 'plugin-nativeprocessor';
+import { cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 import { showError } from '~/utils/error';
@@ -287,11 +287,14 @@ export class SyncService extends Observable {
                     });
                     // check if we need to recreate the image
                     if (pageTooUpdate.crop || pageTooUpdate.transforms) {
-                        const editingImage = await loadImage(localPage.sourceImagePath);
-                        const images = await cropDocument(editingImage, [pageTooUpdate.crop]);
-
-                        await new ImageSource(images[0]).saveToFileAsync(localPage.imagePath, IMG_FORMAT, IMG_COMPRESS);
-                        recycleImages(editingImage, images);
+                        const file = File.fromPath(localPage.imagePath);
+                        await cropDocumentFromFile(localPage.sourceImagePath, [pageTooUpdate.crop], {
+                            saveInFolder: file.parent.path,
+                            fileName: file.name,
+                            compressFormat: IMG_FORMAT,
+                            compressQuality: IMG_COMPRESS
+                        });
+                        pageTooUpdate.size = file.size;
                     }
                     await document.updatePage(localPageIndex, pageTooUpdate);
                 } else if (remotePageToSync.modifiedDate < localPage.modifiedDate) {

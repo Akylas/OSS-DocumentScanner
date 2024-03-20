@@ -290,10 +290,14 @@ export class OCRDocument extends Observable implements Document {
     async updatePageCrop(pageIndex: number, quad: any) {
         const page = this.pages[pageIndex];
         DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
-        const splitData = page.imagePath.split('/');
-        const fileName = splitData.pop();
-        const saveInFolder = splitData.join('/');
-        const images = await cropDocumentFromFile(page.sourceImagePath, [quad], { transforms: page.transforms, fileName, saveInFolder });
+        const file = File.fromPath(page.imagePath);
+        const images = await cropDocumentFromFile(page.sourceImagePath, [quad], {
+            transforms: page.transforms,
+            saveInFolder: file.parent.path,
+            fileName: file.name,
+            compressFormat: IMG_FORMAT,
+            compressQuality: IMG_COMPRESS
+        });
         const image = images[0];
         DEV_LOG && console.log('updatePageCrop done', image);
         // const croppedImagePath = page.imagePath;
@@ -309,34 +313,40 @@ export class OCRDocument extends Observable implements Document {
             {
                 crop: quad,
                 width: image.width,
-                height: image.height
+                height: image.height,
+                size: file.size
             },
             true
         );
         //we remove from cache so that everything gets updated
         // recycleImages(images);
     }
-    async updatePageTransforms(pageIndex: number, transforms: string, editingImage?: ImageSource, optionalUpdates = {}) {
+    async updatePageTransforms(pageIndex: number, transforms: string, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms);
-        if (!editingImage) {
-            editingImage = await loadImage(page.sourceImagePath);
-        }
-        const images = await cropDocument(editingImage, [page.crop], transforms);
+        const file = File.fromPath(page.imagePath);
+        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
 
-        const croppedImagePath = page.imagePath;
-        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
+        const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
+            transforms,
+            saveInFolder: file.parent.path,
+            fileName: file.name,
+            compressFormat: IMG_FORMAT,
+            compressQuality: IMG_COMPRESS
+        });
+        const image = images[0];
+        DEV_LOG && console.log('updatePageTransforms done', image);
+
         await this.updatePage(
             pageIndex,
             {
                 transforms,
-                size: File.fromPath(croppedImagePath).size,
+                width: image.width,
+                height: image.height,
+                size: file.size,
                 ...optionalUpdates
             },
             true
         );
-        //we remove from cache so that everything gets updated
-        recycleImages(images, editingImage);
     }
 }
 

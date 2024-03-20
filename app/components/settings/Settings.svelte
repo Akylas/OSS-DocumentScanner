@@ -131,7 +131,7 @@
                             storeKey: 'default_export_options',
                             storeDefault: DEFAULT_PDF_OPTIONS_STRING,
                             key: 'page_padding',
-                            title: lc('page_margin'),
+                            title: lc('page_padding'),
                             type: 'prompt',
                             textFieldProperties: {
                                 keyboardType: 'integer'
@@ -180,7 +180,6 @@
                             max: 100,
                             step: 1,
                             title: lc('jpeg_quality'),
-                            description: lc('jpeg_quality_desc'),
                             type: 'slider',
                             rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality'],
                             currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']

@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.util.Log
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.colors.ColorConstants
+import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.geom.PageSize
 import com.itextpdf.kernel.geom.Rectangle
 import com.itextpdf.kernel.pdf.PdfDocument
@@ -280,6 +281,8 @@ class PDFUtils {
                     val pageSize = if (imageRotation % 180 !== 0) PageSize(image.imageHeight, image.imageWidth) else PageSize(image.imageWidth, image.imageHeight)
                     if (i == 0) {
                         document = Document(pdfDoc, pageSize)
+                        val font =  PdfFontFactory.createRegisteredFont("helvetica")
+                        document.setFont(font)
                         document.setMargins(0F, 0F, 0F, 0F)
                     } else {
                         pdfDoc.addNewPage(pageSize)
@@ -322,6 +325,8 @@ class PDFUtils {
                     var toDrawHeight: Double
                     if (idx == 0) {
                         document = Document(pdfDoc, pageSize)
+                        val font =  PdfFontFactory.createRegisteredFont("helvetica")
+                        document!!.setFont(font)
                         document!!.setMargins(pagePadding, pagePadding, pagePadding, pagePadding)
                         pdfDoc.addNewPage(pageSize)
                     } else if (idx < items.size - 1) {

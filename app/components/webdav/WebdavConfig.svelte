@@ -55,10 +55,6 @@
                     id: AuthType.Token,
                     name: lc('token')
                 }
-                // {
-                //     id: AuthType.Digest,
-                //     name: lc('digest')
-                // }
             ];
             await showPopoverMenu({
                 options,

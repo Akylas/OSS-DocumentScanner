@@ -21,6 +21,7 @@
     import { recycleImages } from '~/utils/images';
     import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
     import { colors, fonts, navigationBarHeight, screenHeightDips, screenRatio, screenWidthDips } from '~/variables';
+    import PageIndicator from '../common/PageIndicator.svelte';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -308,7 +309,6 @@
             subSettingsOptions: 'pdf'
         });
     }
-
 </script>
 
 <!-- we use a frame to be able to navigate to settings from the modal-->
@@ -354,8 +354,7 @@
                         {/each}
                     </pager>
                     <!-- <checkbox checked={draw_ocr_overlay} margin={14} row={1} text={lc('draw_ocr_overlay')} verticalAlignment="top" on:checkedChange={(e) => updateOption('draw_ocr_overlay', e.value)} /> -->
-
-                    <pagerindicator horizontalAlignment="center" marginBottom={10} pagerViewId="pager" row={1} type="worm" verticalAlignment="bottom" />
+                    <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
                     <gridlayout backgroundColor={colorSurfaceContainerHigh} columns="*,*" row={2}>
                         <mdbutton text={lc('export')} on:tap={exportPDF} />
                         <mdbutton col={1} text={lc('open')} on:tap={openPDF} />

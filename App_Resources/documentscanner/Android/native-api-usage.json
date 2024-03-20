@@ -17,10 +17,6 @@
         "android.text.format:DateFormat",
         "android.graphics:BitmapShader",
         "androidx.documentfile.provider:DocumentFile",
-        "android.graphics.pdf:PdfDocument",
-        "android.graphics.pdf:PdfDocument.PageInfo",
-        "android.graphics.pdf:PdfDocument.PageInfo.Builder",
-        "android.graphics.pdf:PdfDocument.Page",
         "android.widget:Toast"
     ],
     "blacklist": [
