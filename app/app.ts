@@ -11,16 +11,15 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, NavigatedData, Page } from '@nativescript/core';
+import { Application, Frame, NavigatedData, Page } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
-import { FrameElement, PageElement, createElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
+import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '~/NestedScrollView';
 import { lc } from '~/helpers/locale';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { documentsService } from '~/services/documents';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { startSentry } from '~/utils/sentry';
-import { navigate } from '~/utils/svelte/ui';
 import { networkService } from './services/api';
 import { ocrService } from './services/ocr';
 import { securityService } from './services/security';
@@ -149,7 +148,11 @@ try {
     if (__ANDROID__) {
         Page.on('shownModally', function (event) {
             DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
-            com.akylas.documentscanner.Utils.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
+            com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
+        });
+        Frame.on('shownModally', function (event) {
+            DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
+            com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
         });
         // GestureRootView.on('shownInBottomSheet', function (event) {
         //     const _bottomSheetFragment = event.object['_bottomSheetFragment'];
@@ -165,6 +168,12 @@ try {
         });
         Page.on('showingModally', (event: NavigatedData) => {
             DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Frame.on('showingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Frame.on('closingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
         });
         Page.on('closingModally', (event: NavigatedData) => {
             DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
@@ -196,11 +205,15 @@ try {
     new Promise((resolve, reject) => {
         //wait for launch
         Application.on(Application.launchEvent, () => {
+            DEV_LOG && console.log('launch', !!pageInstance);
             resolve(pageInstance);
         });
         Application.on(Application.exitEvent, () => {
-            pageInstance.$destroy();
-            pageInstance = null;
+            DEV_LOG && console.log('exit', !!pageInstance);
+            if (pageInstance) {
+                pageInstance.$destroy();
+                pageInstance = null;
+            }
         });
         try {
             Application.run({
@@ -208,11 +221,14 @@ try {
                     const rootGridLayout = createElement('gesturerootview', window.document as any);
                     const rootFrame = createElement('frame', rootGridLayout.ownerDocument);
                     rootFrame.setAttribute('id', 'app-root-frame');
+                    //very important here to use svelte-native navigate
+                    // the throttle one wont return the pageInstance
                     pageInstance = navigate({
                         page: Comp.default,
                         props: {},
                         frame: rootFrame as any
                     });
+                    DEV_LOG && console.log('Application.run', !!pageInstance);
                     rootGridLayout.appendChild(rootFrame);
                     return rootGridLayout['nativeView'];
                 }

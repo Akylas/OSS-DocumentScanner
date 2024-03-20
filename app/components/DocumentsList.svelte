@@ -2,7 +2,7 @@
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
@@ -42,7 +42,7 @@
     import { syncService } from '~/services/sync';
     import { PermissionError, showError } from '~/utils/error';
     import { fade, navigate, showModal } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSettings, transformPages } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight } from '~/variables';
 
     const textPaint = new Paint();
@@ -130,16 +130,17 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: EventData & { doc }) {
-        documents.unshift({
+        documents?.unshift({
             doc: event.doc,
             selected: false
         } as Item);
         updateNoDocument();
+        collectionView?.nativeElement.scrollToIndex(0, false);
         DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         let index = -1;
-        documents.some((d, i) => {
+        documents?.some((d, i) => {
             if (d.doc.id === event.doc.id) {
                 index = i;
                 return true;
@@ -147,9 +148,11 @@
         });
         DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc.id, index, event.doc.pages.length);
         if (index >= 0) {
-            const item = documents.getItem(index);
-            item.doc = event.doc;
-            documents.setItem(index, item);
+            const item = documents?.getItem(index);
+            if (item) {
+                item.doc = event.doc;
+                documents.setItem(index, item);
+            }
         }
     }
     function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
@@ -201,6 +204,7 @@
     }
 
     onMount(() => {
+        DEV_LOG && console.log('DocumentList', 'onMount');
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             const intent = Application.android['startIntent'];
@@ -220,6 +224,7 @@
         // refresh();
     });
     onDestroy(() => {
+        DEV_LOG && console.log('DocumentList', 'onDestroy');
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -231,6 +236,7 @@
         documentsService.off('documentAdded', onDocumentAdded);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         syncService.off('syncState', onSyncState);
+        syncService.off('state', refresh);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -329,8 +335,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+        if (documents) {
+            nbSelected = 0;
+            documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);
@@ -369,14 +377,13 @@
             showError(error);
         }
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
             }
-        }
-    }
+        });
     async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
         if (__ANDROID__) {
             try {
@@ -479,14 +486,6 @@
             }
         }
     }
-    async function showSettings() {
-        try {
-            const Settings = (await import('~/components/settings/Settings.svelte')).default;
-            navigate({ page: Settings });
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function selectViewStyle(event) {
         try {
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
@@ -496,6 +495,7 @@
                     { id: 'condensed', name: lc('condensed') }
                 ],
                 anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
                 onClose: (item) => {
                     viewStyle = item.id;
                     ApplicationSettings.setString('documents_list_view_style', viewStyle);
@@ -756,10 +756,10 @@
         <CActionBar title={l('documents')}>
             <mdbutton
                 class="actionBarButton"
-                defaultVisualState={syncEnabled ? 'normal' : 'disabled'}
                 isEnabled={!syncRunning}
                 text="mdi-sync"
                 variant="text"
+                visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />

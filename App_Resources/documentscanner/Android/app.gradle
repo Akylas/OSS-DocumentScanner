@@ -11,8 +11,8 @@ android {
   defaultConfig {  
     multiDexEnabled false
     minSdkVersion 22
-    versionCode 55
-    versionName "1.4.14"
+    versionCode 57
+    versionName "1.5.0"
 
     // if (project.hasProperty('resConfigs')) {
     //   def resConfigs = project.findProperty('resConfigs')
@@ -116,7 +116,13 @@ android {
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
     exclude "assets/app/**/*.js.map"
-    exclude "com/itextpdf/**"
+    exclude "com/itextpdf/**/afm/Courier*.afm"
+    exclude "com/itextpdf/**/afm/Times*.afm"
+    exclude "com/itextpdf/**/afm/Symbol*.afm"
+    exclude "com/itextpdf/**/afm/Zap*.afm"
+    exclude "com/itextpdf/**/afm/Helvetica-*.afm"
+    exclude "com/itextpdf/**/*.html"
+    // exclude "com/itextpdf/**/*.txt"
     exclude "org/bouncycastle/**"
     exclude "license/**"
   }
@@ -180,7 +186,9 @@ dependencies {
     implementation "androidx.profileinstaller:profileinstaller:1.3.1"
     baselineProfile project(':baselineprofile')
 
-    implementation 'com.itextpdf.android:kernel-android:7.2.3'
+    def itextpdfVersion = { -> project.hasProperty("itextpdfVersion") ? itextpdfVersion : "7.2.3" }
+    implementation "com.itextpdf.android:kernel-android:$itextpdfVersion"
+    implementation "com.itextpdf.android:layout-android:$itextpdfVersion"
 }
 repositories {
       mavenCentral()

@@ -1,7 +1,7 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
-import { ColorPaletteData, OCRData, QRCodeData, cropDocument } from 'plugin-nativeprocessor';
+import { ColorPaletteData, OCRData, QRCodeData, cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
@@ -59,6 +59,10 @@ export class OCRDocument extends Observable implements Document {
         return doc;
     }
 
+    get folderPath() {
+        return documentsService.dataFolder.getFolder(this.id);
+    }
+
     async addPage(pageData: PageData, index: number = this.pages.length) {
         const docId = this.id;
         const docData = documentsService.dataFolder.getFolder(docId);
@@ -114,7 +118,7 @@ export class OCRDocument extends Observable implements Document {
         DEV_LOG && console.log('addPages', JSON.stringify(pagesData));
         if (pagesData) {
             const docId = this.id;
-            const docData = documentsService.dataFolder.getFolder(docId);
+            const docData = this.folderPath;
             const length = pagesData.length;
             const pages = [];
             const pageStartId = Date.now();
@@ -153,6 +157,7 @@ export class OCRDocument extends Observable implements Document {
                     attributes.sourceImagePath = actualSourceImagePath;
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
+                        .replace(/%252F/g, '/') // for Android content:// paths
                         .split('/')
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
@@ -216,7 +221,7 @@ export class OCRDocument extends Observable implements Document {
 
     async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false) {
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(page));
+        DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), JSON.stringify(page));
         if (page) {
             await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
@@ -282,13 +287,21 @@ export class OCRDocument extends Observable implements Document {
         return JSON.parse(this.toString());
     }
 
-    async updatePageCrop(pageIndex: number, quad: any, editingImage: ImageSource) {
+    async updatePageCrop(pageIndex: number, quad: any) {
         const page = this.pages[pageIndex];
         DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
-        const images = await cropDocument(editingImage, [quad], page.transforms || '');
+        const file = File.fromPath(page.imagePath);
+        const images = await cropDocumentFromFile(page.sourceImagePath, [quad], {
+            transforms: page.transforms,
+            saveInFolder: file.parent.path,
+            fileName: file.name,
+            compressFormat: IMG_FORMAT,
+            compressQuality: IMG_COMPRESS
+        });
         const image = images[0];
-        const croppedImagePath = page.imagePath;
-        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
+        DEV_LOG && console.log('updatePageCrop done', image);
+        // const croppedImagePath = page.imagePath;
+        // await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         // if (__IOS__) {
         //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
         //     getImagePipeline().clearCaches();
@@ -299,35 +312,41 @@ export class OCRDocument extends Observable implements Document {
             pageIndex,
             {
                 crop: quad,
-                width: __ANDROID__ ? image.getWidth() : image.size.width,
-                height: __ANDROID__ ? image.getHeight() : image.size.height
+                width: image.width,
+                height: image.height,
+                size: file.size
             },
             true
         );
         //we remove from cache so that everything gets updated
-        recycleImages(images);
+        // recycleImages(images);
     }
-    async updatePageTransforms(pageIndex: number, transforms: string, editingImage?: ImageSource, optionalUpdates = {}) {
+    async updatePageTransforms(pageIndex: number, transforms: string, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms);
-        if (!editingImage) {
-            editingImage = await loadImage(page.sourceImagePath);
-        }
-        const images = await cropDocument(editingImage, [page.crop], transforms);
+        const file = File.fromPath(page.imagePath);
+        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
 
-        const croppedImagePath = page.imagePath;
-        await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
+        const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
+            transforms,
+            saveInFolder: file.parent.path,
+            fileName: file.name,
+            compressFormat: IMG_FORMAT,
+            compressQuality: IMG_COMPRESS
+        });
+        const image = images[0];
+        DEV_LOG && console.log('updatePageTransforms done', image);
+
         await this.updatePage(
             pageIndex,
             {
                 transforms,
-                size: File.fromPath(croppedImagePath).size,
+                width: image.width,
+                height: image.height,
+                size: file.size,
                 ...optionalUpdates
             },
             true
         );
-        //we remove from cache so that everything gets updated
-        recycleImages(images, editingImage);
     }
 }
 
@@ -349,6 +368,9 @@ export interface Page {
     height: number;
     size: number;
     sourceImagePath: string;
+    sourceImageWidth: number;
+    sourceImageHeight: number;
+    sourceImageRotation: number;
     imagePath: string;
 
     ocrData: OCRData;
@@ -385,7 +407,12 @@ export class OCRPage extends Observable implements Page {
     width: number;
     height: number;
     size: number;
+
     sourceImagePath: string;
+    sourceImageWidth: number;
+    sourceImageHeight: number;
+    sourceImageRotation: number;
+
     imagePath: string;
 
     ocrData: OCRData;

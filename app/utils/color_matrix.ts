@@ -1,4 +1,4 @@
-import { Color } from '@nativescript/core';
+// import { Color } from '@nativescript/core';
 
 export type Matrix = [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
 
@@ -9,12 +9,12 @@ function clamp(value, min, max) {
     return min < max ? (value < min ? min : value > max ? max : value) : value < max ? max : value > min ? min : value;
 }
 
-function colorToRGB(color: string | Color | number) {
-    if (!(color instanceof Color)) {
-        color = new Color(color as any);
-    }
-    return [color.r / 255, color.g / 255, color.b / 255];
-}
+// function colorToRGB(color: string | Color | number) {
+//     if (!(color instanceof Color)) {
+//         color = new Color(color as any);
+//     }
+//     return [color.r / 255, color.g / 255, color.b / 255];
+// }
 
 const staticFilters: { [key: string]: Matrix } = {
     normal: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
@@ -187,7 +187,7 @@ export default {
     //     return [a00, a01, a02, 0, 0, a10, a11, a12, 0, 0, a20, a21, a22, 0, 0, 0, 0, 0, 1, 0];
     // },
 
-    luminanceToAlpha: { fn: (): Matrix => staticFilters.luminanceToAlpha },
+    // luminanceToAlpha: { fn: (): Matrix => staticFilters.luminanceToAlpha },
 
     invert: { fn: (): Matrix => staticFilters.invert },
 
@@ -251,11 +251,11 @@ export default {
         range: [0, 1]
     },
 
-    nightvision: { fn: (): Matrix => staticFilters.nightvision },
+    // nightvision: { fn: (): Matrix => staticFilters.nightvision },
 
-    warm: { fn: (): Matrix => staticFilters.warm },
+    // warm: { fn: (): Matrix => staticFilters.warm },
 
-    cool: { fn: (): Matrix => staticFilters.cool },
+    // cool: { fn: (): Matrix => staticFilters.cool },
     bw: { fn: (value = 1) => [value, value, value, -1, 0, value, value, value, -1, 0, value, value, value, -1, 0, 0, 0, 0, 1, 0], range: [0, 1], defaultValue: 1 },
     // brightness: (v = 1): Matrix => [v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, 1, 0],
 
@@ -278,82 +278,82 @@ export default {
     //     return [r, g, b, 0, -bias * v, r, g, b, 0, -bias * v, r, g, b, 0, -bias * v, 0, 0, 0, 1, 0];
     // },
 
-    technicolor: { fn: (): Matrix => staticFilters.technicolor },
+    // technicolor: { fn: (): Matrix => staticFilters.technicolor },
 
     polaroid: { fn: (): Matrix => staticFilters.polaroid },
 
-    toBGR: { fn: (): Matrix => staticFilters.toBGR },
+    // toBGR: { fn: (): Matrix => staticFilters.toBGR },
 
-    kodachrome: { fn: (): Matrix => staticFilters.kodachrome },
+    // kodachrome: { fn: (): Matrix => staticFilters.kodachrome },
 
-    browni: { fn: (): Matrix => staticFilters.browni },
+    // browni: { fn: (): Matrix => staticFilters.browni },
 
-    vintage: { fn: (): Matrix => staticFilters.vintage },
+    // vintage: { fn: (): Matrix => staticFilters.vintage },
 
-    night: { fn: (v = 0.1): Matrix => [v * -2.0, -v, 0, 0, 0, -v, 0, v, 0, 0, 0, v, v * 2.0, 0, 0, 0, 0, 0, 1, 0], defaultValue: 1, range: [0, 1] },
+    // night: { fn: (v = 0.1): Matrix => [v * -2.0, -v, 0, 0, 0, -v, 0, v, 0, 0, 0, v, v * 2.0, 0, 0, 0, 0, 0, 1, 0], defaultValue: 1, range: [0, 1] },
 
-    predator: {
-        fn: (v = 1): Matrix => [
-            // row 1
-            11.224130630493164 * v,
-            -4.794486999511719 * v,
-            -2.8746118545532227 * v,
-            0 * v,
-            (0.40342438220977783 * v) / biasRev,
-            // row 2
-            -3.6330697536468506 * v,
-            9.193157196044922 * v,
-            -2.951810836791992 * v,
-            0 * v,
-            (-1.316135048866272 * v) / biasRev,
-            // row 3
-            -3.2184197902679443 * v,
-            -4.2375030517578125 * v,
-            7.476448059082031 * v,
-            0 * v,
-            (0.8044459223747253 * v) / biasRev,
-            // row 4
-            0,
-            0,
-            0,
-            1,
-            0
-        ],
-        defaultValue: 1,
-        range: [0, 1]
-    },
+    // predator: {
+    //     fn: (v = 1): Matrix => [
+    //         // row 1
+    //         11.224130630493164 * v,
+    //         -4.794486999511719 * v,
+    //         -2.8746118545532227 * v,
+    //         0 * v,
+    //         (0.40342438220977783 * v) / biasRev,
+    //         // row 2
+    //         -3.6330697536468506 * v,
+    //         9.193157196044922 * v,
+    //         -2.951810836791992 * v,
+    //         0 * v,
+    //         (-1.316135048866272 * v) / biasRev,
+    //         // row 3
+    //         -3.2184197902679443 * v,
+    //         -4.2375030517578125 * v,
+    //         7.476448059082031 * v,
+    //         0 * v,
+    //         (0.8044459223747253 * v) / biasRev,
+    //         // row 4
+    //         0,
+    //         0,
+    //         0,
+    //         1,
+    //         0
+    //     ],
+    //     defaultValue: 1,
+    //     range: [0, 1]
+    // },
 
-    lsd: { fn: (): Matrix => staticFilters.lsd },
+    // lsd: { fn: (): Matrix => staticFilters.lsd },
 
-    colorTone: {
-        fn: (desaturation: number = 0.2, toned = 0.15, lightColor: string = '#ffe580', darkColor: string = '#338000'): Matrix => {
-            const [lR, lG, lB] = colorToRGB(lightColor);
-            const [dR, dG, dB] = colorToRGB(darkColor);
-            return [0.3, 0.59, 0.11, 0, 0, lR, lG, lB, desaturation, 0, dR, dG, dB, toned, 0, lR - dR, lG - dG, lB - dB, 0, 0];
-        }
-    },
+    // colorTone: {
+    //     fn: (desaturation: number = 0.2, toned = 0.15, lightColor: string = '#ffe580', darkColor: string = '#338000'): Matrix => {
+    //         const [lR, lG, lB] = colorToRGB(lightColor);
+    //         const [dR, dG, dB] = colorToRGB(darkColor);
+    //         return [0.3, 0.59, 0.11, 0, 0, lR, lG, lB, desaturation, 0, dR, dG, dB, toned, 0, lR - dR, lG - dG, lB - dB, 0, 0];
+    //     }
+    // },
 
-    duoTone: {
-        fn: (first: string = '#ffe580', second: string = '#338000'): Matrix => {
-            const [fR, fG, fB] = colorToRGB(first);
-            const [sR, sG, sB] = colorToRGB(second);
-            return [fR - sR, 0, 0, 0, sR * bias, fG - sG, 0, 0, 0, sG * bias, fB - sB, 0, 0, 0, sB * bias, 0, 0, 0, 1, 0];
-        }
-    },
+    // duoTone: {
+    //     fn: (first: string = '#ffe580', second: string = '#338000'): Matrix => {
+    //         const [fR, fG, fB] = colorToRGB(first);
+    //         const [sR, sG, sB] = colorToRGB(second);
+    //         return [fR - sR, 0, 0, 0, sR * bias, fG - sG, 0, 0, 0, sG * bias, fB - sB, 0, 0, 0, sB * bias, 0, 0, 0, 1, 0];
+    //     }
+    // },
 
-    protanomaly: { fn: (): Matrix => staticFilters.protanomaly },
+    // protanomaly: { fn: (): Matrix => staticFilters.protanomaly },
 
-    deuteranomaly: { fn: (): Matrix => staticFilters.deuteranomaly },
+    // deuteranomaly: { fn: (): Matrix => staticFilters.deuteranomaly },
 
-    tritanomaly: { fn: (): Matrix => staticFilters.tritanomaly },
+    // tritanomaly: { fn: (): Matrix => staticFilters.tritanomaly },
 
-    protanopia: { fn: (): Matrix => staticFilters.protanopia },
+    // protanopia: { fn: (): Matrix => staticFilters.protanopia },
 
-    deuteranopia: { fn: (): Matrix => staticFilters.deuteranopia },
+    // deuteranopia: { fn: (): Matrix => staticFilters.deuteranopia },
 
-    tritanopia: { fn: (): Matrix => staticFilters.tritanopia },
+    // tritanopia: { fn: (): Matrix => staticFilters.tritanopia },
 
-    achromatopsia: { fn: (): Matrix => staticFilters.achromatopsia },
+    // achromatopsia: { fn: (): Matrix => staticFilters.achromatopsia },
 
-    achromatomaly: { fn: (): Matrix => staticFilters.achromatomaly }
+    // achromatomaly: { fn: (): Matrix => staticFilters.achromatomaly }
 } as { [k: string]: { fn: Function; defaultValue?: number; range?: [number, number] } };

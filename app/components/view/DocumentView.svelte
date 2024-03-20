@@ -5,12 +5,12 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
+    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
@@ -22,8 +22,8 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { PermissionError, showError } from '~/utils/error';
-    import { goBack, navigate } from '~/utils/svelte/ui';
-    import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
+    import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -196,8 +196,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        if (items) {
+            nbSelected = 0;
+            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);
@@ -298,16 +300,16 @@
                   }
         );
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             data.cancel = true;
             if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
             }
-        }
-    }
+        });
     async function deleteSelectedPages() {
         if (nbSelected > 0) {
             try {
@@ -420,8 +422,8 @@
         // refresh();
     });
     onDestroy(() => {
-        items = null;
         DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
+        items = null;
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -494,8 +496,8 @@
                             showImageExportPopover(event);
                             break;
                         // case 'fullscreen':
-                            // await fullscreenSelectedDocuments();
-                            // break;
+                        // await fullscreenSelectedDocuments();
+                        // break;
                         case 'ocr':
                             await detectOCR({ pages: getSelectedPagesWithData() });
                             unselectAll();
@@ -541,7 +543,7 @@
     }
 </script>
 
-<page bind:this={page} id="pdfView" actionBarHidden={true}>
+<page bind:this={page} id="documentView" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar
             forceCanGoBack={nbSelected > 0}

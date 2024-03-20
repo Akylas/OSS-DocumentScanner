@@ -88,16 +88,19 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         {
             addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`,
             transformsSplit: sql`UPDATE Page SET transforms = replace( transforms, ',', '|' )`,
-            removeDataPath: () => sql`UPDATE Page SET imagePath = replace( imagePath, ${dataFolder.path}, '' ), sourceImagePath = replace( sourceImagePath, ${dataFolder.path}, '' )`
+            removeDataPath: () => sql`UPDATE Page SET imagePath = replace( imagePath, ${dataFolder.path}, '' ), sourceImagePath = replace( sourceImagePath, ${dataFolder.path}, '' )`,
+            addSourceImageWidth: sql`ALTER TABLE Page ADD COLUMN sourceImageWidth INTEGER`,
+            addSourceImageHeight: sql`ALTER TABLE Page ADD COLUMN sourceImageHeight INTEGER`,
+            addSourceImageRotation: sql`ALTER TABLE Page ADD COLUMN sourceImageRotation INTEGER`
         },
         CARD_APP
             ? {
                   addQRCode: sql`ALTER TABLE Page ADD COLUMN qrcode TEXT`,
                   addColors: sql`ALTER TABLE Page ADD COLUMN colors TEXT`
-                  // addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
               }
             : {}
     );
+
     async createTables() {
         await this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Page" (
@@ -372,10 +375,6 @@ export class DocumentsService extends Observable {
         if (this.started) {
             return;
         }
-        // const result = await request('storage');
-        //     if (result[0] !== 'authorized') {
-        //         throw new Error(lc('storage_permission_needed'));
-        //     }
         DEV_LOG &&
             console.log(
                 'DocumentsService',

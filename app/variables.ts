@@ -53,6 +53,7 @@ export const actionBarButtonHeight = writable(0);
 export const actionBarHeight = writable(0);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
+export const screenRatio = screenWidthDips / screenHeightDips;
 export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
@@ -73,7 +74,8 @@ const onInitRootView = function () {
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         const activity = Application.android.startActivity;
-        const nUtils = com.akylas.documentscanner.Utils;
+        const nUtils = com.akylas.documentscanner.Utils.Companion;
+        DEV_LOG && console.log('nUtils', nUtils);
         const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
         if (nActionBarHeight > 0) {
             actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
@@ -139,7 +141,7 @@ export function updateThemeColors(theme: string) {
     }
     // rootViewStyle?.setUnscopedCssVariable('--fontScale', fontScale + '');
     if (__ANDROID__) {
-        const nUtils = com.akylas.documentscanner.Utils;
+        const nUtils = com.akylas.documentscanner.Utils.Companion;
         const activity = Application.android.startActivity;
         // we also update system font scale so that our UI updates correcly
         fontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);

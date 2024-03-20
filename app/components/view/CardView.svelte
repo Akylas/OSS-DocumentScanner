@@ -6,12 +6,12 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
+    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { QRCodeData, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
@@ -26,8 +26,8 @@
     import { qrcodeService } from '~/services/qrcode';
     import { PermissionError, showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
-    import { goBack, navigate } from '~/utils/svelte/ui';
-    import { detectOCR, hideLoading, importAndScanImage, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
+    import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
@@ -58,6 +58,7 @@
     // let currentQRCodeImage: ImageSource;
     // let currentQRCode: QRCodeSingleData;
     let currentQRCodeIndex = 0;
+    let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
@@ -252,8 +253,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        if (items) {
+            nbSelected = 0;
+            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);
@@ -320,16 +323,15 @@
                   }
         );
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             data.cancel = true;
             if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
             }
-        }
-    }
+        });
     async function fullscreenSelectedPages() {
         const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
         navigate({
@@ -590,7 +592,7 @@
     }
 </script>
 
-<page id="cardview" actionBarHidden={true} {statusBarStyle}>
+<page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
     <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
         <CActionBar
             backgroundColor={topBackgroundColor}

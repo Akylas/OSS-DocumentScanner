@@ -31,6 +31,22 @@ DocumentDetector::~DocumentDetector()
 {
 }
 
+void sortPoints(std::vector<cv::Point> &points)
+{
+    // sort by Y
+    std::sort(points.begin(), points.end(),
+              [](Point const &a, Point const &b)
+              { return a.y < b.y; });
+    // sort by X
+    std::sort(points.begin(), points.begin() + 2,
+              [](Point const &a, Point const &b)
+              { return a.x < b.x; });
+    // sort second half by  X descending
+    std::sort(points.begin() + 2, points.end(),
+              [](Point const &a, Point const &b)
+              { return a.x > b.x; });
+}
+
 double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 {
     double dx1 = pt1.x - pt0.x;
@@ -40,12 +56,83 @@ double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
     return (dx1 * dx2 + dy1 * dy2) /
            sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
 }
-double contoursApproxEpsilonFactor = 0.02;
 bool sortByArea(PointAndArea contour1, PointAndArea contour2)
 {
     return (contour1.second > contour2.second);
 }
-void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double scaledHeight,
+
+// Function to compute the intersection point of two line segments defined by Vec4i
+bool computeIntersection(const Vec4i &line1, const Vec4i &line2, Point &r)
+{
+    Point o1(line1[0], line1[1]);
+    Point p1(line1[2], line1[3]);
+    Point o2(line2[0], line2[1]);
+    Point p2(line2[2], line2[3]);
+
+    float angle1 = abs(atan2(o1.y - p1.y, o1.x - p1.x));
+    float angle2 = abs(atan2(o2.y - p2.y, o2.x - p2.x));
+    if (abs(angle1 - angle2) < 0.4)
+    {
+        return false;
+    }
+    Point x = o2 - o1;
+    Point d1 = p1 - o1;
+    Point d2 = p2 - o2;
+
+    float cross = d1.x * d2.y - d1.y * d2.x;
+
+    double t1 = (x.x * d2.y - x.y * d2.x) / cross;
+    r = o1 + d1 * t1;
+    if (r.x >= 0 && r.y >= 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+// Function to cluster intersection points based on distance
+vector<vector<Point>> clusterIntersectionPoints(const vector<Vec4i> &lines, float maxDistance)
+{
+    vector<vector<Point>> clusters;
+    size_t numLines = lines.size();
+
+    // Compute intersection points for each pair of line segments
+    for (size_t i = 0; i < numLines; ++i)
+    {
+        for (size_t j = i + 1; j < numLines; ++j)
+        {
+            Point intersection;
+            if (computeIntersection(lines[i], lines[j], intersection))
+            {
+                // Check if the intersection point is close to any existing cluster
+                bool clustered = false;
+                for (auto &cluster : clusters)
+                {
+                    for (const auto &point : cluster)
+                    {
+                        if (norm(point - intersection) < maxDistance)
+                        {
+                            cluster.push_back(intersection);
+                            clustered = true;
+                            break;
+                        }
+                    }
+                    if (clustered)
+                        break;
+                }
+                // If not close to any existing cluster, create a new cluster
+                if (!clustered)
+                {
+                    clusters.push_back({intersection});
+                }
+            }
+        }
+    }
+
+    return clusters;
+}
+
+bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double scaledHeight,
                                    std::vector<std::pair<std::vector<cv::Point>, double>> &squares, cv::Mat drawImage, bool drawContours, float weight)
 {
     int marge = static_cast<int>(scaledWidth * 0.01);
@@ -58,7 +145,7 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
     //     cv::drawContours(drawImage, contours, -1, (0,255,0), 2);
     // }
     std::vector<Point> approx;
-    std::vector<std::vector<Point>> approxs;
+    // std::vector<std::vector<Point>> approxs;
     for (size_t i = 0; i < contours.size(); i++)
     {
         std::vector<Point> contour = contours[i];
@@ -68,14 +155,20 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
         {
             continue;
         }
+
         // Detection of geometric shapes
         double epsilon = arcLength * contoursApproxEpsilonFactor;
         cv::approxPolyDP(contour, approx, epsilon, true);
-        approxs.push_back(approx);
+        // approxs.push_back(approx);
 
         // Detection of quadrilaterals among geometric shapes
         if (approx.size() == 4 && cv::isContourConvex(approx))
         {
+            // cv::RotatedRect boundingRect = cv::minAreaRect(contour);
+            // Point2f rectPoints[4];
+            // boundingRect.points(rectPoints);
+            // approx={rectPoints[0], rectPoints[1],rectPoints[2],rectPoints[3]};
+
             bool shouldIgnore = false;
             for (const cv::Point &p : approx)
             {
@@ -108,16 +201,78 @@ void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                 // std::printf("found contour %f %zu %f %f\n", area, approx.size(), minCosine, maxCosine);
                 if (maxCosine < 0.3)
                 {
+                    // Mat houghLines;
+                    if (houghLinesThreshold > 0)
+                    {
+                        Mat houghLines = Mat(srcGray.rows, srcGray.cols, CV_8U, cv::Scalar(0, 0, 0));
+                        cv::polylines(houghLines, contour, true, Scalar(255, 0, 0), 5, 8);
+
+                        // std::printf("HoughLinesP %f %f %f\n", houghLinesThreshold, houghLinesMinLineLength, houghLinesMaxLineGap);
+                        vector<Vec4i> lineSegments;
+                        // will hold the results of the detection
+                        cv::HoughLinesP(houghLines, lineSegments, 1, CV_PI / 180, houghLinesThreshold, houghLinesMinLineLength, houghLinesMaxLineGap); // runs the actual detection
+                        // Draw the lines
+
+                        if (drawContours)
+                        {
+                            int distance = 1000;
+                            for (const auto &l : lineSegments)
+                            {
+                                // lines.push_back(convertToPolar(l));
+                                double diff = atan2(l[1] - l[3], l[0] - l[2]);
+                                int x3 = l[0] + distance * cos(diff);
+                                int y3 = l[1] + distance * sin(diff);
+                                int x4 = l[0] - distance * cos(diff);
+                                int y4 = l[1] - distance * sin(diff);
+                                cv::line(drawImage, Point(x3, y3), Point(x4, y4), Scalar(255, 255, 255), 1, cv::LINE_8);
+                            }
+                        }
+                        int maxDistance = min(scaledWidth, scaledHeight) / 10.0;
+                        vector<vector<Point>> intersectionClusters = clusterIntersectionPoints(lineSegments, maxDistance); // Adjust distance threshold as needed
+
+                        // // Print the clustered intersection points
+                        if (drawContours) {
+                            for (size_t i = 0; i < intersectionClusters.size(); ++i)
+                            {
+                                // cout << "Cluster " << i + 1 << ": ";
+                                // for (const auto& point : intersectionClusters[i]) {
+                                //     // cout << "(" << point.x << ", " << point.y << ") ";
+                                // }
+                                circle(drawImage, intersectionClusters[i][0], 4, Scalar(0, 255, 0), FILLED);
+                                // cout << endl;
+                            }
+                        }
+                        if (intersectionClusters.size() == 4)
+                        {
+
+                            approx[0] = intersectionClusters[0][0];
+                            approx[1] = intersectionClusters[1][0];
+                            approx[2] = intersectionClusters[2][0];
+                            approx[3] = intersectionClusters[3][0];
+                            if (drawContours)
+                            {
+                                sortPoints(approx);
+                            }
+                        }
+                    }
                     // we give more weight for low cosinus (closer to 90d angles)
                     squares.push_back(std::pair<std::vector<cv::Point>, double>(approx, area * weight * (1 - meanCosine)));
+
                     if (drawContours)
                     {
-                        cv::drawContours(drawImage, approxs, -1, Scalar(0, 255, 0), 1);
+                        cv::polylines(drawImage, approx, true, Scalar(0, 255, 0), 1, 8);
+                        cv::polylines(drawImage, contour, true, Scalar(255, 0, 0), 1, 8);
+                        // cv::drawContours(drawImage, [approx], -1, Scalar(0, 255, 0), 1);
+                    }
+                    if (maxCosine < 0.05 && area > (scaledWidth * scaledHeight / 4))
+                    {
+                        return true;
                     }
                 }
             }
         }
     }
+    return false;
 }
 
 std::string DocumentDetector::scanPointToJSON()
@@ -205,10 +360,19 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     cv::Mat dilateStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateAnchorSize, dilateAnchorSize));
     cv::Mat morphologyStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphologyAnchorSize, morphologyAnchorSize));
     int channelsCount = std::min(image.channels(), 3);
+    int i = channelsCount - 1;
+    int minI = 0;
+    if (useChannel >= 0)
+    {
+        channelsCount = 1;
+        i = useChannel;
+        minI = useChannel;
+    }
     // cvtColor(temp1, temp2, COLOR_BGR2GRAY);
     // we give more weight to contours found with threshod then with higher canny
     float weight = 30;
-    for (int i = channelsCount - 1; i >= 0; i--)
+    bool shoudlBreak = false;
+    for (i = i; i >= minI; i--)
     {
         //  std::printf("testing on channel %i %i\n", i, iterration);
         cv::extractChannel(temp1, temp2, i);
@@ -219,17 +383,23 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         cv::threshold(temp2, edged, thresh, threshMax, cv::THRESH_BINARY);
         cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
         cv::dilate(edged, edged, dilateStruct);
-        findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
+        shoudlBreak = findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
         iterration++;
-
+        if (shoudlBreak)
+        {
+            break;
+        }
         // we test over all channels to find the best contour
         int t = 60;
         while (t >= 10)
         {
-            cv::Canny(temp2, edged, t, t * 2);
+            cv::Canny(temp2, edged, t * cannyFactor, cannyFactor * t * 2);
             cv::dilate(edged, edged, dilateStruct);
-            findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
-
+            shoudlBreak = findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
+            if (shoudlBreak)
+            {
+                break;
+            }
             iterration++;
             t -= 10;
             // break;
@@ -366,18 +536,7 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
                 }
                 points[j] *= resizeScale;
             }
-            // sort by Y
-            std::sort(points.begin(), points.end(),
-                      [](Point const &a, Point const &b)
-                      { return a.y < b.y; });
-            // sort by X
-            std::sort(points.begin(), points.begin() + 2,
-                      [](Point const &a, Point const &b)
-                      { return a.x < b.x; });
-            // sort second half by  X descending
-            std::sort(points.begin() + 2, points.end(),
-                      [](Point const &a, Point const &b)
-                      { return a.x > b.x; });
+            sortPoints(points);
             result.push_back(points);
         }
 
@@ -385,7 +544,6 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     }
     return vector<vector<Point>>();
 }
-
 Mat DocumentDetector::resizeImageToSize(int size)
 {
 

@@ -28,7 +28,7 @@
     import { syncService } from '~/services/sync';
     import { PermissionError, showError } from '~/utils/error';
     import { fade } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importAndScanImageFromUris, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSettings, transformPages } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
     import { CARD_RATIO } from '~/models/constants';
 
@@ -54,7 +54,7 @@
     //     doc: OCRDocument; selected: boolean
     // }> = null;
 
-    async function refresh() {
+    async function refreshSyncState() {
         try {
             syncEnabled = syncService.enabled;
             DEV_LOG && console.log('syncEnabled', syncEnabled);
@@ -192,7 +192,7 @@
         documentsService.on('documentUpdated', onDocumentUpdated);
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         syncService.on('syncState', onSyncState);
-        syncService.on('state', refresh);
+        syncService.on('state', refreshSyncState);
         // refresh();
     });
     onDestroy(() => {
@@ -207,6 +207,7 @@
         documentsService.off('documentAdded', onDocumentAdded);
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         syncService.off('syncState', onSyncState);
+        syncService.off('state', refreshSyncState);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -263,9 +264,9 @@
     function onNavigatedTo(e: NavigatedData) {
         if (!e.isBackNavigation) {
             if (documentsService.started) {
-                refresh();
+                refreshSyncState();
             } else {
-                documentsService.once('started', refresh);
+                documentsService.once('started', refreshSyncState);
             }
         }
     }
@@ -295,8 +296,10 @@
         }
     }
     function unselectAll() {
-        nbSelected = 0;
-        documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+        if (documents) {
+            nbSelected = 0;
+            documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+        }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
         //         documents.setItem(index, d);
@@ -460,14 +463,14 @@
             showError(error);
         }
     }, 500);
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
             }
-        }
-    }
+        });
     async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
         if (__ANDROID__) {
             try {
@@ -602,14 +605,6 @@
     //         showError(error);
     //     }
     // }
-    async function showSettings() {
-        try {
-            const Settings = (await import('~/components/settings/Settings.svelte')).default;
-            navigate({ page: Settings });
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function syncDocuments() {
         try {
             if (!syncEnabled) {
@@ -892,9 +887,9 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <stackLayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                    <stacklayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-                    </stackLayout>
+                    </stacklayout>
 
                     <!-- <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
@@ -941,9 +936,9 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <stackLayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                    <stacklayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-                    </stackLayout>
+                    </stacklayout>
 
                     <!-- <canvaslabel col={1} padding="16 0 0 16">
                         <cgroup>
@@ -994,10 +989,10 @@
         <CActionBar title={l('cards')}>
             <mdbutton
                 class="actionBarButton"
-                defaultVisualState={syncEnabled ? 'normal' : 'disabled'}
                 isEnabled={!syncRunning}
                 text="mdi-sync"
                 variant="text"
+                visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments}
                 on:longPress={showSyncSettings} />
 

@@ -84,7 +84,10 @@ end
 desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
-  sh("rm", "-fr", File.join(".", app_build_path, platform))
+  if (Dir.exist?(File.join("..", app_build_path, platform)))
+    puts "deleting: "  + "#{app_build_path}/#{platform}"
+    FileUtils.remove_dir(File.join("..", app_build_path, platform))
+  end
   if (platform == 'ios')
     sh("npm", "run", "prepare.ios.sentry")
   else
@@ -337,7 +340,14 @@ platform :android do
   desc 'Build the Android application.'
   lane :build do |params|
     puts "build app_build_path:" + app_build_path
-    sh("rm", "-fr", File.join(".", app_build_path, "android"))
+    if (Dir.exist?(File.join("..", app_build_path, "android")))
+      puts "deleting: "  + "#{app_build_path}/android"
+      FileUtils.remove_dir(File.join("..", app_build_path, "android"))
+    end
+    if (Dir.exist?(File.join("..", app_build_path, "tempPlugin")))
+      puts "deleting: "  + "#{app_build_path}/tempPlugin"
+      FileUtils.remove_dir(File.join("..", app_build_path, "tempPlugin"))
+    end
     options = params[:options]
     puts "build flavor:"  + params[:flavor]
     puts "build options:"  + JSON.generate(options.to_json)

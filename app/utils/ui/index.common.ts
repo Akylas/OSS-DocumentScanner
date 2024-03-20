@@ -17,13 +17,24 @@ import {
     Utils,
     View,
     ViewBase,
+    displayedEvent,
     knownFolders,
     path
 } from '@nativescript/core';
-import { SDK_VERSION, copyToClipboard, openFile, openUrl } from '@nativescript/core/utils';
+import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
-import { cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+import {
+    CropResult,
+    cropDocument,
+    cropDocumentFromFile,
+    detectQRCode,
+    detectQRCodeFromFile,
+    getColorPalette,
+    getJSONDocumentCorners,
+    getJSONDocumentCornersFromFile,
+    processFromFile
+} from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -53,6 +64,8 @@ import { loadImage, recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale } from '~/variables';
+import { getImageSize } from '../utils';
+import { navigate } from '../svelte/ui';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -139,29 +152,33 @@ export function updateLoadingProgress(msg: Partial<ShowLoadingOptions>) {
     }
 }
 export async function showLoading(msg?: string | ShowLoadingOptions) {
-    const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
-    const loadingIndicator = getLoadingIndicator();
-    loadingIndicator.instance.onButtonTap = msg['onButtonTap'];
-    // if (!!msg?.['onButtonTap']) {
-    //     loadingIndicator.instance.$on('tap', msg['onButtonTap']);
-    // } else {
-    //     loadingIndicator.instance.$off('tap');
-    // }
-    const props = {
-        showButton: !!msg?.['onButtonTap'],
-        text,
-        title: (msg as any)?.title,
-        progress: null
-    };
-    if (msg && typeof msg !== 'string' && msg?.hasOwnProperty('progress')) {
-        props.progress = msg.progress;
-    } else {
-        props.progress = null;
-    }
-    loadingIndicator.instance.$set(props);
-    if (showLoadingStartTime === null) {
-        showLoadingStartTime = Date.now();
-        loadingIndicator.show();
+    try {
+        const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
+        const indicator = getLoadingIndicator();
+        indicator.instance.onButtonTap = msg?.['onButtonTap'];
+        // if (!!msg?.['onButtonTap']) {
+        //     loadingIndicator.instance.$on('tap', msg['onButtonTap']);
+        // } else {
+        //     loadingIndicator.instance.$off('tap');
+        // }
+        const props = {
+            showButton: !!msg?.['onButtonTap'],
+            text,
+            title: (msg as any)?.title,
+            progress: null
+        };
+        if (msg && typeof msg !== 'string' && msg?.hasOwnProperty('progress')) {
+            props.progress = msg.progress;
+        } else {
+            props.progress = null;
+        }
+        indicator.instance.$set(props);
+        if (showLoadingStartTime === null) {
+            showLoadingStartTime = Date.now();
+            indicator.show();
+        }
+    } catch (error) {
+        showError(error, { silent: true });
     }
 }
 export function showingLoading() {
@@ -352,53 +369,66 @@ export async function hideLoading() {
 //         worker.postMessage(mData);
 //     });
 // }
+
+interface ImportItem {
+    imagePath: string;
+    imageWidth: number;
+    imageHeight: number;
+    imageRotation: number;
+    quads: [number, number][][];
+}
 export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
     let pagesToAdd: PageData[] = [];
     DEV_LOG && console.log('importAndScanImageFromUris', uris);
-    let items;
+    let items: ImportItem[];
     try {
         await showLoading(l('computing'));
         const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
 
         items = await Promise.all(
             uris.map(
-                (s) =>
+                (sourceImagePath) =>
                     new Promise(async (resolve, reject) => {
                         try {
-                            const sourceImagePath = s;
-                            // const resizeThreshold = Math.max(QRCODE_RESIZE_THRESHOLD, PREVIEW_RESIZE_THRESHOLD);
-                            // we load directly at the max of QRCODE_RESIZE_THRESHOLD and PREVIEW_RESIZE_THRESHOLD
-                            const editingImage = await loadImage(sourceImagePath);
-
-                            if (!editingImage) {
-                                throw new Error('failed to read imported image');
-                            }
+                            const imageSize = getImageSize(sourceImagePath);
 
                             const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                             const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+
+                            const imageRotation = imageSize.rotation;
                             // TODO: detect JSON and QRCode in one go
-                            const quads = cropEnabled ? await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0) : undefined;
+                            const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, previewResizeThreshold * 1.5, 0) : undefined;
                             let qrcode;
                             if (CARD_APP) {
                                 // try to get the qrcode to show it in the import screen
-                                qrcode = await detectQRCode(editingImage, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
+                                qrcode = await detectQRCodeFromFile(sourceImagePath, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
                             }
                             if (cropEnabled && quads.length === 0) {
+                                let width = imageSize.width;
+                                let height = imageSize.height;
+                                if (imageRotation % 180 !== 0) {
+                                    width = imageSize.height;
+                                    height = imageSize.width;
+                                }
                                 quads.push([
                                     [noDetectionMargin, noDetectionMargin],
-                                    [editingImage.width - noDetectionMargin, noDetectionMargin],
-                                    [editingImage.width - noDetectionMargin, editingImage.height - noDetectionMargin],
-                                    [noDetectionMargin, editingImage.height - noDetectionMargin]
+                                    [width - noDetectionMargin, noDetectionMargin],
+                                    [width - noDetectionMargin, height - noDetectionMargin],
+                                    [noDetectionMargin, height - noDetectionMargin]
                                 ]);
                             }
-                            resolve({ editingImage, quads, sourceImagePath, qrcode });
+                            resolve({ quads, imagePath: sourceImagePath, qrcode, imageWidth: imageSize.width, imageHeight: imageSize.height, imageRotation });
                         } catch (error) {
                             reject(error);
                         }
                     })
             )
         );
-        DEV_LOG && console.log('items', items);
+        DEV_LOG &&
+            console.log(
+                'items',
+                items.map((i) => i.imagePath)
+            );
         // const sourceImagePath = selection[0].path;
         // editingImage = await loadImage(sourceImagePath);
 
@@ -422,7 +452,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
         if (items?.length) {
             if (cropEnabled) {
                 const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
-                const newItems = await showModal({
+                const newItems: ImportItem[] = await showModal({
                     page: ModalImportImage,
                     animated: true,
                     fullscreen: true,
@@ -433,42 +463,83 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                 if (!newItems) {
                     return;
                 }
-                DEV_LOG && console.log('items after crop1', newItems, items);
+                DEV_LOG &&
+                    console.log(
+                        'items after crop1',
+                        newItems.map((i) => i.imagePath),
+                        items.map((i) => i.imagePath)
+                    );
             }
             if (items) {
-                DEV_LOG && console.log('items after crop', items);
+                DEV_LOG &&
+                    console.log(
+                        'items after crop',
+                        items.map((i) => i.imagePath)
+                    );
 
                 pagesToAdd = (
                     await Promise.all(
                         items.map(
-                            (item) =>
+                            (item, index) =>
                                 new Promise<PageData[]>(async (resolve, reject) => {
                                     try {
-                                        DEV_LOG && console.log('about to cropDocument', item.quads);
-                                        const editingImage = item.editingImage;
-                                        const images = cropEnabled ? await cropDocument(editingImage, item.quads) : [__IOS__ ? editingImage.ios : editingImage.android];
+                                        DEV_LOG && console.log('about to cropDocument', item);
+                                        const images: CropResult[] = [];
+                                        if (item.quads) {
+                                            images.push(
+                                                ...(await cropDocumentFromFile(item.imagePath, item.quads, {
+                                                    // rotation: item.imageRotation,
+                                                    fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
+                                                    saveInFolder: knownFolders.temp().path,
+                                                    compressFormat: IMG_FORMAT,
+                                                    compressQuality: IMG_COMPRESS
+                                                }))
+                                            );
+                                            // we generate
+                                        } else {
+                                            images.push({ imagePath: item.imagePath, width: item.imageWidth, height: item.imageHeight });
+                                        }
                                         let qrcode;
                                         let colors;
                                         if (CARD_APP) {
-                                            [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: 900 }), getColorPalette(images[0])]);
+                                            [qrcode, colors] = await processFromFile(
+                                                item.imagePath,
+                                                [
+                                                    {
+                                                        type: 'qrcode'
+                                                    },
+                                                    {
+                                                        type: 'palette'
+                                                    }
+                                                ],
+                                                {
+                                                    maxSize: QRCODE_RESIZE_THRESHOLD
+                                                }
+                                            );
                                             DEV_LOG && console.log('qrcode and colors', qrcode, colors);
                                         }
                                         const result = [];
+                                        DEV_LOG &&
+                                            console.log(
+                                                'images',
+                                                images.map((i) => i.imagePath)
+                                            );
                                         if (images?.length) {
                                             for (let index = 0; index < images.length; index++) {
                                                 const image = images[index];
                                                 result.push({
-                                                    image,
+                                                    ...image,
                                                     crop: item.quads?.[index] || [
                                                         [0, 0],
-                                                        [editingImage.width - 0, 0],
-                                                        [editingImage.width - 0, editingImage.height - 0],
-                                                        [0, editingImage.height - 0]
+                                                        [item.imageWidth - 0, 0],
+                                                        [item.imageWidth - 0, item.imageHeight - 0],
+                                                        [0, item.imageHeight - 0]
                                                     ],
-                                                    sourceImagePath: item.sourceImagePath,
-                                                    width: __ANDROID__ ? image.getWidth() : image.size.width,
-                                                    height: __ANDROID__ ? image.getHeight() : image.size.height,
-                                                    rotation: editingImage.rotationAngle,
+                                                    sourceImagePath: item.imagePath,
+                                                    sourceImageWidth: item.imageWidth,
+                                                    sourceImageHeight: item.imageHeight,
+                                                    sourceImageRotation: item.imageRotation,
+                                                    // rotation: item.imageRotation,
                                                     ...(CARD_APP
                                                         ? {
                                                               qrcode,
@@ -486,7 +557,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                         )
                     )
                 ).flat();
-                DEV_LOG && console.log('pagesToAdd', pagesToAdd);
+                DEV_LOG && console.log('pagesToAdd', JSON.stringify(pagesToAdd));
                 if (pagesToAdd.length) {
                     if (document) {
                         await document.addPages(pagesToAdd);
@@ -503,10 +574,6 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
         throw error;
     } finally {
         hideLoading();
-        recycleImages(pagesToAdd.map((p) => p.image));
-        if (items) {
-            recycleImages(items.map((i) => i.editingImage));
-        }
     }
 }
 export async function importAndScanImage(document?: OCRDocument) {
@@ -547,9 +614,6 @@ export async function importAndScanImage(document?: OCRDocument) {
         selection = await imagePickerPlugin
             .create({
                 mediaType: 1,
-                android: {
-                    // read_external_storage: lc('import_images')
-                },
                 mode: 'multiple' // use "multiple" for multiple selection
             })
             // on android pressing the back button will trigger an error which we dont want
@@ -658,6 +722,14 @@ export async function showPopoverMenu<T = any>({
     return result;
 }
 
+export async function showSettings(props) {
+    const Settings = (await import('~/components/settings/Settings.svelte')).default;
+    navigate({
+        page: Settings,
+        props
+    });
+}
+
 export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocument, anchor?) {
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
@@ -668,6 +740,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
 
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
+            { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
             { id: 'open', name: lc('open'), icon: 'mdi-eye' },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
             { id: 'export', name: lc('export'), icon: 'mdi-export' },
@@ -683,7 +756,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
             // rows: 'auto',
             // rowHeight: null,
             // height: null,
-            autoSizeListItem: true,
+            // autoSizeListItem: true,
             onRightIconTap: (item, event) => {
                 try {
                     switch (item.id) {
@@ -708,6 +781,13 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
             try {
                 DEV_LOG && console.log('showPDFPopoverMenu', 'action', item.id);
                 switch (item.id) {
+                    case 'settings': {
+                        closePopover();
+                        showSettings({
+                            subSettingsOptions: 'pdf'
+                        });
+                        break;
+                    }
                     case 'set_export_directory': {
                         const result = await pickFolder({
                             multipleSelection: false,
@@ -726,7 +806,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                     case 'open': {
                         await closePopover();
                         await showLoading(l('exporting'));
-                        const filePath = await exportPDFAsync(pages, document);
+                        const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         openFile(filePath);
                         break;
@@ -734,7 +814,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                     case 'share': {
                         await closePopover();
                         await showLoading(l('exporting'));
-                        const filePath = await exportPDFAsync(pages, document);
+                        const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         share({ file: filePath }, { mimetype: 'application/pdf' });
                         break;
@@ -750,7 +830,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         if (result?.result && result?.text?.length) {
                             showLoading(l('exporting'));
                             DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                            const filePath = await exportPDFAsync(pages, document, exportDirectory, result.text);
+                            const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                             hideLoading();
                             const onSnack = await showSnack({ message: lc('pdf_saved', filePath.split('/').slice(-1)[0]), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
@@ -876,7 +956,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
     }
 }
 
-export async function showImagePopoverMenu(pages: OCRPage[], anchor) {
+export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = VerticalPosition.BELOW) {
     let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
@@ -893,7 +973,7 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor) {
     return showPopoverMenu({
         options,
         anchor,
-        vertPos: VerticalPosition.BELOW,
+        vertPos,
         props: {
             width: 250,
             // rows: 'auto',
@@ -1082,8 +1162,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
             });
             await Promise.all(
                 pages.map(async (p, index) => {
-                    const pageId = p.page.id;
-                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), null, {
+                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
                         colorType: updateOptions.colorType,
                         colorMatrix: updateOptions.colorMatrix
                     });
@@ -1160,4 +1239,74 @@ export function copyTextToClipboard(text) {
     if (__IOS__ || (__ANDROID__ && SDK_VERSION < 13)) {
         showToast(lc('copied'));
     }
+}
+
+export async function showSliderPopover({
+    debounceDuration = 100,
+    min = 0,
+    max = 100,
+    step = 1,
+    horizPos = HorizontalPosition.ALIGN_LEFT,
+    anchor,
+    vertPos = VerticalPosition.CENTER,
+    width = '80%',
+    value,
+    onChange,
+    title,
+    icon,
+    formatter
+}: {
+    title?;
+    debounceDuration?;
+    icon?;
+    min?;
+    max?;
+    step?;
+    formatter?;
+    horizPos?;
+    anchor;
+    vertPos?;
+    width?;
+    value?;
+    onChange?;
+}) {
+    const component = (await import('~/components/common/SliderPopover.svelte')).default;
+    const { colorSurfaceContainer } = get(colors);
+
+    return showPopover({
+        backgroundColor: colorSurfaceContainer,
+        view: component,
+        anchor,
+        horizPos,
+        vertPos,
+        props: {
+            title,
+            icon,
+            min,
+            max,
+            step,
+            width,
+            formatter,
+            value,
+            onChange: debounce(onChange, debounceDuration)
+        }
+
+        // trackingScrollView: 'collectionView'
+    });
+}
+
+export async function showMatrixLevelPopover({ item, anchor, currentValue, onChange }) {
+    if (!item.range) {
+        return;
+    }
+
+    return showSliderPopover({
+        vertPos: VerticalPosition.ABOVE,
+        min: 0.5,
+        max: 2,
+        step: 0.1,
+        anchor,
+        value: currentValue,
+        onChange
+    });
 }

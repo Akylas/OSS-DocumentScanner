@@ -1,4 +1,9 @@
 {
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "OSS kortti lompakko"
+        }
+    },
     "$com.akylas.carwallet": {
         "app": {
             "name": "OSS-kortin lompakko"
@@ -59,6 +64,7 @@
     "data_location": "tietojen sijainti",
     "delete": "poista",
     "delete_page": "poista",
+    "detect_qrcode": "tunnista QRKoodi",
     "disable": "Poista käytöstä",
     "disabled": "ei käytössä",
     "document_detection": "asiakirjan tunnistus",
@@ -70,7 +76,7 @@
     "download": "lataa",
     "downloading": "ladataan (%1$s%%)…",
     "draw_ocr_overlay": "piirrä OCR-peittokuva",
-    "draw_ocr_text": "piirrä OCR-tekstiä",
+    "draw_ocr_text": "läpinäkyvä OCR-teksti PDF-muodossa",
     "enable": "ota käyttöön",
     "enabled": "käytössä",
     "english": "Englanti",
@@ -80,7 +86,6 @@
     "expanded": "laajennettu",
     "export": "vie",
     "export_folder": "vientihakemisto",
-    "export_ios_desc": "tiedosto viedään sovelluksen dokumentteihin",
     "export_settings": "vientiasetukset",
     "export_settings_desc": "vie kaikki sovelluksen asetukset, jotta voit myöhemmin palauttaa ne",
     "exporting": "viedään",
@@ -96,7 +101,6 @@
     "image_filename": "kuvan tiedostonimi vientiin",
     "image_import": "tuo kuva",
     "image_saved": "kuva tallennettu",
-    "images_loading": "kuvia ladataan...",
     "images_saved": "kuvat tallennettu",
     "import_settings": "tuo asetukset",
     "import_settings_desc": "tuo kaikki asetukset varmuuskopiosta",
@@ -123,8 +127,10 @@
     "move_data_desc": "kaikki sovellustietosi siirretään ja sovellus käynnistetään uudelleen lopussa",
     "moving_files": "tiedostojen siirtäminen",
     "nb_pages": "%1$s sivua",
+    "no_card_yet": "lisää kortti kameralla tai tuo se kuvasta",
     "no_document_found": "dokumentteja ei löytynyt",
     "no_document_yet": "lisää dokumentti käyttäen kameraa tai tuomalla kuvatiedosto",
+    "no_qrcode_found": "QR-koodia ei löytynyt",
     "no_text_found_in_page": "dokumentista ei tunnistettu tekstiä",
     "ocr_computing": "tunnistetaan tekstiä (%1$s%%)...",
     "ocr_computing_document": "tunnistetaan tekstiä dokument(e)issa (%1$s%%)",
@@ -142,13 +148,14 @@
     "pdf_export": "PDF-vienti",
     "pdf_export_settings": "PDF-vientiasetukset",
     "pdf_filename": "Vietävän PDF:n tiedostonimi",
-    "pdf_saved": "pdf tallenettu kohteeseen %1$s",
+    "pdf_saved": "pdf tallennettu: %1$s",
     "picture_size": "kuvan koko",
     "portrait": "pystysuunta",
     "preferences": "asetukset",
     "preview": "esikatselu",
     "preview_resize_threshold": "kameran kuvan koon muuttamisen kynnys",
     "preview_resize_threshold_desc": "koko, johon kamerakuvan koko muutetaan asiakirjojen tunnistamiseksi. \nIsompi tarkoittaa parempaa havaitsemista, mutta hitaampaa.",
+    "qrcode_found": "QR-Koodi löydettiin ja tallennettiin!",
     "quality": "laatu",
     "reduce_image_size": "pienennä kuvan kokoa",
     "remote_folder": "etäkansio",
@@ -173,6 +180,7 @@
     "share_application": "jaa sovellus",
     "share_images": "jakaa kuvia",
     "show_fullscreen_images": "koko näyttö",
+    "show_love": "Jos pidät projektista, jaa rakkautta tai edes osallistu",
     "source_code": "lähdekoodi",
     "start": "aloitus",
     "start_on_cam": "aloita sovellus kameranäkymässä",

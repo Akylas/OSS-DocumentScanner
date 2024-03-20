@@ -26,11 +26,11 @@ class PDFExportWorker extends BaseWorker {
         return true;
     }
 
-    async export(id, type, { pages, folder, filename }) {
+    async export(id, type, { pages, folder, filename, compress }) {
         try {
-            DEV_LOG && console.log(TAG, 'export', id, type, { pages, folder, filename });
+            DEV_LOG && console.log(TAG, 'export', id, type, pages.length, folder, filename, compress);
             const exporter = new PDFExportCanvas();
-            const filePath = await exporter.export(pages, folder, filename);
+            const filePath = await exporter.export({ pages, folder, filename, compress });
             // const filePath = 'test';
             (global as any).postMessage({ id, type, messageData: filePath });
         } catch (error) {

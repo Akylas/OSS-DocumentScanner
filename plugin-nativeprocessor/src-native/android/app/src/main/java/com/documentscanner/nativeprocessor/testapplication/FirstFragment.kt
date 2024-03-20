@@ -132,8 +132,10 @@ class FirstFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.cameraView.aspectRatio = "4:3"
-//        binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
+        binding.cameraView.enablePinchZoom = true
+        binding.cameraView.zoom = 1.0F
         binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
+        binding.cropView.scaleType = binding.cameraView.scaleType
         binding.cameraView.savePhotoToDisk = false
         val activity = this.requireActivity()
         var lastQRCode: String? = null
@@ -169,14 +171,14 @@ class FirstFragment : Fragment() {
 //                }
 //            }
         ))
-        (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).autoScanHandler = AutoScanHandler(this.requireActivity(), binding.cropView, onAutoScan = object: AutoScanHandler.OnAutoScan {
-            override fun onAutoScan(corners: String) {
-                Log.d("CameraView", "onAutoScan $corners")
-            }
-        })
+//        (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).autoScanHandler = AutoScanHandler(this.requireActivity(), binding.cropView, onAutoScan = object: AutoScanHandler.OnAutoScan {
+//            override fun onAutoScan(corners: String) {
+//                Log.d("CameraView", "onAutoScan $corners")
+//            }
+//        })
         (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).previewResizeThreshold =
             200.0;
-        (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).detectQRCode = true
+        (binding.cameraView.analyserCallback as (CustomImageAnalysisCallback)).detectQRCode = false
         binding.cameraView.listener = object : CameraEventListener {
             override fun onReady() {
                 Log.d("CameraView", "onReady")
@@ -185,10 +187,15 @@ class FirstFragment : Fragment() {
             override fun onCameraOpen() {
                 var test = binding.cameraView.getAllAvailablePictureSizes();
                 Log.d("CameraView", "onCameraOpen " + test.get(0).toString())
+                Log.d("CameraView", "onCameraOpen zoom" + binding.cameraView.minZoom + " " + binding.cameraView.zoom + " " + binding.cameraView.maxZoom)
             }
 
             override fun onCameraClose() {
                 Log.d("CameraView", "onCameraClose")
+            }
+
+            override fun onZoom(zoom: Float) {
+                Log.d("CameraView", "onZoom " + zoom)
             }
 
             override fun onCameraPhoto(file: File?) {

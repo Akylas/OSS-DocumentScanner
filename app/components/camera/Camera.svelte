@@ -5,10 +5,20 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, Page, TouchAnimationOptions, Utils } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, CoreTypes, Page, TouchAnimationOptions, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import dayjs from 'dayjs';
-    import { createAutoScanHandler, cropDocument, detectQRCode, getColorPalette, getJSONDocumentCorners } from 'plugin-nativeprocessor';
+    import {
+        CropResult,
+        createAutoScanHandler,
+        cropDocument,
+        cropDocumentFromFile,
+        detectQRCode,
+        getColorPalette,
+        getJSONDocumentCorners,
+        getJSONDocumentCornersFromFile,
+        processFromFile
+    } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
     import { closeModal, showModal } from 'svelte-native';
@@ -26,16 +36,19 @@
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
         DOCUMENT_NOT_DETECTED_MARGIN,
+        IMG_COMPRESS,
+        IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         QRCODE_RESIZE_THRESHOLD,
         TRANSFORMS_SPLIT
     } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { showError, wrapNativeException } from '~/utils/error';
-    import { getColorMatrix, hideLoading, showLoading } from '~/utils/ui';
+    import { getColorMatrix, hideLoading, onBackButton, showLoading, showSettings } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
-    import { colors } from '~/variables';
+    import { colors, navigationBarHeight } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
+    import { debounce } from '@nativescript/core/utils';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -85,7 +98,7 @@
     let nbPages = 0;
     let takingPicture = false;
     // let croppedImage: string | ImageSource = null;
-    let smallImage: string | ImageSource = null;
+    let smallImage: string = null;
     let smallImageRotation: number = 0;
     // let croppedImageRotation: number = 0;
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
@@ -94,6 +107,7 @@
     let colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
+    const zoom = ApplicationSettings.getNumber('defaultZoom', 1);
     let _actualFlashMode = flashMode;
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
@@ -137,15 +151,6 @@
                     document: doc
                 }
             });
-        }
-    }
-
-    async function showSettings() {
-        try {
-            const Settings = (await import('~/components/settings/Settings.svelte')).default;
-            navigate({ page: Settings });
-        } catch (error) {
-            showError(error);
         }
     }
     // async function showOptions() {
@@ -223,38 +228,41 @@
         setCurrentImage(e.object.src);
     }
 
-    let editingImage: ImageSource;
+    // let editingImage: ImageSource;
 
     async function processAndAddImage(image, autoScan = false) {
         try {
             showLoading(l('computing'));
-            editingImage = new ImageSource(image);
+            let imageSource = new ImageSource(image);
+
+            const imageWidth = imageSource.width;
+            const imageHeight = imageSource.height;
+            const imageRotation = imageSource.rotationAngle;
             const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
             let quads: [number, number][][];
+
+            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.jpg`);
+            await imageSource.saveToFileAsync(tempImagePath, IMG_FORMAT, IMG_COMPRESS);
+            recycleImages(imageSource);
+            imageSource = null;
+            // TODO: we need to save the image to do anything
             if (cropEnabled) {
-                quads = await getJSONDocumentCorners(editingImage, previewResizeThreshold * 1.5, 0);
+                quads = await getJSONDocumentCornersFromFile(tempImagePath, previewResizeThreshold * 1.5, 0);
             }
-            DEV_LOG &&
-                console.log(
-                    'processAndAddImage',
-                    image,
-                    __ANDROID__ ? (image as android.graphics.Bitmap).getByteCount() : undefined,
-                    previewResizeThreshold,
-                    quads,
-                    autoScan,
-                    editingImage.width,
-                    editingImage.height
-                );
+            DEV_LOG && console.log('processAndAddImage', tempImagePath, previewResizeThreshold, quads, autoScan, imageWidth, imageHeight);
             if (cropEnabled && quads.length === 0) {
                 let items = [
                     {
-                        editingImage,
+                        imagePath: tempImagePath,
+                        imageWidth,
+                        imageHeight,
+                        imageRotation,
                         quads: [
                             [
                                 [noDetectionMargin, noDetectionMargin],
-                                [editingImage.width - noDetectionMargin, noDetectionMargin],
-                                [editingImage.width - noDetectionMargin, editingImage.height - noDetectionMargin],
-                                [noDetectionMargin, editingImage.height - noDetectionMargin]
+                                [imageWidth - noDetectionMargin, noDetectionMargin],
+                                [imageWidth - noDetectionMargin, imageHeight - noDetectionMargin],
+                                [noDetectionMargin, imageHeight - noDetectionMargin]
                             ]
                         ] as [number, number][][]
                     }
@@ -279,9 +287,10 @@
                 }
             }
             if (!cropEnabled || quads?.length) {
-                await addCurrentImageToDocument(image, quads);
+                await addCurrentImageToDocument(tempImagePath, imageWidth, imageHeight, imageRotation, quads);
                 return true;
             }
+            recycleImages(imageSource);
             showSnack({ message: lc('no_document_found') });
             return false;
         } catch (err) {
@@ -371,14 +380,17 @@
         }
     });
     onDestroy(() => {
-        clearImages();
+        // clearImages();
         document = null;
         nbPages = 0;
+        if (autoScanHandler) {
+            autoScanHandler.enabled = false;
+            autoScanHandler = null;
+        }
         if (processor) {
             processor.autoScanHandler = null;
             processor = null;
         }
-        autoScanHandler = null;
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -454,78 +466,102 @@
         }
     }
 
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             if (editing) {
                 toggleEditing();
                 data.cancel = true;
-            } else if (startOnCam) {
-                if (document) {
-                    // we need to clear the current document which was not saved
-                    //especially memory images
-                    document.removeFromDisk();
-                    document = null;
-                }
             }
-        }
-    }
+        });
 
-    function clearImages() {
-        // if (editingImage) {
-        const toRelease = [editingImage, smallImage].concat(pagesToAdd ? pagesToAdd.map((d) => d.image) : []);
-        editingImage = null;
-        smallImage = null;
-        recycleImages(toRelease);
-    }
+    // function clearImages() {
+    //     // if (editingImage) {
+    //     const toRelease = [editingImage, smallImage].concat(pagesToAdd ? pagesToAdd.map((d) => d.image) : []);
+    //     editingImage = null;
+    //     smallImage = null;
+    //     recycleImages(toRelease);
+    // }
     const pagesToAdd: PageData[] = [];
 
-    async function addCurrentImageToDocument(sourceImage, quads) {
+    async function addCurrentImageToDocument(sourceImagePath, imageWidth, imageHeight, imageRotation, quads) {
         try {
-            if (!editingImage) {
+            if (!sourceImagePath) {
                 return;
             }
             const strTransforms = transforms.join(TRANSFORMS_SPLIT);
-            DEV_LOG && console.log('addCurrentImageToDocument', editingImage, quads, processor);
-            let images = quads ? await cropDocument(editingImage, quads, strTransforms) : [__IOS__ ? editingImage.ios : editingImage.android];
-            let qrcode;
-            let colors;
-            if (CARD_APP) {
-                [qrcode, colors] = await Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
-                DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+            DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads, processor);
+            const images: CropResult[] = [];
+            if (quads) {
+                images.push(
+                    ...(await cropDocumentFromFile(sourceImagePath, quads, {
+                        transforms: strTransforms,
+                        saveInFolder: knownFolders.temp().path,
+                        compressFormat: IMG_FORMAT,
+                        compressQuality: IMG_COMPRESS
+                    }))
+                );
+                // we generate
+            } else {
+                images.push({ imagePath: sourceImagePath, width: imageWidth, height: imageHeight });
             }
-            for (let index = 0; index < images.length; index++) {
-                const image = images[index];
-                pagesToAdd.push({
-                    image,
-                    crop: quads?.[index] || [
-                        [0, 0],
-                        [editingImage.width - 0, 0],
-                        [editingImage.width - 0, editingImage.height - 0],
-                        [0, editingImage.height - 0]
-                    ],
-                    colorType,
-                    colorMatrix,
-                    colors,
-                    qrcode,
-                    transforms: strTransforms,
-                    sourceImage,
-                    width: __ANDROID__ ? image.getWidth() : image.size.width,
-                    height: __ANDROID__ ? image.getHeight() : image.size.height,
-                    rotation: editingImage.rotationAngle
-                });
+            // let images = quads ? await cropDocumentFromFile(sourceImagePath, quads, strTransforms) : [sourceImagePath];
+            if (images.length) {
+                // if (!document) {
+                //     document = await OCRDocument.createDocument(dayjs().format('L LTS'));
+                // }
+                let qrcode;
+                let colors;
+                if (CARD_APP) {
+                    [qrcode, colors] = await processFromFile(
+                        sourceImagePath,
+                        [
+                            {
+                                type: 'qrcode'
+                            },
+                            {
+                                type: 'palette'
+                            }
+                        ],
+                        {
+                            maxSize: QRCODE_RESIZE_THRESHOLD
+                        }
+                    );
+                    // Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
+                    DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+                }
+                for (let index = 0; index < images.length; index++) {
+                    const image = images[index];
+                    pagesToAdd.push({
+                        ...image,
+                        crop: quads?.[index] || [
+                            [0, 0],
+                            [imageWidth - 0, 0],
+                            [imageWidth - 0, imageHeight - 0],
+                            [0, imageHeight - 0]
+                        ],
+                        colorType,
+                        colorMatrix,
+                        colors,
+                        qrcode,
+                        transforms: strTransforms,
+                        sourceImagePath,
+                        sourceImageWidth: imageWidth,
+                        sourceImageHeight: imageHeight,
+                        sourceImageRotation: imageRotation,
+                        rotation: imageRotation
+                    });
+                }
             }
-
-            images = null;
             nbPages = pagesToAdd.length;
             startPreview();
             const lastPage = pagesToAdd[pagesToAdd.length - 1];
-            setCurrentImage(new ImageSource(lastPage.image), lastPage.rotation, true);
+            setCurrentImage(lastPage.imagePath, lastPage.rotation, true);
         } catch (error) {
             showError(error);
         }
     }
 
-    async function setCurrentImage(image, rotation = 0, needAnimateBack = false) {
+    async function setCurrentImage(image: string, rotation = 0, needAnimateBack = false) {
         // const imageView = fullImageView.nativeElement;
         // const sImageView = smallImageView.nativeElement;
         // imageView.originX = 0.5;
@@ -599,6 +635,9 @@
         DEV_LOG && console.log('focusCamera', e.getX(), e.getY());
         cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
     }
+    const onZoom = debounce(function onZoom(event) {
+        ApplicationSettings.setNumber('defaultZoom', event.zoom);
+    }, 500);
 
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
     let processor;
@@ -606,17 +645,17 @@
     function applyAutoScan(value: boolean) {
         if (value) {
             const nCropView = cropView.nativeView;
-            const newAautoScanHandler = createAutoScanHandler(nCropView, (result) => {
+            const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
-                if (cameraView.nativeView) {
+                if (cameraView?.nativeView) {
                     takePicture(true);
                 }
             });
-            newAautoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
-            newAautoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
-            newAautoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
-            autoScanHandler = processor.autoScanHandler = newAautoScanHandler;
+            newAutoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
+            newAutoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
+            newAutoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
+            autoScanHandler = processor.autoScanHandler = newAutoScanHandler;
         } else {
             processor.autoScanHandler = null;
             autoScanHandler = null;
@@ -749,9 +788,11 @@
             {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
             {stretch}
+            {zoom}
             on:cameraOpen={onCameraOpen}
             on:layoutChanged={onCameraLayoutChanged}
             on:loaded={applyProcessor}
+            on:zoom={onZoom}
             on:tap={focusCamera} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
@@ -771,7 +812,7 @@
             <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
         {/if}
 
-        <gridlayout columns="60,*,auto,*,60" paddingBottom={30} paddingTop={30} row={3}>
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $navigationBarHeight} paddingTop={30} row={3}>
             <IconButton
                 color="white"
                 horizontalAlignment="left"

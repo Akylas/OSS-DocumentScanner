@@ -13,7 +13,7 @@
     import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
-    import { ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, statusBarHeight } from '~/variables';
     import ListItem from './ListItem.svelte';
 
@@ -48,7 +48,7 @@
 
     function setColorType(type) {
         colorType = type;
-        colorMatrix = null;
+        colorMatrix = getColorMatrix(type);
         refreshCollectionView();
     }
     function onColorMatrixChange(type, value, refreshCV = false) {
@@ -64,26 +64,16 @@
         }
 
         try {
-            const component = (await import('~/components/common/SliderPopover.svelte')).default;
             const currentValue = 1;
             DEV_LOG && console.log('setColorMatrixLevels', currentValue, colorMatrix);
             onColorMatrixChange(item.colorType, currentValue, true);
-            await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                view: component,
+            await showMatrixLevelPopover({
+                item,
                 anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                horizPos: HorizontalPosition.ALIGN_LEFT,
-                props: {
-                    min: 0.5,
-                    max: 2,
-                    step: 0.1,
-                    width: '80%',
-                    value: currentValue,
-                    onChange(value) {
-                        if (colorMatrix?.[0] || 1 !== value) {
-                            onColorMatrixChange(item.colorType, value);
-                        }
+                currentValue,
+                onChange(value) {
+                    if (colorMatrix?.[0] || 1 !== value) {
+                        onColorMatrixChange(item.colorType, value);
                     }
                 }
             });
@@ -125,7 +115,7 @@
     const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
 </script>
 
-<gesturerootview padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
+<gesturerootview id="transformBottomSheet" padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
     <scrollview>
         <stacklayout>
             <label class="sectionBigHeader" text={lc('transformations')} />

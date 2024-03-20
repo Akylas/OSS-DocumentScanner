@@ -1,7 +1,16 @@
 import { Color } from '@nativescript/core';
 
 export * from './index.android';
-export interface OCRData {
+
+export interface LoadImageOptions {
+    width?: number;
+    height?: number;
+    maxWidth?: number;
+    maxHeight?: number;
+    maxSize?: number;
+    resizeThreshold?: number;
+}
+export interface    OCRData {
     text: string;
     blocks: {
         box: { x: number; y: number; width: number; height: number };
@@ -48,6 +57,19 @@ export interface DetectOptions {
 export interface DetectQRCodeOptions {
     resizeThreshold?: number;
     rotation?: number;
+}
+
+export interface CropOptions extends LoadImageOptions {
+    transforms?: string;
+    saveInFolder?: string;
+    fileName?: string;
+    compressFormat?: string;
+    compressQuality?: number;
+}
+export interface CropResult {
+    imagePath: string;
+    width: number;
+    height: number;
 }
 
 export interface GenerateColorOptions {

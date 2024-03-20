@@ -1,6 +1,6 @@
 import { ApplicationSettings, File, Folder, ImageSource, Observable, path } from '@nativescript/core';
-import { debounce } from '@nativescript/core/utils';
-import { cropDocument } from 'plugin-nativeprocessor';
+import { debounce, throttle } from '@nativescript/core/utils';
+import { cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
 import { showError } from '~/utils/error';
@@ -40,7 +40,10 @@ export class SyncService extends Observable {
     remoteURL;
     username;
     remoteFolder;
+    authType;
     client: WebDAVClient;
+    token;
+    password;
 
     get enabled() {
         return !!this.client;
@@ -64,8 +67,10 @@ export class SyncService extends Observable {
             const { remoteURL, headers, authType, ...otherConfig } = config;
             // const context = createContext(config.remoteURL, { config.username, password, authType: AuthType.Password });
             this.remoteURL = remoteURL;
+            this.authType = authType;
             this.remoteFolder = config.remoteFolder;
             this.username = config.username;
+            this.token = config.token;
             this.client = createClient(remoteURL, {
                 headers,
                 authType: !authType || authType === AuthType.Password ? AuthType.None : authType,
@@ -91,14 +96,29 @@ export class SyncService extends Observable {
         documentsService.off('documentUpdated', this.onDocumentUpdated, this);
     }
 
-    saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password }) {
+    saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password, token }) {
         if (remoteURL && username && password && remoteFolder) {
             // TODO: if we use digest we need a test connection to acquire the ha1
-            const context = createContext(remoteURL, { username, password, authType });
-            const config = { remoteURL, username, headers: context.headers, remoteFolder, ha1: context.ha1 || context.digest?.ha1, authType };
+
+            const context = createContext(remoteURL, { username, password, authType, token });
+            const config = {
+                remoteURL,
+                username,
+                headers: context.headers,
+                remoteFolder,
+                ha1: context.ha1 || context.digest?.ha1,
+                authType,
+                // password: authType === AuthType.Password ? password : undefined,
+                token
+            };
             DEV_LOG && console.log('saveData', context, config);
             ApplicationSettings.setString(SETTINGS_KEY, JSON.stringify(config));
+            this.remoteURL = remoteURL;
             this.remoteFolder = remoteFolder;
+            this.username = username;
+            this.authType = authType;
+            this.token = token;
+            this.password = password;
             this.client = createClient(remoteURL, {
                 headers: context.headers,
                 authType: authType === AuthType.Password ? AuthType.None : authType,
@@ -109,12 +129,17 @@ export class SyncService extends Observable {
         } else {
             ApplicationSettings.remove(SETTINGS_KEY);
             this.client = null;
+            this.remoteURL = null;
+            this.username = null;
+            this.remoteFolder = null;
+            this.authType = null;
+            this.token = null;
         }
         this.notify({ eventName: 'state', enabled: this.enabled });
     }
-    async testConnection({ remoteURL, username, password, remoteFolder, authType = null }): Promise<boolean> {
+    async testConnection({ remoteURL, username, password, remoteFolder, token, authType = null }): Promise<boolean> {
         try {
-            const context = createContext(remoteURL, { password, username, authType: authType || AuthType.Password });
+            const context = createContext(remoteURL, { password, username, authType: authType || AuthType.Password, token: token ? { access_token: token, token_type: 'Bearer' } : token });
             DEV_LOG && console.log('testConnection', context);
             const result = await exists(context, remoteFolder, { cachePolicy: 'noCache' });
             return true;
@@ -262,11 +287,14 @@ export class SyncService extends Observable {
                     });
                     // check if we need to recreate the image
                     if (pageTooUpdate.crop || pageTooUpdate.transforms) {
-                        const editingImage = await loadImage(localPage.sourceImagePath);
-                        const images = await cropDocument(editingImage, [pageTooUpdate.crop]);
-
-                        await new ImageSource(images[0]).saveToFileAsync(localPage.imagePath, IMG_FORMAT, IMG_COMPRESS);
-                        recycleImages(editingImage, images);
+                        const file = File.fromPath(localPage.imagePath);
+                        await cropDocumentFromFile(localPage.sourceImagePath, [pageTooUpdate.crop], {
+                            saveInFolder: file.parent.path,
+                            fileName: file.name,
+                            compressFormat: IMG_FORMAT,
+                            compressQuality: IMG_COMPRESS
+                        });
+                        pageTooUpdate.size = file.size;
                     }
                     await document.updatePage(localPageIndex, pageTooUpdate);
                 } else if (remotePageToSync.modifiedDate < localPage.modifiedDate) {
@@ -328,7 +356,7 @@ export class SyncService extends Observable {
         }
     }
     syncRunning = false;
-    syncDocuments = debounce(async (bothWays = false) => {
+    syncDocuments = throttle(async (bothWays = false) => {
         try {
             if (!networkService.connected || !this.client || this.syncRunning) {
                 return;
@@ -414,10 +442,11 @@ export class SyncService extends Observable {
                     }
                 }
             }
-            this.syncRunning = false;
-            this.notify({ eventName: 'syncState', state: 'finished' });
         } catch (error) {
             showError(error);
+        } finally {
+            this.syncRunning = false;
+            this.notify({ eventName: 'syncState', state: 'finished' });
         }
     }, 1000);
 }

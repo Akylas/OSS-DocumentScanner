@@ -28,9 +28,9 @@
     // export let leftIcon: string = null;
     export let rightValue: string | Function = null;
     // const leftColumn = iconFontSize * 1.4 * $fontScale;
-    export let columns: string = 'auto,*,auto';
+    export let columns: string = '*,auto';
     // export let leftIconFonFamily: string = $fonts.mdi;
-    export let mainCol = 1;
+    export let mainCol = 0;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 
     function draw(event: { canvas: Canvas; object: CanvasView }) {
@@ -80,9 +80,7 @@
 
 <canvasview
     {columns}
-    disableCss={true}
-    paddingLeft={16}
-    paddingRight={16}
+    padding="0 16 0 16"
     rippleColor={color || colorOnSurface}
     on:tap={(event) => dispatch('tap', event)}
     on:longPress={(event) => dispatch('longPress', event)}
@@ -96,13 +94,22 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapse'}
         width={iconFontSize * 2} /> -->
-    <label col={mainCol} disableCss={true} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" verticalTextAlignment="center">
+    <label
+        col={mainCol}
+        disableCss={true}
+        lineBreak="end"
+        paddingBottom={addedPadding}
+        paddingTop={addedPadding}
+        textWrap={true}
+        verticalAlignment="center"
+        verticalTextAlignment="center"
+        {...$$restProps.titleProps || {}}>
         <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
     <label
-        col={2}
+        col={1}
         color={subtitleColor}
         disableCss={true}
         fontSize={subtitleFontSize * $fontScale}

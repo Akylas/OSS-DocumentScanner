@@ -150,6 +150,7 @@ Mat cropAndWarp(Mat src, vector<cv::Point> orderedPoints)
 }
 
 detector::DocumentDetector docDetector(300, 0);
+int cannyFactor = docDetector.cannyFactor * 100;
 int cannyThreshold1 = docDetector.cannyThreshold1;
 int cannyThreshold2 = docDetector.cannyThreshold2;
 int morphologyAnchorSize = docDetector.morphologyAnchorSize;
@@ -167,7 +168,8 @@ int adapThresholdBlockSize = docDetector.adapThresholdBlockSize; // 391
 int adapThresholdC = docDetector.adapThresholdBlockSize;         // 53
 int gammaCorrection = docDetector.gammaCorrection * 10;          // 53
 int shouldNegate = docDetector.shouldNegate;                     // 53
-int useChannel = docDetector.useChannel;                         // 53
+int useChannel = 0;                         // 53
+int contoursApproxEpsilonFactor = docDetector.contoursApproxEpsilonFactor * 1000;                         // 53
 
 int whitepaper = 0;
 int enhance = 0;
@@ -254,6 +256,7 @@ void preprocess_ocr(const Mat &image, const Mat &rgb)
 
 void updateImage()
 {
+    docDetector.cannyFactor = cannyFactor / 100;
     docDetector.cannyThreshold1 = cannyThreshold1;
     docDetector.cannyThreshold2 = cannyThreshold2;
     docDetector.dilateAnchorSize = dilateAnchorSize;
@@ -266,11 +269,12 @@ void updateImage()
     docDetector.adapThresholdC = adapThresholdC;
     docDetector.morphologyAnchorSize = morphologyAnchorSize;
     docDetector.shouldNegate = shouldNegate;
-    docDetector.useChannel = useChannel;
+    docDetector.useChannel = useChannel - 1;
     docDetector.bilateralFilterValue = bilateralFilterValue;
     docDetector.thresh = thresh;
     docDetector.threshMax = threshMax;
     docDetector.gammaCorrection = gammaCorrection / 10.0;
+    docDetector.contoursApproxEpsilonFactor = contoursApproxEpsilonFactor / 1000.0;
     if (gaussianBlur > 0 && gaussianBlur % 2 == 0)
     {
         docDetector.gaussianBlur = gaussianBlur + 1;
@@ -307,6 +311,7 @@ void updateImage()
 
     if (pointsList.size() > 0)
     {
+        // cv::polylines(resizedImage, pointsList[0], true, Scalar(255, 0, 0), 2, 8);
         // vector<cv::Point> orderedPoints;
         // orderPoints(pointsList[0], orderedPoints);
         warped = cropAndWarp(image, pointsList[0]);
@@ -436,14 +441,21 @@ JSONCONS_N_MEMBER_TRAITS(WhitePaperTransformOptions, 0, csBlackPer,csWhitePer, g
 int main(int argc, char **argv)
 {
     // with single image
-    if (argc != 2)
+    if (argc < 2)
     {
         cout << "Usage: ./scanner [test_images_dir_path]\n";
         return 1;
     }
     const char *dirPath = argv[1];
+    const char *startImage = argv[2];
 
     setImagesFromFolder(dirPath);
+    if (startImage) {
+        auto ret = std::find_if(images.begin(), images.end(), [startImage](string filePath) { return filePath.find(startImage) != std::string::npos; });
+        if (ret != images.end()) {
+            imageIndex = ret - images.begin();
+        }
+    }
     namedWindow("SourceImage", WINDOW_KEEPRATIO);
     resizeWindow("SourceImage", 600, 400);
     moveWindow("SourceImage", 550, 500);
@@ -474,19 +486,27 @@ int main(int argc, char **argv)
     createTrackbar("gaussianBlur:", "Options", &gaussianBlur, 200, on_trackbar);
     createTrackbar("medianBlurValue:", "Options", &medianBlurValue, 200, on_trackbar);
     createTrackbar("morphologyAnchorSize:", "Options", &morphologyAnchorSize, 20, on_trackbar);
-    createTrackbar("cannyThreshold1:", "Options", &cannyThreshold1, 255, on_trackbar);
-    createTrackbar("cannyThreshold2:", "Options", &cannyThreshold2, 255, on_trackbar);
+    createTrackbar("cannyFactor:", "Options", &cannyFactor, 400, on_trackbar);
+    // createTrackbar("cannyThreshold1:", "Options", &cannyThreshold1, 255, on_trackbar);
+    // createTrackbar("cannyThreshold2:", "Options", &cannyThreshold2, 255, on_trackbar);
     createTrackbar("dilateAnchorSizeBefore:", "Options", &dilateAnchorSizeBefore, 20, on_trackbar);
     createTrackbar("dilateAnchorSize:", "Options", &dilateAnchorSize, 20, on_trackbar);
     createTrackbar("gammaCorrection:", "Options", &gammaCorrection, 200, on_trackbar);
     createTrackbar("thresh:", "Options", &thresh, 300, on_trackbar);
     createTrackbar("threshMax:", "Options", &threshMax, 300, on_trackbar);
+    createTrackbar("houghLinesThreshold:", "Options", &houghLinesThreshold, 500, on_trackbar);
+    createTrackbar("houghLinesMinLineLength:", "Options", &houghLinesMinLineLength, 500, on_trackbar);
+    createTrackbar("houghLinesMaxLineGap:", "Options", &houghLinesMaxLineGap, 500, on_trackbar);
+    
     // createTrackbar("actualTesseractDetect:", "SourceImage", &actualTesseractDetect, 1, on_trackbar);
     // createTrackbar("textDetect1:", "SourceImage", &textDetect1, 100, on_trackbar);
     // createTrackbar("textDetect2:", "SourceImage", &textDetect2, 100, on_trackbar);
     // createTrackbar("textDetectDilate:", "SourceImage", &textDetectDilate, 100, on_trackbar);
     // createTrackbar("desseractDetectContours:", "SourceImage", &desseractDetectContours, 1, on_trackbar);
     createTrackbar("negate:", "Options", &shouldNegate, 1, on_trackbar);
+    createTrackbar("contoursApproxEpsilonFactor:", "Options", &contoursApproxEpsilonFactor, 100, on_trackbar);
+
+    
     createTrackbar("enhance details:", "Warped", &enhance, 1, on_trackbar);
 
 

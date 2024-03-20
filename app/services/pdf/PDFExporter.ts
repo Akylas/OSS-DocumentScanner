@@ -1,12 +1,13 @@
-import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import type { WorkerEventType, WorkerResult } from '~/workers/BaseWorker';
+import { CustomError } from '~/utils/error';
+import type { WorkerEventType } from '~/workers/BaseWorker';
+import { PDFExportOptions } from './PDFCanvas';
 
 export function cleanFilename(str) {
     return str.replace(/[|\\?*<\":>+\[\]\/'"]+/g, '').replace(/[\s\t\n]+/g, '_');
 }
 
-export async function exportPDFAsync(pages: OCRPage[], document?: OCRDocument, folder?, filename?): Promise<string> {
-    DEV_LOG && console.log('exportPDFAsync', folder, filename);
+export async function exportPDFAsync({ pages, document, folder, filename, compress }: PDFExportOptions): Promise<string> {
+    DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename && document) {
         filename = cleanFilename(document.name) + '.pdf';
     }
@@ -50,7 +51,7 @@ export async function exportPDFAsync(pages: OCRPage[], document?: OCRDocument, f
                     }
                 }
                 if (data.error) {
-                    executor.reject(JSON.parse(data.error));
+                    executor.reject(new CustomError(JSON.parse(data.error)));
                 } else {
                     executor.resolve(data);
                 }
@@ -97,7 +98,8 @@ export async function exportPDFAsync(pages: OCRPage[], document?: OCRDocument, f
             worker.postMessage(data);
         });
     }
-    const result = await sendMessageToWorker('export', { pages, folder, filename }, Date.now());
-    DEV_LOG && console.log('result', result);
+    // DEV_LOG && console.log('export message sent to worker', { pages, folder, filename, compress });
+    const result = await sendMessageToWorker('export', { pages, folder, filename, compress }, Date.now());
+    // DEV_LOG && console.log('result', result);
     return result.messageData;
 }

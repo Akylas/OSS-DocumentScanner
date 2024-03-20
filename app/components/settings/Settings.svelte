@@ -5,7 +5,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { ApplicationSettings, File, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { ApplicationSettings, File, Folder, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -21,6 +21,7 @@
         CROP_ENABLED,
         DEFAULT_EXPORT_DIRECTORY,
         DEFAULT_PDF_OPTIONS,
+        DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NOT_DETECTED_MARGIN,
         PREVIEW_RESIZE_THRESHOLD
     } from '~/models/constants';
@@ -31,7 +32,7 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';
-    import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui';
+    import { hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
@@ -53,7 +54,11 @@
         { icon: 'mdi-share-variant', id: 'share' },
         { icon: 'mdi-github', id: 'github' }
     ];
+    export let subSettingsOptions: string = null;
     export let options: any[] = null;
+    if (!options && subSettingsOptions) {
+        options = getSubSettings(subSettingsOptions);
+    }
 
     function getTitle(item) {
         switch (item.id) {
@@ -72,6 +77,118 @@
             storeSettings[k] = JSON.parse(ApplicationSettings.getString(k, defaultValue));
         }
         return storeSettings[k];
+    }
+    function getSubSettings(id: string) {
+        switch (id) {
+            case 'pdf':
+                return [
+                    {
+                        type: 'rightIcon',
+                        key: 'pdf_export_directory',
+                        title: lc('export_folder'),
+                        defaultValue: DEFAULT_EXPORT_DIRECTORY,
+                        description: (item) => ApplicationSettings.getString(item.key, item.defaultValue),
+                        rightBtnIcon: 'mdi-restore',
+                        onTap: async (item) => {
+                            DEV_LOG && console.log('onTap', item);
+                            const result = await pickFolder({
+                                multipleSelection: false,
+                                permissions: { write: true, persistable: true }
+                            });
+                            if (result.folders.length) {
+                                const exportDirectory = result.folders[0];
+                                ApplicationSettings.setString(item.key, exportDirectory);
+                                return true;
+                            }
+                        },
+                        onRightIconTap: (item) => {
+                            DEV_LOG && console.log('onRightIconTap', item);
+                            ApplicationSettings.remove(item.key);
+                            return true;
+                        }
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('page_layout')
+                    }
+                ]
+                    .concat(
+                        Object.keys(PDF_OPTIONS).map((option) => ({
+                            id: 'store_setting',
+                            storeKey: 'default_export_options',
+                            storeDefault: DEFAULT_PDF_OPTIONS_STRING,
+                            key: option,
+                            valueType: typeof getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)[option],
+                            title: lc(option),
+                            rightValue: () => PDF_OPTIONS[option][getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)[option]].name,
+                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)[option],
+                            values: Object.keys(PDF_OPTIONS[option]).map((k) => ({ ...PDF_OPTIONS[option][k], value: k }))
+                        })) as any
+                    )
+                    .concat([
+                        {
+                            id: 'store_setting',
+                            storeKey: 'default_export_options',
+                            storeDefault: DEFAULT_PDF_OPTIONS_STRING,
+                            key: 'page_padding',
+                            title: lc('page_padding'),
+                            type: 'prompt',
+                            textFieldProperties: {
+                                keyboardType: 'integer'
+                            } as TextFieldProperties,
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['page_padding'],
+                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['page_padding']
+                        },
+                        {
+                            type: 'sectionheader',
+                            title: lc('image_settings')
+                        },
+                        {
+                            id: 'store_setting',
+                            storeKey: 'default_export_options',
+                            storeDefault: DEFAULT_PDF_OPTIONS_STRING,
+                            key: 'imageSizeThreshold',
+                            title: lc('image_size_threshold'),
+                            description: lc('image_size_threshold_desc'),
+                            type: 'prompt',
+                            textFieldProperties: {
+                                keyboardType: 'integer'
+                            } as TextFieldProperties,
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageSizeThreshold'],
+                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageSizeThreshold']
+                        },
+                        {
+                            id: 'store_setting',
+                            storeKey: 'default_export_options',
+                            storeDefault: DEFAULT_PDF_OPTIONS_STRING,
+                            key: 'imageLoadScale',
+                            min: 0.1,
+                            max: 1,
+                            step: 0.01,
+                            title: lc('image_load_scale'),
+                            description: lc('image_load_scale_desc'),
+                            type: 'slider',
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageLoadScale'],
+                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageLoadScale']
+                        },
+                        {
+                            id: 'store_setting',
+                            storeKey: 'default_export_options',
+                            storeDefault: DEFAULT_PDF_OPTIONS_STRING,
+                            key: 'jpegQuality',
+                            min: 1,
+                            max: 100,
+                            step: 1,
+                            title: lc('jpeg_quality'),
+                            type: 'slider',
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality'],
+                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
+                        }
+                    ] as any);
+
+            default:
+                break;
+        }
     }
     function refresh() {
         const newItems: any[] =
@@ -119,8 +236,8 @@
                         ? [
                               {
                                   id: 'setting',
-                                  key: 'data_location',
-                                  title: lc('data_location'),
+                                  key: 'storage_location',
+                                  title: lc('storage_location'),
                                   currentValue: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal'),
                                   description: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? lc('sdcard') : lc('internal_storage')),
                                   values: [
@@ -171,6 +288,58 @@
                           ]
                         : ([] as any)
                 )
+                // .concat(
+                //     __ANDROID__
+                //         ? [
+                //               {
+                //                   key: 'custom_data_location',
+                //                   title: lc('data_location'),
+                //                   currentValue: () => documentsService.rootDataFolder,
+                //                   description: () => documentsService.rootDataFolder,
+                //                   onTap: async (data) => {
+                //                       try {
+                //                           const result = await pickFolder({
+                //                               multipleSelection: false,
+                //                               permissions: { write: true, persistable: true, recursive: true }
+                //                           });
+                //                           if (result.folders.length) {
+                //                               const confirmed = await confirm({
+                //                                   title: lc('move_data'),
+                //                                   message: lc('move_data_desc'),
+                //                                   okButtonText: lc('ok'),
+                //                                   cancelButtonText: lc('cancel')
+                //                               });
+                //                               if (confirmed) {
+                //                                   const srcFolderStr = documentsService.rootDataFolder;
+                //                                   const dstFolderStr = result.folders[0];
+                //                                   DEV_LOG && console.log('confirmed move data to', srcFolderStr, dstFolderStr);
+                //                                   showLoading(lc('moving_files'));
+                //                                   const srcFolder = Folder.fromPath(srcFolderStr);
+                //                                   const dstFolder = Folder.fromPath(dstFolderStr);
+                //                                   const srcDbPath = srcFolder.getFile(DocumentsService.DB_NAME).path;
+                //                                   await File.fromPath(srcDbPath).copy(dstFolder.getFile(DocumentsService.DB_NAME).path);
+                //                                   await copyFolderContent(srcFolder.getFolder('data').path, dstFolder.getFolder('data').path);
+                //                                   ApplicationSettings.setString('root_data_folder', dstFolderStr);
+                //                                   await File.fromPath(srcDbPath).remove();
+                //                                   await removeFolderContent(srcFolder.getFolder('data').path);
+                //                                   await alert({
+                //                                       cancelable: false,
+                //                                       message: lc('restart_app'),
+                //                                       okButtonText: lc('restart')
+                //                                   });
+                //                                   restartApp();
+                //                               }
+                //                           }
+                //                       } catch (error) {
+                //                           showError(error);
+                //                       } finally {
+                //                           hideLoading();
+                //                       }
+                //                   }
+                //               }
+                //           ]
+                //         : ([] as any)
+                // )
                 .concat([
                     {
                         id: 'third_party',
@@ -303,62 +472,7 @@
                         icon: 'mdi-file-pdf-box',
                         title: lc('pdf_export'),
                         description: lc('pdf_export_settings'),
-                        options: () =>
-                            [
-                                {
-                                    type: 'rightIcon',
-                                    key: 'pdf_export_directory',
-                                    title: lc('export_folder'),
-                                    defaultValue: DEFAULT_EXPORT_DIRECTORY,
-                                    description: (item) => ApplicationSettings.getString(item.key, item.defaultValue),
-                                    rightBtnIcon: 'mdi-restore',
-                                    onTap: async (item) => {
-                                        DEV_LOG && console.log('onTap', item);
-                                        const result = await pickFolder({
-                                            multipleSelection: false,
-                                            permissions: { write: true, persistable: true }
-                                        });
-                                        if (result.folders.length) {
-                                            const exportDirectory = result.folders[0];
-                                            ApplicationSettings.setString(item.key, exportDirectory);
-                                            return true;
-                                        }
-                                    },
-                                    onRightIconTap: (item) => {
-                                        DEV_LOG && console.log('onRightIconTap', item);
-                                        ApplicationSettings.remove(item.key);
-                                        return true;
-                                    }
-                                }
-                            ]
-                                .concat(
-                                    Object.keys(PDF_OPTIONS).map((option) => ({
-                                        id: 'store_setting',
-                                        storeKey: 'default_export_options',
-                                        storeDefault: DEFAULT_PDF_OPTIONS,
-                                        key: option,
-                                        valueType: typeof getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS)[option],
-                                        title: lc(option),
-                                        rightValue: () => PDF_OPTIONS[option][getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS)[option]].name,
-                                        currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS)[option],
-                                        values: Object.keys(PDF_OPTIONS[option]).map((k) => ({ ...PDF_OPTIONS[option][k], value: k }))
-                                    })) as any
-                                )
-                                .concat([
-                                    {
-                                        id: 'store_setting',
-                                        storeKey: 'default_export_options',
-                                        storeDefault: DEFAULT_PDF_OPTIONS,
-                                        key: 'page_padding',
-                                        title: lc('page_padding'),
-                                        type: 'prompt',
-                                        textFieldProperties: {
-                                            keyboardType: 'integer'
-                                        } as TextFieldProperties,
-                                        rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS)['page_padding'],
-                                        currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS)['page_padding']
-                                    }
-                                ] as any)
+                        options: () => getSubSettings('pdf')
                     }
                 ] as any)
                 .concat([
@@ -370,7 +484,7 @@
                         id: 'webdav',
                         rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                         title: lc('webdav_sync'),
-                        description: syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc')
+                        description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
                     }
                 ] as any)
                 .concat([
@@ -448,14 +562,10 @@
             }
             switch (item.id) {
                 case 'sub_settings': {
-                    const component = (await import('~/components/settings/Settings.svelte')).default;
-                    navigate({
-                        page: component,
-                        props: {
-                            title: item.title,
-                            options: item.options(),
-                            actionBarButtons: item.actionBarButtons?.() || []
-                        }
+                    showSettings({
+                        title: item.title,
+                        options: item.options(),
+                        actionBarButtons: item.actionBarButtons?.() || []
                     });
 
                     break;
@@ -553,11 +663,16 @@
                     break;
                 case 'webdav':
                     const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-                    await showBottomSheet({
+                    const saved = await showBottomSheet({
                         parent: this,
                         view: WebdavConfig,
                         ignoreTopSafeArea: true
                     });
+                    if (saved) {
+                        const index = items.indexOf(item);
+                        DEV_LOG && console.log('webdav done', item, index);
+                        items.setItem(index, item);
+                    }
                     break;
                 case 'review':
                     openLink(STORE_REVIEW_LINK);
@@ -606,6 +721,28 @@
                             }
                             updateItem(item);
                         }
+                    } else if (item.type === 'slider') {
+                        showSliderPopover({
+                            ...item,
+                            onChange(value) {
+                                if (item.id === 'store_setting') {
+                                    const store = getStoreSetting(item.storeKey, item.storeDefault);
+                                    if (item.valueType === 'string') {
+                                        store[item.key] = value + '';
+                                    } else {
+                                        store[item.key] = value;
+                                    }
+                                    ApplicationSettings.setString(item.storeKey, JSON.stringify(store));
+                                } else {
+                                    if (item.valueType === 'string') {
+                                        ApplicationSettings.setString(item.key, value + '');
+                                    } else {
+                                        ApplicationSettings.setNumber(item.key, value);
+                                    }
+                                }
+                                updateItem(item);
+                            }
+                        });
                     } else {
                         const component = (await import('~/components/common/OptionSelect.svelte')).default;
                         DEV_LOG && console.log('OptionSelect', item);
@@ -739,13 +876,14 @@
             showError(error);
         }
     }
+
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
 </script>
 
-<page actionBarHidden={true}>
+<page id="settingsPage" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
             <Template key="header" let:item>
@@ -774,24 +912,26 @@
                 <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize fontSize={20} leftIcon={item.icon} mainCol={1} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={2} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
+                <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize fontSize={20} leftIcon={item.icon} mainCol={1} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={2} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
+                <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="rightIcon" let:item>
                 <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <IconButton col={2} text={item.rightBtnIcon} on:tap={(event) => onRightIconTap(item, event)} />
+                    <IconButton col={1} text={item.rightBtnIcon} on:tap={(event) => onRightIconTap(item, event)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="leftIcon" let:item>
                 <ListItemAutoSize
+                    columns="auto,*,auto"
                     fontSize={20}
                     leftIcon={item.icon}
+                    mainCol={1}
                     rightValue={item.rightValue}
                     showBottomLine={false}
                     subtitle={getDescription(item)}

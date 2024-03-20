@@ -4,7 +4,11 @@
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
         "com.akylas.documentscanner:Utils",
+        "com.akylas.documentscanner:Utils.Companion",
         "com.akylas.documentscanner:PDFUtils",
+        "com.akylas.documentscanner:PDFUtils.Companion",
+        "com.akylas.documentscanner.utils:ImageUtil",
+        "com.akylas.documentscanner.utils:ImageUtil.Companion",
         "androidx.appcompat.app:AppCompatDelegate",
         "androidx.core.os:LocaleListCompat",
         "java.nio.file:Files",
@@ -13,10 +17,6 @@
         "android.text.format:DateFormat",
         "android.graphics:BitmapShader",
         "androidx.documentfile.provider:DocumentFile",
-        "android.graphics.pdf:PdfDocument",
-        "android.graphics.pdf:PdfDocument.PageInfo",
-        "android.graphics.pdf:PdfDocument.PageInfo.Builder",
-        "android.graphics.pdf:PdfDocument.Page",
         "android.widget:Toast"
     ],
     "blacklist": [

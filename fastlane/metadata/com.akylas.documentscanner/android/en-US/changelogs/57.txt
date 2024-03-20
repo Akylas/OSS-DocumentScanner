@@ -1,0 +1,15 @@
+### Bug fixes
+- Translated using Weblate (German)
+- Translated using Weblate (Finnish)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Czech)
+- Translated using Weblate (French)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Bulgarian)
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Portuguese (Brazil))
+- removed unnecessary filters
+- back buttons crash in some cases
+- total

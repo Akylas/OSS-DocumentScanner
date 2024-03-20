@@ -1,9 +1,8 @@
 <script lang="ts">
     import { Frame } from '@nativescript/core';
     import { onMount } from 'svelte';
-    import { closeModal, goBack } from '~/utils/svelte/ui';
     import { showError } from '~/utils/error';
-    import { conditionalEvent, fade } from '~/utils/svelte/ui';
+    import { closeModal, conditionalEvent, fade, goBack } from '~/utils/svelte/ui';
     import { statusBarHeight } from '~/variables';
 
     export let title: string = null;

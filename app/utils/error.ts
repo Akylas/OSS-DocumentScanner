@@ -25,10 +25,15 @@ export class CustomError extends BaseError {
     isCustomError = true;
     assignedLocalData: any;
     silent?: boolean;
+    _customStack?: string;
     constructor(props?, customErrorConstructorName?: string) {
         super(props.message);
         this.message = props.message;
         delete props.message;
+
+        // standard way: Error.captureStackTrace(this, this.constructor.name);
+        // if you do this, you couldn't set different getter for the 'stack' property
+        this.stack = props.stack || new Error().stack; // do this, if you need a custom getter
 
         this.silent = props.silent;
         delete props.silent;
@@ -42,15 +47,25 @@ export class CustomError extends BaseError {
             for (let index = 0; index < keys.length; index++) {
                 const k = keys[index];
                 if (!props[k] || typeof props[k] === 'function') continue;
-                this[k] = props[k];
+                if (k === 'stack') {
+                    this._customStack = props[k];
+                } else {
+                    this[k] = props[k];
+                }
             }
-        } else {
-            this.assignedLocalData = props;
         }
+        this.assignedLocalData = props;
 
         if (!this.customErrorConstructorName) {
             this.customErrorConstructorName = customErrorConstructorName || (this as any).constructor.name; // OR (<any>this).constructor.name;
         }
+    }
+    //@ts-ignore
+    get stack() {
+        return this._customStack;
+    }
+    set stack(value) {
+        this._customStack = value;
     }
 
     localData() {
@@ -76,8 +91,7 @@ export class CustomError extends BaseError {
         return JSON.stringify(this.toJSON());
     }
     toString() {
-        const result = evalTemplateString(l(this.message), Object.assign({ l }, this.assignedLocalData));
-        return result;
+        return evalTemplateString(l(this.message), Object.assign({ l }, this.assignedLocalData));
     }
 
     getMessage() {}
@@ -147,7 +161,6 @@ export function wrapNativeException(ex, errorType = typeof ex) {
     if (__ANDROID__ && !(ex instanceof Error) && errorType === 'object') {
         const err = new Error(ex.toString());
         err['nativeException'] = ex;
-        //@ts-ignore
         err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
         return err;
     }

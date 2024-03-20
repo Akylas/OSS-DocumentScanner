@@ -113,6 +113,9 @@ dependencies {
 
 	implementation "androidx.camera:camera-view:${cameraxVersion}"
 	implementation "androidx.camera:camera-extensions:${cameraxVersion}"
+
+	def androidXExifInterfaceVersion =  project.hasProperty("androidXExifInterfaceVersion") ? project.androidXExifInterfaceVersion : "1.3.3"
+	implementation "androidx.exifinterface:exifinterface:$androidXExifInterfaceVersion"
 }
 //repositories {
 //	mavenCentral()

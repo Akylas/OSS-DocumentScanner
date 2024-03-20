@@ -308,6 +308,9 @@ std::optional<DocumentOCR::OCRResult> DocumentOCR::detectTextImpl(const Mat &ima
                 } else {
                     fullText += stdWord;
                 }
+                // we keep "spaces" for full text but remove then as box
+                if (trimWord.size() == 0)
+                    continue;
                 bool bold;
                 bool italic;
                 bool underlined;

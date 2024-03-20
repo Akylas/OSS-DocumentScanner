@@ -32,6 +32,7 @@
     export let fontWeight = 'bold';
     export let options: OptionType[] | ObservableArray<OptionType[]>;
     export let onClose = null;
+    export let selectedIndex = -1;
     export let height: number | string = null;
     export let fontSize = 16;
     export let iconFontSize = 24;
@@ -41,7 +42,7 @@
     let filter: string = null;
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutlineVariant, colorOnSurface, colorOutline } = $colors);
+    $: ({ colorOutline } = $colors);
 
     function updateFiltered(filter) {
         if (filter) {
@@ -113,6 +114,12 @@
         }
         return 'default';
     }
+    function onDataPopulated(event) {
+        if (selectedIndex > 0) {
+            event.object.scrollToIndex(selectedIndex, false);
+        }
+    }
+    const component = autoSizeListItem ? ListItemAutoSize : ListItem;
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
@@ -144,117 +151,82 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight}>
+        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight} on:dataPopulated={onDataPopulated}>
             <Template key="checkbox" let:item>
-                {#if autoSizeListItem}
-                    <ListItemAutoSize
-                        {borderRadius}
-                        color={item.color}
-                        columns="auto,*,auto"
-                        {fontSize}
-                        fontWeight={item.fontWeight || fontWeight}
-                        {iconFontSize}
-                        leftIcon={item.icon}
-                        mainCol={1}
-                        showBottomLine={showBorders}
-                        subtitle={item.subtitle}
-                        title={item.name}
-                        on:tap={(event) => onTap(item, event)}>
-                        <checkbox
-                            id="checkbox"
-                            boxType={item.boxType}
-                            checked={item.value}
-                            col={item.boxType === 'circle' ? 0 : 2}
-                            ios:marginRight={10}
-                            verticalAlignment="center"
-                            on:checkedChange={(e) => onCheckedChanged(item, e)} />
-                    </ListItemAutoSize>
-                {:else}
-                    <ListItem
-                        {borderRadius}
-                        color={item.color}
-                        columns="auto,*,auto"
-                        {fontSize}
-                        fontWeight={item.fontWeight || fontWeight}
-                        {iconFontSize}
-                        leftIcon={item.icon}
-                        mainCol={1}
-                        showBottomLine={showBorders}
-                        subtitle={item.subtitle}
-                        title={item.name}
-                        on:tap={(event) => onTap(item, event)}>
-                        <checkbox
-                            id="checkbox"
-                            boxType={item.boxType}
-                            checked={item.value}
-                            col={item.boxType === 'circle' ? 0 : 2}
-                            ios:marginRight={10}
-                            verticalAlignment="center"
-                            on:checkedChange={(e) => onCheckedChanged(item, e)} />
-                    </ListItem>
-                {/if}
+                <svelte:component
+                    this={component}
+                    {borderRadius}
+                    color={item.color}
+                    columns="auto,*,auto"
+                    {fontSize}
+                    fontWeight={item.fontWeight || fontWeight}
+                    {iconFontSize}
+                    leftIcon={item.icon}
+                    mainCol={1}
+                    showBottomLine={showBorders}
+                    subtitle={item.subtitle}
+                    title={item.name}
+                    on:tap={(event) => onTap(item, event)}>
+                    <checkbox
+                        id="checkbox"
+                        boxType={item.boxType}
+                        checked={item.value}
+                        col={item.boxType === 'circle' ? 0 : 2}
+                        ios:marginRight={10}
+                        verticalAlignment="center"
+                        on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                </svelte:component>
             </Template>
             <Template key="righticon" let:item>
-                {#if autoSizeListItem}
-                    <ListItemAutoSize
-                        {borderRadius}
-                        color={item.color}
-                        {fontSize}
-                        {fontWeight}
-                        {iconFontSize}
-                        leftIcon={item.icon}
-                        showBottomLine={showBorders}
-                        subtitle={item.subtitle}
-                        title={item.name}
-                        on:tap={(event) => onTap(item, event)}>
-                        <IconButton col={2} text={item.rightIcon} on:tap={(event) => onRightTap(item, event)} />
-                    </ListItemAutoSize>
-                {:else}
-                    <ListItem
-                        {borderRadius}
-                        color={item.color}
-                        columns="auto,*,auto"
-                        {fontSize}
-                        {fontWeight}
-                        {iconFontSize}
-                        leftIcon={item.icon}
-                        mainCol={1}
-                        showBottomLine={showBorders}
-                        subtitle={item.subtitle}
-                        title={item.name}
-                        on:tap={(event) => onTap(item, event)}>
-                        <mdbutton class="icon-btn" col={2} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
-                    </ListItem>
-                {/if}
+                <svelte:component
+                    this={component}
+                    {borderRadius}
+                    color={item.color}
+                    columns="*,auto"
+                    {fontSize}
+                    {fontWeight}
+                    {iconFontSize}
+                    leftIcon={item.icon}
+                    showBottomLine={showBorders}
+                    subtitle={item.subtitle}
+                    title={item.name}
+                    on:tap={(event) => onTap(item, event)}>
+                    <mdbutton class="icon-btn" col={1} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
+                </svelte:component>
+            </Template>
+            <Template key="image" let:item>
+                <svelte:component
+                    this={component}
+                    {borderRadius}
+                    color={item.color}
+                    columns="*,auto"
+                    {fontSize}
+                    {fontWeight}
+                    {iconFontSize}
+                    leftIcon={item.icon}
+                    showBottomLine={showBorders}
+                    subtitle={item.subtitle}
+                    title={item.name}
+                    on:tap={(event) => onTap(item, event)}>
+                    <image col={1} height={45} src={item.image} />
+                </svelte:component>
             </Template>
             <Template let:item>
-                {#if autoSizeListItem}
-                    <ListItemAutoSize
-                        {borderRadius}
-                        color={item.color}
-                        {fontSize}
-                        {fontWeight}
-                        {iconFontSize}
-                        leftIcon={item.icon}
-                        showBottomLine={showBorders}
-                        subtitle={item.subtitle}
-                        title={item.name}
-                        on:tap={(event) => onTap(item, event)}>
-                    </ListItemAutoSize>
-                {:else}
-                    <ListItem
-                        {borderRadius}
-                        color={item.color}
-                        {fontSize}
-                        {fontWeight}
-                        {iconFontSize}
-                        leftIcon={item.icon}
-                        showBottomLine={showBorders}
-                        subtitle={item.subtitle}
-                        title={item.name}
-                        on:tap={(event) => onTap(item, event)}>
-                    </ListItem>
-                {/if}
+                <svelte:component
+                    this={component}
+                    {borderRadius}
+                    color={item.color}
+                    {fontSize}
+                    {fontWeight}
+                    {iconFontSize}
+                    leftIcon={item.icon}
+                    rightIcon={item.rightIcon}
+                    showBottomLine={showBorders}
+                    subtitle={item.subtitle}
+                    title={item.name}
+                    on:rightTap={(event) => onRightTap(item, event)}
+                    on:tap={(event) => onTap(item, event)}>
+                </svelte:component>
             </Template>
         </collectionView>
     </gridlayout>

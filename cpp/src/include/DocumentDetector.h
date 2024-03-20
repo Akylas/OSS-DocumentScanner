@@ -40,6 +40,7 @@ namespace detector {
 
         float borderSize = 10.0f;
         float cannySigmaX = 0.0f;
+        float cannyFactor = 2.0f;
         float cannyThreshold1 = 10.0f;
         float cannyThreshold2 = 20.0f;
         float morphologyAnchorSize = 4.0f;
@@ -53,13 +54,14 @@ namespace detector {
         float medianBlurValue = 9.0f;
         float bilateralFilterValue = 18.0f;
         int resizeThreshold = 500;
-        int useChannel = 0;
+        int useChannel = -1;
         int houghLinesThreshold = 0;
-        int houghLinesMinLineLength = 0;
+        int houghLinesMinLineLength = 55;
         int houghLinesMaxLineGap = 0;
         int adapThresholdBlockSize = 0; // 391
         int adapThresholdC = 0;          // 53
         int shouldNegate = 0;          // 53
+        double contoursApproxEpsilonFactor = 0.02;
         
 
     private:
@@ -81,7 +83,7 @@ namespace detector {
         //         std::vector<std::vector<cv::Point>> &cannySquares,
         //         int indice,
         //         std::vector<int> &indices);
-        void findSquares(
+        bool findSquares(
                 cv::Mat srcGray,
                 double scaledWidth,
                 double scaledHeight,

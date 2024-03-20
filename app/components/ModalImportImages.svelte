@@ -10,12 +10,16 @@
     import { lc } from '~/helpers/locale';
     import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/models/constants';
     import { navigationBarHeight } from '~/variables';
+    import PageIndicator from './common/PageIndicator.svelte';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
 
     export let items: {
-        editingImage;
+        imagePath: string;
+        imageWidth: number;
+        imageHeight: number;
+        imageRotation: number;
         quads;
         qrcode?: QRCodeData;
     }[] = [];
@@ -35,12 +39,12 @@
 
     function resetCrop() {
         const item = items[currentIndex];
-        const editingImage = item.editingImage;
+        // const editingImage = item.editingImage;
         item.quads = item.quads.map((quad) => [
             [0, 0],
-            [editingImage.width - 0, 0],
-            [editingImage.width - 0, editingImage.height - 0],
-            [0, editingImage.height - 0]
+            [item.imageWidth - 0, 0],
+            [item.imageWidth - 0, item.imageHeight - 0],
+            [0, item.imageHeight - 0]
         ]);
         pager.nativeView.refreshVisibleItems();
     }
@@ -75,7 +79,7 @@
             verticalAlignment="center"
             visibility={currentIndex < items.length - 1 ? 'visible' : 'hidden'}
             on:tap={() => changePage(1)} />
-        <pagerindicator horizontalAlignment="center" marginBottom={10} pagerViewId="pager" row={2} type="worm" verticalAlignment="bottom" />
+        <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
         <label color="white" fontSize={13} marginBottom={10} row={3} text={lc('crop_edit_doc')} textAlignment="center" textWrap={true} />
         <mdbutton class="fab" elevation={0} horizontalAlignment="center" row={4} text="mdi-check" variant="text" on:tap={onTapFinish} />
         <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={4} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />

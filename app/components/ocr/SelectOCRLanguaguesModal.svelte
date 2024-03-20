@@ -114,7 +114,7 @@
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
 <!-- <gesturerootview columns="auto" rows="auto"> -->
-<gesturerootview columns="auto">
+<gesturerootview id="setectOCRLanguage" columns="auto">
     <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} margin={margin || elevation + 2} rows="auto,340" {width}>
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} />
