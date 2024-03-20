@@ -168,7 +168,7 @@ int adapThresholdBlockSize = docDetector.adapThresholdBlockSize; // 391
 int adapThresholdC = docDetector.adapThresholdBlockSize;         // 53
 int gammaCorrection = docDetector.gammaCorrection * 10;          // 53
 int shouldNegate = docDetector.shouldNegate;                     // 53
-int useChannel = 3;                         // 53
+int useChannel = 0;                         // 53
 int contoursApproxEpsilonFactor = docDetector.contoursApproxEpsilonFactor * 1000;                         // 53
 
 int whitepaper = 0;
