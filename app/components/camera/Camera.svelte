@@ -36,6 +36,7 @@
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
         DOCUMENT_NOT_DETECTED_MARGIN,
+        IMAGE_CONTEXT_OPTIONS,
         IMG_COMPRESS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
@@ -826,6 +827,7 @@
                 bind:this={smallImageView}
                 borderColor="white"
                 col={1}
+                ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
                 colorMatrix={getColorMatrix(colorType)}
                 decodeWidth={Utils.layout.toDevicePixels(60)}
                 height={60}

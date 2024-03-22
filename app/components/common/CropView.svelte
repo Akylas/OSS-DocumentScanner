@@ -8,6 +8,7 @@
     import { loadImage, recycleImages } from '~/utils/images';
     import { IMAGE_DECODE_HEIGHT } from '~/models/constants';
     import { onDestroy } from 'svelte';
+    import RotableImageView from './RotableImageView.svelte';
     const padding = 20;
     const ZOOOM_GLASS_SIZE = 50;
     const ZOOM_IMAGE_MAX_SIZE = Math.max(Screen.mainScreen.widthDIPs, Screen.mainScreen.heightDIPs);
@@ -49,6 +50,7 @@
     $: {
         const theRotation = rotation || imageRotation || 0;
         needRotation = theRotation && theRotation % 180 !== 0;
+        DEV_LOG && console.log('theRotation', theRotation, imageRotation, needRotation);
         if (needRotation) {
             actualWidth = imageHeight;
             actualHeight = imageWidth;
@@ -314,6 +316,7 @@
     }
 </script>
 
-<canvasView bind:this={canvasView} backgroundColor="black" {padding} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} {...$$restProps}>
-    <image decodeWidth={IMAGE_DECODE_HEIGHT} src={imagePath} stretch="aspectFit" />
-</canvasView>
+<gridlayout backgroundColor="black" {...$$restProps}>
+    <RotableImageView margin={padding} src={imagePath} stretch="aspectFit" />
+    <canvasView bind:this={canvasView} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} />
+</gridlayout>

@@ -430,8 +430,10 @@
 
     async function updateImageUris() {
         await getCurrentImageView()?.updateImageUri();
-        collectionView?.nativeView.eachChildAsync((c: View) => c.getViewById<Img>('imageView')?.updateImageUri());
-        refreshCollectionView();
+        collectionView?.nativeView.eachChildAsync((c: View) => {
+            c.getViewById<Img>('imageView')?.updateImageUri();
+        });
+        // refreshCollectionView();
     }
 
     async function updateTransform(value: boolean, store: Writable<boolean>, type: string) {

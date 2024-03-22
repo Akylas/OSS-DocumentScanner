@@ -32,6 +32,13 @@ export const DEFAULT_PDF_OPTIONS = {
     draw_ocr_text: true,
     draw_ocr_overlay: false
 };
+export const IMAGE_CONTEXT_OPTIONS = {
+    originalQueryCacheType: 0,
+    originalStoreCacheType: 0,
+    imageEncodeOptions: {
+        encodeCompressionQuality: IMG_COMPRESS / 100
+    }
+};
 export const DEFAULT_PDF_OPTIONS_STRING = JSON.stringify(DEFAULT_PDF_OPTIONS);
 export const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
     ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()

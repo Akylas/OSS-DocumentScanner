@@ -22,6 +22,7 @@
     import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
     import { colors, fonts, navigationBarHeight, screenHeightDips, screenRatio, screenWidthDips } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
+    import { IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -346,7 +347,12 @@
                                 <gridlayout padding={PAGER_PAGE_PADDING}>
                                     <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)}>
                                         {#each { length: i + 1 } as _, j}
-                                            <image {...getPageImageOptions(i + 1, item, j, index)} horizontalAlignment="center" stretch="aspectFit" verticalAlignment="middle" />
+                                            <image
+                                                ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
+                                                {...getPageImageOptions(i + 1, item, j, index)}
+                                                horizontalAlignment="center"
+                                                stretch="aspectFit"
+                                                verticalAlignment="middle" />
                                         {/each}
                                     </gridlayout>
                                 </gridlayout>

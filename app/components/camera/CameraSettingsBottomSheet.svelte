@@ -15,7 +15,7 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/models/constants';
+    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -71,7 +71,6 @@
         }
     }
     async function setColorMatrixLevels(item, event) {
-
         try {
             const currentValue = 1;
             DEV_LOG && console.log('setColorMatrixLevels', currentValue, colorMatrix);

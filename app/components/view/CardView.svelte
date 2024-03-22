@@ -21,7 +21,7 @@
     import { l, lc } from '~/helpers/locale';
     import { currentRealTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO } from '~/models/constants';
+    import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { PermissionError, showError } from '~/utils/error';
@@ -643,7 +643,7 @@
             <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
-                        <image colorMatrix={qrcodeColorMatrix} sharedTransitionTag={'qrcode' + index} src={item.getImage} stretch="aspectFit" />
+                        <image ios:contextOptions={IMAGE_CONTEXT_OPTIONS} colorMatrix={qrcodeColorMatrix} sharedTransitionTag={'qrcode' + index} src={item.getImage} stretch="aspectFit" />
                         <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
                     </gridlayout>
                 </Template>
