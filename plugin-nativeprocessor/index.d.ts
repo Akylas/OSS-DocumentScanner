@@ -10,7 +10,7 @@ export interface LoadImageOptions {
     maxSize?: number;
     resizeThreshold?: number;
 }
-export interface    OCRData {
+export interface OCRData {
     text: string;
     blocks: {
         box: { x: number; y: number; width: number; height: number };

@@ -1,9 +1,11 @@
 
 #import "OpencvDocumentProcessDelegate.h"
+
+#import <QuartzCore/QuartzCore.h>
+
 #import <opencv2/opencv.hpp>
 #import <DocumentDetector.h>
 #import <DocumentOCR.h>
-#import <QuartzCore/QuartzCore.h>
 
 @implementation OpencvDocumentProcessDelegate
 
@@ -228,6 +230,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   return [self findDocumentCornersInMat:mat shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation];
 }
 
+// PRAGMA: getJSONDocumentCorners
 +(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
 {
   @try {
@@ -295,33 +298,194 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     });
   }
 }
-+(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
++(void) getJSONDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self cropDocumentSync:image quads:quads transforms:nil delegate:delegate];
+    [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate];
   });
 }
-
-+(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads transforms:(NSString*)transforms delegate:(id<OCRDelegate>)delegate options:(NSString*)options {
++(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate options:(NSString*)options
+{
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    UIImage* image = [ImageUtils.loadImageWithOptions(src, options)];
-    [self cropDocumentSync:image quads:quads transforms:nil delegate:delegate];
+    UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
+    [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate];
+  });
+}
++(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
+{
+  [self getJSONDocumentCornersFromFile:src shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate options:nil];
+}
+
+// PRAGMA: cropDocument
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat compressQuality:(CGFloat)compressQuality   {
+  @try {
+    NSError *error = nil;
+    NSArray* quadsArray = [NSJSONSerialization JSONObjectWithData:[quads dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
+    NSMutableArray* images = [NSMutableArray array];
+    NSMutableArray* jsonResult = [NSMutableArray array];
+    //  std::vector<std::vector<cv::Point>> scanPointsList;
+    cv::Mat srcBitmapMat;
+    UIImageToMat(image, srcBitmapMat);
+    
+    NSUInteger index = 0;
+    for (NSArray* quad in quadsArray) {
+      std::vector<cv::Point> points;
+      for (NSArray* point in quad) {
+        cv::Point cvpoint([[point objectAtIndex:0] intValue], [[point objectAtIndex:1] intValue]);
+        points.push_back(cvpoint);
+      };
+      cv::Point leftTop = points[0];
+      cv::Point  rightTop = points[1];
+      cv::Point rightBottom = points[2];
+      cv::Point  leftBottom = points[3];
+      int newWidth = (cv::norm(leftTop-rightTop) + cv::norm(leftBottom-rightBottom)) / 2.0f;
+      int newHeight = (cv::norm(leftTop-leftBottom) + cv::norm(rightTop-rightBottom)) / 2.0f;
+      
+      Mat dstBitmapMat;
+      dstBitmapMat = Mat::zeros(newHeight, newWidth, srcBitmapMat.type());
+      
+      std::vector<Point2f> srcTriangle;
+      std::vector<Point2f> dstTriangle;
+      
+      srcTriangle.push_back(Point2f(leftTop.x, leftTop.y));
+      srcTriangle.push_back(Point2f(rightTop.x, rightTop.y));
+      srcTriangle.push_back(Point2f(leftBottom.x, leftBottom.y));
+      srcTriangle.push_back(Point2f(rightBottom.x, rightBottom.y));
+      
+      dstTriangle.push_back(Point2f(0, 0));
+      dstTriangle.push_back(Point2f(newWidth, 0));
+      dstTriangle.push_back(Point2f(0, newHeight));
+      dstTriangle.push_back(Point2f(newWidth, newHeight));
+      
+      Mat transform = getPerspectiveTransform(srcTriangle, dstTriangle);
+      cv::warpPerspective(srcBitmapMat, dstBitmapMat, transform, dstBitmapMat.size());
+      if (transforms != nil) {
+        std::string transformsStd = std::string([transforms UTF8String]);
+        if (transformsStd.length() > 0)
+        {
+          detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd);
+        }
+      }
+      if (saveInFolder != nil) {
+        
+        NSString* imagePath = [NSString stringWithFormat:@"%@/%@", saveInFolder, fileName ?: [NSString stringWithFormat:@"cropedBitmap_%@.%@", index, compressFormat]];
+        if ([compressFormat isEqualToString:@"jpg"]) {
+          NSError *error = nil;
+          [UIImageJPEGRepresentation(MatToUIImage(dstBitmapMat), compressQuality/ 100.0) writeToFile:imagePath options:0 error:&error];
+        } else {
+          [UIImagePNGRepresentation(MatToUIImage(dstBitmapMat)) writeToFile:imagePath options:NSDataWritingAtomic error:&error];
+        }
+        if(error != nil) {
+          [delegate onComplete:nil error:error];
+          return;
+        }
+        [jsonResult addObject:[NSString stringWithFormat:@"{\"imagePath\":\"%@\",\"width\":%@,\"height\":%@}", imagePath, @(newWidth), @(newHeight)]];
+        
+      } else {
+        [images addObject:MatToUIImage(dstBitmapMat)];
+      }
+      index++;
+    };
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      if ([images count] > 0) {
+        [delegate onComplete:images error:nil];
+      } else {
+        NSString* result = [NSString stringWithFormat:@"[%@]", [jsonResult componentsJoinedByString:@","]];
+        [delegate onComplete:result error:nil];
+        
+      }
+      
+    });
+  }
+  @catch (NSException *exception) {
+    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+    
+    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:nil error:err];
+      
+    });
+  }
+}
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat   {
+  [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms saveInFolder:saveInFolder fileName:fileName compressFormat:compressFormat compressQuality:100];
+}
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName   {
+  [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms saveInFolder:saveInFolder fileName:fileName compressFormat:@"jpg"];
+}
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms   {
+  [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms saveInFolder:nil fileName:nil];
+}
+
+// PRAGMA: cropDocumentFromFile
++(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate options:(NSString*)optionsStr {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSDictionary* options = [ImageUtils toJSON:optionsStr];
+    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    NSNumber* compressQuality = [options objectForKey:@"compressQuality"] ?: @(100);
+    [self cropDocumentSync:image quads:quads delegate:delegate transforms:([options objectForKey:@"transforms"] ?: @"") saveInFolder:[options objectForKey:@"saveInFolder"] fileName:[options objectForKey:@"fileName"] compressFormat:([options objectForKey:@"compressFormat"] ?: @"jpg") compressQuality:[compressQuality floatValue] ];
   });
 }
 
-
-+(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
-  
-  [self cropDocument:image quads:quads transforms:nil delegate:delegate];
-}
-
-+(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate options:(NSString*) options {
-  
-  [self cropDocumentFromFile:src quads:quads transforms:nil delegate:delegate options:options];
-}
 +(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
   
-  [self cropDocumentFromFile:src quads:quads transforms:nil delegate:delegate options:nil];
+  [self cropDocumentFromFile:src quads:quads delegate:delegate options:nil];
+}
+
+
+// PRAGMA: cropDocument
++(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate transforms:(NSString*)transforms{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms];
+  });
+}
++(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
+  [self cropDocument:image quads:quads delegate:delegate transforms:nil];
+}
+
+
+// PRAGMA: ocrDocument
++(void)ocrDocumentSync:(UIImage*)image options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
+  @try {
+    cv::Mat srcBitmapMat;
+    UIImageToMat(image, srcBitmapMat);
+    std::optional<std::function<void(int)>> progressLambda = [&](int progress)
+    {
+      [delegate onProgress:progress];
+    };
+    
+    std::string result = detector::DocumentOCR::detectText(srcBitmapMat, std::string([options UTF8String]), progressLambda);
+    
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
+      
+    });
+  }
+  @catch (NSException *exception) {
+    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+    
+    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:nil error:err];
+      
+    });
+  }
+}
+
++(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self ocrDocumentSync:image options:options delegate:delegate];
+  });
+}
++(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
+    [self ocrDocumentSync:image options:options delegate:delegate];
+  });
 }
 
 
@@ -358,36 +522,5 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 }
 - (void)cameraView:(NSCameraView *)cameraView renderToCustomContextWithImageBuffer:(CVPixelBufferRef)imageBuffer onQueue:(dispatch_queue_t)queue {
   // we do nothing here
-}
-+(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    @try {
-      cv::Mat srcBitmapMat;
-      UIImageToMat(image, srcBitmapMat);
-      std::optional<std::function<void(int)>> progressLambda = [&](int progress)
-      {
-        [delegate onProgress:progress];
-      };
-      
-      std::string result = detector::DocumentOCR::detectText(srcBitmapMat, std::string([options UTF8String]), progressLambda);
-      
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
-        
-      });
-    }
-    @catch (NSException *exception) {
-      NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
-      
-      [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
-      [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
-      NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [delegate onComplete:nil error:err];
-        
-      });
-    }
-    
-  });
 }
 @end

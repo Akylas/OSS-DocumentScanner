@@ -1,5 +1,5 @@
 import { Color, ImageSource } from '@nativescript/core';
-import { DetectOptions, GenerateQRCodeOptions, OCRData } from '.';
+import { CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, OCRData, QRCodeData } from '.';
 import { CropView } from './CropView';
 
 @NativeClass
@@ -35,10 +35,9 @@ export async function cropDocument(editingImage: ImageSource, quads, transforms 
     return new Promise<any[]>((resolve, reject) => {
         try {
             // nImages is a NSArray
-            OpencvDocumentProcessDelegate.cropDocumentQuadsTransformsDelegate(
+            OpencvDocumentProcessDelegate.cropDocumentQuadsDelegateTransforms(
                 editingImage.ios,
                 JSON.stringify(quads),
-                transforms,
                 OCRDelegateDelegateImpl.initWithResolveReject(
                     (nImages) => {
                         const images = [];
@@ -49,7 +48,30 @@ export async function cropDocument(editingImage: ImageSource, quads, transforms 
                     },
                     reject,
                     null
-                )
+                ),
+                transforms
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+export async function cropDocumentFromFile(src: string, quads, options: CropOptions = {}) {
+    return new Promise<any[]>((resolve, reject) => {
+        try {
+            // nImages is a NSArray
+            DEV_LOG && console.log('cropDocumentFromFile', src, quads, options);
+            OpencvDocumentProcessDelegate.cropDocumentFromFileQuadsDelegateOptions(
+                src,
+                JSON.stringify(quads),
+                OCRDelegateDelegateImpl.initWithResolveReject(
+                    (result) => {
+                        resolve(result);
+                    },
+                    reject,
+                    null
+                ),
+                JSON.stringify(options)
             );
         } catch (error) {
             reject(error);
@@ -70,26 +92,90 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         }
     });
 }
-// export async function getJSONDocumentCornersAndImage(image: UIImage, processor: any, resizeThreshold = 300, imageRotation = 0): Promise<[UIImage, [number, number][][]]> {
-//     return new Promise((resolve, reject) => {
-//         try {
-//             OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(
-//                 image,
-//                 resizeThreshold,
-//                 imageRotation,
-//                 OCRDelegateDelegateImpl.initWithResolveReject(
-//                     (res) => {
-//                         resolve([image, res]);
-//                     },
-//                     reject,
-//                     null
-//                 )
-//             );
-//         } catch (error) {
-//             reject(error);
-//         }
-//     });
-// }
+export async function getJSONDocumentCornersFromFile(src: string, resizeThreshold = 300, imageRotation = 0, options?: string): Promise<[number, number][][]> {
+    return new Promise((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileShrunkImageHeightImageRotationDelegateOptions(
+                src,
+                resizeThreshold,
+                imageRotation,
+                OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, null),
+                options
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+export async function processFromFile(src: string, processes: any[], options?: any): Promise<any[]> {
+    throw new Error('not implemented');
+    // return new Promise((resolve, reject) => {
+    // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.processFromFile(
+    //     Utils.android.getApplicationContext(),
+    //     src,
+    //     JSON.stringify(processes),
+    //     new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //         onResult(e, result) {
+    //             if (e) {
+    //                 reject(e);
+    //             } else {
+    //                 resolve(result ? JSON.parse(result) : []);
+    //             }
+    //         }
+    //     }),
+    //     options ? JSON.stringify(options) : null
+    // );
+    // });
+}
+export async function getColorPalette(
+    editingImage: ImageSource,
+    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }
+): Promise<[number, number][][]> {
+    throw new Error('not implemented');
+    // return new Promise((resolve, reject) => {
+    //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
+    //         editingImage['android'] || editingImage,
+    //         new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //             onResult(e, result) {
+    //                 if (e) {
+    //                     reject(e);
+    //                 } else {
+    //                     resolve(result ? JSON.parse(result) : []);
+    //                 }
+    //             }
+    //         }),
+    //         options.resizeThreshold,
+    //         options.colorsFilterDistanceThreshold,
+    //         options.colorPalette
+    //     );
+    // });
+}
+export async function getColorPaletteFromFile(
+    src: string,
+    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 },
+    strOptions?: string
+): Promise<[number, number][][]> {
+    throw new Error('not implemented');
+    // return new Promise((resolve, reject) => {
+    // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPaletteFromFile(
+    //     Utils.android.getApplicationContext(),
+    //     src,
+    //     new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //         onResult(e, result) {
+    //             if (e) {
+    //                 reject(e);
+    //             } else {
+    //                 resolve(result ? JSON.parse(result) : []);
+    //             }
+    //         }
+    //     }),
+    //     options.resizeThreshold,
+    //     options.colorsFilterDistanceThreshold,
+    //     options.colorPalette,
+    //     strOptions
+    // );
+    // });
+}
 
 export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
     return new Promise<OCRData>((resolve, reject) => {
@@ -103,6 +189,54 @@ export async function ocrDocument(editingImage: ImageSource, options?: Partial<D
             reject(error);
         }
     });
+}
+export async function ocrDocumentFromFile(src: string, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
+    return new Promise<OCRData>((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.ocrDocumentFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, onProgress));
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+export async function detectQRCode(editingImage: ImageSource | android.graphics.Bitmap, options?: Partial<DetectQRCodeOptions>) {
+    throw new Error('not implemented');
+    // return new Promise<QRCodeData>((resolve, reject) => {
+    //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCode(
+    //         editingImage['android'] || editingImage,
+    //         new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //             onResult(e, result) {
+    //                 if (e) {
+    //                     reject(e);
+    //                 } else {
+    //                     resolve(result ? JSON.parse(result) : null);
+    //                 }
+    //             }
+    //         }),
+    //         options ? JSON.stringify(options) : ''
+    //     );
+    // });
+}
+
+export async function detectQRCodeFromFile(src: string, options?: Partial<DetectQRCodeOptions>) {
+    throw new Error('not implemented');
+    // return new Promise<QRCodeData>((resolve, reject) => {
+    //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCodeFromFile(
+    //         Utils.android.getApplicationContext(),
+    //         src,
+    //         new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //             onResult(e, result) {
+    //                 if (e) {
+    //                     reject(e);
+    //                 } else {
+    //                     resolve(result ? JSON.parse(result) : null);
+    //                 }
+    //             }
+    //         }),
+    //         options ? JSON.stringify(options) : ''
+    //     );
+    // });
 }
 
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {

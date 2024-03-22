@@ -15,23 +15,6 @@ export async function removeFolderContent(src: string, dst: string) {
 }
 
 export function getImageSize(imagePath: string) {
-    const url = NSURL.fileURLWithPath(imagePath);
-    const imageSource = CGImageSourceCreateWithURL(url, null);
-    if (imageSource == null) {
-        // Error loading image
-        return null;
-    }
-
-    const options = NSDictionary.dictionaryWithObjectForKey(false, kCGImageSourceShouldCache);
-    const imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, options);
-    let result;
-    if (imageProperties) {
-        const width = CFDictionaryGetValue(imageProperties, kCGImagePropertyPixelWidth);
-        const height = CFDictionaryGetValue(imageProperties, kCGImagePropertyPixelHeight);
-        result = { width, height, rotation: 0 };
-        DEV_LOG && console.log('getImageSize', width, height);
-        CFRelease(imageProperties);
-    }
-    CFRelease(imageSource);
-    return result;
+    const size = ImageUtils.getImageSize(imagePath);
+    return { width: size.objectForKey('width'), height: size.objectForKey('height'), rotation: size.objectForKey('rotation') };
 }

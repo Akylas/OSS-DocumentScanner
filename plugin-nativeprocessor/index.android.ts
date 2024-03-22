@@ -277,9 +277,9 @@ export async function generateQRCodeImage(text: string, format: string, width: n
     });
 }
 
-export function generateQRCodeImageSync(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
-    com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSync(text, format, width, height, options ? JSON.stringify(options) : '');
-}
+// export function generateQRCodeImageSync(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
+//     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSync(text, format, width, height, options ? JSON.stringify(options) : '');
+// }
 
 export function createAutoScanHandler(cropView: CropView, block: (result) => void): any {
     const AutoScanHandler = com.akylas.documentscanner.AutoScanHandler;
