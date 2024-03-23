@@ -756,7 +756,7 @@ constructor(
                 } else {
                     callback.onResult(null, jsonResult.toString())
                 }
-            } catch (e: Exception) {
+            } catch (e: Exception) { 
                 callback.onResult(e, null)
             }
         }
