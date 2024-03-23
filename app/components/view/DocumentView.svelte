@@ -5,7 +5,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout, View } from '@nativescript/core';
+    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout, TouchGestureEventData, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -226,9 +226,9 @@
         return selected;
     }
 
-    function startDragging(item: Item) {
+    function startDragging(item: Item, event) {
         const index = items.findIndex((p) => p.page === item.page);
-        collectionView?.nativeElement.startDragging(index);
+        collectionView?.nativeElement.startDragging(index, event.getActivePointers()[0]);
     }
     function onItemLongPress(item: Item, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
@@ -254,7 +254,7 @@
 
         if (Math.abs(extraData.translationX) > 30 || Math.abs(extraData.translationY) > 30) {
             event.handler?.cancel();
-            startDragging(item);
+            startDragging(item, event);
         }
     }
     async function onItemTap(item: Item) {
@@ -612,7 +612,7 @@
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
                     on:tap={() => onItemTap(item)}
-                    on:pan={(e) => onPan(item, e)}
+                    android:on:pan={(e) => onPan(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
                     <RotableImageView
@@ -629,7 +629,7 @@
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
+                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={(event) => startDragging(item, event)} />
                 </gridlayout>
             </Template>
         </collectionview>
