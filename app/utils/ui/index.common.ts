@@ -63,7 +63,7 @@ import { showError } from '~/utils/error';
 import { loadImage, recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
 import { showToast } from '~/utils/ui';
-import { colors, fontScale } from '~/variables';
+import { colors, fontScale, screenWidthDips } from '~/variables';
 import { getImageSize } from '../utils';
 import { navigate } from '../svelte/ui';
 
@@ -804,6 +804,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         await showLoading(l('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
+                        DEV_LOG && console.log('opening pdf', filePath);
                         openFile(filePath);
                         break;
                     }
@@ -812,6 +813,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         await showLoading(l('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
+                        DEV_LOG && console.log('sharing pdf', filePath);
                         share({ file: filePath }, { mimetype: 'application/pdf' });
                         break;
                     }
