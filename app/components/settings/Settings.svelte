@@ -540,6 +540,12 @@
         }
     }
     let checkboxTapTimer;
+    function clearCheckboxTimer() {
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+    }
     async function onRightIconTap(item, event) {
         try {
             const needsUpdate = await item.onRightIconTap?.(item, event);
@@ -555,6 +561,7 @@
             if (item.type === 'checkbox' || item.type === 'switch') {
                 // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
                 const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+                clearCheckboxTimer();
                 checkboxTapTimer = setTimeout(() => {
                     checkboxView.checked = !checkboxView.checked;
                 }, 10);
@@ -808,7 +815,7 @@
 
     function selectTemplate(item, index, items) {
         if (item.type) {
-            if (item.type === 'prompt') {
+            if (item.type === 'prompt' || item.type === 'slider') {
                 return 'default';
             }
             return item.type;
@@ -825,10 +832,7 @@
         }
         const value = event.value;
         item.value = value;
-        if (checkboxTapTimer) {
-            clearTimeout(checkboxTapTimer);
-            checkboxTapTimer = null;
-        }
+        clearCheckboxTimer();
         DEV_LOG && console.log('onCheckBox', item.id, value);
         try {
             switch (item.id) {

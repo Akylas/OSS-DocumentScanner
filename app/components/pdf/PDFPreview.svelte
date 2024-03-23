@@ -23,6 +23,7 @@
     import { colors, fonts, navigationBarHeight, screenHeightDips, screenRatio, screenWidthDips } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
     import { IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -78,17 +79,16 @@
     function refresh() {
         pdfCanvas.updatePages(pages);
         items = new ObservableArray(pdfCanvas.items);
-        DEV_LOG && console.log('refresh');
     }
     function requestPagesRedraw() {
         pager?.nativeElement?.refreshVisibleItems();
-        pager?.nativeElement?.eachChild((view) => {
-            if (view instanceof ContentView) {
-                view = view.content;
-            }
-            (view as CanvasView)?.requestLayout();
-            return true;
-        });
+        // pager?.nativeElement?.eachChild((view) => {
+        //     if (view instanceof ContentView) {
+        //         view = view.content;
+        //     }
+        //     (view as CanvasView)?.requestLayout();
+        //     return true;
+        // });
     }
     function drawPDFPage(item: PDFCanvasItem, { canvas }: { canvas: Canvas }) {
         pdfCanvas.canvas = canvas;
@@ -195,7 +195,8 @@
 
     function updateOption(option: string, value, fullRefresh = false) {
         try {
-            DEV_LOG && console.log('updateOption', option, value);
+            clearCheckboxTimer();
+            // DEV_LOG && console.log('updateOption', option, value, fullRefresh);
             optionsStore.update((state) => {
                 state[option] = value;
                 return state;
@@ -309,6 +310,21 @@
         showSettings({
             subSettingsOptions: 'pdf'
         });
+    }
+
+    let checkboxTapTimer;
+    function clearCheckboxTimer() {
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+    }
+    function tapForCheckBox(event) {
+        const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+        clearCheckboxTimer();
+        checkboxTapTimer = setTimeout(() => {
+            checkboxView.checked = !checkboxView.checked;
+        }, 10);
     }
 </script>
 
@@ -428,15 +444,18 @@
                     width={tWidth}
                     on:checkedChange={(e) => updateOption('reduce_image_size', e.value)}
                     ios:margin={14} /> -->
-                    <checkbox
-                        checked={draw_ocr_text}
-                        height={tHeight}
-                        margin={tMargin}
-                        text={lc('draw_ocr_text')}
-                        verticalAlignment="center"
-                        width={tWidth}
-                        on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
-                        ios:margin={14} />
+                    <stacklayout orientation="horizontal" width={tWidth}>
+                        <checkbox
+                            id="checkbox"
+                            checked={draw_ocr_text}
+                            height={tHeight}
+                            margin={tMargin}
+                            verticalAlignment="center"
+                            on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
+                            ios:margin={14} />
+                        <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} on:tap={tapForCheckBox} />
+                    </stacklayout>
+
                     <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} text="mdi-chevron-up" textAlignment="center" width="100%" on:tap={() => drawer?.close()} />
                 </wraplayout>
             </drawer>

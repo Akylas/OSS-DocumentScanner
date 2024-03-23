@@ -205,15 +205,19 @@
     // }
 
     let checkboxTapTimer;
-    function onCheckedChanged(item, event) {
+    function clearCheckboxTimer() {
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
             checkboxTapTimer = null;
         }
+    }
+    function onCheckedChanged(item, event) {
+        clearCheckboxTimer();
         addOrRemoveTransform(item.id);
     }
     function onTransformTap(item, event) {
         const checkboxView: CheckBox = (event.object as View).getViewById('checkbox');
+        clearCheckboxTimer();
         checkboxTapTimer = setTimeout(() => {
             checkboxView.checked = !checkboxView.checked;
         }, 10);

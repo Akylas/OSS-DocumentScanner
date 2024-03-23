@@ -60,7 +60,12 @@
     }
 
     let checkboxTapTimer;
-
+    function clearCheckboxTimer() {
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+    }
     async function onRightTap(item: OptionType, event) {
         onRightIconTap?.(item, event);
     }
@@ -84,6 +89,7 @@
         } else if (item.type === 'checkbox') {
             // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
             const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+            clearCheckboxTimer();
             checkboxTapTimer = setTimeout(() => {
                 checkboxView.checked = !checkboxView.checked;
             }, 10);
@@ -92,10 +98,7 @@
         }
     }
     function onCheckedChanged(item, event) {
-        if (checkboxTapTimer) {
-            clearTimeout(checkboxTapTimer);
-            checkboxTapTimer = null;
-        }
+        clearCheckboxTimer();
         onCheckBox?.(item, event.value, event);
     }
     onDestroy(() => {
