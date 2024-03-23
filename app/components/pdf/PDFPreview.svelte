@@ -217,7 +217,7 @@
                 vertPos: VerticalPosition.BELOW,
                 value: pdfCanvas.options[option],
                 onChange(value) {
-                    updateOption(option, value, fullRefresh);
+                    updateOption(option, Math.round(value), fullRefresh);
                 }
             });
         } catch (error) {

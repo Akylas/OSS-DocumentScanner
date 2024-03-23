@@ -1245,7 +1245,7 @@ export async function showSliderPopover({
     horizPos = HorizontalPosition.ALIGN_LEFT,
     anchor,
     vertPos = VerticalPosition.CENTER,
-    width = '80%',
+    width = 0.8 * screenWidthDips,
     value,
     onChange,
     title,

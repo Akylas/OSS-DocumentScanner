@@ -7,9 +7,10 @@
     // technique for only specific properties to get updated on store change
     $: ({ colorSurfaceContainer } = $colors);
     export let backgroundColor = colorSurfaceContainer;
+    export let width = '*';
 </script>
 
-<gesturerootview columns="auto" rows="auto">
+<gesturerootview columns={`${width}`} rows="auto">
     <gridlayout {backgroundColor} borderRadius={10} elevation={4} margin={4} padding="0 10 0 10" {...$$restProps}>
         <slot />
     </gridlayout>
