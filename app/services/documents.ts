@@ -389,6 +389,10 @@ export class DocumentsService extends Observable {
         let rootDataFolder;
         if (__ANDROID__) {
             rootDataFolder = ApplicationSettings.getString('root_data_folder');
+            if (!Folder.exists(rootDataFolder)) {
+                rootDataFolder = null;
+                ApplicationSettings.remove('root_data_folder');
+            }
             DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
             if (!rootDataFolder) {
                 rootDataFolder = knownFolders.externalDocuments().path;

@@ -1,6 +1,6 @@
 import { CustomError } from '~/utils/error';
 import type { WorkerEventType } from '~/workers/BaseWorker';
-import { PDFExportOptions } from './PDFCanvas';
+import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { Screen, Utils, knownFolders } from '@nativescript/core';
 import { getColorMatrix } from '~/utils/matrix';
 
@@ -16,12 +16,13 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
     if (__ANDROID__) {
         const start = Date.now();
         return new Promise((resolve, reject) => {
+            const pdfCanvas = new PDFCanvas();
             pages.forEach((page) => {
                 if (page.colorType && !page.colorMatrix) {
                     page.colorMatrix = getColorMatrix(page.colorType);
                 }
             });
-            const options = JSON.stringify({ ...this.options, text_scale: Screen.mainScreen.scale * 1.4, pages });
+            const options = JSON.stringify({ ...pdfCanvas.options, text_scale: Screen.mainScreen.scale * 1.4, pages });
             DEV_LOG && console.log('exportPDFAsync', folder, filename, compress, options);
             com.akylas.documentscanner.PDFUtils.Companion.generatePDFASync(
                 Utils.android.getApplicationContext(),

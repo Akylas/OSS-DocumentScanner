@@ -38,10 +38,15 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
+import kotlin.concurrent.thread
+
 
 class PDFUtils {
-
+    interface FunctionCallback {
+        fun onResult(e: Exception?, result: Any?)
+    }
     class PDFLoadImageOptions {
+
         var imageSizeThreshold: Int = 0
         var imageScale: Double = 1.0
         var quality: Int = 100
@@ -185,9 +190,16 @@ class PDFUtils {
         private fun drawOCRData(pdfDoc:PdfDocument, page: JSONObject, posX:Float, posY:Float, imageScale: Float, toDrawHeight: Float, textScale: Float, debug: Boolean) {
             if (page.has("ocrData")) {
                 val ocrData = page.getJSONObject("ocrData")
+//                val canvas =  PdfCanvas(pdfDoc.lastPage).setExtGState(PdfExtGState().setFillOpacity(if (debug) 1.0F else 0.01F)).setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.INVISIBLE)
                 val imageWidth = ocrData.getDouble("imageWidth").toFloat()
                 val imageHeight = ocrData.getDouble("imageHeight").toFloat()
                 val blocks = ocrData.getJSONArray("blocks")
+//                canvas.rectangle(Rectangle(posX ,
+//                    posY,
+//                    imageWidth * imageScale,
+//                    imageHeight * imageScale
+//                )).setFillColor(ColorConstants.BLUE)
+//                    .fill();
                 for (i in 0..<blocks.length()) {
                     val block = blocks.getJSONObject(i)
                     var box = block.getJSONObject("box")
@@ -198,6 +210,9 @@ class PDFUtils {
                         width * imageScale,
                         height * imageScale
                     )
+//                    canvas.rectangle(rect)
+//                        .stroke();
+
                     Canvas(pdfDoc.lastPage, rect).setTextRenderingMode(if (debug) PdfCanvasConstants.TextRenderingMode.FILL else PdfCanvasConstants.TextRenderingMode.INVISIBLE).setFontColor(if (debug) ColorConstants.RED else ColorConstants.WHITE)
                         .setTextAlignment(TextAlignment.LEFT)
                         .setFixedPosition(posX, posY, width * imageScale)
@@ -219,6 +234,7 @@ class PDFUtils {
             val jsonOps = JSONObject(options)
             val compressionLevel = jsonOps.optInt("compressionLevel", 9)
             val paperSize = jsonOps.optString("paper_size", "full")
+//            var paperSize = "full"
             val orientation = jsonOps.optString("orientation", "portrait")
             val color = jsonOps.optString("color", "color")
             val blackAndWhite = color == "black_white"
@@ -228,6 +244,7 @@ class PDFUtils {
             val pagePadding = jsonOps.optInt("page_padding", 0).toFloat()
             val textScale = jsonOps.optDouble("text_scale", 3.0).toFloat()
             val imageScale = jsonOps.optDouble("image_page_scale", 2.0).toFloat()
+//            var pagePadding = 100F
             var itemsPerPage = jsonOps.optInt("items_per_page", 1)
             val loadImageOptions = PDFLoadImageOptions()
             loadImageOptions.imageScale = jsonOps.optDouble("imageLoadScale", 1.0)
@@ -239,6 +256,15 @@ class PDFUtils {
             if(paperSize == "full") {
                 itemsPerPage = 1
             }
+//            when (paperSize) {
+//                "full" -> {
+//                    pageSize = PageSize(page.optInt("width", 0).toFloat(), page.optInt("height", 0).toFloat())
+//                    itemsPerPage = 1
+//                }
+//                "a5" -> if (isLandscape) PageSize.A5.rotate() else PageSize.A5
+//                "a3" -> if (isLandscape) PageSize.A3.rotate() else PageSize.A3
+//                "a4" -> if (isLandscape) PageSize.A4.rotate() else PageSize.A4
+//            }
 
             val writer = PdfWriter(generateFilePath, WriterProperties().setCompressionLevel(compressionLevel).setFullCompressionMode(true).setPdfVersion(
                 PdfVersion.PDF_1_4
@@ -285,8 +311,8 @@ class PDFUtils {
                 val items = list.chunked(itemsPerPage)
                 items.forEachIndexed { idx, pageItems ->
                     val nbItems = pageItems.size
-                    var columns = if (itemsPerPage > 2) 2 else 1
-                    var rows = if (itemsPerPage > 2) ceil(itemsPerPage / 2F).toInt() else itemsPerPage
+                    var columns = if (nbItems > 2) 2 else 1
+                    var rows = if (nbItems > 2) ceil(nbItems / 2F).toInt() else nbItems
                     if (orientation == "landscape") {
                         val temp = columns
                         columns = rows
@@ -311,7 +337,8 @@ class PDFUtils {
                         pdfDoc.addNewPage(pageSize)
                     }
                     for (i in rows - 1 downTo 0) {
-                        for (j in 0..<columns) {
+//                        for (i in 0..<rows) {
+                            for (j in 0..<columns) {
                             val pageIndex = i * shared + j
                             if (pageIndex >= nbItems) {
 
@@ -325,6 +352,13 @@ class PDFUtils {
                             val imageWidth = page.getDouble("width")
                             val imageHeight = page.getDouble("height")
                             val colorMatrix = if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString("colorMatrix", null)
+
+//
+//                            if (imageRotation % 180 !== 0) {
+//                                val temp = imageWidth
+//                                imageWidth = imageHeight
+//                                imageHeight = temp
+//                            }
                             val pageRatio = if (imageRotation % 180 !== 0) imageHeight/ imageWidth else imageWidth / imageHeight
                             var itemAvailableWidth = widthPerColumn - 2 * pagePadding
                             val itemAvailableHeight = heightPerRow - 2 * pagePadding
@@ -397,6 +431,16 @@ class PDFUtils {
                 return outfile.uri.toString()
             }
             return destinationFilePath
+        }
+        fun generatePDFASync(context: Context, destFolder: String, fileName: String,  options: String, callback: FunctionCallback) {
+            thread(start = true) {
+                try {
+                    var result = generatePDF(context, destFolder, fileName,  options)
+                    callback.onResult(null, result)
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
         }
     }
 }

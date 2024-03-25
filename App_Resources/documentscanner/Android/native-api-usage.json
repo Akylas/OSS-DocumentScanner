@@ -9,6 +9,7 @@
         "com.akylas.documentscanner:PDFUtils.Companion",
         "com.akylas.documentscanner.utils:ImageUtil",
         "com.akylas.documentscanner.utils:ImageUtil.Companion",
+        "com.akylas.documentscanner:PDFUtils.FunctionCallback",
         "androidx.appcompat.app:AppCompatDelegate",
         "androidx.core.os:LocaleListCompat",
         "java.nio.file:Files",
