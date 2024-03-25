@@ -391,7 +391,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                     new Promise(async (resolve, reject) => {
                         try {
                             const imageSize = getImageSize(sourceImagePath);
-                            DEV_LOG && console.log('imageSize', imageSize);
+                            // DEV_LOG && console.log('imageSize', imageSize);
 
                             const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                             const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
@@ -399,7 +399,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                             const imageRotation = imageSize.rotation;
                             // TODO: detect JSON and QRCode in one go
                             const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, previewResizeThreshold * 1.5, 0) : undefined;
-                            DEV_LOG && console.log('[importAndScanImageFromUris] quads', sourceImagePath, quads);
+                            // DEV_LOG && console.log('[importAndScanImageFromUris] quads', sourceImagePath, quads);
                             let qrcode;
                             if (CARD_APP) {
                                 // try to get the qrcode to show it in the import screen
