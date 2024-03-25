@@ -718,7 +718,7 @@ export async function showPopoverMenu<T = any>({
     return result;
 }
 
-export async function showSettings(props) {
+export async function showSettings(props?) {
     const Settings = (await import('~/components/settings/Settings.svelte')).default;
     navigate({
         page: Settings,

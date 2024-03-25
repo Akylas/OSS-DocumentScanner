@@ -800,7 +800,7 @@
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
             {#if startOnCam}
                 <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-image-plus" on:tap={showDocumentsList} />
-                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" on:tap={showSettings} />
+                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" on:tap={() => showSettings()} />
             {/if}
         </CActionBar>
 

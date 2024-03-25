@@ -997,7 +997,7 @@
                 on:longPress={showSyncSettings} />
 
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
-            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={showSettings} />
+            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
         </CActionBar>
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ maxLines: 1, autoFontSize: true }}>
