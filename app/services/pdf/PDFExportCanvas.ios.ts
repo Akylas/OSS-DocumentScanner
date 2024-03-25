@@ -1,5 +1,5 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
-import { Folder, knownFolders } from '@nativescript/core';
+import { Folder, Screen, knownFolders } from '@nativescript/core';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
 import { PDFExportOptions } from './PDFCanvas';
 
@@ -53,6 +53,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         // const pdfData = NSMutableData.alloc().init();
         // const canvas = new Canvas(0, 0);
         UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);
+
         const items = this.items;
         for (let index = 0; index < items.length; index++) {
             const pages = items[index].pages;
@@ -73,6 +74,14 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
                 case 'full':
                     pageWidth = pages[0].width;
                     pageHeight = pages[0].height;
+                    if (options.imageSizeThreshold) {
+                        const minSize = Math.max(pageWidth, pageHeight);
+                        if (minSize > options.imageSizeThreshold) {
+                            const resizeScale = (1.0 * minSize) / options.imageSizeThreshold;
+                            pageWidth = pageWidth / resizeScale;
+                            pageHeight = pageHeight / resizeScale;
+                        }
+                    }
                     break;
 
                 default:
@@ -87,10 +96,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
             UIGraphicsBeginPDFPageWithInfo(pageRect, null);
             const context = UIGraphicsGetCurrentContext();
             this.canvas.setContext(context, pageWidth, pageHeight);
-            // const scale = __IOS_Screen.mainScreen.scale;
-            // this.canvas.scale(scale, scale);
-            await this.loadImagesForPage(index);
-            this.drawPages(index, items[index].pages, false, true);
+            await this.drawPages(index, items[index].pages);
         }
         UIGraphicsEndPDFContext();
 
@@ -99,7 +105,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         }
         const pdfFile = Folder.fromPath(folder).getFile(filename);
         await pdfFile.write(pdfData);
-
+        DEV_LOG && console.log('export PDF done', filename, Date.now() - start, 'ms');
         return pdfFile.path;
         // }
     }

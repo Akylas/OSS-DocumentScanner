@@ -7,8 +7,6 @@ import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/models/consta
 
 export interface PDFExportBaseOptions {
     reduce_image_size: boolean;
-    pagerPagePaddingHorizontal: number;
-    pagerPagePaddingVertical: number;
     paper_size: string;
     color: string;
     orientation: string;
@@ -16,6 +14,7 @@ export interface PDFExportBaseOptions {
     imageLoadScale: number;
     imageSizeThreshold: number;
     image_page_scale: number;
+    jpegQuality: number;
     items_per_page: number;
     dpi: number;
     draw_ocr_text: boolean;
@@ -66,7 +65,7 @@ export interface PDFCanvasItem {
 
 export default class PDFCanvas {
     canvas: Canvas;
-    imagesCache: { [k: string]: ImageSource } = {};
+    // imagesCache: { [k: string]: ImageSource } = {};
     items: PDFCanvasItem[];
     updatePages(pages: OCRPage[]) {
         let { items_per_page } = this.options;
@@ -95,30 +94,30 @@ export default class PDFCanvas {
 
     options: PDFExportBaseOptions = getPDFDefaultExportOptions();
 
-    async loadImagesForPage(pdfPageIndex) {
-        const item = this.items[pdfPageIndex];
-        for (let index = 0; index < item.pages.length; index++) {
-            const src = item.pages[index].imagePath;
-            if (!this.imagesCache[src]) {
-                this.imagesCache[src] = await loadImage(src);
-            }
-        }
-    }
-    needsLoadImage(pdfPageIndex, item?) {
-        item = item || this.items[pdfPageIndex];
-        for (let index = 0; index < item.pages.length; index++) {
-            const src = item.pages[index].imagePath;
-            if (!this.imagesCache[src]) {
-                return true;
-            }
-        }
-        return false;
-    }
-    draw() {
-        this.items.forEach((item, index) => {
-            this.drawPages(index, item.pages);
-        });
-    }
+    // async loadImagesForPage(pdfPageIndex) {
+    //     const item = this.items[pdfPageIndex];
+    //     for (let index = 0; index < item.pages.length; index++) {
+    //         const src = item.pages[index].imagePath;
+    //         if (!this.imagesCache[src]) {
+    //             this.imagesCache[src] = await loadImage(src);
+    //         }
+    //     }
+    // }
+    // needsLoadImage(pdfPageIndex, item?) {
+    //     item = item || this.items[pdfPageIndex];
+    //     for (let index = 0; index < item.pages.length; index++) {
+    //         const src = item.pages[index].imagePath;
+    //         if (!this.imagesCache[src]) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+    // draw() {
+    //     this.items.forEach((item, index) => {
+    //         this.drawPages(index, item.pages);
+    //     });
+    // }
     updateBitmapPaint(page: OCRPage) {
         if (this.options.color === 'black_white') {
             if (!bitmapPaint) {
@@ -139,85 +138,75 @@ export default class PDFCanvas {
             bitmapPaint.setColorFilter(null);
         }
     }
-    drawImageOnCanvas(canvas: Canvas, page: OCRPage, toDrawWidth, toDrawHeight, forExport) {
-        const dpi = this.options.dpi;
+    async drawImageOnCanvas(canvas: Canvas, page: OCRPage, toDrawWidth, toDrawHeight) {
+        const options = this.options;
+
+        const textScale = Screen.mainScreen.scale * 1.4;
         const src = page.imagePath;
         let imageWidth = page.width;
         let imageHeight = page.height;
+        let reqWidth = toDrawWidth;
+        let reqHeight = toDrawHeight;
+
         if (page.rotation % 180 !== 0) {
             imageWidth = page.height;
             imageHeight = page.width;
+            const temp = reqWidth;
+            reqWidth = reqHeight;
+            reqHeight = temp;
         }
         // DEV_LOG && console.log('drawImageOnCanvas', toDrawWidth, toDrawHeight, imageWidth, imageHeight, this.imagesCache[src]);
-        if (forExport && this.options.reduce_image_size) {
-            // size is in PT we need to transform to pixels to reduce file size
-            const canvasWidth = ptToPixel(Utils.layout.toDevicePixels(toDrawWidth), dpi);
-            const canvasHeight = ptToPixel(Utils.layout.toDevicePixels(toDrawHeight), dpi);
-            const pageCanvas = new Canvas(canvasWidth, canvasHeight);
-            this.updateBitmapPaint(page);
-            const resizeImageScale = canvasWidth / imageWidth;
-            pageCanvas.scale(resizeImageScale, resizeImageScale, 0, 0);
-            if (page.rotation !== 0) {
-                const ddx = Math.min(imageWidth, imageHeight) / 2;
-                pageCanvas.rotate(page.rotation, ddx, ddx);
-            }
-            pageCanvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
-            const resizedImage = pageCanvas.getImage();
+        // if (forExport && this.options.reduce_image_size) {
+        // size is in PT we need to transform to pixels to reduce file size
+        // const canvasWidth = ptToPixel(Utils.layout.toDevicePixels(toDrawWidth), dpi);
+        // const canvasHeight = ptToPixel(Utils.layout.toDevicePixels(toDrawHeight), dpi);
 
-            const imageScale = toDrawWidth / canvasWidth;
-            // now we draw the resized and transformed image
-            canvas.save();
-            canvas.scale(imageScale, imageScale, 0, 0);
-            canvas.drawBitmap(resizedImage, 0, 0, bitmapPaint);
-            canvas.restore();
-            recycleImages(resizedImage);
-        } else {
-            canvas.save();
-            if (page.rotation !== 0) {
-                const ddx = Math.min(toDrawWidth, toDrawHeight) / 2;
-                canvas.rotate(page.rotation, ddx, ddx);
-            }
-            const imageScale = toDrawWidth / imageWidth;
-            canvas.scale(imageScale, imageScale, 0, 0);
-            this.updateBitmapPaint(page);
+        const image = await loadImage(src, {
+            reqWidth,
+            reqHeight,
+            imageWidth,
+            imageHeight,
+            jpegQuality: options.jpegQuality,
+            imageSizeThreshold: options.imageSizeThreshold,
+            imageScale: options.paper_size === 'full' ? 1 : options.imageLoadScale
+        });
+        DEV_LOG && console.log('loadImage done', toDrawWidth, toDrawHeight, imageWidth, imageHeight, reqWidth, reqHeight, image.width, image.height);
 
-            canvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
-            canvas.restore();
-        }
+        // const imageScale = 1 / imageLoadScale;
+        const imageScale = toDrawWidth / image.width;
+        // now we draw the resized and transformed image
+        canvas.save();
+        canvas.scale(imageScale, imageScale, 0, 0);
+        canvas.drawBitmap(image, 0, 0, bitmapPaint);
+        canvas.restore();
+        recycleImages(image);
+
         if (this.options.draw_ocr_text && page.ocrData) {
             const ocrScale = toDrawWidth / page.ocrData.imageWidth;
             canvas.scale(ocrScale, ocrScale, 0, 0);
-            const drawOverlay = this.options.draw_ocr_overlay && !forExport;
-            textPaint.color = drawOverlay ? 'white' : !PRODUCTION && DEV_LOG ? '#ff000088' : '#ffffff01';
+            textPaint.color = !PRODUCTION && DEV_LOG ? '#ff000088' : '#ffffff01';
             page.ocrData.blocks.forEach((block) => {
                 canvas.save();
                 // TODO: understand why that kind of scale is necessary
-                textPaint.textSize = (block.fontSize || 16) * Screen.mainScreen.scale * (forExport ? 1.4 : 1.8);
+                textPaint.textSize = (block.fontSize || 16) * textScale;
                 const staticLayout = new StaticLayout(block.text, textPaint, block.box.width, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                if (drawOverlay) {
-                    canvas.drawRect(block.box.x, block.box.y, block.box.x + block.box.width, block.box.y + block.box.height, textOverlayPaint);
-                }
                 canvas.translate(block.box.x, block.box.y);
                 staticLayout.draw(canvas);
                 canvas.restore();
             });
         }
     }
-    drawPages(pdfPageIndex: number, pages: OCRPage[], isLoading = false, forExport = false) {
-        const { pagerPagePaddingHorizontal, pagerPagePaddingVertical, paper_size, dpi, page_padding, orientation, items_per_page } = this.options;
+    async drawPages(pdfPageIndex: number, pages: OCRPage[]) {
+        const { imageSizeThreshold, paper_size, dpi, page_padding, orientation, items_per_page } = this.options;
         const pagePadding = ptToPixel(page_padding, dpi);
         const canvas = this.canvas;
-        const w = canvas.getWidth() - 2 * (forExport ? 1 : pagerPagePaddingHorizontal);
-        const h = canvas.getHeight() - 2 * (forExport ? 1 : pagerPagePaddingVertical);
+        const w = canvas.getWidth() - 2;
+        const h = canvas.getHeight() - 2;
         // DEV_LOG && console.log('drawPages', pages.length, this.options, canvas.getWidth(), canvas.getHeight(), w, h);
 
-        let dx = forExport ? 0 : pagerPagePaddingHorizontal;
-        let dy = forExport ? 0 : pagerPagePaddingVertical;
         const nbItems = pages.length;
         const srcs = pages.map((page) => page.imagePath);
         // console.log('drawPDFPage', w, h, nbItems, srcs);
-        isLoading = isLoading || srcs.some((src) => !this.imagesCache[src]);
-        canvas.translate(dx, dy);
         const canvasRatio = w / h;
         if (paper_size === 'full') {
             // we only support 1 item per page for this
@@ -230,32 +219,34 @@ export default class PDFCanvas {
             }
             imageWidth *= page.scale;
             imageHeight *= page.scale;
-            const pageRatio = imageWidth / imageHeight;
+            if (imageSizeThreshold) {
+                const minSize = Math.max(imageWidth, imageHeight);
+                if (minSize > imageSizeThreshold) {
+                    const resizeScale = (1.0 * minSize) / imageSizeThreshold;
+                    imageWidth = imageWidth / resizeScale;
+                    imageHeight = imageHeight / resizeScale;
+                }
+            }
+            // const pageRatio = imageWidth / imageHeight;
 
             // const src = page.imagePath;
-            let toDrawWidth;
-            let toDrawHeight;
-            let scale;
-            if (pageRatio > canvasRatio) {
-                toDrawWidth = w;
-                toDrawHeight = w / pageRatio;
-                scale = toDrawWidth / imageWidth;
-            } else {
-                toDrawWidth = h * pageRatio;
-                toDrawHeight = h;
-                scale = toDrawHeight / imageHeight;
-            }
+            // let toDrawWidth;
+            // let toDrawHeight;
+            // let scale;
+            // if (pageRatio > canvasRatio) {
+            //     toDrawWidth = w;
+            //     toDrawHeight = w / pageRatio;
+            //     scale = toDrawWidth / imageWidth;
+            // } else {
+            //     toDrawWidth = h * pageRatio;
+            //     toDrawHeight = h;
+            //     scale = toDrawHeight / imageHeight;
+            // }
 
-            const pageDx = w / 2 - toDrawWidth / 2;
-            const pageDy = h / 2 - toDrawHeight / 2;
-            canvas.translate(pageDx, pageDy);
-            if (!forExport) {
-                canvas.drawRect(0, 0, toDrawWidth, toDrawHeight, bgPaint);
-            }
+            // const pageDx = w / 2 - toDrawWidth / 2;
+            // const pageDy = h / 2 - toDrawHeight / 2;
+            // canvas.translate(pageDx, pageDy);
 
-            if (isLoading) {
-                return;
-            }
             // if (page.rotation !== 0) {
             //     const ddx = Math.min(toDrawWidth, toDrawHeight) / 2;
             //     canvas.rotate(page.rotation, ddx, ddx);
@@ -271,8 +262,11 @@ export default class PDFCanvas {
             //     bitmapPaint.setColorFilter(null);
             // }
             // canvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
-            this.drawImageOnCanvas(canvas, page, toDrawWidth, toDrawHeight, forExport);
+            await this.drawImageOnCanvas(canvas, page, imageWidth, imageHeight);
         } else {
+            let dx = 0;
+            let dy = 0;
+            canvas.translate(dx, dy);
             let pageRatio = 1;
             switch (paper_size) {
                 case 'a4':
@@ -299,12 +293,7 @@ export default class PDFCanvas {
             const pageDx = w / 2 - availableWidth / 2;
             const pageDy = h / 2 - availableHeight / 2;
             canvas.translate(pageDx, pageDy);
-            if (!forExport) {
-                canvas.drawRect(0, 0, availableWidth, availableHeight, bgPaint);
-            }
-            if (isLoading) {
-                return;
-            }
+
             // compute space diivision
             let columns = nbItems > 2 ? 2 : 1;
             let rows = nbItems > 2 ? Math.ceil(nbItems / 2) : nbItems;
@@ -355,23 +344,7 @@ export default class PDFCanvas {
                     // canvas.drawRect(0, 0, itemAvailableWidth, itemAvailableHeight, bgPaint);
                     canvas.translate(itemAvailableWidth / 2 - toDrawWidth / 2, itemAvailableHeight / 2 - toDrawHeight / 2);
 
-                    // canvas.drawRect(0, 0, toDrawWidth, toDrawHeight, bgPaint);
-                    // if (page.rotation !== 0) {
-                    //     const ddx = Math.min(toDrawWidth, toDrawHeight) / 2;
-                    //     canvas.rotate(page.rotation, ddx, ddx);
-                    // }
-                    // const imageScale = toDrawWidth / imageWidth;
-                    // canvas.scale(imageScale, imageScale, 0, 0);
-                    // if (page.colorType || page.colorMatrix) {
-                    //     if (!bitmapPaint) {
-                    //         bitmapPaint = new Paint();
-                    //     }
-                    //     bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
-                    // } else if (bitmapPaint) {
-                    //     bitmapPaint.setColorFilter(null);
-                    // }
-                    // canvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
-                    this.drawImageOnCanvas(canvas, page, toDrawWidth, toDrawHeight, forExport);
+                    await this.drawImageOnCanvas(canvas, page, toDrawWidth, toDrawHeight);
                     canvas.restore();
                     if (last) {
                         break;

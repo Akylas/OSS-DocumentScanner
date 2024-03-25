@@ -1,17 +1,55 @@
-import { ImageAsset, ImageSource } from '@nativescript/core';
+import { ImageAsset, ImageSource, Utils } from '@nativescript/core';
+import { getImageSize } from './utils.ios';
 
-export async function loadImage(sourceImagePath, maxSize = 4500) {
-    // if (__ANDROID__) {
+export async function loadImage(
+    imagePath,
+    {
+        imageSizeThreshold = 4500,
+        imageScale = 1,
+        reqWidth,
+        reqHeight,
+        imageWidth,
+        imageHeight,
+        jpegQuality
+    }: { reqWidth?; reqHeight?; imageSizeThreshold?; imageScale?; imageWidth?; imageHeight?; jpegQuality? } = {}
+) {
     // we need to use ImageAsset to correctly load images with content:
     // we also need it cause it loads the image "rotated"
     // Another reason is that it is the only way to do it the true async way
-    const asset = new ImageAsset(sourceImagePath);
-    asset.options = { autoScaleFactor: false, keepAspectRatio: true, maxWidth: maxSize, maxHeight: maxSize };
+    if (!imageWidth || !imageHeight) {
+        const size = getImageSize(imagePath);
+        imageWidth = size.width;
+        imageHeight = size.height;
+    }
+    reqWidth = reqWidth || imageWidth;
+    reqHeight = reqHeight || imageHeight;
+    if (imageSizeThreshold !== 0) {
+        const minSize = Math.max(reqWidth, reqHeight);
+        if (minSize > imageSizeThreshold) {
+            const resizeScale = (1.0 * minSize) / imageSizeThreshold;
+            reqWidth = reqWidth / resizeScale;
+            reqHeight = reqHeight / resizeScale;
+        }
+    }
+    if (imageScale !== 1.0) {
+        reqWidth = reqWidth * imageScale;
+        reqHeight = reqHeight * imageScale;
+    }
+    const loadOptions = JSON.stringify({
+        width: Math.round(reqWidth),
+        height: Math.round(reqHeight),
+        jpegQuality
+    });
+    if (__IOS__) {
+        return new ImageSource(ImageUtils.readImageFromFileStringOptions(imagePath, loadOptions));
+    } else {
+        return new ImageSource(com.akylas.documentscanner.utils.ImageUtil.Companion.readBitmapFromFile(Utils.android.getApplicationContext(), imagePath, loadOptions));
+    }
+    const asset = new ImageAsset(imagePath);
+    asset.options = { autoScaleFactor: false, keepAspectRatio: true, width: Math.round(reqWidth), height: Math.round(reqHeight) };
+    DEV_LOG && console.log('loadImage', imageWidth, imageHeight, imageSizeThreshold, imageScale, reqWidth, reqHeight, asset.options);
     const bitmap = await asset.getImage();
     return new ImageSource(bitmap);
-    // } else {
-    //     return ImageSource.fromFile(sourceImagePath);
-    // }
 }
 
 export function recycleImages(...args) {

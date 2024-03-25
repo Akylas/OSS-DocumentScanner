@@ -16,7 +16,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
-    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
+    import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
     import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
@@ -52,30 +52,6 @@
     let items: ObservableArray<PDFCanvasItem>;
     let currentPagerIndex = 0;
 
-    async function loadImagesForPage(pdfPageIndex) {
-        const item = items.getItem(pdfPageIndex);
-        if (item.loading || !pdfCanvas.needsLoadImage(pdfPageIndex)) {
-            return;
-        }
-        DEV_LOG && console.log('loadImagesForPage', pdfPageIndex);
-        setTimeout(async () => {
-            try {
-                const item = items.getItem(pdfPageIndex);
-                if (!item.loading) {
-                    item.loading = true;
-                    items.setItem(pdfPageIndex, item);
-                }
-                await pdfCanvas.loadImagesForPage(pdfPageIndex);
-                // iOS needs a bit of time or it will break UICollectionView
-                setTimeout(() => {
-                    item.loading = false;
-                    items.setItem(pdfPageIndex, item);
-                }, 10);
-            } catch (error) {
-                console.error(error, error.stack);
-            }
-        }, 0);
-    }
     function refresh() {
         pdfCanvas.updatePages(pages);
         items = new ObservableArray(pdfCanvas.items);
@@ -90,20 +66,10 @@
         //     return true;
         // });
     }
-    function drawPDFPage(item: PDFCanvasItem, { canvas }: { canvas: Canvas }) {
-        pdfCanvas.canvas = canvas;
-        pdfCanvas.drawPages(item.index, item.pages, item.loading);
-    }
-
-    onDestroy(() => {
-        recycleImages(Object.values(pdfCanvas.imagesCache));
-        pdfCanvas.imagesCache = {};
-    });
 
     function onPageIndexChanged(event) {
         // DEV_LOG && console.log('onPageIndexChanged', event.object.selectedIndex, new Error().stack);
         currentPagerIndex = event.object.selectedIndex;
-        // loadImagesForPage(currentPagerIndex);
     }
     refresh();
 
@@ -112,7 +78,7 @@
             const result = await prompt({
                 okButtonText: lc('ok'),
                 cancelButtonText: lc('cancel'),
-                defaultText: Date.now() + '.pdf',
+                defaultText: (document ? cleanFilename(document.name) : Date.now()) + '.pdf',
                 hintText: lc('pdf_filename')
             });
             if (result?.result && result?.text?.length) {
@@ -142,18 +108,6 @@
             showError(error);
         }
     }
-    // DEV_LOG && console.log('onItemLoading', index);
-    function onItemLoading({ index, view }) {
-        // const item = items.getItem(index);
-        // if (!item.loading && !pdfCanvas.needsLoadImage(index)) {
-        //     if (view instanceof ContentView) {
-        //         view = view.content;
-        //     }
-        //     (view as CanvasView)?.invalidate();
-        // } else {
-        //     loadImagesForPage(index);
-        // }
-    }
 
     async function selectOption(option: string, event, valueTransformer?, fullRefresh = true) {
         try {
@@ -166,28 +120,6 @@
                     updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
                 }
             });
-            // await showPopover({
-            //     backgroundColor: colorSurfaceContainer,
-            //     view: OptionSelect,
-            //     anchor: event.object,
-            //     horizPos: HorizontalPosition.ALIGN_LEFT,
-            //     vertPos: VerticalPosition.CENTER,
-            //     props: {
-            //         borderRadius: 10,
-            //         elevation: 4,
-            //         margin: 4,
-            //         backgroundColor: colorSurfaceContainer,
-            //         containerColumns: 'auto',
-            //         rowHeight: 58 * $fontScale,
-            //         height: Math.min(58 * options.length * $fontScale + 8, 300),
-            //         width: 150,
-            //         options,
-            //         onClose: (item) => {
-            //             closePopover();
-            //             updateOption(option, valueTransformer ? valueTransformer(item.id) : item.id, fullRefresh);
-            //         }
-            //     }
-            // });
         } catch (error) {
             showError(error);
         }
@@ -356,8 +288,7 @@
                         preserveIndexOnItemsChange={true}
                         row={1}
                         selectedIndex={currentPagerIndex}
-                        on:selectedIndexChange={onPageIndexChanged}
-                        on:itemLoading={onItemLoading}>
+                        on:selectedIndexChange={onPageIndexChanged}>
                         {#each { length: 6 } as _, i}
                             <Template key={`${i + 1}`} let:index let:item>
                                 <gridlayout padding={PAGER_PAGE_PADDING}>

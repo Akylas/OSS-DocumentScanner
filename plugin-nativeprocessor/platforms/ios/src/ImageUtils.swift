@@ -1,6 +1,20 @@
 import Foundation
 import UIKit
 
+extension UIImage.Orientation {
+    init(_ cgOrientation: CGImagePropertyOrientation) {
+        switch cgOrientation {
+            case .up: self = .up
+            case .upMirrored: self = .upMirrored
+            case .down: self = .down
+            case .downMirrored: self = .downMirrored
+            case .left: self = .left
+            case .leftMirrored: self = .leftMirrored
+            case .right: self = .right
+            case .rightMirrored: self = .rightMirrored
+        }
+    }
+}
 @objcMembers
 @objc(ImageUtils)
 class ImageUtils : NSObject {
@@ -141,7 +155,7 @@ class ImageUtils : NSObject {
       let width = imageProperties![kCGImagePropertyPixelWidth] as! Double;
       let height = imageProperties![kCGImagePropertyPixelHeight] as! Double;
       let orientation = imageProperties![kCGImagePropertyOrientation] as! Int;
-      let uiOrientation = UIImage.Orientation(rawValue: orientation)!;
+      let uiOrientation = UIImage.Orientation.init(CGImagePropertyOrientation(rawValue: UInt32(orientation))!);
       var degrees: Int = 0
       switch uiOrientation {
       case .down, .downMirrored:
@@ -168,25 +182,26 @@ class ImageUtils : NSObject {
       let size = image.size
       var reqWidth = size.width
       var reqHeight = size.height
-      print("size", size.width, size.height)
       let imageOrientation = image.imageOrientation
-      print("imageOrientation", imageOrientation)
       if ((options?["width"] != nil) || (options?["height"] != nil) || (options?["maxWidth"] != nil) || (options?["maxHeight"] != nil)) {
         reqWidth = (options?.object(forKey: "width") ?? (((options?["maxWidth"]) != nil) ? min(options?["maxWidth"] as! Double, size.width) : size.width)) as! Double;
         reqHeight = (options?.object(forKey: "height") ?? (((options?["maxHeight"]) != nil) ? min(options?["maxHeight"] as! Double, size.height) : size.height)) as! Double;
         
-        if ((options?["keepAspectRatio"] as! Bool == true)) {
+        if ((options?["keepAspectRatio"] != nil) && (options?["keepAspectRatio"] as! Bool == true)) {
           let safeAspectSize = getAspectSafeDimensions(size.width, size.height, reqWidth, reqHeight);
           reqWidth = safeAspectSize.width;
           reqHeight = safeAspectSize.height;
         }
       }
-      
+      var result: UIImage? = image
       if (reqWidth != size.width || reqHeight != size.height || imageOrientation != .up) {
-        return scaleImage(image, CGSize(width: reqWidth, height: reqHeight) )
+        result = scaleImage(image, CGSize(width: reqWidth, height: reqHeight) )
+      }
+      if (options?["jpegQuality"] != nil) {
+        result = UIImage.init(data: result!.jpegData(compressionQuality: CGFloat((options!["jpegQuality"] as! Int)) / 100.0)!)
       }
       
-      return image
+      return result
     }
     return nil
     

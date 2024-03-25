@@ -81,37 +81,41 @@
     function getSubSettings(id: string) {
         switch (id) {
             case 'pdf':
-                return [
-                    {
-                        type: 'rightIcon',
-                        key: 'pdf_export_directory',
-                        title: lc('export_folder'),
-                        defaultValue: DEFAULT_EXPORT_DIRECTORY,
-                        description: (item) => ApplicationSettings.getString(item.key, item.defaultValue),
-                        rightBtnIcon: 'mdi-restore',
-                        onTap: async (item) => {
-                            DEV_LOG && console.log('onTap', item);
-                            const result = await pickFolder({
-                                multipleSelection: false,
-                                permissions: { write: true, persistable: true }
-                            });
-                            if (result.folders.length) {
-                                const exportDirectory = result.folders[0];
-                                ApplicationSettings.setString(item.key, exportDirectory);
-                                return true;
-                            }
-                        },
-                        onRightIconTap: (item) => {
-                            DEV_LOG && console.log('onRightIconTap', item);
-                            ApplicationSettings.remove(item.key);
-                            return true;
-                        }
-                    },
-                    {
-                        type: 'sectionheader',
-                        title: lc('page_layout')
-                    }
-                ]
+                return (
+                    __ANDROID__
+                        ? [
+                              {
+                                  type: 'rightIcon',
+                                  key: 'pdf_export_directory',
+                                  title: lc('export_folder'),
+                                  defaultValue: DEFAULT_EXPORT_DIRECTORY,
+                                  description: (item) => ApplicationSettings.getString(item.key, item.defaultValue),
+                                  rightBtnIcon: 'mdi-restore',
+                                  onTap: async (item) => {
+                                      DEV_LOG && console.log('onTap', item);
+                                      const result = await pickFolder({
+                                          multipleSelection: false,
+                                          permissions: { write: true, persistable: true }
+                                      });
+                                      if (result.folders.length) {
+                                          const exportDirectory = result.folders[0];
+                                          ApplicationSettings.setString(item.key, exportDirectory);
+                                          return true;
+                                      }
+                                  },
+                                  onRightIconTap: (item) => {
+                                      DEV_LOG && console.log('onRightIconTap', item);
+                                      ApplicationSettings.remove(item.key);
+                                      return true;
+                                  }
+                              },
+                              {
+                                  type: 'sectionheader',
+                                  title: lc('page_layout')
+                              }
+                          ]
+                        : []
+                )
                     .concat(
                         Object.keys(PDF_OPTIONS).map((option) => ({
                             id: 'store_setting',
@@ -162,9 +166,9 @@
                             storeKey: 'default_export_options',
                             storeDefault: DEFAULT_PDF_OPTIONS_STRING,
                             key: 'imageLoadScale',
-                            min: 0.1,
-                            max: 1,
-                            step: 0.01,
+                            min: 0.5,
+                            max: 10,
+                            step: 0.5,
                             title: lc('image_load_scale'),
                             description: lc('image_load_scale_desc'),
                             type: 'slider',
@@ -729,9 +733,17 @@
                             updateItem(item);
                         }
                     } else if (item.type === 'slider') {
-                        showSliderPopover({
+                        DEV_LOG && console.log('HANDLING SLIDER SETTING', item);
+                        await showSliderPopover({
+                            anchor: event.object,
+                            value: item.currentValue(),
                             ...item,
                             onChange(value) {
+                                if (item.transformValue) {
+                                    value = item.transformValue(value);
+                                } else {
+                                    value = Math.round(value / item.step) * item.step;
+                                }
                                 if (item.id === 'store_setting') {
                                     const store = getStoreSetting(item.storeKey, item.storeDefault);
                                     if (item.valueType === 'string') {

@@ -18,8 +18,6 @@ export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
 export const DEFAULT_PDF_OPTIONS = {
-    pagerPagePaddingHorizontal: 16,
-    pagerPagePaddingVertical: 8,
     paper_size: 'full',
     color: 'color',
     orientation: 'portrait',
@@ -28,7 +26,7 @@ export const DEFAULT_PDF_OPTIONS = {
     items_per_page: 1,
     dpi: 96,
     imageSizeThreshold: 1500,
-    imageLoadScale: 1,
+    imageLoadScale: 2,
     draw_ocr_text: true,
     draw_ocr_overlay: false
 };
