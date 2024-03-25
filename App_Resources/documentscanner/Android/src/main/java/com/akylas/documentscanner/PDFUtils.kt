@@ -171,7 +171,8 @@ class PDFUtils {
             }
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
-            if (colorMatrix != null) {
+            if (colorMatrix != null && colorMatrix != "null") {
+                Log.d("JS", "colorMatrix " + colorMatrix)
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
@@ -238,7 +239,6 @@ class PDFUtils {
             val orientation = jsonOps.optString("orientation", "portrait")
             val color = jsonOps.optString("color", "color")
             val blackAndWhite = color == "black_white"
-            Log.d("JS", "generatePDF " + color+ " blackAndWhite:" + blackAndWhite)
             val drawOcrText = jsonOps.optBoolean("draw_ocr_text", true)
             val debug = jsonOps.optBoolean("debug", false)
             val pagePadding = jsonOps.optInt("page_padding", 0).toFloat()
@@ -311,8 +311,8 @@ class PDFUtils {
                 val items = list.chunked(itemsPerPage)
                 items.forEachIndexed { idx, pageItems ->
                     val nbItems = pageItems.size
-                    var columns = if (nbItems > 2) 2 else 1
-                    var rows = if (nbItems > 2) ceil(nbItems / 2F).toInt() else nbItems
+                    var columns = if (itemsPerPage > 2) 2 else 1
+                    var rows = if (itemsPerPage > 2) ceil(itemsPerPage / 2F).toInt() else itemsPerPage
                     if (orientation == "landscape") {
                         val temp = columns
                         columns = rows
@@ -333,8 +333,9 @@ class PDFUtils {
                         document!!.setFont(font)
                         document!!.setMargins(pagePadding, pagePadding, pagePadding, pagePadding)
                         pdfDoc.addNewPage(pageSize)
-                    } else if (idx < items.size - 1) {
+                    } else if (idx < items.size) {
                         pdfDoc.addNewPage(pageSize)
+                        document!!.add(AreaBreak())
                     }
                     for (i in rows - 1 downTo 0) {
 //                        for (i in 0..<rows) {
@@ -344,7 +345,7 @@ class PDFUtils {
 
                                 continue
                             }
-                            val last = pageIndex == nbItems - 1
+                            val last = pageIndex == itemsPerPage - 1
                             val page = pageItems[pageIndex]
                             val imageRotation = page.optInt("rotation", 0)
 
@@ -410,9 +411,8 @@ class PDFUtils {
                         ddy += heightPerRow
                         ddx = pagePadding
                     }
-                    if (totalIndex < pagesCount - 1) {
-                        document!!.add(AreaBreak())
-                    }
+                    // if (totalIndex < items.size - 1) {
+                    // }
                 }
             }
             document!!.close()

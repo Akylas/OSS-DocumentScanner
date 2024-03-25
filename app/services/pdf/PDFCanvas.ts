@@ -310,7 +310,7 @@ export default class PDFCanvas {
                     if (pageIndex >= nbItems) {
                         continue;
                     }
-                    const last = pageIndex === nbItems - 1;
+                    const last = pageIndex === itemsPerPage - 1;
 
                     const page = pages[pageIndex];
                     let imageWidth = page.width;
