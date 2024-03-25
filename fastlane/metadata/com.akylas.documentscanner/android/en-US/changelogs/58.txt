@@ -1,0 +1,12 @@
+### Bug fixes
+- Translated using Weblate (Italian)
+- Translated using Weblate (Indonesian)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Czech)
+- Translated using Weblate (French)
+- PDF export improvements
+- regression fix for edit image not showing filter
+- prevent error if data folder does not exist anymore (like switched sdcard)
+- multiple export PDF fixes
