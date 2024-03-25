@@ -155,12 +155,7 @@ export default class PDFCanvas {
             reqWidth = reqHeight;
             reqHeight = temp;
         }
-        // DEV_LOG && console.log('drawImageOnCanvas', toDrawWidth, toDrawHeight, imageWidth, imageHeight, this.imagesCache[src]);
-        // if (forExport && this.options.reduce_image_size) {
-        // size is in PT we need to transform to pixels to reduce file size
-        // const canvasWidth = ptToPixel(Utils.layout.toDevicePixels(toDrawWidth), dpi);
-        // const canvasHeight = ptToPixel(Utils.layout.toDevicePixels(toDrawHeight), dpi);
-
+        this.updateBitmapPaint(page);
         const image = await loadImage(src, {
             reqWidth,
             reqHeight,
@@ -170,9 +165,7 @@ export default class PDFCanvas {
             imageSizeThreshold: options.imageSizeThreshold,
             imageScale: options.paper_size === 'full' ? 1 : options.imageLoadScale
         });
-        DEV_LOG && console.log('loadImage done', toDrawWidth, toDrawHeight, imageWidth, imageHeight, reqWidth, reqHeight, image.width, image.height);
 
-        // const imageScale = 1 / imageLoadScale;
         const imageScale = toDrawWidth / image.width;
         // now we draw the resized and transformed image
         canvas.save();
