@@ -285,8 +285,8 @@ class PDFUtils {
                 val items = list.chunked(itemsPerPage)
                 items.forEachIndexed { idx, pageItems ->
                     val nbItems = pageItems.size
-                    var columns = if (nbItems > 2) 2 else 1
-                    var rows = if (nbItems > 2) ceil(nbItems / 2F).toInt() else nbItems
+                    var columns = if (itemsPerPage > 2) 2 else 1
+                    var rows = if (itemsPerPage > 2) ceil(itemsPerPage / 2F).toInt() else itemsPerPage
                     if (orientation == "landscape") {
                         val temp = columns
                         columns = rows

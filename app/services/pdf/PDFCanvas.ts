@@ -295,8 +295,8 @@ export default class PDFCanvas {
             canvas.translate(pageDx, pageDy);
 
             // compute space diivision
-            let columns = nbItems > 2 ? 2 : 1;
-            let rows = nbItems > 2 ? Math.ceil(nbItems / 2) : nbItems;
+            let columns = items_per_page > 2 ? 2 : 1;
+            let rows = items_per_page > 2 ? Math.ceil(items_per_page / 2) : items_per_page;
             // console.log('columns', columns, rows);
             if (orientation === 'landscape') {
                 const temp = columns;
@@ -305,18 +305,21 @@ export default class PDFCanvas {
             }
             const shared = Math.min(rows, columns);
             const widthPerColumn = availableWidth / columns;
-            const widthPerRow = availableHeight / rows;
+            const heightPerRow = availableHeight / rows;
             let ddx = 0;
             let ddy = 0;
             let toDrawWidth;
             let toDrawHeight;
             // console.log('rows', rows, columns, shared, widthPerColumn, widthPerRow);
-            let index = 0;
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < columns; j++) {
-                    const last = index === nbItems - 1;
+                    const pageIndex = i * shared + j;
+                    if (pageIndex >= nbItems) {
+                        continue;
+                    }
+                    const last = pageIndex === nbItems - 1;
 
-                    const page = pages[i * shared + j];
+                    const page = pages[pageIndex];
                     let imageWidth = page.width;
                     let imageHeight = page.height;
                     if (page.rotation % 180 !== 0) {
@@ -327,11 +330,11 @@ export default class PDFCanvas {
                     // const src = page.imagePath;
 
                     let itemAvailableWidth = widthPerColumn - 2 * pagePadding;
-                    const itemAvailableHeight = widthPerRow - 2 * pagePadding;
+                    const itemAvailableHeight = heightPerRow - 2 * pagePadding;
                     if (last && columns * rows > nbItems) {
                         itemAvailableWidth = 2 * widthPerColumn - 2 * pagePadding;
                     }
-                    const itemRatio = widthPerColumn / widthPerRow;
+                    const itemRatio = itemAvailableWidth / itemAvailableHeight;
                     if (pageRatio > itemRatio) {
                         toDrawWidth = itemAvailableWidth;
                         toDrawHeight = itemAvailableWidth / pageRatio;
@@ -351,9 +354,8 @@ export default class PDFCanvas {
                     }
                     // for those same size!
                     ddx += widthPerColumn;
-                    index++;
                 }
-                ddy += widthPerRow;
+                ddy += heightPerRow;
                 ddx = 0;
             }
             // }
