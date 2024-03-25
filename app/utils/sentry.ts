@@ -22,7 +22,7 @@ export async function startSentry() {
                 disabledNativeIntegrations: ['io.sentry.UncaughtExceptionHandlerIntegration', 'io.sentry.android.fragment.FragmentLifecycleIntegration'], // Android
                 flushSendEvent: true,
                 enableCrashHandler: false, // iOS
-                attachScreenshot: true,
+                attachScreenshot: false,
                 enableUIViewControllerTracing: false,
                 enableUserInteractionTracing: false,
                 enableAutoBreadcrumbTracking: false,
