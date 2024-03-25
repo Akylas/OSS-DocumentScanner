@@ -89,6 +89,7 @@
         colorMatrix={getItemColorMatrix(item)}
         decodeWidth={IMAGE_DECODE_HEIGHT}
         ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
+        imageRotation={item?.rotation ?? 0}
         maxZoom={10}
         src={src || getImageSrc(item)}
         {stretch}
