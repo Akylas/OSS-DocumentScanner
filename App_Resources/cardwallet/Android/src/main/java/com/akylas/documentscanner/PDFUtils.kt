@@ -38,9 +38,13 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
+import kotlin.concurrent.thread
+
 
 class PDFUtils {
-
+    interface FunctionCallback {
+        fun onResult(e: Exception?, result: Any?)
+    }
     class PDFLoadImageOptions {
 
         var imageSizeThreshold: Int = 0
@@ -427,6 +431,16 @@ class PDFUtils {
                 return outfile.uri.toString()
             }
             return destinationFilePath
+        }
+        fun generatePDFASync(context: Context, destFolder: String, fileName: String,  options: String, callback: FunctionCallback) {
+            thread(start = true) {
+                try {
+                    var result = generatePDF(context, destFolder, fileName,  options)
+                    callback.onResult(null, result)
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
         }
     }
 }

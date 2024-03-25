@@ -24,9 +24,19 @@ declare namespace com {
                 }
             }
             export namespace PDFUtils {
+                export class FunctionCallback extends java.lang.Object {
+                    public static class: java.lang.Class<FunctionCallback>;
+                    /**
+                     * Constructs a new instance of the com.akylas.documentscanner.CustomImageAnalysisCallback$FunctionCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+                     */
+                    public constructor(implementation: { onResult(param0: java.lang.Exception, param1: any): void });
+                    public constructor();
+                    public onResult(param0: java.lang.Exception, param1: any): void;
+                }
                 export class Companion {
                     static compressPDF(src: string, dst: string, jpegQuality: number);
                     static generatePDF(context: android.content.Context, destFolder: string, fileName: string, options: string);
+                    static generatePDFASync(context: android.content.Context, destFolder: string, fileName: string, options: string, callback: FunctionCallback);
                 }
             }
         }

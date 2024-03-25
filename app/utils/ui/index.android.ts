@@ -15,7 +15,7 @@ export function onBackButton(view: View, callback) {
         return;
     }
     // if it is not the currentPage of its frame lets ignore (we are in the backstack)
-    if (view instanceof Page && view.frame.currentPage !== view) {
+    if (view instanceof Page && view.frame && view.frame.currentPage !== view) {
         return;
     }
     let modalParent = view;
