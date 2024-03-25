@@ -1,4 +1,4 @@
-import { CustomError } from '~/utils/error';
+import { CustomError, wrapNativeException } from '~/utils/error';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { Screen, Utils, knownFolders } from '@nativescript/core';
@@ -32,7 +32,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                 new com.akylas.documentscanner.PDFUtils.FunctionCallback({
                     onResult(e, result) {
                         if (e) {
-                            reject(e);
+                            reject(wrapNativeException(e));
                         } else {
                             resolve(result);
                         }
