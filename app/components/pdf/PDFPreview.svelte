@@ -89,7 +89,7 @@
                 );
                 const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                 hideLoading();
-                const onSnack = await showSnack({ message: lc('pdf_saved', filePath), actionText: lc('open') });
+                const onSnack = await showSnack({ message: lc('pdf_saved', filePath.split('/').slice(-1)[0]), actionText: lc('open') });
                 if (onSnack.reason === 'action') {
                     openFile(filePath);
                 }
