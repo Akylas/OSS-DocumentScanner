@@ -86,6 +86,7 @@
     <zoomimage
         {...$$restProps}
         bind:this={SVImageView}
+        colorMatrix={getItemColorMatrix(item)}
         decodeWidth={IMAGE_DECODE_HEIGHT}
         ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
         maxZoom={10}
