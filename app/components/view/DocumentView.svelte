@@ -356,20 +356,20 @@
         }
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        // if (event.object !== document) {
-        //     return;
-        // }
-        // const index = event.pageIndex;
-        // const current = items.getItem(index);
-        // if (current) {
-        //     DEV_LOG && console.log('view onDocumentPageUpdated', index, current.index, event.imageUpdated);
-        //     const page = document.getObservablePages().getItem(index);
-        //     items.setItem(index, { ...current, page });
-        //     if (!!event.imageUpdated) {
-        //         const imageView = getImageView(index);
-        //         imageView?.updateImageUri();
-        //     }
-        // }
+        if (event.object !== document) {
+            return;
+        }
+        const index = event.pageIndex;
+        const current = items.getItem(index);
+        if (current) {
+            DEV_LOG && console.log('view onDocumentPageUpdated', index, current.index, event.imageUpdated);
+            const page = document.getObservablePages().getItem(index);
+            items.setItem(index, { ...current, page });
+            if (!!event.imageUpdated) {
+                const imageView = getImageView(index);
+                imageView?.updateImageUri();
+            }
+        }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
         if (event.object !== document) {
