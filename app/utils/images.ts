@@ -45,11 +45,6 @@ export async function loadImage(
     } else {
         return new ImageSource(com.akylas.documentscanner.utils.ImageUtil.Companion.readBitmapFromFile(Utils.android.getApplicationContext(), imagePath, loadOptions));
     }
-    const asset = new ImageAsset(imagePath);
-    asset.options = { autoScaleFactor: false, keepAspectRatio: true, width: Math.round(reqWidth), height: Math.round(reqHeight) };
-    DEV_LOG && console.log('loadImage', imageWidth, imageHeight, imageSizeThreshold, imageScale, reqWidth, reqHeight, asset.options);
-    const bitmap = await asset.getImage();
-    return new ImageSource(bitmap);
 }
 
 export function recycleImages(...args) {
