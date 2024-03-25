@@ -217,7 +217,7 @@
     "torch": "torche",
     "transform_images": "transformer des images",
     "transformations": "transformations",
-    "updating_pages": "pages de mise à jour (%1$%)",
+    "updating_pages": "pages de mise à jour (%1$s%%)",
     "username": "nom d'utilisateur",
     "version": "version",
     "webdav_config": "configuration webdav",

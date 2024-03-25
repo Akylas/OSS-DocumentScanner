@@ -217,7 +217,7 @@
     "torch": "senter",
     "transform_images": "ubah gambar",
     "transformations": "perubahan",
-    "updating_pages": "memperbarui halaman (%1$%%)",
+    "updating_pages": "memperbarui halaman (%1$s%%)",
     "username": "nama pengguna",
     "version": "versi",
     "webdav_config": "konfigurasi webDAV",

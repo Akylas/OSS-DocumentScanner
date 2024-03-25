@@ -196,7 +196,7 @@
     "torch": "lanterna",
     "transform_images": "transformar imagens",
     "transformations": "transformações",
-    "updating_pages": "atualizando páginas (%1$%%)",
+    "updating_pages": "atualizando páginas (%1$s%%)",
     "username": "nome de usuário",
     "version": "versão",
     "webdav_config": "configuração do webdav",
