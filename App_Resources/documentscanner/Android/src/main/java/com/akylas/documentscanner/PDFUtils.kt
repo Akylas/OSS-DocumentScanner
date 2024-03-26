@@ -172,7 +172,6 @@ class PDFUtils {
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
             if (colorMatrix != null && colorMatrix != "null") {
-                Log.d("JS", "colorMatrix " + colorMatrix)
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)

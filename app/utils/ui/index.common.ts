@@ -893,7 +893,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             }
         }
     }
-    DEV_LOG && console.log('outputImageNames', outputImageNames);
+    DEV_LOG && console.log('exporting images', outputImageNames);
     showLoading(l('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;

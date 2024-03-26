@@ -10,7 +10,8 @@ export async function getTransformedImage(page: OCRPage) {
     const height = page.height * page.scale;
     const pageCanvas = new Canvas(width, height);
     const imageSource = await loadImage(page.imagePath, { imageWidth: page.width, imageHeight: page.height });
-    if (page.colorType || page.colorMatrix) {
+    DEV_LOG && console.log('getTransformedImage', JSON.stringify(page));
+    if (page.colorType || !!page.colorMatrix) {
         const bitmapPaint: Paint = new Paint();
         bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
 
