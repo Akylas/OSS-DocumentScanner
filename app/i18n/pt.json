@@ -25,7 +25,7 @@
     "auto_scan_delay_desc": "atraso antes de iniciar escaneamento automático de um documento encontrado",
     "auto_scan_distance_threshold": "limiar de distância",
     "auto_scan_distance_threshold_desc": "quando a câmera se move, o escaneamento automático precisa determinar se ainda estamos vendo o mesmo documento. isto é o limiar de distância",
-    "auto_scan_duration": "duração de escaneamento automático",
+    "auto_scan_duration": "duração do escaneamento automático",
     "auto_scan_duration_desc": "duração em milissegundos até que o documento seja adicionado",
     "auto_scan_first_use": "Uma nova função de escaneamento automático está habilitada por padrão. Ela irá escanear os documentos automaticamente. Por conta da natureza dessa função, você não receberá uma solicitação para modificar os cantos do documento.\nVocê deseja manter o escaneamento automático habilitado?\n(Você pode alterar isso nas configurações ou mantendo o botão de captura pressionado)",
     "autoscan": "escaneamento automático",
