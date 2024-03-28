@@ -11,18 +11,12 @@
     import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/models/constants';
     import { navigationBarHeight } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
+    import { ImportImageData } from '~/models/OCRDocument';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
 
-    export let items: {
-        imagePath: string;
-        imageWidth: number;
-        imageHeight: number;
-        imageRotation: number;
-        quads;
-        qrcode?: QRCodeData;
-    }[] = [];
+    export let items: ImportImageData[] = [];
     // export let editingImage;
     // export let quads;
     // export let qrcode: QRCodeData = null;

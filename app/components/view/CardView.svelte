@@ -1,7 +1,6 @@
 <script context="module" lang="ts">
-    import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img } from '@nativescript-community/ui-image';
+    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
@@ -12,7 +11,6 @@
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
@@ -24,10 +22,22 @@
     import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
-    import { PermissionError, showError } from '~/utils/error';
+    import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
-    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
-    import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { goBack, navigate } from '~/utils/svelte/ui';
+    import {
+        detectOCR,
+        getColorMatrix,
+        hideLoading,
+        importAndScanImage,
+        importImageFromCamera,
+        onBackButton,
+        showImagePopoverMenu,
+        showLoading,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        transformPages
+    } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
@@ -165,18 +175,7 @@
     }
     async function addPages() {
         try {
-            const result = await request('camera');
-            if (result[0] !== 'authorized') {
-                throw new PermissionError(lc('camera_permission_needed'));
-            }
-            document = await showModal({
-                page: Camera,
-                fullscreen: true,
-                props: {
-                    modal: true,
-                    document
-                }
-            });
+            await importImageFromCamera(document);
             updateQRCodes();
         } catch (error) {
             showError(error);
@@ -185,19 +184,7 @@
 
     async function importDocument() {
         try {
-            const oldPagesNumber = document.pages.length;
-            const doc = await importAndScanImage(document);
-            // if more than 1 page was imported stay here so that the user sees the added pages
-            if (doc && doc.pages.length - oldPagesNumber === 1) {
-                const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
-                navigate({
-                    page: component,
-                    props: {
-                        document,
-                        startPageIndex: document.pages.length - 1
-                    }
-                });
-            }
+            await importAndScanImage(document, false);
         } catch (error) {
             showError(error);
         }
@@ -408,7 +395,18 @@
             items.setItem(index, { ...current, page });
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
-                imageView?.updateImageUri();
+                if (imageView) {
+                    imageView?.updateImageUri();
+                } else {
+                    const page = current.page;
+                    const pipeline = getImagePipeline();
+                    const cacheKey = pipeline.getCacheKey(page.imagePath, {
+                        decodeWidth: itemHeight,
+                        colorMatrix: page.colorMatrix || getColorMatrix(page.colorType),
+                        imageRotation: page?.rotation ?? 0
+                    });
+                    pipeline.evictFromCache(cacheKey);
+                }
             }
         }
     }

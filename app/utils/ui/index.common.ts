@@ -14,27 +14,18 @@ import {
     GridLayout,
     ImageSource,
     ObservableArray,
+    PageTransition,
+    SharedTransition,
     Utils,
     View,
     ViewBase,
-    displayedEvent,
     knownFolders,
     path
 } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
-import {
-    CropResult,
-    cropDocument,
-    cropDocumentFromFile,
-    detectQRCode,
-    detectQRCodeFromFile,
-    getColorPalette,
-    getJSONDocumentCorners,
-    getJSONDocumentCornersFromFile,
-    processFromFile
-} from 'plugin-nativeprocessor';
+import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -43,29 +34,30 @@ import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
-import { OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import {
     CROP_ENABLED,
     DEFAULT_EXPORT_DIRECTORY,
+    DEFAULT__BATCH_CHUNK_SIZE,
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
     IMG_FORMAT,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
-    TRANSFORMS_SPLIT
+    TRANSFORMS_SPLIT,
+    USE_SYSTEM_CAMERA
 } from '~/models/constants';
-import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
-import { showError } from '~/utils/error';
-import { loadImage, recycleImages } from '~/utils/images';
+import { PermissionError, showError } from '~/utils/error';
+import { recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
-import { getImageSize } from '../utils';
 import { navigate } from '../svelte/ui';
+import { getImageSize } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -156,11 +148,6 @@ export async function showLoading(msg?: string | ShowLoadingOptions) {
         const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
         const indicator = getLoadingIndicator();
         indicator.instance.onButtonTap = msg?.['onButtonTap'];
-        // if (!!msg?.['onButtonTap']) {
-        //     loadingIndicator.instance.$on('tap', msg['onButtonTap']);
-        // } else {
-        //     loadingIndicator.instance.$off('tap');
-        // }
         const props = {
             showButton: !!msg?.['onButtonTap'],
             text,
@@ -194,238 +181,76 @@ export async function hideLoading() {
         return;
     }
     showLoadingStartTime = null;
-    // log('hideLoading', !!loadingIndicator);
     if (loadingIndicator) {
         loadingIndicator.hide();
     }
 }
 
-// function calculateInterpolation(outMatrix: android.graphics.Matrix, startValues, stopValues, fraction) {
-//     const currentValues = [];
-//     for (let i = 0; i < 9; i++) {
-//         currentValues[i] = (1 - fraction) * startValues[i] + fraction * stopValues[i];
-//     }
-//     outMatrix.setValues(currentValues);
-// }
-
-// export async function setImageRotation(imageView: Image, rotation, duration?: number) {
-
-//     const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
-//     if (scaleType['setImageRotation']) {
-//         scaleType['setImageRotation'](rotation);
-//         (imageView.nativeViewProtected as android.widget.ImageView).invalidate();
-//     }
-// }
-// export async function setImageMatrix(imageView: Image, values: number[], duration?: number) {
-//     if (duration) {
-//         return new Promise<void>((resolve, reject) => {
-//             try {
-//                 const currentAnimator = imageView['matrixAnimator'];
-//                 if (currentAnimator) {
-//                     currentAnimator.cancel();
-//                     currentAnimator.removeAllUpdateListeners();
-//                     currentAnimator.removeAllListeners();
-//                     imageView['matrixAnimator'] = null;
-//                 }
-//                 const arr = Array.create('float', 2);
-//                 arr[0] = 0;
-//                 arr[1] = 1;
-//                 const valueAnimator = android.animation.ValueAnimator.ofFloat(arr);
-//                 const startValues = Array.create('float', 9);
-//                 (imageView.nativeViewProtected as android.widget.ImageView).getImageMatrix().getValues(startValues);
-//                 const currentMatrix = new android.graphics.Matrix();
-//                 valueAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
-//                 valueAnimator.setDuration(duration);
-//                 valueAnimator.addUpdateListener(
-//                     new android.animation.ValueAnimator.AnimatorUpdateListener({
-//                         onAnimationUpdate(valueAnimator) {
-//                             calculateInterpolation(currentMatrix, startValues, values, valueAnimator.getAnimatedValue());
-//                             (imageView.nativeViewProtected as android.widget.ImageView).setImageMatrix(currentMatrix);
-//                         }
-//                     })
-//                 );
-//                 valueAnimator.addListener(
-//                     new android.animation.Animator.AnimatorListener({
-//                         onAnimationStart() {},
-//                         onAnimationRepeat() {},
-//                         onAnimationCancel(animation) {
-//                             imageView['matrixAnimator'] = null;
-//                         },
-
-//                         onAnimationEnd(animation) {
-//                             resolve();
-//                             imageView['matrixAnimator'] = null;
-//                         }
-//                     })
-//                 );
-//                 imageView['matrixAnimator'] = valueAnimator;
-//                 valueAnimator.start();
-//             } catch (error) {
-//                 reject(error);
-//             }
-//         });
-//     } else {
-//         const matrix = new android.graphics.Matrix();
-//         const arr = Array.create('float', values.length);
-//         for (let index = 0; index < values.length; index++) {
-//             console.log('arr', index, values[index]);
-//             arr[index] = values[index];
-//         }
-//         matrix.setValues(arr);
-//         const scaleType = imageView.nativeViewProtected.getHierarchy().getActualImageScaleType();
-//         if (scaleType['setImageMatrix']) {
-//             scaleType['setImageMatrix'](matrix)(imageView.nativeViewProtected as android.widget.ImageView).invalidate();
-//         }
-//     }
-// }
-
-// const worker = new Worker('~/workers/ImageWorker');
-// const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
-// worker.onmessage = function onWorkerMessage(event: {
-//     data: {
-//         type: WorkerEventType;
-//         result: WorkerResult;
-//         full?: boolean;
-//         contours?: number[][];
-//         width?: number;
-//         height?: number;
-//         originalWidth?: number;
-//         originaHeight?: number;
-//         id?: number;
-//         rotation?: number;
-//         nativeDataKeys: string[];
-//         nativeDatas?: { [k: string]: any };
-//     };
-// }) {
-//     const data = event.data;
-//     const id = data.id;
-
-//     if (id && messagePromises.hasOwnProperty(id)) {
-//         messagePromises[id].forEach(function (executor) {
-//             executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
-//             // if (isError) {
-//             // executor.reject(createErrorFromMessage(message));
-//             // } else {
-//             const id = data.id;
-//             if (data.nativeDataKeys.length > 0) {
-//                 const nativeDatas: { [k: string]: any } = {};
-//                 if (__ANDROID__) {
-//                     data.nativeDataKeys.forEach((k) => {
-//                         nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
-//                         com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
-//                     });
-//                     data.nativeDatas = nativeDatas;
-//                 }
-//             }
-
-//             executor.resolve(data);
-//             // }
-//         });
-//         delete messagePromises[id];
-//     }
-// };
-// export function sendMessageToWorker(
-//     nativeData,
-//     messageData,
-//     timeout = 0
-// ): Promise<{
-//     id: number;
-//     nativeDatas?: { [k: string]: any };
-//     [k: string]: any;
-// }> {
-//     return new Promise((resolve, reject) => {
-//         const id = Date.now().valueOf();
-//         messagePromises[id] = messagePromises[id] || [];
-//         let timeoutTimer;
-//         if (timeout > 0) {
-//             timeoutTimer = setTimeout(() => {
-//                 // we need to try catch because the simple fact of creating a new Error actually throws.
-//                 // so we will get an uncaughtException
-//                 try {
-//                     reject(new Error('timeout'));
-//                 } catch {}
-//                 delete messagePromises[id];
-//             }, timeout);
-//         }
-//         messagePromises[id].push({ resolve, reject, timeoutTimer });
-
-//         // const result = worker.processImage(image, { width, height, rotation });
-//         // handleContours(result.contours, rotation, width, height);
-//         const keys = Object.keys(nativeData);
-//         if (__ANDROID__) {
-//             keys.forEach((k) => {
-//                 com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, nativeData[k]._native || nativeData[k]);
-//             });
-//         }
-//         const mData = Object.assign(
-//             {
-//                 type: 'image',
-//                 id,
-//                 nativeDataKeys: keys
-//             },
-//             messageData
-//         );
-//         // console.log('postMessage', mData);
-//         worker.postMessage(mData);
-//     });
-// }
-
-interface ImportItem {
-    imagePath: string;
-    imageWidth: number;
-    imageHeight: number;
-    imageRotation: number;
-    quads: [number, number][][];
+function chunk<T>(array: T[], size) {
+    return Array.from<T, T[]>({ length: Math.ceil(array.length / size) }, (value, index) => array.slice(index * size, index * size + size));
 }
-export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
+
+export async function doInBatch<T, U>(array: T[], handler: (T, index: number) => Promise<U>, chunkSize: number = DEFAULT__BATCH_CHUNK_SIZE) {
+    const chunks = chunk(array, chunkSize);
+    const result: U[] = [];
+    const promises = chunks.map((s, i) => () => Promise.all(s.map((value, j) => handler(value, i * chunkSize + j))));
+    for (let index = 0; index < promises.length; index++) {
+        DEV_LOG && console.log('doInBatch', index);
+        result.push(...(await promises[index]()));
+    }
+    return result;
+}
+
+export async function importAndScanImageFromUris(uris: string[], document?: OCRDocument, canGoToView = true) {
     let pagesToAdd: PageData[] = [];
     DEV_LOG && console.log('importAndScanImageFromUris', uris);
-    let items: ImportItem[];
+    let items: ImportImageData[] = [];
     try {
         await showLoading(l('computing'));
         const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+        // We do it in batch of 5 to prevent memory issues
+        items = await doInBatch(
+            uris,
+            (sourceImagePath) =>
+                new Promise<ImportImageData>(async (resolve, reject) => {
+                    try {
+                        const imageSize = getImageSize(sourceImagePath);
+                        DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize));
 
-        items = await Promise.all(
-            uris.map(
-                (sourceImagePath) =>
-                    new Promise(async (resolve, reject) => {
-                        try {
-                            const imageSize = getImageSize(sourceImagePath);
-                            // DEV_LOG && console.log('imageSize', imageSize);
+                        const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
+                        const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
 
-                            const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
-                            const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
-
-                            const imageRotation = imageSize.rotation;
-                            // TODO: detect JSON and QRCode in one go
-                            const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, previewResizeThreshold * 1.5, 0) : undefined;
-                            // DEV_LOG && console.log('[importAndScanImageFromUris] quads', sourceImagePath, quads);
-                            let qrcode;
-                            if (CARD_APP) {
-                                // try to get the qrcode to show it in the import screen
-                                qrcode = await detectQRCodeFromFile(sourceImagePath, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
-                            }
-                            if (cropEnabled && quads.length === 0) {
-                                let width = imageSize.width;
-                                let height = imageSize.height;
-                                if (imageRotation % 180 !== 0) {
-                                    width = imageSize.height;
-                                    height = imageSize.width;
-                                }
-                                quads.push([
-                                    [noDetectionMargin, noDetectionMargin],
-                                    [width - noDetectionMargin, noDetectionMargin],
-                                    [width - noDetectionMargin, height - noDetectionMargin],
-                                    [noDetectionMargin, height - noDetectionMargin]
-                                ]);
-                            }
-                            resolve({ quads, imagePath: sourceImagePath, qrcode, imageWidth: imageSize.width, imageHeight: imageSize.height, imageRotation });
-                        } catch (error) {
-                            reject(error);
+                        const imageRotation = imageSize.rotation;
+                        // TODO: detect JSON and QRCode in one go
+                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, previewResizeThreshold * 1.5, 0) : undefined;
+                        // DEV_LOG && console.log('[importAndScanImageFromUris] quads', sourceImagePath, quads);
+                        let qrcode;
+                        if (CARD_APP) {
+                            // try to get the qrcode to show it in the import screen
+                            qrcode = await detectQRCodeFromFile(sourceImagePath, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
                         }
-                    })
-            )
+                        if (cropEnabled && quads.length === 0) {
+                            let width = imageSize.width;
+                            let height = imageSize.height;
+                            if (imageRotation % 180 !== 0) {
+                                width = imageSize.height;
+                                height = imageSize.width;
+                            }
+                            quads.push([
+                                [noDetectionMargin, noDetectionMargin],
+                                [width - noDetectionMargin, noDetectionMargin],
+                                [width - noDetectionMargin, height - noDetectionMargin],
+                                [noDetectionMargin, height - noDetectionMargin]
+                            ]);
+                        }
+                        DEV_LOG && console.log('importFromImage done', sourceImagePath);
+                        resolve({ quads, imagePath: sourceImagePath, qrcode, imageWidth: imageSize.width, imageHeight: imageSize.height, imageRotation });
+                    } catch (error) {
+                        reject(error);
+                    }
+                })
         );
+
         DEV_LOG &&
             console.log(
                 'items',
@@ -454,7 +279,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
         if (items?.length) {
             if (cropEnabled) {
                 const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
-                const newItems: ImportItem[] = await showModal({
+                const newItems: ImportImageData[] = await showModal({
                     page: ModalImportImage,
                     animated: true,
                     fullscreen: true,
@@ -472,95 +297,97 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
                         'items after crop',
                         items.map((i) => i.imagePath)
                     );
-
                 pagesToAdd = (
-                    await Promise.all(
-                        items.map(
-                            (item, index) =>
-                                new Promise<PageData[]>(async (resolve, reject) => {
-                                    try {
-                                        DEV_LOG && console.log('about to cropDocument', item);
-                                        const images: CropResult[] = [];
-                                        if (item.quads) {
-                                            images.push(
-                                                ...(await cropDocumentFromFile(item.imagePath, item.quads, {
-                                                    // rotation: item.imageRotation,
-                                                    fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
-                                                    saveInFolder: knownFolders.temp().path,
-                                                    compressFormat: IMG_FORMAT,
-                                                    compressQuality: IMG_COMPRESS
-                                                }))
-                                            );
-                                            // we generate
-                                        } else {
-                                            images.push({ imagePath: item.imagePath, width: item.imageWidth, height: item.imageHeight });
-                                        }
-                                        let qrcode;
-                                        let colors;
-                                        if (CARD_APP) {
-                                            [qrcode, colors] = await processFromFile(
-                                                item.imagePath,
-                                                [
-                                                    {
-                                                        type: 'qrcode'
-                                                    },
-                                                    {
-                                                        type: 'palette'
-                                                    }
-                                                ],
-                                                {
-                                                    maxSize: QRCODE_RESIZE_THRESHOLD
-                                                }
-                                            );
-                                            DEV_LOG && console.log('qrcode and colors', qrcode, colors);
-                                        }
-                                        const result = [];
-                                        DEV_LOG &&
-                                            console.log(
-                                                'images',
-                                                images.map((i) => i.imagePath)
-                                            );
-                                        if (images?.length) {
-                                            for (let index = 0; index < images.length; index++) {
-                                                const image = images[index];
-                                                result.push({
-                                                    ...image,
-                                                    crop: item.quads?.[index] || [
-                                                        [0, 0],
-                                                        [item.imageWidth - 0, 0],
-                                                        [item.imageWidth - 0, item.imageHeight - 0],
-                                                        [0, item.imageHeight - 0]
-                                                    ],
-                                                    sourceImagePath: item.imagePath,
-                                                    sourceImageWidth: item.imageWidth,
-                                                    sourceImageHeight: item.imageHeight,
-                                                    sourceImageRotation: item.imageRotation,
-                                                    // rotation: item.imageRotation,
-                                                    ...(CARD_APP
-                                                        ? {
-                                                              qrcode,
-                                                              colors
-                                                          }
-                                                        : {})
-                                                });
-                                            }
-                                        }
-                                        resolve(result);
-                                    } catch (error) {
-                                        reject(error);
+                    await doInBatch(
+                        items,
+                        (item, index) =>
+                            new Promise<PageData[]>(async (resolve, reject) => {
+                                try {
+                                    DEV_LOG && console.log('about to cropDocument', index, JSON.stringify(item));
+                                    const images: CropResult[] = [];
+                                    if (item.quads) {
+                                        images.push(
+                                            ...(await cropDocumentFromFile(item.imagePath, item.quads, {
+                                                // rotation: item.imageRotation,
+                                                fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
+                                                saveInFolder: knownFolders.temp().path,
+                                                compressFormat: IMG_FORMAT,
+                                                compressQuality: IMG_COMPRESS
+                                            }))
+                                        );
+                                        // we generate
+                                    } else {
+                                        images.push({ imagePath: item.imagePath, width: item.imageWidth, height: item.imageHeight });
                                     }
-                                })
-                        )
+                                    let qrcode;
+                                    let colors;
+                                    if (CARD_APP) {
+                                        [qrcode, colors] = await processFromFile(
+                                            item.imagePath,
+                                            [
+                                                {
+                                                    type: 'qrcode'
+                                                },
+                                                {
+                                                    type: 'palette'
+                                                }
+                                            ],
+                                            {
+                                                maxSize: QRCODE_RESIZE_THRESHOLD
+                                            }
+                                        );
+                                        DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+                                    }
+                                    const result = [];
+                                    DEV_LOG &&
+                                        console.log(
+                                            'images',
+                                            images.map((i) => i.imagePath)
+                                        );
+                                    if (images?.length) {
+                                        for (let index = 0; index < images.length; index++) {
+                                            const image = images[index];
+                                            result.push({
+                                                ...image,
+                                                crop: item.quads?.[index] || [
+                                                    [0, 0],
+                                                    [item.imageWidth - 0, 0],
+                                                    [item.imageWidth - 0, item.imageHeight - 0],
+                                                    [0, item.imageHeight - 0]
+                                                ],
+                                                sourceImagePath: item.imagePath,
+                                                sourceImageWidth: item.imageWidth,
+                                                sourceImageHeight: item.imageHeight,
+                                                sourceImageRotation: item.imageRotation,
+                                                // rotation: item.imageRotation,
+                                                ...(CARD_APP
+                                                    ? {
+                                                          qrcode,
+                                                          colors
+                                                      }
+                                                    : {})
+                                            });
+                                        }
+                                    }
+                                    DEV_LOG && console.log('cropAndOtherDone', index);
+                                    resolve(result);
+                                } catch (error) {
+                                    reject(error);
+                                }
+                            })
                     )
                 ).flat();
                 DEV_LOG && console.log('pagesToAdd', JSON.stringify(pagesToAdd));
                 if (pagesToAdd.length) {
+                    const nbPagesBefore = document?.pages.length ?? 0;
                     if (document) {
                         await document.addPages(pagesToAdd);
                         await document.save({}, false);
+                        showSnack({ message: lc('imported_nb_pages', pagesToAdd.length) });
                     } else {
                         document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
                     }
+                    await goToDocumentAfterScan(document, nbPagesBefore, canGoToView);
                     return document;
                 }
             }
@@ -572,7 +399,7 @@ export async function importAndScanImageFromUris(uris, document?: OCRDocument) {
         hideLoading();
     }
 }
-export async function importAndScanImage(document?: OCRDocument) {
+export async function importAndScanImage(document?: OCRDocument, canGoToView = true) {
     await request({ storage: {}, photo: {} });
     // let selection: { files: string[]; ios?; android? };
     let selection;
@@ -627,11 +454,12 @@ export async function importAndScanImage(document?: OCRDocument) {
             showLoading(l('computing'));
             return await importAndScanImageFromUris(
                 selection.map((s) => s.path),
-                document
+                document,
+                canGoToView
             );
         }
     } catch (error) {
-        showError(error);
+        throw error;
     } finally {
         hideLoading();
     }
@@ -1134,7 +962,12 @@ export async function detectOCROnPage(document: OCRDocument, index: number) {
         // recycleImages(ocrImage);
     }
 }
-export async function transformPages({ documents, pages }: { documents?: OCRDocument[]; pages?: { page: OCRPage; pageIndex: number; document: OCRDocument }[] }) {
+interface PageTransformData {
+    page: OCRPage;
+    pageIndex: number;
+    document: OCRDocument;
+}
+export async function transformPages({ documents, pages }: { documents?: OCRDocument[]; pages?: PageTransformData[] }) {
     try {
         const view = (await import('~/components/common/TransformPagesBottomSheet.svelte')).default;
         const updateOptions = await showBottomSheet({
@@ -1158,21 +991,19 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
                 text: lc('updating_pages', progress),
                 progress: 0
             });
-            await Promise.all(
-                pages.map(async (p, index) => {
-                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
-                        colorType: updateOptions.colorType,
-                        colorMatrix: updateOptions.colorMatrix
-                    });
+            await doInBatch(pages, async (p: PageTransformData, index) => {
+                await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
+                    colorType: updateOptions.colorType,
+                    colorMatrix: updateOptions.colorMatrix
+                });
 
-                    const progress = Math.round((pagesDone / totalPages) * 100);
-                    updateSnackMessage({
-                        text: lc('updating_pages', progress),
-                        progress
-                    });
-                    pagesDone += 1;
-                })
-            );
+                pagesDone += 1;
+                const progress = Math.round((pagesDone / totalPages) * 100);
+                updateSnackMessage({
+                    text: lc('updating_pages', progress),
+                    progress
+                });
+            });
         }
     } catch (error) {
         throw error;
@@ -1307,4 +1138,273 @@ export async function showMatrixLevelPopover({ item, anchor, currentValue, onCha
         value: currentValue,
         onChange
     });
+}
+export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
+    if (CARD_APP) {
+        const page = (await import('~/components/view/CardView.svelte')).default;
+        return navigate({
+            page,
+            props: {
+                document: doc
+            }
+        });
+    } else {
+        const page = (await import('~/components/view/DocumentView.svelte')).default;
+        return navigate({
+            page,
+            transition: __ANDROID__ && useTransition ? SharedTransition.custom(new PageTransition(300, null, 10)) : null,
+            props: {
+                document: doc
+            }
+        });
+    }
+}
+
+export async function addCurrentImageToDocument({
+    colorType,
+    colorMatrix,
+    pagesToAdd,
+    sourceImagePath,
+    imageWidth,
+    imageHeight,
+    imageRotation,
+    quads,
+    transforms = []
+}: {
+    colorType?;
+    colorMatrix?;
+    pagesToAdd;
+    sourceImagePath;
+    imageWidth;
+    imageHeight;
+    imageRotation;
+    quads;
+    transforms?: string[];
+}) {
+    if (!sourceImagePath) {
+        return;
+    }
+    const strTransforms = transforms?.join(TRANSFORMS_SPLIT) ?? '';
+    DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
+    const images: CropResult[] = [];
+    if (quads) {
+        images.push(
+            ...(await cropDocumentFromFile(sourceImagePath, quads, {
+                transforms: strTransforms,
+                saveInFolder: knownFolders.temp().path,
+                compressFormat: IMG_FORMAT,
+                compressQuality: IMG_COMPRESS
+            }))
+        );
+        // we generate
+    } else {
+        images.push({ imagePath: sourceImagePath, width: imageWidth, height: imageHeight });
+    }
+    // let images = quads ? await cropDocumentFromFile(sourceImagePath, quads, strTransforms) : [sourceImagePath];
+    if (images.length) {
+        // if (!document) {
+        //     document = await OCRDocument.createDocument(dayjs().format('L LTS'));
+        // }
+        let qrcode;
+        let colors;
+        if (CARD_APP) {
+            [qrcode, colors] = await processFromFile(
+                sourceImagePath,
+                [
+                    {
+                        type: 'qrcode'
+                    },
+                    {
+                        type: 'palette'
+                    }
+                ],
+                {
+                    maxSize: QRCODE_RESIZE_THRESHOLD
+                }
+            );
+            // Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
+            DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+        }
+        for (let index = 0; index < images.length; index++) {
+            const image = images[index];
+            pagesToAdd.push({
+                ...image,
+                crop: quads?.[index] || [
+                    [0, 0],
+                    [imageWidth - 0, 0],
+                    [imageWidth - 0, imageHeight - 0],
+                    [0, imageHeight - 0]
+                ],
+                colorType,
+                colorMatrix,
+                colors,
+                qrcode,
+                transforms: strTransforms,
+                sourceImagePath,
+                sourceImageWidth: imageWidth,
+                sourceImageHeight: imageHeight,
+                sourceImageRotation: imageRotation,
+                rotation: imageRotation
+            });
+        }
+    }
+}
+export async function processCameraImage({
+    imagePath,
+    autoScan = false,
+    onBeforeModalImport,
+    onAfterModalImport,
+    pagesToAdd
+}: {
+    imagePath: string;
+    autoScan?: boolean;
+    onBeforeModalImport?: Function;
+    onAfterModalImport?: Function;
+    pagesToAdd;
+}) {
+    const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+    const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
+    const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+    const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
+    const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
+    let quads: [number, number][][];
+    const imageSize = getImageSize(imagePath);
+    const imageWidth = imageSize.width;
+    const imageHeight = imageSize.height;
+    const imageRotation = imageSize.rotation;
+    if (cropEnabled) {
+        quads = await getJSONDocumentCornersFromFile(imagePath, previewResizeThreshold * 1.5, 0);
+    }
+    DEV_LOG && console.log('processAndAddImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height);
+    if (cropEnabled && quads.length === 0) {
+        let items = [
+            {
+                imagePath,
+                imageWidth,
+                imageHeight,
+                imageRotation,
+                quads: [
+                    [
+                        [noDetectionMargin, noDetectionMargin],
+                        [imageSize.width - noDetectionMargin, noDetectionMargin],
+                        [imageSize.width - noDetectionMargin, imageSize.height - noDetectionMargin],
+                        [noDetectionMargin, imageSize.height - noDetectionMargin]
+                    ]
+                ] as [number, number][][]
+            }
+        ];
+        if (autoScan === false) {
+            onBeforeModalImport?.();
+            const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
+            items = await showModal({
+                page: ModalImportImage,
+                animated: true,
+                fullscreen: true,
+                props: {
+                    items
+                }
+            });
+            quads = items ? items[0].quads : undefined;
+            onAfterModalImport?.();
+        }
+    }
+    if (!cropEnabled || quads?.length) {
+        await addCurrentImageToDocument({ sourceImagePath: imagePath, imageWidth, imageHeight, imageRotation, quads, colorType, colorMatrix, pagesToAdd, transforms });
+        return true;
+    }
+    showSnack({ message: lc('no_document_found') });
+    return false;
+}
+export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumber = 0, canGoToView = true) {
+    if (oldPagesNumber === 0 || document.pages.length - oldPagesNumber === 1) {
+        const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
+        DEV_LOG && console.log('goToDocumentAfterScan', document.pages.length);
+        navigate({
+            page: component,
+            props: {
+                document,
+                startPageIndex: document.pages.length - 1,
+                transitionOnBack: null
+            }
+        });
+    } else if (canGoToView) {
+        return goToDocumentView(document, false);
+    }
+}
+export async function importImageFromCamera(document?: OCRDocument, canGoToView = true) {
+    const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
+    if (useSystemCamera) {
+        const resultImagePath = await new Promise<string>((resolve, reject) => {
+            const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+            let tempPictureUri;
+            const context = Utils.android.getApplicationContext();
+            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + '/' + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
+            const nativeFile = new java.io.File(picturePath);
+
+            if (SDK_VERSION >= 21) {
+                tempPictureUri = androidx.core.content.FileProvider.getUriForFile(context, __APP_ID__ + '.provider', nativeFile);
+            } else {
+                tempPictureUri = android.net.Uri.fromFile(nativeFile);
+            }
+
+            takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, tempPictureUri);
+            takePictureIntent.putExtra('android.intent.extras.CAMERA_FACING', 0);
+
+            // if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
+            const REQUEST_IMAGE_CAPTURE = 3453;
+            function onActivityResult(args) {
+                const requestCode = args.requestCode;
+                const resultCode = args.resultCode;
+
+                if (requestCode === REQUEST_IMAGE_CAPTURE) {
+                    Application.android.off(Application.android.activityResultEvent, onActivityResult);
+                    if (resultCode === android.app.Activity.RESULT_OK) {
+                        resolve(picturePath);
+                    } else if (resultCode === android.app.Activity.RESULT_CANCELED) {
+                        // User cancelled the image capture
+                        reject();
+                    }
+                }
+            }
+            Application.android.on(Application.android.activityResultEvent, onActivityResult);
+            Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            // } else {
+            //     reject(new Error('camera_intent_not_supported'));
+            // }
+        });
+        if (resultImagePath) {
+            const pagesToAdd = [];
+            await processCameraImage({
+                imagePath: resultImagePath,
+                pagesToAdd
+            });
+            if (!document) {
+                document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+            } else {
+                await document.addPages(pagesToAdd);
+            }
+            await goToDocumentAfterScan(document, 0, canGoToView);
+        }
+
+        return;
+    }
+    const result = await request('camera');
+    if (result[0] !== 'authorized') {
+        throw new PermissionError(lc('camera_permission_needed'));
+    }
+    const oldPagesNumber = document?.pages.length ?? 0;
+    DEV_LOG && console.log('importImageFromCamera', oldPagesNumber);
+    const Camera = (await import('~/components/camera/Camera.svelte')).default;
+    document = await showModal({
+        page: Camera,
+        fullscreen: true,
+        props: {
+            document
+        }
+    });
+    if (document) {
+        return goToDocumentAfterScan(document, oldPagesNumber);
+    }
 }

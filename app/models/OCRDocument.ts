@@ -6,6 +6,16 @@ import { documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
 import { IMG_COMPRESS, IMG_FORMAT } from './constants';
+import { doInBatch } from '~/utils/ui';
+
+export interface ImportImageData {
+    imagePath?: string;
+    imageWidth?: number;
+    imageHeight?: number;
+    imageRotation?: number;
+    quads?: [number, number][][];
+    qrcode?: QRCodeData;
+}
 
 export interface ImageConfig {
     colorType?: ColorMatricesType;
@@ -120,16 +130,15 @@ export class OCRDocument extends Observable implements Document {
             const docId = this.id;
             const docData = this.folderPath;
             const length = pagesData.length;
-            const pages = [];
             const pageStartId = Date.now();
-            for (let index = 0; index < length; index++) {
-                const { id, imagePath, sourceImage, sourceImagePath, image, ...pageData } = pagesData[index];
+            const pages = await doInBatch(pagesData, async (data, index) => {
+                const { id, imagePath, sourceImage, sourceImagePath, image, ...pageData } = data;
                 const pageId = id || pageStartId + '_' + index;
                 // const page = new OCRPage(pageId, docId);
                 const pageFileData = docData.getFolder(pageId);
                 const attributes = { ...pageData, id: pageId, document_id: docId } as OCRPage;
                 attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
-                DEV_LOG && console.log('add page', attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
+                DEV_LOG && console.log('add page', pageId, attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
                 if (imagePath) {
                     const file = File.fromPath(imagePath);
                     await file.copy(attributes.imagePath);
@@ -137,23 +146,16 @@ export class OCRDocument extends Observable implements Document {
                     const imageSource = new ImageSource(image);
                     await imageSource.saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
                 } else {
-                    continue;
+                    return;
                 }
                 attributes.size = File.fromPath(attributes.imagePath).size;
                 if (sourceImage) {
-                    // let baseName = sourceImagePath
-                    //     .split('/')
-                    //     .slice(-1)[0]
-                    //     .replace(/%[a-zA-Z\d]{2}/, '');
-                    // if (!baseName.endsWith(IMG_FORMAT)) {
                     const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
                     // }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
 
                     const imageSource = new ImageSource(sourceImage);
                     await imageSource.saveToFileAsync(actualSourceImagePath, IMG_FORMAT, IMG_COMPRESS);
-                    // const file = File.fromPath(sourceImagePath);
-                    // await file.copy(actualSourceImagePath);
                     attributes.sourceImagePath = actualSourceImagePath;
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
@@ -169,13 +171,9 @@ export class OCRDocument extends Observable implements Document {
                     await file.copy(actualSourceImagePath);
                     attributes.sourceImagePath = actualSourceImagePath;
                 }
-                // we add 1000 to each pageIndex so that we can reorder them
-                // attributes.pageIndex = pages.length + 1000;
-                // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
-
-                //using saved image to disk
-                pages.push(await documentsService.pageRepository.createPage(attributes));
-            }
+                return documentsService.pageRepository.createPage(attributes);
+            });
+            // for (let index = 0; index < length; index++) {}
             // DEV_LOG && console.log('addPages done', JSON.stringify(pages));
             if (this.pages) {
                 this.pages.push(...pages);
@@ -253,8 +251,8 @@ export class OCRDocument extends Observable implements Document {
         return this.save();
     }
     onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
-        page.notify({ eventName: 'updated', object: page });
-        this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
+        // page.notify({ eventName: 'updated', object: page });
+        // this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
         documentsService.notify({ eventName: 'documentPageUpdated', object: this as any, pageIndex, imageUpdated });
     }
     #_observablesListeners: Function[] = [];

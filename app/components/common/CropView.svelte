@@ -50,7 +50,6 @@
     $: {
         const theRotation = rotation || imageRotation || 0;
         needRotation = theRotation && theRotation % 180 !== 0;
-        DEV_LOG && console.log('theRotation', theRotation, imageRotation, needRotation);
         if (needRotation) {
             actualWidth = imageHeight;
             actualHeight = imageWidth;

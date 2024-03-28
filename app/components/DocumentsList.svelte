@@ -1,35 +1,20 @@
 <script context="module" lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-    import { request } from '@nativescript-community/perms';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import {
-        AnimationDefinition,
-        Application,
-        ApplicationSettings,
-        Color,
-        EventData,
-        NavigatedData,
-        ObservableArray,
-        Page,
-        PageTransition,
-        SharedTransition,
-        StackLayout,
-        Utils
-    } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
@@ -40,9 +25,21 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
-    import { PermissionError, showError } from '~/utils/error';
-    import { fade, navigate, showModal } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSettings, transformPages } from '~/utils/ui';
+    import { showError } from '~/utils/error';
+    import { fade, navigate } from '~/utils/svelte/ui';
+    import {
+        detectOCR,
+        goToDocumentView,
+        importAndScanImage,
+        importAndScanImageFromUris,
+        importImageFromCamera,
+        onBackButton,
+        showImagePopoverMenu,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        showSettings,
+        transformPages
+    } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight } from '~/variables';
 
     const textPaint = new Paint();
@@ -240,40 +237,10 @@
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
-    async function goToView(doc: OCRDocument) {
-        const page = (await import('~/components/view/DocumentView.svelte')).default;
-        return navigate({
-            page,
-            transition: __ANDROID__ && !CARD_APP ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
-            props: {
-                document: doc
-            }
-        });
-    }
+
     async function onStartCam() {
         try {
-            const result = await request('camera');
-            if (result[0] !== 'authorized') {
-                throw new PermissionError(lc('camera_permission_needed'));
-            }
-            const document: OCRDocument = await showModal({
-                page: Camera,
-                fullscreen: true
-            });
-            if (document) {
-                if (document.pages.length === 1) {
-                    const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
-                    navigate({
-                        page: component,
-                        props: {
-                            document,
-                            transitionOnBack: false
-                        }
-                    });
-                } else {
-                    await goToView(document);
-                }
-            }
+            await importImageFromCamera();
         } catch (error) {
             showError(error);
         }
@@ -281,21 +248,7 @@
 
     async function importDocument() {
         try {
-            const doc = await importAndScanImage();
-            if (!doc) {
-                return;
-            }
-            const component =
-                doc.pages.length > 1
-                    ? (await import(CARD_APP ? '~/components/view/CardView.svelte' : '~/components/view/DocumentView.svelte')).default
-                    : (await import('~/components/edit/DocumentEdit.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    document: doc,
-                    transitionOnBack: false
-                }
-            });
+            await importAndScanImage();
         } catch (error) {
             showError(error);
         }
@@ -371,7 +324,7 @@
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else {
-                await goToView(item.doc);
+                await goToDocumentView(item.doc);
             }
         } catch (error) {
             showError(error);
@@ -405,20 +358,7 @@
                         }
                 }
                 if (uris.length) {
-                    const doc = await importAndScanImageFromUris(uris);
-                    if (!doc) {
-                        return;
-                    }
-                    const component =
-                        doc.pages.length > 1
-                            ? (await import(CARD_APP ? '~/components/view/CardView.svelte' : '~/components/view/DocumentView.svelte')).default
-                            : (await import('~/components/edit/DocumentEdit.svelte')).default;
-                    navigate({
-                        page: component,
-                        props: {
-                            document: doc
-                        }
-                    });
+                    await importAndScanImageFromUris(uris);
                 }
             } catch (error) {
                 showError(error);
@@ -624,7 +564,15 @@
         // const h2 = h / 2;
         const dx = 10 + getItemImageHeight(viewStyle) + 16;
         textPaint.color = colorOnSurfaceVariant;
-        canvas.drawText(filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0)), dx, h - (condensed ? 0 : 16) - 10, textPaint);
+        canvas.drawText(
+            filesize(
+                item.doc.pages.reduce((acc, v) => acc + v.size, 0),
+                { output: 'string' }
+            ),
+            dx,
+            h - (condensed ? 0 : 16) - 10,
+            textPaint
+        );
         textPaint.color = colorOnBackground;
         const topText = createNativeAttributedString({
             spans: [

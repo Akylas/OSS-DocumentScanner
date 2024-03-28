@@ -23,7 +23,8 @@
         DEFAULT_PDF_OPTIONS,
         DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NOT_DETECTED_MARGIN,
-        PREVIEW_RESIZE_THRESHOLD
+        PREVIEW_RESIZE_THRESHOLD,
+        USE_SYSTEM_CAMERA
     } from '~/models/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import { DocumentsService, documentsService } from '~/services/documents';
@@ -80,6 +81,92 @@
     }
     function getSubSettings(id: string) {
         switch (id) {
+            case 'camera':
+                return [
+                    {
+                        type: 'switch',
+                        id: 'use_system_camera',
+                        title: lc('use_system_camera'),
+                        description: lc('use_system_camera_desc'),
+                        value: ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA)
+                    }
+                ];
+            case 'security':
+                return [
+                    {
+                        type: 'switch',
+                        id: 'biometric_lock',
+                        title: lc('biometric_lock'),
+                        description: lc('biometric_lock_desc'),
+                        value: securityService.biometricEnabled
+                    },
+                    {
+                        type: 'switch',
+                        id: 'biometric_auto_lock',
+                        title: lc('biometric_auto_lock'),
+                        description: lc('biometric_auto_lock_desc'),
+                        enabled: securityService.biometricEnabled,
+                        value: securityService.biometricEnabled && securityService.autoLockEnabled
+                    }
+                ];
+            case 'document_detection':
+                return [
+                    {
+                        type: 'switch',
+                        id: 'cropEnabled',
+                        title: lc('crop_enabled'),
+                        value: ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED)
+                    },
+                    {
+                        id: 'setting',
+                        key: 'previewResizeThreshold',
+                        title: lc('preview_resize_threshold'),
+                        full_description: lc('preview_resize_threshold_desc'),
+                        rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
+                        type: 'prompt'
+                    },
+                    {
+                        id: 'setting',
+                        key: 'documentNotDetectedMargin',
+                        title: lc('document_not_detected_margin'),
+                        full_description: lc('document_not_detected_margin_desc'),
+                        rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
+                        type: 'prompt'
+                    }
+                ];
+            case 'autoscan':
+                return [
+                    {
+                        type: 'switch',
+                        id: 'autoScan',
+                        title: lc('auto_scan'),
+                        value: ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED)
+                    },
+                    {
+                        id: 'setting',
+                        key: 'autoScan_distanceThreshold',
+                        title: lc('auto_scan_distance_threshold'),
+                        full_description: lc('auto_scan_distance_threshold_desc'),
+                        rightValue: () => ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD),
+                        type: 'prompt'
+                    },
+                    {
+                        id: 'setting',
+                        key: 'autoScan_autoScanDuration',
+                        title: lc('auto_scan_duration'),
+                        full_description: lc('auto_scan_duration_desc'),
+                        rightValue: () => ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION),
+                        type: 'prompt'
+                    },
+                    {
+                        id: 'setting',
+                        key: 'autoScan_preAutoScanDelay',
+                        title: lc('auto_scan_delay'),
+                        full_description: lc('auto_scan_delay_desc'),
+                        rightValue: () => ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY),
+                        type: 'prompt'
+                    }
+                ];
             case 'pdf':
                 return (
                     __ANDROID__
@@ -377,23 +464,20 @@
                                   icon: 'mdi-fingerprint',
                                   title: lc('security'),
                                   description: lc('security_settings'),
-                                  options: () => [
-                                      {
-                                          type: 'switch',
-                                          id: 'biometric_lock',
-                                          title: lc('biometric_lock'),
-                                          description: lc('biometric_lock_desc'),
-                                          value: securityService.biometricEnabled
-                                      },
-                                      {
-                                          type: 'switch',
-                                          id: 'biometric_auto_lock',
-                                          title: lc('biometric_auto_lock'),
-                                          description: lc('biometric_auto_lock_desc'),
-                                          enabled: securityService.biometricEnabled,
-                                          value: securityService.biometricEnabled && securityService.autoLockEnabled
-                                      }
-                                  ]
+                                  options: () => getSubSettings('security')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat(
+                    __ANDROID__
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  title: lc('camera'),
+                                  description: lc('camera_settings'),
+                                  icon: 'mdi-camera',
+                                  options: () => getSubSettings('camera')
                               }
                           ]
                         : ([] as any)
@@ -404,30 +488,7 @@
                         title: lc('document_detection'),
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
-                        options: () => [
-                            {
-                                type: 'switch',
-                                id: 'cropEnabled',
-                                title: lc('crop_enabled'),
-                                value: ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED)
-                            },
-                            {
-                                id: 'setting',
-                                key: 'previewResizeThreshold',
-                                title: lc('preview_resize_threshold'),
-                                full_description: lc('preview_resize_threshold_desc'),
-                                rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
-                                type: 'prompt'
-                            },
-                            {
-                                id: 'setting',
-                                key: 'documentNotDetectedMargin',
-                                title: lc('document_not_detected_margin'),
-                                full_description: lc('document_not_detected_margin_desc'),
-                                rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
-                                type: 'prompt'
-                            }
-                        ]
+                        options: () => getSubSettings('document_detection')
                     }
                 ] as any)
                 .concat([
@@ -436,38 +497,7 @@
                         icon: 'mdi-file-star-four-points',
                         title: lc('autoscan'),
                         description: lc('autoscan_settings'),
-                        options: () => [
-                            {
-                                type: 'switch',
-                                id: 'autoScan',
-                                title: lc('auto_scan'),
-                                value: ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED)
-                            },
-                            {
-                                id: 'setting',
-                                key: 'autoScan_distanceThreshold',
-                                title: lc('auto_scan_distance_threshold'),
-                                full_description: lc('auto_scan_distance_threshold_desc'),
-                                rightValue: () => ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD),
-                                type: 'prompt'
-                            },
-                            {
-                                id: 'setting',
-                                key: 'autoScan_autoScanDuration',
-                                title: lc('auto_scan_duration'),
-                                full_description: lc('auto_scan_duration_desc'),
-                                rightValue: () => ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION),
-                                type: 'prompt'
-                            },
-                            {
-                                id: 'setting',
-                                key: 'autoScan_preAutoScanDelay',
-                                title: lc('auto_scan_delay'),
-                                full_description: lc('auto_scan_delay_desc'),
-                                rightValue: () => ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY),
-                                type: 'prompt'
-                            }
-                        ]
+                        options: () => getSubSettings('autoscan')
                     }
                 ] as any)
                 .concat([

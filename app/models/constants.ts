@@ -6,12 +6,14 @@ export const IMG_FORMAT = 'jpg';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
+export const DEFAULT__BATCH_CHUNK_SIZE = 10;
 export const FILTER_ROW_HEIGHT = CARD_APP ? 55 : 85;
 export const FILTER_COL_WIDTH = CARD_APP ? FILTER_ROW_HEIGHT / CARD_RATIO : 60;
 export const IMG_COMPRESS = 80;
 export const PREVIEW_RESIZE_THRESHOLD = 200;
 export const QRCODE_RESIZE_THRESHOLD = 900;
 export const DOCUMENT_NOT_DETECTED_MARGIN = 100;
+export const USE_SYSTEM_CAMERA = false;
 export const CROP_ENABLED = true;
 export const AUTO_SCAN_ENABLED = true;
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;

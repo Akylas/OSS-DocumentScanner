@@ -1,17 +1,15 @@
 <script context="module" lang="ts">
-    import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img } from '@nativescript-community/ui-image';
+    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout, TouchGestureEventData, View } from '@nativescript/core';
+    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
@@ -21,9 +19,23 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
-    import { PermissionError, showError } from '~/utils/error';
-    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
-    import { detectOCR, hideLoading, importAndScanImage, onBackButton, showImagePopoverMenu, showLoading, showPDFPopoverMenu, showPopoverMenu, transformPages } from '~/utils/ui';
+    import { showError } from '~/utils/error';
+    import { goBack, navigate } from '~/utils/svelte/ui';
+    import {
+        detectOCR,
+        getColorMatrix,
+        hideLoading,
+        importAndScanImage,
+        importImageFromCamera,
+        onBackButton,
+        showImagePopoverMenu,
+        showLoading,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        showSnackMessage,
+        transformPages,
+        updateSnackMessage
+    } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -99,30 +111,7 @@
     }
     async function addPages() {
         try {
-            const result = await request('camera');
-            if (result[0] !== 'authorized') {
-                throw new PermissionError(lc('camera_permission_needed'));
-            }
-            const oldPagesNumber = document.pages.length;
-            const doc: OCRDocument = await showModal({
-                page: Camera,
-                fullscreen: true,
-                props: {
-                    modal: true,
-                    document
-                }
-            });
-            // if more than 1 page was imported stay here so that the user sees the added pages
-            if (doc && doc.pages.length - oldPagesNumber === 1) {
-                const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
-                navigate({
-                    page: component,
-                    props: {
-                        document,
-                        startPageIndex: document.pages.length - 1
-                    }
-                });
-            }
+            await importImageFromCamera(document);
         } catch (error) {
             showError(error);
         }
@@ -130,19 +119,7 @@
 
     async function importPages() {
         try {
-            const oldPagesNumber = document.pages.length;
-            const doc = await importAndScanImage(document);
-            // if more than 1 page was imported stay here so that the user sees the added pages
-            if (doc && doc.pages.length - oldPagesNumber === 1) {
-                const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
-                navigate({
-                    page: component,
-                    props: {
-                        document,
-                        startPageIndex: document.pages.length - 1
-                    }
-                });
-            }
+            await importAndScanImage(document, false);
         } catch (error) {
             showError(error);
         }
@@ -199,6 +176,17 @@
         if (items) {
             nbSelected = 0;
             items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+        }
+        // documents?.forEach((d, index) => {
+        //         d.selected = false;
+        //         documents.setItem(index, d);
+        //     });
+        // refresh();
+    }
+    function selectAll() {
+        if (items) {
+            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: true, index: i.index })));
+            nbSelected = items.length;
         }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
@@ -367,7 +355,18 @@
             items.setItem(index, { ...current, page });
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
-                imageView?.updateImageUri();
+                if (imageView) {
+                    imageView?.updateImageUri();
+                } else {
+                    const page = current.page;
+                    const pipeline = getImagePipeline();
+                    const cacheKey = pipeline.getCacheKey(page.imagePath, {
+                        decodeWidth: itemHeight,
+                        colorMatrix: page.colorMatrix || getColorMatrix(page.colorType),
+                        imageRotation: page?.rotation ?? 0
+                    });
+                    pipeline.evictFromCache(cacheKey);
+                }
             }
         }
     }
@@ -419,7 +418,6 @@
         documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         document.on('pagesAdded', onPagesAdded);
-        // refresh();
     });
     onDestroy(() => {
         DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
@@ -479,6 +477,7 @@
     async function showOptions(event) {
         if (nbSelected > 0) {
             const options = new ObservableArray([
+                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
                 { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
                 // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
@@ -492,6 +491,9 @@
 
                 onClose: async (item) => {
                     switch (item.id) {
+                        case 'select_all':
+                            selectAll();
+                            break;
                         case 'share':
                             showImageExportPopover(event);
                             break;
@@ -514,6 +516,7 @@
             });
         } else {
             const options = new ObservableArray([
+                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -525,6 +528,9 @@
 
                 onClose: async (item) => {
                     switch (item.id) {
+                        case 'select_all':
+                            selectAll();
+                            break;
                         case 'ocr':
                             await detectOCR({ documents: [document] });
                             unselectAll();
@@ -625,7 +631,7 @@
                         stretch="aspectFit"
                         verticalAlignment="center" />
                     <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} height="100%" padding="10 0 0 0" row={1}>
-                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size)}`} textAlignment="left" verticalAlignment="bottom" />
+                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`} textAlignment="left" verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>

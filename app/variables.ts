@@ -75,7 +75,6 @@ const onInitRootView = function () {
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         const activity = Application.android.startActivity;
         const nUtils = com.akylas.documentscanner.Utils.Companion;
-        DEV_LOG && console.log('nUtils', nUtils);
         const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
         if (nActionBarHeight > 0) {
             actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));

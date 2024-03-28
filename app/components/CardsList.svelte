@@ -1,7 +1,5 @@
 <script lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-    import { throttle } from '@nativescript/core/utils';
-    import { request } from '@nativescript-community/perms';
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { Img } from '@nativescript-community/ui-image';
@@ -11,12 +9,11 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
+    import { throttle } from '@nativescript/core/utils';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
-    import { navigate, showModal } from '~/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import Camera from '~/components/camera/Camera.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
@@ -24,13 +21,25 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { CARD_RATIO } from '~/models/constants';
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
-    import { PermissionError, showError } from '~/utils/error';
-    import { fade } from '~/utils/svelte/ui';
-    import { detectOCR, importAndScanImage, importAndScanImageFromUris, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSettings, transformPages } from '~/utils/ui';
+    import { showError } from '~/utils/error';
+    import { fade, navigate } from '~/utils/svelte/ui';
+    import {
+        detectOCR,
+        goToDocumentView,
+        importAndScanImage,
+        importAndScanImageFromUris,
+        importImageFromCamera,
+        onBackButton,
+        showImagePopoverMenu,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        showSettings,
+        transformPages
+    } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
-    import { CARD_RATIO } from '~/models/constants';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -212,30 +221,9 @@
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
 
-    async function goToView(doc: OCRDocument) {
-        const page = (await import('~/components/view/CardView.svelte')).default;
-        return navigate({
-            page,
-            // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, null, 10)) : undefined,
-            props: {
-                document: doc
-            }
-        });
-    }
-
     async function onStartCam() {
         try {
-            const result = await request('camera');
-            if (result[0] !== 'authorized') {
-                throw new PermissionError(lc('camera_permission_needed'));
-            }
-            const document: OCRDocument = await showModal({
-                page: Camera,
-                fullscreen: true
-            });
-            if (document) {
-                await goToView(document);
-            }
+            await importImageFromCamera();
         } catch (error) {
             showError(error);
         }
@@ -243,20 +231,7 @@
 
     async function importDocument() {
         try {
-            const doc = await importAndScanImage();
-            if (!doc) {
-                return;
-            }
-            const component =
-                doc.pages.length > 1
-                    ? (await import(CARD_APP ? '~/components/view/CardView.svelte' : '~/components/view/DocumentView.svelte')).default
-                    : (await import('~/components/edit/DocumentEdit.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    document: doc
-                }
-            });
+            await importAndScanImage();
         } catch (error) {
             showError(error);
         }
@@ -457,7 +432,7 @@
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else {
-                await goToView(item.doc);
+                await goToDocumentView(item.doc);
             }
         } catch (error) {
             showError(error);
@@ -493,18 +468,7 @@
                         }
                 }
                 if (uris.length) {
-                    const doc = await importAndScanImageFromUris(uris);
-                    if (!doc) {
-                        return;
-                    }
-                    const component = doc.pages.length > 1 ? (await import('~/components/view/DocumentView.svelte')).default : (await import('~/components/edit/DocumentEdit.svelte')).default;
-                    navigate({
-                        page: component,
-                        props: {
-                            document: doc,
-                            transitionOnBack: false
-                        }
-                    });
+                    await importAndScanImageFromUris(uris);
                 }
             } catch (error) {
                 showError(error);
@@ -657,9 +621,9 @@
     //         showError(error);
     //     }
     // }
-    function getSize(item: Item) {
-        return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
-    }
+    // function getSize(item: Item) {
+    //     return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
+    // }
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }

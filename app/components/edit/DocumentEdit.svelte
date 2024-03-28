@@ -19,7 +19,7 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
@@ -262,12 +262,7 @@
             showError(error);
         }
     }
-    let cropItem: {
-        imagePath?: string;
-        imageWidth?: number;
-        imageHeight?: number;
-        imageRotation?;
-    } = {};
+    let cropItem: ImportImageData = {};
     async function cropEdit() {
         //TODO: recrop into modal window
         try {

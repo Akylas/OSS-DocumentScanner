@@ -2,7 +2,7 @@
 
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Color, View } from '@nativescript/core';
+    import { ApplicationSettings, Color, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
@@ -15,7 +15,7 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
+    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMAGE_CONTEXT_OPTIONS, TRANSFORMS_SPLIT } from '~/models/constants';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -23,10 +23,10 @@
 
     const textFieldWidth = (screenWidthDips - 20 - 22 - 16) / 2;
 
-    export let transforms = [];
+    export let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>;
-    export let colorType;
-    export let colorMatrix;
+    export let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    export let colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
     export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
 
