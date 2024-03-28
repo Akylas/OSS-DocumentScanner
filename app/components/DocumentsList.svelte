@@ -238,9 +238,9 @@
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
 
-    async function onStartCam() {
+    async function onStartCam(inverseUseSystemCamera = false) {
         try {
-            await importImageFromCamera();
+            await importImageFromCamera({ inverseUseSystemCamera });
         } catch (error) {
             showError(error);
         }
@@ -697,7 +697,7 @@
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
-                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={onStartCam} />
+                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={() => onStartCam()} on:longPress={() => onStartCam(true)} />
             </stacklayout>
         {/if}
 

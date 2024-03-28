@@ -1332,9 +1332,9 @@ export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumb
         return goToDocumentView(document, false);
     }
 }
-export async function importImageFromCamera(document?: OCRDocument, canGoToView = true) {
+export async function importImageFromCamera({ document, canGoToView = true, inverseUseSystemCamera = false }: { document?: OCRDocument; canGoToView?: boolean; inverseUseSystemCamera? } = {}) {
     const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
-    if (useSystemCamera) {
+    if (__ANDROID__ ? (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera) : useSystemCamera) {
         const resultImagePath = await new Promise<string>((resolve, reject) => {
             const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 

@@ -109,9 +109,9 @@
             showError(err);
         }
     }
-    async function addPages() {
+    async function addPages(inverseUseSystemCamera = false) {
         try {
-            await importImageFromCamera(document);
+            await importImageFromCamera({ document, inverseUseSystemCamera });
         } catch (error) {
             showError(error);
         }
@@ -643,7 +643,7 @@
 
         <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
             <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={importPages} />
-            <mdbutton class="fab" margin="8 16 16 16" text="mdi-plus" on:tap={addPages} />
+            <mdbutton class="fab" margin="8 16 16 16" text="mdi-plus" on:tap={() => addPages()} on:longPress={() => addPages(true)} />
         </stacklayout>
     </gridlayout>
 </page>

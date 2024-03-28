@@ -222,7 +222,7 @@
     "transformations": "transformations",
     "updating_pages": "updating pages (%1$s%%)",
     "use_system_camera": "use system camera",
-    "use_system_camera_desc": "use system camera instead of app view. This will disable some features like batch, auto-scan.",
+    "use_system_camera_desc": "use system camera instead of app view (long press would use the inversed behavior). When enabled some features like batch or auto-scan will be disabled",
     "username": "username",
     "version": "version",
     "webdav_config": "webdav configuration",
