@@ -97,9 +97,17 @@
             close(item);
         }
     }
+    let ignoreNextOnCheckBoxChange = false;
     function onCheckedChanged(item, event) {
+        DEV_LOG && console.log('onCheckedChanged', event.value, ignoreNextOnCheckBoxChange);
         clearCheckboxTimer();
+        if (ignoreNextOnCheckBoxChange) {
+            ignoreNextOnCheckBoxChange = false;
+            return;
+        }
+        ignoreNextOnCheckBoxChange = true;
         onCheckBox?.(item, event.value, event);
+        ignoreNextOnCheckBoxChange = false;
     }
     onDestroy(() => {
         blurTextField();

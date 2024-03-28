@@ -868,8 +868,9 @@
         return 'default';
     }
 
+    let ignoreNextOnCheckBoxChange = false;
     async function onCheckBox(item, event) {
-        if (item.value === event.value) {
+        if (ignoreNextOnCheckBoxChange || item.value === event.value) {
             return;
         }
         const value = event.value;
@@ -877,6 +878,7 @@
         clearCheckboxTimer();
         DEV_LOG && console.log('onCheckBox', item.id, value);
         try {
+            ignoreNextOnCheckBoxChange = true;
             switch (item.id) {
                 case 'biometric_lock':
                     if (value) {
@@ -920,6 +922,8 @@
             }
         } catch (error) {
             showError(error);
+        } finally {
+            ignoreNextOnCheckBoxChange = false;
         }
     }
 
