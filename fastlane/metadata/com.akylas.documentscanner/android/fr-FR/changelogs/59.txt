@@ -1,0 +1,4 @@
+### Bug fixes
+- faster document view scrolling
+- batch operations on multiple pages to prevent memory crash feat(android): allow to use system camera app
+- long press on the camera button would trigger the opposite behavior(use system camera app or not)
