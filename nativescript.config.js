@@ -15,6 +15,7 @@ module.exports = {
         defaultLanguage: 'en'
     },
     android: {
+        runtimePackageName: '@akylas/nativescript-android-runtime',
         gradleVersion: '8.3',
         markingMode: 'none',
         codeCache: true,
