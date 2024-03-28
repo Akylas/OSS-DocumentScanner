@@ -199,7 +199,7 @@
     "start": "iniciar",
     "start_on_cam": "inicia la app desde la pantalla de cámara",
     "startup_error": "hubo un error al iniciar la aplicación. Reinicie la aplicación para volver a intentarlo. Si persiste por favor reportarlo",
-    "storage_location": "storage_location",
+    "storage_location": "ubicación de almacenamiento",
     "successful": "completado",
     "sync": "sincronizar",
     "system": "sistema",
