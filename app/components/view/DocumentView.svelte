@@ -618,6 +618,7 @@
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
+                        decodeWidth={itemHeight}
                         horizontalAlignment="center"
                         item={item.page}
                         sharedTransitionTag={`document_${document.id}_${item.page.id}`}

@@ -629,7 +629,14 @@
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView id="imageView" borderRadius={12} item={item.page} sharedTransitionTag={`document_${document.id}_${item.page.id}`} stretch="aspectFill" width="100%" />
+                    <RotableImageView
+                        id="imageView"
+                        borderRadius={12}
+                        decodeWidth={colWidth}
+                        item={item.page}
+                        sharedTransitionTag={`document_${document.id}_${item.page.id}`}
+                        stretch="aspectFill"
+                        width="100%" />
                     <!-- <canvaslabel height="100%" padding="10 0 0 0">
                         <cspan fontSize={14} fontWeight="normal" paddingBottom={20} text={`${item.page.width} x ${item.page.height}`} textAlignment="right" verticalAlignment="bottom" />
                         <cspan fontSize={14} fontWeight="normal" text={filesize(item.page.size)} textAlignment="right" verticalAlignment="bottom" />

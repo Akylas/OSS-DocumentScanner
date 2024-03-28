@@ -84,7 +84,6 @@
 
 {#if zoomable}
     <zoomimage
-        {...$$restProps}
         bind:this={SVImageView}
         colorMatrix={getItemColorMatrix(item)}
         decodeWidth={IMAGE_DECODE_HEIGHT}
@@ -93,16 +92,18 @@
         maxZoom={10}
         src={src || getImageSrc(item)}
         {stretch}
+        {...$$restProps}
         on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)} />
 {:else}
     <image
-        {...$$restProps}
         bind:this={SVImageView}
         colorMatrix={getItemColorMatrix(item)}
-        ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
         decodeWidth={IMAGE_DECODE_HEIGHT}
+        fadeDuration={100}
+        ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
         imageRotation={item?.rotation ?? 0}
         src={src || getImageSrc(item)}
         {stretch}
+        {...$$restProps}
         on:rotateAnimated={(e) => rotateToRotation(e.rotation, true)} />
 {/if}
