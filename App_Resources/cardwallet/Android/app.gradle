@@ -173,7 +173,7 @@ dependencies {
     def kotlinVersion = computeKotlinVersion()
     // def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
     // implementation "androidx.core:core-ktx:$androidxVersion"
-    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'androidx.core:core-splashscreen:1.1.0-alpha02'
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
