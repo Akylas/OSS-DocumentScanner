@@ -124,12 +124,13 @@
         try {
             showLoading(l('computing'));
             imageSource = new ImageSource(image);
-            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.jpg`);
+            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${IMG_COMPRESS}`);
             await imageSource.saveToFileAsync(tempImagePath, IMG_FORMAT, IMG_COMPRESS);
             //clear memory as soon as possible
             recycleImages(imageSource);
             return await processCameraImage({
                 imagePath: tempImagePath,
+                fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_COMPRESS}`,
                 autoScan,
                 onBeforeModalImport: () => {
                     if (torchEnabled) {

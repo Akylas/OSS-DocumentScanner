@@ -1171,6 +1171,7 @@ export async function addCurrentImageToDocument({
     imageHeight,
     imageRotation,
     quads,
+    fileName,
     transforms = []
 }: {
     colorType?;
@@ -1181,6 +1182,7 @@ export async function addCurrentImageToDocument({
     imageHeight;
     imageRotation;
     quads;
+    fileName?: string;
     transforms?: string[];
 }) {
     if (!sourceImagePath) {
@@ -1194,6 +1196,7 @@ export async function addCurrentImageToDocument({
             ...(await cropDocumentFromFile(sourceImagePath, quads, {
                 transforms: strTransforms,
                 saveInFolder: knownFolders.temp().path,
+                fileName,
                 compressFormat: IMG_FORMAT,
                 compressQuality: IMG_COMPRESS
             }))
@@ -1256,9 +1259,11 @@ export async function processCameraImage({
     autoScan = false,
     onBeforeModalImport,
     onAfterModalImport,
+    fileName,
     pagesToAdd
 }: {
     imagePath: string;
+    fileName?: string;
     autoScan?: boolean;
     onBeforeModalImport?: Function;
     onAfterModalImport?: Function;
@@ -1312,7 +1317,7 @@ export async function processCameraImage({
         }
     }
     if (!cropEnabled || quads?.length) {
-        await addCurrentImageToDocument({ sourceImagePath: imagePath, imageWidth, imageHeight, imageRotation, quads, colorType, colorMatrix, pagesToAdd, transforms });
+        await addCurrentImageToDocument({ sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads, colorType, colorMatrix, pagesToAdd, transforms });
         return true;
     }
     showSnack({ message: lc('no_document_found') });
