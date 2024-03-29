@@ -1,0 +1,2 @@
+### Bug fixes
+- batch scan would add the same image
