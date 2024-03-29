@@ -244,7 +244,6 @@
                     width: Screen.mainScreen.widthDIPs - 50,
                     onCheckBox(item, value, e) {
                         if (updatingTransform) {
-                            DEV_LOG && console.log('updatingTransform');
                             e.object.checked = !value;
                             return;
                         }
