@@ -66,6 +66,9 @@ export interface CropOptions extends LoadImageOptions {
     compressFormat?: string;
     compressQuality?: number;
 }
+export interface CornersOptions extends LoadImageOptions {
+    imageRotation?: number;
+}
 export interface CropResult {
     imagePath: string;
     width: number;

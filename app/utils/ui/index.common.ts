@@ -214,15 +214,16 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
             (sourceImagePath) =>
                 new Promise<ImportImageData>(async (resolve, reject) => {
                     try {
+                        const start = Date.now();
                         const imageSize = getImageSize(sourceImagePath);
-                        DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize));
+                        DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize), Date.now() - start, 'ms');
 
                         const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
                         const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
 
                         const imageRotation = imageSize.rotation;
                         // TODO: detect JSON and QRCode in one go
-                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, previewResizeThreshold * 1.5, 0) : undefined;
+                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, { resizeThreshold: previewResizeThreshold * 1.5 }) : undefined;
                         // DEV_LOG && console.log('[importAndScanImageFromUris] quads', sourceImagePath, quads);
                         let qrcode;
                         if (CARD_APP) {
@@ -243,7 +244,7 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
                                 [noDetectionMargin, height - noDetectionMargin]
                             ]);
                         }
-                        DEV_LOG && console.log('importFromImage done', sourceImagePath);
+                        DEV_LOG && console.log('importFromImage done', sourceImagePath, Date.now() - start, 'ms');
                         resolve({ quads, imagePath: sourceImagePath, qrcode, imageWidth: imageSize.width, imageHeight: imageSize.height, imageRotation });
                     } catch (error) {
                         reject(error);
@@ -303,6 +304,7 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
                         (item, index) =>
                             new Promise<PageData[]>(async (resolve, reject) => {
                                 try {
+                                    const start = Date.now();
                                     DEV_LOG && console.log('about to cropDocument', index, JSON.stringify(item));
                                     const images: CropResult[] = [];
                                     if (item.quads) {
@@ -369,7 +371,7 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
                                             });
                                         }
                                     }
-                                    DEV_LOG && console.log('cropAndOtherDone', index);
+                                    DEV_LOG && console.log('cropAndOtherDone', index, Date.now() - start, 'ms');
                                     resolve(result);
                                 } catch (error) {
                                     reject(error);
@@ -1219,7 +1221,7 @@ export async function addCurrentImageToDocument({
                     }
                 ],
                 {
-                    maxSize: QRCODE_RESIZE_THRESHOLD
+                    resizeThreshold: QRCODE_RESIZE_THRESHOLD
                 }
             );
             // Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
@@ -1274,7 +1276,7 @@ export async function processCameraImage({
     const imageHeight = imageSize.height;
     const imageRotation = imageSize.rotation;
     if (cropEnabled) {
-        quads = await getJSONDocumentCornersFromFile(imagePath, previewResizeThreshold * 1.5, 0);
+        quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, imageRotation: 0 });
     }
     DEV_LOG && console.log('processAndAddImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height);
     if (cropEnabled && quads.length === 0) {

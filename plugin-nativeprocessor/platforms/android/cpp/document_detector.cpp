@@ -184,7 +184,7 @@ struct ScanPlusQRCodeResult {
 JSONCONS_ALL_MEMBER_TRAITS(ScanPlusQRCodeResult, points, qrcodes, resizeScale);
 //JSONCONS_ALL_MEMBER_TRAITS(cv::Point, x, y);
 
-static jstring native_scan_qrcode(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jstring options_) {
+static jstring native_scan_qrcode(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jstring options_, jdouble scale) {
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
     ScanPlusQRCodeResult result;
@@ -195,7 +195,7 @@ static jstring native_scan_qrcode(JNIEnv *env, jobject type, jobject srcBitmap, 
 
     auto hints = ZXing::DecodeHints().setFormats(ZXing::BarcodeFormat::Any).setMaxNumberOfSymbols(1);
     result.qrcodes = ZXing::ReadBarcodes(ImageViewFromMat(docDetector.resizeImageToSize(700)), hints);
-    result.resizeScale = docDetector.resizeScale;
+    result.resizeScale = docDetector.resizeScale * scale;
     string s;
     encode_json(result, s, jsoncons::indenting::no_indent);
     return stringToJavaString(env, s);
@@ -235,18 +235,19 @@ static void testImageProxyToBitmap(JNIEnv *env, jobject type, jint width, jint h
     mat_to_bitmap(env, srcBitmapMat, out_bitmap);
     srcBitmapMat.release();
 }
-static std::string native_scan_json_mat(Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation) {
-    detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation);
+static std::string native_scan_json_mat(Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation, jdouble scale) {
+    detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation, scale);
     return docDetector.scanPointToJSON();
 }
-static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation)
+static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jdouble scale)
 {
+//    auto t_start = std::chrono::high_resolution_clock::now();
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
-//    Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
-//    cvtColor(srcBitmapMat, bgrData, COLOR_RGBA2BGR);
-    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "bitmap_to_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
+    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation, scale);
     srcBitmapMat.release();
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_scan_json_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     return stringToJavaString(env, scanPointsList);
 }
 static jstring native_color_palette(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint colorsFilterDistanceThreshold, jint colorPalette)
@@ -267,10 +268,13 @@ static jstring native_scan_json_buffer(JNIEnv *env, jobject type, jint width, ji
                                        jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
                                        jint rowStride3, jint shrunkImageHeight, jint imageRotation)
 {
+//     auto t_start = std::chrono::high_resolution_clock::now();
     Mat srcBitmapMat;
     buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
-    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "buffer_to_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
+    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation, 1.0);
     srcBitmapMat.release();
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_scan_json_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     return stringToJavaString(env, scanPointsList);
 }
 static jstring native_scan_json_buffer_with_image(JNIEnv *env, jobject type, jint width, jint height, jint chromaPixelStride, jobject buffer1,
@@ -279,7 +283,7 @@ static jstring native_scan_json_buffer_with_image(JNIEnv *env, jobject type, jin
 {
     Mat srcBitmapMat;
     buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
-    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation);
+    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation, 1.0);
     mat_to_bitmap(env, srcBitmapMat, outBitmap);
     srcBitmapMat.release();
     return stringToJavaString(env, scanPointsList);
@@ -502,18 +506,20 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
                                                                                       jobject src_bitmap,
                                                                                       jint shrunk_image_height,
                                                                                       jint image_rotation,
-                                                                                      jstring options)
+                                                                                      jstring options,
+                                                                                      jdouble scale)
 {
-    return native_scan_qrcode(env, thiz, src_bitmap, shrunk_image_height, image_rotation, options);
+    return native_scan_qrcode(env, thiz, src_bitmap, shrunk_image_height, image_rotation, options, scale);
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSON(JNIEnv *env,
                                                                                           jobject thiz,
                                                                                           jobject src_bitmap,
                                                                                           jint shrunk_image_height,
-                                                                                          jint image_rotation)
+                                                                                          jint image_rotation,
+                                                                                          jdouble scale)
 {
-    return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
+    return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation, scale);
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxy(JNIEnv *env,

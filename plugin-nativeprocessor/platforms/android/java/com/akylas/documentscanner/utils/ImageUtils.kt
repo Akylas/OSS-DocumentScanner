@@ -14,6 +14,7 @@ import java.io.FileDescriptor
 import java.io.FileNotFoundException
 import java.io.IOException
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.min
 
 
@@ -25,6 +26,7 @@ import kotlin.math.min
 class ImageUtil {
 
     class LoadImageOptions {
+        var options: JSONObject? = null
         var width = 0
         var maxWidth = 0
         var height = 0
@@ -34,6 +36,7 @@ class ImageUtil {
 
         fun initWithJSON(jsonOpts: JSONObject)
         {
+            options = jsonOpts
             if (jsonOpts.has("resizeThreshold")) {
                 maxWidth = jsonOpts.optInt("resizeThreshold", maxWidth)
                 maxHeight = maxWidth
@@ -80,13 +83,13 @@ class ImageUtil {
         var keepAspectRatio = true
         var autoScaleFactor = true
 
-        constructor(bitmapOptions: BitmapFactory.Options) {
-            width = bitmapOptions.outWidth
-            height = bitmapOptions.outHeight
+        constructor(sourceSize: Pair<Int, Int>) {
+            width = sourceSize.first
+            height = sourceSize.second
         }
-        constructor(bitmapOptions: BitmapFactory.Options, options: LoadImageOptions?) {
-            width = bitmapOptions.outWidth
-            height = bitmapOptions.outHeight
+        constructor(sourceSize: Pair<Int, Int>, options: LoadImageOptions?) {
+            width = sourceSize.first
+            height = sourceSize.second
             if (options != null) {
                 if (options.width > 0) {
                     width = options.width
@@ -181,7 +184,7 @@ class ImageUtil {
         ): Pair<Int, Int> {
             val widthCoef = sourceWidth.toDouble() / reqWidth.toDouble()
             val heightCoef = sourceHeight.toDouble() / reqHeight.toDouble()
-            val aspectCoef = min(widthCoef, heightCoef)
+            val aspectCoef = max(widthCoef, heightCoef)
             return Pair(
                 floor((sourceWidth / aspectCoef)).toInt(),
                 floor((sourceHeight / aspectCoef)).toInt()
@@ -286,12 +289,10 @@ class ImageUtil {
             return intArrayOf(bitmapOptions.outWidth, bitmapOptions.outHeight, rotationAngle)
         }
 
-        fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?): Bitmap? {
-            var imageSize = getImageSize(context, src)
-            val bitmapOptions = BitmapFactory.Options()
-            bitmapOptions.inJustDecodeBounds = true
+        fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?, sourceSize:Pair<Int, Int>?): Bitmap? {
+            var sourceSize = sourceSize
             var bitmap: Bitmap?
-
+            val bitmapOptions = BitmapFactory.Options()
             var pfd: ParcelFileDescriptor? = null
             if (src.startsWith("content://")) {
                 val uri = Uri.parse(src)
@@ -302,15 +303,22 @@ class ImageUtil {
                     closePfd(pfd)
                     throw e;
                 }
-                BitmapFactory.decodeFileDescriptor(pfd!!.fileDescriptor, null, bitmapOptions)
-            } else {
-                BitmapFactory.decodeFile(src, bitmapOptions)
             }
-            val opts = ImageAssetOptions(bitmapOptions, options)
-            val sourceSize = Pair(bitmapOptions.outWidth, bitmapOptions.outHeight)
+            if (sourceSize == null) {
+                bitmapOptions.inJustDecodeBounds = true
+
+                if (pfd != null) {
+                    BitmapFactory.decodeFileDescriptor(pfd!!.fileDescriptor, null, bitmapOptions)
+                } else {
+                    BitmapFactory.decodeFile(src, bitmapOptions)
+                }
+                sourceSize = Pair(bitmapOptions.outWidth, bitmapOptions.outHeight)
+            }
+            val opts = ImageAssetOptions(sourceSize, options)
+
             val (first, second) = getRequestedImageSize(sourceSize, opts)
             val sampleSize: Int = calculateInSampleSize(
-                bitmapOptions.outWidth, bitmapOptions.outHeight,
+                sourceSize.first, sourceSize.second,
                 first,
                 second
             )
@@ -356,7 +364,7 @@ class ImageUtil {
         }
 
         fun readBitmapFromFile(context: Context, src: String, opts: String?): Bitmap? {
-            return readBitmapFromFile(context, src, LoadImageOptions(opts))
+            return readBitmapFromFile(context, src, LoadImageOptions(opts), null)
         }
     }
 }

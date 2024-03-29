@@ -10,6 +10,13 @@ using namespace std;
 // JSONCONS_ALL_MEMBER_TRAITS(cv::Point, x, y);
 
 typedef std::pair<std::vector<cv::Point>, double> PointAndArea;
+DocumentDetector::DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation, double scale)
+{
+    image = bitmap;
+    DocumentDetector::resizeThreshold = resizeThreshold;
+    DocumentDetector::imageRotation = imageRotation;
+    DocumentDetector::scale = scale;
+}
 DocumentDetector::DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation)
 {
     image = bitmap;
@@ -17,6 +24,12 @@ DocumentDetector::DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int ima
     DocumentDetector::imageRotation = imageRotation;
 }
 
+DocumentDetector::DocumentDetector(int resizeThreshold, int imageRotation, double scale)
+{
+    DocumentDetector::resizeThreshold = resizeThreshold;
+    DocumentDetector::imageRotation = imageRotation;
+    DocumentDetector::scale = scale;
+}
 DocumentDetector::DocumentDetector(int resizeThreshold, int imageRotation)
 {
     DocumentDetector::resizeThreshold = resizeThreshold;
@@ -199,7 +212,7 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                 }
                 // Selection of quadrilaterals with large enough angles
                 // std::printf("found contour %f %zu %f %f\n", area, approx.size(), minCosine, maxCosine);
-                if (maxCosine < 0.3)
+                if (maxCosine < 0.4)
                 {
                     // Mat houghLines;
                     if (houghLinesThreshold > 0)
@@ -264,7 +277,7 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                         cv::polylines(drawImage, contour, true, Scalar(255, 0, 0), 1, 8);
                         // cv::drawContours(drawImage, [approx], -1, Scalar(0, 255, 0), 1);
                     }
-                    if (maxCosine < 0.05 && area > (scaledWidth * scaledHeight / 4))
+                    if (maxCosine < 0.3 && area > (scaledWidth * scaledHeight / 4))
                     {
                         return true;
                     }
@@ -384,11 +397,11 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
         cv::dilate(edged, edged, dilateStruct);
         shoudlBreak = findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
-        iterration++;
         if (shoudlBreak)
         {
             break;
         }
+        iterration++;
         // we test over all channels to find the best contour
         int t = 60;
         while (t >= 10)
@@ -534,7 +547,7 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
                 {
                     points[j] -= Point(borderSize, borderSize);
                 }
-                points[j] *= resizeScale;
+                points[j] *= resizeScale * scale;
             }
             sortPoints(points);
             result.push_back(points);
@@ -549,7 +562,7 @@ Mat DocumentDetector::resizeImageToSize(int size)
 
     int width = image.cols;
     int height = image.rows;
-    if (size > resizeThreshold)
+    if (resizeThreshold > 0 && size > resizeThreshold)
     {
         resizeScale = 1.0f * size / resizeThreshold;
         width = static_cast<int>(width / resizeScale);
@@ -574,10 +587,10 @@ Mat DocumentDetector::resizeImageToSize(int size)
 Mat DocumentDetector::resizeImage()
 {
     // add borders to image
-    if (resizeThreshold <= 0)
-    {
-        return image;
-    }
+//    if (resizeThreshold <= 0)
+//    {
+//        return image;
+//    }
 
     int width = image.cols;
     int height = image.rows;
@@ -587,10 +600,10 @@ Mat DocumentDetector::resizeImage()
 Mat DocumentDetector::resizeImageMax()
 {
     // add borders to image
-    if (resizeThreshold <= 0)
-    {
-        return image;
-    }
+//    if (resizeThreshold <= 0)
+//    {
+//        return image;
+//    }
     int width = image.cols;
     int height = image.rows;
     int maxSize = max(width, height);

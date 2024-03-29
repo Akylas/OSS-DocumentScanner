@@ -17,6 +17,8 @@ namespace detector {
     public:
 
         DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation);
+        DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation, double scale);
+        DocumentDetector(int resizeThreshold, int imageRotation, double scale);
         DocumentDetector(int resizeThreshold, int imageRotation);
         DocumentDetector();
 
@@ -47,13 +49,14 @@ namespace detector {
         float dilateAnchorSizeBefore = 0.0f;
         float gammaCorrection = 0.0f;
         float dilateAnchorSize = 3.0f;
-        float resizeScale = 1.0f;
+        double resizeScale = 1.0f;
         float gaussianBlur = 0.0f;
         float thresh = 160.0f;
         float threshMax = 256.0f;
         float medianBlurValue = 9.0f;
         float bilateralFilterValue = 18.0f;
         int resizeThreshold = 500;
+        double scale = 1.0;
         int useChannel = -1;
         int houghLinesThreshold = 0;
         int houghLinesMinLineLength = 55;

@@ -96,7 +96,7 @@ class ImageUtils : NSObject {
   ) -> CGSize {
     let widthCoef = sourceWidth / reqWidth
     let heightCoef = sourceHeight / reqHeight
-    let aspectCoef = min(widthCoef, heightCoef)
+    let aspectCoef = max(widthCoef, heightCoef)
     return CGSize(width: floor((sourceWidth / aspectCoef)), height: floor((sourceHeight / aspectCoef)))
   }
   static func getRequestedImageSize(_ size: CGSize, _ options: ImageAssetOptions) -> CGSize {

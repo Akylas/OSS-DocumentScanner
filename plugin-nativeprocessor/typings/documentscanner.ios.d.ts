@@ -49,6 +49,7 @@ declare class OpencvDocumentProcessDelegate extends NSObject {
     static getJSONDocumentCornersFromFileShrunkImageHeightImageRotationDelegate(src: string, shrunkImageHeight: number, imageRotation: number, delegate: OCRDelegate): void;
 
     static getJSONDocumentCornersFromFileShrunkImageHeightImageRotationDelegateOptions(src: string, shrunkImageHeight: number, imageRotation: number, delegate: OCRDelegate, options: string): void;
+    static getJSONDocumentCornersFromFileDelegateOptions(src: string, delegate: OCRDelegate, options: string): void;
 
     static getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(image: UIImage, shrunkImageHeight: number, imageRotation: number, delegate: OCRDelegate): void;
 

@@ -315,6 +315,15 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 {
   [self getJSONDocumentCornersFromFile:src shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate options:nil];
 }
++(void) getJSONDocumentCornersFromFile:(NSString*)src delegate:(id<OCRDelegate>)delegate options:(NSString*)optionsStr
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSDictionary* options = [ImageUtils toJSON:optionsStr];
+    NSNumber* imageRotation = [options objectForKey:@"imageRotation"] ?: @(0);
+    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    [self getJSONDocumentCornersSync:image shrunkImageHeight:0 imageRotation:[imageRotation intValue] delegate:delegate];
+  });
+}
 
 // PRAGMA: cropDocument
 +(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat compressQuality:(CGFloat)compressQuality   {

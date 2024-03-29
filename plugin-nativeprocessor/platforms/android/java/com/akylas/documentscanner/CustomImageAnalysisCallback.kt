@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
 import android.media.Image
+import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
 import com.akylas.documentscanner.utils.ImageUtil
@@ -69,7 +70,8 @@ constructor(
         private external fun nativeScanJSON(
             srcBitmap: Bitmap,
             shrunkImageHeight: Int,
-            imageRotation: Int
+            imageRotation: Int,
+            scale: Double
         ): String
 
 //        private external fun nativeScanJSONFromProxy(
@@ -169,6 +171,7 @@ constructor(
         private external fun nativeQRCodeRead(
             srcBitmap: Bitmap,
             options: String,
+            scale: Double
         ): String
 
         private external fun nativeQRCodeReadBuffer(
@@ -246,12 +249,13 @@ constructor(
             bitmap: Bitmap?,
             callback: FunctionCallback,
             options: String = "",
+            scale: Double = 1.0
         ) {
             try {
                 if (bitmap == null || bitmap.byteCount == 0) {
                     throw ImageNotFoundException()
                 }
-                callback.onResult(null, nativeQRCodeRead(bitmap, options))
+                callback.onResult(null, nativeQRCodeRead(bitmap, options, scale))
             } catch (e: Exception) {
                 callback.onResult(e, null)
             }
@@ -274,8 +278,20 @@ constructor(
             options: String = "",
         ) {
             thread(start = true) {
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, options)
-                readQRCodeSync(bitmap, callback, options)
+                var imageSize = ImageUtil.getImageSize(context, src)
+                val loadingOptions = ImageUtil.LoadImageOptions(options);
+                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
+                if (bitmap == null) {
+                    callback.onResult(java.lang.Exception("could not read bitmap $src"), null)
+                    return@thread
+                }
+                var scale = 1.0
+                if (imageSize[2] % 180 !== 0) {
+                    scale = imageSize[0].toDouble() / bitmap!!.height
+                } else {
+                    scale = imageSize[0].toDouble() / bitmap!!.width
+                }
+                readQRCodeSync(bitmap, callback, options, scale)
                 bitmap?.recycle()
             }
         }
@@ -331,15 +347,17 @@ constructor(
             bitmap: Bitmap?,
             callback: FunctionCallback,
             shrunkImageHeight: Double = 500.0,
-            imageRotation: Int = 0
+            imageRotation: Int = 0,
+            scale: Double = 1.0
         ) {
             try {
                 if (bitmap == null || bitmap.byteCount == 0) {
                     throw ImageNotFoundException()
                 }
+                val result = nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale)
                 callback.onResult(
                     null,
-                    nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation)
+                    result
                 )
             } catch (e: Exception) {
                 callback.onResult(e, null)
@@ -362,12 +380,27 @@ constructor(
             src: String,
             callback: FunctionCallback,
             shrunkImageHeight: Double = 500.0,
-            imageRotation: Int = 0,
             options: String?
         ) {
             thread(start = true) {
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, options)
-                getJSONDocumentCornersSync(bitmap, callback, shrunkImageHeight, imageRotation)
+                var shrunkImageHeight = shrunkImageHeight
+                var imageSize = ImageUtil.getImageSize(context, src)
+                val loadingOptions = ImageUtil.LoadImageOptions(options);
+                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
+                if (bitmap == null) {
+                    callback.onResult(java.lang.Exception("could not read bitmap $src"), null)
+                    return@thread
+                }
+                var scale = 1.0
+                if (imageSize[2] % 180 !== 0) {
+                    scale = imageSize[0].toDouble() / bitmap!!.height
+                } else {
+                    scale = imageSize[0].toDouble() / bitmap!!.width
+                }
+                if (scale != 1.0) {
+                    shrunkImageHeight = 0.0
+                }
+                getJSONDocumentCornersSync(bitmap, callback, shrunkImageHeight, 0, scale)
                 bitmap?.recycle()
             }
         }
@@ -420,7 +453,21 @@ constructor(
             options: String?
         ) {
             thread(start = true) {
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, options)
+                var colorsFilterDistanceThreshold = colorsFilterDistanceThreshold
+                var colorPalette = colorPalette
+                var shrunkImageHeight = shrunkImageHeight
+                val loadingOptions = ImageUtil.LoadImageOptions(options);
+                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, null)
+                val jsOptions =loadingOptions.options
+                if (jsOptions != null) {
+                    if (jsOptions.has("colorsFilterDistanceThreshold")) {
+                        colorsFilterDistanceThreshold = jsOptions.optInt("colorsFilterDistanceThreshold",colorsFilterDistanceThreshold )
+                    }
+                    if (jsOptions.has("colorPalette")) {
+                        colorPalette = jsOptions.optInt("colorPalette",colorPalette )
+                    }
+                    shrunkImageHeight = 0.0
+                }
                 getColorPaletteSync(bitmap, callback, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette)
                 bitmap?.recycle()
             }
@@ -439,17 +486,25 @@ constructor(
                     val processesArray = JSONArray(processes)
                     if (processesArray.length() > 0) {
                         var result = ArrayList<String>()
-                        var loadOptions = ImageUtil.LoadImageOptions(options)
-                        var bitmap = ImageUtil.readBitmapFromFile(context, src, options);
-                        if (bitmap == null || bitmap.byteCount == 0) {
-                            throw ImageNotFoundException()
+                        var imageSize = ImageUtil.getImageSize(context, src)
+                        val loadingOptions = ImageUtil.LoadImageOptions(options);
+                        var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
+                        if (bitmap == null) {
+                            callback.onResult(java.lang.Exception("could not read bitmap $src"), null)
+                            return@thread
                         }
-                        var shrunkImageHeight = if (loadOptions.resizeThreshold > 0)  loadOptions.resizeThreshold else 500
+                        var scale = 1.0
+                        if (imageSize[2] % 180 !== 0) {
+                            scale = imageSize[0].toDouble() / bitmap!!.height
+                        } else {
+                            scale = imageSize[0].toDouble() / bitmap!!.width
+                        }
+                        var shrunkImageHeight = if (scale != 1.0)  0 else 500
 
                         for (i in 0 until processesArray.length()) {
                             var processJSON = processesArray[i] as JSONObject
                             when (processJSON.optString("type")) {
-                                "qrcode" -> result.add(nativeQRCodeRead(bitmap, processJSON.toString()))
+                                "qrcode" -> result.add(nativeQRCodeRead(bitmap, processJSON.toString(), scale))
                                 "palette" -> result.add(nativeColorPalette(
                                     bitmap,
                                     shrunkImageHeight,
@@ -802,7 +857,7 @@ constructor(
                     } catch (ignored: JSONException) {
                     }
                 }
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadBitmapOptions)
+                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadBitmapOptions, null)
                 cropDocumentSync(bitmap, quads, callback, transforms, saveInFolder, fileName, compressFormat,compressQuality )
                 bitmap?.recycle()
             }
@@ -822,16 +877,17 @@ constructor(
                 processor.finished()
                 return
             }
+//            val start = System.currentTimeMillis()
             val image = imageProxy.image!!
             val planes = image.planes
             val chromaPixelStride = planes[1].pixelStride
-
             val result = nativeBufferScanJSON(
                 image.width, image.height, chromaPixelStride, planes[0].buffer,
                 planes[0].rowStride, planes[1].buffer,
                 planes[1].rowStride, planes[2].buffer,
                 planes[2].rowStride, previewResizeThreshold.toInt(), info.rotationDegrees
             );
+//            Log.d("ImageAnalysis", "process image:${image.width}x${image.height} resize:$previewResizeThreshold in ${System.currentTimeMillis() - start} ms")
             var pointsList: MutableList<List<Point>>? = pointsFromJSONArray(JSONArray(result))
 
             if (detectQRCode) {

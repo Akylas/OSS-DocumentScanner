@@ -1,5 +1,5 @@
 import { Color, ImageSource } from '@nativescript/core';
-import { CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, OCRData, QRCodeData } from '.';
+import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, QRCodeData } from '.';
 import { CropView } from './CropView';
 
 @NativeClass
@@ -92,22 +92,16 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         }
     });
 }
-export async function getJSONDocumentCornersFromFile(src: string, resizeThreshold = 300, imageRotation = 0, options?: string): Promise<[number, number][][]> {
+export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<[number, number][][]> {
     return new Promise((resolve, reject) => {
         try {
-            OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileShrunkImageHeightImageRotationDelegateOptions(
-                src,
-                resizeThreshold,
-                imageRotation,
-                OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, null),
-                options
-            );
+            OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileDelegateOptions(src, OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, null), JSON.stringify(options));
         } catch (error) {
             reject(error);
         }
     });
 }
-export async function processFromFile(src: string, processes: any[], options?: any): Promise<any[]> {
+export async function processFromFile(src: string, processes: any[], options: LoadImageOptions = {}): Promise<any[]> {
     throw new Error('not implemented');
     // return new Promise((resolve, reject) => {
     // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.processFromFile(

@@ -1,5 +1,5 @@
 import { ImageSource, Utils } from '@nativescript/core';
-import { CropOptions, CropResult, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, OCRData, QRCodeData } from '.';
+import { CornersOptions, CropOptions, CropResult, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, QRCodeData } from '.';
 import { CropView } from './CropView';
 
 export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
@@ -58,7 +58,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         );
     });
 }
-export async function getJSONDocumentCornersFromFile(src: string, resizeThreshold = 300, imageRotation = 0, options?: string): Promise<[number, number][][]> {
+export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<[number, number][][]> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersFromFile(
             Utils.android.getApplicationContext(),
@@ -72,13 +72,11 @@ export async function getJSONDocumentCornersFromFile(src: string, resizeThreshol
                     }
                 }
             }),
-            resizeThreshold,
-            imageRotation,
-            options
+            JSON.stringify(options)
         );
     });
 }
-export async function processFromFile(src: string, processes: any[], options?: any): Promise<any[]> {
+export async function processFromFile(src: string, processes: any[], options: LoadImageOptions = {}): Promise<any[]> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.processFromFile(
             Utils.android.getApplicationContext(),
@@ -93,7 +91,7 @@ export async function processFromFile(src: string, processes: any[], options?: a
                     }
                 }
             }),
-            options ? JSON.stringify(options) : null
+            JSON.stringify(options)
         );
     });
 }
@@ -237,7 +235,7 @@ export async function detectQRCode(editingImage: ImageSource | android.graphics.
     });
 }
 
-export async function detectQRCodeFromFile(src: string, options?: Partial<DetectQRCodeOptions>) {
+export async function detectQRCodeFromFile(src: string, options: Partial<DetectQRCodeOptions> = {}) {
     return new Promise<QRCodeData>((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCodeFromFile(
             Utils.android.getApplicationContext(),
@@ -251,7 +249,7 @@ export async function detectQRCodeFromFile(src: string, options?: Partial<Detect
                     }
                 }
             }),
-            options ? JSON.stringify(options) : ''
+            JSON.stringify(options)
         );
     });
 }
