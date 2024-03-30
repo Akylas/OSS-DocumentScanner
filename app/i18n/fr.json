@@ -37,6 +37,7 @@
     "biometric_lock": "Sécurité biométrique",
     "biometric_lock_desc": "Verrouiller l'app à l'aide de la biométrie ou d'un code PIN",
     "black_white": "noir et blanc",
+    "camera": "caméra",
     "camera_permission_needed": "l'autorisation de l'appareil photo est nécessaire pour prendre des photos",
     "camera_preview_stretch": "aperçu de l'étirement",
     "camera_settings": "paramètres de caméra",
@@ -110,6 +111,7 @@
     "images_saved": "Images sauvegardées",
     "import_settings": "importer les paramètres",
     "import_settings_desc": "importer tous les paramètres d'une sauvegarde précédente",
+    "imported_nb_pages": "%1$s pages importées",
     "internal_storage": "stockage interne",
     "ios": {
         "info": {
@@ -183,6 +185,7 @@
     "search": "recherche",
     "security": "sécurité",
     "security_settings": "les paramètres de sécurité",
+    "select_all": "tout sélectionner",
     "select_language": "sélectionner la langue",
     "select_theme": "sélectionne un thème",
     "selected": "%1$s sélectionnés",
@@ -218,6 +221,7 @@
     "transform_images": "transformer des images",
     "transformations": "transformations",
     "updating_pages": "mise à jour des pages(%1$s%%)",
+    "use_system_camera": "utiliser la caméra système",
     "use_system_camera_desc": "utilisez la caméra système au lieu de la vue de l'application (un appui long utilisera le comportement inversé). Activé, certaines fonctionnalités telles que le traitement par lots ou l'analyse automatique seront désactivées",
     "username": "nom d'utilisateur",
     "version": "version",
