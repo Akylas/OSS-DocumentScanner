@@ -228,7 +228,7 @@
     "webdav_config": "configuración WebDAV",
     "webdav_sync": "Sincr webdav de documentos",
     "webdav_sync_desc": "activar a sincr webdav dos teus documentos (copia apoio)",
-    "whitepaper": "libro branco",
-    "whitepaper_desc": "mellora para os documentos tipo libro branco",
+    "whitepaper": "papel branco",
+    "whitepaper_desc": "mellora para documentos con papel branco",
     "wrong_passcode": "contrasinal incorrecto"
 }
