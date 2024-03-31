@@ -37,6 +37,7 @@
     "biometric_lock": "Seguridad biométrica",
     "biometric_lock_desc": "Bloquea la aplicación por verificación biométrica / PIN",
     "black_white": "blanco y negro",
+    "camera": "cámara",
     "camera_permission_needed": "se necesita permiso para hacer fotos",
     "camera_preview_stretch": "previsualizar bosquejo",
     "camera_settings": "ajuste de cámara",
@@ -110,6 +111,7 @@
     "images_saved": "imágenes guardadas",
     "import_settings": "importar ajustes",
     "import_settings_desc": "importa todos los ajustes de una copia de seguridad anterior",
+    "imported_nb_pages": "%1$s páginas importadas",
     "internal_storage": "memoria interna",
     "ios": {
         "info": {
@@ -183,6 +185,7 @@
     "search": "buscar",
     "security": "seguridad",
     "security_settings": "configuraciones de seguridad",
+    "select_all": "seleccionar todo",
     "select_language": "seleccionar idioma",
     "select_theme": "seleccionar tema",
     "selected": "%1$s seleccionados",
@@ -218,6 +221,8 @@
     "transform_images": "transformar imágenes",
     "transformations": "transformaciones",
     "updating_pages": "actualizando páginas (%1$s%%)",
+    "use_system_camera": "utilizar la cámara del sistema",
+    "use_system_camera_desc": "usar la cámara del sistema en lugar de la vista de la aplicación (una pulsación larga usaría el comportamiento inverso). Al activar esta opción, algunas funciones como el escaneo automático o por lotes se desactivarán",
     "username": "nombre usuario",
     "version": "versión",
     "webdav_config": "configuración webdav",
