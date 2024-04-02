@@ -1283,7 +1283,7 @@ export async function processCameraImage({
     if (cropEnabled) {
         quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, imageRotation: 0 });
     }
-    DEV_LOG && console.log('processAndAddImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height);
+    DEV_LOG && console.log('processCameraImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height);
     if (cropEnabled && quads.length === 0) {
         let items = [
             {
