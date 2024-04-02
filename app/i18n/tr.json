@@ -37,6 +37,7 @@
     "biometric_lock": "Biyometrik güvenlik",
     "biometric_lock_desc": "Biyometri / PIN kodu kullanarak uygulamayı kilitle",
     "black_white": "siyah & beyaz",
+    "camera": "kamera",
     "camera_permission_needed": "fotoğraf çekmek için kamera izni gerekiyor",
     "camera_preview_stretch": "ön izleme genişletme",
     "camera_settings": "kamera ayarları",
@@ -110,6 +111,7 @@
     "images_saved": "görüntüler kaydedildi",
     "import_settings": "ayarları içe aktar",
     "import_settings_desc": "ayarları önceki bir yedekten içe aktar",
+    "imported_nb_pages": "%1$s sayfa içe aktarıldı",
     "internal_storage": "dahili depolama",
     "ios": {
         "info": {
@@ -183,6 +185,7 @@
     "search": "ara",
     "security": "güvenlik",
     "security_settings": "güvenlik ayarları",
+    "select_all": "tümünü seç",
     "select_language": "dil seç",
     "select_theme": "tema seç",
     "selected": "%1$s seçildi",
@@ -218,6 +221,8 @@
     "transform_images": "görüntüleri dönüştür",
     "transformations": "değişiklikler",
     "updating_pages": "sayfalar güncelleniyor (%1$s%%)",
+    "use_system_camera": "sistem kamerasını kullan",
+    "use_system_camera_desc": "uygulama görünümü yerine sistem kamerasını kullanın (uzun basma ters davranışı kullanacaktır). Etkinleştirildiğinde toplu veya otomatik tarama gibi bazı özellikler devre dışı bırakılacaktır",
     "username": "kullanıcı adı",
     "version": "sürüm",
     "webdav_config": "webdav yapılandırması",
