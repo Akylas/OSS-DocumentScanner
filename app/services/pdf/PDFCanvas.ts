@@ -141,7 +141,7 @@ export default class PDFCanvas {
     async drawImageOnCanvas(canvas: Canvas, page: OCRPage, toDrawWidth, toDrawHeight) {
         const options = this.options;
 
-        const textScale = Screen.mainScreen.scale * 1.4;
+        const textScale = Screen.mainScreen.scale * (__IOS__ ? 2.2 : 1.4);
         const src = page.imagePath;
         let imageWidth = page.width;
         let imageHeight = page.height;
