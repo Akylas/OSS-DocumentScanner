@@ -31,8 +31,8 @@ class ImageUtils : NSObject {
     var keepAspectRatio = true
     var autoScaleFactor = true
     
-    init(_ optionsStr:String?) {
-      if let jsonOpts = toJSON(optionsStr) {
+    func initWithJSONOptions(_ jsonOpts:NSDictionary?){
+      if let jsonOpts = jsonOpts {
         if ((jsonOpts["resizeThreshold"]) != nil) {
           maxWidth = jsonOpts["resizeThreshold"] as! Double
           maxHeight = maxWidth
@@ -50,9 +50,20 @@ class ImageUtils : NSObject {
         } else if ((jsonOpts["maxHeight"]) != nil) {
           maxHeight = jsonOpts["maxHeight"] as! Double
         }
-        keepAspectRatio = jsonOpts["keepAspectRatio"] as! Bool
-        autoScaleFactor = jsonOpts["autoScaleFactor"] as! Bool
+        if ((jsonOpts["keepAspectRatio"]) != nil) {
+          keepAspectRatio = jsonOpts["keepAspectRatio"] as! Bool
+        }
+        if ((jsonOpts["autoScaleFactor"]) != nil) {
+          autoScaleFactor = jsonOpts["autoScaleFactor"] as! Bool
+        }
       }
+    }
+    
+    init(_ optionsStr:String?) {
+      initWithJSONOptions(toJSON(optionsStr))
+    }
+    init( jsonOpts:NSDictionary?) {
+      initWithJSONOptions(jsonOpts)
     }
   }
   class ImageAssetOptions {
@@ -180,22 +191,13 @@ class ImageUtils : NSObject {
     let image = UIImage(contentsOfFile: src)
     if let image {
       let size = image.size
-      var reqWidth = size.width
-      var reqHeight = size.height
       let imageOrientation = image.imageOrientation
-      if ((options?["width"] != nil) || (options?["height"] != nil) || (options?["maxWidth"] != nil) || (options?["maxHeight"] != nil)) {
-        reqWidth = (options?.object(forKey: "width") ?? (((options?["maxWidth"]) != nil) ? min(options?["maxWidth"] as! Double, size.width) : size.width)) as! Double;
-        reqHeight = (options?.object(forKey: "height") ?? (((options?["maxHeight"]) != nil) ? min(options?["maxHeight"] as! Double, size.height) : size.height)) as! Double;
-        
-        if ((options?["keepAspectRatio"] != nil) && (options?["keepAspectRatio"] as! Bool == true)) {
-          let safeAspectSize = getAspectSafeDimensions(size.width, size.height, reqWidth, reqHeight);
-          reqWidth = safeAspectSize.width;
-          reqHeight = safeAspectSize.height;
-        }
-      }
+      let loadImageOptions = LoadImageOptions(jsonOpts: options)
+      let opts = ImageAssetOptions(size, options: loadImageOptions)
+      let requestedSize = getRequestedImageSize(size, opts)
       var result: UIImage? = image
-      if (reqWidth != size.width || reqHeight != size.height || imageOrientation != .up) {
-        result = scaleImage(image, CGSize(width: reqWidth, height: reqHeight) )
+      if (requestedSize.width != size.width || requestedSize.height != size.height || imageOrientation != .up) {
+        result = scaleImage(image, requestedSize )
       }
       if (options?["jpegQuality"] != nil) {
         result = UIImage.init(data: result!.jpegData(compressionQuality: CGFloat((options!["jpegQuality"] as! Int)) / 100.0)!)
