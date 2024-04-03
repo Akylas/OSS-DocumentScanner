@@ -5,7 +5,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, ContentView, ObservableArray, Page, Screen, View, knownFolders } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, ContentView, File, ObservableArray, Page, Screen, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -89,7 +89,7 @@
                 );
                 const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                 hideLoading();
-                const onSnack = await showSnack({ message: lc('pdf_saved', filePath.split('/').slice(-1)[0]), actionText: lc('open') });
+                const onSnack = await showSnack({ message: lc('pdf_saved', File.fromPath(filePath).name), actionText: lc('open') });
                 if (onSnack.reason === 'action') {
                     openFile(filePath);
                 }
