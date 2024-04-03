@@ -123,17 +123,17 @@
     }
 
     function updateNoDocument() {
-        nbDocuments = documents.length;
+        nbDocuments = documents?.length ?? 0;
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: EventData & { doc }) {
+        DEV_LOG && console.log('onDocumentAdded', nbDocuments, documents);
         documents?.unshift({
             doc: event.doc,
             selected: false
         } as Item);
         updateNoDocument();
         collectionView?.nativeElement.scrollToIndex(0, false);
-        DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         // let index = -1;

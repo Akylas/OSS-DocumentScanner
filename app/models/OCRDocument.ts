@@ -322,7 +322,8 @@ export class OCRDocument extends Observable implements Document {
     async updatePageTransforms(pageIndex: number, transforms: string, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
         const file = File.fromPath(page.imagePath);
-        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
+        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name, File.exists(file.path), file.size);
+        DEV_LOG && console.log('updatePageTransforms2', file.path, file.size);
 
         const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
             transforms,
