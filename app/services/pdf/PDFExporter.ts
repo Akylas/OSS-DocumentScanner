@@ -1,8 +1,11 @@
-import { CustomError, wrapNativeException } from '~/utils/error';
+import { CustomError, PermissionError, wrapNativeException } from '~/utils/error';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { Screen, Utils, knownFolders } from '@nativescript/core';
 import { getColorMatrix } from '~/utils/matrix';
+import { lc } from '~/helpers/locale';
+import { SDK_VERSION } from '@akylas/nativescript/utils';
+import { request } from '@nativescript-community/perms';
 
 export function cleanFilename(str) {
     return str.replace(/[|\\?*<\":>+\[\]\/'"]+/g, '').replace(/[\s\t\n]+/g, '_');
@@ -14,6 +17,12 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
         filename = cleanFilename(document.name) + '.pdf';
     }
     if (__ANDROID__) {
+        if (SDK_VERSION <= 29) {
+            const result = await request('sorage');
+            if (result[0] !== 'authorized') {
+                throw new PermissionError(lc('storage_permission_needed'));
+            }
+        }
         const start = Date.now();
         return new Promise((resolve, reject) => {
             const pdfCanvas = new PDFCanvas();
