@@ -88,6 +88,7 @@
     },
     "devDependencies": {
         "@akylas/fontmin": "0.9.9",
+        "@akylas/nativescript-android-runtime": "8.6.3",
         "@babel/core": "^7.24.3",
         "@babel/plugin-transform-runtime": "^7.24.3",
         "@babel/preset-env": "^7.24.3",
@@ -136,9 +137,6 @@
         "terser-webpack-plugin": "^5.3.10",
         "typescript": "5.4.3",
         "webpack-shell-plugin-next": "^2.3.1"
-    },
-    "optionalDependencies": {
-        "@akylas/nativescript-android-runtime": "8.6.3"
     },
     "commitlint": {
         "extends": [
