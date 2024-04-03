@@ -11,6 +11,7 @@ import {
     AnimationDefinition,
     Application,
     ApplicationSettings,
+    File,
     GridLayout,
     ImageSource,
     ObservableArray,
@@ -659,7 +660,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
                             const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                             hideLoading();
-                            const onSnack = await showSnack({ message: lc('pdf_saved', filePath.split('/').slice(-1)[0]), actionText: lc('open') });
+                            const onSnack = await showSnack({ message: lc('pdf_saved', File.fromPath(filePath).name), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
                                 openFile(filePath);
@@ -726,60 +727,59 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
     showLoading(l('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
-    await Promise.all(
-        sortedPages.map(
-            (page, index) =>
-                new Promise<void>(async (resolve, reject) => {
-                    let imageSource: ImageSource;
-                    try {
-                        const destinationName = outputImageNames[index] + '.' + IMG_FORMAT;
-                        // const imageSource = await ImageSource.fromFile(imagePath);
-                        imageSource = await getTransformedImage(page);
-                        if (__ANDROID__ && exportDirectory.startsWith('content://')) {
-                            const context = Utils.android.getApplicationContext();
-                            const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
-                            let outfile = outdocument.createFile('image/jpeg', destinationName);
-                            if (outfile == null) {
-                                outfile = outdocument.findFile(destinationName);
-                            }
-                            if (!outfile) {
-                                throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
-                            }
-                            if (!finalMessagePart) {
-                                if (canSetName) {
-                                    finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
-                                } else {
-                                    finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
-                                }
-                            }
-                            const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
-                            (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
-                            // destinationPaths.push(outfile.getUri().toString());
-                        } else {
-                            const destinationPath = path.join(exportDirectory, destinationName);
-                            await imageSource.saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
-                            // destinationPaths.push(destinationPath);
-                            if (!finalMessagePart) {
-                                if (canSetName) {
-                                    finalMessagePart = destinationPath;
-                                } else {
-                                    finalMessagePart = exportDirectory;
-                                }
+    await doInBatch(
+        sortedPages,
+        (page, index) =>
+            new Promise<void>(async (resolve, reject) => {
+                let imageSource: ImageSource;
+                try {
+                    const destinationName = outputImageNames[index] + '.' + IMG_FORMAT;
+                    // const imageSource = await ImageSource.fromFile(imagePath);
+                    imageSource = await getTransformedImage(page);
+                    if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+                        const context = Utils.android.getApplicationContext();
+                        const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
+                        let outfile = outdocument.createFile('image/jpeg', destinationName);
+                        if (outfile == null) {
+                            outfile = outdocument.findFile(destinationName);
+                        }
+                        if (!outfile) {
+                            throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
+                        }
+                        if (!finalMessagePart) {
+                            if (canSetName) {
+                                finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
+                            } else {
+                                finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
                             }
                         }
-                        resolve();
-                    } catch (error) {
-                        reject(error);
-                    } finally {
-                        recycleImages(imageSource);
+                        const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
+                        (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
+                        // destinationPaths.push(outfile.getUri().toString());
+                    } else {
+                        const destinationPath = path.join(exportDirectory, destinationName);
+                        await imageSource.saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+                        // destinationPaths.push(destinationPath);
+                        if (!finalMessagePart) {
+                            if (canSetName) {
+                                finalMessagePart = destinationPath;
+                            } else {
+                                finalMessagePart = exportDirectory;
+                            }
+                        }
                     }
-                })
-        )
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                } finally {
+                    recycleImages(imageSource);
+                }
+            })
     );
     if (outputImageNames.length === 1) {
-        await showSnack({ message: lc('image_saved', finalMessagePart) });
+        showSnack({ message: lc('image_saved', finalMessagePart) });
     } else {
-        await showSnack({ message: lc('images_saved', finalMessagePart) });
+        showSnack({ message: lc('images_saved', finalMessagePart) });
     }
 }
 
@@ -869,7 +869,6 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
                     case 'export': {
                         await closePopover();
                         await exportImage(pages, exportDirectory);
-
                         break;
                     }
                 }
