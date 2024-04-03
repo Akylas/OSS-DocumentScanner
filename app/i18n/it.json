@@ -37,6 +37,7 @@
     "biometric_lock": "Sicurezza biometrica",
     "biometric_lock_desc": "bloccare l'applicazione con verifica biometrica / codice PIN",
     "black_white": "bianco e nero",
+    "camera": "fotocamera",
     "camera_permission_needed": "per scattare foto è necessaria l'autorizzazione della fotocamera",
     "camera_preview_stretch": "imposta anteprima",
     "camera_settings": "impostazioni della fotocamera",
@@ -110,6 +111,7 @@
     "images_saved": "immagini salvate",
     "import_settings": "impostazioni di importazione",
     "import_settings_desc": "importa tutte le impostazioni da un backup precedente",
+    "imported_nb_pages": "importate %1$s pagine",
     "internal_storage": "archiviazione interna",
     "ios": {
         "info": {
@@ -183,6 +185,7 @@
     "search": "cerca",
     "security": "sicurezza",
     "security_settings": "impostazioni di sicurezza",
+    "select_all": "seleziona tutto",
     "select_language": "seleziona la lingua",
     "select_theme": "seleziona il tema",
     "selected": "%1$s selezionati",
@@ -218,6 +221,8 @@
     "transform_images": "trasforma immagini",
     "transformations": "trasformazioni",
     "updating_pages": "aggiornamento pagine (%1$s%%)",
+    "use_system_camera": "usa la fotocamera di sistema",
+    "use_system_camera_desc": "usa la fotocamera di sistema invece della visualizzazione interna all'app (una pressione prolungata attiva il comportamento inverso). Se abilitate, alcune funzionalità come la scansione batch o automatica verranno disabilitate",
     "username": "nome utente",
     "version": "versione",
     "webdav_config": "configurazione webdav",

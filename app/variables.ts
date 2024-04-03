@@ -100,7 +100,6 @@ const onInitRootView = function () {
     if (__IOS__) {
         const rootView = Application.getRootView();
         const rootViewStyle = rootView?.style;
-        DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
 
         const currentColors = get(colors);
