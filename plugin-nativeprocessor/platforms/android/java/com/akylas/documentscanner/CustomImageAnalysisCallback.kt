@@ -33,7 +33,7 @@ constructor(
     ImageAnalysisCallback {
 
     class ImageNotFoundException : Exception {
-        constructor() : super("image_not_found")
+        constructor(src: String) : super("image not found $src")
     }
 
     var previewResizeThreshold = 200.0
@@ -199,15 +199,12 @@ constructor(
 
         @JvmOverloads
         fun ocrDocumentSync(
-            bitmap: Bitmap?,
+            bitmap: Bitmap,
             callback: FunctionCallback,
             options: String = "",
             progress: FunctionCallbackProgress? = null,
         ) {
             try {
-                if (bitmap == null || bitmap.byteCount == 0) {
-                    throw ImageNotFoundException()
-                }
                 callback.onResult(null, nativeOCR(bitmap, options, progress))
             } catch (e: Exception) {
                 callback.onResult(e, null)
@@ -233,32 +230,31 @@ constructor(
             progress: FunctionCallbackProgress? = null,
         ) {
             thread(start = true) {
+                var bitmap: Bitmap? = null
                 try {
-                    var bitmap = ImageUtil.readBitmapFromFile(context, src, options)
+                    bitmap = ImageUtil.readBitmapFromFile(context, src, options)
+
+                    if (bitmap == null || bitmap.byteCount == 0) {
+                        throw ImageNotFoundException(src)
+                    }
                     ocrDocumentSync(bitmap, callback, options, progress)
                     bitmap?.recycle()
 
                 } catch (e: Exception) {
                     callback.onResult(e, null)
+                } finally {
+                    bitmap?.recycle()
                 }
             }
         }
 
         @JvmOverloads
         fun readQRCodeSync(
-            bitmap: Bitmap?,
-            callback: FunctionCallback,
+            bitmap: Bitmap,
             options: String = "",
             scale: Double = 1.0
         ) {
-            try {
-                if (bitmap == null || bitmap.byteCount == 0) {
-                    throw ImageNotFoundException()
-                }
-                callback.onResult(null, nativeQRCodeRead(bitmap, options, scale))
-            } catch (e: Exception) {
-                callback.onResult(e, null)
-            }
+            nativeQRCodeRead(bitmap, options, scale)
         }
         @JvmOverloads
         fun readQRCode(
@@ -267,7 +263,12 @@ constructor(
             options: String = "",
         ) {
             thread(start = true) {
-                readQRCodeSync(bitmap, callback, options)
+                try {
+                    
+                    callback.onResult(null, readQRCodeSync(bitmap, options))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
             }
         }
         @JvmOverloads
@@ -278,21 +279,26 @@ constructor(
             options: String = "",
         ) {
             thread(start = true) {
-                var imageSize = ImageUtil.getImageSize(context, src)
-                val loadingOptions = ImageUtil.LoadImageOptions(options);
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
-                if (bitmap == null) {
-                    callback.onResult(java.lang.Exception("could not read bitmap $src"), null)
-                    return@thread
+                var bitmap: Bitmap? = null
+                try {
+                    var imageSize = ImageUtil.getImageSize(context, src)
+                    val loadingOptions = ImageUtil.LoadImageOptions(options);
+                    bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
+                    if (bitmap == null || bitmap.byteCount == 0) {
+                        throw ImageNotFoundException(src)
+                    }
+                    var scale = 1.0
+                    if (imageSize[2] % 180 !== 0) {
+                        scale = imageSize[0].toDouble() / bitmap!!.height
+                    } else {
+                        scale = imageSize[0].toDouble() / bitmap!!.width
+                    }
+                    readQRCodeSync(bitmap, options, scale)
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                } finally {
+                    bitmap?.recycle()
                 }
-                var scale = 1.0
-                if (imageSize[2] % 180 !== 0) {
-                    scale = imageSize[0].toDouble() / bitmap!!.height
-                } else {
-                    scale = imageSize[0].toDouble() / bitmap!!.width
-                }
-                readQRCodeSync(bitmap, callback, options, scale)
-                bitmap?.recycle()
             }
         }
 
@@ -344,24 +350,12 @@ constructor(
 
         @JvmOverloads
         fun getJSONDocumentCornersSync(
-            bitmap: Bitmap?,
-            callback: FunctionCallback,
+            bitmap: Bitmap,
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0,
             scale: Double = 1.0
-        ) {
-            try {
-                if (bitmap == null || bitmap.byteCount == 0) {
-                    throw ImageNotFoundException()
-                }
-                val result = nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale)
-                callback.onResult(
-                    null,
-                    result
-                )
-            } catch (e: Exception) {
-                callback.onResult(e, null)
-            }
+        ): String {
+            return nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale)
         }
         @JvmOverloads
         fun getJSONDocumentCorners(
@@ -371,7 +365,11 @@ constructor(
             imageRotation: Int = 0
         ) {
             thread(start = true) {
-                getJSONDocumentCornersSync(image, callback, shrunkImageHeight, imageRotation)
+                try {
+                    callback.onResult(null, getJSONDocumentCornersSync(image, shrunkImageHeight, imageRotation))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
             }
         }
         @JvmOverloads
@@ -383,52 +381,47 @@ constructor(
             options: String?
         ) {
             thread(start = true) {
-                var shrunkImageHeight = shrunkImageHeight
-                var imageSize = ImageUtil.getImageSize(context, src)
-                val loadingOptions = ImageUtil.LoadImageOptions(options);
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
-                if (bitmap == null) {
-                    callback.onResult(java.lang.Exception("could not read bitmap $src"), null)
-                    return@thread
+                var bitmap: Bitmap? = null
+                try {
+                    var shrunkImageHeight = shrunkImageHeight
+                    var imageSize = ImageUtil.getImageSize(context, src)
+                    val loadingOptions = ImageUtil.LoadImageOptions(options);
+                    bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
+                    if (bitmap == null) {
+                        callback.onResult(ImageNotFoundException(src), null)
+                        return@thread
+                    }
+                    var scale = 1.0
+                    if (imageSize[2] % 180 !== 0) {
+                        scale = imageSize[0].toDouble() / bitmap!!.height
+                    } else {
+                        scale = imageSize[0].toDouble() / bitmap!!.width
+                    }
+                    if (scale != 1.0) {
+                        shrunkImageHeight = 0.0
+                    }
+                    callback.onResult(null, getJSONDocumentCornersSync(bitmap, shrunkImageHeight,  0, scale))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                } finally {
+                    bitmap?.recycle()
                 }
-                var scale = 1.0
-                if (imageSize[2] % 180 !== 0) {
-                    scale = imageSize[0].toDouble() / bitmap!!.height
-                } else {
-                    scale = imageSize[0].toDouble() / bitmap!!.width
-                }
-                if (scale != 1.0) {
-                    shrunkImageHeight = 0.0
-                }
-                getJSONDocumentCornersSync(bitmap, callback, shrunkImageHeight, 0, scale)
-                bitmap?.recycle()
             }
         }
 
         @JvmOverloads
         fun getColorPaletteSync(
-            bitmap: Bitmap?,
-            callback: FunctionCallback,
+            bitmap: Bitmap,
             shrunkImageHeight: Double = 500.0,
             colorsFilterDistanceThreshold: Int = 0,
             colorPalette: Int = 0
-        ) {
-            try {
-                if (bitmap == null || bitmap.byteCount == 0) {
-                    throw ImageNotFoundException()
-                }
-                callback.onResult(
-                    null,
-                    nativeColorPalette(
-                        bitmap,
-                        shrunkImageHeight.toInt(),
-                        colorsFilterDistanceThreshold,
-                        colorPalette
-                    )
-                )
-            } catch (e: Exception) {
-                callback.onResult(e, null)
-            }
+        ): String {
+            return nativeColorPalette(
+                bitmap,
+                shrunkImageHeight.toInt(),
+                colorsFilterDistanceThreshold,
+                colorPalette
+            )
         }
         @JvmOverloads
         fun getColorPalette(
@@ -439,7 +432,11 @@ constructor(
             colorPalette: Int = 0
         ) {
             thread(start = true) {
-                getColorPaletteSync(image, callback, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette)
+                try {
+                    callback.onResult(null, getColorPaletteSync(image, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
             }
         }
         @JvmOverloads
@@ -453,23 +450,33 @@ constructor(
             options: String?
         ) {
             thread(start = true) {
-                var colorsFilterDistanceThreshold = colorsFilterDistanceThreshold
-                var colorPalette = colorPalette
-                var shrunkImageHeight = shrunkImageHeight
-                val loadingOptions = ImageUtil.LoadImageOptions(options);
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, null)
-                val jsOptions =loadingOptions.options
-                if (jsOptions != null) {
-                    if (jsOptions.has("colorsFilterDistanceThreshold")) {
-                        colorsFilterDistanceThreshold = jsOptions.optInt("colorsFilterDistanceThreshold",colorsFilterDistanceThreshold )
+                var bitmap: Bitmap? = null
+                try {
+                    var colorsFilterDistanceThreshold = colorsFilterDistanceThreshold
+                    var colorPalette = colorPalette
+                    var shrunkImageHeight = shrunkImageHeight
+                    val loadingOptions = ImageUtil.LoadImageOptions(options);
+                    var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, null)
+                    if (bitmap == null || bitmap.byteCount == 0) {
+                        callback.onResult(ImageNotFoundException(src), null)
+                        return@thread
                     }
-                    if (jsOptions.has("colorPalette")) {
-                        colorPalette = jsOptions.optInt("colorPalette",colorPalette )
+                    val jsOptions =loadingOptions.options
+                    if (jsOptions != null) {
+                        if (jsOptions.has("colorsFilterDistanceThreshold")) {
+                            colorsFilterDistanceThreshold = jsOptions.optInt("colorsFilterDistanceThreshold",colorsFilterDistanceThreshold )
+                        }
+                        if (jsOptions.has("colorPalette")) {
+                            colorPalette = jsOptions.optInt("colorPalette",colorPalette )
+                        }
+                        shrunkImageHeight = 0.0
                     }
-                    shrunkImageHeight = 0.0
+                    callback.onResult(null, getColorPaletteSync(bitmap, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                } finally {
+                    bitmap?.recycle()
                 }
-                getColorPaletteSync(bitmap, callback, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette)
-                bitmap?.recycle()
             }
         }
         @JvmOverloads
@@ -481,16 +488,16 @@ constructor(
             options: String?
         ) {
             thread(start = true) {
+                var bitmap: Bitmap? = null
                 try {
-
                     val processesArray = JSONArray(processes)
                     if (processesArray.length() > 0) {
                         var result = ArrayList<String>()
                         var imageSize = ImageUtil.getImageSize(context, src)
                         val loadingOptions = ImageUtil.LoadImageOptions(options);
-                        var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
+                        bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                         if (bitmap == null) {
-                            callback.onResult(java.lang.Exception("could not read bitmap $src"), null)
+                            callback.onResult(ImageNotFoundException(src), null)
                             return@thread
                         }
                         var scale = 1.0
@@ -520,6 +527,8 @@ constructor(
                     }
                 } catch (e: Exception) {
                     callback.onResult(e, null)
+                } finally {
+                    bitmap?.recycle()
                 }
             }
         }
@@ -743,76 +752,67 @@ constructor(
 
         @JvmOverloads
         fun cropDocumentSync(
-            bitmap: Bitmap?,
+            bitmap: Bitmap,
             quads: String,
-            callback: FunctionCallback,
             transforms: String = "",
             saveInFolder: String?,
             fileName: String?,
             compressFormat: String = "jpg",
             compressQuality: Int = 100,
-        ) {
-            try {
-                if (bitmap == null || bitmap.byteCount == 0) {
-                    throw ImageNotFoundException()
-                }
+        ): Any? {
+            val bitmaps = arrayListOf<Bitmap>()
+            val jsonResult = JSONArray()
+            val jsonArray = JSONArray(quads)
+            pointsFromJSONArray(jsonArray).forEachIndexed { index, points ->
+                // convert corners from image preview coordinates to original photo
+                // coordinates
+                // (original image is probably bigger than the preview image)
+                // convert output image matrix to bitmap
+                val cropWidth =
+                    ((points[0].distance(points[1]) + points[2].distance(points[3])) / 2).toInt()
+                val cropHeight =
+                    ((points[3].distance(points[0]) + points[2].distance(points[1])) / 2).toInt()
 
-                val bitmaps = arrayListOf<Bitmap>()
-                val jsonResult = JSONArray()
-                val jsonArray = JSONArray(quads)
-                pointsFromJSONArray(jsonArray).forEachIndexed { index, points ->
-                    // convert corners from image preview coordinates to original photo
-                    // coordinates
-                    // (original image is probably bigger than the preview image)
-                    // convert output image matrix to bitmap
-                    val cropWidth =
-                        ((points[0].distance(points[1]) + points[2].distance(points[3])) / 2).toInt()
-                    val cropHeight =
-                        ((points[3].distance(points[0]) + points[2].distance(points[1])) / 2).toInt()
-
-                    val cropBitmap =
-                        Bitmap.createBitmap(
-                            cropWidth,
-                            cropHeight,
-                            Bitmap.Config.ARGB_8888
-                        )
-                    nativeCrop(
-                        bitmap,
-                        jsonArray.getJSONArray(index).toString(),
-                        transforms,
-                        cropBitmap
+                val cropBitmap =
+                    Bitmap.createBitmap(
+                        cropWidth,
+                        cropHeight,
+                        Bitmap.Config.ARGB_8888
                     )
-                    if (saveInFolder != null) {
-                        try {
+                nativeCrop(
+                    bitmap,
+                    jsonArray.getJSONArray(index).toString(),
+                    transforms,
+                    cropBitmap
+                )
+                if (saveInFolder != null) {
+                    try {
 
-                            var imagePath = "$saveInFolder/${fileName ?: "cropedBitmap_$index.$compressFormat"}"
-                            FileOutputStream(imagePath).use { out ->
-                                cropBitmap.compress(
-                                    ImageUtil.getTargetFormat(compressFormat),
-                                    compressQuality,
-                                    out
-                                )
-                            }
-                            var result = JSONObject()
-                            result.put("imagePath", imagePath)
-                            result.put("width", cropWidth)
-                            result.put("height", cropHeight)
-                            jsonResult.put(result)
-                        } catch (e: IOException) {
-                            e.printStackTrace()
+                        var imagePath = "$saveInFolder/${fileName ?: "cropedBitmap_$index.$compressFormat"}"
+                        FileOutputStream(imagePath).use { out ->
+                            cropBitmap.compress(
+                                ImageUtil.getTargetFormat(compressFormat),
+                                compressQuality,
+                                out
+                            )
                         }
-                        cropBitmap.recycle()
-                    } else {
-                        bitmaps.add(cropBitmap)
+                        var result = JSONObject()
+                        result.put("imagePath", imagePath)
+                        result.put("width", cropWidth)
+                        result.put("height", cropHeight)
+                        jsonResult.put(result)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
                     }
-                }
-                if (bitmaps.size > 0) {
-                    callback.onResult(null, bitmaps.toArray())
+                    cropBitmap.recycle()
                 } else {
-                    callback.onResult(null, jsonResult.toString())
+                    bitmaps.add(cropBitmap)
                 }
-            } catch (e: Exception) { 
-                callback.onResult(e, null)
+            }
+            if (bitmaps.size > 0) {
+                return bitmaps.toArray()
+            } else {
+                return jsonResult.toString()
             }
         }
         @JvmOverloads
@@ -827,7 +827,11 @@ constructor(
             compressQuality: Int = 100,
         ) {
             thread(start = true) {
-                cropDocumentSync(bitmap, quads, callback, transforms, saveInFolder, fileName, compressFormat, compressQuality)
+                try {
+                    callback.onResult(null, cropDocumentSync(bitmap, quads, transforms, saveInFolder, fileName, compressFormat, compressQuality))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
             }
         }
         @JvmOverloads
@@ -839,27 +843,37 @@ constructor(
             options: String?
         ) {
             thread(start = true) {
-                var loadBitmapOptions: ImageUtil.LoadImageOptions? = null
-                var transforms = ""
-                var saveInFolder: String? = null
-                var fileName: String? = null
-                var compressFormat = "jpg"
-                var compressQuality = 100
-                if (options != null) {
-                    try {
-                        var jsOptions = JSONObject(options)
-                        loadBitmapOptions = ImageUtil.LoadImageOptions(jsOptions)
-                        transforms = jsOptions.optString("transforms", transforms)
-                        saveInFolder = jsOptions.optString("saveInFolder", saveInFolder)
-                        fileName = jsOptions.optString("fileName", fileName)
-                        compressFormat = jsOptions.optString("compressFormat", compressFormat)
-                        compressQuality = jsOptions.optInt("compressQuality", compressQuality)
-                    } catch (ignored: JSONException) {
+                var bitmap: Bitmap? = null
+                try {
+                    var loadBitmapOptions: ImageUtil.LoadImageOptions? = null
+                    var transforms = ""
+                    var saveInFolder: String? = null
+                    var fileName: String? = null
+                    var compressFormat = "jpg"
+                    var compressQuality = 100
+                    if (options != null) {
+                        try {
+                            var jsOptions = JSONObject(options)
+                            loadBitmapOptions = ImageUtil.LoadImageOptions(jsOptions)
+                            transforms = jsOptions.optString("transforms", transforms)
+                            saveInFolder = jsOptions.optString("saveInFolder", saveInFolder)
+                            fileName = jsOptions.optString("fileName", fileName)
+                            compressFormat = jsOptions.optString("compressFormat", compressFormat)
+                            compressQuality = jsOptions.optInt("compressQuality", compressQuality)
+                        } catch (ignored: JSONException) {
+                        }
                     }
+                    bitmap = ImageUtil.readBitmapFromFile(context, src, loadBitmapOptions, null)
+                    if (bitmap == null || bitmap.byteCount == 0) {
+                        callback.onResult(ImageNotFoundException(src), null)
+                        return@thread
+                    }
+                    callback.onResult(null, cropDocumentSync(bitmap, quads, transforms, saveInFolder, fileName, compressFormat,compressQuality ))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                } finally {
+                    bitmap?.recycle()
                 }
-                var bitmap = ImageUtil.readBitmapFromFile(context, src, loadBitmapOptions, null)
-                cropDocumentSync(bitmap, quads, callback, transforms, saveInFolder, fileName, compressFormat,compressQuality )
-                bitmap?.recycle()
             }
         }
     }
