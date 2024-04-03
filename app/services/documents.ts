@@ -131,25 +131,27 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     async createPage(page: OCRPage) {
         const createdDate = Date.now();
         const dataFolder = documentsService.dataFolder.path;
-        return this.create({
-            ...cleanUndefined(page),
-            imagePath: page.imagePath.replace(dataFolder, ''),
-            sourceImagePath: page.sourceImagePath.replace(dataFolder, ''),
-            createdDate,
-            pageindex: -1, // we are stuck with this as we cant migrate to remove pageIndex
-            modifiedDate: createdDate,
-            rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
-            scale: page.scale ?? 1,
-            crop: page._crop || (JSON.stringify(page.crop) as any),
-            colorMatrix: page._colorMatrix || (JSON.stringify(page.colorMatrix) as any),
-            ocrData: page._ocrData || (JSON.stringify(page.ocrData) as any),
-            ...(CARD_APP
-                ? {
-                      qrcode: page._qrcode || (JSON.stringify(page.qrcode) as any),
-                      colors: page._colors || (JSON.stringify(page.colors) as any)
-                  }
-                : {})
-        });
+        return this.create(
+            cleanUndefined({
+                ...page,
+                imagePath: page.imagePath.replace(dataFolder, ''),
+                sourceImagePath: page.sourceImagePath.replace(dataFolder, ''),
+                createdDate,
+                pageIndex: -1, // we are stuck with this as we cant migrate to remove pageIndex
+                modifiedDate: createdDate,
+                rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
+                scale: page.scale ?? 1,
+                crop: page.crop ? JSON.stringify(page.crop) : undefined,
+                colorMatrix: page.colorMatrix ? JSON.stringify(page.colorMatrix) : undefined,
+                ocrData: page.ocrData ? JSON.stringify(page.ocrData) : undefined,
+                ...(CARD_APP
+                    ? {
+                          qrcode: page.qrcode ? JSON.stringify(page.qrcode) : undefined,
+                          colors: page.colors ? JSON.stringify(page.colors) : undefined
+                      }
+                    : {})
+            })
+        );
     }
     async update(page: OCRPage, data?: Partial<OCRPage>) {
         if (!data) {
@@ -177,7 +179,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         return page;
     }
     async createModelFromAttributes(attributes: Required<any> | OCRPage): Promise<OCRPage> {
-        const { id, document_id, imagePath, sourceImagePath, ...other } = attributes;
+        const { id, document_id, imagePath, sourceImagePath, colorMatrix, ocrData, qrcode, colors, crop, ...other } = attributes;
         const model = new OCRPage(id, document_id);
         Object.assign(model, {
             ...other,
@@ -185,18 +187,14 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             // sourceImagePath,
             imagePath: dataFolder.path + imagePath,
             sourceImagePath: dataFolder.path + sourceImagePath,
-            _crop: other.crop,
-            crop: other.crop ? JSON.parse(other.crop) : undefined,
-            _colorMatrix: other.colorMatrix,
-            colorMatrix: other.colorMatrix ? JSON.parse(other.colorMatrix) : undefined,
-            _ocrData: other.ocrData,
-            ocrData: other.ocrData ? JSON.parse(other.ocrData) : undefined,
+
+            crop: typeof crop === 'string' ? JSON.parse(crop) : crop,
+            colorMatrix: typeof colorMatrix === 'string' ? JSON.parse(colorMatrix) : colorMatrix,
+            ocrData: typeof ocrData === 'string' ? JSON.parse(ocrData) : ocrData,
             ...(CARD_APP
                 ? {
-                      _qrcode: other.qrcode,
-                      qrcode: other.qrcode ? JSON.parse(other.qrcode) : undefined,
-                      _colors: other.colors,
-                      colors: other.colors ? JSON.parse(other.colors) : undefined
+                      qrcode: typeof qrcode === 'string' ? JSON.parse(qrcode) : qrcode,
+                      colors: typeof colors === 'string' ? JSON.parse(colors) : colors
                   }
                 : {})
         });
@@ -333,19 +331,13 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         return result.filter((d) => d.pages?.length > 0);
     }
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<OCRDocument> {
-        const document = new OCRDocument(attributes.id);
-        Object.assign(document, attributes);
-        DEV_LOG && console.log('[Document]', 'createModelFromAttributes', JSON.stringify(attributes));
-        try {
-            // TODO: this should not be separated from previous assign.
-            // only to debug the real issue with pagesOrder
-            Object.assign(document, {
-                _pagesOrder: attributes.pagesOrder,
-                pagesOrder: attributes.pagesOrder ? JSON.parse(attributes.pagesOrder) : undefined
-            });
-        } catch (error) {
-            showError(error, { silent: true });
-        }
+        const { id, pagesOrder, ...others } = attributes;
+        const document = new OCRDocument(id);
+        Object.assign(document, {
+            id,
+            ...others,
+            pagesOrder: typeof pagesOrder === 'string' ? JSON.parse(pagesOrder) : pagesOrder
+        });
 
         let pages = await this.pagesRepository.search({ where: sql`document_id = ${document.id}` });
         if (pages.length) {

@@ -188,8 +188,9 @@ class PDFUtils {
         }
 
         private fun drawOCRData(pdfDoc:PdfDocument, page: JSONObject, posX:Float, posY:Float, imageScale: Float, toDrawHeight: Float, textScale: Float, debug: Boolean) {
-            if (page.has("ocrData")) {
-                val ocrData = page.getJSONObject("ocrData")
+
+            val ocrData = page.optJSONObject("ocrData")
+            if (ocrData != null) {
 //                val canvas =  PdfCanvas(pdfDoc.lastPage).setExtGState(PdfExtGState().setFillOpacity(if (debug) 1.0F else 0.01F)).setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.INVISIBLE)
                 val imageWidth = ocrData.getDouble("imageWidth").toFloat()
                 val imageHeight = ocrData.getDouble("imageHeight").toFloat()

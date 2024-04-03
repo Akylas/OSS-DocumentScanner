@@ -256,7 +256,6 @@ export class OCRDocument extends Observable implements Document {
         // this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
         documentsService.notify({ eventName: 'documentPageUpdated', object: this as any, pageIndex, imageUpdated });
     }
-    #_observablesListeners: Function[] = [];
     getObservablePages() {
         if (!this.#observables) {
             const pages = this.pages;
@@ -393,13 +392,11 @@ export class OCRPage extends Observable implements Page {
 
     colorType?: string;
     colorMatrix?: number[];
-    _colorMatrix?: string;
 
     rotation: number = 0;
     scale: number = 1;
 
     crop: [number, number][];
-    _crop: string;
 
     transforms?: string;
 
@@ -416,13 +413,8 @@ export class OCRPage extends Observable implements Page {
     imagePath: string;
 
     ocrData: OCRData;
-    _ocrData: string;
-
     qrcode: QRCodeData;
-    _qrcode: string;
-
     colors: ColorPaletteData;
-    _colors: string;
 
     constructor(id: string, docId: string) {
         super();
