@@ -30,8 +30,8 @@
     export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
     export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
 
-    DEV_LOG && console.log('resolutions', resolutions);
-    DEV_LOG && console.log('currentResolutions', currentResolution);
+    // DEV_LOG && console.log('resolutions', resolutions);
+    // DEV_LOG && console.log('currentResolutions', currentResolution);
 
     // $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
 

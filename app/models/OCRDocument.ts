@@ -169,6 +169,7 @@ export class OCRDocument extends Observable implements Document {
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
                     const file = File.fromPath(sourceImagePath);
                     await file.copy(actualSourceImagePath);
+                    DEV_LOG && console.log('add page source image copied', actualSourceImagePath, File.exists(actualSourceImagePath), File.fromPath(actualSourceImagePath).size);
                     attributes.sourceImagePath = actualSourceImagePath;
                 }
                 return documentsService.pageRepository.createPage(attributes);
@@ -219,7 +220,7 @@ export class OCRDocument extends Observable implements Document {
 
     async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false) {
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), JSON.stringify(page));
+        DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), page.toString());
         if (page) {
             await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
@@ -323,6 +324,7 @@ export class OCRDocument extends Observable implements Document {
         const page = this.pages[pageIndex];
         const file = File.fromPath(page.imagePath);
         DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
+        DEV_LOG && console.log('updatePageTransforms2', page.sourceImagePath, File.exists(page.sourceImagePath), File.fromPath(page.sourceImagePath).size);
 
         const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
             transforms,
@@ -426,5 +428,12 @@ export class OCRPage extends Observable implements Page {
         super();
         this.id = id;
         this.document_id = docId;
+    }
+    toString() {
+        return JSON.stringify(this, (key, value) => (key.startsWith('_') ? undefined : value));
+    }
+
+    toJSONObject() {
+        return JSON.parse(this.toString());
     }
 }

@@ -6,6 +6,7 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { l, lc } from '~/helpers/locale';
 import NSQLDatabase from './NSQLDatabase';
+import { showError } from '~/utils/error';
 const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
@@ -333,11 +334,18 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<OCRDocument> {
         const document = new OCRDocument(attributes.id);
-        Object.assign(document, {
-            ...attributes,
-            _pagesOrder: attributes.pagesOrder,
-            pagesOrder: attributes.pagesOrder ? JSON.parse(attributes.pagesOrder) : undefined
-        });
+        Object.assign(document, attributes);
+        DEV_LOG && console.log('[Document]', 'createModelFromAttributes', JSON.stringify(attributes));
+        try {
+            // TODO: this should not be separated from previous assign.
+            // only to debug the real issue with pagesOrder
+            Object.assign(document, {
+                _pagesOrder: attributes.pagesOrder,
+                pagesOrder: attributes.pagesOrder ? JSON.parse(attributes.pagesOrder) : undefined
+            });
+        } catch (error) {
+            showError(error, { silent: true });
+        }
 
         let pages = await this.pagesRepository.search({ where: sql`document_id = ${document.id}` });
         if (pages.length) {

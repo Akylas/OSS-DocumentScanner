@@ -195,7 +195,6 @@ export async function doInBatch<T, U>(array: T[], handler: (T, index: number) =>
     const result: U[] = [];
     const promises = chunks.map((s, i) => () => Promise.all(s.map((value, j) => handler(value, i * chunkSize + j))));
     for (let index = 0; index < promises.length; index++) {
-        DEV_LOG && console.log('doInBatch', index);
         result.push(...(await promises[index]()));
     }
     return result;

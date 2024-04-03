@@ -86,7 +86,7 @@
             updateNoDocument();
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
-            console.error(error);
+            showError(error);
         }
     }
 

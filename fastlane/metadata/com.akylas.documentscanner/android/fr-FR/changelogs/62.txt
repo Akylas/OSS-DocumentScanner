@@ -1,0 +1,13 @@
+### Bug fixes
+- Translated using Weblate (Finnish)
+- Translated using Weblate (Polish)
+- Translated using Weblate (Croatian)
+- Translated using Weblate (French)
+- Translated using Weblate (Italian)
+- Translated using Weblate (German)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Galician)
+- Translated using Weblate (Spanish)
+- show error on document list loading
+- better error handling

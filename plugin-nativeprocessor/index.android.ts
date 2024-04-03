@@ -28,7 +28,6 @@ export async function cropDocumentFromFile(src: string, quads, options: CropOpti
             JSON.stringify(quads),
             new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
                 onResult(e, result) {
-                    console.log('cropDocumentFromFile', e, result);
                     if (e) {
                         reject(e);
                     } else {
