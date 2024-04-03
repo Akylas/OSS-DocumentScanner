@@ -130,7 +130,7 @@
             recycleImages(imageSource);
             return await processCameraImage({
                 imagePath: tempImagePath,
-                fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_COMPRESS}`,
+                fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_FORMAT}`,
                 autoScan,
                 onBeforeModalImport: () => {
                     if (torchEnabled) {
