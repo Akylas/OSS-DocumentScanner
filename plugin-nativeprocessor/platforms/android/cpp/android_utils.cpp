@@ -116,11 +116,11 @@ void bitmap_to_mat(JNIEnv *env, jobject &srcBitmap, Mat &srcMat) {
         }
         AndroidBitmap_unlockPixels(env, srcBitmap);
         return;
-    } catch (cv::Exception &e) {
-        AndroidBitmap_unlockPixels(env, srcBitmap);
-        jclass je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, e.what());
-        return;
+//    } catch (cv::Exception &e) {
+//        AndroidBitmap_unlockPixels(env, srcBitmap);
+//        jclass je = env->FindClass("java/lang/Exception");
+//        env->ThrowNew(je, e.what());
+//        return;
     } catch (...) {
         AndroidBitmap_unlockPixels(env, srcBitmap);
         jclass je = env->FindClass("java/lang/Exception");
@@ -157,11 +157,11 @@ void mat_to_bitmap(JNIEnv *env, Mat &srcMat, jobject &dstBitmap) {
             }
         }
         AndroidBitmap_unlockPixels(env, dstBitmap);
-    } catch (cv::Exception &e) {
-        AndroidBitmap_unlockPixels(env, dstBitmap);
-        jclass je = env->FindClass("java/lang/Exception");
-        env->ThrowNew(je, e.what());
-        return;
+//    } catch (cv::Exception &e) {
+//        AndroidBitmap_unlockPixels(env, dstBitmap);
+//        jclass je = env->FindClass("java/lang/Exception");
+//        env->ThrowNew(je, e.what());
+//        return;
     } catch (...) {
         AndroidBitmap_unlockPixels(env, dstBitmap);
         jclass je = env->FindClass("java/lang/Exception");
