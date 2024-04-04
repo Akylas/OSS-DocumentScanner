@@ -1339,6 +1339,11 @@ export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumb
 }
 export async function importImageFromCamera({ document, canGoToView = true, inverseUseSystemCamera = false }: { document?: OCRDocument; canGoToView?: boolean; inverseUseSystemCamera? } = {}) {
     const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
+
+    const result = await request('camera');
+    if (result[0] !== 'authorized') {
+        throw new PermissionError(lc('camera_permission_needed'));
+    }
     if (__ANDROID__ ? (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera) : useSystemCamera) {
         const resultImagePath = await new Promise<string>((resolve, reject) => {
             const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
@@ -1394,10 +1399,6 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
         }
 
         return;
-    }
-    const result = await request('camera');
-    if (result[0] !== 'authorized') {
-        throw new PermissionError(lc('camera_permission_needed'));
     }
     const oldPagesNumber = document?.pages.length ?? 0;
     DEV_LOG && console.log('importImageFromCamera', oldPagesNumber);
