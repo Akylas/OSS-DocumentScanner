@@ -658,7 +658,7 @@
                         item={item.doc.pages[0]}
                         marginBottom={getImageMargin(viewStyle)}
                         marginTop={getImageMargin(viewStyle)}
-                        sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
+                        sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0]?.id}`}
                         stretch="aspectFill"
                         width={getItemImageHeight(viewStyle)} />
                     <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
