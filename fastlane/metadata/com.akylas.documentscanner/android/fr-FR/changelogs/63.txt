@@ -1,0 +1,8 @@
+### Bug fixes
+- storage permission still needed on android <= 10
+- export images in batch to prevent memory issue
+- fixed snack text and file opening while exporting PDF
+- camera permission also needed when using system camera app
+- better document detection
+- prevent crash on dark mode change
+- prevent adding document with no page
