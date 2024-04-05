@@ -8,11 +8,11 @@
 
     const items = [
         {
-            moduleName: 'OpenCV',
+            moduleName: 'OpenCV 4.8.0',
             moduleUrl: 'https://github.com/opencv/opencv'
         },
         {
-            moduleName: 'tesseract',
+            moduleName: 'tesseract 5.3.3',
             moduleUrl: 'https://github.com/tesseract-ocr/tesseract'
         },
 
