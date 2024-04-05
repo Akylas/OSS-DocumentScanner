@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
-#include <opencv2/text.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
 
 #include <tesseract/baseapi.h>
@@ -45,29 +46,29 @@ static inline void trim(std::string &s)
     ltrim(s);
 }
 
-
-class DoubleTrack{
+class DoubleTrack
+{
 public:
-
     int int_value = 0;
     double precision;
-    double* currentValue;
-    void(*user_callback)(double);
+    double *currentValue;
+    void (*user_callback)(double);
 
-    void setup(const std::string& field_name, const std::string& window_name, double* value, double max_value, void(*function)(double), unsigned precision = 100){
-            int_value = *value * precision;
-            user_callback = function;
-            this->precision = precision;
-            this->currentValue = value;
-            createTrackbar(field_name, window_name, &int_value, max_value * precision, DoubleTrack::callback, this);
+    void setup(const std::string &field_name, const std::string &window_name, double *value, double max_value, void (*function)(double), unsigned precision = 100)
+    {
+        int_value = *value * precision;
+        user_callback = function;
+        this->precision = precision;
+        this->currentValue = value;
+        createTrackbar(field_name, window_name, &int_value, max_value * precision, DoubleTrack::callback, this);
     }
 
-    static void callback(int, void* object){
-        DoubleTrack* pObject = static_cast<DoubleTrack*>(object);
+    static void callback(int, void *object)
+    {
+        DoubleTrack *pObject = static_cast<DoubleTrack *>(object);
         *pObject->currentValue = pObject->int_value / pObject->precision;
         pObject->user_callback(*pObject->currentValue);
     }
-
 };
 
 void listFilesInFolder(string dirPath)
@@ -150,26 +151,26 @@ Mat cropAndWarp(Mat src, vector<cv::Point> orderedPoints)
 }
 
 detector::DocumentDetector docDetector(300, 0);
-int cannyFactor = docDetector.cannyFactor * 100;
-int cannyThreshold1 = docDetector.cannyThreshold1;
-int cannyThreshold2 = docDetector.cannyThreshold2;
-int morphologyAnchorSize = docDetector.morphologyAnchorSize;
-int dilateAnchorSize = docDetector.dilateAnchorSize;
-int gaussianBlur = docDetector.gaussianBlur;
-int medianBlurValue = docDetector.medianBlurValue;
-int bilateralFilterValue = docDetector.bilateralFilterValue;
-int dilateAnchorSizeBefore = docDetector.dilateAnchorSizeBefore;
-int houghLinesThreshold = docDetector.houghLinesThreshold;
-int houghLinesMinLineLength = docDetector.houghLinesMinLineLength;
-int houghLinesMaxLineGap = docDetector.houghLinesMaxLineGap;
-int thresh = docDetector.thresh;
-int threshMax = docDetector.threshMax;
-int adapThresholdBlockSize = docDetector.adapThresholdBlockSize; // 391
-int adapThresholdC = docDetector.adapThresholdBlockSize;         // 53
-int gammaCorrection = docDetector.gammaCorrection * 10;          // 53
-int shouldNegate = docDetector.shouldNegate;                     // 53
-int useChannel = 0;                         // 53
-int contoursApproxEpsilonFactor = docDetector.contoursApproxEpsilonFactor * 1000;                         // 53
+int cannyFactor = docDetector.options.cannyFactor * 100;
+// int cannyThreshold1 = docDetector.cannyThreshold1;
+// int cannyThreshold2 = docDetector.cannyThreshold2;
+int morphologyAnchorSize = docDetector.options.morphologyAnchorSize;
+int dilateAnchorSize = docDetector.options.dilateAnchorSize;
+// int gaussianBlur = docDetector.gaussianBlur;
+int medianBlurValue = docDetector.options.medianBlurValue;
+int bilateralFilterValue = docDetector.options.bilateralFilterValue;
+// int dilateAnchorSizeBefore = docDetector.dilateAnchorSizeBefore;
+int houghLinesThreshold = docDetector.options.houghLinesThreshold;
+int houghLinesMinLineLength = docDetector.options.houghLinesMinLineLength;
+int houghLinesMaxLineGap = docDetector.options.houghLinesMaxLineGap;
+int thresh = docDetector.options.thresh;
+int threshMax = docDetector.options.threshMax;
+// int adapThresholdBlockSize = docDetector.adapThresholdBlockSize; // 391
+// int adapThresholdC = docDetector.adapThresholdBlockSize;         // 53
+// int gammaCorrection = docDetector.gammaCorrection * 10;          // 53
+// int shouldNegate = docDetector.shouldNegate;                     // 53
+int useChannel = 0;                                                               // 53
+int contoursApproxEpsilonFactor = docDetector.options.contoursApproxEpsilonFactor * 1000; // 53
 
 int whitepaper = 0;
 int enhance = 0;
@@ -179,6 +180,7 @@ int colors = 0;
 Mat edged;
 Mat warped;
 Mat image;
+bool canUpdateImage = false;
 Mat resizedImage;
 int imageIndex = 0;
 int colorsResizeThreshold = 100;
@@ -201,7 +203,6 @@ int textDetect1 = 70;      // 34
 int textDetect2 = 4;       // 12
 
 WhitePaperTransformOptions whitepaperOptions;
-
 
 inline uchar reduceVal(const uchar val)
 {
@@ -256,47 +257,52 @@ void preprocess_ocr(const Mat &image, const Mat &rgb)
 
 void updateImage()
 {
-    docDetector.cannyFactor = cannyFactor / 100;
-    docDetector.cannyThreshold1 = cannyThreshold1;
-    docDetector.cannyThreshold2 = cannyThreshold2;
-    docDetector.dilateAnchorSize = dilateAnchorSize;
-    docDetector.dilateAnchorSizeBefore = dilateAnchorSizeBefore;
-    docDetector.dilateAnchorSizeBefore = dilateAnchorSizeBefore;
-    docDetector.houghLinesThreshold = houghLinesThreshold;
-    docDetector.houghLinesMinLineLength = houghLinesMinLineLength;
-    docDetector.houghLinesMaxLineGap = houghLinesMaxLineGap;
-    docDetector.adapThresholdBlockSize = adapThresholdBlockSize;
-    docDetector.adapThresholdC = adapThresholdC;
-    docDetector.morphologyAnchorSize = morphologyAnchorSize;
-    docDetector.shouldNegate = shouldNegate;
-    docDetector.useChannel = useChannel - 1;
-    docDetector.bilateralFilterValue = bilateralFilterValue;
-    docDetector.thresh = thresh;
-    docDetector.threshMax = threshMax;
-    docDetector.gammaCorrection = gammaCorrection / 10.0;
-    docDetector.contoursApproxEpsilonFactor = contoursApproxEpsilonFactor / 1000.0;
-    if (gaussianBlur > 0 && gaussianBlur % 2 == 0)
-    {
-        docDetector.gaussianBlur = gaussianBlur + 1;
+
+    if (!canUpdateImage) {
+        return;
     }
-    else
-    {
-        docDetector.gaussianBlur = gaussianBlur;
-    }
+    docDetector.options.cannyFactor = cannyFactor / 100;
+    // docDetector.cannyThreshold1 = cannyThreshold1;
+    // docDetector.cannyThreshold2 = cannyThreshold2;
+    docDetector.options.dilateAnchorSize = dilateAnchorSize;
+    // docDetector.dilateAnchorSizeBefore = dilateAnchorSizeBefore;
+    // docDetector.dilateAnchorSizeBefore = dilateAnchorSizeBefore;
+    docDetector.options.houghLinesThreshold = houghLinesThreshold;
+    docDetector.options.houghLinesMinLineLength = houghLinesMinLineLength;
+    docDetector.options.houghLinesMaxLineGap = houghLinesMaxLineGap;
+    // docDetector.adapThresholdBlockSize = adapThresholdBlockSize;
+    // docDetector.adapThresholdC = adapThresholdC;
+    docDetector.options.morphologyAnchorSize = morphologyAnchorSize;
+    // docDetector.shouldNegate = shouldNegate;
+    docDetector.options.useChannel = useChannel - 1;
+    docDetector.options.bilateralFilterValue = bilateralFilterValue;
+    docDetector.options.thresh = thresh;
+    docDetector.options.threshMax = threshMax;
+    // docDetector.gammaCorrection = gammaCorrection / 10.0;
+    docDetector.options.contoursApproxEpsilonFactor = contoursApproxEpsilonFactor / 1000.0;
+    // if (gaussianBlur > 0 && gaussianBlur % 2 == 0)
+    // {
+    //     docDetector.gaussianBlur = gaussianBlur + 1;
+    // }
+    // else
+    // {
+    //     docDetector.gaussianBlur = gaussianBlur;
+    // }
     if (medianBlurValue > 0 && medianBlurValue % 2 == 0)
     {
-        docDetector.medianBlurValue = medianBlurValue + 1;
+        docDetector.options.medianBlurValue = medianBlurValue + 1;
     }
     else
     {
-        docDetector.medianBlurValue = medianBlurValue;
+        docDetector.options.medianBlurValue = medianBlurValue;
     }
     docDetector.image = image;
     resizedImage = docDetector.resizeImageMax();
     vector<vector<cv::Point>> pointsList = docDetector.scanPoint(edged, resizedImage, true);
-    if (pointsList.size() == 0) {
+    if (pointsList.size() == 0)
+    {
         vector<cv::Point> points;
-        points.push_back(cv::Point(0,0));
+        points.push_back(cv::Point(0, 0));
         points.push_back(cv::Point(image.cols, 0));
         points.push_back(cv::Point(image.cols, image.rows));
         points.push_back(cv::Point(0, image.rows));
@@ -345,7 +351,7 @@ void updateImage()
                 stream << "\e[48;2;" << (int)rbgColor(2) << ";" << (int)rbgColor(1) << ";" << (int)rbgColor(0) << "m   \e[0m";
                 // ESC[48;2;⟨r⟩;⟨g⟩;⟨b⟩m
                 //     __android_log_print(ANDROID_LOG_INFO, "JS", "Color  Color %s Area: %f% %d\n", rgbSexString(HLStoBGR(color.first)).c_str(), 100.f * float(color.second) / n, colors.size());
-                cout  << stream.str()  << "Color: " << colors.size() << " - Hue: " << (int)color(0) << " - Lightness: " << (int)color(1) << " - Saturation: " << (int)color(2) << " " << BGRHexString(rbgColor) << " - Area: " << 100.f * (colors.at(index).second) << "%" << endl;
+                cout << stream.str() << "Color: " << colors.size() << " - Hue: " << (int)color(0) << " - Lightness: " << (int)color(1) << " - Saturation: " << (int)color(2) << " " << BGRHexString(rbgColor) << " - Area: " << 100.f * (colors.at(index).second) << "%" << endl;
                 rectangle(warped, cv::Rect(index * 60, 0, 60, 60), Scalar(rbgColor(0), rbgColor(1), rbgColor(2)), -1);
             }
 
@@ -415,16 +421,16 @@ void updateSourceImage()
 {
     image = imread(images[imageIndex]);
     docDetector.image = image;
-    resizedImage = docDetector.resizeImage();
+    resizedImage = docDetector.resizeImageMax();
     imshow("SourceImage", resizedImage);
     updateImage();
 }
 void on_trackbar(int, void *)
 {
-    if (adapThresholdBlockSize > 0 && adapThresholdBlockSize % 2 == 0)
-    {
-        adapThresholdBlockSize = adapThresholdBlockSize + 1;
-    }
+    // if (adapThresholdBlockSize > 0 && adapThresholdBlockSize % 2 == 0)
+    // {
+    //     adapThresholdBlockSize = adapThresholdBlockSize + 1;
+    // }
     updateImage();
 }
 void on_double_trackbar(double)
@@ -436,7 +442,7 @@ void on_trackbar_image(int, void *)
     updateSourceImage();
 }
 
-JSONCONS_N_MEMBER_TRAITS(WhitePaperTransformOptions, 0, csBlackPer,csWhitePer, gaussKSize, gaussSigma , gammaValue, cbBlackPer, cbWhitePer, dogKSize, dogSigma2);
+JSONCONS_N_MEMBER_TRAITS(WhitePaperTransformOptions, 0, csBlackPer, csWhitePer, gaussKSize, gaussSigma, gammaValue, cbBlackPer, cbWhitePer, dogKSize, dogSigma2);
 
 int main(int argc, char **argv)
 {
@@ -446,69 +452,71 @@ int main(int argc, char **argv)
         cout << "Usage: ./scanner [test_images_dir_path]\n";
         return 1;
     }
+    printf("OpenCV: %s", cv::getBuildInformation().c_str());
     const char *dirPath = argv[1];
     const char *startImage = argv[2];
 
     setImagesFromFolder(dirPath);
-    if (startImage) {
-        auto ret = std::find_if(images.begin(), images.end(), [startImage](string filePath) { return filePath.find(startImage) != std::string::npos; });
-        if (ret != images.end()) {
+    if (startImage)
+    {
+        auto ret = std::find_if(images.begin(), images.end(), [startImage](string filePath)
+                                { return filePath.find(startImage) != std::string::npos; });
+        if (ret != images.end())
+        {
             imageIndex = ret - images.begin();
         }
     }
     namedWindow("SourceImage", WINDOW_KEEPRATIO);
     resizeWindow("SourceImage", 600, 400);
-    moveWindow("SourceImage", 550, 500);
+    moveWindow("SourceImage", 450, 500);
     namedWindow("Options", 0);
     resizeWindow("Options", 450, 400);
+    moveWindow("Options", 0, 0);
     // namedWindow("HoughLinesP", WINDOW_KEEPRATIO);
     // resizeWindow("HoughLinesP", 400, 300);
     // moveWindow("HoughLinesP", 1200, 600);
     namedWindow("Edges", WINDOW_KEEPRATIO);
     resizeWindow("Edges", 600, 400);
-    moveWindow("Edges", 550, 0);
-
-    namedWindow("Warped", WINDOW_KEEPRATIO);
-    moveWindow("Warped", 1200, 0);
-    resizeWindow("Warped", 400, 600);
+    moveWindow("Edges", 450, 0);
 
     namedWindow("WarpedOptions", WINDOW_KEEPRATIO);
-    moveWindow("WarpedOptions", 1200, 600);
+    moveWindow("WarpedOptions", 1500, 0);
     resizeWindow("WarpedOptions", 400, 600);
+
+    namedWindow("Warped", WINDOW_KEEPRATIO);
+    moveWindow("Warped", 1100, 0);
+    resizeWindow("Warped", 400, 600);
 
     // namedWindow("Detect", WINDOW_KEEPRATIO);
     // moveWindow("Detect", 1400, 100);
     // resizeWindow("Detect", 600, 600);
-    updateSourceImage();
     createTrackbar("image:", "Options", &imageIndex, std::size(images) - 1, on_trackbar_image);
     createTrackbar("useChannel:", "Options", &useChannel, 3, on_trackbar);
     createTrackbar("bilateralFilter:", "Options", &bilateralFilterValue, 200, on_trackbar);
-    createTrackbar("gaussianBlur:", "Options", &gaussianBlur, 200, on_trackbar);
+    // createTrackbar("gaussianBlur:", "Options", &gaussianBlur, 200, on_trackbar);
     createTrackbar("medianBlurValue:", "Options", &medianBlurValue, 200, on_trackbar);
     createTrackbar("morphologyAnchorSize:", "Options", &morphologyAnchorSize, 20, on_trackbar);
     createTrackbar("cannyFactor:", "Options", &cannyFactor, 400, on_trackbar);
     // createTrackbar("cannyThreshold1:", "Options", &cannyThreshold1, 255, on_trackbar);
     // createTrackbar("cannyThreshold2:", "Options", &cannyThreshold2, 255, on_trackbar);
-    createTrackbar("dilateAnchorSizeBefore:", "Options", &dilateAnchorSizeBefore, 20, on_trackbar);
+    // createTrackbar("dilateAnchorSizeBefore:", "Options", &dilateAnchorSizeBefore, 20, on_trackbar);
     createTrackbar("dilateAnchorSize:", "Options", &dilateAnchorSize, 20, on_trackbar);
-    createTrackbar("gammaCorrection:", "Options", &gammaCorrection, 200, on_trackbar);
+    // createTrackbar("gammaCorrection:", "Options", &gammaCorrection, 200, on_trackbar);
     createTrackbar("thresh:", "Options", &thresh, 300, on_trackbar);
     createTrackbar("threshMax:", "Options", &threshMax, 300, on_trackbar);
     createTrackbar("houghLinesThreshold:", "Options", &houghLinesThreshold, 500, on_trackbar);
     createTrackbar("houghLinesMinLineLength:", "Options", &houghLinesMinLineLength, 500, on_trackbar);
     createTrackbar("houghLinesMaxLineGap:", "Options", &houghLinesMaxLineGap, 500, on_trackbar);
-    
+
     // createTrackbar("actualTesseractDetect:", "SourceImage", &actualTesseractDetect, 1, on_trackbar);
     // createTrackbar("textDetect1:", "SourceImage", &textDetect1, 100, on_trackbar);
     // createTrackbar("textDetect2:", "SourceImage", &textDetect2, 100, on_trackbar);
     // createTrackbar("textDetectDilate:", "SourceImage", &textDetectDilate, 100, on_trackbar);
     // createTrackbar("desseractDetectContours:", "SourceImage", &desseractDetectContours, 1, on_trackbar);
-    createTrackbar("negate:", "Options", &shouldNegate, 1, on_trackbar);
+    // createTrackbar("negate:", "Options", &shouldNegate, 1, on_trackbar);
     createTrackbar("contoursApproxEpsilonFactor:", "Options", &contoursApproxEpsilonFactor, 100, on_trackbar);
 
-    
     createTrackbar("enhance details:", "Warped", &enhance, 1, on_trackbar);
-
 
     // Whitepaper
     createTrackbar("whitepaper:", "WarpedOptions", &whitepaper, 1, on_trackbar);
@@ -533,8 +541,8 @@ int main(int argc, char **argv)
     // createTrackbar("paletteNbColors:", "Warped", &paletteNbColors, 8, on_trackbar);
     // createTrackbar("adapThresholdBlockSize:", "Options", &adapThresholdBlockSize, 500, on_trackbar);
     // createTrackbar("adapThresholdC:", "Options", &adapThresholdC, 500, on_trackbar);
-
-
+    canUpdateImage = true;
+    updateImage();
 
     // createTrackbar("dogKSize:", "SourceImage", &dogKSize, 30, on_trackbar);
     // createTrackbar("dogSigma1:", "SourceImage", &dogSigma1, 200, on_trackbar);

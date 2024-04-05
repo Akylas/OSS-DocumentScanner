@@ -18,7 +18,7 @@
     "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
     "cmake.buildDirectory": "${workspaceFolder}/cpp/cpp_test_app/build",
     "cmake.debugConfig": {
-        "args": ["/home/mguillon/Desktop/test_images", "IMG_20240305_114438_911.jpg"]
+        "args": ["/home/mguillon/Desktop/test_images", "IMG_20231008_100554_476.jpg"]
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc-12",
     "svelte.plugin.svelte.compilerWarnings": {
@@ -166,6 +166,7 @@
         "semaphore": "cpp",
         "charconv": "cpp",
         "numbers": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "cstdarg": "cpp"
     }
 }
