@@ -11,6 +11,8 @@ using namespace std;
 template <class T>
 T& make_ref(T&& x) { return x; }
 
+typedef std::tuple<std::vector<cv::Point>, double, double, double, int> PointAreaMaxCosMeanCosWeight;
+
 namespace detector {
 
     class DocumentDetector {
@@ -39,37 +41,40 @@ namespace detector {
         cv::Mat image;
         cv::Mat resizedImage;
 
-
-        float borderSize = 10.0f;
-        float cannySigmaX = 0.0f;
-        float cannyFactor = 2.0f;
-        float cannyThreshold1 = 10.0f;
-        float cannyThreshold2 = 20.0f;
-        float morphologyAnchorSize = 4.0f;
-        float dilateAnchorSizeBefore = 0.0f;
-        float gammaCorrection = 0.0f;
-        float dilateAnchorSize = 3.0f;
         double resizeScale = 1.0f;
-        float gaussianBlur = 0.0f;
-        float thresh = 160.0f;
-        float threshMax = 256.0f;
-        float medianBlurValue = 9.0f;
-        float bilateralFilterValue = 18.0f;
         int resizeThreshold = 500;
         double scale = 1.0;
-        int useChannel = -1;
-        int houghLinesThreshold = 0;
-        int houghLinesMinLineLength = 55;
-        int houghLinesMaxLineGap = 0;
-        int adapThresholdBlockSize = 0; // 391
-        int adapThresholdC = 0;          // 53
-        int shouldNegate = 0;          // 53
-        double contoursApproxEpsilonFactor = 0.02;
-        
+
+        struct DetectOptions {
+            int useChannel = -1;
+            float borderSize = 10.0f;
+            float cannySigmaX = 0.0f;
+            float cannyFactor = 2.0f;
+            float morphologyAnchorSize = 4.0f;
+            float dilateAnchorSize = 3.0f;
+            float thresh = 160.0f;
+            float threshMax = 256.0f;
+            float medianBlurValue = 9.0f;
+            float bilateralFilterValue = 18.0f;
+            double contoursApproxEpsilonFactor = 0.02;
+            double expectedMaxCosine = 0.4;
+            double expectedOptimalMaxCosine = 0.3;
+            double expectedAreaFactor = 0.20;
+            double areaScaleMinFactor = 0.04;
+            double minDistanceFromBorderFactor = 0.0;
+
+            int houghLinesThreshold = 0;
+            int houghLinesMinLineLength = 55;
+            int houghLinesMaxLineGap = 0;
+        };
+        DetectOptions options;
+//        int adapThresholdBlockSize = 0; // 391
+//        int adapThresholdC = 0;          // 53
+//        int shouldNegate = 0;          // 53
+
 
     private:
         int imageRotation = 0;
-        int areaScaleMinFactor = 5;
         bool isHisEqual = false;
 
 
@@ -86,11 +91,11 @@ namespace detector {
         //         std::vector<std::vector<cv::Point>> &cannySquares,
         //         int indice,
         //         std::vector<int> &indices);
-        bool findSquares(
+        void findSquares(
                 cv::Mat srcGray,
                 double scaledWidth,
                 double scaledHeight,
-                std::vector<std::pair<std::vector<cv::Point>, double>> &squares,
+                std::vector<PointAreaMaxCosMeanCosWeight> &squares,
                 cv::Mat drawimage,
                 bool drawContours,
                 float weight  = 1.0);

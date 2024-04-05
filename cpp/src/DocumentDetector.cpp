@@ -9,7 +9,6 @@ using namespace std;
 
 // JSONCONS_ALL_MEMBER_TRAITS(cv::Point, x, y);
 
-typedef std::pair<std::vector<cv::Point>, double> PointAndArea;
 DocumentDetector::DocumentDetector(cv::Mat &bitmap, int resizeThreshold, int imageRotation, double scale)
 {
     image = bitmap;
@@ -69,9 +68,13 @@ double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
     return (dx1 * dx2 + dy1 * dy2) /
            sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
 }
-bool sortByArea(PointAndArea contour1, PointAndArea contour2)
+
+double getContourSortFactor(PointAreaMaxCosMeanCosWeight contour) {
+    return /* area */std::get<1>(contour) + /* weight */(double)std::get<4>(contour) * (1 - /* maxCos */std::get<2>(contour));
+}
+bool sortByArea(PointAreaMaxCosMeanCosWeight contour1, PointAreaMaxCosMeanCosWeight contour2)
 {
-    return (contour1.second > contour2.second);
+    return (getContourSortFactor(contour1) > getContourSortFactor(contour2));
 }
 
 // Function to compute the intersection point of two line segments defined by Vec4i
@@ -145,32 +148,34 @@ vector<vector<Point>> clusterIntersectionPoints(const vector<Vec4i> &lines, floa
     return clusters;
 }
 
-bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double scaledHeight,
-                                   std::vector<std::pair<std::vector<cv::Point>, double>> &squares, cv::Mat drawImage, bool drawContours, float weight)
+void DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double scaledHeight,
+                                   std::vector<PointAreaMaxCosMeanCosWeight> &squares, cv::Mat drawImage, bool drawContours, float weight)
 {
-    int marge = static_cast<int>(scaledWidth * 0.01);
+    int marge = static_cast<int>(scaledWidth * options.minDistanceFromBorderFactor) + options.borderSize;
     // Contours search
     std::vector<std::vector<cv::Point>> contours;
     vector<Vec4i> hierarchy;
     cv::findContours(srcGray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    
     std::sort(contours.begin(), contours.end(), compareContourAreas);
     // if (drawContours) {
     //     cv::drawContours(drawImage, contours, -1, (0,255,0), 2);
     // }
     std::vector<Point> approx;
     // std::vector<std::vector<Point>> approxs;
+    double maxAllowedArea = (scaledWidth - 2 * options.borderSize) * (scaledHeight - 2 * options.borderSize) * 0.92;
     for (size_t i = 0; i < contours.size(); i++)
     {
         std::vector<Point> contour = contours[i];
         double arcLength = cv::arcLength(contour, true);
         double area = cv::contourArea(contour);
-        if (arcLength < 100 || area < 1000)
+        if (arcLength < 100 || area < (scaledWidth * scaledHeight) * options.areaScaleMinFactor || area >= maxAllowedArea)
         {
             continue;
         }
 
         // Detection of geometric shapes
-        double epsilon = arcLength * contoursApproxEpsilonFactor;
+        double epsilon = arcLength * options.contoursApproxEpsilonFactor;
         cv::approxPolyDP(contour, approx, epsilon, true);
         // approxs.push_back(approx);
 
@@ -197,8 +202,8 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
             }
 
             // const double area = std::abs(contourArea(approx));
-            if (area > scaledWidth / areaScaleMinFactor * (scaledHeight / areaScaleMinFactor))
-            {
+//            if (area > (scaledWidth * scaledHeight) * areaScaleMinFactor)
+//            {
 
                 double maxCosine = 0.0;
                 double minCosine = 100.0;
@@ -212,10 +217,10 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                 }
                 // Selection of quadrilaterals with large enough angles
                 // std::printf("found contour %f %zu %f %f\n", area, approx.size(), minCosine, maxCosine);
-                if (maxCosine < 0.4)
+                if (maxCosine < options.expectedMaxCosine)
                 {
                     // Mat houghLines;
-                    if (houghLinesThreshold > 0)
+                    if (options.houghLinesThreshold > 0)
                     {
                         Mat houghLines = Mat(srcGray.rows, srcGray.cols, CV_8U, cv::Scalar(0, 0, 0));
                         cv::polylines(houghLines, contour, true, Scalar(255, 0, 0), 5, 8);
@@ -223,7 +228,7 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                         // std::printf("HoughLinesP %f %f %f\n", houghLinesThreshold, houghLinesMinLineLength, houghLinesMaxLineGap);
                         vector<Vec4i> lineSegments;
                         // will hold the results of the detection
-                        cv::HoughLinesP(houghLines, lineSegments, 1, CV_PI / 180, houghLinesThreshold, houghLinesMinLineLength, houghLinesMaxLineGap); // runs the actual detection
+                        cv::HoughLinesP(houghLines, lineSegments, 1, CV_PI / 180, options.houghLinesThreshold, options.houghLinesMinLineLength, options.houghLinesMaxLineGap); // runs the actual detection
                         // Draw the lines
 
                         if (drawContours)
@@ -269,7 +274,7 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                         }
                     }
                     // we give more weight for low cosinus (closer to 90d angles)
-                    squares.push_back(std::pair<std::vector<cv::Point>, double>(approx, area * weight * (1 - meanCosine)));
+                    squares.push_back(std::make_tuple(approx, area, maxCosine, meanCosine / 4.0, weight)); //area * weight * (1 - maxCosine))
 
                     if (drawContours)
                     {
@@ -277,15 +282,15 @@ bool DocumentDetector::findSquares(cv::Mat srcGray, double scaledWidth, double s
                         cv::polylines(drawImage, contour, true, Scalar(255, 0, 0), 1, 8);
                         // cv::drawContours(drawImage, [approx], -1, Scalar(0, 255, 0), 1);
                     }
-                    if (maxCosine < 0.3 && area > (scaledWidth * scaledHeight / 4))
-                    {
-                        return true;
-                    }
+                    // if (maxCosine < expectedOptimalMaxCosine && area > (scaledWidth * scaledHeight * expectedAreaFactor))
+                    // {
+                    //     return true;
+                    // }
                 }
-            }
+//            }
         }
     }
-    return false;
+    // return false;
 }
 
 std::string DocumentDetector::scanPointToJSON()
@@ -364,27 +369,31 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
     Size size = image.size();
     double width = size.width;
     double height = size.height;
-    std::vector<PointAndArea> foundSquares;
+    std::vector<PointAreaMaxCosMeanCosWeight> foundSquares;
     int iterration = 0;
     cv::Mat temp1;
     cv::Mat temp2;
-    medianBlur(image, temp1, medianBlurValue);
+    if (options.medianBlurValue > 0) {
+        medianBlur(image, temp1, options.medianBlurValue);
+    } else {
+        temp1 = image;
+    }
 
-    cv::Mat dilateStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateAnchorSize, dilateAnchorSize));
-    cv::Mat morphologyStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphologyAnchorSize, morphologyAnchorSize));
+    cv::Mat dilateStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(options.dilateAnchorSize, options.dilateAnchorSize));
+    cv::Mat morphologyStruct = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(options.morphologyAnchorSize, options.morphologyAnchorSize));
     int channelsCount = std::min(image.channels(), 3);
     int i = channelsCount - 1;
     int minI = 0;
-    if (useChannel >= 0)
+    if (options.useChannel >= 0)
     {
         channelsCount = 1;
-        i = useChannel;
-        minI = useChannel;
+        i = options.useChannel;
+        minI = options.useChannel;
     }
     // cvtColor(temp1, temp2, COLOR_BGR2GRAY);
     // we give more weight to contours found with threshod then with higher canny
-    float weight = 30;
-    bool shoudlBreak = false;
+    int weight = 3000000;
+    // bool shoudlBreak = false;
     for (i = i; i >= minI; i--)
     {
         //  std::printf("testing on channel %i %i\n", i, iterration);
@@ -392,27 +401,45 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
 
         Mat out;
         // bilateralFilter is really slow so for now we dont use it
-        cv::bilateralFilter(temp2, out, 15, bilateralFilterValue, bilateralFilterValue);
-        cv::threshold(temp2, edged, thresh, threshMax, cv::THRESH_BINARY);
+        cv::bilateralFilter(temp2, out, 15, options.bilateralFilterValue, options.bilateralFilterValue);
+        cv::threshold(temp2, edged, options.thresh, options.threshMax, cv::THRESH_BINARY);
         cv::morphologyEx(edged, edged, cv::MORPH_CLOSE, morphologyStruct);
         cv::dilate(edged, edged, dilateStruct);
-        shoudlBreak = findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
-        if (shoudlBreak)
+        findSquares(edged, width, height, foundSquares, image, drawContours, (weight--));
+        if (foundSquares.size() > 0)
         {
-            break;
+            std::sort(foundSquares.begin(), foundSquares.end(), sortByArea);
+            auto firstContour = foundSquares[0];
+            if (std::get<2>(firstContour) < options.expectedOptimalMaxCosine && std::get<1>(firstContour) > (width * height * options.expectedAreaFactor))
+            {
+                // return true;
+                i = minI;
+                break;
+            }
         }
+        // if (shoudlBreak)
+        // {
+        //     break;
+        // }
         iterration++;
         // we test over all channels to find the best contour
         int t = 60;
         while (t >= 10)
         {
-            cv::Canny(temp2, edged, t * cannyFactor, cannyFactor * t * 2);
+            cv::Canny(temp2, edged, t * options.cannyFactor, options.cannyFactor * t * 2);
             cv::dilate(edged, edged, dilateStruct);
-            shoudlBreak = findSquares(edged, width, height, foundSquares, image, drawContours, (weight--) / 100);
-            if (shoudlBreak)
+            findSquares(edged, width, height, foundSquares, image, drawContours, (weight--));
+            if (foundSquares.size() > 0)
+        {
+            std::sort(foundSquares.begin(), foundSquares.end(), sortByArea);
+            auto firstContour = foundSquares[0];
+            if (std::get<2>(firstContour) < options.expectedOptimalMaxCosine && std::get<1>(firstContour) > (width * height * options.expectedAreaFactor))
             {
+                // return true;
+                i = minI;
                 break;
             }
+        }
             iterration++;
             t -= 10;
             // break;
@@ -531,7 +558,8 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
 
     if (foundSquares.size() > 0)
     {
-        std::sort(foundSquares.begin(), foundSquares.end(), sortByArea);
+      int borderSize = options.borderSize;
+      // std::sort(foundSquares.begin(), foundSquares.end(), sortByArea);
         // auto t_end = std::chrono::high_resolution_clock::now();
 
         // auto elapsed_time_ms = duration_cast<std::chrono::milliseconds>(t_end - t_start);
@@ -540,7 +568,7 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         // for now we return only one. Need to see how to prevent overlapping squares
         for (int i = 0; i < 1; i++)
         {
-            std::vector<Point> points = foundSquares[i].first;
+            std::vector<Point> points = std::get<0>(foundSquares[i]);
             for (int j = 0; j < points.size(); j++)
             {
                 if (borderSize > 0)
@@ -562,24 +590,29 @@ Mat DocumentDetector::resizeImageToSize(int size)
 
     int width = image.cols;
     int height = image.rows;
+    int borderSize = options.borderSize;
     if (resizeThreshold > 0 && size > resizeThreshold)
     {
-        resizeScale = 1.0f * size / resizeThreshold;
-        width = static_cast<int>(width / resizeScale);
-        height = static_cast<int>(height / resizeScale);
+        double widthCoef = width / (double)resizeThreshold;
+        double heightCoef = height / (double)resizeThreshold;
+        double aspectCoef = std::max(widthCoef, heightCoef);
+        resizeScale = aspectCoef;
+        width = std::floor(width / aspectCoef);
+        height = std::floor(height / aspectCoef);
         Size size(width, height);
         Mat resizedBitmap(size, CV_8UC3);
         resize(image, resizedBitmap, size);
+//        imwrite("resized.png", resizedBitmap);
         if (borderSize > 0)
         {
-            copyMakeBorder(resizedBitmap, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
+            copyMakeBorder(resizedBitmap, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_CONSTANT, Scalar(0, 0, 0));
         }
         return resizedBitmap;
     }
     if (borderSize > 0)
     {
         Mat resizedBitmap;
-        copyMakeBorder(image, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_REPLICATE);
+        copyMakeBorder(image, resizedBitmap, borderSize, borderSize, borderSize, borderSize, BORDER_CONSTANT, Scalar(0, 0, 0));
         return resizedBitmap;
     }
     return image;

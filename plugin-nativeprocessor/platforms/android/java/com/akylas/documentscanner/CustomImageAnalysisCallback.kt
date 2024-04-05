@@ -377,7 +377,7 @@ constructor(
             context: Context,
             src: String,
             callback: FunctionCallback,
-            shrunkImageHeight: Double = 500.0,
+            shrunkImageHeight: Double = 300.0,
             options: String?
         ) {
             thread(start = true) {
@@ -400,6 +400,14 @@ constructor(
                     if (scale != 1.0) {
                         shrunkImageHeight = 0.0
                     }
+//                    FileOutputStream(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).absolutePath + "/test.png").use { out ->
+//                        bitmap.compress(
+//                            Bitmap.CompressFormat.PNG,
+//                            100,
+//                            out
+//                        )
+//                    }
+                    // resized images from android side are more blurry than when resized with openCV
                     callback.onResult(null, getJSONDocumentCornersSync(bitmap, shrunkImageHeight,  0, scale))
                 } catch (e: Exception) {
                     callback.onResult(e, null)

@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import org.json.JSONException
 import org.json.JSONObject
@@ -27,6 +28,8 @@ class ImageUtil {
 
     class LoadImageOptions {
         var options: JSONObject? = null
+        var sourceWidth = 0
+        var sourceHeight = 0
         var width = 0
         var maxWidth = 0
         var height = 0
@@ -54,6 +57,8 @@ class ImageUtil {
             } else if (jsonOpts.has("maxHeight")) {
                 maxHeight = jsonOpts.optInt("maxHeight", maxHeight)
             }
+            sourceWidth = jsonOpts.optInt("sourceWidth", sourceWidth)
+            sourceHeight = jsonOpts.optInt("sourceHeight", sourceHeight)
             keepAspectRatio = jsonOpts.optBoolean("keepAspectRatio", keepAspectRatio)
             autoScaleFactor = jsonOpts.optBoolean("autoScaleFactor", autoScaleFactor)
 
@@ -184,11 +189,18 @@ class ImageUtil {
         ): Pair<Int, Int> {
             val widthCoef = sourceWidth.toDouble() / reqWidth.toDouble()
             val heightCoef = sourceHeight.toDouble() / reqHeight.toDouble()
-            val aspectCoef = max(widthCoef, heightCoef)
-            return Pair(
-                floor((sourceWidth / aspectCoef)).toInt(),
-                floor((sourceHeight / aspectCoef)).toInt()
-            )
+            val imageRatio = sourceWidth.toDouble() / sourceHeight.toDouble()
+//            val aspectCoef = max(widthCoef, heightCoef)
+            if (widthCoef > heightCoef) {
+                return Pair(reqWidth, (reqWidth/imageRatio).toInt())
+            } else {
+                return Pair((reqHeight*imageRatio).toInt(), reqHeight)
+
+            }
+//            return Pair(
+//                ((sourceWidth / aspectCoef)).toInt(),
+//                ((sourceHeight / aspectCoef)).toInt()
+//            )
         }
         private fun getRequestedImageSize(
             src: Pair<Int, Int>,
@@ -290,7 +302,11 @@ class ImageUtil {
         }
 
         fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?, sourceSize:Pair<Int, Int>?): Bitmap? {
+             val start = System.currentTimeMillis()
             var sourceSize = sourceSize
+            if (sourceSize == null && options?.sourceWidth != 0 && options?.sourceHeight != 0) {
+                sourceSize = Pair(options!!.sourceWidth, options!!.sourceHeight)
+            }
             var bitmap: Bitmap?
             val bitmapOptions = BitmapFactory.Options()
             var pfd: ParcelFileDescriptor? = null
@@ -324,21 +340,21 @@ class ImageUtil {
             )
             val finalBitmapOptions = BitmapFactory.Options()
             finalBitmapOptions.inSampleSize = sampleSize
-            var error: String? = null
+            if (sampleSize != 1) {
+                finalBitmapOptions.inScaled = true;
+                finalBitmapOptions.inDensity = sourceSize.first;
+                finalBitmapOptions.inTargetDensity =  first * sampleSize;
+            } else {
+                finalBitmapOptions.inScaled = false;
+            }
             // read as minimum bitmap as possible (slightly bigger than the requested size)
             bitmap = if (pfd != null) {
                 BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor, null, finalBitmapOptions)
             } else {
                 BitmapFactory.decodeFile(src, finalBitmapOptions)
             }
+            Log.d("ImageAnalysis", "readBitmapFromFile in ${System.currentTimeMillis() - start} ms")
             if (bitmap != null) {
-                if (first !== bitmap.getWidth() || second !== bitmap.getHeight()) {
-                    // scale to exact size
-                    bitmap = Bitmap.createScaledBitmap(
-                        bitmap,
-                        first, second, true
-                    )
-                }
                 val rotationAngle: Int
                 if (pfd != null) {
                     rotationAngle = calculateAngleFromFileDescriptor(pfd.fileDescriptor)
@@ -346,6 +362,27 @@ class ImageUtil {
                 } else {
                     rotationAngle = calculateAngleFromFile(src)
                 }
+//                if (first !== bitmap.getWidth() || second !== bitmap.getHeight()  || rotationAngle != 0) {
+//
+//                    val matrix = Matrix()
+//                    if (first !== bitmap.getWidth() || second !== bitmap.getHeight()) {
+//                        val scale = first.toFloat() / bitmap.width
+//                        matrix.postScale(scale, scale)
+//                    }
+//                    if (rotationAngle != 0) {
+//                        matrix.postRotate(rotationAngle.toFloat())
+//                    }
+//                    bitmap = Bitmap.createBitmap(
+//                        bitmap,
+//                        0,
+//                        0,
+//                        bitmap.getWidth(),
+//                        bitmap.getHeight(),
+//                        matrix,
+//                        false
+//                    )
+//                }
+
                 if (rotationAngle != 0) {
                     val matrix = Matrix()
                     matrix.postRotate(rotationAngle.toFloat())
@@ -359,6 +396,7 @@ class ImageUtil {
                         true
                     )
                 }
+                Log.d("ImageAnalysis", "readBitmapFromFile2 in ${System.currentTimeMillis() - start} ms")
             }
             return bitmap
         }

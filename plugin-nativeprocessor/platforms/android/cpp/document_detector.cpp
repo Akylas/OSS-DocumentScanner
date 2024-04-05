@@ -237,11 +237,17 @@ static void testImageProxyToBitmap(JNIEnv *env, jobject type, jint width, jint h
 }
 static std::string native_scan_json_mat(Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation, jdouble scale) {
     detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation, scale);
+    if (shrunkImageHeight == 0) {
+        // image was resized on the native side let diminish blur
+        docDetector.options.medianBlurValue = 3;
+    }
     return docDetector.scanPointToJSON();
 }
 static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jdouble scale)
 {
 //    auto t_start = std::chrono::high_resolution_clock::now();
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "OpenCV: %s", cv::getBuildInformation().c_str());
+
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "bitmap_to_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
