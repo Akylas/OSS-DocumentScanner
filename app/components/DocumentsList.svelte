@@ -127,7 +127,7 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: EventData & { doc }) {
-        DEV_LOG && console.log('onDocumentAdded', nbDocuments, documents);
+        DEV_LOG && console.log('onDocumentAdded', nbDocuments);
         documents?.unshift({
             doc: event.doc,
             selected: false
