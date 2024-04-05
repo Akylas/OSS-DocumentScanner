@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 project( scanner )
-find_package( OpenCV REQUIRED )
-find_package(Tesseract 4)
+find_package( OpenCV REQUIRED PATHS ../../opencv/linux NO_DEFAULT_PATH)
+find_package(Tesseract PATHS ../../tesseract/linux NO_DEFAULT_PATH)
 if (NOT Tesseract_FOUND)
     find_package(PkgConfig REQUIRED)
 
