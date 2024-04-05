@@ -156,14 +156,14 @@ export default class PDFCanvas {
             reqHeight = temp;
         }
         this.updateBitmapPaint(page);
+        const scale = options.paper_size === 'full' ? 1 : options.imageLoadScale;
         const image = await loadImage(src, {
-            reqWidth,
-            reqHeight,
-            imageWidth,
-            imageHeight,
+            width: reqWidth * scale,
+            height: reqHeight * scale,
+            sourceWidth: imageWidth,
+            sourceHeight: imageHeight,
             jpegQuality: options.jpegQuality,
-            imageSizeThreshold: options.imageSizeThreshold,
-            imageScale: options.paper_size === 'full' ? 1 : options.imageLoadScale
+            resizeThreshold: options.imageSizeThreshold
         });
 
         const imageScale = toDrawWidth / image.width;

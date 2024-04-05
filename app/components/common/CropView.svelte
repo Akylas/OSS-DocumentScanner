@@ -184,7 +184,7 @@
             if (!zoomImage || zoomImagePath !== image) {
                 clearImages();
                 zoomImagePath = image;
-                zoomImage = await loadImage(imagePath, { imageWidth: width, imageHeight: height, imageSizeThreshold: ZOOM_IMAGE_MAX_SIZE });
+                zoomImage = await loadImage(imagePath, { sourceWidth: width, sourceHeight: height, resizeThreshold: ZOOM_IMAGE_MAX_SIZE });
                 zoomImageScale = width / zoomImage.width;
                 zoomImageShader = new BitmapShader(zoomImage, TileMode.CLAMP, TileMode.CLAMP);
                 shaderPaint.setShader(zoomImageShader);

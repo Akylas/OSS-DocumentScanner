@@ -9,7 +9,7 @@ export async function getTransformedImage(page: OCRPage) {
     const width = page.width * page.scale;
     const height = page.height * page.scale;
     const pageCanvas = new Canvas(width, height);
-    const imageSource = await loadImage(page.imagePath, { imageWidth: page.width, imageHeight: page.height });
+    const imageSource = await loadImage(page.imagePath, { sourceWidth: page.width, sourceHeight: page.height });
     DEV_LOG && console.log('getTransformedImage', JSON.stringify(page));
     if (page.colorType || !!page.colorMatrix) {
         const bitmapPaint: Paint = new Paint();
