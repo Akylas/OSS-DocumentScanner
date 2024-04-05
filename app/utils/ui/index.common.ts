@@ -207,6 +207,9 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
     let items: ImportImageData[] = [];
     try {
         await showLoading(l('computing'));
+        const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
+        const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+        const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
         // We do it in batch of 5 to prevent memory issues
         items = await doInBatch(
@@ -218,13 +221,10 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
                         const imageSize = getImageSize(sourceImagePath);
                         DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize), Date.now() - start, 'ms');
 
-                        const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
-                        const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
-
                         const imageRotation = imageSize.rotation;
                         // TODO: detect JSON and QRCode in one go
-                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, { resizeThreshold: previewResizeThreshold * 1.5 }) : undefined;
-                        // DEV_LOG && console.log('[importAndScanImageFromUris] quads', sourceImagePath, quads);
+                        DEV_LOG && console.log('[importAndScanImageFromUris] getJSONDocumentCornersFromFile', sourceImagePath, resizeThreshold);
+                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, { resizeThreshold }) : undefined;
                         let qrcode;
                         if (CARD_APP) {
                             // try to get the qrcode to show it in the import screen
