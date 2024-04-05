@@ -1386,16 +1386,18 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
         });
         if (resultImagePath) {
             const pagesToAdd = [];
-            await processCameraImage({
+            const result = await processCameraImage({
                 imagePath: resultImagePath,
                 pagesToAdd
             });
-            if (!document) {
-                document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
-            } else {
-                await document.addPages(pagesToAdd);
+            if (result && pagesToAdd.length) {
+                if (!document) {
+                    document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                } else {
+                    await document.addPages(pagesToAdd);
+                }
+                await goToDocumentAfterScan(document, 0, canGoToView);
             }
-            await goToDocumentAfterScan(document, 0, canGoToView);
         }
 
         return;
