@@ -52,10 +52,10 @@ yarn-error.log*
 yarn.lock
 tmp/
 # typings/
-opencv/android/*
-!opencv/android/README.md
-tesseract/android/*
-!tesseract/android/README.md
+opencv/**/*
+!opencv/**/README.md
+tesseract/**/*
+!tesseract/**/README.md
 
 
 # Visual Studio Code
