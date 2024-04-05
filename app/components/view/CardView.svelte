@@ -665,7 +665,7 @@
                 verticalAlignment="bottom" />
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={importDocument} />
-                <mdbutton class="fab" text="mdi-plus" on:tap={() => addPages()} on:longPress={() => addPages(true)} />
+                <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={() => addPages()} on:longPress={() => addPages(true)} />
             </stacklayout>
         </gridlayout>
     </gridlayout>
