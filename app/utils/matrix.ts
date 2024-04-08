@@ -29,5 +29,5 @@ export const ColorMatricesTypes = Object.keys(ColorMatrices)
 export type ColorMatricesType = string;
 
 export function getColorMatrix(type: string, ...args): number[] {
-    return ColorMatrices[type]?.fn?.apply(ColorMatrices, args);
+    return ColorMatrices[type]?.fn?.apply(ColorMatrices, args) ?? null;
 }
