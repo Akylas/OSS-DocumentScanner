@@ -1,0 +1,12 @@
+### Features
+- allow set custom format for document name and export filename
+- allow to send feeback
+
+### Bug fixes
+- Translated using Weblate (Portuguese (Brazil))
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Punjabi)
+- finally fixed export error after device reboot
+- possible `closeModal` error after document creation from camera
+- possible crash while exporting image
+- prevent error while generating PDF with image filtering
