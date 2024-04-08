@@ -147,11 +147,11 @@ try {
     });
     if (__ANDROID__) {
         Page.on('shownModally', function (event) {
-            DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
+            // DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
             com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
         });
         Frame.on('shownModally', function (event) {
-            DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
+            // DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
             com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
         });
         // GestureRootView.on('shownInBottomSheet', function (event) {
