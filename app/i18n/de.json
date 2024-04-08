@@ -1,18 +1,4 @@
 {
-    "$com": {
-        "akylas": {
-            "cardwallet": {
-                "app": {
-                    "name": "OSS-Kartenetui"
-                }
-            },
-            "documentscanner": {
-                "app": {
-                    "name": "OSS-Dokumentenscanner"
-                }
-            }
-        }
-    },
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Kartenetui"
@@ -62,6 +48,7 @@
     "cards": "Karten",
     "color": "Farbe",
     "color_desc": "Verbessert Farben und verringert ungewünschte Farbverläufe",
+    "comments": "Kommentare",
     "computing": "Berechnung …",
     "condensed": "Komprimiert",
     "confirm_delete": "Sind Sie sicher, dass Sie dieses Dokument löschen wollen?",
@@ -84,6 +71,8 @@
     "disabled": "deaktiviert",
     "document_detection": "Dokumentenerkennung",
     "document_detection_settings": "Einstellungen zur Dokumenterkennung",
+    "document_name_format": "Datumsformat für Dokumentnamen",
+    "document_name_format_desc": "Definiert das Datumsformat, das beim Benennen neuer Dokumente verwendet wird\n\n* Verwenden Sie %1$s für das %2$s-Format\n\n* Verwenden Sie %3$s für den Zeitstempel der Epoche (Dauer in ms seit 1970).\n\n* Benutzerdefiniertes Format mit %4$s verwenden. \nSie können weitere %5$s finden",
     "document_not_detected_margin": "kein Dokumentenrand",
     "document_not_detected_margin_desc": "wenn kein Dokument gefunden wird, werden die Ecken auf die Bildgröße mit einem leichten Versatz gesetzt",
     "documents": "Dokumente",
@@ -92,6 +81,7 @@
     "downloading": "Herunterladen (%1$s%%) …",
     "draw_ocr_overlay": "OCR-Überlagerung zeichnen",
     "draw_ocr_text": "transparenter OCR-Text im PDF",
+    "email": "Email",
     "enable": "Aktivieren",
     "enabled": "Aktiviert",
     "english": "Englisch",
@@ -106,6 +96,12 @@
     "export_settings_desc": "Alle App-Einstellungen exportieren (für den späteren Import)",
     "exporting": "Exportieren",
     "failed": "Fehlgeschlagen",
+    "feedback_sent": "Feedback gesendet",
+    "file_naming_settings": "Einstellungen im Zusammenhang mit dem Namen von Bildern/PDF beim Exportieren",
+    "file_naming_template": "Dateibenennungsvorlage",
+    "filename_date_format": "Dateiname-Datumsformat",
+    "filename_date_format_desc": "Definiert das Datumsformat, das beim Exportieren von Dateien verwendet wird\n\n* Verwenden Sie %1$s für das %2$s-Format\n\n* Verwenden Sie %3$s für den Zeitstempel der Epoche (Dauer in ms seit 1970).\n\n* Benutzerdefiniertes Format mit %4$s verwenden. \nSie können weitere %5$s finden",
+    "filename_use_document_name": "Verwenden Sie nach Möglichkeit den Dokumentnamen",
     "filters": "Filter",
     "finish": "beenden",
     "flash_mode": "Blitzmodus",
@@ -114,6 +110,7 @@
     "full": "Voll",
     "general": "Allgemein",
     "get_app_source_code": "Den App-Quellcode erhalten",
+    "here": "Hier",
     "image_filename": "Dateiname des Bildes für den Export",
     "image_import": "Ein Bild importieren",
     "image_load_scale": "Bildskalierung",
@@ -150,6 +147,7 @@
     "move_data": "Daten verschieben?",
     "move_data_desc": "All deine Anwendungsdaten werden verschoben und im Anschluss ein Neustart der App erzwungen",
     "moving_files": "Verschiebe Dateien",
+    "name": "Name",
     "nb_pages": "%1$s Seiten",
     "new_passcode": "neuer PIN",
     "no_card_yet": "Füge eine Karte mit der Kamera hinzu oder importiere eine aus einem Bild",
@@ -203,7 +201,10 @@
     "select_language": "Sprache wählen",
     "select_theme": "Thema auswählen",
     "selected": "%1$s ausgewählt",
+    "send": "schicken",
+    "send_feedback": "Feedback abschicken",
     "server_address": "Serveradresse",
+    "set_filename_format_settings": "Sie können das Dateinamenformat in den Einstellungen festlegen",
     "settings": {
         "title": "Einstellungen"
     },
@@ -217,6 +218,7 @@
     "start_on_cam": "Die App im Fotomodus starten",
     "startup_error": "Beim Starten der App ist ein Fehler aufgetreten.\nStarten Sie die App bitte neu.\nBitte melden Sie das Problem, falls es weiterhin auftritt.",
     "storage_location": "Speicherort",
+    "storage_permission_needed": "Eine Speichererlaubnis ist erforderlich",
     "successful": "Erfolgreich",
     "sync": "Synchronisation",
     "system": "System",
