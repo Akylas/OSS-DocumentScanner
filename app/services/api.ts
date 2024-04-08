@@ -1,6 +1,6 @@
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { CustomError, HTTPError, NoNetworkError } from '~/utils/error';
+import { CustomError, HTTPError, NoNetworkError, wrapNativeException } from '~/utils/error';
 import * as https from '@nativescript-community/https';
 import { Application, ApplicationEventData } from '@nativescript/core';
 
@@ -217,6 +217,18 @@ export async function request<T = any>(requestParams: HttpRequestOptions, retry 
 
     const requestStartTime = Date.now();
     DEV_LOG && console.log('request', requestParams);
-    const response = await https.request<T>(requestParams);
-    return handleRequestResponse<T>(response, requestParams, requestStartTime, retry);
+    try {
+        const response = await https.request<T>(requestParams);
+        return handleRequestResponse<T>(response, requestParams, requestStartTime, retry);
+    } catch (error) {
+        throw wrapNativeException(
+            error,
+            (message) =>
+                new HTTPError({
+                    message,
+                    statusCode: -1,
+                    requestParams
+                })
+        );
+    }
 }

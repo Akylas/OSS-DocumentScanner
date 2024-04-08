@@ -157,19 +157,19 @@ export class HTTPError extends CustomError {
         );
     }
 }
-export function wrapNativeException(ex, errorType = typeof ex) {
+export function wrapNativeException(ex, wrapError: (...args) => Error = (msg) => new Error(msg)) {
     if (typeof ex === 'string') {
         return new Error(ex);
     }
     if (!(ex instanceof Error)) {
         if (__ANDROID__) {
-            const err = new Error(ex.toString());
+            const err = wrapError(ex.toString());
             err['nativeException'] = ex;
             err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
             return err;
         }
         if (__IOS__) {
-            const err = new Error(ex.localizedDescription);
+            const err = wrapError(ex.localizedDescription);
             err['nativeException'] = ex;
             err['code'] = ex.code;
             err['domain'] = ex.domain;
@@ -194,7 +194,7 @@ export async function showError(
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const errorType = typeof err;
-        const realError = errorType === 'string' ? null : wrapNativeException(err, errorType);
+        const realError = errorType === 'string' ? null : wrapNativeException(err);
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();
