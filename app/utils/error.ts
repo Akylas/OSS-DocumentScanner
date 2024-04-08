@@ -7,6 +7,9 @@ import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
 import type { HTTPSOptions } from '~/services/api';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
+import { colors } from '~/variables';
+import { get } from 'svelte/store';
+import { createLabel } from './ui';
 
 Error.stackTraceLimit = Infinity;
 
@@ -217,16 +220,15 @@ export async function showError(
         if (silent) {
             return;
         }
-        const label = new Label();
-        label.padding = '10 20 0 20';
-        label.textWrap = true;
-        label.color = new Color(255, 138, 138, 138);
-        label.html = message.trim();
-
         return mdAlert({
             okButtonText: lc('ok'),
             title,
-            view: label,
+            view: createLabel({
+                padding: '10 20 0 20',
+                textWrap: true,
+                color: get(colors).colorOnSurfaceVariant as any,
+                html: message.trim()
+            }),
             ...alertOptions
         });
     } catch (error) {

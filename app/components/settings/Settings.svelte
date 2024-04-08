@@ -22,7 +22,10 @@
         DEFAULT_EXPORT_DIRECTORY,
         DEFAULT_PDF_OPTIONS,
         DEFAULT_PDF_OPTIONS_STRING,
+        DOCUMENT_NAME_FORMAT,
         DOCUMENT_NOT_DETECTED_MARGIN,
+        FILENAME_DATE_FORMAT,
+        FILENAME_USE_DOCUMENT_NAME,
         PREVIEW_RESIZE_THRESHOLD,
         USE_SYSTEM_CAMERA
     } from '~/models/constants';
@@ -33,18 +36,19 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';
-    import { hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
+    import { createLabel, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import { Label } from '@nativescript-community/ui-label';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
 </script>
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors;
-    $: ({ colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
+    let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors;
+    $: ({ colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -111,6 +115,30 @@
                 ];
             case 'document_detection':
                 return [
+                    {
+                        id: 'setting',
+                        key: 'document_name_format',
+                        useHTML: true,
+                        title: lc('document_name_format'),
+                        full_description: lc(
+                            'document_name_format_desc',
+                            `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
+                            '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
+                            `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
+                            `<span style="background-color:${colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
+                            `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
+                        ),
+                        onLinkTap: ({ link }) => {
+                            openLink(link);
+                        },
+                        valueType: 'string',
+                        textFieldProperties: {
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getString('document_name_format', DOCUMENT_NAME_FORMAT),
+                        type: 'prompt'
+                    },
                     {
                         type: 'switch',
                         id: 'cropEnabled',
@@ -276,7 +304,39 @@
                             currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
                         }
                     ] as any);
-
+            case 'export_naming':
+                return [
+                    {
+                        type: 'switch',
+                        id: 'filename_use_document_name',
+                        title: lc('filename_use_document_name'),
+                        value: ApplicationSettings.getBoolean('filename_use_document_name', FILENAME_USE_DOCUMENT_NAME)
+                    },
+                    {
+                        id: 'setting',
+                        key: 'filename_date_format',
+                        useHTML: true,
+                        title: lc('filename_date_format'),
+                        full_description: lc(
+                            'filename_date_format_desc',
+                            `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
+                            '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
+                            `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
+                            `<span style="background-color:${colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
+                            `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
+                        ),
+                        onLinkTap: ({ link }) => {
+                            openLink(link);
+                        },
+                        valueType: 'string',
+                        textFieldProperties: {
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getString('filename_date_format', FILENAME_DATE_FORMAT),
+                        type: 'prompt'
+                    }
+                ];
             default:
                 break;
         }
@@ -498,6 +558,15 @@
                         title: lc('autoscan'),
                         description: lc('autoscan_settings'),
                         options: () => getSubSettings('autoscan')
+                    }
+                ] as any)
+                .concat([
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-file-document-edit',
+                        title: lc('file_naming_template'),
+                        description: lc('file_naming_settings'),
+                        options: () => getSubSettings('export_naming')
                     }
                 ] as any)
                 .concat([
@@ -736,12 +805,27 @@
                     if (item.type === 'prompt') {
                         const result = await prompt({
                             title: getTitle(item),
-                            message: item.full_description || item.description,
+                            message: item.useHTML ? item.description : item.full_description || item.description,
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
                             textFieldProperties: item.textFieldProperties,
-                            defaultText: (typeof item.rightValue === 'function' ? item.rightValue() : item.default) + ''
+                            defaultText: (typeof item.rightValue === 'function' ? item.rightValue() : item.default) + '',
+                            view: item.useHTML
+                                ? createLabel(
+                                      {
+                                          padding: '10 20 0 20',
+                                          textWrap: true,
+                                          color: colorOnSurfaceVariant as any,
+                                          html: item.full_description || item.description
+                                      },
+                                      item.onLinkTap
+                                          ? {
+                                                linkTap: item.onLinkTap
+                                            }
+                                          : undefined
+                                  )
+                                : undefined
                         });
                         Utils.dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {

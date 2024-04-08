@@ -50,7 +50,7 @@ import {
 } from '~/models/constants';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
-import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
+import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
 import { PermissionError, showError } from '~/utils/error';
 import { recycleImages } from '~/utils/images';
@@ -58,7 +58,8 @@ import { share } from '~/utils/share';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
-import { getImageSize } from '../utils';
+import { getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
+import { Label } from '@nativescript-community/ui-label';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -387,7 +388,7 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
                         await document.save({}, false);
                         showSnack({ message: lc('imported_nb_pages', pagesToAdd.length) });
                     } else {
-                        document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                        document = await OCRDocument.createDocument(pagesToAdd);
                     }
                     await goToDocumentAfterScan(document, nbPagesBefore, canGoToView);
                     return document;
@@ -652,7 +653,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         const result = await prompt({
                             okButtonText: lc('ok'),
                             cancelButtonText: lc('cancel'),
-                            defaultText: (document ? cleanFilename(document.name) : Date.now()) + '.pdf',
+                            defaultText: getFileNameForDocument(document) + '.pdf',
                             hintText: lc('pdf_filename')
                         });
                         if (result?.result && result?.text?.length) {
@@ -660,6 +661,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
                             const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                             hideLoading();
+                            DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
                             const onSnack = await showSnack({ message: lc('pdf_saved', File.fromPath(filePath).name), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
@@ -700,15 +702,21 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
         const result = await prompt({
             okButtonText: lc('ok'),
             cancelButtonText: lc('cancel'),
-            defaultText: Date.now() + '',
-            hintText: lc('image_filename')
+            defaultText: getFileNameForDocument() + '.' + IMG_FORMAT,
+            hintText: lc('image_filename'),
+            view: createLabel({
+                padding: '10 20 0 20',
+                textWrap: true,
+                color: get(colors).colorOnSurfaceVariant as any,
+                html: lc('set_filename_format_settings')
+            })
         });
         if (!result?.result || !result?.text?.length) {
             return;
         }
         outputImageNames.push(result.text);
     } else {
-        outputImageNames = sortedPages.map((page) => page.createdDate);
+        outputImageNames = sortedPages.map((page) => page.createdDate).map((value) => getFormatedDateForFilename(value));
         // find duplicates and rename if any
         let lastName;
         let renameDelta = 1;
@@ -733,7 +741,10 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             new Promise<void>(async (resolve, reject) => {
                 let imageSource: ImageSource;
                 try {
-                    const destinationName = outputImageNames[index] + '.' + IMG_FORMAT;
+                    let destinationName = outputImageNames[index];
+                    if (!destinationName.endsWith(IMG_FORMAT)) {
+                        destinationName += '.' + IMG_FORMAT;
+                    }
                     // const imageSource = await ImageSource.fromFile(imagePath);
                     imageSource = await getTransformedImage(page);
                     if (__ANDROID__ && exportDirectory.startsWith('content://')) {
@@ -1206,7 +1217,7 @@ export async function addCurrentImageToDocument({
     // let images = quads ? await cropDocumentFromFile(sourceImagePath, quads, strTransforms) : [sourceImagePath];
     if (images.length) {
         // if (!document) {
-        //     document = await OCRDocument.createDocument(dayjs().format('L LTS'));
+        //     document = await OCRDocument.createDocument();
         // }
         let qrcode;
         let colors;
@@ -1392,7 +1403,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
             });
             if (result && pagesToAdd.length) {
                 if (!document) {
-                    document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                    document = await OCRDocument.createDocument(pagesToAdd);
                 } else {
                     await document.addPages(pagesToAdd);
                 }
@@ -1415,4 +1426,13 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
     if (document) {
         return goToDocumentAfterScan(document, oldPagesNumber);
     }
+}
+
+export function createLabel(props, events?) {
+    const label = new Label();
+    Object.assign(label, props);
+    if (events) {
+        Object.keys(events).forEach((k) => label.on(k, events[k]));
+    }
+    return label;
 }

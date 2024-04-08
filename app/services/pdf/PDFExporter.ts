@@ -1,20 +1,18 @@
 import { CustomError, PermissionError, wrapNativeException } from '~/utils/error';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
-import { Screen, Utils, knownFolders } from '@nativescript/core';
+import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
 import { getColorMatrix } from '~/utils/matrix';
 import { lc } from '~/helpers/locale';
-import { SDK_VERSION } from '@akylas/nativescript/utils';
+import { SDK_VERSION } from '@nativescript/core/utils';
 import { request } from '@nativescript-community/perms';
-
-export function cleanFilename(str) {
-    return str.replace(/[|\\?*<\":>+\[\]\/'"]+/g, '').replace(/[\s\t\n]+/g, '_');
-}
-
-export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename = Date.now() + '.pdf', compress }: PDFExportOptions): Promise<string> {
+import type { OCRDocument } from '~/models/OCRDocument';
+import dayjs from 'dayjs';
+import { getFileNameForDocument } from '~/utils/utils.common';
+export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
-    if (!filename && document) {
-        filename = cleanFilename(document.name) + '.pdf';
+    if (!filename) {
+        filename = getFileNameForDocument(document) + '.pdf';
     }
     if (__ANDROID__) {
         if (SDK_VERSION <= 29) {

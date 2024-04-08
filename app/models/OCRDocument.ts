@@ -1,12 +1,13 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
-import { EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
+import { ApplicationSettings, EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { ColorPaletteData, OCRData, QRCodeData, cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
-import { IMG_COMPRESS, IMG_FORMAT } from './constants';
+import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT } from './constants';
 import { doInBatch } from '~/utils/ui';
+import { getFormatedDateForFilename } from '~/utils/utils.common';
 
 export interface ImportImageData {
     imagePath?: string;
@@ -57,8 +58,10 @@ export class OCRDocument extends Observable implements Document {
         // this.id = id;
     }
 
-    static async createDocument(name?: string, pagesData?: PageData[], setRaw = false) {
-        const docId = Date.now() + '';
+    static async createDocument(pagesData?: PageData[], setRaw = false) {
+        const date = dayjs();
+        const docId = date.valueOf() + '';
+        const name = getFormatedDateForFilename(date.valueOf(), ApplicationSettings.getString('document_name_format', DOCUMENT_NAME_FORMAT), false);
         // DEV_LOG && console.log('createDocument', docId);
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
         await doc.addPages(pagesData);
