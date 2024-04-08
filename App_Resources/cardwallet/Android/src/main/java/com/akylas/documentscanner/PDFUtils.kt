@@ -164,14 +164,16 @@ class PDFUtils {
                 reqWidth = ((reqWidth * options.imageScale))
                 reqHeight = ((reqHeight * options.imageScale))
             }
+            val hasColorMatrix = colorMatrix != null && colorMatrix != "null"
             val finalBitmapOptions = BitmapFactory.Options()
+            finalBitmapOptions.inMutable = hasColorMatrix
             if (imageWidth != reqWidth || imageHeight != reqHeight) {
                 finalBitmapOptions.inSampleSize =
                     calculateInSampleSize(imageWidth.toInt(), imageHeight.toInt(), reqWidth.toInt(), reqHeight.toInt())
             }
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
-            if (colorMatrix != null && colorMatrix != "null") {
+            if (hasColorMatrix) {
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
@@ -188,7 +190,6 @@ class PDFUtils {
         }
 
         private fun drawOCRData(pdfDoc:PdfDocument, page: JSONObject, posX:Float, posY:Float, imageScale: Float, toDrawHeight: Float, textScale: Float, debug: Boolean) {
-
             val ocrData = page.optJSONObject("ocrData")
             if (ocrData != null) {
 //                val canvas =  PdfCanvas(pdfDoc.lastPage).setExtGState(PdfExtGState().setFillOpacity(if (debug) 1.0F else 0.01F)).setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.INVISIBLE)

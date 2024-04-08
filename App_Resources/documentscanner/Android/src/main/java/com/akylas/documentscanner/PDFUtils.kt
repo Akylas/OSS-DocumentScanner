@@ -164,14 +164,16 @@ class PDFUtils {
                 reqWidth = ((reqWidth * options.imageScale))
                 reqHeight = ((reqHeight * options.imageScale))
             }
+            val hasColorMatrix = colorMatrix != null && colorMatrix != "null"
             val finalBitmapOptions = BitmapFactory.Options()
+            finalBitmapOptions.inMutable = hasColorMatrix
             if (imageWidth != reqWidth || imageHeight != reqHeight) {
                 finalBitmapOptions.inSampleSize =
                     calculateInSampleSize(imageWidth.toInt(), imageHeight.toInt(), reqWidth.toInt(), reqHeight.toInt())
             }
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
-            if (colorMatrix != null && colorMatrix != "null") {
+            if (hasColorMatrix) {
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
