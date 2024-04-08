@@ -11,9 +11,10 @@ export async function getTransformedImage(page: OCRPage) {
     const pageCanvas = new Canvas(width, height);
     const imageSource = await loadImage(page.imagePath, { sourceWidth: page.width, sourceHeight: page.height });
     DEV_LOG && console.log('getTransformedImage', JSON.stringify(page));
-    if (page.colorType || !!page.colorMatrix) {
+    const colorMatrix = page.colorMatrix || getColorMatrix(page.colorType);
+    if (colorMatrix) {
         const bitmapPaint: Paint = new Paint();
-        bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
+        bitmapPaint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
 
         pageCanvas.translate(width / 2, height / 2);
         pageCanvas.rotate(page.rotation, 0, 0);
