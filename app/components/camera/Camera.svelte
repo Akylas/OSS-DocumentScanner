@@ -301,12 +301,17 @@
         DEV_LOG && console.log('onForeground', !!cameraView);
         startPreview();
     }
+    let saveCalled = false;
     async function saveCurrentDocument() {
+        if (saveCalled) {
+            return;
+        }
+        saveCalled = true;
         const newDocument = !document;
         try {
             DEV_LOG && console.log('saveCurrentDocument', newDocument, !!document);
             if (!document) {
-                document = await OCRDocument.createDocument(dayjs().format('L LTS'), pagesToAdd);
+                document = await OCRDocument.createDocument(pagesToAdd);
                 if (startOnCam) {
                     await goToDocumentView(document);
                 } else {
