@@ -49,7 +49,6 @@
         "@nativescript-community/ui-checkbox": "^2.0.12",
         "@nativescript-community/ui-collectionview": "5.3.30",
         "@nativescript-community/ui-collectionview-swipemenu": "5.3.30",
-        "@nativescript-community/ui-document-picker": "1.1.17",
         "@nativescript-community/ui-document-picker": "1.1.18",
         "@nativescript-community/ui-image": "4.3.40",
         "@nativescript-community/ui-image-colorfilter": "4.3.40",

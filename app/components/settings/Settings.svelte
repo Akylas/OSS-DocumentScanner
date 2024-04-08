@@ -182,7 +182,7 @@
                                       DEV_LOG && console.log('onTap', item);
                                       const result = await pickFolder({
                                           multipleSelection: false,
-                                          permissions: { write: true, persistable: true }
+                                          permissions: { write: true, persistable: true, read: true }
                                       });
                                       if (result.folders.length) {
                                           const exportDirectory = result.folders[0];

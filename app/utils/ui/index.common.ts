@@ -617,7 +617,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                     case 'set_export_directory': {
                         const result = await pickFolder({
                             multipleSelection: false,
-                            permissions: { write: true, persistable: true }
+                            permissions: { write: true, persistable: true, read: true }
                         });
                         if (result.folders.length) {
                             exportDirectory = result.folders[0];
@@ -833,7 +833,7 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
                     case 'set_export_directory': {
                         const result = await pickFolder({
                             multipleSelection: false,
-                            permissions: { write: true, persistable: true }
+                            permissions: { write: true, persistable: true, read: true }
                         });
                         if (result.folders.length) {
                             exportDirectory = result.folders[0];
