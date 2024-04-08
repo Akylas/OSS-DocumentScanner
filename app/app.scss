@@ -54,12 +54,13 @@ htmllabel,
 canvasview,
 label,
 mdtextfield,
+mdtextview,
 checkbox,
 mdbutton {
     ios-a11y-adjusts-font-size: true;
 }
 
-mdtextfield {
+mdtextfield, mdtextview {
     stroke-color: var(--colorOutline);
     placeholder-color: var(--colorOutline);
     color: var(--colorOnSurface);

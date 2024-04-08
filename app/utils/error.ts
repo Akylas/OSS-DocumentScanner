@@ -9,7 +9,7 @@ import type { HTTPSOptions } from '~/services/api';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
 import { colors } from '~/variables';
 import { get } from 'svelte/store';
-import { createLabel } from './ui';
+import { createView } from './ui';
 
 Error.stackTraceLimit = Infinity;
 
@@ -114,14 +114,11 @@ export class TimeoutError extends CustomError {
     }
 }
 export class PermissionError extends CustomError {
-    constructor(props?) {
+    constructor(message?) {
         super(
-            Object.assign(
-                {
-                    message: 'permission_error'
-                },
-                props
-            ),
+            {
+                message: message ?? 'permission_error'
+            },
             'PermissionError'
         );
     }
@@ -223,7 +220,7 @@ export async function showError(
         return mdAlert({
             okButtonText: lc('ok'),
             title,
-            view: createLabel({
+            view: createView(Label, {
                 padding: '10 20 0 20',
                 textWrap: true,
                 color: get(colors).colorOnSurfaceVariant as any,

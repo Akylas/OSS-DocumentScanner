@@ -51,8 +51,6 @@
         ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
     });
     $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
-    $: DEV_LOG && console.log('aspectRatio', aspectRatio);
-    $: DEV_LOG && console.log('pictureSize', pictureSize);
 
     export let modal = false;
     export let document: OCRDocument = null;

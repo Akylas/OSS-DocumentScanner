@@ -704,7 +704,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             cancelButtonText: lc('cancel'),
             defaultText: getFileNameForDocument() + '.' + IMG_FORMAT,
             hintText: lc('image_filename'),
-            view: createLabel({
+            view: createView(Label, {
                 padding: '10 20 0 20',
                 textWrap: true,
                 color: get(colors).colorOnSurfaceVariant as any,
@@ -1428,11 +1428,11 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
     }
 }
 
-export function createLabel(props, events?) {
-    const label = new Label();
-    Object.assign(label, props);
+export function createView<T extends View>(claz: new () => T, props: Partial<Pick<T, keyof T>>, events?) {
+    const view: T = new claz();
+    Object.assign(view, props);
     if (events) {
-        Object.keys(events).forEach((k) => label.on(k, events[k]));
+        Object.keys(events).forEach((k) => view.on(k, events[k]));
     }
-    return label;
+    return view;
 }

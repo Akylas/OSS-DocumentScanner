@@ -4,8 +4,9 @@
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { ApplicationSettings, File, Folder, ObservableArray, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
+    import { TextView, TextViewProperties } from '@nativescript-community/ui-material-textview';
+    import { ApplicationSettings, File, Folder, ObservableArray, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -36,11 +37,13 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';
-    import { createLabel, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
+    import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { Label } from '@nativescript-community/ui-label';
+    import { Sentry, isSentryEnabled } from '~/utils/sentry';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
 </script>
@@ -497,6 +500,11 @@
                         // rightBtnIcon: 'mdi-chevron-right',
                         title: lc('third_parties'),
                         description: lc('list_used_third_parties')
+                    },
+                    {
+                        id: 'feedback',
+                        icon: 'mdi-bullhorn',
+                        title: lc('send_feedback')
                     }
                 ] as any)
                 .concat(
@@ -799,7 +807,56 @@
                         view: ThirdPartySoftwareBottomSheet
                     });
                     break;
+                case 'feedback': {
+                    if (SENTRY_ENABLED) {
+                        const view = createView(StackLayout, {
+                            padding: 10
+                        });
+                        const commentsTF = createView(TextView, {
+                            hint: lc('comments'),
+                            variant: 'outline',
+                            height: 150,
+                            returnKeyType: 'done'
+                        });
+                        const emailTF = createView(TextField, {
+                            hint: lc('email'),
+                            variant: 'outline',
+                            autocapitalizationType: 'none',
+                            autocorrect: false,
+                            keyboardType: 'email',
+                            returnKeyType: 'next'
+                        });
+                        const nameTF = createView(TextField, {
+                            hint: lc('name'),
+                            variant: 'outline',
+                            returnKeyType: 'next'
+                        });
+                        view.addChild(nameTF);
+                        view.addChild(emailTF);
+                        view.addChild(commentsTF);
+                        const result = await confirm({
+                            title: lc('send_feedback'),
+                            okButtonText: l('send'),
+                            cancelButtonText: l('cancel'),
+                            view
+                        });
+                        if (result) {
+                            const eventId = Sentry.captureMessage('User Feedback');
 
+                            Sentry.captureUserFeedback({
+                                event_id: eventId,
+                                name: nameTF.text,
+                                email: emailTF.text,
+                                comments: commentsTF.text
+                            });
+                            Sentry.flush();
+                            showSnack({ message: l('feedback_sent') });
+                        }
+                    } else {
+                        openLink(GIT_URL + 'issues');
+                    }
+                    break;
+                }
                 case 'store_setting':
                 case 'setting': {
                     if (item.type === 'prompt') {
@@ -812,7 +869,8 @@
                             textFieldProperties: item.textFieldProperties,
                             defaultText: (typeof item.rightValue === 'function' ? item.rightValue() : item.default) + '',
                             view: item.useHTML
-                                ? createLabel(
+                                ? createView(
+                                      Label,
                                       {
                                           padding: '10 20 0 20',
                                           textWrap: true,

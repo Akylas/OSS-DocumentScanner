@@ -46,9 +46,9 @@ try {
     registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
     registerNativeViewElement('Switch', () => require('@nativescript-community/ui-material-switch').Switch);
     registerNativeViewElement('Span', () => require('@nativescript/core').Span);
-    registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
 
     registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
+    registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
     registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button);
     registerNativeViewElement('activityIndicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);

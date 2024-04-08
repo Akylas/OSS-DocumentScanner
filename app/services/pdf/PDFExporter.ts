@@ -16,7 +16,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
     }
     if (__ANDROID__) {
         if (SDK_VERSION <= 29) {
-            const result = await request('sorage');
+            const result = await request('storage');
             if (result[0] !== 'authorized') {
                 throw new PermissionError(lc('storage_permission_needed'));
             }
