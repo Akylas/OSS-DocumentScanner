@@ -37,6 +37,7 @@
     "biometric_lock": "Bloqueio por biometria",
     "biometric_lock_desc": "Bloquear o aplicativo utilizando biometria / código PIN",
     "black_white": "preto e branco",
+    "camera": "câmera",
     "camera_permission_needed": "a permissão de acesso à câmera é necessária para tirar fotos",
     "camera_preview_stretch": "modo de visualização",
     "camera_settings": "configurações da câmera",
@@ -110,6 +111,7 @@
     "images_saved": "imagens salvas",
     "import_settings": "importar configurações",
     "import_settings_desc": "importar todas as configurações de um backup anterior",
+    "imported_nb_pages": "%1$s páginas importadas",
     "internal_storage": "armazenamento interno",
     "ios": {
         "info": {
@@ -183,6 +185,7 @@
     "search": "pesquisar",
     "security": "segurança",
     "security_settings": "configurações de segurança",
+    "select_all": "selecionar tudo",
     "select_language": "selecionar o idioma",
     "select_theme": "selecionar o tema",
     "selected": "%1$s selecionados",
@@ -218,6 +221,7 @@
     "transform_images": "transformar imagens",
     "transformations": "transformações",
     "updating_pages": "atualizando páginas (%1$s%%)",
+    "use_system_camera": "usar câmera do sistema",
     "username": "nome de usuário",
     "version": "versão",
     "webdav_config": "configuração do webdav",
