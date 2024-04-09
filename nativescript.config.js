@@ -7,6 +7,7 @@ module.exports = {
     id: process.env['APP_ID'] || 'com.akylas.documentscanner',
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources/documentscanner',
     buildPath: process.env['APP_BUILD_PATH'] || 'build/documentscanner',
+    webpackPackageName: '@akylas/nativescript-webpack',
     webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
     forceLog: loggingEnabled,
