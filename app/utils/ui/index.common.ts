@@ -1355,6 +1355,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
     if (result[0] !== 'authorized') {
         throw new PermissionError(lc('camera_permission_needed'));
     }
+    DEV_LOG && console.log('importImageFromCamera', useSystemCamera, inverseUseSystemCamera);
     if (__ANDROID__ ? (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera) : useSystemCamera) {
         const resultImagePath = await new Promise<string>((resolve, reject) => {
             const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
@@ -1390,6 +1391,8 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
                 }
             }
             Application.android.on(Application.android.activityResultEvent, onActivityResult);
+            // on android a background event will trigger while picking a file
+            securityService.ignoreNextValidation();
             Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             // } else {
             //     reject(new Error('camera_intent_not_supported'));
@@ -1414,7 +1417,6 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
         return;
     }
     const oldPagesNumber = document?.pages.length ?? 0;
-    DEV_LOG && console.log('importImageFromCamera', oldPagesNumber);
     const Camera = (await import('~/components/camera/Camera.svelte')).default;
     document = await showModal({
         page: Camera,
