@@ -5,7 +5,7 @@ import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/
 import { getColorMatrix } from '~/utils/matrix';
 import { lc } from '~/helpers/locale';
 import { SDK_VERSION } from '@nativescript/core/utils';
-import { request } from '@nativescript-community/perms';
+import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import type { OCRDocument } from '~/models/OCRDocument';
 import dayjs from 'dayjs';
 import { getFileNameForDocument } from '~/utils/utils.common';
@@ -17,7 +17,8 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
     if (__ANDROID__) {
         if (SDK_VERSION <= 29) {
             const result = await request('storage');
-            if (result[0] !== 'authorized') {
+            DEV_LOG && console.log('exportPDFAsync permission', result);
+            if (!isPermResultAuthorized(result)) {
                 throw new PermissionError(lc('storage_permission_needed'));
             }
         }
