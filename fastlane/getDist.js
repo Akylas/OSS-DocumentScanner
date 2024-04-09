@@ -1,4 +1,4 @@
-const nsWebpack = require('@nativescript/webpack');
+const nsWebpack = require('@akylas/nativescript-webpack');
 const { resolve } = require('path');
 const projectRoot = resolve('./')
 const platform = process.argv[2]

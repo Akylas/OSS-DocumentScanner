@@ -1,4 +1,4 @@
-const webpack = require('@nativescript/webpack');
+const webpack = require('@akylas/nativescript-webpack');
 module.exports = (env) => {
     webpack.init(env);
     return webpack.resolveConfig();
