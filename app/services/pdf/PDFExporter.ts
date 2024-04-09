@@ -17,7 +17,6 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
     if (__ANDROID__) {
         if (SDK_VERSION <= 29) {
             const result = await request('storage');
-            DEV_LOG && console.log('exportPDFAsync permission', result);
             if (!isPermResultAuthorized(result)) {
                 throw new PermissionError(lc('storage_permission_needed'));
             }
