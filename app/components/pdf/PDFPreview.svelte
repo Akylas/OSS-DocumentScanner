@@ -1,29 +1,28 @@
 <script context="module" lang="ts">
-    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { Paint } from '@nativescript-community/ui-canvas';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, ContentView, File, ObservableArray, Page, Screen, View, knownFolders } from '@nativescript/core';
+    import { ApplicationSettings, File, ObservableArray, Screen, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
-    import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
-    import { cleanFilename, exportPDFAsync } from '~/services/pdf/PDFExporter';
+    import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
-    import { recycleImages } from '~/utils/images';
     import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
+    import { getFileNameForDocument } from '~/utils/utils.common';
     import { colors, fonts, navigationBarHeight, screenHeightDips, screenRatio, screenWidthDips } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
-    import { IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -78,7 +77,7 @@
             const result = await prompt({
                 okButtonText: lc('ok'),
                 cancelButtonText: lc('cancel'),
-                defaultText: (document ? cleanFilename(document.name) : Date.now()) + '.pdf',
+                defaultText: getFileNameForDocument(document) + '.pdf',
                 hintText: lc('pdf_filename')
             });
             if (result?.result && result?.text?.length) {
