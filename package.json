@@ -148,7 +148,6 @@
         "./webpdfviewer"
     ],
     "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@akylas/nativescript-ios-runtime": "/Volumes/data/dev/nativescript/nativescript-ios-runtime/dist/akylas-nativescript-ios-runtime-8.7.0-1.tgz"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
     }
 }
