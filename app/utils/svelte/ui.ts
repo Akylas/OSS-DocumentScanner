@@ -55,6 +55,16 @@ export function fade(node, { delay = 0, duration = 400, easing = easings.easeInO
         opacity: t * opacity
     }));
 }
+export function scale(node, { delay = 0, duration = 400, easing = easings.easeInOutQuart }) {
+    const scaleX = node.nativeView.scaleX;
+    const scaleY = node.nativeView.scaleY;
+    return asSvelteTransition(node, delay, duration, easing, (t) => ({
+        scale: {
+            x: t * scaleX,
+            y: t * scaleY
+        }
+    }));
+}
 
 export function conditionalEvent(node, { condition, event, callback }) {
     let toRemove;
