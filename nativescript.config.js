@@ -15,6 +15,9 @@ module.exports = {
     i18n: {
         defaultLanguage: 'en'
     },
+    ios: {
+        runtimePackageName: '@akylas/nativescript-ios-runtime'
+    },
     android: {
         runtimePackageName: '@akylas/nativescript-android-runtime',
         gradleVersion: '8.3',
