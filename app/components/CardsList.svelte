@@ -284,12 +284,12 @@
     let ignoreTap = false;
     function onItemLongPress(item: Item, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
-        if (event && event.ios && event.ios.state !== 1) {
-            return;
-        }
-        if (event && event.ios) {
-            ignoreTap = true;
-        }
+        // if (event && event.ios && event.ios.state !== 1) {
+        //     return;
+        // }
+        // if (event && event.ios) {
+        //     ignoreTap = true;
+        // }
         // console.log('onItemLongPress', item, Object.keys(event));
         if (item.selected) {
             unselectItem(item);
