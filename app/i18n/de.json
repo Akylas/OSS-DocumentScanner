@@ -89,6 +89,7 @@
     "enhance_desc": "Funktionen im Bild verbessern",
     "enter_passcode": "Geben Sie eine PIN ein",
     "error": "Fehler",
+    "error_loading_image": "beim Laden des Bildes %1$s ist ein Fehler aufgetreten (%2$s)",
     "expanded": "Erweitert",
     "export": "Export",
     "export_folder": "Exportier-Ordner",
