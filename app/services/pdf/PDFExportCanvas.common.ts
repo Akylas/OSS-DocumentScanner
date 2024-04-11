@@ -19,7 +19,7 @@ export async function getTransformedImage(page: OCRPage) {
         pageCanvas.translate(width / 2, height / 2);
         pageCanvas.rotate(page.rotation, 0, 0);
         pageCanvas.scale(page.scale, page.scale, 0, 0);
-        pageCanvas.drawBitmap(imageSource.android, -page.width / 2, -page.height / 2, bitmapPaint);
+        pageCanvas.drawBitmap(imageSource, -page.width / 2, -page.height / 2, bitmapPaint);
         recycleImages(imageSource);
         return new ImageSource(pageCanvas.getImage());
     }
