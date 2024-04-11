@@ -89,6 +89,7 @@
     "enhance_desc": "enhance features in image",
     "enter_passcode": "Enter a PIN",
     "error": "error",
+    "error_loading_image": "there was an error loading image %1$s (%2$s)",
     "expanded": "expanded",
     "export": "export",
     "export_folder": "export folder",
