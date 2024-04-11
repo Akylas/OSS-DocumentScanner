@@ -334,6 +334,9 @@
             if (editing) {
                 toggleEditing();
                 data.cancel = true;
+            } else if (!startOnCam && saveCalled) {
+                data.cancel = true;
+
             }
         });
 

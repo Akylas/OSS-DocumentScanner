@@ -81,7 +81,7 @@
         "nativescript-iqkeyboardmanager": "1.5.1",
         "nested-property": "^4.0.0",
         "plugin-nativeprocessor": "portal:plugin-nativeprocessor",
-        "svelte-native": "1.0.19",
+        "svelte-native": "1.0.21",
         "topojson-simplify": "3.0.3",
         "util": "0.12.5"
     },
