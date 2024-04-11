@@ -34,7 +34,7 @@
     "batch_mode": "बैच मोड",
     "biometric_auto_lock": "बायोमेट्रिक ऑटो लॉक",
     "biometric_auto_lock_desc": "सक्षम होने पर जब भी ऐप बैकग्राउंड में जाएगा तो ऐप लॉक हो जाएगा",
-    "biometric_lock": "बॉयोमीट्रिक सुरक्षा",
+    "biometric_lock": "बायोमेट्रिक सुरक्षा",
     "biometric_lock_desc": "बायोमेट्रिक्स / PIN कोड का उपयोग करके एप्लिकेशन को लॉक करें",
     "black_white": "काला और सफ़ेद",
     "camera": "कैमरा",
