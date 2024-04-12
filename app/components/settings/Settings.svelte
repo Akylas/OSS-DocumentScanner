@@ -454,7 +454,7 @@
                 //                       try {
                 //                           const result = await pickFolder({
                 //                               multipleSelection: false,
-                //                               permissions: { write: true, persistable: true, recursive: true }
+                //                               permissions: { write: true, read: true, persistable: true, recursive: true }
                 //                           });
                 //                           if (result.folders.length) {
                 //                               const confirmed = await confirm({
