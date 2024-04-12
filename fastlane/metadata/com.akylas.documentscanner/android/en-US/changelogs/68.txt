@@ -1,0 +1,11 @@
+### Bug fixes
+- report error if image fails to load
+- prevent error with autoScan if back button is pressed while saving document
+- Translated using Weblate (German)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Croatian)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Galician)
+- webpack sync fix. For everything to work correctly force a sync with the button. Some old documents you alread
