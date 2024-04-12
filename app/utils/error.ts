@@ -123,6 +123,16 @@ export class PermissionError extends CustomError {
         );
     }
 }
+export class SilentError extends CustomError {
+    constructor(message?) {
+        super(
+            {
+                message: message ?? 'silent_error'
+            },
+            'SilentError'
+        );
+    }
+}
 
 export class NoNetworkError extends CustomError {
     constructor(props?) {
@@ -207,7 +217,7 @@ export async function showError(
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
         const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
 
-        if (realError && reporterEnabled && !(realError instanceof PermissionError)) {
+        if (realError && reporterEnabled && !(realError instanceof PermissionError) && !(realError instanceof SilentError)) {
             try {
                 Sentry.captureException(realError);
             } catch (error) {

@@ -52,7 +52,7 @@ import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
-import { PermissionError, showError } from '~/utils/error';
+import { PermissionError, SilentError, showError } from '~/utils/error';
 import { recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
 import { showToast } from '~/utils/ui';
@@ -782,7 +782,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
                     resolve();
                 } catch (error) {
                     if (/error creating file/.test(error.toString())) {
-                        reject(new Error(lc('please_choose_export_folder_again')));
+                        reject(new SilentError(lc('please_choose_export_folder_again')));
                     } else {
                         reject(error);
                     }

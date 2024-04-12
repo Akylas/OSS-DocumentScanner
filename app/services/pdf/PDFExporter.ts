@@ -1,4 +1,4 @@
-import { CustomError, PermissionError, wrapNativeException } from '~/utils/error';
+import { CustomError, PermissionError, SilentError, wrapNativeException } from '~/utils/error';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
@@ -40,7 +40,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                     onResult(e, result) {
                         if (e) {
                             if (/could not create file/.test(e.toString())) {
-                                reject(new Error(lc('please_choose_export_folder_again')));
+                                reject(new SilentError(lc('please_choose_export_folder_again')));
                             } else {
                                 reject(wrapNativeException(e));
                             }
