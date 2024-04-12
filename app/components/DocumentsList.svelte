@@ -136,21 +136,21 @@
         collectionView?.nativeElement.scrollToIndex(0, false);
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
-        // let index = -1;
-        // documents?.some((d, i) => {
-        //     if (d.doc.id === event.doc.id) {
-        //         index = i;
-        //         return true;
-        //     }
-        // });
-        // DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc.id, index, event.doc.pages.length);
-        // if (index >= 0) {
-        //     const item = documents?.getItem(index);
-        //     if (item) {
-        //         item.doc = event.doc;
-        //         documents.setItem(index, item);
-        //     }
-        // }
+        let index = -1;
+        documents?.some((d, i) => {
+            if (d.doc.id === event.doc.id) {
+                index = i;
+                return true;
+            }
+        });
+        DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc.id, index, event.doc.pages.length);
+        if (index >= 0) {
+            const item = documents?.getItem(index);
+            if (item) {
+                item.doc = event.doc;
+                documents.setItem(index, item);
+            }
+        }
     }
     function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
         for (let index = documents.length - 1; index >= 0; index--) {
@@ -703,8 +703,9 @@
         <CActionBar title={l('documents')}>
             <mdbutton
                 class="actionBarButton"
+                class:infinite-rotate={syncRunning}
                 isEnabled={!syncRunning}
-                text="mdi-sync"
+                text="mdi-autorenew"
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments}

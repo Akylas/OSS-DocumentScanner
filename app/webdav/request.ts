@@ -67,7 +67,7 @@ export function prepareRequestOptions(requestOptions: RequestOptions | RequestOp
 }
 
 function _request<T = any>(requestOptions: RequestOptionsWithState) {
-    // DEV_LOG && console.log('webdav request', requestOptions);
+    DEV_LOG && console.log('webdav request', JSON.stringify(requestOptions));
     return request<T>({ ...requestOptions, body: requestOptions.data as any });
 }
 async function webdavRequest<T>(requestOptions: RequestOptionsWithState): Promise<HttpsResponse<HttpsResponseLegacy<T>>> {

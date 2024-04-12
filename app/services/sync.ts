@@ -49,9 +49,15 @@ export class SyncService extends Observable {
         return !!this.client;
     }
     onDocumentAdded() {
-        // TODO: fast and dirty
         DEV_LOG && console.log('SYNC', 'onDocumentAdded');
         this.syncDocuments();
+    }
+    onDocumentDeleted(event) {
+        DEV_LOG && console.log('SYNC', 'onDocumentDeleted');
+        const documentsToDeleteOnRemote = JSON.parse(ApplicationSettings.getString('sync_docs_to_remove_remote', '[]'));
+        documentsToDeleteOnRemote.push(...event.documents.map((d) => d.id));
+        ApplicationSettings.setString('sync_docs_to_remove_remote', JSON.stringify(documentsToDeleteOnRemote));
+        this.syncDocuments(false);
     }
     onDocumentUpdated(event) {
         // TODO: fast and dirty
@@ -80,6 +86,7 @@ export class SyncService extends Observable {
             this.notify({ eventName: 'state', enabled: this.enabled });
             documentsService.on('documentAdded', this.onDocumentAdded, this);
             documentsService.on('documentUpdated', this.onDocumentUpdated, this);
+            documentsService.on('documentsDeleted', this.onDocumentDeleted, this);
         }
         // this.username = 'farfromrefuge';
         // this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
@@ -94,9 +101,10 @@ export class SyncService extends Observable {
     stop() {
         documentsService.off('documentAdded', this.onDocumentAdded, this);
         documentsService.off('documentUpdated', this.onDocumentUpdated, this);
+        documentsService.off('documentsDeleted', this.onDocumentDeleted, this);
     }
 
-    saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password, token }) {
+    async saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password, token }) {
         if (remoteURL && username && password && remoteFolder) {
             // TODO: if we use digest we need a test connection to acquire the ha1
 
@@ -113,18 +121,7 @@ export class SyncService extends Observable {
             };
             DEV_LOG && console.log('saveData', context, config);
             ApplicationSettings.setString(SETTINGS_KEY, JSON.stringify(config));
-            this.remoteURL = remoteURL;
-            this.remoteFolder = remoteFolder;
-            this.username = username;
-            this.authType = authType;
-            this.token = token;
-            this.password = password;
-            this.client = createClient(remoteURL, {
-                headers: context.headers,
-                authType: authType === AuthType.Password ? AuthType.None : authType,
-                username: config.username,
-                ha1: config.ha1
-            });
+            await this.start();
             this.syncDocuments();
         } else {
             ApplicationSettings.remove(SETTINGS_KEY);
@@ -172,7 +169,25 @@ export class SyncService extends Observable {
             }
         }
     }
-
+    async removeDocumentFromWebdav(remotePath: string) {
+        console.log('removeDocumentFromWebdav', remotePath);
+        return this.client.deleteFile(remotePath);
+        // const remoteDocuments = (await this.getRemoteFolderDirectories(remotePath)) as FileStat[];
+        // for (let index = 0; index < remoteDocuments.length; index++) {
+        //     const remoteDocument = remoteDocuments[index];
+        //     if (ignores?.indexOf(remoteDocument.basename) >= 0) {
+        //         continue;
+        //     }
+        //     if (remoteDocument.type === 'directory') {
+        //         await this.importFolderFromWebdav(path.join(remotePath, remoteDocument.basename), folder.getFolder(remoteDocument.basename));
+        //     } else {
+        //         await this.client.getFileContents(path.join(remotePath, remoteDocument.basename), {
+        //             format: 'file',
+        //             destinationFilePath: path.join(folder.path, remoteDocument.basename)
+        //         });
+        //     }
+        // }
+    }
     async importFolderFromWebdav(remotePath: string, folder: Folder, ignores?: string[]) {
         console.log('importFolderFromWebdav', remotePath, folder.path, ignores);
         const remoteDocuments = (await this.getRemoteFolderDirectories(remotePath)) as FileStat[];
@@ -197,6 +212,7 @@ export class SyncService extends Observable {
         await this.sendFolderToWebDav(docFolder, path.join(this.remoteFolder, document.id));
         await this.client.putFileContents(path.join(this.remoteFolder, document.id, 'data.json'), document.toString());
         // mark the document as synced
+        // TEST_LOG && console.log('addDocumentToWebdav done saving synced state', document.id, document.pages);
         return document.save({ _synced: 1 }, false);
     }
     async importDocumentFromWebdav(data: FileStat) {
@@ -365,12 +381,15 @@ export class SyncService extends Observable {
             this.notify({ eventName: 'syncState', state: 'running' });
             TEST_LOG && console.log('syncDocuments', bothWays);
             const localDocuments = await documentsService.documentRepository.search({});
+            const documentsToDeleteOnRemote = JSON.parse(ApplicationSettings.getString('sync_docs_to_remove_remote', '[]'));
+
             TEST_LOG &&
                 console.log(
                     'localDocuments',
                     localDocuments.map((d) => d.id)
                 );
 
+            TEST_LOG && console.log('documentsToDeleteOnRemote', documentsToDeleteOnRemote);
             if (bothWays) {
                 await this.ensureRemoteFolder();
                 const remoteDocuments = (await this.getRemoteFolderDirectories(this.remoteFolder)) as FileStat[];
@@ -396,6 +415,15 @@ export class SyncService extends Observable {
                         'toBeSyncDocuments',
                         toBeSyncDocuments.map((d) => d.id)
                     );
+
+                for (let index = 0; index < documentsToDeleteOnRemote.length; index++) {
+                    const id = documentsToDeleteOnRemote[index];
+                    const missingLocalIndex = missingLocalDocuments.findIndex((d) => d.basename === id);
+                    if (missingLocalIndex !== -1) {
+                        missingLocalDocuments.splice(missingLocalIndex, 1);
+                        await this.removeDocumentFromWebdav(path.join(this.remoteFolder, id));
+                    }
+                }
                 for (let index = 0; index < missingRemoteDocuments.length; index++) {
                     await this.addDocumentToWebdav(missingRemoteDocuments[index]);
                 }
@@ -406,7 +434,7 @@ export class SyncService extends Observable {
                     await this.syncDocumentOnWebdav(toBeSyncDocuments[index]);
                 }
             } else {
-                const documentsToSync = localDocuments.filter((d) => !d._synced);
+                const documentsToSync = localDocuments.filter((d) => !d._synced).concat(documentsToDeleteOnRemote);
                 if (documentsToSync.length) {
                     await this.ensureRemoteFolder();
                     const remoteDocuments = (await this.getRemoteFolderDirectories(this.remoteFolder)) as FileStat[];
@@ -415,7 +443,6 @@ export class SyncService extends Observable {
                         toBeDeleted: missingRemoteDocuments,
                         union: toBeSyncDocuments
                     } = findArrayDiffs(localDocuments, remoteDocuments, (a, b) => a.id === b.basename);
-
                     TEST_LOG &&
                         console.log(
                             'missingRemoteDocuments',
@@ -431,6 +458,14 @@ export class SyncService extends Observable {
                             'toBeSyncDocuments',
                             toBeSyncDocuments.map((d) => d.id)
                         );
+                    for (let index = 0; index < documentsToDeleteOnRemote.length; index++) {
+                        const id = documentsToDeleteOnRemote[index];
+                        const missingLocalIndex = missingLocalDocuments.findIndex((d) => d.basename === id);
+                        if (missingLocalIndex !== -1) {
+                            missingLocalDocuments.splice(missingLocalIndex, 1);
+                            await this.removeDocumentFromWebdav(path.join(this.remoteFolder, id));
+                        }
+                    }
                     for (let index = 0; index < missingRemoteDocuments.length; index++) {
                         await this.addDocumentToWebdav(missingRemoteDocuments[index]);
                     }

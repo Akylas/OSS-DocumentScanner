@@ -295,7 +295,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
         await super.update(document, toUpdate);
         Object.assign(document, toSave);
-        // DEV_LOG && console.log('update doc', toSave, document._synced, new Error().stack);
+        // DEV_LOG && console.log('update doc', toSave, document._synced);
         return document;
     }
     async addTag(document: OCRDocument, tagId: string) {
@@ -423,7 +423,7 @@ export class DocumentsService extends Observable {
     }
     async deleteDocuments(documents: OCRDocument[]) {
         // await this.documentRepository.delete(model);
-        await Promise.all(documents.map((d) => this.documentRepository.delete(d)));
+        await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d)))));
         // await OCRDocument.delete(docs.map((d) => d.id));
         documents.forEach((doc) => doc.removeFromDisk());
         this.notify({ eventName: 'documentsDeleted', documents });

@@ -175,6 +175,15 @@ export class OCRDocument extends Observable implements Document {
                     DEV_LOG && console.log('add page source image copied', actualSourceImagePath, File.exists(actualSourceImagePath), File.fromPath(actualSourceImagePath).size);
                     attributes.sourceImagePath = actualSourceImagePath;
                 }
+                if (id) {
+                    try {
+                        const page = await documentsService.pageRepository.get(id);
+                        if (page) {
+                            const { id, ...toUpdate } = attributes;
+                            return documentsService.pageRepository.update(page, toUpdate);
+                        }
+                    } catch (error) {}
+                }
                 return documentsService.pageRepository.createPage(attributes);
             });
             // for (let index = 0; index < length; index++) {}
@@ -281,7 +290,7 @@ export class OCRDocument extends Observable implements Document {
     }
 
     toString() {
-        return JSON.stringify(this, (key, value) => (key.startsWith('_') ? undefined : value));
+        return JSON.stringify(this, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
     }
 
     toJSONObject() {
@@ -425,7 +434,7 @@ export class OCRPage extends Observable implements Page {
         this.document_id = docId;
     }
     toString() {
-        return JSON.stringify(this, (key, value) => (key.startsWith('_') ? undefined : value));
+        return JSON.stringify(this, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
     }
 
     toJSONObject() {
