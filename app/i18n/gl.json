@@ -89,6 +89,7 @@
     "enhance_desc": "mellorar características da imaxe",
     "enter_passcode": "Escribe un PIN",
     "error": "erro",
+    "error_loading_image": "houbo un erro ao cargar a imaxe %1$s (%2$s)",
     "expanded": "despregado",
     "export": "exportar",
     "export_folder": "cartafol de exportación",
