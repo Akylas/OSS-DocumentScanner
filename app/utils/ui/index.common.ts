@@ -781,7 +781,11 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
                     }
                     resolve();
                 } catch (error) {
-                    reject(error);
+                    if (/error creating file/.test(error.toString())) {
+                        reject(new Error(lc('please_choose_export_folder_again')));
+                    } else {
+                        reject(error);
+                    }
                 } finally {
                     recycleImages(imageSource);
                 }
