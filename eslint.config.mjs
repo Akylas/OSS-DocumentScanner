@@ -26,7 +26,8 @@ export default [
                 OWM_KEY: 'readonly',
                 __ANDROID__: 'readonly',
                 __IOS__: 'readonly',
-                DEV_LOG: 'readonly'
+                DEV_LOG: 'readonly',
+                CARD_APP: 'readonly'
             }
         },
         rules: {
