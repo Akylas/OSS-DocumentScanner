@@ -89,6 +89,7 @@
     "enhance_desc": "poboljšava neka obilježja na slici",
     "enter_passcode": "Unesite PIN",
     "error": "greška",
+    "error_loading_image": "dogodila se greška kod učitavanja slike %1$s (%2$s)",
     "expanded": "prošireno",
     "export": "izvoz",
     "export_folder": "mapa za izvoz",
