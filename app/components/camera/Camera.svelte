@@ -365,7 +365,7 @@
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
-                if (cameraView?.nativeView) {
+                if (cameraOpened && cameraView?.nativeView) {
                     takePicture(true);
                 }
             });
@@ -474,6 +474,7 @@
     }
     let cameraOpened = false;
     function onCameraOpen({ object }: { object: CameraView }) {
+        DEV_LOG && console.log('onCameraOpen');
         if (__ANDROID__) {
             const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
             if (currentResolution) {
