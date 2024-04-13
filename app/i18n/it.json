@@ -179,6 +179,7 @@
     "pdf_filename": "nome del file per il pdf esportato",
     "pdf_saved": "pdf salvato: %1$s",
     "picture_size": "dimensione immagine",
+    "please_choose_export_folder_again": "Seleziona di nuovo la cartella di esportazione per risolvere il problema. Non dovrebbe essere più richiesto",
     "portrait": "verticale",
     "preferences": "preferenze",
     "preview": "anteprima",
