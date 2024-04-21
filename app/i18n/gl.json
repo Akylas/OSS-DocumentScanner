@@ -179,6 +179,7 @@
     "pdf_filename": "nome do ficheiro pdf exportado",
     "pdf_saved": "pdf gardado: %1$s",
     "picture_size": "tamaño da imaxe",
+    "please_choose_export_folder_again": "Por favor indica outra vez o cartafol para exportación. Non debería preguntar outra vez",
     "portrait": "retrato",
     "preferences": "preferencias",
     "preview": "vista previa",
