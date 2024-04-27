@@ -302,7 +302,7 @@ class ImageUtil {
         }
 
         fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?, sourceSize:Pair<Int, Int>?): Bitmap? {
-             val start = System.currentTimeMillis()
+            //  val start = System.currentTimeMillis()
             var sourceSize = sourceSize
             if (sourceSize == null && options?.sourceWidth != 0 && options?.sourceHeight != 0) {
                 sourceSize = Pair(options!!.sourceWidth, options!!.sourceHeight)
@@ -353,7 +353,7 @@ class ImageUtil {
             } else {
                 BitmapFactory.decodeFile(src, finalBitmapOptions)
             }
-            Log.d("ImageAnalysis", "readBitmapFromFile in ${System.currentTimeMillis() - start} ms")
+            // Log.d("ImageAnalysis", "readBitmapFromFile in ${System.currentTimeMillis() - start} ms")
             if (bitmap != null) {
                 val rotationAngle: Int
                 if (pfd != null) {
@@ -396,7 +396,7 @@ class ImageUtil {
                         true
                     )
                 }
-                Log.d("ImageAnalysis", "readBitmapFromFile2 in ${System.currentTimeMillis() - start} ms")
+                // Log.d("ImageAnalysis", "readBitmapFromFile2 in ${System.currentTimeMillis() - start} ms")
             }
             return bitmap
         }
