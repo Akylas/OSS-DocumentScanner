@@ -59,9 +59,7 @@ export class CustomError extends BaseError {
         }
         this.assignedLocalData = props;
 
-        if (!this.customErrorConstructorName) {
-            this.customErrorConstructorName = customErrorConstructorName || (this as any).constructor.name; // OR (<any>this).constructor.name;
-        }
+        this.customErrorConstructorName ??= customErrorConstructorName || (this as any).constructor.name; // OR (<any>this).constructor.name;
     }
     //@ts-ignore
     get stack() {
@@ -217,7 +215,7 @@ export async function showError(
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
         const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
 
-        if (realError && reporterEnabled && !(realError instanceof PermissionError) && !(realError instanceof SilentError)) {
+        if (realError && reporterEnabled && realError.customErrorConstructorName !== 'PermissionError' && realError.customErrorConstructorName !== 'SilentError') {
             try {
                 Sentry.captureException(realError);
             } catch (error) {
