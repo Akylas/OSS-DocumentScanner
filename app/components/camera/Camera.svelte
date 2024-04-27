@@ -272,11 +272,17 @@
         if (!previewStarted) {
             previewStarted = true;
             cameraView?.nativeView.startPreview();
+            if (autoScanHandler) {
+                resumeAutoScan();
+            }
         }
     }
     function stopPreview() {
         if (previewStarted) {
             previewStarted = false;
+            if (autoScanHandler) {
+                pauseAutoScan();
+            }
             cameraView?.nativeView.stopPreview();
             if (cropView?.nativeView) {
                 cropView.nativeView.quads = null;
@@ -293,10 +299,11 @@
         })();
     }
     function onBackground() {
+        DEV_LOG && console.log('[Camera]', 'onBackground', !!cameraView);
         stopPreview();
     }
     function onForeground() {
-        DEV_LOG && console.log('onForeground', !!cameraView);
+        DEV_LOG && console.log('[Camera]', 'onForeground', !!cameraView);
         startPreview();
     }
     let saveCalled = false;
