@@ -62,14 +62,10 @@ abstract class AbstractBiMap<K : Any, V : Any> protected constructor(
     }
 
     override fun put(key: K, value: V): V? {
-        require(value !in reverse) { "BiMap already contains value $value" }
         return forcePut(key, value)
     }
 
     override fun putAll(from: Map<out K, V>) {
-        from.values.forEach { value ->
-            require(value !in reverse) { "BiMap already contains value $value" }
-        }
         from.entries.forEach { forcePut(it.key, it.value) }
     }
 
