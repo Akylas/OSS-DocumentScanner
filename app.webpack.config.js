@@ -212,7 +212,6 @@ module.exports = (env, params = {}) => {
         __ACCESSIBILITY_DEFAULT_ENABLED__: false,
         __ONLY_ALLOW_ROOT_VARIABLES__: true,
         __UI_USE_XML_PARSER__: false,
-        'global.__AUTO_REGISTER_UI_MODULES__': false,
         __IOS__: isIOS,
         __ANDROID__: isAndroid,
         'global.autoLoadPolyfills': false,
@@ -235,7 +234,7 @@ module.exports = (env, params = {}) => {
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS
-                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+So gftware`
+                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
                 : `market://details?id=${appId}`
         }"`,
         SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
@@ -399,7 +398,7 @@ module.exports = (env, params = {}) => {
         })
     );
 
-    // config.plugins.push(new SpeedMeasurePlugin());
+    config.plugins.push(new SpeedMeasurePlugin());
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
@@ -413,7 +412,6 @@ module.exports = (env, params = {}) => {
     );
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
 
-    // TODO: find a better way to detect symlinked packages
     // config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = function (module) {
         const absPath = module.resource;
@@ -465,7 +463,7 @@ module.exports = (env, params = {}) => {
                 }
             })
         );
-        // if (!sentry) {
+        if (!sentry) {
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
                 if (resource.context.match(nativescriptReplace)) {
@@ -473,7 +471,7 @@ module.exports = (env, params = {}) => {
                 }
             })
         );
-        // }
+        }
         config.module.rules.push(
             {
                 // rules to replace mdi icons and not use nativescript-font-icon
@@ -576,7 +574,6 @@ module.exports = (env, params = {}) => {
                     sourcemaps: {
                         // assets: './**/*.nonexistent'
                         rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
-                        // rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
                         ignore: ['tns-java-classes', 'hot-update'],
                         assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
                     }

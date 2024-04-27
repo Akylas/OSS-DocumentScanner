@@ -4,6 +4,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import eslintPluginSvelte from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
 import tseslint from 'typescript-eslint';
+import globals from 'globals';
 const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character'];
 export default [
     ...tseslint.configs.recommendedTypeChecked,
@@ -23,11 +24,11 @@ export default [
             globals: {
                 SENTRY_DSN: 'readonly',
                 SENTRY_PREFIX: 'readonly',
-                OWM_KEY: 'readonly',
                 __ANDROID__: 'readonly',
                 __IOS__: 'readonly',
                 DEV_LOG: 'readonly',
-                CARD_APP: 'readonly'
+                CARD_APP: 'readonly',
+                ...globals.node
             }
         },
         rules: {

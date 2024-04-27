@@ -9,6 +9,7 @@
         "experimentalDecorators": true,
         "sourceMap": true,
         "skipLibCheck": true,
+        "preserveSymlinks": true,
         "skipDefaultLibCheck": true,
         "allowUnreachableCode": false,
         "allowSyntheticDefaultImports": true,
