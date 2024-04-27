@@ -1,0 +1,15 @@
+### Features
+- You can now import PDFs. Each page is seen as an imported image
+
+### Bug fixes
+- Translated using Weblate (Galician)
+- Translated using Weblate (Swedish)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Croatian)
+- Translated using Weblate (Ukrainian)
+- Translated using Weblate (Portuguese)
+- Translated using Weblate (Portuguese (Brazil))
+- Translated using Weblate (French)
+- Translated using Weblate (Spanish)
+- Translated using W
