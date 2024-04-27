@@ -1,8 +1,8 @@
 ext {
     compileSdk = 34
     targetSdk = 34
-    kotlinVersion = "1.9.10"
-    androidBuildToolsVersion = "8.2.2"
+    kotlinVersion = "2.0.0-RC1"
+    androidBuildToolsVersion = "8.3.2"
     buildToolsVersion = "34.0.0"
     androidxVersion = "1.12.0"
     androidXAppCompat = "1.7.0-alpha03"
