@@ -290,8 +290,8 @@
                         on:selectedIndexChange={onPageIndexChanged}>
                         {#each { length: 6 } as _, i}
                             <Template key={`${i + 1}`} let:index let:item>
-                                <gridlayout padding={PAGER_PAGE_PADDING}>
-                                    <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)}>
+                                <gridlayout padding={PAGER_PAGE_PADDING - 10}>
+                                    <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)} margin={10}>
                                         {#each { length: i + 1 } as _, j}
                                             <image
                                                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
