@@ -94,7 +94,7 @@
     }
 
     function updateOption(option: string, value, item) {
-        DEV_LOG && console.log(updateOption, option, value, item);
+        DEV_LOG && console.log('updateOption', option, value, item);
         cameraOptionsStore.update((state) => {
             state[option] = value;
             if (option === 'pictureSize') {
