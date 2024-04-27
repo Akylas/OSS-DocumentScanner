@@ -707,7 +707,9 @@
                     const filePath = result.files[0];
                     if (filePath && File.exists(filePath)) {
                         showLoading();
-                        const json = JSON.parse(await File.fromPath(filePath).readText());
+                        const text = await File.fromPath(filePath).readText();
+                        DEV_LOG && console.log('import_settings', text);
+                        const json = JSON.parse(text);
                         const nativePref = ApplicationSettings.getNative();
                         if (__ANDROID__) {
                             const editor = (nativePref as android.content.SharedPreferences).edit();
