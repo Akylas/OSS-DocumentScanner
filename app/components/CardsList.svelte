@@ -30,7 +30,7 @@
         detectOCR,
         goToDocumentView,
         importAndScanImage,
-        importAndScanImageFromUris,
+        importAndScanImageOrPdfFromUris,
         importImageFromCamera,
         onBackButton,
         showImagePopoverMenu,
@@ -468,7 +468,7 @@
                         }
                 }
                 if (uris.length) {
-                    await importAndScanImageFromUris(uris);
+                    await importAndScanImageOrPdfFromUris(uris);
                 }
             } catch (error) {
                 showError(error);

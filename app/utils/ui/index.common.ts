@@ -1,5 +1,5 @@
 import { request } from '@nativescript-community/perms';
-import { pickFolder } from '@nativescript-community/ui-document-picker';
+import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { AlertDialog, MDCAlertControlerOptions, alert, prompt } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
@@ -26,7 +26,7 @@ import {
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
-import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, processFromFile } from 'plugin-nativeprocessor';
+import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -37,6 +37,7 @@ import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
 import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import {
+    AREA_SCALE_MIN_FACTOR,
     CROP_ENABLED,
     DEFAULT_EXPORT_DIRECTORY,
     DEFAULT__BATCH_CHUNK_SIZE,
@@ -202,20 +203,48 @@ export async function doInBatch<T, U>(array: T[], handler: (T, index: number) =>
     return result;
 }
 
-export async function importAndScanImageFromUris(uris: string[], document?: OCRDocument, canGoToView = true) {
+export async function importAndScanImageOrPdfFromUris(uris: string[], document?: OCRDocument, canGoToView = true) {
     let pagesToAdd: PageData[] = [];
-    DEV_LOG && console.log('importAndScanImageFromUris', uris);
     let items: ImportImageData[] = [];
     try {
         await showLoading(l('computing'));
         const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
         const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+        const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+        const [pdf, images] = uris.reduce(
+            ([p, f], e) => {
+                let testStr = e.toLowerCase();
+                if (__ANDROID__ && e.startsWith('content://')) {
+                    testStr = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getFileName(Utils.android.getApplicationContext(), e);
+                    DEV_LOG && console.log('getFilename', e, testStr);
+                }
+                return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
+            },
+            [[], []]
+        );
+        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
         // We do it in batch of 5 to prevent memory issues
+
+        const pdfImages = await doInBatch(
+            pdf,
+            (pdfPath: string) =>
+                new Promise<string[]>(async (resolve, reject) => {
+                    try {
+                        const start = Date.now();
+                        DEV_LOG && console.log('importFromPdf', pdfPath, Date.now() - start, 'ms');
+                        const images = await importPdfToTempImages(pdfPath);
+                        DEV_LOG && console.log('importFromPdf done ', pdfPath, Date.now() - start, 'ms');
+                        resolve(images);
+                    } catch (error) {
+                        reject(error);
+                    }
+                })
+        );
         items = await doInBatch(
-            uris,
-            (sourceImagePath) =>
+            images.concat(pdfImages.flat()),
+            (sourceImagePath: string) =>
                 new Promise<ImportImageData>(async (resolve, reject) => {
                     try {
                         const start = Date.now();
@@ -225,7 +254,7 @@ export async function importAndScanImageFromUris(uris: string[], document?: OCRD
                         const imageRotation = imageSize.rotation;
                         // TODO: detect JSON and QRCode in one go
                         DEV_LOG && console.log('[importAndScanImageFromUris] getJSONDocumentCornersFromFile', sourceImagePath, resizeThreshold);
-                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, { resizeThreshold }) : undefined;
+                        const quads = cropEnabled ? await getJSONDocumentCornersFromFile(sourceImagePath, { resizeThreshold, areaScaleMinFactor }) : undefined;
                         let qrcode;
                         if (CARD_APP) {
                             // try to get the qrcode to show it in the import screen
@@ -437,14 +466,23 @@ export async function importAndScanImage(document?: OCRDocument, canGoToView = t
             // on android a background event will trigger while picking a file
             securityService.ignoreNextValidation();
         }
-        selection = await imagePickerPlugin
-            .create({
-                mediaType: 1,
-                mode: 'multiple' // use "multiple" for multiple selection
+
+        selection = (
+            await openFilePicker({
+                mimeTypes: ['image/*', 'application/pdf'],
+                documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
+                multipleSelection: true,
+                pickerMode: 0
             })
-            // on android pressing the back button will trigger an error which we dont want
-            .present()
-            .catch((err) => null);
+        )?.files.map((s) => ({ path: s }));
+        // selection = await imagePickerPlugin
+        //     .create({
+        //         mediaType: 1,
+        //         mode: 'multiple' // use "multiple" for multiple selection
+        //     })
+        //     // on android pressing the back button will trigger an error which we dont want
+        //     .present()
+        //     .catch((err) => null);
         // }
         //we need to wait a bit or the presenting controller
         // is still the image picker and will mix things up
@@ -455,7 +493,7 @@ export async function importAndScanImage(document?: OCRDocument, canGoToView = t
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {
             showLoading(l('computing'));
-            return await importAndScanImageFromUris(
+            return await importAndScanImageOrPdfFromUris(
                 selection.map((s) => s.path),
                 document,
                 canGoToView
@@ -1283,6 +1321,7 @@ export async function processCameraImage({
     pagesToAdd;
 }) {
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
+    const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
     const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
     const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
@@ -1294,7 +1333,7 @@ export async function processCameraImage({
     const imageHeight = imageSize.height;
     const imageRotation = imageSize.rotation;
     if (cropEnabled) {
-        quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, imageRotation: 0 });
+        quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, imageRotation: 0, areaScaleMinFactor });
     }
     DEV_LOG && console.log('processCameraImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height);
     if (cropEnabled && quads.length === 0) {

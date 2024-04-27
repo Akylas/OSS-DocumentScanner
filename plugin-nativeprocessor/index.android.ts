@@ -1,5 +1,5 @@
 import { ImageSource, Utils } from '@nativescript/core';
-import { CornersOptions, CropOptions, CropResult, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, QRCodeData } from '.';
+import { CornersOptions, CropOptions, CropResult, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData } from '.';
 import { CropView } from './CropView';
 
 export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
@@ -287,4 +287,23 @@ export function createAutoScanHandler(cropView: CropView, block: (result) => voi
             onAutoScan: block
         })
     );
+}
+
+export async function importPdfToTempImages(pdfPath: string, options?: Partial<PDFImportOptions>) {
+    return new Promise<string[]>((resolve, reject) => {
+        com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.importPdfToTempImages(
+            Utils.android.getApplicationContext(),
+            pdfPath,
+            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+                onResult(e, result) {
+                    if (e) {
+                        reject(e);
+                    } else {
+                        resolve(JSON.parse(result));
+                    }
+                }
+            }),
+            options ? JSON.stringify(options) : ''
+        );
+    });
 }

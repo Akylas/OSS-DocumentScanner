@@ -68,6 +68,15 @@ export interface CropOptions extends LoadImageOptions {
 }
 export interface CornersOptions extends LoadImageOptions {
     imageRotation?: number;
+    borderSize?: number;
+    medianBlurValue?: number;
+    bilateralFilterValue?: number;
+    contoursApproxEpsilonFactor?: number;
+    expectedMaxCosine?: number;
+    expectedOptimalMaxCosine?: number;
+    expectedAreaFactor?: number;
+    areaScaleMinFactor?: number;
+    minDistanceFromBorderFactor?: number;
 }
 export interface CropResult {
     imagePath: string;
@@ -85,4 +94,8 @@ export interface GenerateQRCodeOptions {
     margin?: number;
     frontColor?: string | Color;
     backColor?: string | Color;
+}
+export interface PDFImportOptions extends LoadImageOptions {
+    compressFormat?: string;
+    compressQuality?: number;
 }

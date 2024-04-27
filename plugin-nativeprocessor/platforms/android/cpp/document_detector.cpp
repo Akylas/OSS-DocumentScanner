@@ -235,15 +235,41 @@ static void testImageProxyToBitmap(JNIEnv *env, jobject type, jint width, jint h
     mat_to_bitmap(env, srcBitmapMat, out_bitmap);
     srcBitmapMat.release();
 }
-static std::string native_scan_json_mat(Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation, jdouble scale) {
+static std::string native_scan_json_mat(JNIEnv *env, Mat &srcBitmapMat, jint shrunkImageHeight, jint imageRotation, jdouble scale, jstring _options) {
     detector::DocumentDetector docDetector(srcBitmapMat, shrunkImageHeight, imageRotation, scale);
     if (shrunkImageHeight == 0) {
         // image was resized on the native side let diminish blur
         docDetector.options.medianBlurValue = 3;
     }
+    std::string options{jstringToString(env, _options)};
+    if (!options.empty()) {
+        jsoncons::json j = jsoncons::json::parse(options);
+
+        if (j.contains("areaScaleMinFactor")) {
+             docDetector.options.areaScaleMinFactor = j["areaScaleMinFactor"].as<double>();
+        }
+        if (j.contains("expectedAreaFactor")) {
+             docDetector.options.expectedAreaFactor = j["expectedAreaFactor"].as<double>();
+        }
+        if (j.contains("expectedMaxCosine")) {
+             docDetector.options.expectedMaxCosine = j["expectedMaxCosine"].as<double>();
+        }
+        if (j.contains("expectedOptimalMaxCosine")) {
+             docDetector.options.expectedOptimalMaxCosine = j["expectedOptimalMaxCosine"].as<double>();
+        }
+        if (j.contains("minDistanceFromBorderFactor")) {
+             docDetector.options.minDistanceFromBorderFactor = j["minDistanceFromBorderFactor"].as<double>();
+        }
+        if (j.contains("contoursApproxEpsilonFactor")) {
+             docDetector.options.contoursApproxEpsilonFactor = j["contoursApproxEpsilonFactor"].as<double>();
+        }
+        if (j.contains("borderSize")) {
+             docDetector.options.borderSize = j["borderSize"].as<double>();
+        }
+    }
     return docDetector.scanPointToJSON();
 }
-static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jdouble scale)
+static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jdouble scale, jstring options)
 {
 //    auto t_start = std::chrono::high_resolution_clock::now();
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "OpenCV: %s", cv::getBuildInformation().c_str());
@@ -251,7 +277,7 @@ static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, ji
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "bitmap_to_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
-    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation, scale);
+    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, scale, options);
     srcBitmapMat.release();
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_scan_json_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     return stringToJavaString(env, scanPointsList);
@@ -278,7 +304,7 @@ static jstring native_scan_json_buffer(JNIEnv *env, jobject type, jint width, ji
     Mat srcBitmapMat;
     buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "buffer_to_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
-    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation, 1.0);
+    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, 1.0, NULL);
     srcBitmapMat.release();
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_scan_json_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     return stringToJavaString(env, scanPointsList);
@@ -289,7 +315,7 @@ static jstring native_scan_json_buffer_with_image(JNIEnv *env, jobject type, jin
 {
     Mat srcBitmapMat;
     buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
-    std::string scanPointsList = native_scan_json_mat(srcBitmapMat, shrunkImageHeight, imageRotation, 1.0);
+    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, 1.0, NULL);
     mat_to_bitmap(env, srcBitmapMat, outBitmap);
     srcBitmapMat.release();
     return stringToJavaString(env, scanPointsList);
@@ -523,9 +549,10 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
                                                                                           jobject src_bitmap,
                                                                                           jint shrunk_image_height,
                                                                                           jint image_rotation,
-                                                                                          jdouble scale)
+                                                                                          jdouble scale,
+                                                                                          jstring options)
 {
-    return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation, scale);
+    return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation, scale, options);
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxy(JNIEnv *env,

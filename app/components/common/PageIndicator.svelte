@@ -16,7 +16,6 @@
     horizontalAlignment="right"
     paddingLeft={defaultPadding * $fontScale}
     paddingRight={defaultPadding * $fontScale}
-    rowSpan={2}
     {text}
     textAlignment="center"
     verticalAlignment="bottom"

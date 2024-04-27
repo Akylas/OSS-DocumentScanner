@@ -2,10 +2,15 @@ package com.akylas.documentscanner
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.database.Cursor
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Point
-import android.media.Image
-import android.util.Log
+import android.graphics.pdf.PdfRenderer
+import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.provider.OpenableColumns
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
 import com.akylas.documentscanner.utils.ImageUtil
@@ -14,6 +19,7 @@ import com.nativescript.cameraview.ImageAsyncProcessor
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -71,7 +77,8 @@ constructor(
             srcBitmap: Bitmap,
             shrunkImageHeight: Int,
             imageRotation: Int,
-            scale: Double
+            scale: Double,
+            options: String?
         ): String
 
 //        private external fun nativeScanJSONFromProxy(
@@ -353,20 +360,23 @@ constructor(
             bitmap: Bitmap,
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0,
-            scale: Double = 1.0
+            scale: Double = 1.0,
+            options: String?
         ): String {
-            return nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale)
+            return nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale, options)
         }
         @JvmOverloads
         fun getJSONDocumentCorners(
             image: Bitmap,
             callback: FunctionCallback,
             shrunkImageHeight: Double = 500.0,
-            imageRotation: Int = 0
+            imageRotation: Int = 0,
+            scale: Double = 1.0,
+            options: String?
         ) {
             thread(start = true) {
                 try {
-                    callback.onResult(null, getJSONDocumentCornersSync(image, shrunkImageHeight, imageRotation))
+                    callback.onResult(null, getJSONDocumentCornersSync(image, shrunkImageHeight, imageRotation, scale, options))
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 }
@@ -408,7 +418,7 @@ constructor(
 //                        )
 //                    }
                     // resized images from android side are more blurry than when resized with openCV
-                    callback.onResult(null, getJSONDocumentCornersSync(bitmap, shrunkImageHeight,  0, scale))
+                    callback.onResult(null, getJSONDocumentCornersSync(bitmap, shrunkImageHeight,  0, scale, options))
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 } finally {
@@ -884,9 +894,108 @@ constructor(
                 }
             }
         }
-    }
+        @SuppressLint("Range")
+        fun getFileName(context: Context, uri: Uri): String? {
+            var result: String? = null
+            if (uri.scheme == "content") {
+                val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
+                try {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        result =
+                            cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                    }
+                } finally {
+                    cursor!!.close()
+                }
+            }
+            if (result == null) {
+                result = uri.lastPathSegment
+            }
+            return result
+        }
+        fun getFileName(context: Context, src: String): String? {
+            return getFileName(context, Uri.parse(src))
+        }
+        @JvmOverloads
+        fun importPdfToTempImages(
+            context: Context,
+            src: String,
+            callback: FunctionCallback,
+            options: String?
+        ) {
+            thread(start = true) {
+                var parcelFileDescriptor: ParcelFileDescriptor? = null
+                var renderer: PdfRenderer? = null
+                val result = JSONArray()
+                try {
+                    var uri = Uri.parse(src)
+                    var pdfFileName = getFileName(context, uri)
+                    var compressFormat = "jpg"
+                    var compressQuality = 100
+                    if (options != null) {
+                        try {
+                            var jsOptions = JSONObject(options)
+                            compressFormat = jsOptions.optString("compressFormat", compressFormat)
+                            compressQuality = jsOptions.optInt("compressQuality", compressQuality)
+                        } catch (ignored: JSONException) {
+                        }
+                    }
+                    parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
+                    if (parcelFileDescriptor != null) {
+                        renderer = PdfRenderer(parcelFileDescriptor)
 
-    var testBitmap: Bitmap? = null
+                        // Loop over all pages to find barcodes
+                        var renderedPage: Bitmap
+                        for (i in 0 until renderer.getPageCount()) {
+                            val page = renderer.openPage(i)
+                            renderedPage = Bitmap.createBitmap(
+                                page.width * 2,
+                                page.height * 2,
+                                Bitmap.Config.ARGB_8888
+                            )
+                            val canvas = Canvas(renderedPage);
+                            canvas.drawColor(Color.WHITE);
+                            page.render(
+                                renderedPage,
+                                null,
+                                null,
+                                PdfRenderer.Page.RENDER_MODE_FOR_PRINT
+                            )
+                            page.close()
+                            val temp = File.createTempFile("${pdfFileName}_$i",
+                                ".$compressFormat", context.cacheDir)
+                            FileOutputStream(temp).use { out ->
+                                renderedPage.compress(
+                                    ImageUtil.getTargetFormat(compressFormat),
+                                    compressQuality,
+                                    out
+                                )
+                            }
+                            result.put(temp.path)
+                            renderedPage?.recycle()
+                        }
+                    } else {
+                        throw ImageNotFoundException(src)
+                    }
+
+                    callback.onResult(null, result.toString())
+                } catch (e: IOException) {
+                    callback.onResult(e, null)
+                } finally {
+                    // Resource handling
+                    renderer?.close()
+                    if (parcelFileDescriptor != null) {
+                        try {
+                            parcelFileDescriptor.close()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+
+        }
+    }
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun process(
