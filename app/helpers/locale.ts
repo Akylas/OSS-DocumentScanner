@@ -23,30 +23,39 @@ export const clock_24Store = writable(null);
 export const onLanguageChanged = createGlobalEventListener('language');
 export const onTimeChanged = createGlobalEventListener('time');
 
+async function loadDayjsLang(newLang: string) {
+    const toLoad = newLang.replace('_', '-');
+    try {
+        await import(`dayjs/locale/${toLoad}.js`);
+        dayjs.locale(toLoad);
+        DEV_LOG && console.log('dayjs loaded', toLoad, dayjs().format('llll'));
+    } catch (err) {
+        if (toLoad.indexOf('-') !== -1) {
+            loadDayjsLang(toLoad.split('-')[0]);
+        } else {
+            DEV_LOG && console.error(lang, `~/dayjs/${toLoad}`, err, err.stack);
+        }
+    }
+}
+
 $lang.subscribe((newLang: string) => {
     lang = newLang;
     if (!lang) {
         return;
     }
-    // console.log('changed lang', lang, Device.region);
-    try {
-        require(`dayjs/locale/${newLang}.js`);
-    } catch (err) {
-        console.error('failed to load dayjs locale', lang, `~/dayjs/${newLang}`, err, err.stack);
-    }
-    dayjs.locale(lang); // switch back to default English locale globally
+    DEV_LOG && console.log('changed lang', lang, Device.region);
+    loadDayjsLang(lang);
     try {
         // const localeData = require(`~/i18n/${lang}.json`);
         loadLocaleJSON(`~/i18n/${lang}.json`);
     } catch (err) {
-        console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
+        console.error(lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
     }
     globalObservable.notify({ eventName: 'language', data: lang });
 });
 function setLang(newLang) {
     let actualNewLang = getActualLanguage(newLang);
     DEV_LOG && console.log('setLang', newLang, actualNewLang);
-
     if (__IOS__) {
         overrideNativeLocale(actualNewLang);
         currentLocale = null;
@@ -57,9 +66,9 @@ function setLang(newLang) {
             if (newLang === 'auto') {
                 appLocale = androidx.core.os.LocaleListCompat.getEmptyLocaleList();
             } else {
-                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang);
+                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang + ',' + actualNewLang.split('_')[0]);
             }
-            DEV_LOG && console.log('appLocale', appLocale);
+            DEV_LOG && console.log('appLocale', appLocale, actualNewLang);
             // Call this on the main thread as it may require Activity.restart()
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
             currentLocale = null;
@@ -77,7 +86,6 @@ function getActualLanguage(language) {
     if (language === 'auto') {
         if (__ANDROID__) {
             // N Device.language reads app config which thus does return locale app language and not device language
-            DEV_LOG && console.log('getActualLanguage', language, java.util.Locale.getDefault().getLanguage(), get($lang));
             language = java.util.Locale.getDefault().getLanguage();
         } else {
             language = Device.language;
@@ -184,17 +192,26 @@ async function internalSelectLanguage() {
     const actions = SUPPORTED_LOCALES;
     const currentLanguage = getString('language', DEFAULT_LOCALE);
     const component = (await import('~/components/common/OptionSelect.svelte')).default;
+    let selectedIndex = -1;
+    const options = [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d, index) => {
+        const selected = currentLanguage === d.data;
+        if (selected) {
+            selectedIndex = index;
+        }
+        return {
+            ...d,
+            boxType: 'circle',
+            type: 'checkbox',
+            value: selected
+        };
+    });
     return showAlertOptionSelect(
         component,
         {
             height: Math.min(actions.length * 56, 400),
             rowHeight: 56,
-            options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
-                ...d,
-                boxType: 'circle',
-                type: 'checkbox',
-                value: currentLanguage === d.data
-            }))
+            selectedIndex,
+            options
         },
         {
             title: lc('select_language')
