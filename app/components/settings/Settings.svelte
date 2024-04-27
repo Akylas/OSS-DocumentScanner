@@ -57,7 +57,7 @@
 
     let items: ObservableArray<any>;
 
-    export let title = $slc('settings.title');
+    export let title = null;
     export let actionBarButtons = [
         { icon: 'mdi-share-variant', id: 'share' },
         { icon: 'mdi-github', id: 'github' }
@@ -1139,7 +1139,7 @@
                 </ListItemAutoSize>
             </Template>
         </collectionview>
-        <CActionBar canGoBack {title}>
+        <CActionBar canGoBack title={title || $slc('settings.title')}>
             {#each actionBarButtons as button}
                 <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
             {/each}
