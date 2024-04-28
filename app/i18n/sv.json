@@ -179,6 +179,7 @@
     "pdf_filename": "filnamn för den exporterade pdf-filen",
     "pdf_saved": "pdf sparad: %1$s",
     "picture_size": "bildstorlek",
+    "please_choose_export_folder_again": "Vänligen välj exportmapp igen för att fixa. Frågan kommer ej att upprepas",
     "portrait": "porträtt",
     "preferences": "preferenser",
     "preview": "förhandsvisning",
