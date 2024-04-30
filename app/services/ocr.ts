@@ -200,7 +200,8 @@ export class OCRService extends Observable {
     }
 
     localizedLanguage(key: string) {
-        return getLocaleDisplayName(key) || languages[key];
+        const result = getLocaleDisplayName(key);
+        return result !== key ? result : languages[key];
     }
 
     addLanguages(...languages) {

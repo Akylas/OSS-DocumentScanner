@@ -114,17 +114,13 @@
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
 <!-- <gesturerootview columns="auto" rows="auto"> -->
-<gesturerootview id="setectOCRLanguage" columns="auto">
+<gesturerootview id="setectOCRLanguage" columns="auto" rows="auto">
     <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} margin={margin || elevation + 2} rows="auto,340" {width}>
-        <!-- <CActionBar title={lc('search')} modalWindow>
-            <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} />
-        </CActionBar> -->
         <textfield
             bind:this={textField}
             floating="false"
             {height}
             hint={lc('search')}
-            padding="3 10 3 10"
             returnKeyType="search"
             row={0}
             text={query}
