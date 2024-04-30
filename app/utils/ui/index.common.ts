@@ -180,8 +180,9 @@ export async function hideLoading() {
     }
     const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
     if (__IOS__ && delta >= 0 && delta < 1000) {
-        setTimeout(() => hideLoading(), 1000 - delta);
-        return;
+        await timeout(1000 - delta);
+        // setTimeout(() => hideLoading(), 1000 - delta);
+        // return;
     }
     showLoadingStartTime = null;
     if (loadingIndicator) {
@@ -234,9 +235,9 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                     try {
                         const start = Date.now();
                         DEV_LOG && console.log('importFromPdf', pdfPath, Date.now() - start, 'ms');
-                        const images = await importPdfToTempImages(pdfPath);
-                        DEV_LOG && console.log('importFromPdf done ', pdfPath, Date.now() - start, 'ms');
-                        resolve(images);
+                        const pdfImages = await importPdfToTempImages(pdfPath);
+                        DEV_LOG && console.log('importFromPdf done ', pdfPath, pdfImages, Date.now() - start, 'ms');
+                        resolve(pdfImages);
                     } catch (error) {
                         reject(error);
                     }
@@ -486,9 +487,9 @@ export async function importAndScanImage(document?: OCRDocument, canGoToView = t
         // }
         //we need to wait a bit or the presenting controller
         // is still the image picker and will mix things up
-        if (__IOS__) {
-            await timeout(500);
-        }
+        // if (__IOS__) {
+        //     await timeout(500);
+        // }
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {

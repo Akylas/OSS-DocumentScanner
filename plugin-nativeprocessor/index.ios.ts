@@ -1,10 +1,10 @@
 import { Color, ImageSource } from '@nativescript/core';
-import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, QRCodeData } from '.';
+import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData } from '.';
 import { CropView } from './CropView';
 
 @NativeClass
-class OCRDelegateDelegateImpl extends NSObject implements OCRDelegate {
-    static ObjCProtocols = [OCRDelegate];
+class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
+    static ObjCProtocols = [CompletionDelegate];
     resolve;
     reject;
     progress;
@@ -22,8 +22,8 @@ class OCRDelegateDelegateImpl extends NSObject implements OCRDelegate {
         this.progress?.(progress);
     }
 
-    static initWithResolveReject(resolve, reject, progress) {
-        const delegate = OCRDelegateDelegateImpl.new() as OCRDelegateDelegateImpl;
+    static initWithResolveReject(resolve, reject, progress?) {
+        const delegate = CompletionDelegateImpl.new() as CompletionDelegateImpl;
         delegate.resolve = resolve;
         delegate.reject = reject;
         delegate.onProgress = progress;
@@ -38,17 +38,13 @@ export async function cropDocument(editingImage: ImageSource, quads, transforms 
             OpencvDocumentProcessDelegate.cropDocumentQuadsDelegateTransforms(
                 editingImage.ios,
                 JSON.stringify(quads),
-                OCRDelegateDelegateImpl.initWithResolveReject(
-                    (nImages) => {
-                        const images = [];
-                        for (let index = 0; index < nImages.count; index++) {
-                            images[index] = nImages.objectAtIndex(index);
-                        }
-                        resolve(images);
-                    },
-                    reject,
-                    null
-                ),
+                CompletionDelegateImpl.initWithResolveReject((nImages) => {
+                    const images = [];
+                    for (let index = 0; index < nImages.count; index++) {
+                        images[index] = nImages.objectAtIndex(index);
+                    }
+                    resolve(images);
+                }, reject),
                 transforms
             );
         } catch (error) {
@@ -61,18 +57,7 @@ export async function cropDocumentFromFile(src: string, quads, options: CropOpti
         try {
             // nImages is a NSArray
             DEV_LOG && console.log('cropDocumentFromFile', src, quads, options);
-            OpencvDocumentProcessDelegate.cropDocumentFromFileQuadsDelegateOptions(
-                src,
-                JSON.stringify(quads),
-                OCRDelegateDelegateImpl.initWithResolveReject(
-                    (result) => {
-                        resolve(result);
-                    },
-                    reject,
-                    null
-                ),
-                JSON.stringify(options)
-            );
+            OpencvDocumentProcessDelegate.cropDocumentFromFileQuadsDelegateOptions(src, JSON.stringify(quads), CompletionDelegateImpl.initWithResolveReject(resolve, reject), JSON.stringify(options));
         } catch (error) {
             reject(error);
         }
@@ -85,7 +70,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
                 editingImage.ios,
                 resizeThreshold,
                 imageRotation,
-                OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, null)
+                CompletionDelegateImpl.initWithResolveReject(resolve, reject)
             );
         } catch (error) {
             reject(error);
@@ -95,7 +80,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
 export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<[number, number][][]> {
     return new Promise((resolve, reject) => {
         try {
-            OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileDelegateOptions(src, OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, null), JSON.stringify(options));
+            OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileDelegateOptions(src, CompletionDelegateImpl.initWithResolveReject(resolve, reject), JSON.stringify(options));
         } catch (error) {
             reject(error);
         }
@@ -177,7 +162,7 @@ export async function ocrDocument(editingImage: ImageSource, options?: Partial<D
             OpencvDocumentProcessDelegate.ocrDocumentOptionsDelegate(
                 editingImage.ios,
                 options ? JSON.stringify(options) : '',
-                OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, onProgress)
+                CompletionDelegateImpl.initWithResolveReject(resolve, reject, onProgress)
             );
         } catch (error) {
             reject(error);
@@ -187,7 +172,7 @@ export async function ocrDocument(editingImage: ImageSource, options?: Partial<D
 export async function ocrDocumentFromFile(src: string, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
     return new Promise<OCRData>((resolve, reject) => {
         try {
-            OpencvDocumentProcessDelegate.ocrDocumentFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', OCRDelegateDelegateImpl.initWithResolveReject(resolve, reject, onProgress));
+            OpencvDocumentProcessDelegate.ocrDocumentFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', CompletionDelegateImpl.initWithResolveReject(resolve, reject, onProgress));
         } catch (error) {
             reject(error);
         }
@@ -319,4 +304,10 @@ class OnAutoScanImpl extends NSObject implements OnAutoScan {
 }
 export function createAutoScanHandler(cropView: CropView, block: (result) => void) {
     return AutoScanHandler.alloc().initWithCropViewOnAutoScan(cropView.nativeViewProtected, OnAutoScanImpl.initWithCallback(block));
+}
+
+export async function importPdfToTempImages(pdfPath: string, options?: Partial<PDFImportOptions>) {
+    return new Promise<string[]>((resolve, reject) => {
+        PDFUtils.importPdfToTempImagesDelegateOptions(pdfPath, CompletionDelegateImpl.initWithResolveReject(resolve, reject), options ? JSON.stringify(options) : '');
+    });
 }

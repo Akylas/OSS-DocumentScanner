@@ -242,31 +242,7 @@ static std::string native_scan_json_mat(JNIEnv *env, Mat &srcBitmapMat, jint shr
         docDetector.options.medianBlurValue = 3;
     }
     std::string options{jstringToString(env, _options)};
-    if (!options.empty()) {
-        jsoncons::json j = jsoncons::json::parse(options);
-
-        if (j.contains("areaScaleMinFactor")) {
-             docDetector.options.areaScaleMinFactor = j["areaScaleMinFactor"].as<double>();
-        }
-        if (j.contains("expectedAreaFactor")) {
-             docDetector.options.expectedAreaFactor = j["expectedAreaFactor"].as<double>();
-        }
-        if (j.contains("expectedMaxCosine")) {
-             docDetector.options.expectedMaxCosine = j["expectedMaxCosine"].as<double>();
-        }
-        if (j.contains("expectedOptimalMaxCosine")) {
-             docDetector.options.expectedOptimalMaxCosine = j["expectedOptimalMaxCosine"].as<double>();
-        }
-        if (j.contains("minDistanceFromBorderFactor")) {
-             docDetector.options.minDistanceFromBorderFactor = j["minDistanceFromBorderFactor"].as<double>();
-        }
-        if (j.contains("contoursApproxEpsilonFactor")) {
-             docDetector.options.contoursApproxEpsilonFactor = j["contoursApproxEpsilonFactor"].as<double>();
-        }
-        if (j.contains("borderSize")) {
-             docDetector.options.borderSize = j["borderSize"].as<double>();
-        }
-    }
+    docDetector.updateOptions(options);
     return docDetector.scanPointToJSON();
 }
 static jstring native_scan_json(JNIEnv *env, jobject type, jobject srcBitmap, jint shrunkImageHeight, jint imageRotation, jdouble scale, jstring options)

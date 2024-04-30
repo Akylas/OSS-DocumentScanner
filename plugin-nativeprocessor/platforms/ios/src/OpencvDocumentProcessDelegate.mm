@@ -205,8 +205,9 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   return image;
 }
 
-+(NSArray*)findDocumentCornersInMat:(cv::Mat)mat  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale {
++(NSArray*)findDocumentCornersInMat:(cv::Mat)mat  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale options:(NSString*)options {
   detector::DocumentDetector docDetector(mat, shrunkImageHeight, (int)imageRotation, (double)scale);
+  docDetector.updateOptions(std::string([options UTF8String]));
   std::vector<std::vector<cv::Point>> scanPointsList = docDetector.scanPoint();
   unsigned long count = scanPointsList.size();
   if (count > 0) {
@@ -224,17 +225,17 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     return nil;
   }
 }
-+(NSArray*)findDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale {
++(NSArray*)findDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale options:(NSString*)options {
   cv::Mat mat;
   UIImageToMat(image, mat);
-  return [self findDocumentCornersInMat:mat shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation scale:scale];
+  return [self findDocumentCornersInMat:mat shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation scale:scale options:options];
 }
 
 // PRAGMA: getJSONDocumentCorners
-+(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate scale:(CGFloat)scale
++(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale options:(NSString*)options
 {
   @try {
-    NSArray* quads = [OpencvDocumentProcessDelegate findDocumentCorners:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation scale:scale];
+    NSArray* quads = [OpencvDocumentProcessDelegate findDocumentCorners:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation scale:scale options:options];
     NSMutableArray* result = [NSMutableArray arrayWithCapacity:[quads count]];
     [quads enumerateObjectsUsingBlock:^(NSArray*  _Nonnull quad, NSUInteger idx, BOOL * _Nonnull stop) {
       // sort by Y
@@ -298,24 +299,24 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     });
   }
 }
-+(void) getJSONDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
++(void) getJSONDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate scale:1.0];
+    [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate scale:1.0 options:nil];
   });
 }
-+(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate options:(NSString*)options
++(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate options:(NSString*)options
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
-    [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate scale:1.0];
+    [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate scale:1.0 options:options];
   });
 }
-+(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<OCRDelegate>)delegate
++(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate
 {
   [self getJSONDocumentCornersFromFile:src shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate options:nil];
 }
-+(void) getJSONDocumentCornersFromFile:(NSString*)src delegate:(id<OCRDelegate>)delegate options:(NSString*)optionsStr
++(void) getJSONDocumentCornersFromFile:(NSString*)src delegate:(id<CompletionDelegate>)delegate options:(NSString*)optionsStr
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
@@ -328,12 +329,12 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     } else {
         scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.width;
     }
-    [self getJSONDocumentCornersSync:image shrunkImageHeight:0 imageRotation:[imageRotation intValue] delegate:delegate scale:scale];
+    [self getJSONDocumentCornersSync:image shrunkImageHeight:0 imageRotation:[imageRotation intValue] delegate:delegate scale:scale options:optionsStr];
   });
 }
 
 // PRAGMA: cropDocument
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat compressQuality:(CGFloat)compressQuality   {
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat compressQuality:(CGFloat)compressQuality   {
   @try {
 //    CFTimeInterval startTime = CACurrentMediaTime();
     NSError *error = nil;
@@ -392,7 +393,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 //          compression_params.push_back(IMWRITE_JPEG_QUALITY);
 //          compression_params.push_back(compressQuality);
 //          cv::imwrite([imagePath UTF8String], dstBitmapMat);
-          [UIImageJPEGRepresentation(MatToUIImage(dstBitmapMat), compressQuality/ 100.0) writeToFile:imagePath options:0 error:&error];
+          [UIImageJPEGRepresentation(MatToUIImage(dstBitmapMat), compressQuality/ 100.0) writeToFile:imagePath options:NSDataWritingAtomic error:&error];
         } else {
           [UIImagePNGRepresentation(MatToUIImage(dstBitmapMat)) writeToFile:imagePath options:NSDataWritingAtomic error:&error];
         }
@@ -431,18 +432,18 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     });
   }
 }
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat   {
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat   {
   [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms saveInFolder:saveInFolder fileName:fileName compressFormat:compressFormat compressQuality:100];
 }
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName   {
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName   {
   [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms saveInFolder:saveInFolder fileName:fileName compressFormat:@"jpg"];
 }
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate  transforms:(NSString*)transforms   {
++(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms   {
   [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms saveInFolder:nil fileName:nil];
 }
 
 // PRAGMA: cropDocumentFromFile
-+(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads delegate:(id<OCRDelegate>)delegate options:(NSString*)optionsStr {
++(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate options:(NSString*)optionsStr {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
     UIImage* image = [ImageUtils readImageFromFile:src options:options];
@@ -451,25 +452,25 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   });
 }
 
-+(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
++(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<CompletionDelegate>)delegate {
   
   [self cropDocumentFromFile:src quads:quads delegate:delegate options:nil];
 }
 
 
 // PRAGMA: cropDocument
-+(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate transforms:(NSString*)transforms{
++(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<CompletionDelegate>)delegate transforms:(NSString*)transforms{
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     [self cropDocumentSync:image quads:quads delegate:delegate transforms:transforms];
   });
 }
-+(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<OCRDelegate>)delegate {
++(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<CompletionDelegate>)delegate {
   [self cropDocument:image quads:quads delegate:delegate transforms:nil];
 }
 
 
 // PRAGMA: ocrDocument
-+(void)ocrDocumentSync:(UIImage*)image options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
++(void)ocrDocumentSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
   @try {
     cv::Mat srcBitmapMat;
     UIImageToMat(image, srcBitmapMat);
@@ -498,12 +499,12 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   }
 }
 
-+(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
++(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     [self ocrDocumentSync:image options:options delegate:delegate];
   });
 }
-+(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<OCRDelegate>)delegate {
++(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
     [self ocrDocumentSync:image options:options delegate:delegate];
@@ -530,7 +531,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     default:
       break;
   }
-  NSArray* points = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0 scale:1.0];
+  NSArray* points = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0 scale:1.0 options:nil];
   if (self.innerAutoScanHandler != nil) {
     [((AutoScanHandler*)self.innerAutoScanHandler) processWithPoints: points];
   }

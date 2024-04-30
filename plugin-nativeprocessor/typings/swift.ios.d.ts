@@ -99,3 +99,19 @@ declare class ImageUtils extends NSObject {
 
     static toJSON(str: string): NSDictionary<any, any>;
 }
+
+interface CompletionDelegate {
+    onCompleteError(result: NSObject, error: NSError): void;
+
+    onProgress(progress: number): void;
+}
+declare var CompletionDelegate: {
+    prototype: CompletionDelegate;
+};
+declare class PDFUtils extends NSObject {
+    static alloc(): PDFUtils; // inherited from NSObject
+
+    static importPdfToTempImagesDelegateOptions(pdfPath: string, delegate: CompletionDelegate, options: string): void;
+
+    static new(): PDFUtils; // inherited from NSObject
+}

@@ -152,7 +152,7 @@ class ImageUtils : NSObject {
   }
   
   static func getImageSize(_ src: String) -> Dictionary<String, Any>? {
-    let url = NSURL.fileURL(withPath: src)
+    let url = NSURL.fileURL(withPath: src.replacingOccurrences(of: "file://", with: ""))
     let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil);
     if (imageSource == nil) {
       // Error loading image
@@ -188,7 +188,7 @@ class ImageUtils : NSObject {
   
   
   static func readImageFromFile(_ src: String, options: NSDictionary?) -> UIImage? {
-    let image = UIImage(contentsOfFile: src)
+    let image = UIImage(contentsOfFile: src.replacingOccurrences(of: "file://", with: ""))
     if let image {
       let size = image.size
       let imageOrientation = image.imageOrientation

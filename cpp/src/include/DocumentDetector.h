@@ -27,6 +27,7 @@ namespace detector {
 
         virtual ~DocumentDetector();
 
+        void updateOptions(std::string options);
 
         vector<vector<cv::Point>> scanPoint();
         vector<vector<cv::Point>> scanPoint(Mat &edged);

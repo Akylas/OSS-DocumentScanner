@@ -1,13 +1,3 @@
-/* eslint-disable no-var */
-interface OCRDelegate {
-    onCompleteError(result: NSObject, error: NSError): void;
-
-    onProgress(progress: number): void;
-}
-declare var OCRDelegate: {
-    prototype: OCRDelegate;
-};
-
 declare class OpencvDocumentProcessDelegate extends NSObject {
     static alloc(): OpencvDocumentProcessDelegate; // inherited from NSObject
 

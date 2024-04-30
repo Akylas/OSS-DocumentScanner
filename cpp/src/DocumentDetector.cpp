@@ -43,6 +43,34 @@ DocumentDetector::~DocumentDetector()
 {
 }
 
+void DocumentDetector::updateOptions(std::string _options) {
+    if (!_options.empty()) {
+        jsoncons::json j = jsoncons::json::parse(_options);
+
+        if (j.contains("areaScaleMinFactor")) {
+             options.areaScaleMinFactor = j["areaScaleMinFactor"].as<double>();
+        }
+        if (j.contains("expectedAreaFactor")) {
+             options.expectedAreaFactor = j["expectedAreaFactor"].as<double>();
+        }
+        if (j.contains("expectedMaxCosine")) {
+             options.expectedMaxCosine = j["expectedMaxCosine"].as<double>();
+        }
+        if (j.contains("expectedOptimalMaxCosine")) {
+             options.expectedOptimalMaxCosine = j["expectedOptimalMaxCosine"].as<double>();
+        }
+        if (j.contains("minDistanceFromBorderFactor")) {
+             options.minDistanceFromBorderFactor = j["minDistanceFromBorderFactor"].as<double>();
+        }
+        if (j.contains("contoursApproxEpsilonFactor")) {
+             options.contoursApproxEpsilonFactor = j["contoursApproxEpsilonFactor"].as<double>();
+        }
+        if (j.contains("borderSize")) {
+             options.borderSize = j["borderSize"].as<double>();
+        }
+    }
+}
+
 void sortPoints(std::vector<cv::Point> &points)
 {
     // sort by Y

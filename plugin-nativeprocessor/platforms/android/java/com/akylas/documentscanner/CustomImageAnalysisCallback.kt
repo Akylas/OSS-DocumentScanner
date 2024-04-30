@@ -932,11 +932,13 @@ constructor(
                     var pdfFileName = getFileName(context, uri)
                     var compressFormat = "jpg"
                     var compressQuality = 100
+                    var scale = 2.0
                     if (options != null) {
                         try {
                             var jsOptions = JSONObject(options)
                             compressFormat = jsOptions.optString("compressFormat", compressFormat)
                             compressQuality = jsOptions.optInt("compressQuality", compressQuality)
+                            scale = jsOptions.optDouble("scale", scale)
                         } catch (ignored: JSONException) {
                         }
                     }
@@ -949,8 +951,8 @@ constructor(
                         for (i in 0 until renderer.getPageCount()) {
                             val page = renderer.openPage(i)
                             renderedPage = Bitmap.createBitmap(
-                                page.width * 2,
-                                page.height * 2,
+                                page.width * scale,
+                                page.height * scale,
                                 Bitmap.Config.ARGB_8888
                             )
                             val canvas = Canvas(renderedPage);
