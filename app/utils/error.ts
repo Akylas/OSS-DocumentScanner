@@ -200,6 +200,7 @@ export async function showError(
         if (!err) {
             return;
         }
+
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const errorType = typeof err;
         const realError = errorType === 'string' ? null : wrapNativeException(err);
@@ -212,8 +213,8 @@ export async function showError(
             showSnack({ message });
             return;
         }
-        const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
-        const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
+        // const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
+        const title = realError?.['title'] || lc('error');
 
         if (realError && reporterEnabled && realError.customErrorConstructorName !== 'PermissionError' && realError.customErrorConstructorName !== 'SilentError') {
             try {
@@ -234,6 +235,7 @@ export async function showError(
                 color: get(colors).colorOnSurfaceVariant as any,
                 html: message.trim()
             }),
+            iosForceClosePresentedViewController: true, //ensure error popup is always showing
             ...alertOptions
         });
     } catch (error) {
