@@ -103,6 +103,11 @@ export function goBack(options?: BackNavigationOptions) {
     if (frame['_executingContext']) {
         return;
     }
+    const backStackEntry = frame.backStack[frame.backStack.length - 1];
+    if (!backStackEntry) {
+        //this could happen if back is pressed too quickly on android
+        return;
+    }
     return sGoBack(options);
 }
 type NavigateFunc = <T>(options: NavigationOptions<T>) => SvelteComponent<T>;
