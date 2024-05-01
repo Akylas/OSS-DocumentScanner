@@ -151,6 +151,9 @@
                 imageSource = null;
             }
             takingPicture = false;
+            if (!previewStarted) {
+                stopPreview(true);
+            }
             hideLoading();
         }
     }
@@ -277,9 +280,12 @@
             }
         }
     }
-    function stopPreview() {
-        if (previewStarted) {
+    function stopPreview(force = false) {
+        if (force || previewStarted) {
             previewStarted = false;
+            if (takingPicture) {
+                return;
+            }
             if (autoScanHandler) {
                 pauseAutoScan();
             }
@@ -343,7 +349,6 @@
                 data.cancel = true;
             } else if (!startOnCam && saveCalled) {
                 data.cancel = true;
-
             }
         });
 
