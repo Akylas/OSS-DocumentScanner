@@ -951,8 +951,8 @@ constructor(
                         for (i in 0 until renderer.getPageCount()) {
                             val page = renderer.openPage(i)
                             renderedPage = Bitmap.createBitmap(
-                                page.width * scale,
-                                page.height * scale,
+                                (page.width * scale).toInt(),
+                                (page.height * scale).toInt(),
                                 Bitmap.Config.ARGB_8888
                             )
                             val canvas = Canvas(renderedPage);

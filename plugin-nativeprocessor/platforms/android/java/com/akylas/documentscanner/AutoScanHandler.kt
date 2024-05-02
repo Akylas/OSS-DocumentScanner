@@ -35,6 +35,7 @@ private val onAutoScan: AutoScanHandler.OnAutoScan? = null
         set(value) {
             field = value
             cropView?.drawFill = !value
+            Log.d(TAG, "AutoScanHandler set enabled:" + value)
             if (!value) {
                 clearAll()
             }
@@ -91,10 +92,7 @@ private val onAutoScan: AutoScanHandler.OnAutoScan? = null
     }
 
     fun process(points: List<List<Point>>?) {
-        if (!enabled) {
-            return
-        }
-        if (points.isNullOrEmpty()) {
+        if (!enabled || points.isNullOrEmpty()) {
             clearAll()
             return
         } else if (currentPoints == null) {
@@ -179,14 +177,12 @@ private val onAutoScan: AutoScanHandler.OnAutoScan? = null
                     e.printStackTrace()
                 }
             }
-            if (enabled && hashMapping.containsValue(hash)) {
-                if (onAutoScan != null) {
-                    val jsonArray = JSONArray(points.map {
-                         listOf(it.x, it.y)
-                    })
-                    val result = jsonArray.toString()
-                    onAutoScan.onAutoScan(result)
-                }
+            if (onAutoScan != null && enabled && hashMapping.containsValue(hash)) {
+                val jsonArray = JSONArray(points.map {
+                        listOf(it.x, it.y)
+                })
+                val result = jsonArray.toString()
+                onAutoScan.onAutoScan(result)
             }
             // done let s clear things up
             autoScanJobs.remove(hash)

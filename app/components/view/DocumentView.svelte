@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
+    import { throttle } from '@nativescript/core/utils';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
@@ -642,8 +643,8 @@
         </collectionview>
 
         <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
-            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={importPages} />
-            <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={() => addPages()} on:longPress={() => addPages(true)} />
+            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(importPages, 500)} />
+            <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
         </stacklayout>
     </gridlayout>
 </page>

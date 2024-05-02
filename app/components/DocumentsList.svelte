@@ -1,5 +1,6 @@
 <script context="module" lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+    import { throttle } from '@nativescript/core/utils';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
@@ -247,6 +248,7 @@
     }
 
     async function importDocument() {
+        DEV_LOG && console.log('importDocument');
         try {
             await importAndScanImage();
         } catch (error) {
@@ -695,8 +697,8 @@
         {/if}
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
-                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={() => onStartCam()} on:longPress={() => onStartCam(true)} />
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={throttle(importDocument, 500)} />
+                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
             </stacklayout>
         {/if}
 
