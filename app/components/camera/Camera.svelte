@@ -6,7 +6,6 @@
     import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce } from '@nativescript/core/utils';
-    import dayjs from 'dayjs';
     import { createAutoScanHandler } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
@@ -377,7 +376,7 @@
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
-                if (cameraOpened && cameraView?.nativeView) {
+                if (cameraOpened && cameraView?.nativeView && autoScanHandler.enabled) {
                     takePicture(true);
                 }
             });
