@@ -1,5 +1,5 @@
 import { request } from '@nativescript-community/perms';
-import { ApplicationSettings, Folder, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, File, Folder, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
@@ -375,17 +375,6 @@ export class DocumentsService extends Observable {
         if (this.started) {
             return;
         }
-        DEV_LOG &&
-            console.log(
-                'DocumentsService',
-                'start test',
-                knownFolders.externalDocuments().path,
-                Folder.exists(knownFolders.externalDocuments().path),
-                knownFolders.documents().path,
-                Folder.exists(knownFolders.documents().path),
-                knownFolders.currentApp().path,
-                Folder.exists(knownFolders.currentApp().path)
-            );
         let rootDataFolder;
         if (__ANDROID__) {
             rootDataFolder = ApplicationSettings.getString('root_data_folder');
@@ -393,7 +382,6 @@ export class DocumentsService extends Observable {
                 rootDataFolder = null;
                 ApplicationSettings.remove('root_data_folder');
             }
-            DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
             if (!rootDataFolder) {
                 rootDataFolder = knownFolders.externalDocuments().path;
                 ApplicationSettings.setString('root_data_folder', rootDataFolder);
@@ -403,8 +391,10 @@ export class DocumentsService extends Observable {
             rootDataFolder = knownFolders.externalDocuments().path;
         }
         this.rootDataFolder = rootDataFolder;
+        DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
         dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
         const filePath = path.join(rootDataFolder, DocumentsService.DB_NAME);
+        DEV_LOG && console.log('DocumentsService', 'dbFileName', filePath, File.exists(filePath));
 
         this.db = new NSQLDatabase(filePath, {
             // for now it breaks
