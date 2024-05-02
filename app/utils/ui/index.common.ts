@@ -24,7 +24,6 @@ import {
     path
 } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
-import * as imagePickerPlugin from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
 import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
@@ -435,7 +434,6 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
 export async function importAndScanImage(document?: OCRDocument, canGoToView = true) {
     await request({ storage: {}, photo: {} });
     // let selection: { files: string[]; ios?; android? };
-    let selection;
     // let editingImage: ImageSource;
     try {
         // if (__ANDROID__) {
@@ -468,14 +466,15 @@ export async function importAndScanImage(document?: OCRDocument, canGoToView = t
             securityService.ignoreNextValidation();
         }
 
-        selection = (
+        const selection = (
             await openFilePicker({
                 mimeTypes: ['image/*', 'application/pdf'],
                 documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
                 multipleSelection: true,
                 pickerMode: 0
             })
-        )?.files.map((s) => ({ path: s }));
+        )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
+            .map((s) => (__ANDROID__ && s.endsWith('.pdf') ? 'file://' + s : s));
         // selection = await imagePickerPlugin
         //     .create({
         //         mediaType: 1,
@@ -494,11 +493,7 @@ export async function importAndScanImage(document?: OCRDocument, canGoToView = t
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {
             showLoading(l('computing'));
-            return await importAndScanImageOrPdfFromUris(
-                selection.map((s) => s.path),
-                document,
-                canGoToView
-            );
+            return await importAndScanImageOrPdfFromUris(selection, document, canGoToView);
         }
     } catch (error) {
         throw error;
