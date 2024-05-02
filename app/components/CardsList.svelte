@@ -1,6 +1,7 @@
 <script lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
+    import { throttle } from '@nativescript/core/utils';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { Img } from '@nativescript-community/ui-image';
     import { LottieView } from '@nativescript-community/ui-lottie';
@@ -9,7 +10,6 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
-    import { throttle } from '@nativescript/core/utils';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -945,8 +945,8 @@
         {/if}
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={importDocument} />
-                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={() => onStartCam()} on:longPress={() => onStartCam(true)} />
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={throttle(importDocument, 500)} />
+                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
             </stacklayout>
         {/if}
 
