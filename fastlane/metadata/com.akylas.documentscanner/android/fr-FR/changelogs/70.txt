@@ -1,0 +1,14 @@
+### Features
+- new setting to choose PNG/JPEG for image format
+- `save to gallery` option for images
+
+### Bug fixes
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Swedish)
+- OCR language selection popover fix
+- another error fix on back button
+- ensure we dont close camera while taking a picture
+- Translated using Weblate (Persian)
+- error while importing pdf on android < 12
+- prevent auto scan to trigger while app is in background
+- fixed potiential issues with system camera
