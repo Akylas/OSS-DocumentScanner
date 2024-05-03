@@ -16,7 +16,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         });
         const options = JSON.stringify({ ...this.options, text_scale: Screen.mainScreen.scale * 1.4, pages });
         DEV_LOG && console.log('PDFExportCanvas', 'export', folder, filename, compress, options);
-        const outputPath = com.akylas.documentscanner.PDFUtils.Companion.generatePDF(Utils.android.getApplicationContext(), folder, filename, options);
+        const outputPath = com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDF(Utils.android.getApplicationContext(), folder, filename, options);
         DEV_LOG && console.log('PDFExportCanvas', 'export done', JSON.stringify(this.options), options.length, Date.now() - start, 'ms');
         return outputPath;
 
@@ -100,7 +100,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         //     if (folder.startsWith('content://')) {
         //         const tempFile2 = knownFolders.temp().getFile('compressed.pdf');
         //         DEV_LOG && console.log('compressPDF', tempFile.path, tempFile2.path);
-        //         com.akylas.documentscanner.PDFUtils.Companion.compressPDF(tempFile.path, tempFile2.path, IMG_COMPRESS);
+        //         com.akylas.documentscanner.utils.PDFUtils.Companion.compressPDF(tempFile.path, tempFile2.path, IMG_COMPRESS);
         //         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(folder));
         //         let outfile = outdocument.createFile('application/pdf', filename);
         //         if (outfile == null) {
@@ -121,7 +121,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         //         }
         //         try {
         //             DEV_LOG && console.log('compressPDF', tempFile.path, outputPath);
-        //             com.akylas.documentscanner.PDFUtils.Companion.compressPDF(tempFile.path, outputPath, IMG_COMPRESS);
+        //             com.akylas.documentscanner.utils.PDFUtils.Companion.compressPDF(tempFile.path, outputPath, IMG_COMPRESS);
         //             DEV_LOG && console.log('PDFExportCanvas', 'export 4', Date.now() - start, 'ms');
         //         } catch (error) {
         //             tempFile.copySync(outputPath);

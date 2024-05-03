@@ -709,6 +709,7 @@ declare namespace com {
 						public static getImageSize(param0: globalAndroid.content.Context, param1: string): number[];
 						public static readBitmapFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions): globalAndroid.graphics.Bitmap;
 						public static readBitmapFromFile(param0: globalAndroid.content.Context, param1: string, param2: string): globalAndroid.graphics.Bitmap;
+						public static saveBitmapToGallery(param0: globalAndroid.content.Context, bitmap: globalAndroid.graphics.Bitmap, exportFormat: string, exportQuality: number, fileName: string);
 						public static calculateInSampleSize(param0: number, param1: number, param2: number, param3: number): number;
 						public static getTargetFormat(param0: string): globalAndroid.graphics.Bitmap.CompressFormat;
 					}
@@ -744,6 +745,22 @@ declare namespace com {
 						public getKeepAspectRatio(): boolean;
 						public setResizeThreshold(param0: number): void;
 						public constructor(param0: string);
+					}
+				}
+				export namespace PDFUtils {
+					export class FunctionCallback extends java.lang.Object {
+						public static class: java.lang.Class<FunctionCallback>;
+						/**
+						 * Constructs a new instance of the com.akylas.documentscanner.CustomImageAnalysisCallback$FunctionCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+						 */
+						public constructor(implementation: { onResult(param0: java.lang.Exception, param1: any): void });
+						public constructor();
+						public onResult(param0: java.lang.Exception, param1: any): void;
+					}
+					export class Companion {
+						static compressPDF(src: string, dst: string, jpegQuality: number);
+						static generatePDF(context: android.content.Context, destFolder: string, fileName: string, options: string);
+						static generatePDFASync(context: android.content.Context, destFolder: string, fileName: string, options: string, callback: FunctionCallback);
 					}
 				}
 			}

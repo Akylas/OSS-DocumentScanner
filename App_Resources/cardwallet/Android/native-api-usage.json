@@ -1,15 +1,11 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "android.graphics:Bitmap.CompressFormat",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
         "com.akylas.documentscanner:Utils",
         "com.akylas.documentscanner:Utils.Companion",
-        "com.akylas.documentscanner:PDFUtils",
-        "com.akylas.documentscanner:PDFUtils.Companion",
-        "com.akylas.documentscanner.utils:ImageUtil",
-        "com.akylas.documentscanner.utils:ImageUtil.Companion",
-        "com.akylas.documentscanner:PDFUtils.FunctionCallback",
         "androidx.appcompat.app:AppCompatDelegate",
         "androidx.core.os:LocaleListCompat",
         "java.nio.file:Files",

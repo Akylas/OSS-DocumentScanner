@@ -10,5 +10,8 @@
         "com.akylas.documentscanner:ImagePicker",
         "com.akylas.documentscanner:ImagePicker.Companion",
         "com.akylas.documentscanner:ImagePicker.OnResult"
+        "com.akylas.documentscanner.utils:PDFUtils",
+        "com.akylas.documentscanner.utils:PDFUtils.FunctionCallback",
+        "com.akylas.documentscanner.utils:PDFUtils.Companion"
     ]
 }

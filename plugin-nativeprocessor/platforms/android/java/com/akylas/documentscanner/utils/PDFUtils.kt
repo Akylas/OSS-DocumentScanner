@@ -1,4 +1,4 @@
-package com.akylas.documentscanner
+package com.akylas.documentscanner.utils
 
 import android.content.Context
 import android.graphics.Bitmap

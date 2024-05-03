@@ -31,12 +31,12 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
             });
             const options = JSON.stringify({ ...pdfCanvas.options, text_scale: Screen.mainScreen.scale * 1.4, pages });
             DEV_LOG && console.log('exportPDFAsync', folder, filename, compress, options);
-            com.akylas.documentscanner.PDFUtils.Companion.generatePDFASync(
+            com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(
                 Utils.android.getApplicationContext(),
                 folder,
                 filename,
                 options,
-                new com.akylas.documentscanner.PDFUtils.FunctionCallback({
+                new com.akylas.documentscanner.utils.PDFUtils.FunctionCallback({
                     onResult(e, result) {
                         if (e) {
                             if (/could not create file/.test(e.toString())) {
