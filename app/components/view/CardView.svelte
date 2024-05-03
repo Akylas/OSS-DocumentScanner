@@ -183,9 +183,9 @@
         }
     }
 
-    async function importDocument() {
+    async function importDocument(importPDFs = true) {
         try {
-            await importAndScanImage(document, false);
+            await importAndScanImage(document, importPDFs, false);
         } catch (error) {
             showError(error);
         }
@@ -665,7 +665,10 @@
                 type="worm"
                 verticalAlignment="bottom" />
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(importDocument, 500)} />
+                {#if __IOS__}
+                    <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
+                {/if}
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(() => importDocument(), 500)} />
                 <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
             </stacklayout>
         </gridlayout>

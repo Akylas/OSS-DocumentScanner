@@ -29,6 +29,7 @@ import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocument
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
+import * as imagePickerPlugin from '@nativescript/imagepicker';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
@@ -431,64 +432,46 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         hideLoading();
     }
 }
-export async function importAndScanImage(document?: OCRDocument, canGoToView = true) {
+export async function importAndScanImage(document?: OCRDocument, importPDFs = false, canGoToView = true) {
     await request({ storage: {}, photo: {} });
     // let selection: { files: string[]; ios?; android? };
     // let editingImage: ImageSource;
     try {
-        // if (__ANDROID__) {
-        //     // selection = (
-        //     //     await openFilePicker({
-        //     //         mimeTypes: ['image/*'],
-        //     //         documentTypes: __IOS__ ? [UTTypeImage.identifier] : undefined,
-        //     //         multipleSelection: true,
-        //     //         pickerMode: 0
-        //     //     })
-        //     // )?.files;
-        //     await new Promise((resolve, reject) => {
-        //         com.akylas.documentscanner.ImagePicker.Companion.pickImagesVideos(
-        //             Application.android.startActivity,
-        //             new com.akylas.documentscanner.ImagePicker.OnResult({
-        //                 onResult: (err, result) => {
-        //                     if (err) {
-        //                         reject(err);
-        //                     } else {
-        //                         resolve(result);
-        //                     }
-        //                 }
-        //             }),
-        //             ''
-        //         );
-        //     });
-        // } else {
         if (__ANDROID__) {
             // on android a background event will trigger while picking a file
             securityService.ignoreNextValidation();
         }
+        let selection: string[];
+        if (__IOS__ && !importPDFs) {
+            try {
+                const data = await imagePickerPlugin
+                    .create({
+                        mediaType: 1,
+                        mode: 'multiple' // use "multiple" for multiple selection
+                    })
+                    .present();
+                selection = data.map((d) => d.path);
+            } catch (error) {
+                selection = null;
+            }
 
-        const selection = (
-            await openFilePicker({
-                mimeTypes: ['image/*', 'application/pdf'],
-                documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
-                multipleSelection: true,
-                pickerMode: 0
-            })
-        )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
-            .map((s) => (__ANDROID__ && s.endsWith('.pdf') ? 'file://' + s : s));
-        // selection = await imagePickerPlugin
-        //     .create({
-        //         mediaType: 1,
-        //         mode: 'multiple' // use "multiple" for multiple selection
-        //     })
-        //     // on android pressing the back button will trigger an error which we dont want
-        //     .present()
-        //     .catch((err) => null);
-        // }
-        //we need to wait a bit or the presenting controller
-        // is still the image picker and will mix things up
-        // if (__IOS__) {
-        //     await timeout(500);
-        // }
+            // we need to wait a bit or the presenting controller
+            // is still the image picker and will mix things up
+            if (__IOS__) {
+                await timeout(500);
+            }
+        } else {
+            selection = (
+                await openFilePicker({
+                    mimeTypes: ['image/*', 'application/pdf'],
+                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
+                    multipleSelection: true,
+                    pickerMode: 0
+                })
+            )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
+                .map((s) => (__ANDROID__ && s.endsWith('.pdf') ? 'file://' + s : s));
+        }
+
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length) {

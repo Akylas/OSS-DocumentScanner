@@ -118,9 +118,9 @@
         }
     }
 
-    async function importPages() {
+    async function importPages(importPDFs = true) {
         try {
-            await importAndScanImage(document, false);
+            await importAndScanImage(document, importPDFs, false);
         } catch (error) {
             showError(error);
         }
@@ -643,7 +643,10 @@
         </collectionview>
 
         <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
-            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(importPages, 500)} />
+            {#if __IOS__}
+                <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
+            {/if}
+            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
             <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
         </stacklayout>
     </gridlayout>
