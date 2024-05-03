@@ -854,7 +854,7 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
             { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
             { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
-            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
         ] as any)
     );
     return showPopoverMenu({
@@ -1411,7 +1411,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
         throw new PermissionError(lc('camera_permission_needed'));
     }
     DEV_LOG && console.log('importImageFromCamera', useSystemCamera, inverseUseSystemCamera);
-    if (__ANDROID__ ? (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera) : useSystemCamera) {
+    if (__ANDROID__ && (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera)) {
         const resultImagePath = await new Promise<string>((resolve, reject) => {
             const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -1428,7 +1428,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
 
             takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, tempPictureUri);
             takePictureIntent.putExtra('android.intent.extras.CAMERA_FACING', 0);
-
+            let resolved = false;
             // if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
             const REQUEST_IMAGE_CAPTURE = 3453;
             function onActivityResult(args) {
@@ -1438,7 +1438,13 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
                 if (requestCode === REQUEST_IMAGE_CAPTURE) {
                     Application.android.off(Application.android.activityResultEvent, onActivityResult);
                     if (resultCode === android.app.Activity.RESULT_OK) {
-                        resolve(picturePath);
+                        DEV_LOG && console.log('startActivityForResult got image', picturePath);
+                        if (!resolved) {
+                            resolved = true;
+                            resolve(picturePath);
+                        } else {
+                            DEV_LOG && console.warn('startActivityForResult got another image!', picturePath);
+                        }
                     } else if (resultCode === android.app.Activity.RESULT_CANCELED) {
                         // User cancelled the image capture
                         reject();
@@ -1448,6 +1454,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
             Application.android.on(Application.android.activityResultEvent, onActivityResult);
             // on android a background event will trigger while picking a file
             securityService.ignoreNextValidation();
+            DEV_LOG && console.log('startActivityForResult REQUEST_IMAGE_CAPTURE');
             Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             // } else {
             //     reject(new Error('camera_intent_not_supported'));
