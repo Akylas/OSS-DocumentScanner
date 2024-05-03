@@ -947,9 +947,9 @@
         {#if showActionButton}
             <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
                 {#if __IOS__}
-                    <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
+                    <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus" on:tap={throttle(()=>importDocument(), 500)} />
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(() => importDocument(), 500)} />
                 <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
             </stacklayout>
         {/if}
