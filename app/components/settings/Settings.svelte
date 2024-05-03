@@ -27,6 +27,8 @@
         DOCUMENT_NOT_DETECTED_MARGIN,
         FILENAME_DATE_FORMAT,
         FILENAME_USE_DOCUMENT_NAME,
+        IMG_COMPRESS,
+        IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         USE_SYSTEM_CAMERA
     } from '~/models/constants';
@@ -196,6 +198,34 @@
                         full_description: lc('auto_scan_delay_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY),
                         type: 'prompt'
+                    }
+                ];
+            case 'images':
+                return [
+                    {
+                        id: 'setting',
+                        key: 'image_export_format',
+                        title: lc('image_export_format'),
+                        currentValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT),
+                        description: lc('image_export_format_desc'),
+                        rightValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT).toUpperCase(),
+                        valueType:'string',
+                        values: [
+                            { value: 'jpg', title: 'JPEG' },
+                            { value: 'png', title: 'PNG' }
+                        ]
+                    },
+                    {
+                        id: 'setting',
+                        key: 'image_export_quality',
+                        min: 10,
+                        max: 100,
+                        step: 1,
+                        title: lc('image_export_quality'),
+                        description: lc('image_export_quality_desc'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS),
+                        currentValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS)
                     }
                 ];
             case 'pdf':
@@ -588,6 +618,15 @@
                 ] as any)
                 .concat([
                     {
+                        id: 'sub_settings',
+                        icon: 'mdi-image',
+                        title: lc('image_export'),
+                        description: lc('image_export_settings'),
+                        options: () => getSubSettings('images')
+                    }
+                ] as any)
+                .concat([
+                    {
                         type: 'sectionheader',
                         title: lc('sync')
                     },
@@ -907,7 +946,6 @@
                             updateItem(item);
                         }
                     } else if (item.type === 'slider') {
-                        DEV_LOG && console.log('HANDLING SLIDER SETTING', item);
                         await showSliderPopover({
                             anchor: event.object,
                             value: item.currentValue(),

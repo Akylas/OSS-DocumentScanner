@@ -730,7 +730,10 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
 async function exportImage(pages: OCRPage[], exportDirectory: string) {
     const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
     const imagePaths = sortedPages.map((page) => page.imagePath);
-    const canSetName = imagePaths.length === 1;
+
+    const exportFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+    const exportQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+    const canSetName = !toGallery && imagePaths.length === 1;
     let outputImageNames = [];
     if (canSetName) {
         const result = await prompt({
@@ -799,11 +802,15 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
                             }
                         }
                         const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
-                        (imageSource.android as android.graphics.Bitmap).compress(android.graphics.Bitmap.CompressFormat.JPEG, IMG_COMPRESS, stream);
+                        (imageSource.android as android.graphics.Bitmap).compress(
+                            exportFormat === 'png' ? android.graphics.Bitmap.CompressFormat.PNG : android.graphics.Bitmap.CompressFormat.JPEG,
+                            exportQuality,
+                            stream
+                        );
                         // destinationPaths.push(outfile.getUri().toString());
                     } else {
                         const destinationPath = path.join(exportDirectory, destinationName);
-                        await imageSource.saveToFileAsync(destinationPath, IMG_FORMAT, IMG_COMPRESS);
+                        await imageSource.saveToFileAsync(destinationPath, exportFormat, exportQuality);
                         // destinationPaths.push(destinationPath);
                         if (!finalMessagePart) {
                             if (canSetName) {
