@@ -23,7 +23,7 @@ import {
     knownFolders,
     path
 } from '@nativescript/core';
-import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
+import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl, wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
 import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
@@ -58,7 +58,7 @@ import { share } from '~/utils/share';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
-import { getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
+import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
 import { Label } from '@nativescript-community/ui-label';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
@@ -727,7 +727,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
     });
 }
 
-async function exportImage(pages: OCRPage[], exportDirectory: string) {
+async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery = false) {
     const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
     const imagePaths = sortedPages.map((page) => page.imagePath);
 
@@ -739,7 +739,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
         const result = await prompt({
             okButtonText: lc('ok'),
             cancelButtonText: lc('cancel'),
-            defaultText: getFileNameForDocument() + '.' + IMG_FORMAT,
+            defaultText: getFileNameForDocument() + '.' + exportFormat,
             hintText: lc('image_filename'),
             view: createView(Label, {
                 padding: '10 20 0 20',
@@ -753,14 +753,14 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
         }
         outputImageNames.push(result.text);
     } else {
-        outputImageNames = sortedPages.map((page) => page.createdDate).map((value) => getFormatedDateForFilename(value));
+        outputImageNames = sortedPages.map((page) => (page.name ? cleanFilename(page.name) : getFormatedDateForFilename(page.createdDate)));
         // find duplicates and rename if any
         let lastName;
         let renameDelta = 1;
         for (let index = 0; index < outputImageNames.length; index++) {
             const name = outputImageNames[index];
             if (name === lastName) {
-                outputImageNames[index] = name + '_' + (renameDelta++ + '').padStart(2, '0');
+                outputImageNames[index] = name + '_' + (renameDelta++ + '').padStart(3, '0');
                 // we dont reset lastName so that we compare to the first one found
             } else {
                 lastName = name;
@@ -768,7 +768,7 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             }
         }
     }
-    DEV_LOG && console.log('exporting images', outputImageNames);
+    DEV_LOG && console.log('exporting images', exportFormat, exportQuality, outputImageNames);
     showLoading(l('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
@@ -778,13 +778,16 @@ async function exportImage(pages: OCRPage[], exportDirectory: string) {
             new Promise<void>(async (resolve, reject) => {
                 let imageSource: ImageSource;
                 try {
-                    let destinationName = outputImageNames[index];
-                    if (!destinationName.endsWith(IMG_FORMAT)) {
-                        destinationName += '.' + IMG_FORMAT;
+                    const fileName = outputImageNames[index];
+                    let destinationName = fileName;
+                    if (!destinationName.endsWith(exportFormat)) {
+                        destinationName += '.' + exportFormat;
                     }
                     // const imageSource = await ImageSource.fromFile(imagePath);
                     imageSource = await getTransformedImage(page);
-                    if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+                    if (__ANDROID__ && toGallery) {
+                        com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(Utils.android.getApplicationContext(), imageSource.android, exportFormat, exportQuality, fileName);
+                    } else if (__ANDROID__ && exportDirectory.startsWith('content://')) {
                         const context = Utils.android.getApplicationContext();
                         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
                         let outfile = outdocument.createFile('image/jpeg', destinationName);
@@ -849,8 +852,9 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
 
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
+            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
+            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
-            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined }
         ] as any)
     );
     return showPopoverMenu({
@@ -924,7 +928,12 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
                         break;
                     case 'export': {
                         await closePopover();
-                        await exportImage(pages, exportDirectory);
+                        await exportImages(pages, exportDirectory);
+                        break;
+                    }
+                    case 'save_gallery': {
+                        await closePopover();
+                        await exportImages(pages, exportDirectory, true);
                         break;
                     }
                 }

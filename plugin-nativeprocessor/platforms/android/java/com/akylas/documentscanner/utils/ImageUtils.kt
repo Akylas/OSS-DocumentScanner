@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.exifinterface.media.ExifInterface
+import android.provider.MediaStore.Images
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.FileDescriptor
@@ -403,6 +404,43 @@ class ImageUtil {
 
         fun readBitmapFromFile(context: Context, src: String, opts: String?): Bitmap? {
             return readBitmapFromFile(context, src, LoadImageOptions(opts), null)
+        }
+
+        fun saveBitmapToGallery(context: Context, bitmap: Bitmap, exportFormat:String, exportQuality: Int, fileName: String) {
+            val values = android.content.ContentValues()
+            values.put(Images.Media.TITLE, fileName)
+            values.put(Images.Media.DISPLAY_NAME, fileName)
+            // values.put('description', description)
+            values.put(Images.Media.MIME_TYPE, "image/" + if (exportFormat == "png")  exportFormat  else "jpeg")
+            // Add the date meta data to ensure the image is added at the front of the gallery
+            values.put(Images.Media.DATE_ADDED, System.currentTimeMillis()/ 1000)
+            values.put(Images.Media.DATE_TAKEN, System.currentTimeMillis())
+
+            var url: Uri? = null;
+            val cr = context.getContentResolver();
+            try {
+                url = cr.insert(Images.Media.EXTERNAL_CONTENT_URI, values);
+
+                if (url != null && bitmap != null) {
+                    val imageOut = cr.openOutputStream(url);
+                    try {
+                        bitmap.compress(
+                            if (exportFormat == "png")  android.graphics.Bitmap.CompressFormat.PNG else android.graphics.Bitmap.CompressFormat.JPEG,
+                            exportQuality,
+                            imageOut!!
+                        );
+                    } finally {
+                        imageOut?.close();
+                    }
+                } else if (url != null) {
+                    cr.delete(url, null, null);
+                }
+            } catch (e: Exception) {
+                if (url != null) {
+                    cr.delete(url, null, null);
+                }
+                throw (e);
+            }
         }
     }
 }
