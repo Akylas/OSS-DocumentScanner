@@ -53,7 +53,7 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" tools:replace="android:resource" />
         </provider>
-        <meta-data android:name="io.sentry.anr.enable" android:value="false" />
+        <meta-data android:name="io.sentry.anr.enable" android:value="true" />
         <meta-data android:name="io.sentry.breadcrumbs.activity-lifecycle" android:value="false" />
         <meta-data android:name="io.sentry.breadcrumbs.app-lifecycle" android:value="false" />
         <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />
