@@ -508,6 +508,7 @@
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
     });
     onDestroy(() => {
+        DEV_LOG && console.log('DocumentEdit on Destroy');
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
