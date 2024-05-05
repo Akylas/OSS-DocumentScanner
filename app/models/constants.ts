@@ -16,6 +16,7 @@ export const QRCODE_RESIZE_THRESHOLD = 900;
 export const DOCUMENT_NOT_DETECTED_MARGIN = 10;
 export const USE_SYSTEM_CAMERA = false;
 export const CROP_ENABLED = true;
+export const MAGNIFIER_SENSITIVITY = 0.8;
 export const AUTO_SCAN_ENABLED = true;
 export const FILENAME_USE_DOCUMENT_NAME = true;
 export const FILENAME_DATE_FORMAT = 'timestamp';

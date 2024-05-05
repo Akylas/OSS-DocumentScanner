@@ -21,6 +21,7 @@
 
     let canvasView: NativeViewElementNode<CanvasView>;
     let prevTouchPoint;
+    let startTouchPoint;
     let drawingRatio: number;
     const shaderMatrix: Matrix = new Matrix();
     const currentImageMatrix: Matrix = new Matrix();
@@ -106,6 +107,7 @@
         switch (event.action) {
             case 'down': {
                 prevTouchPoint = [x, y];
+                startTouchPoint = getMatrixMappedPoint(inversedCurrentMatrix, prevTouchPoint);
                 const result = getQuadAndCornerClosestToPoint(x, y);
                 if (result) {
                     closestQuadIndex = result[0];
@@ -212,6 +214,7 @@
                 drawingRatio = w / width;
                 cy += (h - w / imageRatio) / 2;
             }
+            // DEV_LOG && console.log('updateMatrix', w, h, cx, cy, width, height, imageRatio, canvasRatio);
             currentImageMatrix.reset();
             currentCropMatrix.reset();
             // if (needRotation) {
@@ -232,32 +235,40 @@
             console.error(error);
         }
     }, 1);
-    function drawZoomGlass(canvas: Canvas, point: [number, number]) {
+    function drawZoomGlass(canvas: Canvas, point: [number, number], mappedPoint: [number, number]) {
+        // we are working in image coords
         //find where to draw the zoom glass
-        const drawingPosition = point;
-        // if (distance(prevTouchPoint[0], prevTouchPoint[1], point[0], point[1]) <= ZOOOM_GLASS_SIZE) {
-        // if (prevTouchPoint[1] > ZOOOM_GLASS_SIZE + 20) {
-        //     drawingPosition[1] = 10 + ZOOOM_GLASS_SIZE / 2;
-        // } else {
-        // }
-        // if (prevTouchPoint[0] < ZOOOM_GLASS_SIZE + 20) {
-        //     drawingPosition[0] = canvas.getWidth() - 10 - ZOOOM_GLASS_SIZE / 2;
-        // } else {
-        //     drawingPosition[0] = 10 + ZOOOM_GLASS_SIZE / 2;
-        // }
-        // }
+        const [w, h] = getMatrixMappedPoint(inversedCurrentMatrix, [canvas.getWidth() - padding, 0]);
+        const glassSize = ZOOOM_GLASS_SIZE / drawingRatio;
+        const glassDecale = padding + 10 + glassSize;
+        // find furtherst corner
+        // const drawingPosition = point;
+        const drawingPosition = [glassDecale, glassDecale];
+        if (startTouchPoint[0] <= 2 * glassDecale + 20 && startTouchPoint[1] <= 2 * glassDecale + 20) {
+            drawingPosition[0] = w - glassDecale;
+            if (distance(point[0], point[1], drawingPosition[0], drawingPosition[1]) <= glassSize) {
+                drawingPosition[0] = glassDecale;
+            }
+        } else {
+            if (distance(point[0], point[1], drawingPosition[0], drawingPosition[1]) <= glassSize) {
+                drawingPosition[0] = w - glassDecale;
+            }
+        }
         shaderMatrix.reset();
         shaderMatrix.postScale(zoomImageScale, zoomImageScale, 0, 0);
         shaderMatrix.postScale(2, 2, point[0], point[1]);
         zoomImageShader.setLocalMatrix(shaderMatrix);
-        canvas.drawCircle(drawingPosition[0], drawingPosition[1], ZOOOM_GLASS_SIZE / drawingRatio, shaderPaint);
-        canvas.drawCircle(drawingPosition[0], drawingPosition[1], ZOOOM_GLASS_SIZE / drawingRatio, cornersPaint);
+
+        canvas.translate(drawingPosition[0] - point[0], drawingPosition[1] - point[1]);
+        canvas.drawCircle(point[0], point[1], glassSize, shaderPaint);
+        canvas.drawCircle(point[0], point[1], glassSize, cornersPaint);
         cornersPaint.strokeWidth = 1 / drawingRatio;
         const arrowWidth = 10 / drawingRatio;
-        canvas.drawLine(drawingPosition[0] - arrowWidth, drawingPosition[1], drawingPosition[0] + arrowWidth, point[1], cornersPaint);
-        canvas.drawLine(drawingPosition[0], drawingPosition[1] - arrowWidth, drawingPosition[0], drawingPosition[1] + arrowWidth, cornersPaint);
+        canvas.drawLine(point[0] - arrowWidth, point[1], point[0] + arrowWidth, point[1], cornersPaint);
+        canvas.drawLine(point[0], point[1] - arrowWidth, point[0], point[1] + arrowWidth, cornersPaint);
     }
     function onCanvasDraw({ canvas }: { canvas: Canvas }) {
+        // DEV_LOG && console.log('onCanvasDraw', canvas.getWidth(), canvas.getHeight(), drawingRatio);
         if (!drawingRatio) {
             return;
         }
@@ -294,7 +305,7 @@
                     // }
                 }
                 if (closestQuadIndex === index) {
-                    drawZoomGlass(canvas, corners[closestCornerQuadIndex]);
+                    drawZoomGlass(canvas, corners[closestCornerQuadIndex], mappedQuads[index][closestCornerQuadIndex]);
                 }
             }
         }
