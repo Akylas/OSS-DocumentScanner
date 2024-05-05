@@ -219,7 +219,6 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith('content://')) {
                     testStr = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getFileName(Utils.android.getApplicationContext(), e);
-                    DEV_LOG && console.log('getFilename', e, testStr);
                 }
                 return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
             },

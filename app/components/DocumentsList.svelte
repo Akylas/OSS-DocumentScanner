@@ -205,9 +205,9 @@
         DEV_LOG && console.log('DocumentList', 'onMount');
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
-            const intent = Application.android['startIntent'];
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.on(Application.android.activityNewIntentEvent, onAndroidNewItent);
+            const intent = Application.android['startIntent'];
             if (intent) {
                 onAndroidNewItent({ intent } as any);
             }
@@ -338,12 +338,13 @@
                 unselectAll();
             }
         });
-    async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
+    const onAndroidNewItent = throttle(async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
         if (__ANDROID__) {
             try {
                 const uris = [];
                 const intent = event.intent as android.content.Intent;
-                switch (intent.getAction()) {
+                const action = intent.getAction();
+                switch (action) {
                     case 'android.intent.action.SEND':
                         const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
                         if (imageUri) {
@@ -358,6 +359,7 @@
                             }
                         }
                 }
+                DEV_LOG && console.log('onAndroidNewItent', action, uris);
                 if (uris.length) {
                     await importAndScanImageOrPdfFromUris(uris);
                 }
@@ -365,7 +367,7 @@
                 showError(error);
             }
         }
-    }
+    }, 500);
     async function fullscreenSelectedDocuments() {
         const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
         navigate({
