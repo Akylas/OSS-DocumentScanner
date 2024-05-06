@@ -29,6 +29,7 @@
         FILENAME_USE_DOCUMENT_NAME,
         IMG_COMPRESS,
         IMG_FORMAT,
+        MAGNIFIER_SENSITIVITY,
         PREVIEW_RESIZE_THRESHOLD,
         USE_SYSTEM_CAMERA
     } from '~/models/constants';
@@ -165,6 +166,20 @@
                         full_description: lc('document_not_detected_margin_desc'),
                         rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
                         type: 'prompt'
+                    },
+                    {
+                        id: 'setting',
+                        key: 'magnifier_sensitivity',
+                        min: 10,
+                        max: 100,
+                        step: 1,
+                        formatter: (value) => value / 100,
+                        transformValue: (value, item) => value / 100,
+                        title: lc('magnifier_sensitivity'),
+                        description: lc('magnifier_sensitivity_desc'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY),
+                        currentValue: () => ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY) * 100
                     }
                 ];
             case 'autoscan':
@@ -209,7 +224,7 @@
                         currentValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT),
                         description: lc('image_export_format_desc'),
                         rightValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT).toUpperCase(),
-                        valueType:'string',
+                        valueType: 'string',
                         values: [
                             { value: 'jpg', title: 'JPEG' },
                             { value: 'png', title: 'PNG' }
@@ -952,7 +967,7 @@
                             ...item,
                             onChange(value) {
                                 if (item.transformValue) {
-                                    value = item.transformValue(value);
+                                    value = item.transformValue(value, item);
                                 } else {
                                     value = Math.round(value / item.step) * item.step;
                                 }

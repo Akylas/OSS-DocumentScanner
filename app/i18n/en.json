@@ -151,6 +151,8 @@
     "list": "list",
     "list_used_third_parties": "list used third parties",
     "loading": "loading",
+    "magnifier_sensitivity": "magnifier sensitivity",
+    "magnifier_sensitivity_desc": "change the sensitivity of the magnifying glass while changing the crop zone",
     "move_data": "move data?",
     "move_data_desc": "all your app data will be moved and an app restart will be enforced at the end",
     "moving_files": "moving files",

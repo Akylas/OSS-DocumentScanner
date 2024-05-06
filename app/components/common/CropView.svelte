@@ -1,12 +1,12 @@
 <script context="module" lang="ts">
     import { debounce } from '@nativescript/core/utils';
     import { BitmapShader, Canvas, CanvasView, Matrix, Paint, Style, TileMode } from '@nativescript-community/ui-canvas';
-    import { ImageSource, Screen, TouchGestureEventData, Utils } from '@nativescript/core';
+    import { ApplicationSettings, ImageSource, Screen, TouchGestureEventData, Utils } from '@nativescript/core';
     import { QRCodeData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { colors } from '~/variables';
     import { loadImage, recycleImages } from '~/utils/images';
-    import { IMAGE_DECODE_HEIGHT } from '~/models/constants';
+    import { IMAGE_DECODE_HEIGHT, MAGNIFIER_SENSITIVITY } from '~/models/constants';
     import { onDestroy } from 'svelte';
     import RotableImageView from './RotableImageView.svelte';
     const padding = 20;
@@ -78,7 +78,7 @@
     }
 
     function distance(x1, y1, x2, y2) {
-        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        return Math.hypot(x2 - x1, y2 - y1);
     }
     function getQuadAndCornerClosestToPoint(x, y) {
         // first we need to get the point coordinates back
@@ -101,6 +101,7 @@
             return [minIndex, minCorner];
         }
     }
+    const sensitivityFactor = ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY);
     function onTouch(event: TouchGestureEventData) {
         const x = event.getX();
         const y = event.getY();
@@ -127,8 +128,8 @@
             case 'move': {
                 if (closestCornerQuadIndex !== -1) {
                     const quad = mappedQuads[closestQuadIndex];
-                    const touchMoveXDistance = x - prevTouchPoint[0];
-                    const touchMoveYDistance = y - prevTouchPoint[1];
+                    const touchMoveXDistance = (x - prevTouchPoint[0]) * sensitivityFactor;
+                    const touchMoveYDistance = (y - prevTouchPoint[1]) * sensitivityFactor;
 
                     const newX = Math.round(quad[closestCornerQuadIndex][0] + touchMoveXDistance);
                     const newY = Math.round(quad[closestCornerQuadIndex][1] + touchMoveYDistance);
