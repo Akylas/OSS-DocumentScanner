@@ -1,0 +1,7 @@
+### Features
+- reduced and allow to change crop magnifier sensitivity
+
+### Bug fixes
+- prevent error while importing images from another app
+- magnifier now always visible
+- prevent error while importing PDF on android >= 12
