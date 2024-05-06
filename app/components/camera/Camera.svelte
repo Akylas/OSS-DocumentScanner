@@ -142,18 +142,12 @@
                 pagesToAdd
             });
         } catch (err) {
-            console.error(err, err.stack);
-            showError(err);
+            throw err;
         } finally {
             if (imageSource) {
                 recycleImages(imageSource);
                 imageSource = null;
             }
-            takingPicture = false;
-            if (!previewStarted) {
-                stopPreview(true);
-            }
-            hideLoading();
         }
     }
 
@@ -187,7 +181,6 @@
                 maxHeight: 4500
             });
             const didAdd = await processAndAddImage(image, autoScan);
-            DEV_LOG && console.log('takePicture done', image, didAdd);
             if (didAdd) {
                 nbPages = pagesToAdd.length;
                 const lastPage = pagesToAdd[pagesToAdd.length - 1];
@@ -196,6 +189,7 @@
                     await saveCurrentDocument();
                 }
             }
+            DEV_LOG && console.log('takePicture done', image, didAdd);
         } catch (err) {
             // we can get a native error here
             showError(wrapNativeException(err));
@@ -203,6 +197,9 @@
             takingPicture = false;
             if (autoScanHandler) {
                 resumeAutoScan();
+            }
+            if (!previewStarted) {
+                stopPreview(true);
             }
             hideLoading();
         }
@@ -280,6 +277,7 @@
         }
     }
     function stopPreview(force = false) {
+        DEV_LOG && console.log('stopPreview', force, previewStarted, takingPicture);
         if (force || previewStarted) {
             previewStarted = false;
             if (takingPicture) {
@@ -317,23 +315,24 @@
             return;
         }
         saveCalled = true;
-        const newDocument = !document;
+        let theDocument = document;
+        const newDocument = !theDocument;
         try {
-            DEV_LOG && console.log('saveCurrentDocument', newDocument, !!document);
-            if (!document) {
-                document = await OCRDocument.createDocument(pagesToAdd);
+            DEV_LOG && console.log('saveCurrentDocument', newDocument, !!theDocument);
+            if (!theDocument) {
+                theDocument = document = await OCRDocument.createDocument(pagesToAdd);
                 if (startOnCam) {
-                    await goToDocumentView(document);
+                    await goToDocumentView(theDocument);
                 } else {
                     // we should already be in edit so closing should go back there
                 }
             } else {
-                await document.addPages(pagesToAdd);
-                await document.save({}, false);
+                await theDocument.addPages(pagesToAdd);
+                await theDocument.save({}, false);
             }
-            if (document) {
+            if (theDocument) {
                 if (!startOnCam) {
-                    closeModal(document);
+                    closeModal(theDocument);
                 }
             }
         } catch (error) {
@@ -346,7 +345,7 @@
             if (editing) {
                 toggleEditing();
                 data.cancel = true;
-            } else if (!startOnCam && saveCalled) {
+            } else if (!startOnCam && takingPicture) {
                 data.cancel = true;
             }
         });

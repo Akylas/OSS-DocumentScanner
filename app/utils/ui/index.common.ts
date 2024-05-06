@@ -468,7 +468,7 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
                     pickerMode: 0
                 })
             )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
-                .map((s) => (__ANDROID__ && s.endsWith('.pdf') ? 'file://' + s : s));
+                .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith('content://') && s.endsWith('.pdf') ? 'file://' + s : s));
         }
 
         // }
