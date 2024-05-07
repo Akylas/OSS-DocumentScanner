@@ -207,7 +207,9 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 +(NSArray*)findDocumentCornersInMat:(cv::Mat)mat  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale options:(NSString*)options {
   detector::DocumentDetector docDetector(mat, shrunkImageHeight, (int)imageRotation, (double)scale);
-  docDetector.updateOptions(std::string([options UTF8String]));
+  if (options != nil) {
+    docDetector.updateOptions(std::string([options UTF8String]));
+  }
   std::vector<std::vector<cv::Point>> scanPointsList = docDetector.scanPoint();
   unsigned long count = scanPointsList.size();
   if (count > 0) {
