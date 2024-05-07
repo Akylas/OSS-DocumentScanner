@@ -456,9 +456,9 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
 
             // we need to wait a bit or the presenting controller
             // is still the image picker and will mix things up
-            if (__IOS__) {
-                await timeout(500);
-            }
+            // if (__IOS__) {
+            //     await timeout(500);
+            // }
         } else {
             selection = (
                 await openFilePicker({
@@ -473,7 +473,7 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
 
         // }
         DEV_LOG && console.log('selection', selection);
-        if (selection?.length) {
+        if (selection?.length > 0) {
             showLoading(l('computing'));
             return await importAndScanImageOrPdfFromUris(selection, document, canGoToView);
         }

@@ -1,5 +1,6 @@
 {
     "scripts": {
+        "postinstall": "patch-package",
         "prepare": "ts-patch install -s",
         "prepare.ios.sentry": "NS_SENTRY=1 PLAY_STORE_BUILD=1 ns prepare ios --release --env.adhoc_sentry",
         "run.ios.production": "PLAY_STORE_BUILD=1 ns run ios --release --env.production --env.adhoc",
@@ -117,6 +118,7 @@
         "fork-ts-checker-webpack-plugin": "9.0.2",
         "merge-options": "^3.0.4",
         "merge-properties-files": "^1.1.6",
+        "patch-package": "^8.0.0",
         "postcss": "^8.4.38",
         "postcss-combine-duplicated-selectors": "^10.0.3",
         "postcss-loader": "^8.1.1",

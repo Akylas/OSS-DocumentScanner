@@ -1,0 +1,46 @@
+diff --git a/node_modules/patch-package/dist/makePatch.js b/node_modules/patch-package/dist/makePatch.js
+index d8d0925..95f50b9 100644
+--- a/node_modules/patch-package/dist/makePatch.js
++++ b/node_modules/patch-package/dist/makePatch.js
+@@ -117,21 +117,21 @@ function makePatch({ packagePathSpecifier, appPath, packageManager, includePaths
+         });
+         if (packageManager === "yarn") {
+             console_1.default.info(chalk_1.default.grey("•"), `Installing ${packageDetails.name}@${packageVersion} with yarn`);
+-            try {
++            // try {
+                 // try first without ignoring scripts in case they are required
+                 // this works in 99.99% of cases
+-                spawnSafe_1.spawnSafeSync(`yarn`, ["install", "--ignore-engines"], {
++                spawnSafe_1.spawnSafeSync(`yarn`, ["install"], {
+                     cwd: tmpRepoNpmRoot,
+-                    logStdErrOnError: false,
++                    logStdErrOnError: true,
+                 });
+-            }
+-            catch (e) {
+-                // try again while ignoring scripts in case the script depends on
+-                // an implicit context which we haven't reproduced
+-                spawnSafe_1.spawnSafeSync(`yarn`, ["install", "--ignore-engines", "--ignore-scripts"], {
+-                    cwd: tmpRepoNpmRoot,
+-                });
+-            }
++            // }
++            // catch (e) {
++            //     // try again while ignoring scripts in case the script depends on
++            //     // an implicit context which we haven't reproduced
++            //     spawnSafe_1.spawnSafeSync(`yarn`, ["install", "--ignore-engines", "--ignore-scripts"], {
++            //         cwd: tmpRepoNpmRoot,
++            //     });
++            // }
+         }
+         else {
+             console_1.default.info(chalk_1.default.grey("•"), `Installing ${packageDetails.name}@${packageVersion} with npm`);
+@@ -391,7 +391,7 @@ function makePatch({ packagePathSpecifier, appPath, packageManager, includePaths
+         }
+     }
+     catch (e) {
+-        console_1.default.log(e);
++        console_1.default.log(e.output[1].toString('utf8'));
+         throw e;
+     }
+     finally {

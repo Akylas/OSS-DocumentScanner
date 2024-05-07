@@ -1,0 +1,144 @@
+diff --git a/node_modules/@nativescript/imagepicker/index.ios.js b/node_modules/@nativescript/imagepicker/index.ios.js
+index c32ae4f..6554862 100644
+--- a/node_modules/@nativescript/imagepicker/index.ios.js
++++ b/node_modules/@nativescript/imagepicker/index.ios.js
+@@ -70,9 +70,9 @@ var ImagePickerControllerDelegate = /** @class */ (function (_super) {
+             imagePicker = null;
+         });
+     };
+-    ImagePickerControllerDelegate.prototype.qb_imagePickerControllerDidFinishPickingAssets = function (imagePickerController, iosAssets) {
++    ImagePickerControllerDelegate.prototype.qb_imagePickerControllerDidFinishPickingAssets = async function (imagePickerController, iosAssets) {
+         var _this = this;
+-        var _loop_1 = function (i) {
++        var _loop_1 = async function (i) {
+             var asset = new ImageAsset(iosAssets.objectAtIndex(i));
+             var phAssetImage = asset._ios;
+             // this fixes the image aspect ratio in tns-core-modules version < 4.0
+@@ -101,66 +101,72 @@ var ImagePickerControllerDelegate = /** @class */ (function (_super) {
+             else {
+                 var imageOptions = new PHContentEditingInputRequestOptions();
+                 imageOptions.networkAccessAllowed = true;
+-                phAssetImage.requestContentEditingInputWithOptionsCompletionHandler(imageOptions, function (thing) {
+-                    fileMap[existingFileName].path = thing.fullSizeImageURL.toString().replace('file://', '');
+-                });
++                await new Promise(resolve=>{
++                    phAssetImage.requestContentEditingInputWithOptionsCompletionHandler(imageOptions, function (thing) {
++                        fileMap[existingFileName].path = thing.fullSizeImageURL.toString().replace('file://', '');
++                        resolve();
++                    });
++                })
+             }
+         };
+         for (var i = 0; i < iosAssets.count; i++) {
+-            _loop_1(i);
+-        }
+-        if (this._resolve) {
+-            setTimeout(function () {
+-                var promises = [];
+-                var count = 0;
+-                var _loop_2 = function (key) {
+-                    var item = fileMap[key];
+-                    var folder = knownFolders.documents();
+-                    var extension = item.filename.split('.').pop();
+-                    var filename = renameFileTo ? renameFileTo + '.' + extension : item.filename;
+-                    if (iosAssets.count > 1)
+-                        filename = renameFileTo ? renameFileTo + '-' + count + '.' + extension : item.filename;
+-                    fileMap[item.filename].filename = filename;
+-                    var fileManager = new NSFileManager();
+-                    if (copyToAppFolder) {
+-                        var filePath_1 = path.join(folder.path + '/' + copyToAppFolder, filename);
+-                        promises.push(getFile('file://' + item.path, filePath_1)
+-                            .then(function (result) {
+-                            fileMap[item.originalFilename].path = filePath_1;
+-                            fileMap[item.originalFilename].filesize = fileManager.attributesOfItemAtPathError(filePath_1).fileSize();
+-                            if (item.type == 'video') {
+-                                return ImageSource.fromAsset(item.asset).then(function (source) {
+-                                    fileMap[item.originalFilename].thumbnail = source;
+-                                });
+-                            }
+-                        })
+-                            .catch(function (error) {
+-                            console.log('Error copying file: ', error);
+-                        }));
+-                    }
+-                    else {
+-                        fileMap[item.originalFilename].filesize = fileManager.attributesOfItemAtPathError(fileMap[item.filename].path).fileSize();
+-                        if (item.type == 'video') {
+-                            promises.push(ImageSource.fromAsset(item.asset).then(function (source) {
+-                                fileMap[item.originalFilename].thumbnail = source;
+-                            }));
+-                        }
+-                    }
+-                    count++;
+-                };
+-                for (var key in fileMap) {
+-                    _loop_2(key);
+-                }
+-                Promise.all(promises).then(function () {
+-                    var results = [];
+-                    for (var key in fileMap) {
+-                        results.push(fileMap[key]);
+-                    }
+-                    _this._resolve(results);
+-                });
+-            }, 300);
++            await _loop_1(i);
+         }
++        // if (this._resolve) {
++            // this._resolve(Object.values(fileMap));
++            // setTimeout(function () {
++            //     var promises = [];
++            //     var count = 0;
++            //     var _loop_2 = function (key) {
++            //         var item = fileMap[key];
++            //         var folder = knownFolders.documents();
++            //         var extension = item.filename.split('.').pop();
++            //         var filename = renameFileTo ? renameFileTo + '.' + extension : item.filename;
++            //         if (iosAssets.count > 1)
++            //             filename = renameFileTo ? renameFileTo + '-' + count + '.' + extension : item.filename;
++            //         fileMap[item.filename].filename = filename;
++            //         var fileManager = new NSFileManager();
++            //         if (copyToAppFolder) {
++            //             var filePath_1 = path.join(folder.path + '/' + copyToAppFolder, filename);
++            //             promises.push(getFile('file://' + item.path, filePath_1)
++            //                 .then(function (result) {
++            //                 fileMap[item.originalFilename].path = filePath_1;
++            //                 fileMap[item.originalFilename].filesize = fileManager.attributesOfItemAtPathError(filePath_1).fileSize();
++            //                 if (item.type == 'video') {
++            //                     return ImageSource.fromAsset(item.asset).then(function (source) {
++            //                         fileMap[item.originalFilename].thumbnail = source;
++            //                     });
++            //                 }
++            //             })
++            //                 .catch(function (error) {
++            //                 console.log('Error copying file: ', error);
++            //             }));
++            //         }
++            //         else {
++            //             fileMap[item.originalFilename].filesize = fileManager.attributesOfItemAtPathError(fileMap[item.filename].path).fileSize();
++            //             if (item.type == 'video') {
++            //                 promises.push(ImageSource.fromAsset(item.asset).then(function (source) {
++            //                     fileMap[item.originalFilename].thumbnail = source;
++            //                 }));
++            //             }
++            //         }
++            //         count++;
++            //     };
++            //     for (var key in fileMap) {
++            //         _loop_2(key);
++            //     }
++            //     Promise.all(promises).then(function () {
++            //         var results = [];
++            //         for (var key in fileMap) {
++            //             results.push(fileMap[key]);
++            //         }
++            //         _this._resolve(results);
++            //     });
++            // }, 300);
++        // }
++        const resolve = this._resolve;
+         imagePickerController.dismissViewControllerAnimatedCompletion(true, function () {
++            resolve?.(Object.values(fileMap));
+             if (imagePicker) {
+                 imagePicker._cleanup();
+             }
