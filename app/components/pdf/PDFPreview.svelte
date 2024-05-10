@@ -23,6 +23,7 @@
     import { getFileNameForDocument } from '~/utils/utils.common';
     import { colors, fonts, navigationBarHeight, screenHeightDips, screenRatio, screenWidthDips } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
+    import { getPageColorMatrix } from '~/utils/matrix';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -183,7 +184,7 @@
             margin: paper_size === 'full' ? 0 : page_padding,
             src: page.imagePath,
             imageRotation: page.rotation,
-            colorMatrix: color === 'black_white' ? getColorMatrix('grayscale') : page.colorMatrix || getColorMatrix(page.colorType)
+            colorMatrix: getPageColorMatrix(page, color === 'black_white' ? 'grayscale' : undefined)
         });
         // DEV_LOG && console.log('getPageImageOptions', templatePagesCount, pageIndex, index, orientation, paper_size, result);
         return result;

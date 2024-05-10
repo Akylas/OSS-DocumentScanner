@@ -37,7 +37,8 @@
         showLoading,
         showMatrixLevelPopover,
         showPDFPopoverMenu,
-        showPopoverMenu
+        showPopoverMenu,
+        showSlidersPopover
     } from '~/utils/ui';
     import { getImageSize } from '~/utils/utils';
     import { colors, navigationBarHeight } from '~/variables';
@@ -422,6 +423,55 @@
             colorMatrix: getColorMatrix(i.colorType)
         });
     }
+    async function applyBrightnessContrast(brightness: number, contrast: number) {
+        const current = items.getItem(currentIndex);
+        current.colorMatrix = null;
+        current.brightness = brightness;
+        current.contrast = contrast;
+        document.updatePage(currentIndex, {
+            brightness,
+            contrast
+        });
+    }
+
+    async function editBrightnessContrast(event) {
+        try {
+            const current = items.getItem(currentIndex);
+            await showSlidersPopover({
+                debounceDuration: 0,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                items: [
+                    {
+                        title: lc('brightness'),
+                        icon: 'mdi-brightness-5',
+                        min: -255,
+                        max: 255,
+                        // step: 1,
+                        resetValue: 0,
+                        value: current.brightness,
+                        onChange: debounce((value) => {
+                            applyBrightnessContrast(value, current.contrast);
+                        }, 10)
+                    },
+                    {
+                        title: lc('contrast'),
+                        icon: 'mdi-contrast-box',
+                        min: 1,
+                        max: 100,
+                        resetValue: 10,
+                        // step: 0.1,
+                        value: Math.round(current.contrast * 10),
+                        onChange: debounce((value) => {
+                            applyBrightnessContrast(current.brightness, value / 10);
+                        }, 10)
+                    }
+                ]
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
 
     async function updateImageUris() {
         await getCurrentImageView()?.updateImageUri();
@@ -669,6 +719,7 @@
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
             <mdbutton class="icon-btn" text="mdi-auto-fix" variant="text" on:tap={showEnhancements} />
+            <mdbutton class="icon-btn" text="mdi-brightness-6" variant="text" on:tap={editBrightnessContrast} />
             {#if CARD_APP}
                 <mdbutton class="actionBarButton" text="mdi-qrcode-scan" variant="text" on:tap={detectQRCode} />
             {/if}

@@ -1,10 +1,12 @@
 <script context="module" lang="ts">
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { conditionalEvent } from '~/utils/svelte/ui';
     import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
     const iconPaint = new Paint();
+    const subtitlePaint = new Paint();
+    // subtitlePaint.setTextAlign(Align.CENTER);
 </script>
 
 <script lang="ts">
@@ -19,18 +21,18 @@
     export let gray = false;
     export let isSelected = false;
     export let text = null;
+    export let subtitle = null;
     export let fontFamily = $fonts.mdi;
     export let selectedColor = white ? 'white' : colorPrimary;
     export let color = null;
     export let onLongPress: Function = null;
-    export let fontSize = 0;
-    export let size: any = small ? 30 : $actionBarButtonHeight;
+    export let fontSize = null;
+    export let subtitleFontSize = null;
+    export let width: any = subtitle ? (small ? 60 : 90) : small ? 30 : $actionBarButtonHeight;
+    export let height: any = subtitle ? (small ? 40 : $actionBarButtonHeight + 20) : small ? 30 : $actionBarButtonHeight;
     export let tooltip = null;
     export let rounded = true;
     export let shape = null;
-    export let height = null;
-    export let width = null;
-
     iconPaint.fontFamily = $fonts.mdi;
 
     let canvas: NativeViewElementNode<CanvasView>;
@@ -58,14 +60,26 @@
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         iconPaint.fontFamily = fontFamily;
-        iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
+        iconPaint.textSize = fontSize || (small ? 16 : 24);
         iconPaint.color = isEnabled ? (isSelected ? selectedColor : actualColor) : 'lightgray';
         const w = canvas.getWidth();
         const w2 = w / 2;
         const h2 = canvas.getHeight() / 2;
-        const staticLayout = new StaticLayout(text, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
-        canvas.translate(0, h2 - staticLayout.getHeight() / 2);
-        staticLayout.draw(canvas);
+        let staticLayout = new StaticLayout(text, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+        if (subtitle) {
+            const iconHeight = staticLayout.getHeight();
+            canvas.translate(0, h2 - iconHeight);
+            staticLayout.draw(canvas);
+            subtitlePaint.color = isEnabled ? actualColor : 'lightgray';
+            subtitlePaint.textSize = subtitleFontSize || (small ? 10 : 12);
+            staticLayout = new StaticLayout(subtitle, subtitlePaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+            canvas.translate(0, iconHeight);
+            // canvas.drawText(subtitle, w2, h2, subtitlePaint);
+            staticLayout.draw(canvas);
+        } else {
+            canvas.translate(0, h2 - staticLayout.getHeight() / 2);
+            staticLayout.draw(canvas);
+        }
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
 </script>
@@ -74,12 +88,12 @@
     bind:this={canvas}
     borderRadius={shape === 'round' || (rounded && !shape) ? '50%' : null}
     disableCss={true}
+    {height}
     rippleColor={actualColor}
     visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
+    {width}
     on:draw={onCanvasDraw}
     {...$$restProps}
-    height={height || size}
-    width={width || size}
     on:tap
     use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 <!-- <mdbutton

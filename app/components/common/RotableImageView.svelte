@@ -5,8 +5,10 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { OCRPage } from '~/models/OCRDocument';
     import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/models/constants';
+    import { concatTwoColorMatrices } from '~/utils/color_matrix';
     import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
+    import { getPageColorMatrix } from '~/utils/matrix';
     import { createEventDispatcher } from '~/utils/svelte/ui';
     import { getColorMatrix } from '~/utils/ui';
 
@@ -38,12 +40,6 @@
             dispatch('rotated', { newRotation });
         } catch (err) {
             showError(err);
-        }
-    }
-    function getItemColorMatrix(item) {
-        if (item) {
-            const result = item.colorMatrix || getColorMatrix(item.colorType);
-            return result;
         }
     }
     let imageToDestroy;
@@ -85,7 +81,7 @@
 {#if zoomable}
     <zoomimage
         bind:this={SVImageView}
-        colorMatrix={getItemColorMatrix(item)}
+        colorMatrix={getPageColorMatrix(item)}
         decodeWidth={IMAGE_DECODE_HEIGHT}
         ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
         imageRotation={item?.rotation ?? 0}
@@ -97,7 +93,7 @@
 {:else}
     <image
         bind:this={SVImageView}
-        colorMatrix={getItemColorMatrix(item)}
+        colorMatrix={getPageColorMatrix(item)}
         decodeWidth={IMAGE_DECODE_HEIGHT}
         fadeDuration={100}
         ios:contextOptions={IMAGE_CONTEXT_OPTIONS}

@@ -8,6 +8,7 @@ import { loadImage, recycleImages } from '~/utils/images';
 import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT } from './constants';
 import { doInBatch } from '~/utils/ui';
 import { getFormatedDateForFilename } from '~/utils/utils.common';
+import type { MatricesTypes, Matrix } from '~/utils/color_matrix';
 
 export interface ImportImageData {
     imagePath?: string;
@@ -19,8 +20,8 @@ export interface ImportImageData {
 }
 
 export interface ImageConfig {
-    colorType?: ColorMatricesType;
-    colorMatrix?: number[];
+    colorType?: MatricesTypes;
+    colorMatrix?: Matrix;
     rotation?: number;
 }
 
@@ -369,8 +370,10 @@ export interface Page {
     document_id: string;
 
     transforms?: string;
-    colorType?: string;
-    colorMatrix?: number[];
+    colorType?: MatricesTypes;
+    colorMatrix?: Matrix;
+    brightness?: number;
+    contrast?: number;
     rotation: number;
     crop: [number, number][];
     // pageIndex: number;
@@ -402,8 +405,11 @@ export class OCRPage extends Observable implements Page {
     name?: string;
     document_id: string;
 
-    colorType?: string;
-    colorMatrix?: number[];
+    colorType?: MatricesTypes;
+    colorMatrix?: Matrix;
+
+    brightness?: number;
+    contrast?: number;
 
     rotation: number = 0;
     scale: number = 1;

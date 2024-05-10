@@ -88,6 +88,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     migrations = Object.assign(
         {
             addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`,
+            addPageBrightness: sql`ALTER TABLE Page ADD COLUMN brightness INTEGER`,
+            addPageContrasts: sql`ALTER TABLE Page ADD COLUMN contrast INTEGER`,
             transformsSplit: sql`UPDATE Page SET transforms = replace( transforms, ',', '|' )`,
             removeDataPath: () => sql`UPDATE Page SET imagePath = replace( imagePath, ${dataFolder.path}, '' ), sourceImagePath = replace( sourceImagePath, ${dataFolder.path}, '' )`,
             addSourceImageWidth: sql`ALTER TABLE Page ADD COLUMN sourceImageWidth INTEGER`,

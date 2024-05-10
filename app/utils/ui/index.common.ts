@@ -1170,6 +1170,38 @@ export async function showSliderPopover({
         // trackingScrollView: 'collectionView'
     });
 }
+export async function showSlidersPopover({
+    debounceDuration = 100,
+    horizPos = HorizontalPosition.ALIGN_LEFT,
+    anchor,
+    vertPos = VerticalPosition.CENTER,
+    width = 0.8 * screenWidthDips,
+    items
+}: {
+    debounceDuration?;
+    horizPos?;
+    anchor;
+    vertPos?;
+    width?;
+    items;
+}) {
+    const component = (await import('~/components/common/SlidersPopover.svelte')).default;
+    const { colorSurfaceContainer } = get(colors);
+
+    return showPopover({
+        backgroundColor: colorSurfaceContainer,
+        view: component,
+        anchor,
+        horizPos,
+        vertPos,
+        props: {
+            width,
+            items
+        }
+
+        // trackingScrollView: 'collectionView'
+    });
+}
 
 export async function showMatrixLevelPopover({ item, anchor, currentValue, onChange }) {
     if (!item.range) {

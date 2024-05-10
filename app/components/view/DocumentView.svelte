@@ -38,6 +38,7 @@
         updateSnackMessage
     } from '~/utils/ui';
     import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
+    import { getPageColorMatrix } from '~/utils/matrix';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
     interface Item {
@@ -363,7 +364,7 @@
                     const pipeline = getImagePipeline();
                     const cacheKey = pipeline.getCacheKey(page.imagePath, {
                         decodeWidth: itemHeight,
-                        colorMatrix: page.colorMatrix || getColorMatrix(page.colorType),
+                        colorMatrix: getPageColorMatrix(page),
                         imageRotation: page?.rotation ?? 0
                     });
                     pipeline.evictFromCache(cacheKey);

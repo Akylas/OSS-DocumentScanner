@@ -2,7 +2,7 @@ import { CustomError, PermissionError, SilentError, wrapNativeException } from '
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
-import { getColorMatrix } from '~/utils/matrix';
+import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 import { lc } from '~/helpers/locale';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
@@ -24,12 +24,12 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
         const start = Date.now();
         return new Promise((resolve, reject) => {
             const pdfCanvas = new PDFCanvas();
-            pages.forEach((page) => {
-                if (page.colorType && !page.colorMatrix) {
-                    page.colorMatrix = getColorMatrix(page.colorType);
-                }
-            });
-            const options = JSON.stringify({ ...pdfCanvas.options, text_scale: Screen.mainScreen.scale * 1.4, pages });
+            // pages.forEach((page) => {
+            //     if (page.colorType && !page.colorMatrix) {
+            //         page.colorMatrix = getColorMatrix(page.colorType);
+            //     }
+            // });
+            const options = JSON.stringify({ ...pdfCanvas.options, text_scale: Screen.mainScreen.scale * 1.4, pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })) });
             DEV_LOG && console.log('exportPDFAsync', folder, filename, compress, options);
             com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(
                 Utils.android.getApplicationContext(),

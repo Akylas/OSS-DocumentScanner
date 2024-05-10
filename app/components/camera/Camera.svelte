@@ -537,9 +537,13 @@
 
         <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $navigationBarHeight} paddingTop={30} row={3}>
             <IconButton
+                colSpan={2}
                 color="white"
                 horizontalAlignment="left"
+                isSelected={batchMode}
                 marginLeft={16}
+                selectedColor={colorPrimary}
+                subtitle={lc('batch_mode')}
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
                 tooltip={lc('batch_mode')}
                 verticalAlignment="center"

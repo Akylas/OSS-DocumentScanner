@@ -1,7 +1,7 @@
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
 import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/core';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { getColorMatrix } from '~/utils/matrix';
+import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
 import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/models/constants';
 
@@ -125,7 +125,7 @@ export default class PDFCanvas {
             }
             bitmapPaint.setColorFilter(new ColorMatrixColorFilter(getColorMatrix('grayscale')));
         } else if (page.colorType || page.colorMatrix) {
-            const matrix = page.colorMatrix || getColorMatrix(page.colorType);
+            const matrix = getPageColorMatrix(page);
             if (matrix) {
                 if (!bitmapPaint) {
                     bitmapPaint = new Paint();

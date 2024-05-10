@@ -40,6 +40,7 @@
         transformPages
     } from '~/utils/ui';
     import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
+    import { getPageColorMatrix } from '~/utils/matrix';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -403,7 +404,7 @@
                     const pipeline = getImagePipeline();
                     const cacheKey = pipeline.getCacheKey(page.imagePath, {
                         decodeWidth: itemHeight,
-                        colorMatrix: page.colorMatrix || getColorMatrix(page.colorType),
+                        colorMatrix: getPageColorMatrix(page),
                         imageRotation: page?.rotation ?? 0
                     });
                     pipeline.evictFromCache(cacheKey);
