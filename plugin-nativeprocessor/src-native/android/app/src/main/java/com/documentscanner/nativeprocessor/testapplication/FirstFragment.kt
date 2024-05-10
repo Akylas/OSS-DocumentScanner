@@ -240,8 +240,7 @@ class FirstFragment : Fragment() {
                                                     })
                                                 }
                                             }
-                                        },
-                                        ""
+                                        }
                                     )
                                 }
                             }
