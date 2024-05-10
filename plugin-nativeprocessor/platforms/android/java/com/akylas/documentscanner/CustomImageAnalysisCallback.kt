@@ -361,7 +361,7 @@ constructor(
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0,
             scale: Double = 1.0,
-            options: String?
+            options: String? = null
         ): String {
             return nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale, options)
         }
@@ -372,7 +372,7 @@ constructor(
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0,
             scale: Double = 1.0,
-            options: String?
+            options: String? = null
         ) {
             thread(start = true) {
                 try {
@@ -781,6 +781,14 @@ constructor(
             val bitmaps = arrayListOf<Bitmap>()
             val jsonResult = JSONArray()
             val jsonArray = JSONArray(quads)
+//            if (jsonArray.length() == 0) {
+//                val crop = JSONArray()
+//                crop.put(JSONArray("[0,0]"))
+//                crop.put(JSONArray("[${bitmap.width},0]"))
+//                crop.put(JSONArray("[${bitmap.width},${bitmap.height}]"))
+//                crop.put(JSONArray("[0,${bitmap.height}]"))
+//                jsonArray.put(crop)
+//            }
             pointsFromJSONArray(jsonArray).forEachIndexed { index, points ->
                 // convert corners from image preview coordinates to original photo
                 // coordinates
@@ -839,8 +847,8 @@ constructor(
             quads: String,
             callback: FunctionCallback,
             transforms: String = "",
-            saveInFolder: String?,
-            fileName: String?,
+            saveInFolder: String? = null,
+            fileName: String? = null,
             compressFormat: String = "jpg",
             compressQuality: Int = 100,
         ) {
