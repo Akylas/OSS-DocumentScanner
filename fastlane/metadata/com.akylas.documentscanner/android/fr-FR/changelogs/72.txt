@@ -1,0 +1,9 @@
+### Features
+- brightness / contrast support
+- While importing PDF you can now choose to import each page as an image or each PDF images
+
+### Bug fixes
+- use image format and compression from settings for all app operations. If using PNG it will mean app data will be bigger
+- wrong layout with navigation bar on some devices
+- re-factored settings to make it a bit easier to find document naming format
+- prevent crash when importing images from other apps with biometrics enabled
