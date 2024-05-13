@@ -90,7 +90,9 @@ export class OCRDocument extends Observable implements Document {
             const file = File.fromPath(imagePath);
             await file.copy(attributes.imagePath);
         } else if (image) {
-            await new ImageSource(image).saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
+            const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+            const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+            await new ImageSource(image).saveToFileAsync(attributes.imagePath, compressFormat, compressQuality);
         } else {
             return;
         }
@@ -135,31 +137,33 @@ export class OCRDocument extends Observable implements Document {
             const docData = this.folderPath;
             const length = pagesData.length;
             const pageStartId = Date.now();
+            const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+            const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
             const pages = await doInBatch(pagesData, async (data, index) => {
                 const { id, imagePath, sourceImage, sourceImagePath, image, ...pageData } = data;
                 const pageId = id || pageStartId + '_' + index;
                 // const page = new OCRPage(pageId, docId);
                 const pageFileData = docData.getFolder(pageId);
                 const attributes = { ...pageData, id: pageId, document_id: docId } as OCRPage;
-                attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
+                attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + compressFormat);
                 DEV_LOG && console.log('add page', pageId, attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
                 if (imagePath) {
                     const file = File.fromPath(imagePath);
                     await file.copy(attributes.imagePath);
                 } else if (image) {
                     const imageSource = new ImageSource(image);
-                    await imageSource.saveToFileAsync(attributes.imagePath, IMG_FORMAT, IMG_COMPRESS);
+                    await imageSource.saveToFileAsync(attributes.imagePath, compressFormat, compressQuality);
                 } else {
                     return;
                 }
                 attributes.size = File.fromPath(attributes.imagePath).size;
                 if (sourceImage) {
-                    const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + IMG_FORMAT;
+                    const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + compressFormat;
                     // }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
 
                     const imageSource = new ImageSource(sourceImage);
-                    await imageSource.saveToFileAsync(actualSourceImagePath, IMG_FORMAT, IMG_COMPRESS);
+                    await imageSource.saveToFileAsync(actualSourceImagePath, compressFormat, compressQuality);
                     attributes.sourceImagePath = actualSourceImagePath;
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
@@ -167,8 +171,8 @@ export class OCRDocument extends Observable implements Document {
                         .split('/')
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
-                    if (!baseName.endsWith(IMG_FORMAT)) {
-                        baseName += '.' + IMG_FORMAT;
+                    if (!baseName.endsWith(compressFormat)) {
+                        baseName += '.' + compressFormat;
                     }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
                     const file = File.fromPath(sourceImagePath);
@@ -302,12 +306,14 @@ export class OCRDocument extends Observable implements Document {
         const page = this.pages[pageIndex];
         DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
         const file = File.fromPath(page.imagePath);
+        const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+        const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
         const images = await cropDocumentFromFile(page.sourceImagePath, [quad], {
             transforms: page.transforms,
             saveInFolder: file.parent.path,
             fileName: file.name,
-            compressFormat: IMG_FORMAT,
-            compressQuality: IMG_COMPRESS
+            compressFormat,
+            compressQuality
         });
         const image = images[0];
         DEV_LOG && console.log('updatePageCrop done', image);
@@ -337,13 +343,14 @@ export class OCRDocument extends Observable implements Document {
         const file = File.fromPath(page.imagePath);
         DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
         DEV_LOG && console.log('updatePageTransforms2', page.sourceImagePath, File.exists(page.sourceImagePath), File.fromPath(page.sourceImagePath).size);
-
+        const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+        const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
         const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
             transforms,
             saveInFolder: file.parent.path,
             fileName: file.name,
-            compressFormat: IMG_FORMAT,
-            compressQuality: IMG_COMPRESS
+            compressFormat,
+            compressQuality
         });
         const image = images[0];
         DEV_LOG && console.log('updatePageTransforms done', image);

@@ -121,8 +121,11 @@
         try {
             showLoading(l('computing'));
             imageSource = new ImageSource(image);
-            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${IMG_COMPRESS}`);
-            await imageSource.saveToFileAsync(tempImagePath, IMG_FORMAT, IMG_COMPRESS);
+
+            const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+            const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${compressQuality}`);
+            await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
             //clear memory as soon as possible
             recycleImages(imageSource);
             return await processCameraImage({

@@ -227,6 +227,8 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
         // We do it in batch of 5 to prevent memory issues
 
+        const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+        const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
         const pdfImages = await doInBatch(
             pdf,
             (pdfPath: string) =>
@@ -343,8 +345,8 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                                 // rotation: item.imageRotation,
                                                 fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
                                                 saveInFolder: knownFolders.temp().path,
-                                                compressFormat: IMG_FORMAT,
-                                                compressQuality: IMG_COMPRESS
+                                                compressFormat,
+                                                compressQuality
                                             }))
                                         );
                                         // we generate
@@ -1268,14 +1270,16 @@ export async function addCurrentImageToDocument({
     const strTransforms = transforms?.join(TRANSFORMS_SPLIT) ?? '';
     DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
     const images: CropResult[] = [];
+    const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+    const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
     if (quads) {
         images.push(
             ...(await cropDocumentFromFile(sourceImagePath, quads, {
                 transforms: strTransforms,
                 saveInFolder: knownFolders.temp().path,
                 fileName,
-                compressFormat: IMG_FORMAT,
-                compressQuality: IMG_COMPRESS
+                compressFormat,
+                compressQuality
             }))
         );
         // we generate

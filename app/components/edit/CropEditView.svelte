@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
-    import { ImageSource, View, querySelectorAll } from '@nativescript/core';
+    import { ApplicationSettings, ImageSource, View, querySelectorAll } from '@nativescript/core';
     import { cropDocument } from 'plugin-nativeprocessor';
     import { createEventDispatcher } from '~/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
@@ -47,7 +47,9 @@
             // let s see if quads changed and update image
             if (quadChanged) {
                 const images = await cropDocument(editingImage, [quad]);
-                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
+                const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+                const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, compressFormat, compressQuality);
                 recycleImages(images);
 
                 //we remove from cache so that everything gets updated
