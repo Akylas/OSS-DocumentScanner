@@ -230,6 +230,8 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
             [[], []]
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
+
+        // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString('import_pdf_images', PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
             const options = new ObservableArray([
@@ -258,10 +260,11 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
             }
             DEV_LOG && console.log('showPromptOptionSelect', result);
         }
-        // We do it in batch of 5 to prevent memory issues
-
         const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
         const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+
+        // now we process PDF files
+        // We do it in batch of 5 to prevent memory issues
         const pdfImages = await doInBatch(
             pdf,
             (pdfPath: string) =>
@@ -281,6 +284,9 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                     }
                 })
         );
+
+        // now we process all image files
+        // We do it in batch of 5 to prevent memory issues
         items = await doInBatch(
             images.concat(pdfImages.flat()),
             (sourceImagePath: string) =>

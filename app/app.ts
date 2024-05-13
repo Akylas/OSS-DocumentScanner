@@ -26,6 +26,12 @@ import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
 
+declare module '@nativescript/core/application/application-common' {
+    interface ApplicationCommon {
+        servicesStarted: boolean;
+    }
+}
+
 try {
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
     installGestures(true);
@@ -84,15 +90,14 @@ try {
     // Trace.enable();
 
     let launched = false;
-    let androidIntentToHandle;
     async function start() {
         try {
+            Application.servicesStarted = false;
             DEV_LOG && console.log('start');
-            networkService.start();
-            securityService.start();
-            await syncService.start();
-            await ocrService.start();
-            await documentsService.start();
+            await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(), documentsService.start()]);
+            Application.servicesStarted = true;
+            DEV_LOG && console.log('servicesStarted');
+            Application.notify({ eventName: 'servicesStarted' });
             try {
                 await syncService.syncDocuments();
             } catch (error) {

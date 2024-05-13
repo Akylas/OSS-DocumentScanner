@@ -45,7 +45,6 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         // DynamicColors
         // com.google.android.material.color.DynamicColors.applyIfAvailable(this);
         try {
-            DEV_LOG && console.log(TAG, 'prepareActivity', this);
             com.akylas.documentscanner.Utils.Companion.prepareActivity(this);
         } catch (error) {
             console.error(error);
