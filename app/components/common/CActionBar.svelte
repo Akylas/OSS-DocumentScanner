@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
     import { showError } from '~/utils/error';
     import { closeModal, conditionalEvent, fade, goBack } from '~/utils/svelte/ui';
-    import { statusBarHeight } from '~/variables';
+    import { windowInset } from '~/variables';
 
     export let title: string = null;
     export let showMenuIcon: boolean = false;
@@ -48,7 +48,7 @@
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapse';
 </script>
 
-<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 300 }} android:marginTop={$statusBarHeight}>
+<gridlayout class={'actionBar ' + clazz} columns="auto,*, auto" paddingLeft={4} paddingRight={4} rows="*" {...$$restProps} transition:fade={{ duration: 300 }} android:marginTop={$windowInset.top}>
     <label
         class={'actionBarTitle ' + clazz}
         col={1}

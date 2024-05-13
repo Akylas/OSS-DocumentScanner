@@ -101,7 +101,7 @@
     "file_naming_settings": "导出时与图像/PDF 名称相关的设置",
     "file_naming_template": "文件命名模板",
     "filename_date_format": "文件名 日期 格式",
-    "filename_date_format_desc": "定义导出文件时使用的日期格式\n\n* 使用 %1$s 表示 %2$s 格式\n\n* 使用 %3$s 表示纪元（自 1970 年以来以毫秒为单位的持续时间）时间戳\n\n* 使用%4$s 使用自定义格式。\n您可以找到更多%5$s",
+    "filename_date_format_fulldesc": "定义导出文件时使用的日期格式\n\n* 使用 %1$s 表示 %2$s 格式\n\n* 使用 %3$s 表示纪元（自 1970 年以来以毫秒为单位的持续时间）时间戳\n\n* 使用%4$s 使用自定义格式。\n您可以找到更多%5$s",
     "filename_use_document_name": "尽可能使用文档名称",
     "filters": "过滤",
     "finish": "结束",

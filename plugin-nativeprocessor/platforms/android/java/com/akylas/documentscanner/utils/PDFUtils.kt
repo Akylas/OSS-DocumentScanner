@@ -3,9 +3,12 @@ package com.akylas.documentscanner.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.util.Log
+import android.graphics.pdf.PdfRenderer
+import android.net.Uri
+import android.os.ParcelFileDescriptor
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.colors.ColorConstants
 import com.itextpdf.kernel.font.PdfFontFactory
@@ -17,9 +20,12 @@ import com.itextpdf.kernel.pdf.PdfReader
 import com.itextpdf.kernel.pdf.PdfVersion
 import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.WriterProperties
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas
 import com.itextpdf.kernel.pdf.canvas.PdfCanvasConstants
-import com.itextpdf.kernel.pdf.extgstate.PdfExtGState
+import com.itextpdf.kernel.pdf.canvas.parser.EventType
+import com.itextpdf.kernel.pdf.canvas.parser.PdfCanvasProcessor
+import com.itextpdf.kernel.pdf.canvas.parser.data.IEventData
+import com.itextpdf.kernel.pdf.canvas.parser.data.ImageRenderInfo
+import com.itextpdf.kernel.pdf.canvas.parser.listener.IEventListener
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject
 import com.itextpdf.layout.Canvas
 import com.itextpdf.layout.Document
@@ -28,17 +34,20 @@ import com.itextpdf.layout.element.Image
 import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.properties.TextAlignment
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import kotlin.concurrent.thread
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
-
-import kotlin.concurrent.thread
 
 
 class PDFUtils {
@@ -183,7 +192,11 @@ class PDFUtils {
             }
 
             val imgBytes = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.JPEG, options.quality, imgBytes)
+            if (options.quality > 0) {
+                bmp.compress(Bitmap.CompressFormat.JPEG, options.quality, imgBytes)
+            } else {
+                bmp.compress(Bitmap.CompressFormat.PNG, options.quality, imgBytes)
+            }
             bmp.recycle()
             val imageData = ImageDataFactory.create(imgBytes.toByteArray())
             return Image(imageData).setRotationAngle(-rotation * PI / 180.0)
@@ -440,6 +453,121 @@ class PDFUtils {
                     callback.onResult(null, result)
                 } catch (e: Exception) {
                     callback.onResult(e, null)
+                }
+            }
+        }
+        @JvmOverloads
+        fun importPdfToTempImages(
+            context: Context,
+            src: String,
+            callback: FunctionCallback,
+            options: String?
+        ) {
+            thread(start = true) {
+                var parcelFileDescriptor: ParcelFileDescriptor? = null
+                var inputStream: InputStream? = null
+                var renderer: PdfRenderer? = null
+                val result = JSONArray()
+                try {
+                    var uri = Uri.parse(src)
+                    var pdfFileName = ImageUtil.getFileName(context, uri)
+                    var compressFormat = "jpg"
+                    var compressQuality = 100
+                    var scale = 2.0
+                    var importPDFImages = false
+                    if (options != null) {
+                        try {
+                            var jsOptions = JSONObject(options)
+                            compressFormat = jsOptions.optString("compressFormat", compressFormat)
+                            compressQuality = jsOptions.optInt("compressQuality", compressQuality)
+                            importPDFImages = jsOptions.optBoolean("importPDFImages", importPDFImages)
+                            scale = jsOptions.optDouble("scale", scale)
+                        } catch (ignored: JSONException) {
+                        }
+                    }
+                    if (importPDFImages) {
+                        inputStream = context.contentResolver.openInputStream(uri)
+                        val pdfDoc =  PdfDocument( PdfReader(inputStream))
+                        for (i in 1..pdfDoc.getNumberOfPages()) {
+                            PdfCanvasProcessor(object: IEventListener {
+                                override fun eventOccurred(data: IEventData?, type: EventType?) {
+                                    if (data is ImageRenderInfo) {
+                                        try {
+                                            val bitmap = BitmapFactory.decodeByteArray(data.image.imageBytes, 0, data.image.imageBytes.size)
+                                            val temp = File.createTempFile("${pdfFileName}_$i",
+                                                ".$compressFormat", context.cacheDir)
+                                            FileOutputStream(temp).use { out ->
+                                                bitmap.compress(
+                                                    ImageUtil.getTargetFormat(compressFormat),
+                                                    compressQuality,
+                                                    out
+                                                )
+                                            }
+                                            result.put(temp.path)
+                                        } catch (e: IOException) {
+                                            System.err.println("Error while extracting image: " + e.message)
+                                        }
+                                    }
+                                }
+
+                                override fun getSupportedEvents(): MutableSet<EventType> {
+                                    return mutableSetOf(EventType.RENDER_IMAGE);                               }
+                            }).processPageContent(pdfDoc.getPage(i));
+                        }
+                    } else {
+                        parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
+                        if (parcelFileDescriptor != null) {
+                            renderer = PdfRenderer(parcelFileDescriptor)
+
+                            // Loop over all pages to find barcodes
+                            var renderedPage: Bitmap
+                            for (i in 0 until renderer.getPageCount()) {
+                                val page = renderer.openPage(i)
+                                renderedPage = Bitmap.createBitmap(
+                                    (page.width * scale).toInt(),
+                                    (page.height * scale).toInt(),
+                                    Bitmap.Config.ARGB_8888
+                                )
+                                val canvas = android.graphics.Canvas(renderedPage);
+                                canvas.drawColor(Color.WHITE);
+                                page.render(
+                                    renderedPage,
+                                    null,
+                                    null,
+                                    PdfRenderer.Page.RENDER_MODE_FOR_PRINT
+                                )
+                                page.close()
+                                val temp = File.createTempFile("${pdfFileName}_$i",
+                                    ".$compressFormat", context.cacheDir)
+                                FileOutputStream(temp).use { out ->
+                                    renderedPage.compress(
+                                        ImageUtil.getTargetFormat(compressFormat),
+                                        compressQuality,
+                                        out
+                                    )
+                                }
+                                result.put(temp.path)
+                                renderedPage?.recycle()
+                            }
+                        } else {
+                            throw ImageUtil.ImageNotFoundException(src)
+                        }
+                    }
+
+                    callback.onResult(null, result.toString())
+                } catch (e: IOException) {
+                    callback.onResult(e, null)
+                } finally {
+                    inputStream?.close()
+                    // Resource handling
+                    renderer?.close()
+                    if (parcelFileDescriptor != null) {
+                        try {
+                            parcelFileDescriptor.close()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
             }
         }

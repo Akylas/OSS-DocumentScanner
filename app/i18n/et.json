@@ -100,7 +100,7 @@
     "file_naming_settings": "kujutiste/PDF-i nimedega seotud sätted eksportimise ajal",
     "file_naming_template": "faili nimetamise mall",
     "filename_date_format": "failinime kuupäeva vorming",
-    "filename_date_format_desc": "määrab failide eksportimisel kasutatava kuupäevavormingu\n\n* kasutage %2$s vormingu jaoks %1$s\n\n* kasutage ajatemplit %3$s (kestus ms alates aastast 1970).\n\n* kasutage kohandatud vormingut, kasutades %4$s. \nLeiate rohkem %5$s",
+    "filename_date_format_fulldesc": "määrab failide eksportimisel kasutatava kuupäevavormingu\n\n* kasutage %2$s vormingu jaoks %1$s\n\n* kasutage ajatemplit %3$s (kestus ms alates aastast 1970).\n\n* kasutage kohandatud vormingut, kasutades %4$s. \nLeiate rohkem %5$s",
     "filename_use_document_name": "võimalusel kasutage dokumendi nime",
     "filters": "filtrid",
     "finish": "lõpetama",

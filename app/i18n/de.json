@@ -101,7 +101,7 @@
     "file_naming_settings": "Einstellungen im Zusammenhang mit dem Namen von Bildern/PDF beim Exportieren",
     "file_naming_template": "Dateibenennungsvorlage",
     "filename_date_format": "Dateiname-Datumsformat",
-    "filename_date_format_desc": "Definiert das Datumsformat, das beim Exportieren von Dateien verwendet wird\n\n* Verwenden Sie %1$s für das %2$s-Format\n\n* Verwenden Sie %3$s für den Zeitstempel der Epoche (Dauer in ms seit 1970).\n\n* Benutzerdefiniertes Format mit %4$s verwenden. \nSie können weitere %5$s finden",
+    "filename_date_format_fulldesc": "Definiert das Datumsformat, das beim Exportieren von Dateien verwendet wird\n\n* Verwenden Sie %1$s für das %2$s-Format\n\n* Verwenden Sie %3$s für den Zeitstempel der Epoche (Dauer in ms seit 1970).\n\n* Benutzerdefiniertes Format mit %4$s verwenden. \nSie können weitere %5$s finden",
     "filename_use_document_name": "Verwenden Sie nach Möglichkeit den Dokumentnamen",
     "filters": "Filter",
     "finish": "beenden",

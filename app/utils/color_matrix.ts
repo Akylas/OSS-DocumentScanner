@@ -5,6 +5,50 @@ export type Matrix = [number, number, number, number, number, number, number, nu
 const bias = __IOS__ ? 1 : 255;
 const biasRev = __IOS__ ? 255 : 1;
 
+// function invariant(condition, format, a, b, c, d, e, f) {
+//     if (!condition) {
+//         let error;
+//         if (format === undefined) {
+//             error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
+//         } else {
+//             const args = [a, b, c, d, e, f];
+//             let argIndex = 0;
+//             error = new Error(
+//                 format.replace(/%s/g, function () {
+//                     return args[argIndex++];
+//                 })
+//             );
+//             error.name = 'Invariant Violation';
+//         }
+
+//         error.framesToPop = 1; // we don't care about invariant's own frame
+//         throw error;
+//     }
+// }
+
+export function concatTwoColorMatrices(matB: Matrix, matA: Matrix) {
+    // invariant(Array.isArray(matB) && matB.length === 20, 'Color matrix matB should be an array with 20 elements.');
+
+    // invariant(Array.isArray(matA) && matA.length === 20, 'Color matrix matA should be an array with 20 elements.');
+
+    const tmp = Array(20);
+
+    let index = 0;
+    for (let j = 0; j < 20; j += 5) {
+        for (let i = 0; i < 4; i++) {
+            tmp[index++] = matA[j + 0] * matB[i + 0] + matA[j + 1] * matB[i + 5] + matA[j + 2] * matB[i + 10] + matA[j + 3] * matB[i + 15];
+        }
+        tmp[index++] = matA[j + 0] * matB[4] + matA[j + 1] * matB[9] + matA[j + 2] * matB[14] + matA[j + 3] * matB[19] + matA[j + 4];
+    }
+
+    return tmp as Matrix;
+}
+
+export function concatColorMatrices(matrices: readonly Matrix[]) {
+    // invariant(Array.isArray(matrices) && matrices.length > 0, 'Matrices should be an array of non zero length.');
+    return matrices.reduce(concatTwoColorMatrices);
+}
+
 function clamp(value, min, max) {
     return min < max ? (value < min ? min : value > max ? max : value) : value < max ? max : value > min ? min : value;
 }
@@ -52,7 +96,7 @@ const staticFilters: { [key: string]: Matrix } = {
     //     0
     // ],
 
-    polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0],
+    polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0]
 
     // toBGR: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
 
@@ -144,7 +188,7 @@ const staticFilters: { [key: string]: Matrix } = {
     // achromatomaly: [0.618, 0.32, 0.062, 0, 0, 0.163, 0.775, 0.062, 0, 0, 0.163, 0.32, 0.516, 0, 0, 0, 0, 0, 1, 0]
 };
 
-export default {
+const Matrices = {
     normal: { fn: (): Matrix => staticFilters.normal },
 
     // rgba: (r = 1, g = 1, b = 1, a = 1): Matrix => [r, 0, 0, 0, 0, 0, g, 0, 0, 0, 0, 0, b, 0, 0, 0, 0, 0, a, 0],
@@ -257,12 +301,21 @@ export default {
 
     // cool: { fn: (): Matrix => staticFilters.cool },
     bw: { fn: (value = 1) => [value, value, value, -1, 0, value, value, value, -1, 0, value, value, value, -1, 0, 0, 0, 0, 1, 0], range: [0, 1], defaultValue: 1 },
-    // brightness: (v = 1): Matrix => [v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, 1, 0],
+    brightness: { fn: (v = 1): Matrix => [v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, v, 0, 0, 0, 0, 0, 1, 0], range: [-10, 10], defaultValue: 1 },
 
-    // contrast: (v = 1): Matrix => {
-    //     const n = 0.5 * (1 - v);
-    //     return [v, 0, 0, 0, bias * n, 0, v, 0, 0, bias * n, 0, 0, v, 0, bias * n, 0, 0, 0, 1, 0];
-    // },
+    contrast: {
+        fn: (v = 1): Matrix => {
+            const n = 0.5 * (1 - v);
+            return [v, 0, 0, 0, bias * n, 0, v, 0, 0, bias * n, 0, 0, v, 0, bias * n, 0, 0, 0, 1, 0];
+        },
+        range: [-10, 10],
+        defaultValue: 1
+    },
+    brightnessAndContrast: {
+        fn: (brightness = 1, contrast = 1): Matrix => [contrast, 0, 0, 0, brightness, 0, contrast, 0, 0, brightness, 0, 0, contrast, 0, brightness, 0, 0, 0, 1, 0],
+        range: [-10, 10],
+        defaultValue: 1
+    },
 
     // temperature: (v = 0): Matrix => [1 + v, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 - v, 0, 0, 0, 0, 0, 1, 0],
 
@@ -280,7 +333,7 @@ export default {
 
     // technicolor: { fn: (): Matrix => staticFilters.technicolor },
 
-    polaroid: { fn: (): Matrix => staticFilters.polaroid },
+    polaroid: { fn: (): Matrix => staticFilters.polaroid }
 
     // toBGR: { fn: (): Matrix => staticFilters.toBGR },
 
@@ -356,4 +409,6 @@ export default {
     // achromatopsia: { fn: (): Matrix => staticFilters.achromatopsia },
 
     // achromatomaly: { fn: (): Matrix => staticFilters.achromatomaly }
-} as { [k: string]: { fn: Function; defaultValue?: number; range?: [number, number] } };
+} as const;
+export type MatricesTypes = keyof typeof Matrices;
+export default Matrices;

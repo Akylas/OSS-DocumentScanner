@@ -33,7 +33,7 @@
     import { recycleImages } from '~/utils/images';
     import { navigate } from '~/utils/svelte/ui';
     import { goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
-    import { colors, navigationBarHeight } from '~/variables';
+    import { colors, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -121,8 +121,11 @@
         try {
             showLoading(l('computing'));
             imageSource = new ImageSource(image);
-            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${IMG_COMPRESS}`);
-            await imageSource.saveToFileAsync(tempImagePath, IMG_FORMAT, IMG_COMPRESS);
+
+            const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+            const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${compressQuality}`);
+            await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
             //clear memory as soon as possible
             recycleImages(imageSource);
             return await processCameraImage({
@@ -535,11 +538,15 @@
             <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
         {/if}
 
-        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $navigationBarHeight} paddingTop={30} row={3}>
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3}>
             <IconButton
+                colSpan={2}
                 color="white"
                 horizontalAlignment="left"
+                isSelected={batchMode}
                 marginLeft={16}
+                selectedColor={colorPrimary}
+                subtitle={lc('batch_mode')}
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
                 tooltip={lc('batch_mode')}
                 verticalAlignment="center"

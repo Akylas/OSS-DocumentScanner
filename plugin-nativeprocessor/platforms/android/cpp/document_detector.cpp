@@ -325,6 +325,7 @@ static vector<Point> pointsToNative(JNIEnv *env, jobjectArray points_)
 
 static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring points_, jstring transforms, jobject outBitmap)
 {
+//    auto t_start = std::chrono::high_resolution_clock::now();
     std::string points{jstringToString(env, points_)};
     jsoncons::json val = jsoncons::json::parse(points);
     std::vector<double> leftTop = val[0].as<std::vector<double>>();
@@ -357,13 +358,16 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring po
 
     Mat transform = getPerspectiveTransform(srcTriangle, dstTriangle);
     warpPerspective(srcBitmapMat, dstBitmapMat, transform, dstBitmapMat.size());
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
 
     std::string transformsStd{jstringToString(env, transforms)};
     if (transformsStd.length() > 0)
     {
         detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd, false);
     }
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop transform %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     mat_to_bitmap(env, dstBitmapMat, outBitmap);
+//    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop done %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
 }
 
 JSONCONS_ENUM_TRAITS(ZXing::BarcodeFormat, None, Aztec, Codabar, Code39, Code93, Code128, DataBar, DataBarExpanded, DataMatrix, EAN8, EAN13, ITF, MaxiCode, PDF417, QRCode, UPCA, UPCE, MicroQRCode);

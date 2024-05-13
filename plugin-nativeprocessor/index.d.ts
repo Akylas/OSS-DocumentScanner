@@ -96,6 +96,7 @@ export interface GenerateQRCodeOptions {
     backColor?: string | Color;
 }
 export interface PDFImportOptions extends LoadImageOptions {
+    importPDFImages?: boolean;
     compressFormat?: string;
     compressQuality?: number;
 }

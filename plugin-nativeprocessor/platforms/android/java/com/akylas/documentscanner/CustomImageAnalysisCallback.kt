@@ -2,15 +2,8 @@ package com.akylas.documentscanner
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.database.Cursor
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Point
-import android.graphics.pdf.PdfRenderer
-import android.net.Uri
-import android.os.ParcelFileDescriptor
-import android.provider.OpenableColumns
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
 import com.akylas.documentscanner.utils.ImageUtil
@@ -19,7 +12,6 @@ import com.nativescript.cameraview.ImageAsyncProcessor
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -38,9 +30,6 @@ constructor(
 ) :
     ImageAnalysisCallback {
 
-    class ImageNotFoundException : Exception {
-        constructor(src: String) : super("image not found $src")
-    }
 
     var previewResizeThreshold = 200.0
     var autoScanHandler: AutoScanHandler? = null
@@ -242,7 +231,7 @@ constructor(
                     bitmap = ImageUtil.readBitmapFromFile(context, src, options)
 
                     if (bitmap == null || bitmap.byteCount == 0) {
-                        throw ImageNotFoundException(src)
+                        throw ImageUtil.ImageNotFoundException(src)
                     }
                     ocrDocumentSync(bitmap, callback, options, progress)
                     bitmap?.recycle()
@@ -292,7 +281,7 @@ constructor(
                     val loadingOptions = ImageUtil.LoadImageOptions(options);
                     bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                     if (bitmap == null || bitmap.byteCount == 0) {
-                        throw ImageNotFoundException(src)
+                        throw ImageUtil.ImageNotFoundException(src)
                     }
                     var scale = 1.0
                     if (imageSize[2] % 180 !== 0) {
@@ -361,7 +350,7 @@ constructor(
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0,
             scale: Double = 1.0,
-            options: String?
+            options: String? = null
         ): String {
             return nativeScanJSON(bitmap, shrunkImageHeight.toInt(), imageRotation, scale, options)
         }
@@ -372,7 +361,7 @@ constructor(
             shrunkImageHeight: Double = 500.0,
             imageRotation: Int = 0,
             scale: Double = 1.0,
-            options: String?
+            options: String? = null
         ) {
             thread(start = true) {
                 try {
@@ -398,7 +387,7 @@ constructor(
                     val loadingOptions = ImageUtil.LoadImageOptions(options);
                     bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                     if (bitmap == null) {
-                        callback.onResult(ImageNotFoundException(src), null)
+                        callback.onResult(ImageUtil.ImageNotFoundException(src), null)
                         return@thread
                     }
                     var scale = 1.0
@@ -476,7 +465,7 @@ constructor(
                     val loadingOptions = ImageUtil.LoadImageOptions(options);
                     var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, null)
                     if (bitmap == null || bitmap.byteCount == 0) {
-                        callback.onResult(ImageNotFoundException(src), null)
+                        callback.onResult(ImageUtil.ImageNotFoundException(src), null)
                         return@thread
                     }
                     val jsOptions =loadingOptions.options
@@ -515,7 +504,7 @@ constructor(
                         val loadingOptions = ImageUtil.LoadImageOptions(options);
                         bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                         if (bitmap == null) {
-                            callback.onResult(ImageNotFoundException(src), null)
+                            callback.onResult(ImageUtil.ImageNotFoundException(src), null)
                             return@thread
                         }
                         var scale = 1.0
@@ -617,7 +606,7 @@ constructor(
 //                    return (outPoints)
 //                }
 //            } else {
-//                throw ImageNotFoundException()
+//                throw ImageUtil.ImageNotFoundException()
 //            }
 //            return null
 //        }
@@ -668,7 +657,7 @@ constructor(
 //            ) {
 //            try {
 //                if (bitmap == null || bitmap.byteCount == 0) {
-//                    throw ImageNotFoundException()
+//                    throw ImageUtil.ImageNotFoundException()
 //                }
 //                val bitmaps = arrayListOf<Bitmap>()
 //                val filePaths = arrayListOf<String>()
@@ -781,6 +770,14 @@ constructor(
             val bitmaps = arrayListOf<Bitmap>()
             val jsonResult = JSONArray()
             val jsonArray = JSONArray(quads)
+//            if (jsonArray.length() == 0) {
+//                val crop = JSONArray()
+//                crop.put(JSONArray("[0,0]"))
+//                crop.put(JSONArray("[${bitmap.width},0]"))
+//                crop.put(JSONArray("[${bitmap.width},${bitmap.height}]"))
+//                crop.put(JSONArray("[0,${bitmap.height}]"))
+//                jsonArray.put(crop)
+//            }
             pointsFromJSONArray(jsonArray).forEachIndexed { index, points ->
                 // convert corners from image preview coordinates to original photo
                 // coordinates
@@ -839,8 +836,8 @@ constructor(
             quads: String,
             callback: FunctionCallback,
             transforms: String = "",
-            saveInFolder: String?,
-            fileName: String?,
+            saveInFolder: String? = null,
+            fileName: String? = null,
             compressFormat: String = "jpg",
             compressQuality: Int = 100,
         ) {
@@ -883,7 +880,7 @@ constructor(
                     }
                     bitmap = ImageUtil.readBitmapFromFile(context, src, loadBitmapOptions, null)
                     if (bitmap == null || bitmap.byteCount == 0) {
-                        callback.onResult(ImageNotFoundException(src), null)
+                        callback.onResult(ImageUtil.ImageNotFoundException(src), null)
                         return@thread
                     }
                     callback.onResult(null, cropDocumentSync(bitmap, quads, transforms, saveInFolder, fileName, compressFormat,compressQuality ))
@@ -894,109 +891,7 @@ constructor(
                 }
             }
         }
-        @SuppressLint("Range")
-        fun getFileName(context: Context, uri: Uri): String? {
-            var result: String? = null
-            if (uri.scheme == "content") {
-                val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
-                try {
-                    if (cursor != null && cursor.moveToFirst()) {
-                        result =
-                            cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-                    }
-                } finally {
-                    cursor!!.close()
-                }
-            }
-            if (result == null) {
-                result = uri.lastPathSegment
-            }
-            return result
-        }
-        fun getFileName(context: Context, src: String): String? {
-            return getFileName(context, Uri.parse(src))
-        }
-        @JvmOverloads
-        fun importPdfToTempImages(
-            context: Context,
-            src: String,
-            callback: FunctionCallback,
-            options: String?
-        ) {
-            thread(start = true) {
-                var parcelFileDescriptor: ParcelFileDescriptor? = null
-                var renderer: PdfRenderer? = null
-                val result = JSONArray()
-                try {
-                    var uri = Uri.parse(src)
-                    var pdfFileName = getFileName(context, uri)
-                    var compressFormat = "jpg"
-                    var compressQuality = 100
-                    var scale = 2.0
-                    if (options != null) {
-                        try {
-                            var jsOptions = JSONObject(options)
-                            compressFormat = jsOptions.optString("compressFormat", compressFormat)
-                            compressQuality = jsOptions.optInt("compressQuality", compressQuality)
-                            scale = jsOptions.optDouble("scale", scale)
-                        } catch (ignored: JSONException) {
-                        }
-                    }
-                    parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
-                    if (parcelFileDescriptor != null) {
-                        renderer = PdfRenderer(parcelFileDescriptor)
-
-                        // Loop over all pages to find barcodes
-                        var renderedPage: Bitmap
-                        for (i in 0 until renderer.getPageCount()) {
-                            val page = renderer.openPage(i)
-                            renderedPage = Bitmap.createBitmap(
-                                (page.width * scale).toInt(),
-                                (page.height * scale).toInt(),
-                                Bitmap.Config.ARGB_8888
-                            )
-                            val canvas = Canvas(renderedPage);
-                            canvas.drawColor(Color.WHITE);
-                            page.render(
-                                renderedPage,
-                                null,
-                                null,
-                                PdfRenderer.Page.RENDER_MODE_FOR_PRINT
-                            )
-                            page.close()
-                            val temp = File.createTempFile("${pdfFileName}_$i",
-                                ".$compressFormat", context.cacheDir)
-                            FileOutputStream(temp).use { out ->
-                                renderedPage.compress(
-                                    ImageUtil.getTargetFormat(compressFormat),
-                                    compressQuality,
-                                    out
-                                )
-                            }
-                            result.put(temp.path)
-                            renderedPage?.recycle()
-                        }
-                    } else {
-                        throw ImageNotFoundException(src)
-                    }
-
-                    callback.onResult(null, result.toString())
-                } catch (e: IOException) {
-                    callback.onResult(e, null)
-                } finally {
-                    // Resource handling
-                    renderer?.close()
-                    if (parcelFileDescriptor != null) {
-                        try {
-                            parcelFileDescriptor.close()
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-
-        }
+        
     }
 
     @SuppressLint("UnsafeOptInUsageError")

@@ -1,6 +1,6 @@
 import { Canvas, ColorMatrixColorFilter, Paint } from '@nativescript-community/ui-canvas';
 import type { OCRPage } from '~/models/OCRDocument';
-import { getColorMatrix } from '~/utils/matrix';
+import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 import { lc } from '~/helpers/locale';
 import { loadImage, recycleImages } from '~/utils/images';
 import PDFCanvas from './PDFCanvas';
@@ -15,7 +15,7 @@ export async function getTransformedImage(page: OCRPage) {
         throw new Error(lc('error_loading_image', page.imagePath, File.exists(page.imagePath)));
     }
     DEV_LOG && console.log('getTransformedImage', JSON.stringify(page));
-    const colorMatrix = page.colorMatrix || getColorMatrix(page.colorType);
+    const colorMatrix = getPageColorMatrix(page);
     if (colorMatrix) {
         const bitmapPaint: Paint = new Paint();
         bitmapPaint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));

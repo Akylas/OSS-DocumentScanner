@@ -195,6 +195,14 @@ export default class SecurityService extends Observable {
             if (!validated && result?.passcode) {
                 setTimeout(() => showSnack({ message: l('wrong_passcode'), view: Application.getRootView() }), 300);
             }
+            if (validated) {
+                // ensure validating is set before notify
+                // look at a proper way without duplicated code
+                this.validating = false;
+                this.notify({
+                    eventName: 'validated'
+                });
+            }
             return validated;
             // }
         } catch (error) {

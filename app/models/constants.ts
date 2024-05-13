@@ -1,5 +1,14 @@
 import { Screen, knownFolders } from '@nativescript/core';
 
+export enum PDFImportImages {
+    ask = 'ask',
+    never = 'never',
+    always = 'always'
+}
+
+export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
+export const SETTINGS_IMPORT_PDF_IMAGES = 'import_pdf_images';
+
 export const TRANSFORMS_SPLIT = '|';
 
 export const IMG_FORMAT = 'jpg';
@@ -14,6 +23,7 @@ export const PREVIEW_RESIZE_THRESHOLD = 200;
 export const AREA_SCALE_MIN_FACTOR = 0.1;
 export const QRCODE_RESIZE_THRESHOLD = 900;
 export const DOCUMENT_NOT_DETECTED_MARGIN = 10;
+export const PDF_IMPORT_IMAGES = PDFImportImages.ask;
 export const USE_SYSTEM_CAMERA = false;
 export const CROP_ENABLED = true;
 export const MAGNIFIER_SENSITIVITY = 0.8;

@@ -12,7 +12,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
-    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
+    import { getLocaleDisplayName, l, lc, lu, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
     import {
         AUTO_SCAN_DELAY,
@@ -30,7 +30,11 @@
         IMG_COMPRESS,
         IMG_FORMAT,
         MAGNIFIER_SENSITIVITY,
+        PDFImportImages,
+        PDF_IMPORT_IMAGES,
         PREVIEW_RESIZE_THRESHOLD,
+        SETTINGS_DOCUMENT_NAME_FORMAT,
+        SETTINGS_IMPORT_PDF_IMAGES,
         USE_SYSTEM_CAMERA
     } from '~/models/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
@@ -42,7 +46,7 @@
     import { navigate } from '~/utils/svelte/ui';
     import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { Label } from '@nativescript-community/ui-label';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
@@ -122,30 +126,6 @@
             case 'document_detection':
                 return [
                     {
-                        id: 'setting',
-                        key: 'document_name_format',
-                        useHTML: true,
-                        title: lc('document_name_format'),
-                        full_description: lc(
-                            'document_name_format_desc',
-                            `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
-                            '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
-                            `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
-                            `<span style="background-color:${colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
-                            `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
-                        ),
-                        onLinkTap: ({ link }) => {
-                            openLink(link);
-                        },
-                        valueType: 'string',
-                        textFieldProperties: {
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getString('document_name_format', DOCUMENT_NAME_FORMAT),
-                        type: 'prompt'
-                    },
-                    {
                         type: 'switch',
                         id: 'cropEnabled',
                         title: lc('crop_enabled'),
@@ -220,9 +200,9 @@
                     {
                         id: 'setting',
                         key: 'image_export_format',
-                        title: lc('image_export_format'),
+                        title: lc('image_format'),
                         currentValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT),
-                        description: lc('image_export_format_desc'),
+                        description: lc('image_format_desc'),
                         rightValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT).toUpperCase(),
                         valueType: 'string',
                         values: [
@@ -236,14 +216,42 @@
                         min: 10,
                         max: 100,
                         step: 1,
-                        title: lc('image_export_quality'),
-                        description: lc('image_export_quality_desc'),
+                        title: lc('image_quality'),
+                        description: lc('image_quality_desc'),
                         type: 'slider',
                         rightValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS),
                         currentValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS)
                     }
                 ];
-            case 'pdf':
+            case 'pdf_import': {
+                return [
+                    {
+                        id: 'setting',
+                        key: SETTINGS_IMPORT_PDF_IMAGES,
+                        title: lc('import_pdf_images'),
+                        description: lc('import_pdf_images_desc'),
+                        currentValue: () => ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES),
+                        rightValue: () => {
+                            switch (ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES)) {
+                                case PDFImportImages.ask:
+                                    return PDFImportImages.ask.toUpperCase();
+                                case PDFImportImages.never:
+                                    return lu('page');
+                                case PDFImportImages.always:
+                                    return lu('image');
+                            }
+                        },
+                        valueType: 'string',
+                        autoSizeListItem: true,
+                        values: [
+                            { value: PDFImportImages.ask, title: lc('ask_everytime') },
+                            { value: PDFImportImages.never, title: lc('pdf_one_image_per_page') },
+                            { value: PDFImportImages.always, title: lc('pdf_one_image_per_pdf_image') }
+                        ]
+                    }
+                ];
+            }
+            case 'pdf_export':
                 return (
                     __ANDROID__
                         ? [
@@ -347,13 +355,43 @@
                             max: 100,
                             step: 1,
                             title: lc('jpeg_quality'),
+                            description: lc('pdf_export_jpeg_quality'),
                             type: 'slider',
                             rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality'],
                             currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
                         }
                     ] as any);
-            case 'export_naming':
+            case 'document_naming':
                 return [
+                    {
+                        id: 'setting',
+                        key: SETTINGS_DOCUMENT_NAME_FORMAT,
+                        useHTML: true,
+                        title: lc('document_name_date_format'),
+                        description: lc('document_name_date_format_desc'),
+                        full_description: lc(
+                            'document_name_date_format_fulldesc',
+                            `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
+                            '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
+                            `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
+                            `<span style="background-color:${colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
+                            `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
+                        ),
+                        onLinkTap: ({ link }) => {
+                            openLink(link);
+                        },
+                        valueType: 'string',
+                        textFieldProperties: {
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT),
+                        type: 'prompt'
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('export_settings')
+                    },
                     {
                         type: 'switch',
                         id: 'filename_use_document_name',
@@ -365,8 +403,9 @@
                         key: 'filename_date_format',
                         useHTML: true,
                         title: lc('filename_date_format'),
+                        description: lc('filename_date_format_desc'),
                         full_description: lc(
-                            'filename_date_format_desc',
+                            'filename_date_format_fulldesc',
                             `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
                             '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
                             `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
@@ -602,45 +641,42 @@
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
-                    }
-                ] as any)
-                .concat([
+                    },
                     {
                         id: 'sub_settings',
                         icon: 'mdi-file-star-four-points',
                         title: lc('autoscan'),
                         description: lc('autoscan_settings'),
                         options: () => getSubSettings('autoscan')
-                    }
-                ] as any)
-                .concat([
+                    },
                     {
                         id: 'sub_settings',
                         icon: 'mdi-file-document-edit',
-                        title: lc('file_naming_template'),
-                        description: lc('file_naming_settings'),
-                        options: () => getSubSettings('export_naming')
-                    }
-                ] as any)
-                .concat([
+                        title: lc('document_naming_template'),
+                        description: lc('document_naming_settings'),
+                        options: () => getSubSettings('document_naming')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-file-pdf-box',
+                        title: lc('pdf_import'),
+                        description: lc('pdf_import_settings'),
+                        options: () => getSubSettings('pdf_import')
+                    },
                     {
                         id: 'sub_settings',
                         icon: 'mdi-file-pdf-box',
                         title: lc('pdf_export'),
                         description: lc('pdf_export_settings'),
-                        options: () => getSubSettings('pdf')
-                    }
-                ] as any)
-                .concat([
+                        options: () => getSubSettings('pdf_export')
+                    },
                     {
                         id: 'sub_settings',
                         icon: 'mdi-image',
-                        title: lc('image_export'),
-                        description: lc('image_export_settings'),
+                        title: lc('image_settings'),
+                        description: lc('image_settings_desc'),
                         options: () => getSubSettings('images')
-                    }
-                ] as any)
-                .concat([
+                    },
                     {
                         type: 'sectionheader',
                         title: lc('sync')
@@ -650,24 +686,11 @@
                         rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                         title: lc('webdav_sync'),
                         description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
-                    }
-                ] as any)
-                .concat([
+                    },
                     {
                         type: 'sectionheader',
                         title: lc('backup_restore')
                     },
-                    // {
-                    //     id: 'version',
-                    //     title: lc('version'),
-                    //     description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
-                    // },
-                    // {
-                    //     id: 'github',
-                    //     rightBtnIcon: 'mdi-chevron-right',
-                    //     title: lc('source_code'),
-                    //     description: lc('get_app_source_code')
-                    // },
                     {
                         id: 'export_settings',
                         title: lc('export_settings'),
@@ -991,12 +1014,12 @@
                         });
                     } else {
                         const component = (await import('~/components/common/OptionSelect.svelte')).default;
-                        DEV_LOG && console.log('OptionSelect', item);
                         const result = await showAlertOptionSelect(
                             component,
                             {
-                                height: Math.min(item.values.length * 56, 400),
-                                rowHeight: 56,
+                                height: item.autoSizeListItem ? undefined : Math.min(item.values.length * 56, 400),
+                                rowHeight: item.autoSizeListItem ? undefined : 56,
+                                autoSizeListItem: item.autoSizeListItem,
                                 options: item.values.map((k) => ({
                                     name: k.title || k.name,
                                     data: k.value,
@@ -1132,7 +1155,7 @@
 
 <page id="settingsPage" actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
+        <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">
                     <stacklayout

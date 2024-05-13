@@ -9,7 +9,7 @@ languageIds:
 # for that, you can use https://www.freeformatter.com/json-escape.html
 keyMatchReg:
   # The following examples show how to detect `t("your.i18n.keys")`
-  - "[^\\w\\d](?:localize|l|lc|lt)\\(['\"`]([[\\w\\d\\. \\-\\[\\]]*?)['\"`]"
+  - "[^\\w\\d](?:localize|l|lc|lt|lu)\\([\\s\\t\\n]*['\"`]([[\\w\\d\\. \\-\\[\\]]*?)['\"`]"
 
 
 # An Array of string contains refactor templates.

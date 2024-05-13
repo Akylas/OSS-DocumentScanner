@@ -39,7 +39,8 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { securityService } from '~/services/security';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -153,7 +154,6 @@
     let syncRunning = false;
     function onSyncState(event: EventData & { state: 'running' | 'finished' }) {
         syncRunning = event.state === 'running';
-        DEV_LOG && console.log('syncState', event.state, syncRunning);
     }
     // technique for only specific properties to get updated on store change
     let colorPrimaryContainer = $colors.colorPrimaryContainer;
@@ -447,12 +447,19 @@
                 unselectAll();
             }
         });
-    const onAndroidNewItent = throttle(async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
+    async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
         if (__ANDROID__) {
+            DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
+            if (Application.servicesStarted !== true) {
+                return Application.once('servicesStarted', () => innerOnAndroidIntent(event));
+            }
+            if (securityService.validating) {
+                return securityService.once('validated', () => innerOnAndroidIntent(event));
+            }
             try {
-                const uris = [];
                 const intent = event.intent as android.content.Intent;
                 const action = intent.getAction();
+                const uris = [];
                 switch (action) {
                     case 'android.intent.action.SEND':
                         const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
@@ -468,7 +475,7 @@
                             }
                         }
                 }
-                DEV_LOG && console.log('onAndroidNewItent', action, uris);
+                DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 if (uris.length) {
                     await importAndScanImageOrPdfFromUris(uris);
                 }
@@ -476,6 +483,10 @@
                 showError(error);
             }
         }
+    }
+    const onAndroidNewItent = throttle(async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
+        DEV_LOG && console.log('onAndroidNewItent', Application.servicesStarted, securityService.validating);
+        innerOnAndroidIntent(event);
     }, 500);
     function getSelectedDocuments() {
         const selected = [];
@@ -946,7 +957,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}

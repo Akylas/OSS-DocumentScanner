@@ -1,12 +1,15 @@
 package com.akylas.documentscanner.utils
 
+import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import android.provider.MediaStore.Images
@@ -27,6 +30,9 @@ import kotlin.math.min
  */
 class ImageUtil {
 
+    class ImageNotFoundException : Exception {
+        constructor(src: String) : super("image not found $src")
+    }
     class LoadImageOptions {
         var options: JSONObject? = null
         var sourceWidth = 0
@@ -121,6 +127,29 @@ class ImageUtil {
         }
     }
     companion object {
+
+        @SuppressLint("Range")
+        fun getFileName(context: Context, uri: Uri): String? {
+            var result: String? = null
+            if (uri.scheme == "content") {
+                val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
+                try {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        result =
+                            cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                    }
+                } finally {
+                    cursor!!.close()
+                }
+            }
+            if (result == null) {
+                result = uri.lastPathSegment
+            }
+            return result
+        }
+        fun getFileName(context: Context, src: String): String? {
+            return getFileName(context, Uri.parse(src))
+        }
         fun getTargetFormat(format: String?): Bitmap.CompressFormat {
             return when (format) {
                 "jpeg", "jpg" -> Bitmap.CompressFormat.JPEG

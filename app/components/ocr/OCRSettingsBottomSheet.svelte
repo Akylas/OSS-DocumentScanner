@@ -1,5 +1,3 @@
-<svelte:options accessors />
-
 <script lang="ts">
     import { View } from '@nativescript/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';

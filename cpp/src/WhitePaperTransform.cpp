@@ -1,3 +1,4 @@
+#include "./include/Log.h"
 #include "./include/WhitePaperTransform.h"
 #include <jsoncons/json.hpp>
 
@@ -39,8 +40,17 @@ cv::Mat normalizeKernel(cv::Mat kernel, int kWidth, int kHeight, double scalingF
     return kernel;
 }
 
-void dog(const cv::Mat &img, const cv::Mat &dst, int kSize, double sigma1, double sigma2)
+cv::Mat dog(const cv::Mat &img, const cv::Mat &dst, int kSize, double sigma1, double sigma2)
 {
+
+    // Apply Gaussian blur with the specified kernel radii
+//    cv::Mat blurred1, blurred2;
+//    GaussianBlur(img, blurred1, cv::Size(kSize, kSize), sigma1);
+//    GaussianBlur(img, blurred2, cv::Size(kSize, kSize), sigma2);
+//
+//    // Compute the Difference of Gaussians (DoG)
+//    cv::Mat dogImage = blurred1 - blurred2;
+//    return dogImage;
     int kWidth = kSize, kHeight = kSize;
     int x = (kWidth - 1) / 2;
     int y = (kHeight - 1) / 2;
@@ -92,6 +102,7 @@ void dog(const cv::Mat &img, const cv::Mat &dst, int kSize, double sigma1, doubl
     cv::Mat normKernel = normalizeKernel(kernel, kWidth, kHeight, 1.0);
 
     cv::filter2D(img, dst, -1, normKernel);
+    return dst;
 }
 
 void negateImage(const cv::Mat &img, const cv::Mat &res)
@@ -349,18 +360,25 @@ void whiteboardEnhance(const cv::Mat &img, cv::Mat &res, const std::string &opti
             options.gammaValue = j["gammaValue"].as<int>();
         }
     }
+//    auto t_start = std::chrono::high_resolution_clock::now();
     // Difference of Gaussian (DoG)
-    dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2);
+    res = dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time
+//    LOGD("WhitePaperTransform dog %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Negative of image
-    negateImage(res, res);
+    negateImage(res, res); //0.3% time
+//    LOGD("WhitePaperTransform negateImage %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Contrast Stretch (CS)
-    contrastStretch(res, res, options.csBlackPer, options.csWhitePer);
+    contrastStretch(res, res, options.csBlackPer, options.csWhitePer); //10% time
+//    LOGD("WhitePaperTransform contrastStretch %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Gaussian Blur
     if (options.gaussKSize > 0) {
-        fastGaussianBlur(res, res, options.gaussKSize, options.gaussSigma);
+        fastGaussianBlur(res, res, options.gaussKSize, options.gaussSigma); //1.6% time
     }
+//    LOGD("WhitePaperTransform fastGaussianBlur %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Gamma Correction
-    gamma(res, res, options.gammaValue);
+    gamma(res, res, options.gammaValue); //0.3% time
+//    LOGD("WhitePaperTransform gamma %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Color Balance (CB) (also Contrast Stretch)
-    colorBalance(res, res, options.cbBlackPer, options.cbWhitePer);
+    colorBalance(res, res, options.cbBlackPer, options.cbWhitePer); // 5% time
+//    LOGD("WhitePaperTransform colorBalance %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
 }

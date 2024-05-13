@@ -14,7 +14,7 @@
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, statusBarHeight } from '~/variables';
+    import { colors, screenHeightDips, windowInset } from '~/variables';
     import ListItem from './ListItem.svelte';
 
     // technique for only specific properties to get updated on store change
@@ -116,7 +116,7 @@
         });
     }
     const maxHeight = 40 + Object.keys(TRANSFORMS).length * 70 + 80;
-    const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
+    const maxScreenHeight = screenHeightDips - $windowInset.top - $windowInset.bottom;
 </script>
 
 <gesturerootview id="transformBottomSheet" padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>

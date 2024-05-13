@@ -1,21 +1,20 @@
 <svelte:options accessors />
 
 <script lang="ts">
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ApplicationSettings, Color, View } from '@nativescript/core';
+    import { ApplicationSettings, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
-    import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu, showSliderPopover } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips, statusBarHeight } from '~/variables';
+    import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu } from '~/utils/ui';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { CARD_RATIO, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMAGE_CONTEXT_OPTIONS, TRANSFORMS_SPLIT } from '~/models/constants';
+    import { MatricesTypes } from '~/utils/color_matrix';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
@@ -25,7 +24,7 @@
 
     export let transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>;
-    export let colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    export let colorType = ApplicationSettings.getString('defaultColorType', 'normal') as MatricesTypes;
     export let colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
     export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
@@ -224,7 +223,7 @@
     }
 
     const maxHeight = 40 + (Object.keys(OPTIONS).length / 2) * 50 + 40 + Object.keys(TRANSFORMS).length * 70 + 80;
-    const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
+    const maxScreenHeight = screenHeightDips - $windowInset.top - $windowInset.bottom;
 </script>
 
 <gesturerootview id="cameraSettingsBottomSheet" maxHeight={screenHeightDips} padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'}>

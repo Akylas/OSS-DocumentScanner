@@ -116,6 +116,13 @@ dependencies {
 
 	def androidXExifInterfaceVersion =  project.hasProperty("androidXExifInterfaceVersion") ? project.androidXExifInterfaceVersion : "1.3.3"
 	implementation "androidx.exifinterface:exifinterface:$androidXExifInterfaceVersion"
+
+	def androidXDocumentFileVersion =  project.hasProperty("androidXDocumentFileVersion") ? project.androidXDocumentFileVersion : "1.0.1"
+	implementation "androidx.documentfile:documentfile:$androidXDocumentFileVersion"
+
+	def itextpdfVersion = { -> project.hasProperty("itextpdfVersion") ? itextpdfVersion : "7.2.3" }
+	implementation "com.itextpdf.android:kernel-android:$itextpdfVersion"
+	implementation "com.itextpdf.android:layout-android:$itextpdfVersion"
 }
 //repositories {
 //	mavenCentral()

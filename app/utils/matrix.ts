@@ -1,4 +1,5 @@
-import ColorMatrices from './color_matrix';
+import type { OCRPage } from '~/models/OCRDocument';
+import ColorMatrices, { MatricesTypes, Matrix, concatTwoColorMatrices } from './color_matrix';
 
 // export const IMAGE_FILTERS = {
 //     grayscale: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
@@ -7,8 +8,9 @@ import ColorMatrices from './color_matrix';
 //     polaroid: [1.438, -0.062, -0.062, 0, 0, -0.122, 1.378, -0.122, 0, 0, -0.016, -0.016, 1.483, 0, 0, 0, 0, 0, 1, 0]
 // };
 
-const sortPriority = ['normal', 'grayscale', 'bw', 'sepia', 'invert', 'polaroid', 'nightvision'];
+const sortPriority = ['normal', 'grayscale', 'bw', 'sepia', 'invert', 'polaroid'];
 export const ColorMatricesTypes = Object.keys(ColorMatrices)
+    .filter((s) => sortPriority.indexOf(s) !== -1)
     .sort((a, b) => {
         const sortIndexA = sortPriority.indexOf(a);
         const sortIndexB = sortPriority.indexOf(b);
@@ -28,6 +30,19 @@ export const ColorMatricesTypes = Object.keys(ColorMatrices)
     }));
 export type ColorMatricesType = string;
 
-export function getColorMatrix(type: string, ...args): number[] {
+export function getColorMatrix(type: MatricesTypes, ...args): Matrix {
     return ColorMatrices[type]?.fn?.apply(ColorMatrices, args) ?? null;
+}
+
+export function getPageColorMatrix(page: OCRPage, forcedColorType?: MatricesTypes) {
+    if (page) {
+        const result = forcedColorType ? getColorMatrix(forcedColorType) : page.colorMatrix || getColorMatrix(page.colorType);
+        const hasBrightness = !isNaN(page.brightness) && page.brightness !== 1;
+        const hasContrast = !isNaN(page.contrast) && page.contrast !== 1;
+        if (hasBrightness || hasContrast) {
+            const subMatrix = getColorMatrix('brightnessAndContrast', page.brightness || 1, page.contrast || 1);
+            return result ? concatTwoColorMatrices(result, subMatrix) : subMatrix;
+        }
+        return result;
+    }
 }
