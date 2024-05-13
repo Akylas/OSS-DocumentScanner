@@ -1,0 +1,23 @@
+{
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "OSS Scanare Documente"
+        }
+    },
+    "a3": "a3",
+    "a4": "a4",
+    "about": "despre",
+    "allow_app_screenshot": "permite capturi de ecran",
+    "aspect_fill": "umplerea aspectului",
+    "aspect_fit": "aspect de potrivire",
+    "aspect_ratio": "aspect raport",
+    "authenticate_security": "autentificați-vă pentru a accesa aplicația",
+    "authentication": "auth",
+    "auto": "auto",
+    "auto_black": "Folosiți pur negru pentru tema auto-dark",
+    "auto_scan": "descoperă și adaugă documente automat",
+    "auto_scan_delay": "întârziere automată la scanare",
+    "auto_scan_delay_desc": "întârziere înainte de începe automat scanarea la documentele descoperite",
+    "autoscan": "auto scanare",
+    "autoscan_settings": "setări auto scranare"
+}

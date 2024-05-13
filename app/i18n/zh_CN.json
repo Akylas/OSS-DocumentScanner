@@ -1,7 +1,7 @@
 {
     "$com.akylas.cardwallet": {
         "app": {
-            "name": "OSS卡包"
+            "name": "OSS 卡包"
         }
     },
     "$com.akylas.documentscanner": {
@@ -21,13 +21,13 @@
     "auto": "自动",
     "auto_black": "在自动暗色模式中使用纯黑色",
     "auto_scan": "自动查找并添加文档",
-    "auto_scan_delay": "自动延时扫描",
-    "auto_scan_delay_desc": "已发现文档中开始自动扫描前的延迟",
+    "auto_scan_delay": "自动扫描延时",
+    "auto_scan_delay_desc": "对已发现文档进行自动扫描的延迟",
     "auto_scan_distance_threshold": "距离阈值",
     "auto_scan_distance_threshold_desc": "当相机移动时，自动扫描需要判断是否依然为同一文档。该参数为距离阈值",
     "auto_scan_duration": "自动扫描持续时间",
     "auto_scan_duration_desc": "添加文档前的持续时间，单位为毫秒",
-    "auto_scan_first_use": "自动扫描功能默认打开，此时不会提示变更文档边角。\n是否打开此功能？\n（可以在设置中或者长按拍照键更改）",
+    "auto_scan_first_use": "自动扫描功能已默认打开，此时不会提示修改文档边角。\n是否打开此功能？\n（可以在设置中或者长按拍照键更改）",
     "autoscan": "自动扫描",
     "autoscan_settings": "自动扫描设置",
     "backup_restore": "备份/恢复",
@@ -89,6 +89,7 @@
     "enhance_desc": "加强图像特征",
     "enter_passcode": "输入 PIN 码",
     "error": "错误",
+    "error_loading_image": "在加载图片时出现错误 %1$s (%2$s)",
     "expanded": "展开",
     "export": "导出",
     "export_folder": "导出文件夹",
@@ -111,6 +112,11 @@
     "general": "一般的",
     "get_app_source_code": "获取源代码",
     "here": "这里",
+    "image_export": "导出图片",
+    "image_export_format": "导出格式",
+    "image_export_format_desc": "导出图片使用的格式 (PNG, JPEG)",
+    "image_export_quality": "导出质量",
+    "image_export_settings": "图片导出设置",
     "image_filename": "导出图片文件名",
     "image_import": "导出到图片",
     "image_load_scale": "图像比例",
@@ -178,6 +184,7 @@
     "pdf_filename": "导出 PDF 文件名",
     "pdf_saved": "PDF 保存为 %1$s",
     "picture_size": "图片尺寸",
+    "please_choose_export_folder_again": "请再次选择导出文件夹，此问题不应该再次出现",
     "portrait": "竖直",
     "preferences": "偏好",
     "preview": "预览",
@@ -192,6 +199,7 @@
     "restart_app": "重启应用",
     "review_application": "评价应用",
     "save": "保存",
+    "save_gallery": "保存图片到相册",
     "saving": "正在保存",
     "sdcard": "SD卡",
     "search": "搜索",
