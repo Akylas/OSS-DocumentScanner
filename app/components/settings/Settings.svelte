@@ -12,7 +12,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
-    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
+    import { getLocaleDisplayName, l, lc, lu, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
     import {
         AUTO_SCAN_DELAY,
@@ -30,8 +30,11 @@
         IMG_COMPRESS,
         IMG_FORMAT,
         MAGNIFIER_SENSITIVITY,
+        PDFImportImages,
+        PDF_IMPORT_IMAGES,
         PREVIEW_RESIZE_THRESHOLD,
         SETTINGS_DOCUMENT_NAME_FORMAT,
+        SETTINGS_IMPORT_PDF_IMAGES,
         USE_SYSTEM_CAMERA
     } from '~/models/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
@@ -220,6 +223,34 @@
                         currentValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS)
                     }
                 ];
+            case 'pdf_import': {
+                return [
+                    {
+                        id: 'setting',
+                        key: SETTINGS_IMPORT_PDF_IMAGES,
+                        title: lc('import_pdf_images'),
+                        description: lc('import_pdf_images_desc'),
+                        currentValue: () => ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES),
+                        rightValue: () => {
+                            switch (ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES)) {
+                                case PDFImportImages.ask:
+                                    return PDFImportImages.ask.toUpperCase();
+                                case PDFImportImages.never:
+                                    return lu('page');
+                                case PDFImportImages.always:
+                                    return lu('image');
+                            }
+                        },
+                        valueType: 'string',
+                        autoSizeListItem: true,
+                        values: [
+                            { value: PDFImportImages.ask, title: lc('ask_everytime') },
+                            { value: PDFImportImages.never, title: lc('pdf_one_image_per_page') },
+                            { value: PDFImportImages.always, title: lc('pdf_one_image_per_pdf_image') }
+                        ]
+                    }
+                ];
+            }
             case 'pdf_export':
                 return (
                     __ANDROID__
@@ -628,6 +659,13 @@
                     {
                         id: 'sub_settings',
                         icon: 'mdi-file-pdf-box',
+                        title: lc('pdf_import'),
+                        description: lc('pdf_import_settings'),
+                        options: () => getSubSettings('pdf_import')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-file-pdf-box',
                         title: lc('pdf_export'),
                         description: lc('pdf_export_settings'),
                         options: () => getSubSettings('pdf_export')
@@ -976,12 +1014,12 @@
                         });
                     } else {
                         const component = (await import('~/components/common/OptionSelect.svelte')).default;
-                        DEV_LOG && console.log('OptionSelect', item);
                         const result = await showAlertOptionSelect(
                             component,
                             {
-                                height: Math.min(item.values.length * 56, 400),
-                                rowHeight: 56,
+                                height: item.autoSizeListItem ? undefined : Math.min(item.values.length * 56, 400),
+                                rowHeight: item.autoSizeListItem ? undefined : 56,
+                                autoSizeListItem: item.autoSizeListItem,
                                 options: item.values.map((k) => ({
                                     name: k.title || k.name,
                                     data: k.value,

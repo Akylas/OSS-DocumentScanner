@@ -3,10 +3,11 @@ import { Screen, knownFolders } from '@nativescript/core';
 export enum PDFImportImages {
     ask = 'ask',
     never = 'never',
-    always = 'always',
+    always = 'always'
 }
 
 export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
+export const SETTINGS_IMPORT_PDF_IMAGES = 'import_pdf_images';
 
 export const TRANSFORMS_SPLIT = '|';
 

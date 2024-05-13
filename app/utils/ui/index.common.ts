@@ -50,6 +50,7 @@ import {
     PDF_IMPORT_IMAGES,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
+    SETTINGS_IMPORT_PDF_IMAGES,
     TRANSFORMS_SPLIT,
     USE_SYSTEM_CAMERA
 } from '~/models/constants';
@@ -232,7 +233,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
 
         // First we check/ask the user if he wants to import PDF pages or images
-        let pdfImportsImages = ApplicationSettings.getString('import_pdf_images', PDF_IMPORT_IMAGES) as PDFImportImages;
+        let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
             const options = new ObservableArray([
                 { name: lc('pdf_one_image_per_page'), data: PDFImportImages.never, type: 'checkbox', boxType: 'circle', value: true },
@@ -256,7 +257,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
             );
             pdfImportsImages = result.data;
             if (result.confirmed) {
-                ApplicationSettings.setString('import_pdf_images', pdfImportsImages);
+                ApplicationSettings.setString(SETTINGS_IMPORT_PDF_IMAGES, pdfImportsImages);
             }
             DEV_LOG && console.log('showPromptOptionSelect', result);
         }
