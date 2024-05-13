@@ -100,7 +100,7 @@
     "file_naming_settings": "nastavení související s názvy obrázků/PDF při exportu",
     "file_naming_template": "šablona pojmenování souborů",
     "filename_date_format": "formát data souboru",
-    "filename_date_format_desc": "definuje formát data použitý při exportu souborů\n\n* pro formát %2$s použijte %1$s\n\n* použijte %3$s pro časové razítko epochy (trvání v ms od roku 1970).\n\n* použijte vlastní formát pomocí %4$s. \nMůžete najít další %5$s",
+    "filename_date_format_fulldesc": "definuje formát data použitý při exportu souborů\n\n* pro formát %2$s použijte %1$s\n\n* použijte %3$s pro časové razítko epochy (trvání v ms od roku 1970).\n\n* použijte vlastní formát pomocí %4$s. \nMůžete najít další %5$s",
     "filename_use_document_name": "pokud je to možné, použijte název dokumentu",
     "filters": "filtry",
     "finish": "dokončit",

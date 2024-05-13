@@ -100,7 +100,7 @@
     "file_naming_settings": "ustawienia związane z nazwami obrazów/plików PDF podczas eksportowania",
     "file_naming_template": "szablon nazewnictwa plików",
     "filename_date_format": "format daty nazwy pliku",
-    "filename_date_format_desc": "określa format daty używany podczas eksportowania plików\n\n* użyj %1$s dla formatu %2$s\n\n* użyj %3$s jako znacznika czasu epoki (czas trwania w ms od 1970).\n\n* użyj niestandardowego formatu, używając %4$s. \nMożesz znaleźć więcej %5$s",
+    "filename_date_format_fulldescdesc": "określa format daty używany podczas eksportowania plików\n\n* użyj %1$s dla formatu %2$s\n\n* użyj %3$s jako znacznika czasu epoki (czas trwania w ms od 1970).\n\n* użyj niestandardowego formatu, używając %4$s. \nMożesz znaleźć więcej %5$s",
     "filename_use_document_name": "jeśli to możliwe, używaj nazwy dokumentu",
     "filters": "filtry",
     "finish": "skończyć",

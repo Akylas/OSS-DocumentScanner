@@ -1,5 +1,6 @@
 import { Screen, knownFolders } from '@nativescript/core';
 
+export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
 export const TRANSFORMS_SPLIT = '|';
 
 export const IMG_FORMAT = 'jpg';

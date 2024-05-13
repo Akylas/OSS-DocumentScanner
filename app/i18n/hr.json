@@ -101,7 +101,7 @@
     "file_naming_settings": "postavke koje se odnose na naziv slika/PDF tijekom izvoza",
     "file_naming_template": "način imenovanja datoteka",
     "filename_date_format": "format datuma imena datoteke",
-    "filename_date_format_desc": "definira format datuma koji se koristi prilikom izvoza datoteka\n\n* koristite '%1$s' za %2$s format\n\n* koristite '%3$s' za vremensku oznaku epohe (trajanje u ms od 1970).\n\n* definirajte svoj format koristeći %4$s. \nViše detalja pronađite %5$s",
+    "filename_date_format_fulldesc": "definira format datuma koji se koristi prilikom izvoza datoteka\n\n* koristite '%1$s' za %2$s format\n\n* koristite '%3$s' za vremensku oznaku epohe (trajanje u ms od 1970).\n\n* definirajte svoj format koristeći %4$s. \nViše detalja pronađite %5$s",
     "filename_use_document_name": "koristi naziv dokumenta kada je to moguće",
     "filters": "filteri",
     "finish": "završi",

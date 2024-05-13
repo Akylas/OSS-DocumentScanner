@@ -310,7 +310,6 @@ declare namespace com {
 			}
 			export namespace CustomImageAnalysisCallback {
 				export class Companion extends java.lang.Object {
-                    public static getFileName(arg0: globalAndroid.content.Context, e: string): string;
 					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.Companion>;
 					public static readQRCodeSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: string): void;
 					public static pointsFromJSONString(param0: string): java.util.List<java.util.List<globalAndroid.graphics.Point>>;
@@ -362,7 +361,6 @@ declare namespace com {
 					public static getJSONDocumentCornersSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
 					public static generateQRCodeSync(param0: string, param1: string, param2: number, param3: number, param4: string): globalAndroid.graphics.Bitmap;
 					public static cropDocument(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string): void;
-					public static importPdfToTempImages(param0: globalAndroid.content.Context, pdfPath: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, options:string): void;
 				}
 				export class FunctionCallback extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback>;
@@ -706,6 +704,7 @@ declare namespace com {
 				export namespace ImageUtil {
 					export class Companion extends java.lang.Object {
 						public static class: java.lang.Class<com.akylas.documentscanner.utils.ImageUtil.Companion>;
+						public static getFileName(arg0: globalAndroid.content.Context, e: string): string;
 						public static getImageSize(param0: globalAndroid.content.Context, param1: string): number[];
 						public static readBitmapFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions): globalAndroid.graphics.Bitmap;
 						public static readBitmapFromFile(param0: globalAndroid.content.Context, param1: string, param2: string): globalAndroid.graphics.Bitmap;
@@ -761,6 +760,8 @@ declare namespace com {
 						static compressPDF(src: string, dst: string, jpegQuality: number);
 						static generatePDF(context: android.content.Context, destFolder: string, fileName: string, options: string);
 						static generatePDFASync(context: android.content.Context, destFolder: string, fileName: string, options: string, callback: FunctionCallback);
+						static importPdfToTempImages(param0: globalAndroid.content.Context, pdfPath: string, param2: FunctionCallback, options:string): void;
+
 					}
 				}
 			}

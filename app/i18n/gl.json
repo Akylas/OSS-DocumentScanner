@@ -101,7 +101,7 @@
     "file_naming_settings": "configuracións relacionadas co nome das imaxes/PDF durante a exportación",
     "file_naming_template": "modelo de nomeamento de ficheiros",
     "filename_date_format": "formato de data do nome do ficheiro",
-    "filename_date_format_desc": "define o formato de data utilizado ao exportar ficheiros\n\n* use %1$s para o formato %2$s\n\n* use %3$s para a marca de tempo de época (duración en ms dende 1970).\n\n* use o formato personalizado usando %4$s. \nPodes atopar máis %5$s",
+    "filename_date_format_fulldesc": "define o formato de data utilizado ao exportar ficheiros\n\n* use %1$s para o formato %2$s\n\n* use %3$s para a marca de tempo de época (duración en ms dende 1970).\n\n* use o formato personalizado usando %4$s. \nPodes atopar máis %5$s",
     "filename_use_document_name": "use o nome do documento cando sexa posible",
     "filters": "filtros",
     "finish": "rematar",

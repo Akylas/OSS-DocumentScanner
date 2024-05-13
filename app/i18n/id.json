@@ -100,7 +100,7 @@
     "file_naming_settings": "pengaturan terkait dengan nama gambar/PDF saat mengekspor",
     "file_naming_template": "templat penamaan file",
     "filename_date_format": "format tanggal nama file",
-    "filename_date_format_desc": "mendefinisikan format tanggal yang digunakan saat mengekspor file\n\n* gunakan %1$s untuk format %2$s\n\n* gunakan stempel waktu %3$s untuk epoch (durasi dalam ms sejak 1970).\n\n* gunakan format khusus menggunakan %4$s. \nAnda dapat menemukan %5$s lainnya",
+    "filename_date_format_fulldesc": "mendefinisikan format tanggal yang digunakan saat mengekspor file\n\n* gunakan %1$s untuk format %2$s\n\n* gunakan stempel waktu %3$s untuk epoch (durasi dalam ms sejak 1970).\n\n* gunakan format khusus menggunakan %4$s. \nAnda dapat menemukan %5$s lainnya",
     "filename_use_document_name": "gunakan nama dokumen bila memungkinkan",
     "filters": "filter",
     "finish": "selesai",

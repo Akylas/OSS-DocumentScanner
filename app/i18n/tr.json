@@ -101,7 +101,7 @@
     "file_naming_settings": "dışa aktarma sırasında görsellerin/PDF'nin adıyla ilgili ayarlar",
     "file_naming_template": "dosya adlandırma şablonu",
     "filename_date_format": "dosya adı tarih biçimi",
-    "filename_date_format_desc": "dosyaları dışa aktarırken kullanılan tarih biçimini tanımlar\n* %2$s biçimi için %1$s kullanın\n* dönem (1970'den bu yana ms cinsinden süre) zaman damgası için %3$s kullanın\n* %4$s kullanarak özel formatı kullanın. Daha fazlasını %5$s bulabilirsiniz",
+    "filename_date_format_fulldesc": "dosyaları dışa aktarırken kullanılan tarih biçimini tanımlar\n* %2$s biçimi için %1$s kullanın\n* dönem (1970'den bu yana ms cinsinden süre) zaman damgası için %3$s kullanın\n* %4$s kullanarak özel formatı kullanın. Daha fazlasını %5$s bulabilirsiniz",
     "filename_use_document_name": "mümkün olduğunda belge adını kullanın",
     "filters": "filtreler",
     "finish": "bitir",

@@ -101,7 +101,7 @@
     "file_naming_settings": "inställningar relaterade till namn på bilder/PDF vid export",
     "file_naming_template": "filnamnsmall",
     "filename_date_format": "filnamns datumformat",
-    "filename_date_format_desc": "definierar datumformatet som används vid export av filer_x000D_ \n* använd %1$s för %2$s format_x000D_ \n* använd %3$s för epok (längd i ms sedan 1970) timestamp_x000D_ \n* använd anpassat format med %4$s. Du kan hitta fler %5$s",
+    "filename_date_format_fulldesc": "definierar datumformatet som används vid export av filer_x000D_ \n* använd %1$s för %2$s format_x000D_ \n* använd %3$s för epok (längd i ms sedan 1970) timestamp_x000D_ \n* använd anpassat format med %4$s. Du kan hitta fler %5$s",
     "filename_use_document_name": "använd dokumentnamn när det är möjligt",
     "filters": "filter",
     "finish": "avsluta",
