@@ -37,7 +37,7 @@
         transformPages,
         updateSnackMessage
     } from '~/utils/ui';
-    import { colors, fontScale, navigationBarHeight, screenWidthDips } from '~/variables';
+    import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -643,7 +643,7 @@
             </Template>
         </collectionview>
 
-        <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
+        <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}

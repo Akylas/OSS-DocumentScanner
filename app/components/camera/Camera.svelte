@@ -33,7 +33,7 @@
     import { recycleImages } from '~/utils/images';
     import { navigate } from '~/utils/svelte/ui';
     import { goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
-    import { colors, navigationBarHeight } from '~/variables';
+    import { colors, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -538,7 +538,7 @@
             <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
         {/if}
 
-        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $navigationBarHeight} paddingTop={30} row={3}>
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3}>
             <IconButton
                 colSpan={2}
                 color="white"

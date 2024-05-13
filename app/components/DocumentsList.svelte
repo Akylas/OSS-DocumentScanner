@@ -41,7 +41,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, navigationBarHeight } from '~/variables';
+    import { colors, fontScale, windowInset } from '~/variables';
 
     const textPaint = new Paint();
 </script>
@@ -698,7 +698,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}

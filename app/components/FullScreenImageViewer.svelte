@@ -9,7 +9,7 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { colors, navigationBarHeight, statusBarHeight } from '~/variables';
+    import { colors, windowInset } from '~/variables';
     import { OCRPage } from '~/models/OCRDocument';
 
     // technique for only specific properties to get updated on store change
@@ -103,7 +103,7 @@
 </script>
 
 <page id="fullscreenImage" actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" {statusBarStyle}>
-    <gridlayout rows="auto,*" android:paddingBottom={$navigationBarHeight}>
+    <gridlayout rows="auto,*" android:paddingBottom={$windowInset.bottom}>
         <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
 
         <pager
@@ -114,7 +114,7 @@
             selectedIndex={startPageIndex}
             transformers="zoomOut"
             on:selectedIndexChange={onSelectedIndex}
-            android:marginTop={$statusBarHeight}>
+            android:marginTop={$windowInset.top}>
             <Template let:item>
                 <gridlayout rows="*,auto" width="100%">
                     <RotableImageView id="imageView" {imageFunctionArg} {item} margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} zoomable={true} />

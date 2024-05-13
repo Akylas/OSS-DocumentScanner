@@ -41,7 +41,7 @@
         showSlidersPopover
     } from '~/utils/ui';
     import { getImageSize } from '~/utils/utils';
-    import { colors, navigationBarHeight } from '~/variables';
+    import { colors, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer, colorBackground } = $colors);
@@ -679,7 +679,7 @@
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,auto,auto" android:paddingBottom={$navigationBarHeight}>
+    <gridlayout rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">

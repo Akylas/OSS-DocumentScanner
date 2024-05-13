@@ -39,7 +39,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -946,7 +946,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" iosIgnoreSafeArea={true} row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}

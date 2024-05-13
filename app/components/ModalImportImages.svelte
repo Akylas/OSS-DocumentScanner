@@ -9,7 +9,7 @@
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
     import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/models/constants';
-    import { navigationBarHeight } from '~/variables';
+    import { windowInset } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
     import { ImportImageData } from '~/models/OCRDocument';
 
@@ -46,7 +46,7 @@
 </script>
 
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
-    <gridlayout backgroundColor="black" columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$navigationBarHeight}>
+    <gridlayout backgroundColor="black" columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} id="pager" colSpan={3} disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <CropView {...item} />

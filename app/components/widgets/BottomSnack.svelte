@@ -1,8 +1,6 @@
 <script context="module" lang="ts">
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { NativeViewElementNode } from 'svelte-native/dom';
     import { conditionalEvent } from '~/utils/svelte/ui';
-    import { colors, fontScale, fonts } from '~/variables';
+    import { colors } from '~/variables';
 </script>
 
 <script lang="ts">

@@ -47,16 +47,13 @@ export const colors = writable({
 export const fonts = writable({
     mdi: ''
 });
-let innerStatusBarHeight = 20;
-export const statusBarHeight = writable(innerStatusBarHeight);
+export const windowInset = writable({ top: 0, left: 0, right: 0, bottom: 0 });
 export const actionBarButtonHeight = writable(0);
 export const actionBarHeight = writable(0);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const screenRatio = screenWidthDips / screenHeightDips;
-export const navigationBarHeight = writable(0);
 
-export let globalMarginTop = 0;
 export const fontScale = writable(1);
 export const isRTL = writable(false);
 
@@ -68,32 +65,52 @@ const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         // setTimeout(() => {
-        const rootView = Application.getRootView();
+            const rootView = Application.getRootView();
+            if (rootView) {
+                (rootView.nativeViewProtected as android.view.View).setOnApplyWindowInsetsListener(
+                    new android.view.View.OnApplyWindowInsetsListener({
+                        onApplyWindowInsets(view, insets) {
+                            const inset = insets.getSystemWindowInsets();
+                            windowInset.set({
+                                top: Utils.layout.toDeviceIndependentPixels(inset.top),
+                                bottom: Utils.layout.toDeviceIndependentPixels(inset.bottom),
+                                left: Utils.layout.toDeviceIndependentPixels(inset.left),
+                                right: Utils.layout.toDeviceIndependentPixels(inset.right)
+                            });
+                            return insets;
+                        }
+                    })
+                );
+            }
         const rootViewStyle = rootView?.style;
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
-        const activity = Application.android.startActivity;
+        const context = Utils.android.getApplicationContext();
         const nUtils = com.akylas.documentscanner.Utils.Companion;
-        const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
-        if (nActionBarHeight > 0) {
-            actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
-        }
+
         const resources = Utils.android.getApplicationContext().getResources();
         updateSystemFontScale(resources.getConfiguration().fontScale);
-        const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
-        let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
-        if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
-            navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
-        }
         isRTL.set(resources.getConfiguration().getLayoutDirection() === 1);
 
-        resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
-        if (id > 0 && resourceId > 0) {
-            innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
-            statusBarHeight.set(innerStatusBarHeight);
+       // ActionBar
+        // resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
+        let nActionBarHeight = Utils.layout.toDeviceIndependentPixels(nUtils.getDimensionFromInt(context, 16843499 /* actionBarSize */));
+        // let nActionBarHeight = 0;
+        // if (resourceId > 0) {
+        //     nActionBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+        // }
+        if (nActionBarHeight > 0) {
+            actionBarHeight.set(nActionBarHeight);
+            rootViewStyle?.setUnscopedCssVariable('--actionBarHeight', nActionBarHeight + '');
+        } else {
+            nActionBarHeight = parseFloat(rootViewStyle.getCssVariable('--actionBarHeight'));
+            actionBarHeight.set(nActionBarHeight);
         }
-        globalMarginTop = innerStatusBarHeight;
+        const nActionBarButtonHeight = nActionBarHeight - 10;
+        actionBarButtonHeight.set(nActionBarButtonHeight);
+        rootViewStyle?.setUnscopedCssVariable('--actionBarButtonHeight', nActionBarButtonHeight + '');
+        DEV_LOG && console.log('actionBarHeight', nActionBarHeight);
         // }, 0);
     }
 
@@ -111,7 +128,6 @@ const onInitRootView = function () {
         Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
-        navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
     }
     updateThemeColors(getRealTheme(theme));
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));

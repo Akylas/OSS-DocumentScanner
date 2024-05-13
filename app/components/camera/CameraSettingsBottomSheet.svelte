@@ -12,7 +12,7 @@
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips, statusBarHeight } from '~/variables';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
     import { MatricesTypes } from '~/utils/color_matrix';
 
@@ -223,7 +223,7 @@
     }
 
     const maxHeight = 40 + (Object.keys(OPTIONS).length / 2) * 50 + 40 + Object.keys(TRANSFORMS).length * 70 + 80;
-    const maxScreenHeight = screenHeightDips - $statusBarHeight - $navigationBarHeight;
+    const maxScreenHeight = screenHeightDips - $windowInset.top - $windowInset.bottom;
 </script>
 
 <gesturerootview id="cameraSettingsBottomSheet" maxHeight={screenHeightDips} padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'}>

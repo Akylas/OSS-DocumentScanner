@@ -1,6 +1,9 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "android.view:View.OnApplyWindowInsetsListener",
+        "android.view:WindowInsets",
+        "android.graphics:Insets",
         "android.graphics:Bitmap.CompressFormat",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",

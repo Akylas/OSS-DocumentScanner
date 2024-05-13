@@ -21,7 +21,7 @@
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
     import { getFileNameForDocument } from '~/utils/utils.common';
-    import { colors, fonts, navigationBarHeight, screenHeightDips, screenRatio, screenWidthDips } from '~/variables';
+    import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
     import { getPageColorMatrix } from '~/utils/matrix';
     // let bitmapPaint: Paint;
@@ -265,7 +265,7 @@
     <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all">
         <gridlayout rows="auto,*">
             <drawer bind:this={drawer} row={1}>
-                <gridlayout rows="auto,*,auto" prop:mainContent android:paddingBottom={$navigationBarHeight}>
+                <gridlayout rows="auto,*,auto" prop:mainContent android:paddingBottom={$windowInset.bottom}>
                     <gridlayout backgroundColor={colorSurface} columns="*,*" padding={5} rows="auto,auto" on:tap={() => drawer?.open()}>
                         <label color={colorOnSurface} fontSize={15}>
                             <span text={lc('orientation') + ': '} />

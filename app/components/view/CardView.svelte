@@ -39,7 +39,7 @@
         showPopoverMenu,
         transformPages
     } from '~/utils/ui';
-    import { colors, navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
@@ -665,7 +665,7 @@
                 selectedColor={colorOnSurfaceVariant}
                 type="worm"
                 verticalAlignment="bottom" />
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$navigationBarHeight}>
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
                 {#if __IOS__}
                     <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}

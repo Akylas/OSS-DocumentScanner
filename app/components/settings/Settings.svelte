@@ -42,7 +42,7 @@
     import { navigate } from '~/utils/svelte/ui';
     import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { Label } from '@nativescript-community/ui-label';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
@@ -1132,7 +1132,7 @@
 
 <page id="settingsPage" actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
+        <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">
                     <stacklayout
