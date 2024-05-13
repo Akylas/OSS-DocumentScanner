@@ -1,7 +1,7 @@
 import { request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { AlertDialog, MDCAlertControlerOptions, alert, prompt } from '@nativescript-community/ui-material-dialogs';
+import { AlertDialog, MDCAlertControlerOptions, PromptOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -30,8 +30,10 @@ import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import * as imagePickerPlugin from '@nativescript/imagepicker';
+import type { ComponentProps } from 'svelte';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
+import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
@@ -44,6 +46,8 @@ import {
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
     IMG_FORMAT,
+    PDFImportImages,
+    PDF_IMPORT_IMAGES,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
     TRANSFORMS_SPLIT,
@@ -61,6 +65,7 @@ import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
 import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
 import { Label } from '@nativescript-community/ui-label';
+import { ConfirmOptions } from '@akylas/nativescript/ui/dialogs/dialogs-common';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -218,13 +223,41 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
             ([p, f], e) => {
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith('content://')) {
-                    testStr = com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getFileName(Utils.android.getApplicationContext(), e);
+                    testStr = com.akylas.documentscanner.utils.ImageUtil.Companion.getFileName(Utils.android.getApplicationContext(), e);
                 }
                 return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
             },
             [[], []]
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
+        let pdfImportsImages = ApplicationSettings.getString('import_pdf_images', PDF_IMPORT_IMAGES) as PDFImportImages;
+        if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
+            const options = new ObservableArray([
+                { name: lc('pdf_one_image_per_page'), data: PDFImportImages.never, type: 'checkbox', boxType: 'circle', value: true },
+                { name: lc('pdf_one_image_per_pdf_image'), data: PDFImportImages.always, type: 'checkbox', boxType: 'circle', value: false }
+            ]);
+            // const component = (await import('~/components/common/OptionSelect.svelte')).default;
+            const result = await showConfirmOptionSelect<PDFImportImages>(
+                {
+                    autoSizeListItem: true,
+                    onlyOneSelected: true,
+                    fontWeight: 'normal',
+                    selectedIndex: 0,
+                    options
+                },
+                {
+                    title: lc('import_pdf_images'),
+                    message: lc('import_pdf_images_desc'),
+                    okButtonText: lc('always'),
+                    cancelButtonText: lc('just_once')
+                }
+            );
+            pdfImportsImages = result.data;
+            if (result.confirmed) {
+                ApplicationSettings.setString('import_pdf_images', pdfImportsImages);
+            }
+            DEV_LOG && console.log('showPromptOptionSelect', result);
+        }
         // We do it in batch of 5 to prevent memory issues
 
         const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
@@ -236,7 +269,11 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                     try {
                         const start = Date.now();
                         DEV_LOG && console.log('importFromPdf', pdfPath, Date.now() - start, 'ms');
-                        const pdfImages = await importPdfToTempImages(pdfPath);
+                        const pdfImages = await importPdfToTempImages(pdfPath, {
+                            importPDFImages: pdfImportsImages === PDFImportImages.always,
+                            compressFormat,
+                            compressQuality
+                        });
                         DEV_LOG && console.log('importFromPdf done ', pdfPath, pdfImages, Date.now() - start, 'ms');
                         resolve(pdfImages);
                     } catch (error) {
@@ -506,6 +543,36 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
             ...(options ? options : {})
         });
         return result;
+    } catch (err) {
+        throw err;
+    } finally {
+        componentInstanceInfo.element.nativeElement._tearDownUI();
+        componentInstanceInfo.viewInstance.$destroy();
+        componentInstanceInfo = null;
+    }
+}
+export async function showConfirmOptionSelect<T>(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<ConfirmOptions & MDCAlertControlerOptions>) {
+    const component = (await import('~/components/common/OptionSelect.svelte')).default;
+    let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
+    try {
+        componentInstanceInfo = resolveComponentElement(component, {
+            onClose: (result) => {
+                view.bindingContext.closeCallback(result);
+            },
+            // onCheckBox(item, value, e) {
+            // view.bindingContext.closeCallback(item);
+            // },
+            trackingScrollView: 'collectionView',
+            ...props
+        }) as ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
+        const view: View = componentInstanceInfo.element.nativeView;
+        const result = await confirm({
+            view,
+            okButtonText: lc('ok'),
+            cancelButtonText: lc('cancel'),
+            ...(options ? options : {})
+        });
+        return { confirmed: result, data: componentInstanceInfo.viewInstance.currentlyCheckedItem.data as T };
     } catch (err) {
         throw err;
     } finally {

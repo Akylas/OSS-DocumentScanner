@@ -1,3 +1,5 @@
+<svelte:options accessors />
+
 <script context="module" lang="ts">
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
@@ -30,15 +32,17 @@
     export let containerColumns: string = '*';
     export let autoSizeListItem: boolean = false;
     export let fontWeight = 'bold';
-    export let options: OptionType[] | ObservableArray<OptionType[]>;
+    export let options: OptionType[] | ObservableArray<OptionType>;
     export let onClose = null;
     export let selectedIndex = -1;
     export let height: number | string = null;
     export let fontSize = 16;
     export let iconFontSize = 24;
+    export let onlyOneSelected = false;
+    export let currentlyCheckedItem = null;
     export let onCheckBox: (item, value, e) => void = null;
     export let onRightIconTap: (item, e) => void = null;
-    let filteredOptions: OptionType[] | ObservableArray<OptionType[]> = null;
+    let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
 
     // technique for only specific properties to get updated on store change
@@ -106,6 +110,33 @@
             return;
         }
         ignoreNextOnCheckBoxChange = true;
+        if (onlyOneSelected && options instanceof ObservableArray) {
+            if (event.value) {
+                const oldSelected = currentlyCheckedItem;
+                if (oldSelected === item) {
+                    ignoreNextOnCheckBoxChange = false;
+                    return;
+                }
+                DEV_LOG && console.log('onlyOneSelected', oldSelected);
+                item.value = true;
+                currentlyCheckedItem = item;
+                if (oldSelected) {
+                    const index = options.indexOf(oldSelected);
+                    DEV_LOG && console.log('onlyOneSelected1', index);
+                    if (index >= 0) {
+                        oldSelected.value = false;
+                        options.setItem(index, oldSelected);
+                    }
+                }
+                options.setItem(options.indexOf(currentlyCheckedItem), currentlyCheckedItem);
+            } else {
+                // we dont allow to have none selected
+                ignoreNextOnCheckBoxChange = false;
+                const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+                checkboxView.checked = true;
+                return;
+            }
+        }
         onCheckBox?.(item, event.value, event);
         ignoreNextOnCheckBoxChange = false;
     }
@@ -126,8 +157,13 @@
         return 'default';
     }
     function onDataPopulated(event) {
-        if (selectedIndex > 0) {
-            event.object.scrollToIndex(selectedIndex, false);
+        if (selectedIndex !== undefined) {
+            if (onlyOneSelected) {
+                currentlyCheckedItem = options instanceof ObservableArray ? options.getItem(selectedIndex) : options[selectedIndex];
+            }
+            if (selectedIndex > 0) {
+                event.object.scrollToIndex(selectedIndex, false);
+            }
         }
     }
     const component = autoSizeListItem ? ListItemAutoSize : ListItem;

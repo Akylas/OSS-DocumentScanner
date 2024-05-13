@@ -197,9 +197,9 @@
                     {
                         id: 'setting',
                         key: 'image_export_format',
-                        title: lc('image_export_format'),
+                        title: lc('image_format'),
                         currentValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT),
-                        description: lc('image_export_format_desc'),
+                        description: lc('image_format_desc'),
                         rightValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT).toUpperCase(),
                         valueType: 'string',
                         values: [
@@ -213,14 +213,14 @@
                         min: 10,
                         max: 100,
                         step: 1,
-                        title: lc('image_export_quality'),
-                        description: lc('image_export_quality_desc'),
+                        title: lc('image_quality'),
+                        description: lc('image_quality_desc'),
                         type: 'slider',
                         rightValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS),
                         currentValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS)
                     }
                 ];
-            case 'pdf':
+            case 'pdf_export':
                 return (
                     __ANDROID__
                         ? [
@@ -324,6 +324,7 @@
                             max: 100,
                             step: 1,
                             title: lc('jpeg_quality'),
+                            description: lc('pdf_export_jpeg_quality'),
                             type: 'slider',
                             rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality'],
                             currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
@@ -629,15 +630,13 @@
                         icon: 'mdi-file-pdf-box',
                         title: lc('pdf_export'),
                         description: lc('pdf_export_settings'),
-                        options: () => getSubSettings('pdf')
-                    }
-                ] as any)
-                .concat([
+                        options: () => getSubSettings('pdf_export')
+                    },
                     {
                         id: 'sub_settings',
                         icon: 'mdi-image',
-                        title: lc('image_export'),
-                        description: lc('image_export_settings'),
+                        title: lc('image_settings'),
+                        description: lc('image_settings_desc'),
                         options: () => getSubSettings('images')
                     },
                     {

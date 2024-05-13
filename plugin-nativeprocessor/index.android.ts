@@ -291,10 +291,10 @@ export function createAutoScanHandler(cropView: CropView, block: (result) => voi
 
 export async function importPdfToTempImages(pdfPath: string, options?: Partial<PDFImportOptions>) {
     return new Promise<string[]>((resolve, reject) => {
-        com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.importPdfToTempImages(
+        com.akylas.documentscanner.utils.PDFUtils.Companion.importPdfToTempImages(
             Utils.android.getApplicationContext(),
             pdfPath,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.PDFUtils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
