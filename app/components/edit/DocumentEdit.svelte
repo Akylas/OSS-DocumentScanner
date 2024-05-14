@@ -445,25 +445,29 @@
                     {
                         title: lc('brightness'),
                         icon: 'mdi-brightness-5',
-                        min: -255,
-                        max: 255,
-                        // step: 1,
-                        resetValue: 0,
-                        value: current.brightness,
+                        min: -100,
+                        max: 500,
+                        resetValue: 100,
+                        step: __IOS__ ? 1 : undefined,
+                        // value: 0,
+                        formatter: (v) => (v / 100).toFixed(),
+                        value: Math.round(Math.max(-1, Math.min(current.brightness?? 1, 5)) * 100),
                         onChange: debounce((value) => {
-                            applyBrightnessContrast(value, current.contrast);
+                            applyBrightnessContrast(value / 100, current.contrast);
                         }, 10)
                     },
                     {
                         title: lc('contrast'),
                         icon: 'mdi-contrast-box',
-                        min: 1,
-                        max: 100,
-                        resetValue: 10,
-                        // step: 0.1,
-                        value: Math.round(current.contrast * 10),
+                        min: 0,
+                        max: 400,
+                        resetValue: 100,
+                        formatter: (v) => (v / 100).toFixed(),
+                        step: __IOS__ ? 1 : undefined,
+                        // value: 10,
+                        value: Math.round(Math.max(0, Math.min(current.contrast ?? 1, 4)) * 100),
                         onChange: debounce((value) => {
-                            applyBrightnessContrast(current.brightness, value / 10);
+                            applyBrightnessContrast(current.brightness, value / 100);
                         }, 10)
                     }
                 ]

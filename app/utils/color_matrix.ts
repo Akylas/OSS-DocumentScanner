@@ -312,7 +312,11 @@ const Matrices = {
         defaultValue: 1
     },
     brightnessAndContrast: {
-        fn: (brightness = 1, contrast = 1): Matrix => [contrast, 0, 0, 0, brightness, 0, contrast, 0, 0, brightness, 0, 0, contrast, 0, brightness, 0, 0, 0, 1, 0],
+        fn: (brightness = 1, contrast = 1): Matrix => {
+            const scale = contrast + brightness;
+            const translate = 0.5 * (1 - contrast) * bias;
+            return [scale, 0, 0, 0, translate, 0, scale, 0, 0, translate, 0, 0, scale, 0, translate, 0, 0, 0, 1, 0];
+        },
         range: [-10, 10],
         defaultValue: 1
     },
