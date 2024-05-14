@@ -379,14 +379,14 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       
       Mat transform = getPerspectiveTransform(srcTriangle, dstTriangle);
       cv::warpPerspective(srcBitmapMat, dstBitmapMat, transform, dstBitmapMat.size());
-      if (transforms != nil) {
+      if (transforms != nil && ![transforms isEqual:[NSNull null]]) {
         std::string transformsStd = std::string([transforms UTF8String]);
         if (transformsStd.length() > 0)
         {
           detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd);
         }
       }
-      if (saveInFolder != nil) {
+      if (saveInFolder != nil && ![saveInFolder isEqual:[NSNull null]]) {
         
         NSString* imagePath = [NSString stringWithFormat:@"%@/%@", saveInFolder, fileName ?: [NSString stringWithFormat:@"cropedBitmap_%@.%@", index, compressFormat]];
         if ([compressFormat isEqualToString:@"jpg"]) {
