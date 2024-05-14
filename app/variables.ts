@@ -65,23 +65,23 @@ const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         // setTimeout(() => {
-            const rootView = Application.getRootView();
-            if (rootView) {
-                (rootView.nativeViewProtected as android.view.View).setOnApplyWindowInsetsListener(
-                    new android.view.View.OnApplyWindowInsetsListener({
-                        onApplyWindowInsets(view, insets) {
-                            const inset = insets.getSystemWindowInsets();
-                            windowInset.set({
-                                top: Utils.layout.toDeviceIndependentPixels(inset.top),
-                                bottom: Utils.layout.toDeviceIndependentPixels(inset.bottom),
-                                left: Utils.layout.toDeviceIndependentPixels(inset.left),
-                                right: Utils.layout.toDeviceIndependentPixels(inset.right)
-                            });
-                            return insets;
-                        }
-                    })
-                );
-            }
+        const rootView = Application.getRootView();
+        if (rootView) {
+            (rootView.nativeViewProtected as android.view.View).setOnApplyWindowInsetsListener(
+                new android.view.View.OnApplyWindowInsetsListener({
+                    onApplyWindowInsets(view, insets) {
+                        const inset = insets.getSystemWindowInsets();
+                        windowInset.set({
+                            top: Utils.layout.toDeviceIndependentPixels(inset.top),
+                            bottom: Utils.layout.toDeviceIndependentPixels(inset.bottom),
+                            left: Utils.layout.toDeviceIndependentPixels(inset.left),
+                            right: Utils.layout.toDeviceIndependentPixels(inset.right)
+                        });
+                        return insets;
+                    }
+                })
+            );
+        }
         const rootViewStyle = rootView?.style;
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
@@ -93,7 +93,7 @@ const onInitRootView = function () {
         updateSystemFontScale(resources.getConfiguration().fontScale);
         isRTL.set(resources.getConfiguration().getLayoutDirection() === 1);
 
-       // ActionBar
+        // ActionBar
         // resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
         let nActionBarHeight = Utils.layout.toDeviceIndependentPixels(nUtils.getDimensionFromInt(context, 16843499 /* actionBarSize */));
         // let nActionBarHeight = 0;
