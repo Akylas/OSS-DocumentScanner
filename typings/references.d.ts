@@ -37,4 +37,4 @@ declare const STORE_REVIEW_LINK: string;
 declare const SPONSOR_URL: string;
 declare const __APP_ID__: string;
 declare const __APP_VERSION__: string;
-declare const __APP_BUILD_NUMBER__: string;
+declare const __APP_BUILD_NUMBER__: number;
