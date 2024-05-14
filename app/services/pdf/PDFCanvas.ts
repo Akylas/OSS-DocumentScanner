@@ -3,7 +3,7 @@ import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/c
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
-import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/models/constants';
+import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/utils/constants';
 
 export interface PDFExportBaseOptions {
     reduce_image_size: boolean;

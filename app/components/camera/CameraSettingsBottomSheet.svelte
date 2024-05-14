@@ -8,7 +8,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu } from '~/utils/ui';

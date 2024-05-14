@@ -8,7 +8,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
-    import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/models/constants';
+    import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/utils/constants';
     import { windowInset } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
     import { ImportImageData } from '~/models/OCRDocument';

@@ -14,7 +14,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
+    import { IMAGE_CONTEXT_OPTIONS } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';

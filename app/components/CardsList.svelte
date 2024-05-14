@@ -21,7 +21,7 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO } from '~/models/constants';
+    import { CARD_RATIO } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import { showError } from '~/utils/error';

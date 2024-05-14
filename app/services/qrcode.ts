@@ -1,7 +1,7 @@
 import { ImageSource, Observable, PageTransition, Screen, SharedTransition } from '@nativescript/core';
 import { detectQRCode, detectQRCodeFromFile, generateQRCodeImage } from 'plugin-nativeprocessor';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { QRCODE_RESIZE_THRESHOLD } from '~/models/constants';
+import { QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { navigate } from '~/utils/svelte/ui';
 

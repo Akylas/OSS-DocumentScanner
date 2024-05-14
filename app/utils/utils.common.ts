@@ -15,7 +15,7 @@ export function omit<T extends object, U extends keyof T>(object: T, ...props: U
         .reduce((newObj, key) => Object.assign(newObj, { [key]: object[key] }), {} as any);
 }
 
-import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME } from '~/models/constants';
+import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME } from '~/utils/constants';
 
 export function cleanFilename(str) {
     return str.replace(/[|?*<\":>+\[\]'"]+/g, '').replace(/[\\\s\t\n\/]+/g, '_');

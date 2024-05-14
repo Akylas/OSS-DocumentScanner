@@ -6,6 +6,8 @@ export enum PDFImportImages {
     always = 'always'
 }
 
+export const SETTINGS_APP_VERSION = '_app_version';
+export const SETTINGS_FIRST_OPEN = '_first_open';
 export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
 export const SETTINGS_IMPORT_PDF_IMAGES = 'import_pdf_images';
 

@@ -36,7 +36,7 @@
         SETTINGS_DOCUMENT_NAME_FORMAT,
         SETTINGS_IMPORT_PDF_IMAGES,
         USE_SYSTEM_CAMERA
-    } from '~/models/constants';
+    } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import { DocumentsService, documentsService } from '~/services/documents';
     import { securityService } from '~/services/security';

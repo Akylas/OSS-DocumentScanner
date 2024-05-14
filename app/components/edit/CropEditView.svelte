@@ -11,7 +11,7 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
     import { recycleImages } from '~/utils/images';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMG_COMPRESS, IMG_FORMAT } from '~/utils/constants';
 
     let recrop = false;
     let topView: NativeViewElementNode<View>;

@@ -27,7 +27,7 @@
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         TRANSFORMS_SPLIT
-    } from '~/models/constants';
+    } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
     import { showError, wrapNativeException } from '~/utils/error';
     import { recycleImages } from '~/utils/images';

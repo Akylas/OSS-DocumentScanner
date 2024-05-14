@@ -4,7 +4,7 @@
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { OCRPage } from '~/models/OCRDocument';
-    import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/models/constants';
+    import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/utils/constants';
     import { concatTwoColorMatrices } from '~/utils/color_matrix';
     import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';

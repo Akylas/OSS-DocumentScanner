@@ -5,7 +5,7 @@ import { ColorPaletteData, OCRData, QRCodeData, cropDocument, cropDocumentFromFi
 import { documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
-import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT, SETTINGS_DOCUMENT_NAME_FORMAT } from './constants';
+import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT, SETTINGS_DOCUMENT_NAME_FORMAT } from '../utils/constants';
 import { doInBatch } from '~/utils/ui';
 import { getFormatedDateForFilename } from '~/utils/utils.common';
 import type { MatricesTypes, Matrix } from '~/utils/color_matrix';

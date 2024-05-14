@@ -10,7 +10,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/models/constants';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { showError } from '~/utils/error';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover } from '~/utils/ui';

@@ -20,7 +20,7 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/models/constants';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';

@@ -20,7 +20,7 @@
     import { l, lc } from '~/helpers/locale';
     import { currentRealTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS } from '~/models/constants';
+    import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { showError } from '~/utils/error';

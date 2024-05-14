@@ -1,6 +1,6 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { IMG_COMPRESS } from '~/models/constants';
+import { IMG_COMPRESS } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
 import { PDFExportOptions } from './PDFCanvas';

@@ -53,7 +53,7 @@ import {
     SETTINGS_IMPORT_PDF_IMAGES,
     TRANSFORMS_SPLIT,
     USE_SYSTEM_CAMERA
-} from '~/models/constants';
+} from '~/utils/constants';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';

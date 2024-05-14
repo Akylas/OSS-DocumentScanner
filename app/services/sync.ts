@@ -2,7 +2,7 @@ import { ApplicationSettings, File, Folder, ImageSource, Observable, path } from
 import { debounce, throttle } from '@nativescript/core/utils';
 import { cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { IMG_COMPRESS, IMG_FORMAT } from '~/models/constants';
+import { IMG_COMPRESS, IMG_FORMAT } from '~/utils/constants';
 import { showError } from '~/utils/error';
 import { loadImage, recycleImages } from '~/utils/images';
 import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';

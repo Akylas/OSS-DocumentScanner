@@ -6,7 +6,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { colors } from '~/variables';
     import { loadImage, recycleImages } from '~/utils/images';
-    import { IMAGE_DECODE_HEIGHT, MAGNIFIER_SENSITIVITY } from '~/models/constants';
+    import { IMAGE_DECODE_HEIGHT, MAGNIFIER_SENSITIVITY } from '~/utils/constants';
     import { onDestroy } from 'svelte';
     import RotableImageView from './RotableImageView.svelte';
     const padding = 20;
