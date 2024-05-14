@@ -65,9 +65,7 @@ export function toggleTheme(autoDark = false) {
 export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark', 'black'];
-        const component = (await import('~/components/common/OptionSelect.svelte')).default;
         const result = await showAlertOptionSelect(
-            component,
             {
                 height: Math.min(actions.length * 56, 400),
                 rowHeight: 56,

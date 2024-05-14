@@ -530,10 +530,11 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
     }
 }
 
-export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<T>, props?: T, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
-    let componentInstanceInfo: ComponentInstanceInfo;
+export async function showAlertOptionSelect(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
+    const component = (await import('~/components/common/OptionSelect.svelte')).default;
+    let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
     try {
-        componentInstanceInfo = resolveComponentElement(viewSpec, {
+        componentInstanceInfo = resolveComponentElement(component, {
             onClose: (result) => {
                 view.bindingContext.closeCallback(result);
             },
@@ -542,7 +543,7 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
             },
             trackingScrollView: 'collectionView',
             ...props
-        });
+        }) as ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
         const view: View = componentInstanceInfo.element.nativeView;
         const result = await alert({
             view,

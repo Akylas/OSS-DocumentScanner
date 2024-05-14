@@ -1013,9 +1013,7 @@
                             }
                         });
                     } else {
-                        const component = (await import('~/components/common/OptionSelect.svelte')).default;
                         const result = await showAlertOptionSelect(
-                            component,
                             {
                                 height: item.autoSizeListItem ? undefined : Math.min(item.values.length * 56, 400),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
