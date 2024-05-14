@@ -323,9 +323,13 @@
     const saveCurrentItemColorType = debounce(function (index, colorMatrix) {
         ignoreNextCollectionViewRefresh = true;
         DEV_LOG && console.log('colorMatrix changed', colorMatrix);
-        document.updatePage(index, {
-            colorMatrix
-        });
+        try {
+            document.updatePage(index, {
+                colorMatrix
+            });
+        } catch (error) {
+            showError(error);
+        }
     }, 500);
     function onColorMatrixChange(colorType, value) {
         const current = items.getItem(currentIndex);
@@ -412,26 +416,34 @@
     }
 
     async function applyImageColorMatrix(i) {
-        const current = items.getItem(currentIndex);
-        current.colorMatrix = null;
-        current.colorType = i.colorType;
-        collectionView.nativeView.refreshVisibleItems();
-        ignoreNextCollectionViewRefresh = true;
-        DEV_LOG && console.log('applyImageColorMatrix', i.colorType);
-        document.updatePage(currentIndex, {
-            colorType: i.colorType,
-            colorMatrix: getColorMatrix(i.colorType)
-        });
+        try {
+            const current = items.getItem(currentIndex);
+            current.colorMatrix = null;
+            current.colorType = i.colorType;
+            collectionView.nativeView.refreshVisibleItems();
+            ignoreNextCollectionViewRefresh = true;
+            DEV_LOG && console.log('applyImageColorMatrix', i.colorType);
+            await document.updatePage(currentIndex, {
+                colorType: i.colorType,
+                colorMatrix: getColorMatrix(i.colorType)
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
     async function applyBrightnessContrast(brightness: number, contrast: number) {
-        const current = items.getItem(currentIndex);
-        current.colorMatrix = null;
-        current.brightness = brightness;
-        current.contrast = contrast;
-        document.updatePage(currentIndex, {
-            brightness,
-            contrast
-        });
+        try {
+            const current = items.getItem(currentIndex);
+            current.colorMatrix = null;
+            current.brightness = brightness;
+            current.contrast = contrast;
+            document.updatePage(currentIndex, {
+                brightness,
+                contrast
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
 
     async function editBrightnessContrast(event) {
