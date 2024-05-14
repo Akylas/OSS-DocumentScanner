@@ -317,7 +317,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             document.tags = document.tags || [];
             document.tags.push(tagId);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 

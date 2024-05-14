@@ -162,7 +162,7 @@ async function handleRequestResponse<T>(response: https.HttpsResponse<https.Http
     try {
         content = await response.content.toJSONAsync();
     } catch (err) {
-        console.error(err);
+        console.error(err, err.stack);
     }
     if (!content) {
         content = (await response.content.toStringAsync()) as any;

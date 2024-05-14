@@ -47,7 +47,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         try {
             com.akylas.documentscanner.Utils.Companion.prepareActivity(this);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
         this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
     }

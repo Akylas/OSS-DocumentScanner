@@ -233,7 +233,7 @@
             mappedQuads = quads.map((quad) => quad.map((p) => getMatrixMappedPoint(currentCropMatrix, p)));
             nCanvas.invalidate();
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }, 1);
     function drawZoomGlass(canvas: Canvas, point: [number, number], mappedPoint: [number, number]) {

@@ -141,7 +141,7 @@ export class SyncService extends Observable {
             const result = await exists(context, remoteFolder, { cachePolicy: 'noCache' });
             return true;
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
             return false;
         }
     }

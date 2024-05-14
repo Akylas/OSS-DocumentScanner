@@ -220,7 +220,7 @@ export async function showError(
             try {
                 Sentry.captureException(realError);
             } catch (error) {
-                console.error(error);
+                console.error(error, error.stack);
             }
         }
         if (silent) {

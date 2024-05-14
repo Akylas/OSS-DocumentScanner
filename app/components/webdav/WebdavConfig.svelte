@@ -27,7 +27,6 @@
             const result = await syncService.testConnection({ username, password, remoteURL, remoteFolder, token, authType });
             testConnectionSuccess = result ? 1 : -1;
         } catch (error) {
-            console.error('error');
             showError(error);
         } finally {
             testing = false;

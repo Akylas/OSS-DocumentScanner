@@ -324,7 +324,6 @@ export class OCRService extends Observable {
                 this.mDownloadedLanguages.push(lang);
                 ApplicationSettings.setString(`tesseract_data_${this.mDataType}`, JSON.stringify(this.mDownloadedLanguages));
             } catch (error) {
-                console.error(error);
                 if (File.exists(destinationFile)) {
                     File.fromPath(destinationFile).remove();
                 }

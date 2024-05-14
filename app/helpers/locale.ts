@@ -75,7 +75,7 @@ function setLang(newLang) {
             // TODO: check why getEmptyLocaleList does not reset the locale to system
             actualNewLang = getActualLanguage(newLang);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     $lang.set(actualNewLang);

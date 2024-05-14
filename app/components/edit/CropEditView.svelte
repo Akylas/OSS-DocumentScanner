@@ -76,7 +76,7 @@
         try {
             await rotableImageView.rotateToRotation(newRotation, true);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
         croppedImageRotation = item.rotation = newRotation;
         refreshCollectionView();
