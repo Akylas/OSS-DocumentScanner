@@ -33,6 +33,7 @@
         PDFImportImages,
         PDF_IMPORT_IMAGES,
         PREVIEW_RESIZE_THRESHOLD,
+        SETTINGS_CROP_ENABLED,
         SETTINGS_DOCUMENT_NAME_FORMAT,
         SETTINGS_IMPORT_PDF_IMAGES,
         USE_SYSTEM_CAMERA
@@ -127,9 +128,9 @@
                 return [
                     {
                         type: 'switch',
-                        id: 'cropEnabled',
+                        id: SETTINGS_CROP_ENABLED,
                         title: lc('crop_enabled'),
-                        value: ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED)
+                        value: ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED)
                     },
                     {
                         id: 'setting',

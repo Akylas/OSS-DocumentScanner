@@ -50,6 +50,7 @@ import {
     PDF_IMPORT_IMAGES,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
+    SETTINGS_CROP_ENABLED,
     SETTINGS_IMPORT_PDF_IMAGES,
     TRANSFORMS_SPLIT,
     USE_SYSTEM_CAMERA
@@ -219,7 +220,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
         const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
         const resizeThreshold = previewResizeThreshold * 1.5;
-        const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+        const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
         const [pdf, images] = uris.reduce(
             ([p, f], e) => {
                 let testStr = e.toLowerCase();
@@ -1433,7 +1434,7 @@ export async function processCameraImage({
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
-    const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+    const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
     const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
     const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);

@@ -22,6 +22,7 @@
         AUTO_SCAN_DISTANCETHRESHOLD,
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
+        CROP_ENABLED,
         IMAGE_CONTEXT_OPTIONS,
         IMG_COMPRESS,
         IMG_FORMAT,
@@ -46,6 +47,8 @@
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
         JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
+    const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
+
     cameraOptionsStore.subscribe((newValue) => {
         ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
     });
@@ -400,7 +403,7 @@
         }
     }
     async function applyProcessor() {
-        if (processor) {
+        if (processor || !cropEnabled) {
             return;
         }
 
