@@ -189,6 +189,7 @@
                 maxWidth: 4500,
                 maxHeight: 4500
             });
+            //image is recyced in processAndAddImage on Android
             const didAdd = await processAndAddImage(image, autoScan);
             if (didAdd) {
                 nbPages = pagesToAdd.length;
