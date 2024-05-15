@@ -304,6 +304,7 @@ export class SyncService extends Observable {
                     // check if we need to recreate the image
                     if (pageTooUpdate.crop || pageTooUpdate.transforms) {
                         const file = File.fromPath(localPage.imagePath);
+                        DEV_LOG && console.log('page sync needed size update', file.size);
                         await cropDocumentFromFile(localPage.sourceImagePath, [pageTooUpdate.crop], {
                             saveInFolder: file.parent.path,
                             fileName: file.name,
