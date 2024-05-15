@@ -12,6 +12,7 @@ export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
 export const SETTINGS_IMPORT_PDF_IMAGES = 'import_pdf_images';
 export const SETTINGS_CAMERA_SETTINGS = 'camera_settings';
 export const SETTINGS_CROP_ENABLED = 'cropEnabled';
+export const SETTINGS_ALWAYS_PROMPT_CROP_EDIT = 'always_prompt_crop_edit';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -30,6 +31,7 @@ export const DOCUMENT_NOT_DETECTED_MARGIN = 10;
 export const PDF_IMPORT_IMAGES = PDFImportImages.ask;
 export const USE_SYSTEM_CAMERA = false;
 export const CROP_ENABLED = true;
+export const ALWAYS_PROMPT_CROP_EDIT = false;
 export const MAGNIFIER_SENSITIVITY = 0.8;
 export const AUTO_SCAN_ENABLED = true;
 export const FILENAME_USE_DOCUMENT_NAME = true;
