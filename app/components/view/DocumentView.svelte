@@ -354,22 +354,15 @@
         if (current) {
             DEV_LOG && console.log('view onDocumentPageUpdated', index, current.index, event.imageUpdated);
             const page = document.getObservablePages().getItem(index);
-            items.setItem(index, { ...current, page });
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
                 if (imageView) {
                     imageView?.updateImageUri();
                 } else {
-                    const page = current.page;
-                    const pipeline = getImagePipeline();
-                    const cacheKey = pipeline.getCacheKey(page.imagePath, {
-                        decodeWidth: itemHeight,
-                        colorMatrix: getPageColorMatrix(page),
-                        imageRotation: page?.rotation ?? 0
-                    });
-                    pipeline.evictFromCache(cacheKey);
+                    getImagePipeline().evictFromCache(current.page.imagePath);
                 }
             }
+            items.setItem(index, { ...current, page });
         }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
@@ -385,6 +378,7 @@
         }
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
+        DEV_LOG && console.log('onDocumentUpdated', document);
         if (document === event.doc) {
             document = event.doc;
         }

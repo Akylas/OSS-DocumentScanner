@@ -595,7 +595,7 @@
                 // let s see if quads changed and update image
                 if (quadChanged && !cancel) {
                     await document.updatePageCrop(currentIndex, quad);
-                    updateImageUris();
+                    // updateImageUris();
                     quadChanged = false;
                     quads = [];
                 }

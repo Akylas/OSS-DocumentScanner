@@ -3,7 +3,7 @@
     import { throttle } from '@nativescript/core/utils';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img } from '@nativescript-community/ui-image';
+    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -45,6 +45,7 @@
     import { securityService } from '~/services/security';
 
     const textPaint = new Paint();
+    const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(100);
 </script>
 
 <script lang="ts">
@@ -164,7 +165,9 @@
         updateNoDocument();
     }
     function getImageView(index: number) {
-        return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
+        const view =  collectionView?.nativeView?.getViewForItemAtIndex(index);
+        DEV_LOG && console.log('getImageView', index, view, collectionView, collectionView?.nativeElement, collectionView?.nativeElement?.nativeViewProtected);
+        return view?.getViewById<Img>('imageView');
     }
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
@@ -179,10 +182,17 @@
             //     }
             // });
             if (index >= 0) {
-                documents.setItem(index, documents.getItem(index));
                 if (!!event.imageUpdated) {
-                    getImageView(index)?.updateImageUri();
+                    const imageView = getImageView(index);
+                        DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
+                    if (imageView) {
+                        imageView?.updateImageUri();
+                    } else {
+                        const page = document.pages[event.pageIndex];
+                        getImagePipeline().evictFromCache(page.imagePath);
+                    }
                 }
+                documents.setItem(index, documents.getItem(index));
             }
         }
     }
@@ -668,7 +678,7 @@
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
-                        decodeWidth={Utils.layout.toDevicePixels(100)}
+                        decodeWidth={IMAGE_DECODE_WIDTH}
                         horizontalAlignment="left"
                         item={item.doc.pages[0]}
                         marginBottom={getImageMargin(viewStyle)}

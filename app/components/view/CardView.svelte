@@ -400,14 +400,7 @@
                 if (imageView) {
                     imageView?.updateImageUri();
                 } else {
-                    const page = current.page;
-                    const pipeline = getImagePipeline();
-                    const cacheKey = pipeline.getCacheKey(page.imagePath, {
-                        decodeWidth: itemHeight,
-                        colorMatrix: getPageColorMatrix(page),
-                        imageRotation: page?.rotation ?? 0
-                    });
-                    pipeline.evictFromCache(cacheKey);
+                    getImagePipeline().evictFromCache(current.page.imagePath);
                 }
             }
         }

@@ -3,7 +3,7 @@
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
     import { throttle } from '@nativescript/core/utils';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { Img } from '@nativescript-community/ui-image';
+    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
@@ -136,6 +136,7 @@
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         let index = -1;
+        const document = event.object as OCRDocument;
         if (event.pageIndex === 0) {
             documents.some((d, i) => {
                 if (d.doc === (event.object as any)) {
@@ -146,7 +147,13 @@
             if (index >= 0) {
                 documents.setItem(index, documents.getItem(index));
                 if (!!event.imageUpdated) {
-                    getImageView(index)?.updateImageUri();
+                    const imageView = getImageView(index);
+                    if (imageView) {
+                        imageView?.updateImageUri();
+                    } else {
+                        const page = document.pages[event.pageIndex];
+                        getImagePipeline().evictFromCache(page.imagePath);
+                    }
                 }
             }
         }

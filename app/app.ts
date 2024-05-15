@@ -4,14 +4,14 @@ import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { initialize } from '@nativescript-community/ui-image';
+import { ImagePipeline, getImagePipeline, initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, Frame, NavigatedData, Page } from '@nativescript/core';
+import { Application, ApplicationSettings, Frame, NavigatedData, Page, Trace } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '~/NestedScrollView';
@@ -25,14 +25,39 @@ import { ocrService } from './services/ocr';
 import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/error';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+import { SETTINGS_APP_VERSION, SETTINGS_FIRST_OPEN } from './utils/constants';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
         servicesStarted: boolean;
     }
 }
-
 try {
+    // we cant really use firstAppOpen anymore as all apps
+    // already installed with older version without this code would
+    // be seen as newly installed
+    // const firstAppOpen = ApplicationSettings.getBoolean(SETTINGS_FIRST_OPEN, true);
+    // if (firstAppOpen) {
+    //     ApplicationSettings.setBoolean(SETTINGS_FIRST_OPEN, false);
+    //     ApplicationSettings.setNumber(SETTINGS_APP_VERSION, __APP_BUILD_NUMBER__);
+    // } else {
+    if (__IOS__) {
+        // we need this for cache image eviction because we change original image
+        // while using a variety of colorMatrix,decodeWidth,....
+        ImagePipeline.iosComplexCacheEviction = true;
+    }
+
+    const lastVersion = ApplicationSettings.getNumber(SETTINGS_APP_VERSION, 0);
+    ApplicationSettings.setNumber(SETTINGS_APP_VERSION, __APP_BUILD_NUMBER__);
+    if (lastVersion < __APP_BUILD_NUMBER__) {
+        DEV_LOG && console.warn('appUpdateNeeds');
+
+        // on 25 we fixed iOS cache clear handling so we need to remove it all
+        if (__IOS__ && lastVersion < 24) {
+            getImagePipeline().clearCaches();
+        }
+    }
     Pager.registerTransformer('zoomOut', ZoomOutTransformer);
     installGestures(true);
     installMixins();
