@@ -9,7 +9,8 @@ import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~
 import { exists } from '~/webdav/operations/exists';
 import { basename } from '~/webdav/tools/path';
 import { networkService } from './api';
-import { documentsService } from './documents';
+import { DocumentsService, documentsService } from './documents';
+import { lc } from '@nativescript-community/l';
 
 const SETTINGS_KEY = 'webdav_config';
 function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
@@ -88,15 +89,6 @@ export class SyncService extends Observable {
             documentsService.on('documentUpdated', this.onDocumentUpdated, this);
             documentsService.on('documentsDeleted', this.onDocumentDeleted, this);
         }
-        // this.username = 'farfromrefuge';
-        // this.remoteUrl = `https://nextcloud.akylas.fr/remote.php/dav/files/${this.username}`;
-        // this.remoteFolder = 'documents';
-        // this.client = createClient(this.remoteUrl, {
-        //     headers: {
-        //         Authorization: 'Basic ZmFyZnJvbXJlZnVnZTpMdHZxSUk0d25mVWJkZWZiZkpNWnNKT1BWbzZZLzRHZzhpZWpSTHQ1eW1F'
-        //     },
-        //     authType: AuthType.None
-        // });
     }
     stop() {
         documentsService.off('documentAdded', this.onDocumentAdded, this);
@@ -138,7 +130,7 @@ export class SyncService extends Observable {
         try {
             const context = createContext(remoteURL, { password, username, authType: authType || AuthType.Password, token: token ? { access_token: token, token_type: 'Bearer' } : token });
             DEV_LOG && console.log('testConnection', context);
-            const result = await exists(context, remoteFolder, { cachePolicy: 'noCache' });
+            await exists(context, remoteFolder, { cachePolicy: 'noCache' });
             return true;
         } catch (error) {
             console.error(error, error.stack);
@@ -170,7 +162,7 @@ export class SyncService extends Observable {
         }
     }
     async removeDocumentFromWebdav(remotePath: string) {
-        console.log('removeDocumentFromWebdav', remotePath);
+        DEV_LOG && console.log('removeDocumentFromWebdav', remotePath);
         return this.client.deleteFile(remotePath);
         // const remoteDocuments = (await this.getRemoteFolderDirectories(remotePath)) as FileStat[];
         // for (let index = 0; index < remoteDocuments.length; index++) {
@@ -220,21 +212,43 @@ export class SyncService extends Observable {
             await this.client.getFileContents(path.join(data.filename, 'data.json'), {
                 format: 'text'
             })
-        ) as Document & { pages: OCRPage[] };
-        const { pages, ...docProps } = dataJSON;
-        const doc = await documentsService.documentRepository.createDocument({ ...docProps, _synced: 1 });
-        const docDataFolder = documentsService.dataFolder.getFolder(doc.id);
-        TEST_LOG && console.log('importDocumentFromWebdav', docDataFolder.path, data, JSON.stringify(dataJSON));
-        pages.forEach((page) => {
-            const pageDataFolder = docDataFolder.getFolder(page.id);
-            page.sourceImagePath = path.join(pageDataFolder.path, basename(page.sourceImagePath));
-            page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
-        });
-        await doc.addPages(pages);
-        await doc.save({}, true, false);
-        await this.importFolderFromWebdav(data.filename, docDataFolder, ['data.json']);
-        TEST_LOG && console.log('importFolderFromWebdav done');
-        documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc });
+        ) as Document & { pages: OCRPage[]; db_version?: number };
+        const { pages, db_version, ...docProps } = dataJSON;
+        if (db_version > DocumentsService.DB_VERSION) {
+            throw new Error(lc('document_need_updated_app', docProps.name));
+        }
+        let docId;
+        let pageIds = [];
+        let docDataFolder: Folder;
+        try {
+            const doc = await documentsService.documentRepository.createDocument({ ...docProps, _synced: 1 });
+            docId = doc.id;
+            docDataFolder = documentsService.dataFolder.getFolder(docId);
+            TEST_LOG && console.log('importDocumentFromWebdav', docDataFolder.path, data, JSON.stringify(dataJSON));
+            pages.forEach((page) => {
+                const pageDataFolder = docDataFolder.getFolder(page.id);
+                page.sourceImagePath = path.join(pageDataFolder.path, basename(page.sourceImagePath));
+                page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
+            });
+            pageIds = pages.map((p) => p.id);
+            await this.importFolderFromWebdav(data.filename, docDataFolder, ['data.json']);
+            await doc.addPages(pages);
+            await doc.save({}, true, false);
+            TEST_LOG && console.log('importFolderFromWebdav done');
+            documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc });
+        } catch (error) {
+            console.error('error while adding remote doc, let s remove it', docId, pageIds);
+            // there was an error while creating the doc. remove it so that we can try again later
+            if (docId) {
+                await documentsService.documentRepository.delete({ id: docId } as any);
+                await Promise.all(pageIds.map((p) => documentsService.pageRepository.delete({ id: p.id } as any)));
+            }
+            if (Folder.exists(docDataFolder.path)) {
+                await docDataFolder.remove();
+            }
+            throw error;
+        }
+
         //_synced:1!
         // mark the document as synced
     }
@@ -311,6 +325,9 @@ export class SyncService extends Observable {
                             compressFormat: IMG_FORMAT,
                             compressQuality: IMG_COMPRESS
                         });
+                        pageTooUpdate.size = file.size;
+                    } else if (pageTooUpdate.size === 0) {
+                        const file = File.fromPath(localPage.imagePath);
                         pageTooUpdate.size = file.size;
                     }
                     await document.updatePage(localPageIndex, pageTooUpdate);

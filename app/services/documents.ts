@@ -1,12 +1,9 @@
-import { request } from '@nativescript-community/perms';
 import { ApplicationSettings, File, Folder, knownFolders, path } from '@nativescript/core';
 import { Observable } from '@nativescript/core/data/observable';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
-import { l, lc } from '~/helpers/locale';
 import NSQLDatabase from './NSQLDatabase';
-import { showError } from '~/utils/error';
 const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
@@ -365,6 +362,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
 export class DocumentsService extends Observable {
     static DB_NAME = 'db.sqlite';
+    static DB_VERSION = 2;
     rootDataFolder: string;
     dataFolder: Folder;
     // connection: Connection;
