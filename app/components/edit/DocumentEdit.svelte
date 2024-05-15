@@ -609,11 +609,14 @@
         }
     }
     function resetCrop() {
+        const shouldInverse = cropItem.imageRotation % 180 !== 0;
+        const imageWidth = shouldInverse ? cropItem.imageHeight : cropItem.imageWidth;
+        const imageHeight = shouldInverse ? cropItem.imageWidth : cropItem.imageHeight;
         quad = [
             [0, 0],
-            [cropItem.imageWidth - 0, 0],
-            [cropItem.imageWidth - 0, cropItem.imageHeight - 0],
-            [0, cropItem.imageHeight - 0]
+            [imageWidth - 0, 0],
+            [imageWidth - 0, imageHeight - 0],
+            [0, imageHeight - 0]
         ];
     }
     function refreshPager() {

@@ -34,12 +34,16 @@
 
     function resetCrop() {
         const item = items[currentIndex];
+        const shouldInverse = item.imageRotation % 180 !== 0;
+        const imageWidth = shouldInverse ? item.imageHeight : item.imageWidth;
+        const imageHeight = shouldInverse ? item.imageWidth : item.imageHeight;
+        DEV_LOG && console.log('resetCrop', item);
         // const editingImage = item.editingImage;
         item.quads = item.quads.map((quad) => [
             [0, 0],
-            [item.imageWidth - 0, 0],
-            [item.imageWidth - 0, item.imageHeight - 0],
-            [0, item.imageHeight - 0]
+            [imageWidth - 0, 0],
+            [imageWidth - 0, imageHeight - 0],
+            [0, imageHeight - 0]
         ]);
         pager.nativeView.refreshVisibleItems();
     }
