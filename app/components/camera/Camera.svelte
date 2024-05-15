@@ -27,6 +27,8 @@
         IMG_COMPRESS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
+        SETTINGS_CAMERA_SETTINGS,
+        SETTINGS_CROP_ENABLED,
         TRANSFORMS_SPLIT
     } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
@@ -45,12 +47,12 @@
     let cropView: NativeViewElementNode<CropView>;
 
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
-        JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
+        JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
     cameraOptionsStore.subscribe((newValue) => {
-        ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
+        ApplicationSettings.setString(SETTINGS_CAMERA_SETTINGS, JSON.stringify(newValue));
     });
     $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
 
