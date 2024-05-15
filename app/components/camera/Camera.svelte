@@ -554,7 +554,7 @@
 
             <image
                 borderColor="white"
-                col={1}
+                col={3}
                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
                 decodeWidth={Utils.layout.toDevicePixels(60)}
                 height={60}
