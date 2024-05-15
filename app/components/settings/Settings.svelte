@@ -586,13 +586,19 @@
                         // rightBtnIcon: 'mdi-chevron-right',
                         title: lc('third_parties'),
                         description: lc('list_used_third_parties')
-                    },
-                    {
-                        id: 'feedback',
-                        icon: 'mdi-bullhorn',
-                        title: lc('send_feedback')
                     }
                 ] as any)
+                .concat(
+                    SENTRY_ENABLED
+                        ? [
+                              {
+                                  id: 'feedback',
+                                  icon: 'mdi-bullhorn',
+                                  title: lc('send_feedback')
+                              }
+                          ]
+                        : ([] as any)
+                )
                 .concat(
                     PLAY_STORE_BUILD
                         ? [
