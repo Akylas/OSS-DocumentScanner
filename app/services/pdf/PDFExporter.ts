@@ -47,10 +47,10 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                         } else {
                             resolve(result);
                         }
+                        DEV_LOG && console.log('exportPDFAsync', 'done', JSON.stringify(pdfCanvas.options), options.length, Date.now() - start, 'ms');
                     }
                 })
             );
-            DEV_LOG && console.log('exportPDFAsync', 'done', JSON.stringify(pdfCanvas.options), options.length, Date.now() - start, 'ms');
         });
     } else {
         const worker = new Worker('~/workers/PDFExportWorker');
