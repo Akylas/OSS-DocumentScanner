@@ -45,7 +45,7 @@
     import { securityService } from '~/services/security';
 
     const textPaint = new Paint();
-    const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(100);
+    const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
 </script>
 
 <script lang="ts">
