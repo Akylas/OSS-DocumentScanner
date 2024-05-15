@@ -243,6 +243,8 @@
                         },
                         valueType: 'string',
                         autoSizeListItem: true,
+                        fontWeight: 'normal',
+                        height: 250,
                         values: [
                             { value: PDFImportImages.ask, title: lc('ask_everytime') },
                             { value: PDFImportImages.never, title: lc('pdf_one_image_per_page') },
@@ -1015,9 +1017,9 @@
                     } else {
                         const result = await showAlertOptionSelect(
                             {
-                                height: item.autoSizeListItem ? undefined : Math.min(item.values.length * 56, 400),
+                                height: Math.min(item.values.length * 56, 400),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
-                                autoSizeListItem: item.autoSizeListItem,
+                                ...item,
                                 options: item.values.map((k) => ({
                                     name: k.title || k.name,
                                     data: k.value,
