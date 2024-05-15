@@ -27,12 +27,12 @@ export function recycleImages(...args) {
                 recycleImages(...arg);
             } else if (typeof arg === 'object' && arg.length > 0) {
                 for (let j = 0; j < arg.length; j++) {
-                    arg[j]?.recycle();
+                    arg[j]?.recycle?.();
                 }
             } else if (arg.android) {
-                arg.android.recycle();
+                arg.android.recycle?.();
             } else {
-                arg.recycle();
+                arg.recycle?.();
             }
         }
     }

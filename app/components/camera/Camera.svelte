@@ -133,6 +133,7 @@
             await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
             //clear memory as soon as possible
             recycleImages(imageSource);
+            imageSource = null;
             return await processCameraImage({
                 imagePath: tempImagePath,
                 fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_FORMAT}`,
