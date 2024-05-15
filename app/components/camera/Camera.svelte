@@ -22,10 +22,13 @@
         AUTO_SCAN_DISTANCETHRESHOLD,
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
+        CROP_ENABLED,
         IMAGE_CONTEXT_OPTIONS,
         IMG_COMPRESS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
+        SETTINGS_CAMERA_SETTINGS,
+        SETTINGS_CROP_ENABLED,
         TRANSFORMS_SPLIT
     } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
@@ -44,10 +47,12 @@
     let cropView: NativeViewElementNode<CropView>;
 
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
-        JSON.parse(ApplicationSettings.getString('camera_settings', '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
+        JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
+    const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
+
     cameraOptionsStore.subscribe((newValue) => {
-        ApplicationSettings.setString('camera_settings', JSON.stringify(newValue));
+        ApplicationSettings.setString(SETTINGS_CAMERA_SETTINGS, JSON.stringify(newValue));
     });
     $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
 
@@ -128,6 +133,7 @@
             await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
             //clear memory as soon as possible
             recycleImages(imageSource);
+            imageSource = null;
             return await processCameraImage({
                 imagePath: tempImagePath,
                 fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_FORMAT}`,
@@ -400,7 +406,7 @@
         }
     }
     async function applyProcessor() {
-        if (processor) {
+        if (processor || !cropEnabled) {
             return;
         }
 
@@ -554,7 +560,7 @@
 
             <image
                 borderColor="white"
-                col={1}
+                col={3}
                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
                 decodeWidth={Utils.layout.toDevicePixels(60)}
                 height={60}

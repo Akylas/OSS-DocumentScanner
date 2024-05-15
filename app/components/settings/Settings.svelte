@@ -15,6 +15,7 @@
     import { getLocaleDisplayName, l, lc, lu, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
     import {
+        ALWAYS_PROMPT_CROP_EDIT,
         AUTO_SCAN_DELAY,
         AUTO_SCAN_DISTANCETHRESHOLD,
         AUTO_SCAN_DURATION,
@@ -33,6 +34,8 @@
         PDFImportImages,
         PDF_IMPORT_IMAGES,
         PREVIEW_RESIZE_THRESHOLD,
+        SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
+        SETTINGS_CROP_ENABLED,
         SETTINGS_DOCUMENT_NAME_FORMAT,
         SETTINGS_IMPORT_PDF_IMAGES,
         USE_SYSTEM_CAMERA
@@ -127,15 +130,22 @@
                 return [
                     {
                         type: 'switch',
-                        id: 'cropEnabled',
+                        id: SETTINGS_CROP_ENABLED,
                         title: lc('crop_enabled'),
-                        value: ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED)
+                        value: ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED)
+                    },
+                    {
+                        type: 'switch',
+                        id: SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
+                        title: lc('always_prompt_crop_edit'),
+                        description: lc('always_prompt_crop_edit_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT)
                     },
                     {
                         id: 'setting',
                         key: 'previewResizeThreshold',
                         title: lc('preview_resize_threshold'),
-                        full_description: lc('preview_resize_threshold_desc'),
+                        description: lc('preview_resize_threshold_desc'),
                         rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
                         type: 'prompt'
                     },
@@ -143,7 +153,7 @@
                         id: 'setting',
                         key: 'documentNotDetectedMargin',
                         title: lc('document_not_detected_margin'),
-                        full_description: lc('document_not_detected_margin_desc'),
+                        description: lc('document_not_detected_margin_desc'),
                         rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
                         type: 'prompt'
                     },
@@ -174,7 +184,7 @@
                         id: 'setting',
                         key: 'autoScan_distanceThreshold',
                         title: lc('auto_scan_distance_threshold'),
-                        full_description: lc('auto_scan_distance_threshold_desc'),
+                        description: lc('auto_scan_distance_threshold_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD),
                         type: 'prompt'
                     },
@@ -182,7 +192,7 @@
                         id: 'setting',
                         key: 'autoScan_autoScanDuration',
                         title: lc('auto_scan_duration'),
-                        full_description: lc('auto_scan_duration_desc'),
+                        description: lc('auto_scan_duration_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION),
                         type: 'prompt'
                     },
@@ -190,7 +200,7 @@
                         id: 'setting',
                         key: 'autoScan_preAutoScanDelay',
                         title: lc('auto_scan_delay'),
-                        full_description: lc('auto_scan_delay_desc'),
+                        description: lc('auto_scan_delay_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY),
                         type: 'prompt'
                     }
@@ -586,13 +596,19 @@
                         // rightBtnIcon: 'mdi-chevron-right',
                         title: lc('third_parties'),
                         description: lc('list_used_third_parties')
-                    },
-                    {
-                        id: 'feedback',
-                        icon: 'mdi-bullhorn',
-                        title: lc('send_feedback')
                     }
                 ] as any)
+                .concat(
+                    SENTRY_ENABLED
+                        ? [
+                              {
+                                  id: 'feedback',
+                                  icon: 'mdi-bullhorn',
+                                  title: lc('send_feedback')
+                              }
+                          ]
+                        : ([] as any)
+                )
                 .concat(
                     PLAY_STORE_BUILD
                         ? [

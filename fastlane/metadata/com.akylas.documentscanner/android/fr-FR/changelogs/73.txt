@@ -1,0 +1,14 @@
+### Features
+- setting to force confirmation of document detected region (happening while not in batch mode)
+
+### Bug fixes
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Italian)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Chinese (Simplified))
+- Translated using Weblate (Croatian)
+- Translated using Weblate (Galician)
+- Translated using Weblate (French)
+- Translated using Weblate (Persian)
+- Translated using Weblate (Roma

@@ -39,6 +39,7 @@ import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
 import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import {
+    ALWAYS_PROMPT_CROP_EDIT,
     AREA_SCALE_MIN_FACTOR,
     CROP_ENABLED,
     DEFAULT_EXPORT_DIRECTORY,
@@ -50,6 +51,8 @@ import {
     PDF_IMPORT_IMAGES,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
+    SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
+    SETTINGS_CROP_ENABLED,
     SETTINGS_IMPORT_PDF_IMAGES,
     TRANSFORMS_SPLIT,
     USE_SYSTEM_CAMERA
@@ -219,7 +222,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
         const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
         const resizeThreshold = previewResizeThreshold * 1.5;
-        const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+        const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
         const [pdf, images] = uris.reduce(
             ([p, f], e) => {
                 let testStr = e.toLowerCase();
@@ -1433,7 +1436,7 @@ export async function processCameraImage({
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
-    const cropEnabled = ApplicationSettings.getBoolean('cropEnabled', CROP_ENABLED);
+    const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
     const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
     const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
@@ -1445,25 +1448,29 @@ export async function processCameraImage({
     if (cropEnabled) {
         quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, imageRotation: 0, areaScaleMinFactor });
     }
-    DEV_LOG && console.log('processCameraImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height);
-    if (cropEnabled && quads.length === 0) {
+    const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
+    DEV_LOG && console.log('processCameraImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height, alwaysPromptForCrop);
+    if (cropEnabled && (quads.length === 0 || alwaysPromptForCrop)) {
         let items = [
             {
                 imagePath,
                 imageWidth,
                 imageHeight,
                 imageRotation,
-                quads: [
-                    [
-                        [noDetectionMargin, noDetectionMargin],
-                        [imageSize.width - noDetectionMargin, noDetectionMargin],
-                        [imageSize.width - noDetectionMargin, imageSize.height - noDetectionMargin],
-                        [noDetectionMargin, imageSize.height - noDetectionMargin]
-                    ]
-                ] as [number, number][][]
+                quads:
+                    quads.length > 0
+                        ? quads
+                        : ([
+                              [
+                                  [noDetectionMargin, noDetectionMargin],
+                                  [imageSize.width - noDetectionMargin, noDetectionMargin],
+                                  [imageSize.width - noDetectionMargin, imageSize.height - noDetectionMargin],
+                                  [noDetectionMargin, imageSize.height - noDetectionMargin]
+                              ]
+                          ] as [number, number][][])
             }
         ];
-        if (autoScan === false) {
+        if (alwaysPromptForCrop || autoScan === false) {
             onBeforeModalImport?.();
             const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
             items = await showModal({

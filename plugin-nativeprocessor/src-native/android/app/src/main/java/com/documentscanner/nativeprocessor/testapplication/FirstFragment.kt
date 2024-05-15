@@ -131,7 +131,7 @@ class FirstFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.cameraView.aspectRatio = "4:3"
+        binding.cameraView.aspectRatio = "16:9"
         binding.cameraView.enablePinchZoom = true
         binding.cameraView.zoom = 1.0F
         binding.cameraView.scaleType = PreviewView.ScaleType.FIT_CENTER
@@ -233,7 +233,7 @@ class FirstFragment : Fragment() {
                                         result as String,
                                         object : CustomImageAnalysisCallback.FunctionCallback {
                                             override fun onResult(e: Exception?, result: Any?) {
-                                                if ((result as Array<Any>).size > 0) {
+                                                if (result != null && (result as Array<*>).isNotEmpty()) {
 
                                                     activity.runOnUiThread(Runnable {
                                                         binding.imageView.setImageBitmap((result as Array<Any>)[0] as Bitmap)

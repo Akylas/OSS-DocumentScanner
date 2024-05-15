@@ -22,6 +22,6 @@ ext {
     licenseReporterVersion = "2.4"
     sentryVersion = "7.8.0"
     sentryGradleVersion = "4.5.1"
-    cameraxVersion = "1.4.0-alpha04"
+    cameraxVersion = "1.4.0-beta01"
     itextpdfVersion = "7.2.5"
 }

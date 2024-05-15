@@ -42,7 +42,7 @@
             showError(err);
         }
     }
-    let imageToDestroy;
+    // let imageToDestroy;
     function getImageSrc(item) {
         // if (imageToDestroy) {
         //     const toRelease = imageToDestroy;
@@ -70,12 +70,12 @@
         return item?.imagePath;
     }
 
-    onDestroy(() => {
-        if (imageToDestroy) {
-            recycleImages(imageToDestroy);
-            imageToDestroy = null;
-        }
-    });
+    // onDestroy(() => {
+    // if (imageToDestroy) {
+    //     recycleImages(imageToDestroy);
+    //     imageToDestroy = null;
+    // }
+    // });
 </script>
 
 {#if zoomable}
