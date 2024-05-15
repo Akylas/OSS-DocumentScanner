@@ -135,19 +135,14 @@
     }
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        let index = -1;
+        // let index = -1;
         const document = event.object as OCRDocument;
-        if (event.pageIndex === 0) {
-            documents.some((d, i) => {
-                if (d.doc === (event.object as any)) {
-                    index = i;
-                    return true;
-                }
-            });
-            if (index >= 0) {
-                documents.setItem(index, documents.getItem(index));
+        const index = documents.findIndex((d) => d.doc === document);
+        if (index >= 0) {
+            if (event.pageIndex === 0) {
                 if (!!event.imageUpdated) {
                     const imageView = getImageView(index);
+                    DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
                     if (imageView) {
                         imageView?.updateImageUri();
                     } else {
@@ -156,6 +151,7 @@
                     }
                 }
             }
+            documents.setItem(index, documents.getItem(index));
         }
     }
     let syncRunning = false;
