@@ -242,6 +242,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
             // const component = (await import('~/components/common/OptionSelect.svelte')).default;
             const result = await showConfirmOptionSelect<PDFImportImages>(
                 {
+                    height: Math.min(options.length * 100, 400),
                     autoSizeListItem: true,
                     onlyOneSelected: true,
                     fontWeight: 'normal',
@@ -252,12 +253,17 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                     title: lc('import_pdf_images'),
                     message: lc('import_pdf_images_desc'),
                     okButtonText: lc('always'),
-                    cancelButtonText: lc('just_once')
+                    cancelButtonText: lc('just_once'),
+                    iosForceClosePresentedViewController: true // force close current loading dialog, we ll show it again after
                 }
             );
             pdfImportsImages = result.data;
             if (result.confirmed) {
                 ApplicationSettings.setString(SETTINGS_IMPORT_PDF_IMAGES, pdfImportsImages);
+            }
+            if (__IOS__) {
+                //we forced close current loading dialog,let s show it again after
+                await showLoading(l('computing'));
             }
             DEV_LOG && console.log('showPromptOptionSelect', result);
         }
@@ -520,7 +526,6 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length > 0) {
-            showLoading(l('computing'));
             return await importAndScanImageOrPdfFromUris(selection, document, canGoToView);
         }
     } catch (error) {
