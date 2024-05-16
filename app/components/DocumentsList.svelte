@@ -657,7 +657,7 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} items={documents} paddingBottom={88} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
+        <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={88} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
             <Template let:item>
                 <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
@@ -714,14 +714,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout
-                bind:this={fabHolder}
-                horizontalAlignment="right"
-                iosIgnoreSafeArea={true}
-                orientation="horizontal"
-                row={1}
-                verticalAlignment="bottom"
-                android:marginBottom={$windowInset.bottom}>
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}

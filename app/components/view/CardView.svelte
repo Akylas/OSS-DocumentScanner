@@ -605,6 +605,7 @@
             autoReloadItemOnLayout={true}
             {colWidth}
             height={itemHeight}
+            iosOverflowSafeArea={true}
             {items}
             orientation="horizontal"
             paddingBottom={88}

@@ -577,6 +577,7 @@
             id="view"
             autoReloadItemOnLayout={true}
             colWidth="50%"
+            iosOverflowSafeArea={true}
             {items}
             paddingBottom={88}
             reorderEnabled={true}
