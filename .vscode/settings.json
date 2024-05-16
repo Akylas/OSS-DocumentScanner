@@ -1,18 +1,4 @@
 {
-    "terminal.integrated.env.osx": {
-        "KEYSTORE_PATH": "certs/upload.keystore",
-        "SENTRY_PREFIX": "app:///",
-        "SOURCEMAP_REL_DIR": "../../sourcemaps",
-        "SENTRY_URL": "https://bugs.akylas.fr",
-        "SENTRY_ORG": "akylas"
-    },
-    "terminal.integrated.env.linux": {
-        "KEYSTORE_PATH": "certs/upload.keystore",
-        "SENTRY_PREFIX": "app:///",
-        "SOURCEMAP_REL_DIR": "../../sourcemaps",
-        "SENTRY_URL": "https://bugs.akylas.fr",
-        "SENTRY_ORG": "akylas"
-    },
     "i18n-ally.keystyle": "nested",
     "typescript.tsdk": "node_modules/typescript/lib",
     "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
@@ -47,6 +33,28 @@
         "a11y-missing-content": "ignore",
         "illegal-attribute-character": "ignore"
     },
+    "scss.lint.validProperties": [
+        "max-font-size",
+        "min-font-size",
+        "ios-a11y-adjusts-font-size",
+        "status-bar-style",
+        "navigation-bar-color",
+        "status-bar-color",
+        "ripple-color",
+        "stroke-color",
+        "fill-color",
+        "on-check-color",
+        "on-tint-color",
+        "shape",
+        "elevation",
+        "horizontal-align",
+        "horizontal-alignment",
+        "vertical-text-alignment",
+        "floating",
+        "vertical-alignment",
+        "placeholder-color",
+        "variant"
+    ],
     "C_Cpp.errorSquiggles": "disabled",
     "terminal.integrated.defaultProfile.linux": "documentscanner",
     "terminal.integrated.defaultProfile.osx": "documentscanner",
