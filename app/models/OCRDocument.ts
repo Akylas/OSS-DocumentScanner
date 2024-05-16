@@ -2,7 +2,7 @@ import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ApplicationSettings, EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { ColorPaletteData, OCRData, QRCodeData, cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
-import { documentsService } from '~/services/documents';
+import { DocumentsService, documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
 import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT, SETTINGS_DOCUMENT_NAME_FORMAT } from '../utils/constants';
@@ -295,7 +295,7 @@ export class OCRDocument extends Observable implements Document {
     }
 
     toString() {
-        return JSON.stringify(this, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
+        return JSON.stringify({ db_version: DocumentsService.DB_VERSION, ...this }, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
     }
 
     toJSONObject() {
