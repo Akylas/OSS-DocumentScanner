@@ -332,7 +332,7 @@ class ImageUtil {
         }
 
         fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?, sourceSize:Pair<Int, Int>?): Bitmap? {
-            //  val start = System.currentTimeMillis()
+            //   val start = System.currentTimeMillis()
             var sourceSize = sourceSize
             if (sourceSize == null && options?.sourceWidth != 0 && options?.sourceHeight != 0) {
                 sourceSize = Pair(options!!.sourceWidth, options!!.sourceHeight)
@@ -340,95 +340,75 @@ class ImageUtil {
             var bitmap: Bitmap?
             val bitmapOptions = BitmapFactory.Options()
             var pfd: ParcelFileDescriptor? = null
-            if (src.startsWith("content://")) {
-                val uri = Uri.parse(src)
-                val resolver: ContentResolver = context.getContentResolver()
-                pfd = try {
-                    resolver.openFileDescriptor(uri, "r")
-                } catch (e: FileNotFoundException) {
-                    closePfd(pfd)
-                    throw e;
+            try {
+                if (src.startsWith("content://")) {
+                    val uri = Uri.parse(src)
+                    val resolver: ContentResolver = context.getContentResolver()
+                    pfd = resolver.openFileDescriptor(uri, "r")
                 }
-            }
-            if (sourceSize == null) {
-                bitmapOptions.inJustDecodeBounds = true
+                if (sourceSize == null) {
+                    bitmapOptions.inJustDecodeBounds = true
 
-                if (pfd != null) {
-                    BitmapFactory.decodeFileDescriptor(pfd!!.fileDescriptor, null, bitmapOptions)
+                    if (pfd != null) {
+                        BitmapFactory.decodeFileDescriptor(pfd!!.fileDescriptor, null, bitmapOptions)
+                    } else {
+                        BitmapFactory.decodeFile(src, bitmapOptions)
+                    }
+                    sourceSize = Pair(bitmapOptions.outWidth, bitmapOptions.outHeight)
+                }
+                val opts = ImageAssetOptions(sourceSize, options)
+
+                val (first, second) = getRequestedImageSize(sourceSize, opts)
+                val sampleSize: Int = calculateInSampleSize(
+                    sourceSize.first, sourceSize.second,
+                    first,
+                    second
+                )
+                val finalBitmapOptions = BitmapFactory.Options()
+                finalBitmapOptions.inSampleSize = sampleSize
+                if (sampleSize != 1) {
+                    finalBitmapOptions.inScaled = true;
+                    finalBitmapOptions.inDensity = sourceSize.first;
+                    finalBitmapOptions.inTargetDensity =  first * sampleSize;
                 } else {
-                    BitmapFactory.decodeFile(src, bitmapOptions)
+                    finalBitmapOptions.inScaled = false;
                 }
-                sourceSize = Pair(bitmapOptions.outWidth, bitmapOptions.outHeight)
-            }
-            val opts = ImageAssetOptions(sourceSize, options)
-
-            val (first, second) = getRequestedImageSize(sourceSize, opts)
-            val sampleSize: Int = calculateInSampleSize(
-                sourceSize.first, sourceSize.second,
-                first,
-                second
-            )
-            val finalBitmapOptions = BitmapFactory.Options()
-            finalBitmapOptions.inSampleSize = sampleSize
-            if (sampleSize != 1) {
-                finalBitmapOptions.inScaled = true;
-                finalBitmapOptions.inDensity = sourceSize.first;
-                finalBitmapOptions.inTargetDensity =  first * sampleSize;
-            } else {
-                finalBitmapOptions.inScaled = false;
-            }
-            // read as minimum bitmap as possible (slightly bigger than the requested size)
-            bitmap = if (pfd != null) {
-                BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor, null, finalBitmapOptions)
-            } else {
-                BitmapFactory.decodeFile(src, finalBitmapOptions)
-            }
-            // Log.d("ImageAnalysis", "readBitmapFromFile in ${System.currentTimeMillis() - start} ms")
-            if (bitmap != null) {
-                val rotationAngle: Int
-                if (pfd != null) {
-                    rotationAngle = calculateAngleFromFileDescriptor(pfd.fileDescriptor)
-                    closePfd(pfd)
+                // read as minimum bitmap as possible (slightly bigger than the requested size)
+                bitmap = if (pfd != null) {
+                    BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor, null, finalBitmapOptions)
                 } else {
-                    rotationAngle = calculateAngleFromFile(src)
+                    BitmapFactory.decodeFile(src, finalBitmapOptions)
                 }
-//                if (first !== bitmap.getWidth() || second !== bitmap.getHeight()  || rotationAngle != 0) {
-//
-//                    val matrix = Matrix()
-//                    if (first !== bitmap.getWidth() || second !== bitmap.getHeight()) {
-//                        val scale = first.toFloat() / bitmap.width
-//                        matrix.postScale(scale, scale)
-//                    }
-//                    if (rotationAngle != 0) {
-//                        matrix.postRotate(rotationAngle.toFloat())
-//                    }
-//                    bitmap = Bitmap.createBitmap(
-//                        bitmap,
-//                        0,
-//                        0,
-//                        bitmap.getWidth(),
-//                        bitmap.getHeight(),
-//                        matrix,
-//                        false
-//                    )
-//                }
-
-                if (rotationAngle != 0) {
-                    val matrix = Matrix()
-                    matrix.postRotate(rotationAngle.toFloat())
-                    bitmap = Bitmap.createBitmap(
-                        bitmap,
-                        0,
-                        0,
-                        bitmap.getWidth(),
-                        bitmap.getHeight(),
-                        matrix,
-                        true
-                    )
+                // Log.d("ImageAnalysis", "readBitmapFromFile in ${System.currentTimeMillis() - start} ms")
+                if (bitmap != null) {
+                    val rotationAngle: Int = if (pfd != null) {
+                        calculateAngleFromFileDescriptor(pfd.fileDescriptor)
+                    } else {
+                        calculateAngleFromFile(src)
+                    }
+                    if (rotationAngle != 0 && opts.autoRotate) {
+                        val matrix = Matrix()
+                        matrix.postRotate(rotationAngle.toFloat())
+                        bitmap = Bitmap.createBitmap(
+                            bitmap,
+                            0,
+                            0,
+                            bitmap.getWidth(),
+                            bitmap.getHeight(),
+                            matrix,
+                            true
+                        )
+                    }
                 }
-                // Log.d("ImageAnalysis", "readBitmapFromFile2 in ${System.currentTimeMillis() - start} ms")
+                // Log.d("ImageAnalysis", "readBitmapFromFile1 in ${System.currentTimeMillis() - start} ms")
+                return bitmap
+            } finally {
+                if (pfd != null) {
+                    closePfd(pfd)
+                    pfd = null
+                }
             }
-            return bitmap
+
         }
 
         fun readBitmapFromFile(context: Context, src: String, opts: String?): Bitmap? {
