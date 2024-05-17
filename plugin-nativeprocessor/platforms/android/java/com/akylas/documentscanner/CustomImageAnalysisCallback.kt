@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
+import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
 import com.akylas.documentscanner.utils.ImageUtil
@@ -407,7 +408,10 @@ constructor(
 //                        )
 //                    }
                     // resized images from android side are more blurry than when resized with openCV
+                    // val start = System.currentTimeMillis()
+                    // Log.d("ImageAnalysis", "getJSONDocumentCornersSync")
                     callback.onResult(null, getJSONDocumentCornersSync(bitmap, shrunkImageHeight,  0, scale, options))
+                    // Log.d("ImageAnalysis", "getJSONDocumentCornersSync in ${System.currentTimeMillis() - start} ms")
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 } finally {
@@ -767,6 +771,7 @@ constructor(
             compressFormat: String = "jpg",
             compressQuality: Int = 100,
         ): Any? {
+            // val start = System.currentTimeMillis()
             val bitmaps = arrayListOf<Bitmap>()
             val jsonResult = JSONArray()
             val jsonArray = JSONArray(quads)
@@ -824,6 +829,7 @@ constructor(
                     bitmaps.add(cropBitmap)
                 }
             }
+            // Log.d("ImageAnalysis", "cropDocumentSync in ${System.currentTimeMillis() - start} ms")
             if (bitmaps.size > 0) {
                 return bitmaps.toArray()
             } else {
