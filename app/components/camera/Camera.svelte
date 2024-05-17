@@ -74,6 +74,7 @@
     let canSaveDoc = false;
     let editing = false;
 
+    const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
     const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
 
@@ -121,19 +122,23 @@
         }
     }
 
-    async function processAndAddImage(image, autoScan = false) {
+    async function processAndAddImage(image: string | UIImage, autoScan = false) {
         let imageSource: ImageSource;
         try {
             showLoading(l('computing'));
-            imageSource = new ImageSource(image);
+            let tempImagePath: string;
+            if (typeof image === 'string') {
+                tempImagePath = image;
+            } else {
+                imageSource = new ImageSource(image);
+                const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+                tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${compressQuality}`);
+                await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
+                //clear memory as soon as possible
+                recycleImages(imageSource);
+                imageSource = null;
+            }
 
-            const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-            const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
-            const tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${compressQuality}`);
-            await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
-            //clear memory as soon as possible
-            recycleImages(imageSource);
-            imageSource = null;
             return await processCameraImage({
                 imagePath: tempImagePath,
                 fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_FORMAT}`,
@@ -182,14 +187,19 @@
         }
         try {
             DEV_LOG && console.log('takePicture', autoScan, _actualFlashMode);
+            const start = Date.now();
             await showLoading(l('capturing'));
-            const { image, info } = await cameraView.nativeView.takePicture({
-                savePhotoToDisk: false,
+            // on Android we the capture will directly save the image to a temp directory
+            // but thus maxWidth / maxHeight is ignored
+            const { image } = await cameraView.nativeView.takePicture({
+                savePhotoToDisk: __ANDROID__,
+                storageLocation: 'file:' + knownFolders.temp().path,
+                fileName: `capture_${Date.now()}.${compressQuality}`,
                 flashMode: _actualFlashMode,
                 maxWidth: 4500,
                 maxHeight: 4500
             });
-            //image is recyced in processAndAddImage on Android
+            // DEV_LOG && console.log('takePicture got image', image, Date.now() - start, 'ms');
             const didAdd = await processAndAddImage(image, autoScan);
             if (didAdd) {
                 nbPages = pagesToAdd.length;
@@ -268,7 +278,7 @@
         if (torchEnabled) {
             forceTorchDisabled(true);
         }
-        stopPreview();
+        // stopPreview();
         if (document) {
             // we need to clear the current document which was not saved
             //especially memory images
@@ -290,16 +300,16 @@
         DEV_LOG && console.log('stopPreview', force, previewStarted, takingPicture);
         if (force || previewStarted) {
             previewStarted = false;
-            if (takingPicture) {
-                return;
-            }
+            // if (takingPicture) {
+            //     return;
+            // }
             if (autoScanHandler) {
                 pauseAutoScan();
             }
-            cameraView?.nativeView.stopPreview();
-            if (cropView?.nativeView) {
-                cropView.nativeView.quads = null;
-            }
+            // // cameraView?.nativeView.stopPreview();
+            // if (cropView?.nativeView) {
+            //     cropView.nativeView.quads = null;
+            // }
         }
     }
     function onNavigatedTo() {
@@ -385,7 +395,7 @@
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
-                if (cameraOpened && cameraView?.nativeView && autoScanHandler.enabled) {
+                if (!saveCalled && cameraOpened && previewStarted && cameraView?.nativeView && autoScanHandler.enabled) {
                     takePicture(true);
                 }
             });
@@ -519,6 +529,7 @@
             enablePinchZoom={true}
             flashMode={_actualFlashMode}
             iosCaptureMode="videoPhotoWithoutAudio"
+            jpegQuality={compressQuality}
             {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
             {stretch}

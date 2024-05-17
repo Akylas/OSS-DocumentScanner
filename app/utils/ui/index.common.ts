@@ -1341,6 +1341,7 @@ export async function addCurrentImageToDocument({
     imageHeight,
     imageRotation,
     quads,
+    autoRotate,
     fileName,
     transforms = []
 }: {
@@ -1350,6 +1351,7 @@ export async function addCurrentImageToDocument({
     sourceImagePath;
     imageWidth;
     imageHeight;
+    autoRotate?: boolean;
     imageRotation;
     quads;
     fileName?: string;
@@ -1358,6 +1360,7 @@ export async function addCurrentImageToDocument({
     if (!sourceImagePath) {
         return;
     }
+    const start = Date.now();
     const strTransforms = transforms?.join(TRANSFORMS_SPLIT) ?? '';
     DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
     const images: CropResult[] = [];
@@ -1369,6 +1372,7 @@ export async function addCurrentImageToDocument({
                 transforms: strTransforms,
                 saveInFolder: knownFolders.temp().path,
                 fileName,
+                autoRotate,
                 compressFormat,
                 compressQuality
             }))
@@ -1421,10 +1425,11 @@ export async function addCurrentImageToDocument({
                 sourceImageWidth: imageWidth,
                 sourceImageHeight: imageHeight,
                 sourceImageRotation: imageRotation,
-                rotation: imageRotation
+                rotation: 0 // cropped image is always rotated
             });
         }
     }
+    DEV_LOG && console.log('addCurrentImageToDocument done', sourceImagePath, Date.now() - start, 'ms');
 }
 export async function processCameraImage({
     imagePath,
@@ -1448,17 +1453,25 @@ export async function processCameraImage({
     const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
     const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
+    const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
     let quads: [number, number][][];
     const imageSize = getImageSize(imagePath);
+    const imageRotation = imageSize.rotation;
     const imageWidth = imageSize.width;
     const imageHeight = imageSize.height;
-    const imageRotation = imageSize.rotation;
-    if (cropEnabled) {
-        quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, imageRotation: 0, areaScaleMinFactor });
-    }
-    const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
     DEV_LOG && console.log('processCameraImage', imagePath, previewResizeThreshold, quads, imageSize.width, imageSize.height, alwaysPromptForCrop);
+    if (cropEnabled) {
+        const start = Date.now();
+        quads = await getJSONDocumentCornersFromFile(imagePath, { resizeThreshold: previewResizeThreshold * 1.5, areaScaleMinFactor });
+        DEV_LOG && console.log('processCameraImage got quads', Date.now() - start, 'ms');
+    }
     if (cropEnabled && (quads.length === 0 || alwaysPromptForCrop)) {
+        let width = imageWidth;
+        let height = imageHeight;
+        if (imageRotation % 180 !== 0) {
+            width = imageHeight;
+            height = imageWidth;
+        }
         let items = [
             {
                 imagePath,
@@ -1471,9 +1484,9 @@ export async function processCameraImage({
                         : ([
                               [
                                   [noDetectionMargin, noDetectionMargin],
-                                  [imageSize.width - noDetectionMargin, noDetectionMargin],
-                                  [imageSize.width - noDetectionMargin, imageSize.height - noDetectionMargin],
-                                  [noDetectionMargin, imageSize.height - noDetectionMargin]
+                                  [width - noDetectionMargin, noDetectionMargin],
+                                  [width - noDetectionMargin, height - noDetectionMargin],
+                                  [noDetectionMargin, height - noDetectionMargin]
                               ]
                           ] as [number, number][][])
             }
