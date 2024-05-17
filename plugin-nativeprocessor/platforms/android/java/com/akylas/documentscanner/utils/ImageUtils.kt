@@ -43,6 +43,7 @@ class ImageUtil {
         var maxHeight = 0
         var keepAspectRatio = true
         var autoScaleFactor = true
+        var autoRotate = true
 
         fun initWithJSON(jsonOpts: JSONObject)
         {
@@ -68,6 +69,7 @@ class ImageUtil {
             sourceHeight = jsonOpts.optInt("sourceHeight", sourceHeight)
             keepAspectRatio = jsonOpts.optBoolean("keepAspectRatio", keepAspectRatio)
             autoScaleFactor = jsonOpts.optBoolean("autoScaleFactor", autoScaleFactor)
+            autoRotate = jsonOpts.optBoolean("autoRotate", autoRotate)
 
         }
         constructor(options: String?) {
@@ -94,6 +96,7 @@ class ImageUtil {
         var height = 0
         var keepAspectRatio = true
         var autoScaleFactor = true
+        var autoRotate = true
 
         constructor(sourceSize: Pair<Int, Int>) {
             width = sourceSize.first
@@ -123,6 +126,7 @@ class ImageUtil {
                 }
                 keepAspectRatio = options.keepAspectRatio
                 autoScaleFactor = options.autoScaleFactor
+                autoRotate = options.autoRotate
             }
         }
     }

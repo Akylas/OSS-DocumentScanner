@@ -9,6 +9,7 @@ export interface LoadImageOptions {
     maxHeight?: number;
     maxSize?: number;
     resizeThreshold?: number;
+    autoRotate?: boolean;
 }
 export interface OCRData {
     text: string;
