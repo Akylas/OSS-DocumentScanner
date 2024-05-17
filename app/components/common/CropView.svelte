@@ -328,6 +328,6 @@
 </script>
 
 <gridlayout backgroundColor="black" {...$$restProps}>
-    <RotableImageView margin={padding} src={imagePath} stretch="aspectFit" />
+    <RotableImageView decodeWidth={ZOOM_IMAGE_MAX_SIZE} margin={padding} src={imagePath} stretch="aspectFit" />
     <canvasView bind:this={canvasView} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} />
 </gridlayout>
