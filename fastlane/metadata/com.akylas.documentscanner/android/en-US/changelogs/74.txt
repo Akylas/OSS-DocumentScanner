@@ -1,0 +1,7 @@
+### Bug fixes
+- better image quality of documents list view
+- action buttons layout fix on main view for better readability
+- many webdav sync issues
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Croatian)
+- much faster image camera image capture
