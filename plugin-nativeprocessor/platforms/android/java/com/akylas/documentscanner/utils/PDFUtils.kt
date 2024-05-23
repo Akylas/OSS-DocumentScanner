@@ -182,6 +182,9 @@ class PDFUtils {
             }
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
+            if (bmp == null) {
+                return null
+            }
             if (hasColorMatrix) {
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
