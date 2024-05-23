@@ -390,6 +390,9 @@
     let processor;
     let autoScanHandler;
     function applyAutoScan(value: boolean) {
+        if (!cropEnabled) {
+            return;
+        }
         if (value) {
             const nCropView = cropView.nativeView;
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
@@ -409,6 +412,9 @@
         }
     }
     function toggleAutoScan(apply = true) {
+        if (!cropEnabled) {
+            return;
+        }
         DEV_LOG && console.log('toggleAutoScan', autoScan, apply);
         autoScan = !autoScan;
         ApplicationSettings.setBoolean('autoScan', autoScan);
