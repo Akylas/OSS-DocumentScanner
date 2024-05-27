@@ -17,7 +17,7 @@
     export let item: OCRPage & { image?: ImageSource } = null;
     export let src: string = null;
     export let stretch: any = 'aspectFit';
-    // export let imageFunctionArg = null;
+    export let imageFunctionArg = null;
 
     let SVImageView: NativeViewElementNode<Img>;
     // $: item && rotateToRotation(item.newRotation);
@@ -42,31 +42,31 @@
             showError(err);
         }
     }
-    // let imageToDestroy;
+    let imageToDestroy;
     function getImageSrc(item) {
-        // if (imageToDestroy) {
-        //     const toRelease = imageToDestroy;
-        //     setTimeout(() => {
-        //         recycleImages(toRelease);
-        //     }, 10);
-        //     imageToDestroy = null;
-        // }
-        // if (item.image) {
-        //     if (typeof item.image === 'function') {
-        //         // TODO: it is a promise!
-        //         let result = item.image(imageFunctionArg);
-        //         if (result instanceof Promise) {
-        //             result = result.then((r) => {
-        //                 imageToDestroy = r;
-        //                 return r;
-        //             });
-        //         } else {
-        //             imageToDestroy = result;
-        //         }
-        //         return result;
-        //     }
-        //     return item.image;
-        // }
+        if (imageToDestroy) {
+            const toRelease = imageToDestroy;
+            setTimeout(() => {
+                recycleImages(toRelease);
+            }, 10);
+            imageToDestroy = null;
+        }
+        if (item.image) {
+            if (typeof item.image === 'function') {
+                // TODO: it is a promise!
+                let result = item.image(imageFunctionArg);
+                if (result instanceof Promise) {
+                    result = result.then((r) => {
+                        imageToDestroy = r;
+                        return r;
+                    });
+                } else {
+                    imageToDestroy = result;
+                }
+                return result;
+            }
+            return item.image;
+        }
         return item?.imagePath;
     }
 
