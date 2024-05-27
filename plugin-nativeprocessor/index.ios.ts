@@ -1,5 +1,5 @@
 import { Color, ImageSource } from '@nativescript/core';
-import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData } from '.';
+import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData, Quads } from '.';
 import { CropView } from './CropView';
 
 @NativeClass
@@ -63,7 +63,7 @@ export async function cropDocumentFromFile(src: string, quads, options: CropOpti
         }
     });
 }
-export async function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): Promise<[number, number][][]> {
+export async function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): Promise<Quads> {
     return new Promise((resolve, reject) => {
         try {
             OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(
@@ -77,7 +77,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         }
     });
 }
-export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<[number, number][][]> {
+export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<Quads> {
     return new Promise((resolve, reject) => {
         try {
             OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileDelegateOptions(src, CompletionDelegateImpl.initWithResolveReject(resolve, reject), JSON.stringify(options));
@@ -106,10 +106,7 @@ export async function processFromFile(src: string, processes: any[], options: Lo
     // );
     // });
 }
-export async function getColorPalette(
-    editingImage: ImageSource,
-    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }
-): Promise<[number, number][][]> {
+export async function getColorPalette(editingImage: ImageSource, options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }): Promise<Quads> {
     throw new Error('not implemented');
     // return new Promise((resolve, reject) => {
     //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
@@ -133,7 +130,7 @@ export async function getColorPaletteFromFile(
     src: string,
     options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 },
     strOptions?: string
-): Promise<[number, number][][]> {
+): Promise<Quads> {
     throw new Error('not implemented');
     // return new Promise((resolve, reject) => {
     // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPaletteFromFile(

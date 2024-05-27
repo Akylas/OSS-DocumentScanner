@@ -2,6 +2,10 @@ import { Color } from '@nativescript/core';
 
 export * from './index.android';
 
+export type QuadPoint = [number, number];
+export type Quad = [QuadPoint, QuadPoint, QuadPoint, QuadPoint];
+export type Quads = Quad[];
+
 export interface LoadImageOptions {
     width?: number;
     height?: number;
@@ -29,7 +33,7 @@ export interface OCRData {
 
 export interface QRCodeSingleData {
     text: string;
-    position: [number, number][];
+    position: Quad;
     format: string;
 }
 export type QRCodeData = QRCodeSingleData[];

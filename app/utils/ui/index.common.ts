@@ -25,7 +25,7 @@ import {
 } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl, wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
-import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
+import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -422,9 +422,9 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                             [
                                                 {
                                                     type: 'qrcode'
-                                                },
-                                                {
-                                                    type: 'palette'
+                                                // },
+                                                // {
+                                                //     type: 'palette'
                                                 }
                                             ],
                                             {
@@ -1454,7 +1454,7 @@ export async function processCameraImage({
     const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
-    let quads: [number, number][][];
+    let quads: Quads;
     const imageSize = getImageSize(imagePath);
     const imageRotation = imageSize.rotation;
     const imageWidth = imageSize.width;
@@ -1488,7 +1488,7 @@ export async function processCameraImage({
                                   [width - noDetectionMargin, height - noDetectionMargin],
                                   [noDetectionMargin, height - noDetectionMargin]
                               ]
-                          ] as [number, number][][])
+                          ] as Quads)
             }
         ];
         if (alwaysPromptForCrop || autoScan === false) {

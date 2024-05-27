@@ -1,5 +1,18 @@
 import { ImageSource, Utils } from '@nativescript/core';
-import { CornersOptions, CropOptions, CropResult, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData } from '.';
+import {
+    CornersOptions,
+    CropOptions,
+    CropResult,
+    DetectOptions,
+    DetectQRCodeOptions,
+    GenerateColorOptions,
+    GenerateQRCodeOptions,
+    LoadImageOptions,
+    OCRData,
+    PDFImportOptions,
+    QRCodeData,
+    Quads
+} from '.';
 import { CropView } from './CropView';
 
 export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
@@ -39,7 +52,7 @@ export async function cropDocumentFromFile(src: string, quads, options: CropOpti
         );
     });
 }
-export async function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): Promise<[number, number][][]> {
+export async function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): Promise<Quads> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(
             editingImage.android,
@@ -57,7 +70,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
         );
     });
 }
-export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<[number, number][][]> {
+export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<Quads> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersFromFile(
             Utils.android.getApplicationContext(),
@@ -99,7 +112,7 @@ export async function processFromFile(src: string, processes: any[], options: Lo
 //     processor: com.nativescript.cameraview.ImageAsyncProcessor,
 //     resizeThreshold = 300,
 //     imageRotation = 0
-// ): Promise<[android.graphics.Bitmap, [number, number][][]]> {
+// ): Promise<[android.graphics.Bitmap, Quads]> {
 //     return new Promise((resolve, reject) => {
 //         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersAndImage(
 //             imageProxy,
@@ -122,10 +135,7 @@ export async function processFromFile(src: string, processes: any[], options: Lo
 //     });
 // }
 
-export async function getColorPalette(
-    editingImage: ImageSource,
-    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }
-): Promise<[number, number][][]> {
+export async function getColorPalette(editingImage: ImageSource, options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }): Promise<Quads> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
             editingImage['android'] || editingImage,
@@ -148,7 +158,7 @@ export async function getColorPaletteFromFile(
     src: string,
     options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 },
     strOptions?: string
-): Promise<[number, number][][]> {
+): Promise<Quads> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPaletteFromFile(
             Utils.android.getApplicationContext(),

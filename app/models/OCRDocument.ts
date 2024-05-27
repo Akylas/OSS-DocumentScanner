@@ -1,7 +1,7 @@
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ApplicationSettings, EventData, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
-import { ColorPaletteData, OCRData, QRCodeData, cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
+import { ColorPaletteData, OCRData, QRCodeData, Quad, Quads, cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { DocumentsService, documentsService } from '~/services/documents';
 import { ColorMatricesType } from '~/utils/matrix';
 import { loadImage, recycleImages } from '~/utils/images';
@@ -15,7 +15,7 @@ export interface ImportImageData {
     imageWidth?: number;
     imageHeight?: number;
     imageRotation?: number;
-    quads?: [number, number][][];
+    quads?: Quads;
     qrcode?: QRCodeData;
 }
 
@@ -302,7 +302,7 @@ export class OCRDocument extends Observable implements Document {
         return JSON.parse(this.toString());
     }
 
-    async updatePageCrop(pageIndex: number, quad: any) {
+    async updatePageCrop(pageIndex: number, quad: Quad) {
         const page = this.pages[pageIndex];
         DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
         const file = File.fromPath(page.imagePath);
@@ -382,7 +382,7 @@ export interface Page {
     brightness?: number;
     contrast?: number;
     rotation: number;
-    crop: [number, number][];
+    crop: Quad;
     // pageIndex: number;
     scale: number;
     width: number;
@@ -421,7 +421,7 @@ export class OCRPage extends Observable implements Page {
     rotation: number = 0;
     scale: number = 1;
 
-    crop: [number, number][];
+    crop: Quad;
 
     transforms?: string;
 

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { Pager } from '@nativescript-community/ui-pager';
-    import { ApplicationSettings, Page } from '@nativescript/core';
-    import { QRCodeData } from 'plugin-nativeprocessor';
+    import { AndroidActivityBackPressedEventData, Application, GridLayout, Page, confirm } from '@nativescript/core';
     import { closeModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -11,7 +10,8 @@
     import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/utils/constants';
     import { windowInset } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
-    import { ImportImageData } from '~/models/OCRDocument';
+    import { onDestroy, onMount } from 'svelte';
+    import { confirmGoBack, onBackButton } from '~/utils/ui';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
@@ -23,6 +23,32 @@
     function onTapFinish() {
         closeModal(items);
     }
+    function onGoBack() {
+        if (items.length > 1) {
+            confirmGoBack({ message: lc('sure_cancel_import'), onGoBack: closeModal });
+        } else {
+            closeModal(undefined);
+        }
+    }
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
+            if (items.length > 1) {
+                data.cancel = true;
+                onGoBack();
+            }
+        });
+
+    onMount(() => {
+        if (__ANDROID__) {
+            Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
+        }
+    });
+    onDestroy(() => {
+        if (__ANDROID__) {
+            Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
+        }
+    });
+
     let currentIndex = 0;
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
@@ -95,6 +121,7 @@
             variant="text"
             verticalAlignment="center"
             on:tap={resetCrop} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" colSpan={3} modalWindow={true} {onGoBack} title={null}>
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" colSpan={3} modalWindow={true} title={null} />
     </gridlayout>
 </page>
