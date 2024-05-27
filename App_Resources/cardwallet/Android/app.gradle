@@ -71,6 +71,7 @@ android {
   }
   
   aaptOptions {
+    // ignoreAssetsPattern "!*.afm"
   }  
   buildTypes { // THIS CAUSES RELEASE MODE ERROR ON APP LAUNCH
     release {
@@ -134,7 +135,7 @@ android {
     // Disables dependency metadata when building APKs.
     includeInApk = false
   }
-  experimentalProperties["android.experimental.r8.dex-startup-optimization"] = true
+  // experimentalProperties["android.experimental.r8.dex-startup-optimization"] = true
 }
 
 task createProguard {
@@ -177,8 +178,6 @@ android.applicationVariants.all { variant ->
 dependencies {
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
     def kotlinVersion = computeKotlinVersion()
-    // def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
-    // implementation "androidx.core:core-ktx:$androidxVersion"
     implementation 'androidx.core:core-splashscreen:1.1.0-alpha02'
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion") {
@@ -188,12 +187,14 @@ dependencies {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }
+
     implementation "androidx.profileinstaller:profileinstaller:1.3.1"
-    baselineProfile project(':benchmark')
-  }
+    baselineProfile project(':baselineprofile')
+}
 repositories {
-			mavenCentral()
-			maven { url 'https://jitpack.io' }
+      mavenCentral()
+      maven { url 'https://jitpack.io' }
+      maven { url "https://repo.itextsupport.com/android" }
 }
 
 if (project.hasProperty("sentryEnabled")) {
