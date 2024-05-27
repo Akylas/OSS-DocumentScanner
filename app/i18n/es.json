@@ -264,6 +264,8 @@
     "storage_location": "ubicación de almacenamiento",
     "storage_permission_needed": "se necesita permiso de almacenamiento",
     "successful": "completado",
+    "sure_cancel_import": "¿estas seguro que quieres cancelar?",
+    "sure_go_back": "¿Estás seguro de que quieres volver?",
     "sync": "sincronizar",
     "system": "sistema",
     "test": "probar",
