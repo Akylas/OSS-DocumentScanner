@@ -210,27 +210,22 @@ frame {
     color: var(--colorOnSurface);
     ripple-color: var(--colorOnSurface);
 
-    &:disabled {
-        color: var(--colorOutlineVariant);
-        ripple-color: var(--colorOutlineVariant);
-    }
+    // &:disabled {
+    //     color: var(--colorOutlineVariant);
+    //     ripple-color: var(--colorOutlineVariant);
+    // }
 
     &:onTertiary {
         color: var(--colorOnTertiary);
         ripple-color: var(--colorOnTertiary);
     }
 
-
-
-
     &:black, &:dark {
-
         color: white;
         ripple-color: white;
     }
 
     &:white {
-
         color: black;
         ripple-color: black;
     }
