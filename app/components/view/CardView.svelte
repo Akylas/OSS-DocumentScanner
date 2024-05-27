@@ -59,6 +59,7 @@
 <script lang="ts">
     $: qrcodeColorMatrix = isDarkTheme($currentRealTheme) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
+    let { colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorError } = $colors;
     $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorError } = $colors);
 
     export let document: OCRDocument;
