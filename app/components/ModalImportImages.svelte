@@ -7,7 +7,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
-    import { DOCUMENT_NOT_DETECTED_MARGIN } from '~/utils/constants';
+    import { ImportImageData } from '~/models/OCRDocument';
     import { windowInset } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
     import { onDestroy, onMount } from 'svelte';
@@ -50,8 +50,10 @@
     });
 
     let currentIndex = 0;
+    let currentItem: ImportImageData = items[currentIndex];
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
+        currentItem = items[currentIndex];
         DEV_LOG && console.log('onSelectedIndex', currentIndex, items.length);
     }
     function changePage(delta) {
@@ -73,13 +75,28 @@
         ]);
         pager.nativeView.refreshVisibleItems();
     }
+
+    function getCurrentCropView() {
+        return pager?.nativeView?.getChildView(currentIndex)?.getViewById<GridLayout>('cropView');
+    }
+
+    async function onUndo() {
+        getCurrentCropView().notify({ eventName: 'undo' });
+    }
+    async function onRedo() {
+        getCurrentCropView().notify({ eventName: 'redo' });
+    }
+    async function onUndosChanged() {
+        //trigger update
+        currentItem = currentItem;
+    }
 </script>
 
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
     <gridlayout backgroundColor="black" columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} id="pager" colSpan={3} disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
-                <CropView {...item} />
+                <CropView {...item} on:undosChanged={onUndosChanged} />
             </Template>
         </pager>
         <PageIndicator colSpan={3} horizontalAlignment="right" margin="10 10 0 0" row={2} text={`${currentIndex + 1}/${items.length}`} />
@@ -122,6 +139,8 @@
             verticalAlignment="center"
             on:tap={resetCrop} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" colSpan={3} modalWindow={true} {onGoBack} title={null}>
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" colSpan={3} modalWindow={true} title={null} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" isEnabled={currentItem?.undos.length > 0} text="mdi-undo" variant="text" on:tap={onUndo} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" isEnabled={currentItem?.redos.length > 0} text="mdi-redo" variant="text" on:tap={onRedo} />
+        </CActionBar>
     </gridlayout>
 </page>

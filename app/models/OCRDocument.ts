@@ -17,6 +17,8 @@ export interface ImportImageData {
     imageRotation?: number;
     quads?: Quads;
     qrcode?: QRCodeData;
+    undos: any[];
+    redos: any[];
 }
 
 export interface ImageConfig {

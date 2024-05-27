@@ -2,19 +2,21 @@
     import { debounce } from '@nativescript/core/utils';
     import { BitmapShader, Canvas, CanvasView, Matrix, Paint, Path, Style, TileMode } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, ImageSource, Screen, TouchGestureEventData, Utils } from '@nativescript/core';
-    import { QRCodeData, QuadPoint } from 'plugin-nativeprocessor';
+    import { QRCodeData, QuadPoint, Quads } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { colors } from '~/variables';
     import { loadImage, recycleImages } from '~/utils/images';
     import { IMAGE_DECODE_HEIGHT, MAGNIFIER_SENSITIVITY } from '~/utils/constants';
-    import { onDestroy } from 'svelte';
+    import { createEventDispatcher, onDestroy } from 'svelte';
     import RotableImageView from './RotableImageView.svelte';
+    import { showError } from '~/utils/error';
     const padding = 20;
     const ZOOOM_GLASS_SIZE = 50;
     const ZOOM_IMAGE_MAX_SIZE = Math.max(Screen.mainScreen.widthDIPs, Screen.mainScreen.heightDIPs);
 </script>
 
 <script lang="ts">
+    const dispatch = createEventDispatcher();
     let { colorPrimary, colorSecondary } = $colors;
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSecondary } = $colors);
@@ -41,9 +43,11 @@
     export let imageWidth: number = null;
     export let imageHeight: number = null;
     export let imageRotation: number = null;
-    export let quads;
+    export let quads: Quads;
     export let quadChanged = false;
     export let qrcode: QRCodeData = null;
+    export let undos = [];
+    export let redos = [];
 
     let actualWidth = imageWidth;
     let actualHeight = imageHeight;
@@ -167,12 +171,19 @@
         return [-1, []] as [number, number[]];
     }
     const sensitivityFactor = ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY);
+    let changeOnTouch = false;
+    let lastUndo;
     function onTouch(event: TouchGestureEventData) {
         try {
             const x = event.getX();
             const y = event.getY();
             switch (event.action) {
                 case 'down': {
+                    lastUndo = {
+                        quads: JSON.stringify(currentQuads),
+                        mappedQuads: JSON.stringify(mappedQuads)
+                    };
+                    changeOnTouch = false;
                     prevTouchPoint = [x, y];
                     startTouchPoint = getMatrixMappedPoint(inversedCurrentMatrix, prevTouchPoint);
                     [closestQuadIndex, closestCornerQuadIndex] = getQuadAndCornerClosestToPoint(prevTouchPoint);
@@ -189,6 +200,13 @@
                 case 'cancel': {
                     closestQuadIndex = -1;
                     closestCornerQuadIndex = [];
+                    if (changeOnTouch) {
+                        redos.splice(0, redos.length);
+                        undos.push(lastUndo);
+                        dispatch('undosChanged');
+                    } else {
+                        lastUndo = null;
+                    }
                     break;
                 }
                 case 'move': {
@@ -230,6 +248,7 @@
                             });
                             if (isConvex(quad)) {
                                 quadChanged = true;
+                                changeOnTouch = true;
                                 for (let index = 0; index < quad.length; index++) {
                                     currentQuads[closestQuadIndex][index] = currentQuad[index];
                                 }
@@ -246,6 +265,49 @@
             canvasView.nativeView.invalidate();
         } catch (error) {
             console.error(error, error.stack);
+        }
+    }
+    function updateUndoRedo(lastData) {
+        mappedQuads = JSON.parse(lastData.mappedQuads);
+        const quads = JSON.parse(lastData.quads);
+        for (let index = 0; index < quads.length; index++) {
+            const quad = quads[index];
+            if (currentQuads[index]) {
+                for (let j = 0; j < quad.length; j++) {
+                    currentQuads[index][j] = quad[j];
+                }
+            }
+        }
+        quadChanged = undos.length > 0;
+        canvasView.nativeView.invalidate();
+    }
+    function applyUndo() {
+        try {
+            if (undos.length) {
+                const lastUndo = undos.pop();
+                redos.push({
+                    quads: JSON.stringify(currentQuads),
+                    mappedQuads: JSON.stringify(mappedQuads)
+                });
+                updateUndoRedo(lastUndo);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    function applyRedo() {
+        try {
+            if (redos.length) {
+                const lastRedo = redos.pop();
+                undos.push({
+                    quads: JSON.stringify(currentQuads),
+                    mappedQuads: JSON.stringify(mappedQuads)
+                });
+                updateUndoRedo(lastRedo);
+            }
+        } catch (error) {
+            showError(error);
         }
     }
 
@@ -408,7 +470,8 @@
     const path: Path = new Path();
     function drawLineAndHandle(canvas: Canvas, pos1: QuadPoint, pos2: QuadPoint, drawingRatio: number) {
         canvas.drawLine(pos1[0], pos1[1], pos2[0], pos2[1], cornersPaint);
-        const rect = createRectangleAlongLine(pos1, pos2, 90 / drawingRatio, 10 / drawingRatio);
+        const d = distance(pos1, pos2);
+        const rect = createRectangleAlongLine(pos1, pos2, Math.min(0.3 * d, 90 / drawingRatio), 10 / drawingRatio);
         path.reset();
         path.moveTo(rect[0][0], rect[0][1]);
         path.lineTo(rect[1][0], rect[1][1]);
@@ -473,7 +536,7 @@
     }
 </script>
 
-<gridlayout backgroundColor="black" {...$$restProps}>
+<gridlayout backgroundColor="black" {...$$restProps} id="cropView" on:redo={applyRedo} on:undo={applyUndo}>
     <RotableImageView decodeWidth={ZOOM_IMAGE_MAX_SIZE} margin={padding} src={imagePath} stretch="aspectFit" />
     <canvasView bind:this={canvasView} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} />
 </gridlayout>

@@ -3,7 +3,7 @@ const sentryEnabled = !!process.env['NS_SENTRY'];
 const loggingEnabled = !!process.env['NS_LOGGING'];
 
 module.exports = {
-    ignoredNativeDependencies: ['@nativescript/detox'].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']),
+    ignoredNativeDependencies: [].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']),
     id: process.env['APP_ID'] || 'com.akylas.documentscanner',
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources/documentscanner',
     buildPath: process.env['APP_BUILD_PATH'] || 'build/documentscanner',
@@ -20,7 +20,7 @@ module.exports = {
     },
     android: {
         runtimePackageName: '@akylas/nativescript-android-runtime',
-        gradleVersion: '8.4',
+        gradleVersion: '8.6',
         markingMode: 'none',
         codeCache: true,
         enableMultithreadedJavascript: false,
