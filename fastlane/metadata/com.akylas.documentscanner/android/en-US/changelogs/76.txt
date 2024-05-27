@@ -1,0 +1,13 @@
+### Features
+- a lot more controls over document "detected zone". You can now move edges, move all zone(center), undo or redo changes
+
+### Bug fixes
+- Translated using Weblate (German)
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Galician)
+- Translated using Weblate (French)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Hindi)
+- prevent crash while generating PDF
+- prevent error if document detection is disabled
+- confirm canceling batch scan or image import
