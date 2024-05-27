@@ -264,6 +264,8 @@
     "storage_location": "موقع التخزين",
     "storage_permission_needed": "بحاجة إلى إذن التخزين",
     "successful": "نجح",
+    "sure_cancel_import": "أمتأكد أنك تريد الإلغاء؟",
+    "sure_go_back": "أمتأكد أنك تريد العودة؟",
     "sync": "مزامنة",
     "system": "النظام",
     "test": "اختبار",
