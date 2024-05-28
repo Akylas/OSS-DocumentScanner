@@ -278,7 +278,9 @@
                 imagePath: item.sourceImagePath,
                 imageWidth: item.sourceImageWidth,
                 imageHeight: item.sourceImageHeight,
-                imageRotation: item.sourceImageRotation
+                imageRotation: item.sourceImageRotation,
+                undos: [],
+                redos: []
             };
             quad = JSON.parse(JSON.stringify(item.crop));
             recrop = true;
