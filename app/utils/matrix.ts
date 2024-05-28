@@ -37,11 +37,11 @@ export function getColorMatrix(type: MatricesTypes, ...args): Matrix {
 export function getPageColorMatrix(page: OCRPage, forcedColorType?: MatricesTypes) {
     if (page) {
         const result = forcedColorType ? getColorMatrix(forcedColorType) : page.colorMatrix || getColorMatrix(page.colorType);
-        const hasBrightness = page.brightness !== null && !isNaN(page.brightness) && page.brightness !== 1;
+        const hasBrightness = page.brightness !== null && !isNaN(page.brightness) && page.brightness !== 0;
         const hasContrast = page.contrast !== null && !isNaN(page.contrast) && page.contrast !== 1;
         // DEV_LOG && console.log('getPageColorMatrix', page.brightness, page.contrast);
         if (hasBrightness || hasContrast) {
-            const subMatrix = getColorMatrix('brightnessAndContrast', page.brightness ?? 1, page.contrast ?? 1);
+            const subMatrix = getColorMatrix('brightnessAndContrast', page.brightness ?? 0, page.contrast ?? 1);
             return result ? concatTwoColorMatrices(result, subMatrix) : subMatrix;
         }
         return result;

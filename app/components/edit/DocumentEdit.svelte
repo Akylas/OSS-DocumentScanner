@@ -459,11 +459,11 @@
                         icon: 'mdi-brightness-5',
                         min: -100,
                         max: 500,
-                        resetValue: 100,
+                        resetValue: 0,
                         step: __IOS__ ? 1 : undefined,
                         // value: 0,
                         formatter: (v) => (v / 100).toFixed(),
-                        value: Math.round(Math.max(-1, Math.min(current.brightness ?? 1, 5)) * 100),
+                        value: Math.round(Math.max(-1, Math.min(current.brightness ?? 0, 5)) * 100),
                         onChange: debounce((value) => {
                             applyBrightnessContrast(value / 100, current.contrast);
                         }, 10)
