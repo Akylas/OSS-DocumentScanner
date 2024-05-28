@@ -209,7 +209,7 @@
                     await saveCurrentDocument();
                 }
             }
-            DEV_LOG && console.log('takePicture done', image, didAdd);
+            DEV_LOG && console.log('takePicture done', didAdd);
         } catch (err) {
             // we can get a native error here
             showError(wrapNativeException(err));
