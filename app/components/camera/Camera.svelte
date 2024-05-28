@@ -35,7 +35,7 @@
     import { showError, wrapNativeException } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
     import { navigate } from '~/utils/svelte/ui';
-    import { goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
+    import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -360,6 +360,14 @@
         }
     }
 
+    function onGoBack() {
+        if (pagesToAdd.length > 0) {
+            confirmGoBack({ message: lc('sure_cancel_import'), onGoBack: closeModal });
+        } else {
+            closeModal(undefined);
+        }
+    }
+
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             if (editing) {
@@ -367,6 +375,9 @@
                 data.cancel = true;
             } else if (!startOnCam && takingPicture) {
                 data.cancel = true;
+            } else if (pagesToAdd.length > 0) {
+                data.cancel = true;
+                onGoBack();
             }
         });
 
@@ -390,6 +401,9 @@
     let processor;
     let autoScanHandler;
     function applyAutoScan(value: boolean) {
+        if (!cropEnabled) {
+            return;
+        }
         if (value) {
             const nCropView = cropView.nativeView;
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
@@ -409,6 +423,9 @@
         }
     }
     function toggleAutoScan(apply = true) {
+        if (!cropEnabled) {
+            return;
+        }
         DEV_LOG && console.log('toggleAutoScan', autoScan, apply);
         autoScan = !autoScan;
         ApplicationSettings.setBoolean('autoScan', autoScan);
@@ -540,7 +557,7 @@
             on:tap={focusCamera} />
         <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true}>
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} {onGoBack}>
             {#if startOnCam}
                 <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-image-plus" on:tap={showDocumentsList} />
                 <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" on:tap={() => showSettings()} />

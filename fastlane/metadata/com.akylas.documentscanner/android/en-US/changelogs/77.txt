@@ -1,0 +1,4 @@
+### Bug fixes
+- regression fix in latest release
+- brightness/contrast default value fix
+- ensure we have correct permissions to export settings

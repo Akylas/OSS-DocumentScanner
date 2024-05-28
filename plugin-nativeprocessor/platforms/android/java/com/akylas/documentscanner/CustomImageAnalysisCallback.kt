@@ -250,8 +250,8 @@ constructor(
             bitmap: Bitmap,
             options: String = "",
             scale: Double = 1.0
-        ) {
-            nativeQRCodeRead(bitmap, options, scale)
+        ): String {
+            return nativeQRCodeRead(bitmap, options, scale)
         }
         @JvmOverloads
         fun readQRCode(
@@ -290,7 +290,7 @@ constructor(
                     } else {
                         scale = imageSize[0].toDouble() / bitmap!!.width
                     }
-                    readQRCodeSync(bitmap, options, scale)
+                    callback.onResult(null, readQRCodeSync(bitmap, options, scale))
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 } finally {
@@ -326,10 +326,9 @@ constructor(
         ) {
             thread(start = true) {
                 try {
-                    val result = generateQRCodeSync(text, format, width, height, options)
                     callback.onResult(
                         null,
-                        result
+                        generateQRCodeSync(text, format, width, height, options)
                     )
                 } catch (e: Exception) {
                     callback.onResult(e, null)

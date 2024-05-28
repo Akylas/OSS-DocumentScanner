@@ -423,10 +423,10 @@ module.exports = (env, params = {}) => {
     };
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
-    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core)';
+    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|@akylas/nativescript)';
     config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
-            if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http') {
+        new webpack.NormalModuleReplacementPlugin(/http/, (resource) => {
+            if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http' || resource.request === '@akylas/nativescript/http') {
                 resource.request = '@nativescript-community/https';
             }
         })
@@ -464,13 +464,13 @@ module.exports = (env, params = {}) => {
             })
         );
         if (!sentry) {
-        config.plugins.push(
-            new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
-                if (resource.context.match(nativescriptReplace)) {
-                    resource.request = '~/shims/trace';
-                }
-            })
-        );
+            config.plugins.push(
+                new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
+                    if (resource.context.match(nativescriptReplace)) {
+                        resource.request = '~/shims/trace';
+                    }
+                })
+            );
         }
         config.module.rules.push(
             {

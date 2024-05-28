@@ -25,7 +25,7 @@ import {
 } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl, wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
-import { CropResult, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
+import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -70,6 +70,7 @@ import { navigate } from '../svelte/ui';
 import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
 import { Label } from '@nativescript-community/ui-label';
 import { ConfirmOptions } from '@akylas/nativescript/ui/dialogs/dialogs-common';
+import { goBack } from '~/utils/svelte/ui';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -338,7 +339,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                             ]);
                         }
                         DEV_LOG && console.log('importFromImage done', sourceImagePath, Date.now() - start, 'ms');
-                        resolve({ quads, imagePath: sourceImagePath, qrcode, imageWidth: imageSize.width, imageHeight: imageSize.height, imageRotation });
+                        resolve({ quads, imagePath: sourceImagePath, qrcode, imageWidth: imageSize.width, imageHeight: imageSize.height, imageRotation, undos: [], redos: [] });
                     } catch (error) {
                         reject(error);
                     }
@@ -422,9 +423,9 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                             [
                                                 {
                                                     type: 'qrcode'
-                                                },
-                                                {
-                                                    type: 'palette'
+                                                    // },
+                                                    // {
+                                                    //     type: 'palette'
                                                 }
                                             ],
                                             {
@@ -1454,7 +1455,7 @@ export async function processCameraImage({
     const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
-    let quads: [number, number][][];
+    let quads: Quads;
     const imageSize = getImageSize(imagePath);
     const imageRotation = imageSize.rotation;
     const imageWidth = imageSize.width;
@@ -1478,6 +1479,8 @@ export async function processCameraImage({
                 imageWidth,
                 imageHeight,
                 imageRotation,
+                undos: [],
+                redos: [],
                 quads:
                     quads.length > 0
                         ? quads
@@ -1488,7 +1491,7 @@ export async function processCameraImage({
                                   [width - noDetectionMargin, height - noDetectionMargin],
                                   [noDetectionMargin, height - noDetectionMargin]
                               ]
-                          ] as [number, number][][])
+                          ] as Quads)
             }
         ];
         if (alwaysPromptForCrop || autoScan === false) {
@@ -1625,4 +1628,21 @@ export function createView<T extends View>(claz: new () => T, props: Partial<Pic
         Object.keys(events).forEach((k) => view.on(k, events[k]));
     }
     return view;
+}
+
+export async function confirmGoBack({ onGoBack, message }: { onGoBack?; message? } = {}) {
+    try {
+        const result = await confirm({
+            message: message || lc('sure_go_back')
+        });
+        if (result) {
+            if (onGoBack) {
+                onGoBack();
+            } else {
+                goBack();
+            }
+        }
+    } catch (error) {
+        showError(error);
+    }
 }
