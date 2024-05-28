@@ -51,7 +51,7 @@
             }, 10);
             imageToDestroy = null;
         }
-        if (item.image) {
+        if (item?.image) {
             if (typeof item.image === 'function') {
                 // TODO: it is a promise!
                 let result = item.image(imageFunctionArg);
