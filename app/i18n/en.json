@@ -168,6 +168,7 @@
     "loading": "loading",
     "magnifier_sensitivity": "magnifier sensitivity",
     "magnifier_sensitivity_desc": "change the sensitivity of the magnifying glass while changing the crop zone",
+    "missing_storage_perm_settings": "storage permission is needed to export settings",
     "move_data": "move data?",
     "move_data_desc": "all your app data will be moved and an app restart will be enforced at the end",
     "moving_files": "moving files",

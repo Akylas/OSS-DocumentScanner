@@ -54,6 +54,8 @@
     import { Label } from '@nativescript-community/ui-label';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
+    import { SDK_VERSION } from '@nativescript-community/sentry';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
 </script>
@@ -784,6 +786,12 @@
                     break;
                 }
                 case 'export_settings':
+                    if (__ANDROID__ && SDK_VERSION < 29) {
+                        const permRes = await request('storage');
+                        if (!isPermResultAuthorized(permRes)) {
+                            throw new Error(lc('missing_storage_perm_settings'));
+                        }
+                    }
                     const jsonStr = ApplicationSettings.getAllJSON();
                     if (jsonStr) {
                         const result = await saveFile({
@@ -795,7 +803,7 @@
                     break;
                 case 'import_settings':
                     const result = await openFilePicker({
-                        extensions: ['application/json'],
+                        extensions: ['json'],
                         multipleSelection: false,
                         pickerMode: 0
                     });
