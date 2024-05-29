@@ -2,6 +2,7 @@
 // #include <android/log.h>
 #include <map>
 #include <iomanip>
+#include <jsoncons/json.hpp>
 
 using namespace cv;
 using namespace std;
@@ -323,12 +324,14 @@ std::vector<std::pair<Vec3b, float>> getPaletteFrom1Row(const Mat &src, int colo
     }
 }
 
-std::vector<std::pair<Vec3b, float>> getPalette(const Mat &img, bool isRGB, int resizeThreshold,
+std::vector<std::pair<cv::Vec3b, float>> getPalette(const Mat &img, bool isRGB, int resizeThreshold,
                                                 int colorsFilterDistanceThreshold, int nbColors, bool returnAsBGR, ColorSpace colorSpace)
 {
     int channels = img.channels();
-
-    Mat reducedimage = resizeImageToSize(img, max(img.cols, img.rows), resizeThreshold);
+    Mat reducedimage = img;
+    if (resizeThreshold > 0) {
+        reducedimage = resizeImageToSize(img, max(img.cols, img.rows), resizeThreshold);
+    }
     if (channels == 4)
     {
         if (isRGB)
@@ -372,4 +375,13 @@ std::vector<std::pair<Vec3b, float>> getPalette(const Mat &img, bool isRGB, int 
 
     // Get palette
     return getPaletteFrom1Row(data, colorsFilterDistanceThreshold, nbColors, returnAsBGR, colorSpace);
+}
+std::string getPaletteString(const Mat &img, bool isRGB, int resizeThreshold,
+                                                int colorsFilterDistanceThreshold, int nbColors, bool returnAsBGR, ColorSpace colorSpace) {
+    std::vector<std::pair<cv::Vec3b, float>> colors = getPalette(img, isRGB, resizeThreshold, colorsFilterDistanceThreshold, nbColors, returnAsBGR, colorSpace);
+    jsoncons::json j(jsoncons::json_array_arg);
+    for (int i = 0; i < colors.size(); ++i) {
+        j.push_back(BGRHexString(colors[i].first));
+    }
+    return j.to_string();
 }

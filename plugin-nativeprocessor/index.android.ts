@@ -135,7 +135,10 @@ export async function processFromFile(src: string, processes: any[], options: Lo
 //     });
 // }
 
-export async function getColorPalette(editingImage: ImageSource, options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }): Promise<Quads> {
+export async function getColorPalette(
+    editingImage: ImageSource,
+    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 20, nbColors: 5, colorPalette: 2 }
+): Promise<Quads> {
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
             editingImage['android'] || editingImage,
@@ -150,13 +153,14 @@ export async function getColorPalette(editingImage: ImageSource, options: Partia
             }),
             options.resizeThreshold,
             options.colorsFilterDistanceThreshold,
+            options.nbColors,
             options.colorPalette
         );
     });
 }
 export async function getColorPaletteFromFile(
     src: string,
-    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 },
+    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 20, nbColors: 5, colorPalette: 2 },
     strOptions?: string
 ): Promise<Quads> {
     return new Promise((resolve, reject) => {
@@ -297,6 +301,14 @@ export function createAutoScanHandler(cropView: CropView, block: (result) => voi
             onAutoScan: block
         })
     );
+}
+
+export function createQRCodeCallback(onQRCodes): any {
+    return onQRCodes
+        ? new com.akylas.documentscanner.CustomImageAnalysisCallback.OnQRCode({
+              onQRCodes
+          })
+        : null;
 }
 
 export async function importPdfToTempImages(pdfPath: string, options?: Partial<PDFImportOptions>) {

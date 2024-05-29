@@ -44,6 +44,7 @@ constructor(
             field = value
         }
     var detectQRCode = false
+    var detectDocuments = true
     var detectQRCodeOptions = "{\"resizeThreshold\":500}"
 
     interface FunctionCallback {
@@ -55,7 +56,7 @@ constructor(
     }
 
     interface OnQRCode {
-        fun onQRCode(text: String, format: String)
+        fun onQRCodes(data: String)
     }
 
     interface FunctionCallbackProgress {
@@ -129,17 +130,18 @@ constructor(
             imageRotation: Int
         ): Vector<Vector<Point>>
 
-        private external fun nativeScanAndQRCode(
-            srcBitmap: Bitmap,
-            shrunkImageHeight: Int,
-            imageRotation: Int,
-            options: String,
-        ): String
+        // private external fun nativeScanAndQRCode(
+        //     srcBitmap: Bitmap,
+        //     shrunkImageHeight: Int,
+        //     imageRotation: Int,
+        //     options: String,
+        // ): String
 
         private external fun nativeColorPalette(
             srcBitmap: Bitmap,
             shrunkImageHeight: Int,
             colorsFilterDistanceThreshold: Int,
+            nbColors: Int,
             colorPalette: Int,
         ): String
 
@@ -422,14 +424,16 @@ constructor(
         @JvmOverloads
         fun getColorPaletteSync(
             bitmap: Bitmap,
-            shrunkImageHeight: Double = 500.0,
-            colorsFilterDistanceThreshold: Int = 0,
-            colorPalette: Int = 0
+            shrunkImageHeight: Double = 100.0,
+            colorsFilterDistanceThreshold: Int = 20,
+            nbColors: Int = 5,
+            colorPalette: Int = 2
         ): String {
             return nativeColorPalette(
                 bitmap,
                 shrunkImageHeight.toInt(),
                 colorsFilterDistanceThreshold,
+                nbColors,
                 colorPalette
             )
         }
@@ -437,13 +441,14 @@ constructor(
         fun getColorPalette(
             image: Bitmap,
             callback: FunctionCallback,
-            shrunkImageHeight: Double = 500.0,
-            colorsFilterDistanceThreshold: Int = 0,
-            colorPalette: Int = 0
+            shrunkImageHeight: Double = 100.0,
+            colorsFilterDistanceThreshold: Int = 20,
+            nbColors: Int = 5,
+            colorPalette: Int = 2
         ) {
             thread(start = true) {
                 try {
-                    callback.onResult(null, getColorPaletteSync(image, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette))
+                    callback.onResult(null, getColorPaletteSync(image, shrunkImageHeight, colorsFilterDistanceThreshold, nbColors, colorPalette))
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 }
@@ -454,9 +459,10 @@ constructor(
             context: Context,
             src: String,
             callback: FunctionCallback,
-            shrunkImageHeight: Double = 500.0,
-            colorsFilterDistanceThreshold: Int = 0,
-            colorPalette: Int = 0,
+            shrunkImageHeight: Double = 100.0,
+            colorsFilterDistanceThreshold: Int = 20,
+            nbColors: Int = 5,
+            colorPalette: Int = 2,
             options: String?
         ) {
             thread(start = true) {
@@ -464,6 +470,7 @@ constructor(
                 try {
                     var colorsFilterDistanceThreshold = colorsFilterDistanceThreshold
                     var colorPalette = colorPalette
+                    var nbColors = nbColors
                     var shrunkImageHeight = shrunkImageHeight
                     val loadingOptions = ImageUtil.LoadImageOptions(options);
                     var bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, null)
@@ -479,9 +486,12 @@ constructor(
                         if (jsOptions.has("colorPalette")) {
                             colorPalette = jsOptions.optInt("colorPalette",colorPalette )
                         }
+                        if (jsOptions.has("nbColors")) {
+                            colorPalette = jsOptions.optInt("nbColors",colorPalette )
+                        }
                         shrunkImageHeight = 0.0
                     }
-                    callback.onResult(null, getColorPaletteSync(bitmap, shrunkImageHeight, colorsFilterDistanceThreshold, colorPalette))
+                    callback.onResult(null, getColorPaletteSync(bitmap, shrunkImageHeight, colorsFilterDistanceThreshold, nbColors, colorPalette))
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 } finally {
@@ -524,9 +534,10 @@ constructor(
                                 "qrcode" -> result.add(nativeQRCodeRead(bitmap, processJSON.toString(), scale))
                                 "palette" -> result.add(nativeColorPalette(
                                     bitmap,
-                                    shrunkImageHeight,
-                                    processJSON.optInt("colorsFilterDistanceThreshold", 0),
-                                    processJSON.optInt("colorPalette", 0)
+                                    processJSON.optInt("shrunkImageHeight", shrunkImageHeight),
+                                    processJSON.optInt("colorsFilterDistanceThreshold", 20),
+                                    processJSON.optInt("nbColors", 5),
+                                    processJSON.optInt("colorPalette", 2)
                                 ))
                             }
                         }
@@ -913,15 +924,21 @@ constructor(
 //            val start = System.currentTimeMillis()
             val image = imageProxy.image!!
             val planes = image.planes
-            val chromaPixelStride = planes[1].pixelStride
-            val result = nativeBufferScanJSON(
-                image.width, image.height, chromaPixelStride, planes[0].buffer,
-                planes[0].rowStride, planes[1].buffer,
-                planes[1].rowStride, planes[2].buffer,
-                planes[2].rowStride, previewResizeThreshold.toInt(), info.rotationDegrees
-            );
+            var pointsList: MutableList<List<Point>> =  mutableListOf<List<Point>>();
+            if (detectDocuments) {
+                val chromaPixelStride = planes[1].pixelStride
+                val result = nativeBufferScanJSON(
+                    image.width, image.height, chromaPixelStride, planes[0].buffer,
+                    planes[0].rowStride, planes[1].buffer,
+                    planes[1].rowStride, planes[2].buffer,
+                    planes[2].rowStride, previewResizeThreshold.toInt(), info.rotationDegrees
+                );
+                if (result != null) {
+                    pointsList.addAll(pointsFromJSONArray(JSONArray(result)));
+                } 
+                autoScanHandler?.process(pointsList)
+            }
 //            Log.d("ImageAnalysis", "process image:${image.width}x${image.height} resize:$previewResizeThreshold in ${System.currentTimeMillis() - start} ms")
-            var pointsList: MutableList<List<Point>>? = pointsFromJSONArray(JSONArray(result))
 
             if (detectQRCode) {
                 val qrcodeResult = nativeQRCodeReadBuffer(
@@ -932,16 +949,12 @@ constructor(
                 val qrcode = JSONArray(qrcodeResult)
                 if (qrcode.length() > 0) {
                     val qrcode = qrcode.getJSONObject(0)
-                    if (pointsList == null) {
-                        pointsList = mutableListOf<List<Point>>();
-                    }
                     pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
-                    onQRCode?.onQRCode(qrcode.getString("text"), qrcode.getString("format"))
+                    onQRCode?.onQRCodes(qrcodeResult)
                 }
             }
 
             // pointsList is sorted by area
-            autoScanHandler?.process(pointsList)
             if (pointsList != null && pointsList.size > 0) {
                 if (info.rotationDegrees == 180 ||
                     info.rotationDegrees ==

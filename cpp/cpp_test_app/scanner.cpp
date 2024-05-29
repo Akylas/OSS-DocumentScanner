@@ -532,7 +532,7 @@ int main(int argc, char **argv)
     // createTrackbar("gammaValue:", "Warped", &whitepaperOptions.gammaValue, 100, on_trackbar);
 
     // Color
-    // createTrackbar("colors:", "Warped", &colors, 1, on_trackbar);
+    createTrackbar("colors:", "Warped", &colors, 1, on_trackbar);
     // createTrackbar("colorsResizeThreshold:", "Warped", &colorsResizeThreshold, 400, on_trackbar);
     // createTrackbar("colorsFilterDistanceThreshold:", "Warped", &colorsFilterDistanceThreshold, 180, on_trackbar);
     // createTrackbar("distanceThreshold:", "Warped", &distanceThreshold, 180, on_trackbar);

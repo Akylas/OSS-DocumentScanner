@@ -93,6 +93,7 @@ export interface GenerateColorOptions {
     resizeThreshold?: number;
     colorsFilterDistanceThreshold?: number;
     colorPalette?: number;
+    nbColors?: number;
 }
 
 export interface GenerateQRCodeOptions {

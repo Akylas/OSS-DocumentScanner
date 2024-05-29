@@ -140,3 +140,13 @@ dependencies {
 //		dirs(pathToPlugin)
 //	}
 //}
+
+tasks.configureEach { DefaultTask currentTask ->
+	// added because of a error with gradle 8 telling us to add this
+	// because buildMetadata uses the output of those
+	// TODO: there must be a way to make it simpler
+	if (currentTask =~ /bundleLibCompileToJarDebug/) {
+		currentTask.finalizedBy(":app:cleanupAllJars")
+//		cleanupAllJars.dependsOn(currentTask)
+	}
+}

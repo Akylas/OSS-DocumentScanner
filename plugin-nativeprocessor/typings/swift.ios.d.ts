@@ -82,6 +82,12 @@ interface OnAutoScan {
 declare var OnAutoScan: {
     prototype: OnAutoScan;
 };
+interface OnQRCode {
+    onQRCodes(data: string): void;
+}
+declare var OnQRCode: {
+    prototype: OnQRCode;
+};
 
 declare class ImageUtils extends NSObject {
     static alloc(): ImageUtils; // inherited from NSObject

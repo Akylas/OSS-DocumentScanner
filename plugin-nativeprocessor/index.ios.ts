@@ -106,7 +106,10 @@ export async function processFromFile(src: string, processes: any[], options: Lo
     // );
     // });
 }
-export async function getColorPalette(editingImage: ImageSource, options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 }): Promise<Quads> {
+export async function getColorPalette(
+    editingImage: ImageSource,
+    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 20, colorPalette: 5 }
+): Promise<Quads> {
     throw new Error('not implemented');
     // return new Promise((resolve, reject) => {
     //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
@@ -128,7 +131,7 @@ export async function getColorPalette(editingImage: ImageSource, options: Partia
 }
 export async function getColorPaletteFromFile(
     src: string,
-    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 0, colorPalette: 0 },
+    options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 20, colorPalette: 5 },
     strOptions?: string
 ): Promise<Quads> {
     throw new Error('not implemented');
@@ -153,11 +156,11 @@ export async function getColorPaletteFromFile(
     // });
 }
 
-export async function ocrDocument(editingImage: ImageSource, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
+export async function ocrDocument(editingImage: ImageSource | UIImage, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
     return new Promise<OCRData>((resolve, reject) => {
         try {
             OpencvDocumentProcessDelegate.ocrDocumentOptionsDelegate(
-                editingImage.ios,
+                editingImage['ios'] || editingImage,
                 options ? JSON.stringify(options) : '',
                 CompletionDelegateImpl.initWithResolveReject(resolve, reject, onProgress)
             );
@@ -176,27 +179,28 @@ export async function ocrDocumentFromFile(src: string, options?: Partial<DetectO
     });
 }
 
-export async function detectQRCode(editingImage: ImageSource | android.graphics.Bitmap, options?: Partial<DetectQRCodeOptions>) {
-    throw new Error('not implemented');
-    // return new Promise<QRCodeData>((resolve, reject) => {
-    //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCode(
-    //         editingImage['android'] || editingImage,
-    //         new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
-    //             onResult(e, result) {
-    //                 if (e) {
-    //                     reject(e);
-    //                 } else {
-    //                     resolve(result ? JSON.parse(result) : null);
-    //                 }
-    //             }
-    //         }),
-    //         options ? JSON.stringify(options) : ''
-    //     );
-    // });
+export async function detectQRCode(editingImage: ImageSource | UIImage, options?: Partial<DetectQRCodeOptions>) {
+    return new Promise<OCRData>((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.detectQRCodeOptionsDelegate(
+                editingImage['ios'] || editingImage,
+                options ? JSON.stringify(options) : '',
+                CompletionDelegateImpl.initWithResolveReject(resolve, reject)
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
 
 export async function detectQRCodeFromFile(src: string, options?: Partial<DetectQRCodeOptions>) {
-    throw new Error('not implemented');
+    return new Promise<OCRData>((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.detectQRCodeFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', CompletionDelegateImpl.initWithResolveReject(resolve, reject));
+        } catch (error) {
+            reject(error);
+        }
+    });
     // return new Promise<QRCodeData>((resolve, reject) => {
     //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCodeFromFile(
     //         Utils.android.getApplicationContext(),
@@ -286,6 +290,21 @@ export async function generateQRCodeImage(text: string, format: string, width: n
 }
 
 @NativeClass
+export class OnQRCodeImpl extends NSObject implements OnQRCode {
+    static ObjCProtocols = [OnQRCode];
+    callback;
+
+    static initWithCallback(callback) {
+        const delegate = OnAutoScanImpl.new() as OnAutoScanImpl;
+        delegate.callback = callback;
+        return delegate;
+    }
+    onQRCodes(data: string): void {
+        this.callback(data);
+    }
+}
+
+@NativeClass
 class OnAutoScanImpl extends NSObject implements OnAutoScan {
     static ObjCProtocols = [OnAutoScan];
     callback;
@@ -301,6 +320,10 @@ class OnAutoScanImpl extends NSObject implements OnAutoScan {
 }
 export function createAutoScanHandler(cropView: CropView, block: (result) => void) {
     return AutoScanHandler.alloc().initWithCropViewOnAutoScan(cropView.nativeViewProtected, OnAutoScanImpl.initWithCallback(block));
+}
+
+export function createQRCodeCallback(onQRCodes): any {
+    return onQRCodes ? OnQRCodeImpl.initWithCallback(onQRCodes) : null;
 }
 
 export async function importPdfToTempImages(pdfPath: string, options?: Partial<PDFImportOptions>) {

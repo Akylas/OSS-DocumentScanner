@@ -297,6 +297,7 @@ declare namespace com {
 				public process(param0: androidx.camera.core.ImageProxy, param1: androidx.camera.core.ImageInfo, param2: com.nativescript.cameraview.ImageAsyncProcessor): void;
 				public getAutoScanHandler(): com.akylas.documentscanner.AutoScanHandler;
 				public setDetectQRCode(param0: boolean): void;
+				public setDetectDocuments(param0: boolean): void;
 				public getPreviewResizeThreshold(): number;
 				public constructor(param0: globalAndroid.content.Context, param1: com.akylas.documentscanner.CropView, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.OnQRCode);
 				public constructor(param0: globalAndroid.content.Context, param1: com.akylas.documentscanner.CropView);
@@ -320,8 +321,8 @@ declare namespace com {
 					public static getJSONDocumentCornersSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number): void;
 					public static generateQRCode(param0: string, param1: string, param2: number, param3: number, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param5: string): void;
 					public static getJSONDocumentCorners(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number): void;
-					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param5: string): void;
-					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param5: number, param6: string): void;
+					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param4: number, param5: string): void;
+					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param5: number, param5: number, param6: string): void;
 					public static ocrDocumentFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress): void;
 					public static generateQRCode(param0: string, param1: string, param2: number, param3: number, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
 					public static cropDocumentSync(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string): void;
@@ -351,6 +352,7 @@ declare namespace com {
 					public static generateQRCodeSync(param0: string, param1: string, param2: number, param3: number): globalAndroid.graphics.Bitmap;
 					public static getColorPaletteSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number, param4: number): void;
 					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number, param4: number): void;
+					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number, param4: number, param5: number): void;
 					public static cropDocument(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string, param6: number): void;
 					public static getJSONDocumentCornersFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: string): void;
 					public static readQRCode(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: string): void;
@@ -398,10 +400,10 @@ declare namespace com {
 					 * Constructs a new instance of the com.akylas.documentscanner.CustomImageAnalysisCallback$OnQRCode interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
 					 */
 					public constructor(implementation: {
-						onQRCode(param0: string, param1: string): void;
+						onQRCodes(param0: string): void;
 					});
 					public constructor();
-					public onQRCode(param0: string, param1: string): void;
+					public onQRCodes(param0: string): void;
 				}
 				export class OnTestBitmap extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.OnTestBitmap>;

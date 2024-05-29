@@ -6,6 +6,7 @@
 #import <opencv2/opencv.hpp>
 #import <DocumentDetector.h>
 #import <DocumentOCR.h>
+#import <QRCode.h>
 
 @implementation OpencvDocumentProcessDelegate
 
@@ -13,7 +14,14 @@
   self.cropView = view;
   self.previewResizeThreshold = 300;
   self.autoScanHandler = nil;
+  self.detectDocuments = true;
+  self.detectQRCodeOptions = @"{\"resizeThreshold\":500}";
+  self.detectQRCode = false;
   return [self init];
+}
+- (instancetype)initWithCropView:(NSCropView*) view onQRCode(OnQRCode*)onQRCode {
+  self.onQRCode = onQRCode;
+  return [self initWithCropView:view];
 }
 
 - (NSObject*) autoScanHandler
@@ -514,6 +522,42 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 }
 
 
+// PRAGMA: detectQRCode
++(void)detectQRCodeSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+  @try {
+    cv::Mat srcBitmapMat;
+    UIImageToMat(image, srcBitmapMat);
+    std::string result = readQRCode(srcBitmapMat, 0, options_);
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
+      
+    });
+  }
+  @catch (NSException *exception) {
+    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+    
+    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:nil error:err];
+      
+    });
+  }
+}
+
++(void)detectQRCode:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self detectQRCodeSync:image options:options delegate:delegate];
+  });
+}
++(void)detectQRCodeFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
+    [self detectQRCodeSync:image options:options delegate:delegate];
+  });
+}
+
 - (void)cameraView:(NSCameraView *)cameraView willProcessRawVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer onQueue:(dispatch_queue_t)queue
 {
   cv::Mat mat = [self matFromBuffer:sampleBuffer];
@@ -533,10 +577,33 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     default:
       break;
   }
-  NSArray* points = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0 scale:1.0 options:nil];
-  if (self.innerAutoScanHandler != nil) {
-    [((AutoScanHandler*)self.innerAutoScanHandler) processWithPoints: points];
+
+  NSMutableArray* points = NSMutableArray.alloc().init();
+  if (self.detectDocuments) {
+    NSArray* result = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0 scale:1.0 options:nil];
+    if (result != nil) {
+      [points addObjectsFromArray:result];
+    }
+    if (self.innerAutoScanHandler != nil) {
+      [((AutoScanHandler*)self.innerAutoScanHandler) processWithPoints: points];
+    }
   }
+  if (self.detectQRCode) {
+      std::string qrcodeResult qrcodeResult = readQRCode(mat, 0, self.detectQRCodeOptions);
+      NSError *error = nil;
+      id qrcode = [NSJSONSerialization JSONObjectWithData:[[NSString stringWithUTF8String:result.c_str()] UTF8String] options:0 error:&error];
+      if (error) {
+          // Handle error
+      } else {
+          if (qrcode.length() > 0) {
+            NSDictionary* qrcode = [((NSArray*)qrcode) objectAtIndex:0];
+            pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
+            onQRCode?.onQRCodes([NSString stringWithUTF8String:result.c_str()])
+        }
+      }
+      
+  }
+  
   
   
   self.cropView.videoGravity = cameraView.videoGravity;

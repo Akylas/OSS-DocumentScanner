@@ -32,5 +32,7 @@ cv::Mat resizeImageToSize(const cv::Mat &image, int size, int resizeThreshold);
 
 std::vector<std::pair<cv::Vec3b, float>> getPalette(const cv::Mat&src, bool isRGB, int resizeThreshold = 200,
                                                     int colorsFilterDistanceThreshold = 20, int nbColors = -1, bool returnAsBGR = false, ColorSpace colorSpace = ColorSpace::BGR);
+std::string getPaletteString(const cv::Mat&src, bool isRGB, int resizeThreshold = 200,
+                                                    int colorsFilterDistanceThreshold = 20, int nbColors = -1, bool returnAsBGR = false, ColorSpace colorSpace = ColorSpace::BGR);
 std::vector<std::pair<cv::Vec3b, float>> getPaletteFrom1Row(const cv::Mat &src, int colorsFilterDistanceThreshold = 20, int nbColors = -1, bool HLS = false, ColorSpace colorSpace = ColorSpace::BGR);
 #endif //UTILS_H

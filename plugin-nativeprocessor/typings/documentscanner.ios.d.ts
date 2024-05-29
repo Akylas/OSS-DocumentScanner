@@ -48,8 +48,10 @@ declare class OpencvDocumentProcessDelegate extends NSObject {
     static new(): OpencvDocumentProcessDelegate; // inherited from NSObject
 
     static ocrDocumentFromFileOptionsDelegate(src: string, options: string, delegate: OCRDelegate): void;
+    static detectQRCodeFromFileOptionsDelegate(src: string, options: string, delegate: OCRDelegate): void;
 
     static ocrDocumentOptionsDelegate(image: UIImage, options: string, delegate: OCRDelegate): void;
+    static detectQRCodeOptionsDelegate(image: UIImage, options: string, delegate: OCRDelegate): void;
 
     static ocrDocumentSyncOptionsDelegate(image: UIImage, options: string, delegate: OCRDelegate): void;
 
@@ -57,9 +59,13 @@ declare class OpencvDocumentProcessDelegate extends NSObject {
 
     previewResizeThreshold: number;
 
+    detectQRCode: boolean;
+    detectDocuments: boolean;
+
     constructor(o: { cropView: any });
 
     initWithCropView(view: any): this;
+    initWithCropViewOnQRCode(view: any, onQRCode: any): this;
 
     setAutoScanHandler(value: NSObject): void;
 }
