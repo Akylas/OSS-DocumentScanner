@@ -176,6 +176,7 @@
     "loading": "cargando",
     "magnifier_sensitivity": "sensibilidad de la lupa",
     "magnifier_sensitivity_desc": "cambiar la sensibilidad de la lupa mientras cambia la zona de recorte",
+    "missing_storage_perm_settings": "Se necesita permiso de acceso al almacenamiento para exportar la configuración",
     "move_data": "¿mover los datos?",
     "move_data_desc": "todos los datos de la aplicación se moverán y se reiniciará la aplicación al final",
     "moving_files": "moviendo los archivos",
