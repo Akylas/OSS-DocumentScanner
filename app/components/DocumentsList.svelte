@@ -657,7 +657,7 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={88} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
+        <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={100} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
             <Template let:item>
                 <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
