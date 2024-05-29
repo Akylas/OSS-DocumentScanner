@@ -29,7 +29,7 @@ import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSOND
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
-import * as imagePickerPlugin from '@nativescript/imagepicker';
+import { create as createImagePicker } from '@nativescript/imagepicker';
 import type { ComponentProps } from 'svelte';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
@@ -41,6 +41,7 @@ import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDoc
 import {
     ALWAYS_PROMPT_CROP_EDIT,
     AREA_SCALE_MIN_FACTOR,
+    COLOR_PALETTE_RESIZE_THRESHOLD,
     CROP_ENABLED,
     DEFAULT_EXPORT_DIRECTORY,
     DEFAULT__BATCH_CHUNK_SIZE,
@@ -415,25 +416,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                     } else {
                                         images.push({ imagePath: item.imagePath, width: item.imageWidth, height: item.imageHeight });
                                     }
-                                    let qrcode;
-                                    let colors;
-                                    if (CARD_APP) {
-                                        [qrcode, colors] = await processFromFile(
-                                            item.imagePath,
-                                            [
-                                                {
-                                                    type: 'qrcode'
-                                                    // },
-                                                    // {
-                                                    //     type: 'palette'
-                                                }
-                                            ],
-                                            {
-                                                maxSize: QRCODE_RESIZE_THRESHOLD
-                                            }
-                                        );
-                                        DEV_LOG && console.log('qrcode and colors', qrcode, colors);
-                                    }
+
                                     const result = [];
                                     DEV_LOG &&
                                         console.log(
@@ -443,6 +426,29 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                     if (images?.length) {
                                         for (let index = 0; index < images.length; index++) {
                                             const image = images[index];
+                                            let qrcode;
+                                            let colors;
+                                            if (CARD_APP) {
+                                                [qrcode, colors] = await processFromFile(
+                                                    image.imagePath,
+                                                    [
+                                                        {
+                                                            type: 'qrcode'
+                                                        },
+                                                        {
+                                                            type: 'palette',
+                                                            shrunkImageHeight: COLOR_PALETTE_RESIZE_THRESHOLD,
+                                                            colorsFilterDistanceThreshold: 20,
+                                                            nbColors: 5,
+                                                            colorPalette: 2
+                                                        }
+                                                    ],
+                                                    {
+                                                        maxSize: QRCODE_RESIZE_THRESHOLD
+                                                    }
+                                                );
+                                                DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+                                            }
                                             result.push({
                                                 ...image,
                                                 crop: item.quads?.[index] || [
@@ -507,12 +513,10 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
         let selection: string[];
         if (__IOS__ && !importPDFs) {
             try {
-                const data = await imagePickerPlugin
-                    .create({
-                        mediaType: 1,
-                        mode: 'multiple' // use "multiple" for multiple selection
-                    })
-                    .present();
+                const data = await createImagePicker({
+                    mediaType: 1,
+                    mode: 'multiple' // use "multiple" for multiple selection
+                }).present();
                 selection = data.map((d) => d.path);
             } catch (error) {
                 selection = null;
@@ -1387,28 +1391,33 @@ export async function addCurrentImageToDocument({
         // if (!document) {
         //     document = await OCRDocument.createDocument();
         // }
-        let qrcode;
-        let colors;
-        if (CARD_APP) {
-            [qrcode, colors] = await processFromFile(
-                sourceImagePath,
-                [
-                    {
-                        type: 'qrcode'
-                    },
-                    {
-                        type: 'palette'
-                    }
-                ],
-                {
-                    resizeThreshold: QRCODE_RESIZE_THRESHOLD
-                }
-            );
-            // Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
-            DEV_LOG && console.log('qrcode and colors', qrcode, colors);
-        }
+
         for (let index = 0; index < images.length; index++) {
             const image = images[index];
+            let qrcode;
+            let colors;
+            if (CARD_APP) {
+                [qrcode, colors] = await processFromFile(
+                    image.imagePath,
+                    [
+                        {
+                            type: 'qrcode'
+                        },
+                        {
+                            type: 'palette',
+                            shrunkImageHeight: COLOR_PALETTE_RESIZE_THRESHOLD,
+                            colorsFilterDistanceThreshold: 20,
+                            nbColors: 5,
+                            colorPalette: 2
+                        }
+                    ],
+                    {
+                        resizeThreshold: QRCODE_RESIZE_THRESHOLD
+                    }
+                );
+                // Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
+                DEV_LOG && console.log('qrcode and colors', qrcode, colors);
+            }
             pagesToAdd.push({
                 ...image,
                 crop: quads?.[index] || [
@@ -1419,14 +1428,18 @@ export async function addCurrentImageToDocument({
                 ],
                 colorType,
                 colorMatrix,
-                colors,
-                qrcode,
                 transforms: strTransforms,
                 sourceImagePath,
                 sourceImageWidth: imageWidth,
                 sourceImageHeight: imageHeight,
                 sourceImageRotation: imageRotation,
-                rotation: 0 // cropped image is always rotated
+                rotation: 0, // cropped image is always rotated
+                ...(CARD_APP
+                    ? {
+                          qrcode,
+                          colors
+                      }
+                    : {})
             });
         }
     }

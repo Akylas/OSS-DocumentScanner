@@ -6,7 +6,7 @@
     import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce } from '@nativescript/core/utils';
-    import { createAutoScanHandler } from 'plugin-nativeprocessor';
+    import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
     import { closeModal } from 'svelte-native';
@@ -58,6 +58,7 @@
 
     export let modal = false;
     export let document: OCRDocument = null;
+    export let QRCodeOnly = false;
 
     let nbPages = 0;
     let takingPicture = false;
@@ -199,8 +200,8 @@
                 maxWidth: 4500,
                 maxHeight: 4500
             });
-            // DEV_LOG && console.log('takePicture got image', image, Date.now() - start, 'ms');
             const didAdd = await processAndAddImage(image, autoScan);
+            DEV_LOG && console.log('takePicture got image', batchMode, image, didAdd, Date.now() - start, 'ms');
             if (didAdd) {
                 nbPages = pagesToAdd.length;
                 const lastPage = pagesToAdd[pagesToAdd.length - 1];
@@ -350,8 +351,10 @@
                 await theDocument.addPages(pagesToAdd);
                 await theDocument.save({}, false);
             }
+            DEV_LOG && console.log('saveCurrentDocument done ', startOnCam, newDocument, !!theDocument);
             if (theDocument) {
                 if (!startOnCam) {
+                    DEV_LOG && console.log('closing cameral modal ', !!theDocument);
                     closeModal(theDocument);
                 }
             }
@@ -437,30 +440,54 @@
         if (processor || !cropEnabled) {
             return;
         }
-
-        const showAutoScanWarning = ApplicationSettings.getBoolean('showAutoScanWarning', true);
-        if (showAutoScanWarning) {
-            if (autoScan) {
-                const result = await confirm({
-                    message: lc('auto_scan_first_use'),
-                    okButtonText: lc('enable'),
-                    cancelButtonText: lc('disable')
-                });
-                if (!result && autoScan) {
-                    toggleAutoScan(false);
+        if (!QRCodeOnly) {
+            const showAutoScanWarning = ApplicationSettings.getBoolean('showAutoScanWarning', true);
+            if (showAutoScanWarning) {
+                if (autoScan) {
+                    const result = await confirm({
+                        message: lc('auto_scan_first_use'),
+                        okButtonText: lc('enable'),
+                        cancelButtonText: lc('disable')
+                    });
+                    if (!result && autoScan) {
+                        toggleAutoScan(false);
+                    }
                 }
+                ApplicationSettings.setBoolean('showAutoScanWarning', false);
             }
-            ApplicationSettings.setBoolean('showAutoScanWarning', false);
         }
         try {
             const nCropView = cropView.nativeView.nativeViewProtected;
             if (__ANDROID__) {
                 const context = Utils.android.getApplicationContext();
-                processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(context, nCropView);
+                processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(
+                    context,
+                    nCropView,
+                    createQRCodeCallback(
+                        QRCodeOnly
+                            ? (str) => {
+                                  closeModal(JSON.parse(str));
+                              }
+                            : null
+                    )
+                );
+                (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).setDetectQRCode(QRCodeOnly);
+                (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).setDetectDocuments(!QRCodeOnly);
                 cameraView.nativeView.processor = processor;
             } else {
-                processor = OpencvDocumentProcessDelegate.alloc().initWithCropView(nCropView);
+                processor = OpencvDocumentProcessDelegate.alloc().initWithCropViewOnQRCode(
+                    nCropView,
+                    createQRCodeCallback(
+                        QRCodeOnly
+                            ? (str) => {
+                                  closeModal(JSON.parse(str));
+                              }
+                            : null
+                    )
+                );
                 cameraView.nativeView.processor = processor;
+                (processor as OpencvDocumentProcessDelegate).detectQRCode = QRCodeOnly;
+                (processor as OpencvDocumentProcessDelegate).detectDocuments = !QRCodeOnly;
             }
             DEV_LOG && console.log('applyProcessor', processor, previewResizeThreshold);
             applyAutoScan(autoScan);
@@ -545,7 +572,7 @@
             captureMode={1}
             enablePinchZoom={true}
             flashMode={_actualFlashMode}
-            iosCaptureMode="videoPhotoWithoutAudio"
+            ios:iosCaptureMode="videoPhotoWithoutAudio"
             jpegQuality={compressQuality}
             {pictureSize}
             rowSpan={viewsize === 'full' ? 4 : 2}
@@ -573,7 +600,7 @@
             <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
         {/if}
 
-        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3}>
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
             <IconButton
                 colSpan={2}
                 color="white"

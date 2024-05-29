@@ -30,7 +30,7 @@
     let currentIndex = startPageIndex;
     const firstItem = images[currentIndex];
 
-    DEV_LOG && console.log('images', images);
+    DEV_LOG && console.log('images', JSON.stringify(images));
     // let currentImageSrc = firstItem.image;
     // let currentImageRotation = firstItem.rotation;
     // let currentImageColorMatrix = firstItem.colorMatrix || getColorMatrix(firstItem.colorType);
@@ -122,6 +122,7 @@
                         color={labelColor}
                         fontSize={30}
                         fontWeight="bold"
+                        maxLines={2}
                         paddingTop={5}
                         row={1}
                         sharedTransitionTag={item.labelSharedTransitionTag}

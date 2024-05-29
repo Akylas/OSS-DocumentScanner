@@ -49,7 +49,7 @@ export class QRCodeService extends Observable {
                 keepScreenAwake: true,
                 screenBrightness: 1,
                 images: qrcodes.map((qrcode, index) => ({
-                    name: pages[index].name || document?.name,
+                    name: document?.name,
                     subtitle: qrcode.text,
                     sharedTransitionTag: 'qrcode' + index,
                     labelSharedTransitionTag: 'qrcodelabel' + index,

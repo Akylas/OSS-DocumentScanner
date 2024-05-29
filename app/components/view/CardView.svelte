@@ -7,8 +7,9 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
+    import { create as createImagePicker } from '@nativescript/imagepicker';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
-    import { QRCodeData, generateQRCodeImage } from 'plugin-nativeprocessor';
+    import { QRCodeData, detectQRCodeFromFile, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -20,12 +21,12 @@
     import { l, lc } from '~/helpers/locale';
     import { currentRealTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS } from '~/utils/constants';
+    import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS, QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
-    import { showError } from '~/utils/error';
+    import { PermissionError, showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
-    import { goBack, navigate } from '~/utils/svelte/ui';
+    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
     import {
         detectOCR,
         getColorMatrix,
@@ -41,6 +42,8 @@
     } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { request } from '@nativescript-community/perms';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -584,6 +587,151 @@
             });
         }
     }
+
+    async function onAddButton() {
+        DEV_LOG && console.log('onAddButton');
+        try {
+            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+            const rowHeight = 58;
+            const options = [
+                {
+                    id: 'camera',
+                    name: lc('add_from_camera'),
+                    icon: 'mdi-camera'
+                },
+                {
+                    id: 'import',
+                    name: lc('import_from_file'),
+                    icon: 'mdi-file-document-plus-outline'
+                }
+            ]
+                .concat(
+                    __IOS__
+                        ? [
+                              {
+                                  id: 'import_image',
+                                  name: lc('import_from_image'),
+                                  icon: 'mdi-image-plus-outline'
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        id: 'add_qrcode_camera',
+                        name: lc('add_qrcode_camera'),
+                        icon: 'mdi-qrcode-scan'
+                    },
+                    {
+                        id: 'add_qrcode_file',
+                        name: lc('add_qrcode_file'),
+                        icon: 'mdi-qrcode-plus'
+                    },
+                    {
+                        id: 'add_qrcode_manual',
+                        name: lc('add_qrcode_manual'),
+                        icon: 'mdi-qrcode-plus'
+                    }
+                ]);
+            const option = await showBottomSheet({
+                parent: this,
+                view: OptionSelect,
+                ignoreTopSafeArea: true,
+                props: {
+                    rowHeight,
+                    height: Math.min(rowHeight * options.length, 400),
+                    options
+                }
+            });
+            DEV_LOG && console.log('on add option', option);
+            let found = false;
+            if (option) {
+                switch (option.id) {
+                    case 'camera':
+                        await importImageFromCamera({ inverseUseSystemCamera: false });
+                        break;
+                    case 'import':
+                        await importDocument();
+                        break;
+                    case 'import_image':
+                        await importDocument(false);
+                        break;
+                    case 'add_qrcode_camera':
+                        const result = await request('camera');
+                        if (result[0] !== 'authorized') {
+                            throw new PermissionError(lc('camera_permission_needed'));
+                        }
+                        const Camera = (await import('~/components/camera/Camera.svelte')).default;
+                        const qrcodes: QRCodeData = await showModal({
+                            page: Camera,
+                            fullscreen: true,
+                            props: {
+                                QRCodeOnly: true
+                            }
+                        });
+                        if (qrcodes.length) {
+                            //we add the qrcode to the last known page
+                            const pageIndex = document.pages.length - 1;
+                            await document.updatePage(pageIndex, {
+                                qrcode: (document.pages[pageIndex].qrcode || []).concat(
+                                    qrcodes.map((q) => ({
+                                        text: q.text,
+                                        format: q.format,
+                                        position: q.position
+                                    }))
+                                )
+                            });
+                            found = true;
+                        } else {
+                            showSnack({ message: lc('no_qrcode_found') });
+                        }
+                        DEV_LOG && console.log('qrcodes', qrcodes);
+                        break;
+                    case 'add_qrcode_file':
+                        try {
+                            const data = await createImagePicker({
+                                mediaType: 1,
+                                mode: 'multiple'
+                            }).present();
+                            const qrcodes = (
+                                await Promise.all(
+                                    data.map((d) =>
+                                        detectQRCodeFromFile(d.path, {
+                                            resizeThreshold: QRCODE_RESIZE_THRESHOLD
+                                        })
+                                    )
+                                )
+                            ).filter((q) => !!q);
+                            if (qrcodes.length) {
+                                //we add the qrcode to the last known page
+                                const pageIndex = document.pages.length - 1;
+                                await document.updatePage(pageIndex, {
+                                    qrcode: (document.pages[pageIndex].qrcode || []).concat(
+                                        qrcodes.flat().map((q) => ({
+                                            text: q.text,
+                                            format: q.format,
+                                            position: q.position
+                                        }))
+                                    )
+                                });
+                                found = true;
+                            } else {
+                                showSnack({ message: lc('no_qrcode_found') });
+                            }
+                        } catch (error) {
+                            //cancel will throw, we want to ignore it!
+                        }
+                        break;
+                }
+                updateQRCodes();
+                if (found) {
+                    pager?.nativeElement?.scrollToIndexAnimated(qrcodes.length - 1, true);
+                }
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
@@ -641,12 +789,12 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" padding={16} row={2} rows="auto,auto,*">
-            <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
+        <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" row={2} rows="auto,auto,*">
+            <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} margin={16} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
                         <image ios:contextOptions={IMAGE_CONTEXT_OPTIONS} colorMatrix={qrcodeColorMatrix} sharedTransitionTag={'qrcode' + index} src={item.getImage} stretch="aspectFit" />
-                        <label fontSize={30} fontWeight="bold" row={1} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
+                        <label fontSize={30} fontWeight="bold" maxLines={2} row={1} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
                     </gridlayout>
                 </Template>
             </pager>
@@ -660,13 +808,23 @@
                 selectedColor={colorOnSurfaceVariant}
                 type="worm"
                 verticalAlignment="bottom" />
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
-                {#if __IOS__}
+            <!-- <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" rowSpan={3} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}> -->
+            <!-- {#if __IOS__}
                     <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(() => importDocument(), 500)} />
-                <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
-            </stacklayout>
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(() => importDocument(), 500)} /> -->
+            <mdbutton
+                bind:this={fabHolder}
+                id="fab"
+                class="fab"
+                horizontalAlignment="right"
+                iosIgnoreSafeArea={true}
+                rowSpan={3}
+                text="mdi-plus"
+                verticalAlignment="bottom"
+                on:tap={throttle(() => onAddButton(), 500)}
+                android:marginBottom={$windowInset.bottom} />
+            <!-- </stacklayout> -->
         </gridlayout>
     </gridlayout>
 </page>

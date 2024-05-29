@@ -660,7 +660,7 @@
             }
         }
     }
-    let viewStyle: string = ApplicationSettings.getString('cardViewStyle', 'full');
+    let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'full');
 
     function fullCardDrawerTranslationFunction(side, width, value, delta, progress) {
         const result = {
@@ -726,7 +726,8 @@
                 options: [
                     { id: 'cardholder', name: lc('cardholder'), icon: 'mdi-view-agenda' },
                     { id: 'full', name: lc('full'), icon: 'mdi-view-split-horizontal' },
-                    { id: 'list', name: lc('list'), icon: 'mdi-view-grid' }
+                    { id: 'columns', name: lc('columns'), icon: 'mdi-view-grid' },
+                    { id: 'list', name: lc('list'), icon: 'mdi-view-day' }
                 ],
                 anchor: event.object,
                 onClose: (item) => {
@@ -742,7 +743,7 @@
 
     function getColWidth(viewStyle) {
         switch (viewStyle) {
-            case 'list':
+            case 'columns':
                 return screenWidthDips / 2;
             default:
                 return screenWidthDips;
@@ -751,10 +752,11 @@
     function getRowHeight(viewStyle) {
         switch (viewStyle) {
             case 'full':
+            case 'list':
                 return itemHeight;
             case 'cardholder':
                 return 150;
-            case 'list':
+            case 'columns':
                 return (screenWidthDips / 2) * CARD_RATIO;
         }
     }
@@ -764,17 +766,81 @@
                 return '-180 0 0 0';
             case 'cardholder':
                 return '-30 0 0 0';
-            case 'list':
+            default:
                 return '0 0 0 0';
         }
     }
     function itemTemplateSelector(item) {
         switch (viewStyle) {
-            case 'full':
+            case 'columns':
             case 'list':
-                return 'full';
+                return 'list';
             default:
                 return viewStyle;
+        }
+    }
+
+    async function onAddButton() {
+        DEV_LOG && console.log('onAddButton');
+        try {
+            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+            const rowHeight = 58;
+            const options = [
+                {
+                    id: 'camera',
+                    name: lc('add_from_camera'),
+                    icon: 'mdi-camera'
+                },
+                {
+                    id: 'import',
+                    name: lc('import_from_file'),
+                    icon: 'mdi-file-document-plus-outline'
+                }
+            ]
+                .concat(
+                    __IOS__
+                        ? [
+                              {
+                                  id: 'import_image',
+                                  name: lc('import_from_image'),
+                                  icon: 'mdi-image-plus-outline'
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        id: 'add_manual',
+                        name: lc('add_manual'),
+                        icon: 'mdi-plus'
+                    }
+                ]);
+            const option = await showBottomSheet({
+                parent: this,
+                view: OptionSelect,
+                ignoreTopSafeArea: true,
+                props: {
+                    rowHeight,
+                    height: Math.min(rowHeight * options.length, 400),
+                    options
+                }
+            });
+            DEV_LOG && console.log('on add option', option);
+            if (option) {
+                switch (option.id) {
+                    case 'camera':
+                        await importImageFromCamera({ inverseUseSystemCamera: false });
+                        break;
+                    case 'import':
+                        await importDocument();
+                        break;
+                    case 'import_image':
+                        await importDocument(false);
+                        break;
+                }
+            }
+        } catch (error) {
+            showError(error);
         }
     }
 </script>
@@ -789,13 +855,12 @@
             itemOverlap={getItemOverlap(viewStyle)}
             {itemTemplateSelector}
             items={documents}
-            paddingBottom={88}
+            paddingBottom={100}
             row={1}
             rowHeight={getRowHeight(viewStyle)}
             swipeMenuId="swipeMenu"
             on:swipeMenuClose={(e) => handleTouchAction(e.index, { action: 'up' })}>
             <Template key="cardholder" let:item>
-                <!-- TODO: make this a canvas -->
                 <absolutelayout height="150">
                     <swipemenu
                         id="swipeMenu"
@@ -834,7 +899,6 @@
                 </absolutelayout>
             </Template>
             <Template key="full" let:item>
-                <!-- TODO: make this a canvas -->
                 <swipemenu
                     id="swipeMenu"
                     openAnimationDuration={100}
@@ -883,7 +947,6 @@
                 </swipemenu>
             </Template>
             <Template key="list" let:item>
-                <!-- TODO: make this a canvas -->
                 <swipemenu
                     id="swipeMenu"
                     openAnimationDuration={100}
@@ -897,8 +960,8 @@
                         prop:mainContent
                         backgroundColor={item.doc.pages[0].colors?.[0]}
                         borderRadius={12}
-                        boxShadow="0 0 8 rgba(0, 0, 0, 0.8)"
-                        margin="16 16 16 16"
+                        elevation={3}
+                        margin={4}
                         on:tap={() => onItemTap(item)}
                         on:longPress={(e) => onItemLongPress(item, e)}>
                         <RotableImageView
@@ -960,20 +1023,31 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout
+            <!-- <stacklayout
                 bind:this={fabHolder}
                 horizontalAlignment="right"
                 iosIgnoreSafeArea={true}
                 orientation="horizontal"
                 row={1}
                 verticalAlignment="bottom"
-                android:marginBottom={$windowInset.bottom}>
-                {#if __IOS__}
+                android:marginBottom={$windowInset.bottom}> -->
+            <!-- {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(), 500)} />
-                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
-            </stacklayout>
+                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(), 500)} /> -->
+            <mdbutton
+                bind:this={fabHolder}
+                id="fab"
+                class="fab"
+                horizontalAlignment="right"
+                iosIgnoreSafeArea={true}
+                margin={16}
+                row={1}
+                text="mdi-plus"
+                verticalAlignment="bottom"
+                on:tap={throttle(() => onAddButton(), 500)}
+                android:marginBottom={$windowInset.bottom} />
+            <!-- </stacklayout> -->
         {/if}
 
         <CActionBar title={l('cards')}>
