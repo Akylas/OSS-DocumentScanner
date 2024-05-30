@@ -176,6 +176,7 @@
     "loading": "يتم التحميل",
     "magnifier_sensitivity": "حساسية المكبر",
     "magnifier_sensitivity_desc": "غير حساسية العدسة المكبرة بينما تغير منطقة القص",
+    "missing_storage_perm_settings": "إذن التخزين مطلوب لتصدير الإعدادات",
     "move_data": "نقل البيانات؟",
     "move_data_desc": "ستنقل جميع بيانات تطبيقك وسيفرض إعادة تشغيل التطبيق في النهاية",
     "moving_files": "نقل البيانات",
