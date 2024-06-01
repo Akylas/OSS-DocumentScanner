@@ -157,9 +157,14 @@ constructor(
             format: String,
             width: Int,
             height: Int,
-            options: String,
-            outBitmap: Bitmap
-        )
+            options: String
+        ): Bitmap
+        private external fun nativeGenerateQRCodeSVG(
+            text: String,
+            format: String,
+            sizeHint: Int,
+            options: String
+        ): String
 
         private external fun nativeOCR(
             srcBitmap: Bitmap,
@@ -309,14 +314,18 @@ constructor(
             height: Int,
             options: String = "",
         ): Bitmap {
-            val result = Bitmap.createBitmap(
-                width,
-                height,
-                Bitmap.Config.ARGB_8888
-            )
-            nativeGenerateQRCode(text, format, width, height, options, result)
-            return result
+            return nativeGenerateQRCode(text, format, width, height, options)
         }
+        @JvmOverloads
+        fun generateQRCodeSVGSync(
+            text: String,
+            format: String,
+            sizeHint: Int,
+            options: String = "",
+        ): String {
+            return nativeGenerateQRCodeSVG(text, format, sizeHint, options)
+        }
+
         @JvmOverloads
         fun generateQRCode(
             text: String,
@@ -331,6 +340,25 @@ constructor(
                     callback.onResult(
                         null,
                         generateQRCodeSync(text, format, width, height, options)
+                    )
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
+        }
+        @JvmOverloads
+        fun generateQRCodeSVG(
+            text: String,
+            format: String,
+            sizeHint: Int,
+            callback: FunctionCallback,
+            options: String = "",
+        ) {
+            thread(start = true) {
+                try {
+                    callback.onResult(
+                        null,
+                        generateQRCodeSVGSync(text, format, sizeHint, options)
                     )
                 } catch (e: Exception) {
                     callback.onResult(e, null)

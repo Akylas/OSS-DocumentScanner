@@ -1,5 +1,9 @@
+#ifdef  WITH_QRCODE
 #include "./include/QRCode.h"
 #include "BitMatrix.h"
+#include "Barcode.h"
+#include "WriteBarcode.h"
+#include <regex>
 
 using namespace std;
 
@@ -11,7 +15,7 @@ ZXing::ImageView ImageViewFromMat(const cv::Mat& image)
     switch (image.channels()) {
         case 1: fmt = ImageFormat::Lum; break;
         case 3: fmt = ImageFormat::BGR; break;
-        case 4: fmt = ImageFormat::BGRX; break;
+        case 4: fmt = ImageFormat::BGRA; break;
     }
 
     if (image.depth() != CV_8U || fmt == ImageFormat::None)
@@ -53,10 +57,9 @@ namespace jsoncons {
 } // namespace jsoncons
 
 
-std::string readQRCode(cv::Mat &srcMat, int jRotation, string options)
+std::string readQRCode(cv::Mat &srcMat, int jRotation, string options, double scale)
 {
     auto hints = ZXing::DecodeHints().setFormats(ZXing::BarcodeFormat::Any).setMaxNumberOfSymbols(1);
-    double scale = 1.0f;
     int rotation = jRotation;
     if (!options.empty()) {
         jsoncons::json j = jsoncons::json::parse(options);
@@ -102,23 +105,118 @@ std::string readQRCode(cv::Mat &srcMat, int jRotation, string options)
 
 cv::Mat generateQRCode(std::string text, std::string format, int width, int height, std::string options)
 {
-    auto writer = ZXing::MultiFormatWriter(ZXing::BarcodeFormatFromString(format));
+//    auto writer = ZXing::MultiFormatWriter(ZXing::BarcodeFormatFromString(format));
+//
+    auto cOpts = ZXing::CreatorOptions(ZXing::BarcodeFormatFromString(format));
+    auto wOpts = ZXing::WriterOptions().sizeHint(max(width, height));
+//
     if (!options.empty()) {
         jsoncons::json j = jsoncons::json::parse(options);
 
-        if (j.contains("encoding")) {
-            writer = writer.setEncoding(ZXing::CharacterSetFromString(j["encoding"].as<string>()));
-        }
+//        if (j.contains("encoding")) {
+//            wOpts = wOpts.setEncoding(ZXing::CharacterSetFromString(j["encoding"].as<string>()));
+//        }
         if (j.contains("ecclevel")) {
-            writer = writer.setEccLevel(j["ecclevel"].as<int>());
+            cOpts.ecLevel(j["ecclevel"].as<string>());
         }
-        if (j.contains("margin")) {
-            writer = writer.setMargin(j["margin"].as<int>());
+//        if (j.contains("margin")) {
+//            wOpts = wOpts.setMargin(j["margin"].as<int>());
+//        }
+    }
+    auto bcode = CreateBarcodeFromText(text, cOpts);
+    auto image = WriteBarcodeToImage(bcode, wOpts);
+//    auto matrix = writer.encode(text, width, height);
+//    auto bitmap = ToMatrix<uint8_t>(matrix);
+    const unsigned char *buffer = image.data();
+    cv::Mat resultMat(image.height(),image.width(),CV_8UC1,(unsigned char*)buffer);
+    return resultMat;
+
+//    auto writer = ZXing::MultiFormatWriter(ZXing::BarcodeFormatFromString(format));
+//    if (!options.empty()) {
+//        jsoncons::json j = jsoncons::json::parse(options);
+//
+//        if (j.contains("encoding")) {
+//            writer = writer.setEncoding(ZXing::CharacterSetFromString(j["encoding"].as<string>()));
+//        }
+//        if (j.contains("ecclevel")) {
+//            writer = writer.setEccLevel(j["ecclevel"].as<int>());
+//        }
+//        if (j.contains("margin")) {
+//            writer = writer.setMargin(j["margin"].as<int>());
+//        }
+//    }
+//    auto matrix = writer.encode(text, width, height);
+//    auto bitmap = ToMatrix<uint8_t>(matrix);
+//    const unsigned char *buffer = bitmap.data();
+//    cv::Mat resultMat(height,width,CV_8UC1,(unsigned char*)buffer);
+//    return resultMat;
+}
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+std::string prepareSVGCode(std::string code, jsoncons::json j, bool useFallbackColor) {
+    replace(code, "fill=\"#FFFFFF\"", "fill=\"transparent\"");
+    if (j != nullptr) {
+        if (useFallbackColor) {
+            if (j.contains("fallbackColor")) {
+                replace(code, "fill=\"#000000\"", "fill=\"" + j["fallbackColor"].as<string>() + "\"");
+            }
+        } else {
+            if (j.contains("color")) {
+                replace(code, "fill=\"#000000\"", "fill=\"" + j["color"].as<string>() + "\"");
+            }
         }
     }
-    auto matrix = writer.encode(text, width, height);
-    auto bitmap = ToMatrix<uint8_t>(matrix);
-    const unsigned char *buffer = bitmap.data();
-    cv::Mat resultMat(height,width,CV_8UC1,(unsigned char*)buffer);
-    return resultMat;
+    code = regex_replace(code, std::regex("width=\"(\\d*?)\" height=\"(\\d*?)\""), "width=\"100%\" height=\"100%\" viewBox=\"0 0 $1 $2\""); 
+    return code;
 }
+std::string generateQRCodeSVG(std::string text, std::string format, int size_hint, std::string options)
+{
+    jsoncons::json j = nullptr;
+    if (!options.empty()) {
+        j = jsoncons::json::parse(options);
+    }
+    auto cOpts = ZXing::CreatorOptions(ZXing::BarcodeFormatFromString(format));
+    auto wOpts = ZXing::WriterOptions().sizeHint(size_hint);
+    try {
+//
+//
+        if (j != nullptr) {
+
+//        if (j.contains("encoding")) {
+//            wOpts = wOpts.setEncoding(ZXing::CharacterSetFromString(j["encoding"].as<string>()));
+//        }
+            if (j.contains("ecclevel")) {
+                cOpts.ecLevel(j["ecclevel"].as<string>());
+            }
+//        if (j.contains("margin")) {
+//            wOpts = wOpts.setMargin(j["margin"].as<int>());
+//        }
+        }
+        if (text.empty()) {
+            throw std::runtime_error("error");
+        }
+        std::string result = WriteBarcodeToSVG(CreateBarcodeFromText(text, cOpts), wOpts);
+        return prepareSVGCode(result, j, false);
+    } catch(const std::exception&) {
+        if (j != nullptr && j.contains("fallbackText")) {
+            std::string result = WriteBarcodeToSVG(CreateBarcodeFromText(j["fallbackText"].as<string>(), cOpts), wOpts);
+            return prepareSVGCode(result, j, true);
+        }
+        return "";
+    }
+
+
+//    auto matrix = writer.encode(text, width, height);
+//    auto bitmap = ToMatrix<uint8_t>(matrix);
+//    const unsigned char *buffer = bitmap.data();
+//    cv::Mat resultMat(height,width,CV_8UC1,(unsigned char*)buffer);
+//    return resultMat;
+
+}
+
+#endif

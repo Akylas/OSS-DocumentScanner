@@ -3,17 +3,17 @@ apply plugin: "org.jetbrains.kotlin.android"
 
 android {
 	namespace "org.nativescript.plugin_nativeprocessor"
-	compileSdkVersion 34
 
 	defaultConfig {
+		compileSdk 34
 		minSdkVersion 21
 		targetSdkVersion 34
 
 		externalNativeBuild {
 			cmake {
-				cppFlags "-std=c++20 -frtti -fexceptions"
+				cppFlags "-frtti -fexceptions"
 				abiFilters 'armeabi-v7a', "arm64-v8a", 'x86', 'x86_64'
-				arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static"
+				arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static", "-DWITH_QRCODE=1"
 			}
 		}
 	}
@@ -24,7 +24,7 @@ android {
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}
-	ndkVersion "25.2.9519653"
+	ndkVersion "26.1.10909125"
 	externalNativeBuild {
 		cmake {
 			path "src/main/cpp/CMakeLists.txt"

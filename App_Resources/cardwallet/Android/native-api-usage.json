@@ -1,6 +1,11 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "java.util:LinkedList",
+        "androidx.core.content.pm:ShortcutManagerCompat",
+        "androidx.core.content.pm:ShortcutInfoCompat",
+        "androidx.core.content.pm:ShortcutInfoCompat.Builder",
+        "androidx.core.graphics.drawable:IconCompat",
         "android.view:View.OnApplyWindowInsetsListener",
         "android.view:WindowInsets",
         "android.graphics:Insets",

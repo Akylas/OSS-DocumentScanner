@@ -33,7 +33,7 @@ export interface OCRData {
 
 export interface QRCodeSingleData {
     text: string;
-    position: Quad;
+    position?: Quad;
     format: string;
 }
 export type QRCodeData = QRCodeSingleData[];
@@ -98,8 +98,8 @@ export interface GenerateColorOptions {
 
 export interface GenerateQRCodeOptions {
     margin?: number;
-    frontColor?: string | Color;
-    backColor?: string | Color;
+    color?: string | Color;
+    fallbackColor?: string | Color;
 }
 export interface PDFImportOptions extends LoadImageOptions {
     importPDFImages?: boolean;

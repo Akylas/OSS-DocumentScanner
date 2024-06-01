@@ -35,6 +35,7 @@
     "autoscan": "auto scan",
     "autoscan_settings": "auto scan settings",
     "backup_restore": "backup / restore",
+    "barcore_qrcode": "barcode / QRCode",
     "batch_mode": "batch mode",
     "biometric_auto_lock": "biometric auto lock",
     "biometric_auto_lock_desc": "if enabled the app will lock whenever the app goes to background",

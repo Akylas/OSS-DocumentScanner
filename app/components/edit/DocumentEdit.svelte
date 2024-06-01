@@ -42,6 +42,7 @@
     } from '~/utils/ui';
     import { getImageSize } from '~/utils/utils';
     import { colors, windowInset } from '~/variables';
+    import { shortcutService } from '~/services/shortcuts';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer, colorBackground } = $colors);
@@ -177,6 +178,9 @@
                 },
                 false
             );
+            if (CARD_APP) {
+                shortcutService.updateShortcuts(document);
+            }
 
             currentSelectedImageRotation = item.rotation;
             // items.setItem(currentIndex, item);
@@ -429,6 +433,9 @@
                 colorType: i.colorType,
                 colorMatrix: getColorMatrix(i.colorType)
             });
+            if (CARD_APP) {
+                shortcutService.updateShortcuts(document);
+            }
         } catch (error) {
             showError(error);
         }
@@ -665,6 +672,9 @@
             await document.save({
                 name: editingTitleTextField.nativeElement.text
             });
+            if (CARD_APP) {
+                shortcutService.updateShortcuts(document);
+            }
             editingTitle = false;
         } catch (error) {
             showError(error);

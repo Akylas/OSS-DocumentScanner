@@ -52,4 +52,8 @@
 
 +(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 +(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
+
+
++(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  hintSize:(NSInteger)hintSize options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 @end

@@ -269,6 +269,8 @@ export async function detectQRCodeFromFile(src: string, options: Partial<DetectQ
 
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
     return new Promise<any>((resolve, reject) => {
+        // isMatrix: Aztec | DataMatrix | MaxiCode | PDF417 | QRCode | MicroQRCode | RMQRCode
+        // use it to generate image squared or not
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCode(
             text,
             format,
@@ -280,6 +282,32 @@ export async function generateQRCodeImage(text: string, format: string, width: n
                         reject(e);
                     } else {
                         resolve(result ? new ImageSource(result) : null);
+                    }
+                }
+            }),
+            options ? JSON.stringify(options) : ''
+        );
+    });
+}
+
+export async function generateQRCodeSVG(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
+    return new Promise<any>((resolve, reject) => {
+        // isMatrix: Aztec | DataMatrix | MaxiCode | PDF417 | QRCode | MicroQRCode | RMQRCode
+        // use it to generate image squared or not
+        com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSVG(
+            text,
+            format,
+            hintSize,
+            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+                onResult(e, result) {
+                    if (e) {
+                        reject(e);
+                    } else {
+                        if (result?.length) {
+                            resolve(result);
+                        } else {
+                            reject();
+                        }
                     }
                 }
             }),

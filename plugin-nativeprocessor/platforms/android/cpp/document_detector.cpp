@@ -5,13 +5,16 @@
 #include <DocumentOCR.h>
 #include <Utils.h>
 #include <jsoncons/json.hpp>
-#include <QRCode.h>
 #include <android/log.h>
+
+#ifdef  WITH_QRCODE
+#include <QRCode.h>
+#endif
 
 #define TAG "JS"
 using namespace std;
 
-static const char *const kClassDocumentDetector = "com/nativescript/cameraViewDemo/ImageAnalysisCallback";
+//static const char *const kClassDocumentDetector = "com/nativescript/cameraViewDemo/ImageAnalysisCallback";
 jstring stringToJavaString(JNIEnv *env, const std::string &stringValue)
 {
     return env->NewStringUTF(stringValue.c_str());
@@ -34,25 +37,49 @@ std::string jstringToString(JNIEnv *env, jstring value)
 
 static struct
 {
+    jclass jClassBitmap;
+    jclass jClassBitmapConfig;
+    jmethodID jMethodCreateBitmap;
+//    jobject jbitmapConfig;
+
     jclass jClassPoint;
     jclass jClassVector;
     jmethodID jMethodInit;
     jfieldID jFieldIDX;
     jfieldID jFieldIDY;
-} gPointInfo;
+} gJNIInfo;
 
 static void initClassInfo(JNIEnv *env)
 {
-    gPointInfo.jClassPoint = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass("android/graphics/Point")));
-    gPointInfo.jClassVector = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass("java/util/Vector")));
-    gPointInfo.jMethodInit = env->GetMethodID(gPointInfo.jClassPoint, "<init>", "(II)V");
-    gPointInfo.jFieldIDX = env->GetFieldID(gPointInfo.jClassPoint, "x", "I");
-    gPointInfo.jFieldIDY = env->GetFieldID(gPointInfo.jClassPoint, "y", "I");
+    gJNIInfo.jClassBitmap = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass("android/graphics/Bitmap")));
+    gJNIInfo.jClassBitmapConfig = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass("android/graphics/Bitmap$Config")));
+    gJNIInfo.jMethodCreateBitmap = env->GetStaticMethodID(gJNIInfo.jClassBitmap, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+//    jstring configName = env->NewStringUTF("ARGB_8888");
+//    jmethodID valueOfBitmapConfigFunction = env->GetStaticMethodID(jClassBitmapConfig, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
+//    gJNIInfo.jbitmapConfig = env->CallStaticObjectMethod(jClassBitmapConfig, valueOfBitmapConfigFunction, configName);
+
+    gJNIInfo.jClassPoint = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass("android/graphics/Point")));
+    gJNIInfo.jClassVector = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass("java/util/Vector")));
+    gJNIInfo.jMethodInit = env->GetMethodID(gJNIInfo.jClassPoint, "<init>", "(II)V");
+    gJNIInfo.jFieldIDX = env->GetFieldID(gJNIInfo.jClassPoint, "x", "I");
+    gJNIInfo.jFieldIDY = env->GetFieldID(gJNIInfo.jClassPoint, "y", "I");
 }
 
 static jobject createJavaPoint(JNIEnv *env, Point point_)
 {
-    return env->NewObject(gPointInfo.jClassPoint, gPointInfo.jMethodInit, point_.x, point_.y);
+    return env->NewObject(gJNIInfo.jClassPoint, gJNIInfo.jMethodInit, point_.x, point_.y);
+}
+
+static jobject createBitmap(JNIEnv *env, jint width, jint height)
+{
+    jstring configName = env->NewStringUTF("ARGB_8888");
+    jmethodID valueOfBitmapConfigFunction = env->GetStaticMethodID(gJNIInfo.jClassBitmapConfig, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
+    jobject jbitmapConfig = env->CallStaticObjectMethod(gJNIInfo.jClassBitmapConfig, valueOfBitmapConfigFunction, configName);
+    jobject bitmap = env->CallStaticObjectMethod(gJNIInfo.jClassBitmap, gJNIInfo.jMethodCreateBitmap, width, height, jbitmapConfig);
+    if (!bitmap) {
+        return nullptr; // Return null if Bitmap creation failed
+    }
+    return bitmap;
 }
 
 static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_, jobject progressInterface)
@@ -62,8 +89,8 @@ static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring 
     Mat bgrData(srcBitmapMat.rows, srcBitmapMat.cols, CV_8UC3);
     std::string options{jstringToString(env, options_)};
     std::optional<std::function<void(int)>> progressLambda;
-    jmethodID method = NULL;
-    if (progressInterface != NULL)
+    jmethodID method = nullptr;
+    if (progressInterface != nullptr)
     {
         jclass objclass = env->GetObjectClass(progressInterface);
         method = env->GetMethodID(objclass, "onProgress", "(I)V");
@@ -81,16 +108,16 @@ static jstring native_ocr(JNIEnv *env, jobject type, jobject srcBitmap, jstring 
 jobject pointsToJava(JNIEnv *env, std::vector<std::vector<cv::Point>> scanPointsList)
 {
 //     auto t_start = std::chrono::high_resolution_clock::now();
-    const int size = scanPointsList.size();
-    jmethodID mid = env->GetMethodID(gPointInfo.jClassVector, "<init>", "()V");
-    jmethodID addMethodID = env->GetMethodID(gPointInfo.jClassVector, "add", "(Ljava/lang/Object;)Z");
-    jobject outerVector = env->NewObject(gPointInfo.jClassVector, mid);
+    const int size = (int)scanPointsList.size();
+    jmethodID mid = env->GetMethodID(gJNIInfo.jClassVector, "<init>", "()V");
+    jmethodID addMethodID = env->GetMethodID(gJNIInfo.jClassVector, "add", "(Ljava/lang/Object;)Z");
+    jobject outerVector = env->NewObject(gJNIInfo.jClassVector, mid);
     if (size > 0)
     {
         for (int i = 0; i < size; ++i)
         {
             vector<Point> scanPoints = scanPointsList[i];
-            jobject innerVector = env->NewObject(gPointInfo.jClassVector, mid);
+            jobject innerVector = env->NewObject(gJNIInfo.jClassVector, mid);
             if (scanPoints.size() == 4)
             {
                 for (int j = 0; j < 4; ++j)
@@ -201,7 +228,7 @@ static jstring native_scan_json_buffer(JNIEnv *env, jobject type, jint width, ji
     Mat srcBitmapMat;
     buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "buffer_to_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
-    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, 1.0, NULL);
+    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, 1.0, nullptr);
     srcBitmapMat.release();
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_scan_json_mat %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     return stringToJavaString(env, scanPointsList);
@@ -212,7 +239,7 @@ static jstring native_scan_json_buffer_with_image(JNIEnv *env, jobject type, jin
 {
     Mat srcBitmapMat;
     buffer_to_mat(env, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, srcBitmapMat);
-    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, 1.0, NULL);
+    std::string scanPointsList = native_scan_json_mat(env, srcBitmapMat, shrunkImageHeight, imageRotation, 1.0, nullptr);
     mat_to_bitmap(env, srcBitmapMat, outBitmap);
     srcBitmapMat.release();
     return stringToJavaString(env, scanPointsList);
@@ -230,19 +257,19 @@ static jstring native_scan_json_buffer_with_image(JNIEnv *env, jobject type, jin
 //    return stringToJavaString(env, scanPointsList);
 //}
 
-static vector<Point> pointsToNative(JNIEnv *env, jobjectArray points_)
-{
-    int arrayLength = env->GetArrayLength(points_);
-    vector<Point> result;
-    for (int i = 0; i < arrayLength; i++)
-    {
-        jobject point_ = env->GetObjectArrayElement(points_, i);
-        int pX = env->GetIntField(point_, gPointInfo.jFieldIDX);
-        int pY = env->GetIntField(point_, gPointInfo.jFieldIDY);
-        result.push_back(Point(pX, pY));
-    }
-    return result;
-}
+//static vector<Point> pointsToNative(JNIEnv *env, jobjectArray points_)
+//{
+//    int arrayLength = env->GetArrayLength(points_);
+//    vector<Point> result;
+//    for (int i = 0; i < arrayLength; i++)
+//    {
+//        jobject point_ = env->GetObjectArrayElement(points_, i);
+//        int pX = env->GetIntField(point_, gPointInfo.jFieldIDX);
+//        int pY = env->GetIntField(point_, gPointInfo.jFieldIDY);
+//        result.push_back(Point(pX, pY));
+//    }
+//    return result;
+//}
 
 static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring points_, jstring transforms, jobject outBitmap)
 {
@@ -260,29 +287,29 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring po
     AndroidBitmapInfo outBitmapInfo;
     AndroidBitmap_getInfo(env, outBitmap, &outBitmapInfo);
     Mat dstBitmapMat;
-    int newHeight = outBitmapInfo.height;
-    int newWidth = outBitmapInfo.width;
+    int newHeight = (int)outBitmapInfo.height;
+    int newWidth = (int)outBitmapInfo.width;
     dstBitmapMat = Mat::zeros(newHeight, newWidth, srcBitmapMat.type());
 
     std::vector<Point2f> srcTriangle;
     std::vector<Point2f> dstTriangle;
 
-    srcTriangle.push_back(Point2f(leftTop[0], leftTop[1]));
-    srcTriangle.push_back(Point2f(rightTop[0], rightTop[1]));
-    srcTriangle.push_back(Point2f(leftBottom[0], leftBottom[1]));
-    srcTriangle.push_back(Point2f(rightBottom[0], rightBottom[1]));
+    srcTriangle.emplace_back((float)leftTop[0], (float)leftTop[1]);
+    srcTriangle.emplace_back((float)rightTop[0], (float)rightTop[1]);
+    srcTriangle.emplace_back((float)leftBottom[0], (float)leftBottom[1]);
+    srcTriangle.emplace_back((float)rightBottom[0], (float)rightBottom[1]);
 
-    dstTriangle.push_back(Point2f(0, 0));
-    dstTriangle.push_back(Point2f(newWidth, 0));
-    dstTriangle.push_back(Point2f(0, newHeight));
-    dstTriangle.push_back(Point2f(newWidth, newHeight));
+    dstTriangle.emplace_back(0.0f, 0.0f);
+    dstTriangle.emplace_back((float)newWidth, 0.0f);
+    dstTriangle.emplace_back(0.0f, (float)newHeight);
+    dstTriangle.emplace_back((float)newWidth, (float)newHeight);
 
     Mat transform = getPerspectiveTransform(srcTriangle, dstTriangle);
     warpPerspective(srcBitmapMat, dstBitmapMat, transform, dstBitmapMat.size());
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
 
     std::string transformsStd{jstringToString(env, transforms)};
-    if (transformsStd.length() > 0)
+    if (!transformsStd.empty())
     {
         detector::DocumentDetector::applyTransforms(dstBitmapMat, transformsStd, false);
     }
@@ -291,39 +318,53 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring po
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop done %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
 }
 
-static jstring native_qrcore_read(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_)
+static jstring native_qrcore_read(JNIEnv *env, jobject type, jobject srcBitmap, jstring options_, jdouble scale)
 {
+#ifdef  WITH_QRCODE
     Mat srcBitmapMat;
     bitmap_to_mat(env, srcBitmap, srcBitmapMat);
     std::string options{jstringToString(env, options_)};
-    string s = readQRCode(srcBitmapMat, 0, options);
+    string s = readQRCode(srcBitmapMat, 0, options, scale);
     return stringToJavaString(env, s);
+#else
+    return nullptr;
+#endif
 }
 
-static void generateQRCode(JNIEnv *env, jobject type, jstring text_, jstring format_, jint width, jint height, jstring options_, jobject outBitmap)
+static jobject generateQRCode(JNIEnv *env, jobject type, jstring text_, jstring format_, jint width, jint height, jstring options_)
 {
+#ifdef  WITH_QRCODE
     std::string format{jstringToString(env, format_)};
     std::string options{jstringToString(env, options_)};
     std::string text{jstringToString(env, text_)};
     Mat resultMat = generateQRCode(text, format, width, height, options);
+    jobject outBitmap = createBitmap(env, resultMat.cols, resultMat.rows);
     mat_to_bitmap(env, resultMat, outBitmap);
+    return outBitmap;
+#else
+    return nullptr;
+#endif
 }
 
 static jstring native_qrcore_read_buffer(JNIEnv *env, jobject type, jint width, jint height, jint rotation, jobject buffer1,
                                           jint rowStride1, jstring options_)
 {
+#ifdef  WITH_QRCODE
     void *pixels = (env->GetDirectBufferAddress(buffer1));
     Mat mat(cv::Size(width, height), CV_8UC1, pixels, rowStride1);
     std::string options{jstringToString(env, options_)};
-    string s = readQRCode(mat, rotation, options);
+    string s = readQRCode(mat, rotation, options, 1.0f);
     return stringToJavaString(env, s);
+#else
+    return nullptr;
+#endif
 }
 
 // extern "C"
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
-    JNIEnv *env = NULL;
+    JNIEnv *env = nullptr;
     if (vm->GetEnv((void **)&env, JNI_VERSION_1_6) != JNI_OK)
     {
         return JNI_FALSE;
@@ -342,17 +383,17 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
     return native_scan(env, thiz, src_bitmap, shrunk_image_height, image_rotation);
 }
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeBufferScan(JNIEnv *env,
-                                                                                      jobject thiz,
-                                                                                            jint width, jint height, jint chromaPixelStride, jobject buffer1,
-                                                                                            jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
-                                                                                            jint rowStride3,
-                                                                                      jint shrunk_image_height,
-                                                                                      jint image_rotation)
-{
-    return native_scan_buffer(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation);
-}
+//extern "C" JNIEXPORT jobject JNICALL
+//Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeBufferScan(JNIEnv *env,
+//                                                                                      jobject thiz,
+//                                                                                            jint width, jint height, jint chromaPixelStride, jobject buffer1,
+//                                                                                            jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+//                                                                                            jint rowStride3,
+//                                                                                      jint shrunk_image_height,
+//                                                                                      jint image_rotation)
+//{
+//    return native_scan_buffer(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation);
+//}
 
 // extern "C" JNIEXPORT jstring JNICALL
 // Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanAndQRCode(JNIEnv *env,
@@ -376,18 +417,18 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativ
 {
     return native_scan_json(env, thiz, src_bitmap, shrunk_image_height, image_rotation, scale, options);
 }
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxy(JNIEnv *env,
-                                                                                          jobject thiz,
-                                                                                        jint width, jint height, jint chromaPixelStride, jobject buffer1,
-                                                                                        jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
-                                                                                        jint rowStride3,
-                                                                                          jint shrunk_image_height,
-                                                                                          jint image_rotation,
-                                                                                                    jobject out_bitmap)
-{
-    return native_scan_json_buffer_with_image(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation, out_bitmap);
-}
+//extern "C" JNIEXPORT jstring JNICALL
+//Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxy(JNIEnv *env,
+//                                                                                          jobject thiz,
+//                                                                                        jint width, jint height, jint chromaPixelStride, jobject buffer1,
+//                                                                                        jint rowStride1, jobject buffer2, jint rowStride2, jobject buffer3,
+//                                                                                        jint rowStride3,
+//                                                                                          jint shrunk_image_height,
+//                                                                                          jint image_rotation,
+//                                                                                                    jobject out_bitmap)
+//{
+//    return native_scan_json_buffer_with_image(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, shrunk_image_height, image_rotation, out_bitmap);
+//}
 //extern "C" JNIEXPORT jstring JNICALL
 //Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeScanJSONFromProxyOnePlane(JNIEnv *env,
 //                                                                                          jobject thiz,
@@ -446,9 +487,10 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeQRCodeRead(JNIEnv *env,
                                                                                             jobject thiz,
                                                                                             jobject src_bitmap,
-                                                                                            jstring options)
+                                                                                            jstring options,
+                                                                                            jdouble scale)
 {
-    return native_qrcore_read(env, thiz, src_bitmap, options);
+    return native_qrcore_read(env, thiz, src_bitmap, options, scale);
 }
 
 
@@ -472,8 +514,23 @@ Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_testI
 {
     testImageProxyToBitmap(env, thiz, width, height, chromaPixelStride, buffer1, rowStride1, buffer2, rowStride2, buffer3 , rowStride3, out_bitmap);
 }
-extern "C" JNIEXPORT void JNICALL
-Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeGenerateQRCode(JNIEnv *env, jobject thiz, jstring text_, jstring format_, jint width, jint height, jstring options_, jobject outBitmap)
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeGenerateQRCode(JNIEnv *env, jobject thiz, jstring text_, jstring format_, jint width, jint height, jstring options_)
 {
-    generateQRCode(env, thiz, text_, format_, width, height, options_, outBitmap);
+    return generateQRCode(env, thiz, text_, format_, width, height, options_);
+}
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_akylas_documentscanner_CustomImageAnalysisCallback_00024Companion_nativeGenerateQRCodeSVG(
+        JNIEnv *env, jobject thiz, jstring text_, jstring format_, jint size_hint,
+        jstring options_) {
+#ifdef  WITH_QRCODE
+    std::string format{jstringToString(env, format_)};
+    std::string options{jstringToString(env, options_)};
+    std::string text{jstringToString(env, text_)};
+    std::string result = generateQRCodeSVG(text, format, size_hint, options);
+    return stringToJavaString(env, result);
+#else
+    return nullptr;
+#endif
 }

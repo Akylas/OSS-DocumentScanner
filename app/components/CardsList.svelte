@@ -41,6 +41,7 @@
     } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { securityService } from '~/services/security';
+    import { qrcodeService } from '~/services/qrcode';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -1041,12 +1042,11 @@
                 class="fab"
                 horizontalAlignment="right"
                 iosIgnoreSafeArea={true}
-                margin={16}
+                margin={`16 16 ${$windowInset.bottom + 16} 16`}
                 row={1}
                 text="mdi-plus"
                 verticalAlignment="bottom"
-                on:tap={throttle(() => onAddButton(), 500)}
-                android:marginBottom={$windowInset.bottom} />
+                on:tap={throttle(() => onAddButton(), 500)} />
             <!-- </stacklayout> -->
         {/if}
 

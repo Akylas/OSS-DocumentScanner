@@ -13,7 +13,8 @@ struct ScanPlusQRCodeResult {
 };
 
 cv::Mat generateQRCode(std::string text, std::string format, int width, int height, std::string options);
-std::string readQRCode(cv::Mat &srcMat, int rotation, std::string options);
+std::string readQRCode(cv::Mat &srcMat, int rotation, std::string options, double scale);
+std::string generateQRCodeSVG(std::string text, std::string format, int size_hint, std::string options);
 
 JSONCONS_ALL_MEMBER_TRAITS(ScanPlusQRCodeResult, points, qrcodes, resizeScale);
 

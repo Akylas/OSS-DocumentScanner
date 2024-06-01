@@ -2,7 +2,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { throttle } from '@nativescript/core/utils';
-    import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
@@ -23,7 +23,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS, QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
-    import { qrcodeService } from '~/services/qrcode';
+    import { getQRCodeSVG, qrcodeService } from '~/services/qrcode';
     import { PermissionError, showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
     import { goBack, navigate, showModal } from '~/utils/svelte/ui';
@@ -44,6 +44,8 @@
     import { getPageColorMatrix } from '~/utils/matrix';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { request } from '@nativescript-community/perms';
+    import { generateQRCodeSVG } from 'plugin-nativeprocessor';
+    import { shortcutService } from '~/services/shortcuts';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -68,7 +70,7 @@
     export let document: OCRDocument;
     export let transitionOnBack = true;
     let topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
-    let statusBarStyle: any = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
+    let statusBarStyle: any = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
 
     let qrcodes: QRCodeData;
     // let currentQRCodeImage: ImageSource;
@@ -80,10 +82,8 @@
     let pager: NativeViewElementNode<Pager>;
     // let items: ObservableArray<Item> = null;
     onThemeChanged(() => {
-        console.log('onThemeChanged', qrcodeColorMatrix);
-        pager?.nativeElement.refreshVisibleItems();
+        updateQRCodes($colors.colorOnSurface);
     });
-    $: console.log('qrcodeColorMatrix', qrcodeColorMatrix);
     // $: {
     const pages = document.getObservablePages();
     let items = pages.map((page, index) => ({ selected: false, page, index })) as any as ObservableArray<Item>;
@@ -107,6 +107,7 @@
     //     }
 
     let qrcodeImages: { [k: string]: ImageSource } = {};
+    const qrcodeSVGs: { [k: string]: string } = {};
     function clearQRCodeImages(timeout = 0) {
         const toClear = Object.values(qrcodeImages);
         qrcodeImages = {};
@@ -115,23 +116,29 @@
         }, timeout);
     }
 
-    function updateQRCodes() {
+    function updateQRCodes(color = $colors.colorOnSurface) {
         DEV_LOG &&
             console.log(
                 'updateQRCodes',
+                color,
                 document.pages.map((p) => p.imagePath)
             );
-        qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode?.map((qr) => ({ ...qr, getImage: () => getQRCodeImage(qr) })) || []), []);
-        clearQRCodeImages(100);
+        qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode?.map((qr) => ({ ...qr, color, svg: getQRCodeImage(qr, color) })) || []), []);
+        //we dont recycle images, it will be done in onDestroy
     }
 
-    async function getQRCodeImage(qrcode) {
-        DEV_LOG && console.log('getQRCodeImage', qrcode.text);
-        if (qrcodeImages[qrcode.text]) {
-            return qrcodeImages[qrcode.text];
+    async function getQRCodeImage(qrcode, color) {
+        try {
+            // DEV_LOG && console.log('getQRCodeImage', color, qrcode.text, qrcodeSVGs[qrcode.text]);
+            // if (qrcodeSVGs[qrcode.text]) {
+            //     return qrcodeSVGs[qrcode.text];
+            // }
+            return getQRCodeSVG(qrcode, screenWidthDips, color);
+            // qrcodeSVGs[qrcode.text] = (await getQRCodeSVG(qrcode, screenWidthDips, color));
+            // return qrcodeSVGs[qrcode.text];
+        } catch (error) {
+            console.error(error);
         }
-        qrcodeImages[qrcode.text] = await generateQRCodeImage(qrcode.text, qrcode.format, screenWidthPixels, screenHeightPixels * 0.4);
-        return qrcodeImages[qrcode.text];
     }
     function onSelectedIndex(event) {
         currentQRCodeIndex = event.object.selectedIndex;
@@ -453,6 +460,8 @@
         documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
         document.on('pagesAdded', onPagesAdded);
+
+        shortcutService.updateShortcuts(document);
         // refresh();
     });
     onDestroy(() => {
@@ -670,17 +679,8 @@
                             }
                         });
                         if (qrcodes.length) {
-                            //we add the qrcode to the last known page
-                            const pageIndex = document.pages.length - 1;
-                            await document.updatePage(pageIndex, {
-                                qrcode: (document.pages[pageIndex].qrcode || []).concat(
-                                    qrcodes.map((q) => ({
-                                        text: q.text,
-                                        format: q.format,
-                                        position: q.position
-                                    }))
-                                )
-                            });
+                            //we add the qrcode to the first page (less risk of it being removed with the page)
+                            await addQRCodes(qrcodes);
                             found = true;
                         } else {
                             showSnack({ message: lc('no_qrcode_found') });
@@ -703,17 +703,8 @@
                                 )
                             ).filter((q) => !!q);
                             if (qrcodes.length) {
-                                //we add the qrcode to the last known page
-                                const pageIndex = document.pages.length - 1;
-                                await document.updatePage(pageIndex, {
-                                    qrcode: (document.pages[pageIndex].qrcode || []).concat(
-                                        qrcodes.flat().map((q) => ({
-                                            text: q.text,
-                                            format: q.format,
-                                            position: q.position
-                                        }))
-                                    )
-                                });
+                                //we add the qrcode to the first page (less risk of it being removed with the page)
+                                await addQRCodes(qrcodes.flat());
                                 found = true;
                             } else {
                                 showSnack({ message: lc('no_qrcode_found') });
@@ -722,15 +713,37 @@
                             //cancel will throw, we want to ignore it!
                         }
                         break;
+                    case 'add_qrcode_manual': {
+                        const result = await qrcodeService.createQRCode();
+                        if (result?.text?.length) {
+                            await addQRCodes([result]);
+                        }
+                        break;
+                    }
                 }
                 updateQRCodes();
                 if (found) {
-                    pager?.nativeElement?.scrollToIndexAnimated(qrcodes.length - 1, true);
+                    setTimeout(() => {
+                        pager?.nativeElement?.scrollToIndexAnimated(qrcodes.length - 1, true);
+                    }, 10);
                 }
             }
         } catch (error) {
             showError(error);
         }
+    }
+
+    function addQRCodes(qrcodes: QRCodeData, pageIndex = 0) {
+        //we add the qrcode to the first page (less risk of it being removed with the page)
+        return document.updatePage(pageIndex, {
+            qrcode: (document.pages[pageIndex].qrcode || []).concat(
+                qrcodes.map((q) => ({
+                    text: q.text,
+                    format: q.format,
+                    position: q.position
+                }))
+            )
+        });
     }
 </script>
 
@@ -793,7 +806,7 @@
             <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} margin={16} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
-                        <image ios:contextOptions={IMAGE_CONTEXT_OPTIONS} colorMatrix={qrcodeColorMatrix} sharedTransitionTag={'qrcode' + index} src={item.getImage} stretch="aspectFit" />
+                        <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
                         <label fontSize={30} fontWeight="bold" maxLines={2} row={1} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
                     </gridlayout>
                 </Template>

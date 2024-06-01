@@ -48,7 +48,7 @@
             const toRelease = imageToDestroy;
             setTimeout(() => {
                 recycleImages(toRelease);
-            }, 10);
+            }, 100);
             imageToDestroy = null;
         }
         if (item?.image) {
@@ -70,12 +70,12 @@
         return item?.imagePath;
     }
 
-    // onDestroy(() => {
-    // if (imageToDestroy) {
-    //     recycleImages(imageToDestroy);
-    //     imageToDestroy = null;
-    // }
-    // });
+    onDestroy(() => {
+        if (imageToDestroy) {
+            recycleImages(imageToDestroy);
+            imageToDestroy = null;
+        }
+    });
 </script>
 
 {#if zoomable}

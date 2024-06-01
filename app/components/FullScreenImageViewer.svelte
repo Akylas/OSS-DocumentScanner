@@ -15,6 +15,7 @@
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorOnBackground } = $colors);
 
+    export let useSVG = false;
     export let keepScreenAwake = false;
     export let refreshOnOrientationChange = false;
     export let screenBrightness = -1;
@@ -23,7 +24,7 @@
     export let labelColor = 'white';
     export let statusBarStyle: any = 'dark';
     export let actionBarStyle: any = backgroundColor;
-    export let images: { image; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation? }[];
+    export let images: { image?; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation?; svg? }[];
     let pager: NativeViewElementNode<Pager>;
     let imageFunctionArg = Application.orientation();
 
@@ -37,7 +38,7 @@
 
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
-        const item = images[currentIndex];
+        // const item = images[currentIndex];
         // currentImageSrc = item.image;
         // currentImageRotation = item.rotation;
         // currentImageColorMatrix = item.colorMatrix || getColorMatrix(item.colorType);
@@ -73,17 +74,17 @@
     //     }
     // }
 
-    function getCurrentImageView() {
-        return pager?.nativeView?.getChildView(currentIndex)?.getViewById<Img>('imageView');
-    }
+    // function getCurrentImageView() {
+    //     return pager?.nativeView?.getChildView(currentIndex)?.getViewById<Img>('imageView');
+    // }
 
-    async function shareItem(item: OCRPage) {
-        try {
-            await share({ file: item.imagePath });
-        } catch (error) {
-            showError(error);
-        }
-    }
+    // async function shareItem(item: OCRPage) {
+    //     try {
+    //         await share({ file: item.imagePath });
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
 
     function onOrientationChanged(event: OrientationChangedEventData) {
         imageFunctionArg = event.newValue;
@@ -108,6 +109,7 @@
 
         <pager
             bind:this={pager}
+            itemTemplateSelector={() => (useSVG ? 'svg' : 'default')}
             items={images}
             preserveIndexOnItemsChange={true}
             rowSpan={2}
@@ -118,6 +120,23 @@
             <Template let:item>
                 <gridlayout rows="*,auto" width="100%">
                     <RotableImageView id="imageView" {imageFunctionArg} {item} margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} zoomable={true} />
+                    <label
+                        color={labelColor}
+                        fontSize={30}
+                        fontWeight="bold"
+                        maxLines={2}
+                        paddingTop={5}
+                        row={1}
+                        sharedTransitionTag={item.labelSharedTransitionTag}
+                        text={item.subtitle}
+                        textAlignment="center"
+                        verticalAlignment="bottom"
+                        visibility={item.subtitle ? 'visible' : 'hidden'} />
+                </gridlayout>
+            </Template>
+            <Template key="svg" let:item>
+                <gridlayout rows="*,auto" width="100%">
+                    <svgview margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} src={item.svg} stretch="aspectFit" />
                     <label
                         color={labelColor}
                         fontSize={30}

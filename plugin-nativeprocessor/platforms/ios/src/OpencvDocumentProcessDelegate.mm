@@ -558,6 +558,16 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   });
 }
 
++(void)generateQRCodeSync:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+}
+
++(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self generateQRCodeSync:text format:fromat  width:width height:height  options:options delegate:delegate];
+  });
+}
+
 - (void)cameraView:(NSCameraView *)cameraView willProcessRawVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer onQueue:(dispatch_queue_t)queue
 {
   cv::Mat mat = [self matFromBuffer:sampleBuffer];
