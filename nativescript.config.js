@@ -1,10 +1,10 @@
 const timelineEnabled = !!process.env['NS_TIMELINE'];
 const sentryEnabled = !!process.env['NS_SENTRY'];
 const loggingEnabled = !!process.env['NS_LOGGING'];
-
+const id = process.env['APP_ID'];
 module.exports = {
     ignoredNativeDependencies: [].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']),
-    id: process.env['APP_ID'] || 'com.akylas.documentscanner',
+    id: id || 'com.akylas.documentscanner',
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources/documentscanner',
     buildPath: process.env['APP_BUILD_PATH'] || 'build/documentscanner',
     webpackPackageName: '@akylas/nativescript-webpack',
@@ -23,6 +23,7 @@ module.exports = {
         gradleVersion: '8.6',
         markingMode: 'none',
         codeCache: true,
+        gradleArgs: id === 'com.akylas.cardwallet' ? ['-PwithQRCode'] : [],
         enableMultithreadedJavascript: false,
         ...(loggingEnabled
             ? {
