@@ -102,7 +102,31 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     );
 
     async createTables() {
-        await this.database.query(sql`
+        await this.database.query(
+            CARD_APP
+                ? sql`
+        CREATE TABLE IF NOT EXISTS "Page" (
+            id TEXT PRIMARY KEY NOT NULL,
+            createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+            modifiedDate NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+            pageIndex INTEGER,
+            colorType TEXT,
+            colorMatrix TEXT,
+            transforms TEXT,
+            rotation INTEGER DEFAULT 0,
+            scale INTEGER DEFAULT 1,
+            crop TEXT,
+            ocrData TEXT,
+            width INTEGER,
+            height INTEGER,
+            size INTEGER,
+            sourceImagePath TEXT,
+            imagePath TEXT,
+            document_id TEXT,
+            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        `
+                : sql`
         CREATE TABLE IF NOT EXISTS "Page" (
             id TEXT PRIMARY KEY NOT NULL,
             createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
@@ -123,7 +147,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             document_id TEXT,
             FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
         );
-        `);
+        `
+        );
         return this.applyMigrations();
     }
 
