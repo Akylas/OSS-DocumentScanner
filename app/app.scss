@@ -109,13 +109,6 @@ htmllabel {
 
     // white-space: normal;
 
-    &:onTertiary {
-        color: var(--colorOnTertiary);
-    }
-
-    &:white {
-        color: black;
-    }
 }
 
 // mdtextfield {
@@ -176,20 +169,22 @@ frame {
     font-weight: 400;
     padding: 0 16 0 16;
     color: var(--colorOnSurface);
-    &:black, &:dark {
-        color: white;
-    }
-
-    &:white, &:light {
-        color: black;
-    }
 }
 
 .actionBarSubtitle {
     font-size: 13;
     color: var(--colorOnSurface);
+}
+
+
+label,
+canvaslabel,
+htmllabel,
+mdtextfield,
+.actionBarTitle,
+.actionBarSubtitle{
     &:black, &:dark {
-        ripple-color: white;
+        color: white;
     }
 
     &:white, &:light {

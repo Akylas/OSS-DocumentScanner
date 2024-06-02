@@ -39,6 +39,7 @@
     } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
+    import EditNameActionBar from '../common/EditNameActionBar.svelte';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
     interface Item {
@@ -61,7 +62,6 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let nbSelected = 0;
     let editingTitle = false;
-    let editingTitleTextField: NativeViewElementNode<TextField>;
     let ignoreTap = false;
     // let items: ObservableArray<Item> = null;
 
@@ -282,13 +282,17 @@
         }
     }
     function onGoBack() {
-        goBack(
-            transitionOnBack
-                ? undefined
-                : {
-                      transition: null
-                  }
-        );
+        if (editingTitle) {
+            editingTitle = false;
+        } else {
+            goBack(
+                transitionOnBack
+                    ? undefined
+                    : {
+                          transition: null
+                      }
+            );
+        }
     }
 
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
@@ -450,26 +454,6 @@
     }
     onThemeChanged(refreshCollectionView);
 
-    async function saveDocumentTitle(event) {
-        try {
-            DEV_LOG && console.log('saveDocumentTitle', editingTitleTextField.nativeElement.text);
-            await document.save({
-                name: editingTitleTextField.nativeElement.text
-            });
-            editingTitle = false;
-        } catch (error) {
-            showError(error);
-        }
-    }
-    async function onTextFieldFocus(event) {
-        try {
-            const textField = event.object as TextField;
-            textField.setSelection(textField.text.length);
-            textField.requestFocus();
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function showOptions(event) {
         if (nbSelected > 0) {
             const options = new ObservableArray([
@@ -547,31 +531,6 @@
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <CActionBar
-            forceCanGoBack={nbSelected > 0}
-            onGoBack={nbSelected ? unselectAll : null}
-            onTitleTap={() => (editingTitle = true)}
-            title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
-        </CActionBar>
-        {#if editingTitle}
-            <CActionBar forceCanGoBack={true} onGoBack={() => (editingTitle = false)} title={null}>
-                <textfield
-                    bind:this={editingTitleTextField}
-                    slot="center"
-                    backgroundColor={colorBackground}
-                    col={1}
-                    paddingBottom={4}
-                    paddingTop={4}
-                    text={document.name}
-                    verticalTextAlignment="center"
-                    on:layoutChanged={onTextFieldFocus} />
-                <mdbutton class="actionBarButton" text="mdi-content-save" variant="text" on:tap={saveDocumentTitle} />
-            </CActionBar>
-        {/if}
-
         <collectionview
             bind:this={collectionView}
             id="view"
@@ -645,5 +604,18 @@
             <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
             <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
         </stacklayout>
+
+        <CActionBar
+            forceCanGoBack={nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : null}
+            onTitleTap={() => (editingTitle = true)}
+            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            titleProps={{ autoFontSize: true, padding: 0 }}>
+            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+        </CActionBar>
+        {#if editingTitle}
+            <EditNameActionBar {document} bind:editingTitle />
+        {/if}
     </gridlayout>
 </page>

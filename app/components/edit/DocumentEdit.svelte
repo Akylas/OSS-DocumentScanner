@@ -43,9 +43,10 @@
     import { getImageSize } from '~/utils/utils';
     import { colors, windowInset } from '~/variables';
     import { shortcutService } from '~/services/shortcuts';
+    import EditNameActionBar from '../common/EditNameActionBar.svelte';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorSurfaceContainer, colorBackground } = $colors);
+    $: ({ colorPrimary } = $colors);
 
     export let startPageIndex: number = 0;
     export let document: OCRDocument;
@@ -77,7 +78,6 @@
     }));
     let updatingTransform = false;
     let editingTitle = false;
-    let editingTitleTextField: NativeViewElementNode<TextField>;
     // const whitepaper = writable(transforms.indexOf('whitepaper') !== -1);
     // const enhanced = writable(transforms.indexOf('enhance') !== -1);
 
@@ -636,6 +636,8 @@
     function onGoBack() {
         if (recrop) {
             onRecropTapFinish(true);
+        } else if (editingTitle) {
+            editingTitle = false;
         } else {
             const item = items.getItem(currentIndex);
             DEV_LOG && console.log('onGoBack', currentIndex, !!items, !!item);
@@ -659,36 +661,9 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (recrop) {
-                onRecropTapFinish(true);
-            } else {
-                onGoBack();
-            }
+            onGoBack();
         });
 
-    async function saveDocumentTitle(event) {
-        try {
-            DEV_LOG && console.log('saveDocumentTitle', editingTitleTextField.nativeElement.text);
-            await document.save({
-                name: editingTitleTextField.nativeElement.text
-            });
-            if (CARD_APP) {
-                shortcutService.updateShortcuts(document);
-            }
-            editingTitle = false;
-        } catch (error) {
-            showError(error);
-        }
-    }
-    async function onTextFieldFocus(event) {
-        try {
-            const textField = event.object as TextField;
-            textField.setSelection(textField.text.length);
-            textField.requestFocus();
-        } catch (error) {
-            showError(error);
-        }
-    }
     function copyText() {
         try {
             if (currentItemOCRData) {
@@ -797,19 +772,7 @@
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
         </CActionBar>
         {#if editingTitle}
-            <CActionBar forceCanGoBack={true} onGoBack={() => (editingTitle = false)} title={null}>
-                <textfield
-                    bind:this={editingTitleTextField}
-                    slot="center"
-                    backgroundColor={colorBackground}
-                    col={1}
-                    paddingBottom={4}
-                    paddingTop={4}
-                    text={document.name}
-                    verticalTextAlignment="center"
-                    on:layoutChanged={onTextFieldFocus} />
-                <mdbutton class="actionBarButton" text="mdi-content-save" variant="text" on:tap={saveDocumentTitle} />
-            </CActionBar>
+            <EditNameActionBar {document} bind:editingTitle />
         {/if}
     </gridlayout>
 </page>

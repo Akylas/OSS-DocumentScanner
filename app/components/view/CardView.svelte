@@ -46,6 +46,7 @@
     import { request } from '@nativescript-community/perms';
     import { generateQRCodeSVG } from 'plugin-nativeprocessor';
     import { shortcutService } from '~/services/shortcuts';
+    import EditNameActionBar from '../common/EditNameActionBar.svelte';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -69,6 +70,7 @@
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
+    let editingTitle = false;
     let topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
     let statusBarStyle: any = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
 
@@ -315,13 +317,17 @@
         }
     }
     function onGoBack() {
-        goBack(
-            transitionOnBack
-                ? undefined
-                : {
-                      transition: null
-                  }
-        );
+        if (editingTitle) {
+            editingTitle = false;
+        } else {
+            goBack(
+                transitionOnBack
+                    ? undefined
+                    : {
+                          transition: null
+                      }
+            );
+        }
     }
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
@@ -749,18 +755,6 @@
 
 <page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
     <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
-        <CActionBar
-            backgroundColor={topBackgroundColor}
-            buttonsDefaultVisualState={statusBarStyle}
-            forceCanGoBack={nbSelected > 0}
-            labelsDefaultVisualState={statusBarStyle}
-            onGoBack={nbSelected ? unselectAll : null}
-            title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
-        </CActionBar>
-
         <collectionview
             bind:this={collectionView}
             id="view"
@@ -839,5 +833,20 @@
                 android:marginBottom={$windowInset.bottom} />
             <!-- </stacklayout> -->
         </gridlayout>
+        <CActionBar
+            backgroundColor={topBackgroundColor}
+            buttonsDefaultVisualState={statusBarStyle}
+            forceCanGoBack={nbSelected > 0}
+            labelsDefaultVisualState={statusBarStyle}
+            onGoBack={nbSelected ? unselectAll : null}
+            onTitleTap={() => (editingTitle = true)}
+            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            titleProps={{ autoFontSize: true, padding: 0 }}>
+            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+        </CActionBar>
+        {#if editingTitle}
+            <EditNameActionBar backgroundColor={topBackgroundColor} buttonsDefaultVisualState={statusBarStyle} {document} labelsDefaultVisualState={statusBarStyle} bind:editingTitle />
+        {/if}
     </gridlayout>
 </page>
