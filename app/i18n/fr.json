@@ -215,7 +215,7 @@
     "pdf_import_settings": "Paramètres d'importation PDF",
     "pdf_one_image_per_page": "chaque page comme une image",
     "pdf_one_image_per_pdf_image": "trouver des images PDF et les importer (toutes les autres données, comme le texte, ne seront pas importées)",
-    "pdf_saved": "pdf enregistré : %1$s",
+    "pdf_saved": "PDF enregistré : %1$s",
     "pdf_settings": "Paramètres PDF",
     "pdf_settings_desc": "tous les paramètres relatifs aux PDF",
     "picture_size": "image taille",
