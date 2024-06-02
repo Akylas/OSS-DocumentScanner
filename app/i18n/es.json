@@ -35,6 +35,7 @@
     "autoscan": "escaneo automático",
     "autoscan_settings": "configuración de escaneo automático",
     "backup_restore": "copia de seguridad / restauración",
+    "barcore_qrcode": "código de barras / código QR",
     "batch_mode": "por lotes",
     "biometric_auto_lock": "bloqueo biométrico automático",
     "biometric_auto_lock_desc": "si se activa la aplicación se bloqueará cada vez que la aplicación pasa a segundo plano",
