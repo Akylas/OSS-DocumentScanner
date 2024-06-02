@@ -210,7 +210,7 @@
     "pdf_import_settings": "PDF içe aktarma ayarları",
     "pdf_one_image_per_page": "her sayfa bir resim olarak",
     "pdf_one_image_per_pdf_image": "PDF görüntülerini bulma ve içe aktarma (metin gibi diğer tüm veriler içe aktarılmayacaktır)",
-    "pdf_saved": "pdf kaydedildi: %1$s",
+    "pdf_saved": "PDF kaydedildi: %1$s",
     "pdf_settings": "PDF ayarları",
     "pdf_settings_desc": "PDF ile ilgili tüm ayarlar",
     "picture_size": "görüntü boyutu",
