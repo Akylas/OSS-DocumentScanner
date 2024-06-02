@@ -35,6 +35,7 @@
     "autoscan": "otomatik tara",
     "autoscan_settings": "otomatik tarama ayarları",
     "backup_restore": "yedekleme / geri yükleme",
+    "barcore_qrcode": "barkod / QR kodu",
     "batch_mode": "toplu iş modu",
     "biometric_auto_lock": "Biyometrik otomatik kilitlenme",
     "biometric_auto_lock_desc": "etkinleştirilirse uygulama arka plana alınığında kilitlenir",
