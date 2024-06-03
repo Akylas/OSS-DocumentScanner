@@ -582,7 +582,7 @@
             on:loaded={applyProcessor}
             on:zoom={onZoom}
             on:tap={focusCamera} />
-        <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan="2" strokeWidth={3} />
+        <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan={viewsize === 'full' ? 4 : 2} {stretch} strokeWidth={3} />
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} {onGoBack}>
             {#if startOnCam}

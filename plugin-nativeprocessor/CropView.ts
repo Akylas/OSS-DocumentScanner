@@ -3,6 +3,58 @@ import { Color, Property, Utils, View } from '@nativescript/core';
 export const colorsProperty = new Property<CropView, (Color | string)[]>({ name: 'colors' });
 export const strokeWidthProperty = new Property<CropView, number>({ name: 'strokeWidth' });
 export const fillAlphaProperty = new Property<CropView, number>({ name: 'fillAlpha' });
+export const stretchProperty = new Property<CropView, string>({ name: 'stretch' });
+
+export enum ScaleType {
+    None = 'none',
+    Fill = 'fill',
+    AspectFill = 'aspectFill',
+    AspectFit = 'aspectFit',
+    Center = 'center',
+    FitCenter = 'fitCenter',
+    FitEnd = 'fitEnd',
+    FitStart = 'fitStart'
+}
+
+function getScaleType(scaleType: ScaleType) {
+    if (__ANDROID__) {
+        if (typeof scaleType === 'string') {
+            switch (scaleType) {
+                case ScaleType.FitCenter:
+                case ScaleType.AspectFit:
+                    return androidx.camera.view.PreviewView.ScaleType.FIT_CENTER;
+                case ScaleType.FitEnd:
+                    return androidx.camera.view.PreviewView.ScaleType.FIT_END;
+                case ScaleType.FitStart:
+                    return androidx.camera.view.PreviewView.ScaleType.FIT_START;
+                default:
+                case ScaleType.Center:
+                case ScaleType.Fill:
+                case ScaleType.AspectFill:
+                    return androidx.camera.view.PreviewView.ScaleType.FILL_CENTER;
+            }
+        }
+
+        return androidx.camera.view.PreviewView.ScaleType.FILL_CENTER;
+    } else {
+        if (typeof scaleType === 'string') {
+            switch (scaleType) {
+                case ScaleType.FitCenter:
+                case ScaleType.AspectFit:
+                case ScaleType.FitEnd:
+                case ScaleType.FitStart:
+                    return AVLayerVideoGravityResizeAspect;
+                default:
+                case ScaleType.Center:
+                case ScaleType.Fill:
+                case ScaleType.AspectFill:
+                    return AVLayerVideoGravityResizeAspectFill;
+            }
+        }
+
+        return AVLayerVideoGravityResizeAspectFill;
+    }
+}
 
 export class CropView extends View {
     createNativeView() {
@@ -58,7 +110,16 @@ export class CropView extends View {
             this.nativeViewProtected.fillAlpha = value;
         }
     }
+
+    [stretchProperty.setNative](value) {
+        if (__ANDROID__) {
+            this.nativeViewProtected.setScaleType(getScaleType(value));
+        } else {
+            this.nativeViewProtected.videoGravity = getScaleType(value);
+        }
+    }
 }
 colorsProperty.register(CropView);
 strokeWidthProperty.register(CropView);
 fillAlphaProperty.register(CropView);
+stretchProperty.register(CropView);

@@ -13,6 +13,7 @@
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreImage.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!ImageIO.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreFoundation.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!AVFoundation.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-cameraview/typings/androidx.camera.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-cameraview/typings/android.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-document-picker/typings/android.d.ts" />
