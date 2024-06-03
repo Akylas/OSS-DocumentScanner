@@ -1,1 +1,46 @@
-{}
+{
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "Fri kortlomme"
+        }
+    },
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "Fri dokumentskanner"
+        }
+    },
+    "about": "Om",
+    "always": "alltid",
+    "camera_settings": "kamerainnstillinger",
+    "camera_view_size": "vis størrelse",
+    "cancel": "avbryt",
+    "copied": "kopiert",
+    "email": "e-post",
+    "enter_passcode": "Skriv inn PIN",
+    "error": "feil",
+    "filename_date_format": "filnavn-datoformat",
+    "french": "fransk",
+    "general": "generelt",
+    "get_app_source_code": "hent programkildekoden",
+    "here": "her",
+    "image": "bilde",
+    "image_filename": "bildefilnavn å eksportere",
+    "image_format": "bildeformat",
+    "image_import": "importer et bilde",
+    "image_load_scale": "bildeskala",
+    "image_quality": "bildekvalitet",
+    "image_saved": "bilde lagret",
+    "image_settings": "bildeinnstillinger",
+    "image_settings_desc": "alle bilderelaterte innstillinger",
+    "image_size_threshold": "bildestørrelseterskel",
+    "images_saved": "bilder lagret",
+    "no_qrcode_found": "fant ingen QR-kode",
+    "ocr_document": "oppdag tekst",
+    "off": "av",
+    "ok": "OK",
+    "on": "på",
+    "page": "side",
+    "password": "passord",
+    "password_not_saved": "passordet er ikke lagret",
+    "pdf_one_image_per_page": "hver side som bilde"
+}
