@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
+import android.os.Handler
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
@@ -31,7 +32,7 @@ constructor(
 ) :
     ImageAnalysisCallback {
 
-
+    private var handler = Handler(context.mainLooper)
     var previewResizeThreshold = 200.0
     var autoScanHandler: AutoScanHandler? = null
         set(value) {
@@ -937,6 +938,57 @@ constructor(
         }
         
     }
+    private fun handleProcessResult(imageWidth:Int, imageHeight:Int, imageRotation: Int, scanJSONResult: String?,qrcodeResult: String? ) {
+        // should we run it on main thread? We know we dont want to make "process" slower
+        handler.post(Runnable() {
+            run() {
+                var pointsList: MutableList<List<Point>> =  mutableListOf<List<Point>>();
+                if (scanJSONResult != null) {
+                    pointsList.addAll(pointsFromJSONArray(JSONArray(scanJSONResult)));
+                }
+                autoScanHandler?.process(pointsList)
+
+                if (qrcodeResult != null) {
+//                Log.d("JS", "detectQRCode ${(System.nanoTime() - start) / 1000000}ms");
+                    val qrcode = JSONArray(qrcodeResult)
+                    if (qrcode.length() > 0) {
+                        val qrcode = qrcode.getJSONObject(0)
+                        pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
+                        onQRCode?.onQRCodes(qrcodeResult)
+                    }
+                }
+                // pointsList is sorted by area
+                if (cropView != null) {
+                    if (pointsList != null && pointsList.size > 0) {
+                        if (imageRotation == 180 ||
+                            imageRotation ==
+                            0
+                        ) {
+
+                            cropView.imageWidth = imageWidth
+                            cropView.imageHeight = imageHeight
+                        } else {
+
+                            cropView.imageWidth = imageHeight
+                            cropView.imageHeight = imageWidth
+                        }
+                        val scaleX = cropView.height.toFloat() / imageWidth.toFloat()
+                        val scaleY = cropView.width.toFloat() / imageHeight.toFloat()
+                        when (cropView.scaleType) {
+                            PreviewView.ScaleType.FILL_END, PreviewView.ScaleType.FILL_START, PreviewView.ScaleType.FILL_CENTER -> cropView.scale = max(scaleX, scaleY)
+                            PreviewView.ScaleType.FIT_END, PreviewView.ScaleType.FIT_START, PreviewView.ScaleType.FIT_CENTER -> cropView.scale = min(scaleX, scaleY)
+                        }
+                        cropView.quads = pointsList
+                    } else {
+                        cropView.quads = null
+                    }
+                    cropView.invalidate()
+                }
+
+                // Code to run on UI thread
+            }
+        });
+    }
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun process(
@@ -946,70 +998,43 @@ constructor(
     ) {
         try {
             if (cropView == null) {
-                processor.finished()
                 return
             }
 //            val start = System.currentTimeMillis()
             val image = imageProxy.image!!
             val planes = image.planes
-            var pointsList: MutableList<List<Point>> =  mutableListOf<List<Point>>();
+            val imageWidth = image.width
+            val imageHeight = image.height
+            val imageRotation = info.rotationDegrees
+
+            var scanJSONResult: String? = null;
+            var qrcodeResult: String? = null;
+
             if (detectDocuments) {
                 val chromaPixelStride = planes[1].pixelStride
-                val result = nativeBufferScanJSON(
+                scanJSONResult = nativeBufferScanJSON(
                     image.width, image.height, chromaPixelStride, planes[0].buffer,
                     planes[0].rowStride, planes[1].buffer,
                     planes[1].rowStride, planes[2].buffer,
                     planes[2].rowStride, previewResizeThreshold.toInt(), info.rotationDegrees
                 );
-                if (result != null) {
-                    pointsList.addAll(pointsFromJSONArray(JSONArray(result)));
-                } 
-                autoScanHandler?.process(pointsList)
+                
             }
-//            Log.d("ImageAnalysis", "process image:${image.width}x${image.height} resize:$previewResizeThreshold in ${System.currentTimeMillis() - start} ms")
-
             if (detectQRCode) {
-                val qrcodeResult = nativeQRCodeReadBuffer(
+                qrcodeResult = nativeQRCodeReadBuffer(
                     image.width, image.height, info.rotationDegrees, planes[0].buffer,
                     planes[0].rowStride, detectQRCodeOptions
                 )
-//                Log.d("JS", "detectQRCode ${(System.nanoTime() - start) / 1000000}ms");
-                val qrcode = JSONArray(qrcodeResult)
-                if (qrcode.length() > 0) {
-                    val qrcode = qrcode.getJSONObject(0)
-                    pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
-                    onQRCode?.onQRCodes(qrcodeResult)
-                }
             }
-
-            // pointsList is sorted by area
-            if (pointsList != null && pointsList.size > 0) {
-                if (info.rotationDegrees == 180 ||
-                    info.rotationDegrees ==
-                    0
-                ) {
-
-                    cropView.imageWidth = image.width
-                    cropView.imageHeight = image.height
-                } else {
-
-                    cropView.imageWidth = image.height
-                    cropView.imageHeight = image.width
-                }
-                val scaleX = cropView.height.toFloat() / image.width.toFloat()
-                val scaleY = cropView.width.toFloat() / image.height.toFloat()
-                when (cropView.scaleType) {
-                    PreviewView.ScaleType.FILL_END, PreviewView.ScaleType.FILL_START, PreviewView.ScaleType.FILL_CENTER -> cropView.scale = max(scaleX, scaleY)
-                    PreviewView.ScaleType.FIT_END, PreviewView.ScaleType.FIT_START, PreviewView.ScaleType.FIT_CENTER -> cropView.scale = min(scaleX, scaleY)
-                }
-                cropView.quads = pointsList
-            } else {
-                cropView.quads = null
-            }
-            cropView.invalidate()
+            // Log.d("ImageAnalysis", "processor finished")
+            // mark the processor as finished as soon as possible
             processor.finished()
+            handleProcessResult(imageWidth, imageHeight, imageRotation, scanJSONResult, qrcodeResult)
+
         } catch (exception: Exception) {
             exception.printStackTrace()
+        } finally {
+            processor.finished()
         }
     }
 }
