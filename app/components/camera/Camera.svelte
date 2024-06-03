@@ -364,7 +364,7 @@
     }
 
     function onGoBack() {
-        if (pagesToAdd.length > 0) {
+        if (PRODUCTION && pagesToAdd.length > 0) {
             confirmGoBack({ message: lc('sure_cancel_import'), onGoBack: closeModal });
         } else {
             closeModal(undefined);
@@ -393,8 +393,12 @@
     $: canSaveDoc = nbPages > 0;
 
     function focusCamera(e) {
-        DEV_LOG && console.log('focusCamera', e.getX(), e.getY());
-        cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
+        try {
+            DEV_LOG && console.log('focusCamera', e.getX(), e.getY());
+            cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
+        } catch (error) {
+            showError(error);
+        }
     }
     const onZoom = debounce(function onZoom(event) {
         ApplicationSettings.setNumber('defaultZoom', event.zoom);
@@ -419,9 +423,14 @@
             newAutoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
             newAutoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
             newAutoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
-            autoScanHandler = processor.autoScanHandler = newAutoScanHandler;
+            autoScanHandler = newAutoScanHandler;
+            if (processor) {
+                processor.autoScanHandler = autoScanHandler;
+            }
         } else {
-            processor.autoScanHandler = null;
+            if (processor) {
+                processor.autoScanHandler = null;
+            }
             autoScanHandler = null;
         }
     }
@@ -437,26 +446,26 @@
         }
     }
     async function applyProcessor() {
-        if (processor || !cropEnabled) {
-            return;
-        }
-        if (!QRCodeOnly) {
-            const showAutoScanWarning = ApplicationSettings.getBoolean('showAutoScanWarning', true);
-            if (showAutoScanWarning) {
-                if (autoScan) {
-                    const result = await confirm({
-                        message: lc('auto_scan_first_use'),
-                        okButtonText: lc('enable'),
-                        cancelButtonText: lc('disable')
-                    });
-                    if (!result && autoScan) {
-                        toggleAutoScan(false);
-                    }
-                }
-                ApplicationSettings.setBoolean('showAutoScanWarning', false);
-            }
-        }
         try {
+            if (processor || !cropEnabled) {
+                return;
+            }
+            if (!QRCodeOnly) {
+                const showAutoScanWarning = ApplicationSettings.getBoolean('showAutoScanWarning', true);
+                if (showAutoScanWarning) {
+                    if (autoScan) {
+                        const result = await confirm({
+                            message: lc('auto_scan_first_use'),
+                            okButtonText: lc('enable'),
+                            cancelButtonText: lc('disable')
+                        });
+                        if (!result && autoScan) {
+                            toggleAutoScan(false);
+                        }
+                    }
+                    ApplicationSettings.setBoolean('showAutoScanWarning', false);
+                }
+            }
             const nCropView = cropView.nativeView.nativeViewProtected;
             if (__ANDROID__) {
                 const context = Utils.android.getApplicationContext();
@@ -493,7 +502,7 @@
             applyAutoScan(autoScan);
             processor.previewResizeThreshold = previewResizeThreshold;
         } catch (error) {
-            console.error(error, error.stack);
+            showError(error);
         }
     }
 
@@ -548,18 +557,22 @@
     }
     let cameraOpened = false;
     function onCameraOpen({ object }: { object: CameraView }) {
-        DEV_LOG && console.log('onCameraOpen');
-        if (__ANDROID__) {
-            const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
-            if (currentResolution) {
-                cameraOptionsStore.update((state) => {
-                    state['aspectRatio'] = currentResolution.aspectRatio;
-                    state['pictureSize'] = currentResolution.pictureSize;
-                    return state;
-                });
+        try {
+            DEV_LOG && console.log('onCameraOpen');
+            if (__ANDROID__) {
+                const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
+                if (currentResolution) {
+                    cameraOptionsStore.update((state) => {
+                        state['aspectRatio'] = currentResolution.aspectRatio;
+                        state['pictureSize'] = currentResolution.pictureSize;
+                        return state;
+                    });
+                }
             }
+            cameraOpened = true;
+        } catch (error) {
+            showError(error);
         }
-        cameraOpened = true;
     }
 </script>
 
@@ -627,7 +640,7 @@
                 verticalAlignment="center"
                 width={60} />
             <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
-                <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
+                <canvasView bind:this={takPictureBtnCanvas} on:draw={drawTakePictureBtnBorder}> </canvasView>
                 <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} isUserInteractionEnabled={false} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
