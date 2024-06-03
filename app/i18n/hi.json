@@ -35,6 +35,7 @@
     "autoscan": "स्वत: स्कैन",
     "autoscan_settings": "स्वत: स्कैन सेटिंग्स",
     "backup_restore": "बैकअप / पुनर्स्थापना",
+    "barcore_qrcode": "बारकोड / QRकोड",
     "batch_mode": "बैच मोड",
     "biometric_auto_lock": "बायोमेट्रिक स्वत: लॉक",
     "biometric_auto_lock_desc": "सक्षम होने पर जब भी ऐप पृष्ठभूमि में जाएगा तो ऐप लॉक हो जाएगा",

@@ -185,7 +185,7 @@
     "pdf_export": "PDF-export",
     "pdf_export_settings": "PDF-exportinställningar",
     "pdf_filename": "filnamn för den exporterade pdf-filen",
-    "pdf_saved": "pdf sparad: %1$s",
+    "pdf_saved": "PDF sparad: %1$s",
     "picture_size": "bildstorlek",
     "please_choose_export_folder_again": "Vänligen välj exportmapp igen för att fixa. Frågan kommer ej att upprepas",
     "portrait": "porträtt",

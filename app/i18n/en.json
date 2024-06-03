@@ -208,7 +208,7 @@
     "pdf_import_settings": "PDF import settings",
     "pdf_one_image_per_page": "each page as an image",
     "pdf_one_image_per_pdf_image": "find PDF images and import them (all other data like text wont be imported)",
-    "pdf_saved": "pdf saved: %1$s",
+    "pdf_saved": "PDF saved: %1$s",
     "pdf_settings": "PDF settings",
     "pdf_settings_desc": "all PDF related settings",
     "picture_size": "picture size",

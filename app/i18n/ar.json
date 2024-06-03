@@ -35,6 +35,7 @@
     "autoscan": "مسح تلقائي",
     "autoscan_settings": "إعدادات المسح التلقائي",
     "backup_restore": "نسخ احتياطي / استعادة",
+    "barcore_qrcode": "الرمز الشريطي / QRCode",
     "batch_mode": "وضع الدفعة",
     "biometric_auto_lock": "القفل التلقائي البيومتري",
     "biometric_auto_lock_desc": "إذا تم تمكينه، فسيقفل التطبيق عندما ينتقل إلى الخلفية",
