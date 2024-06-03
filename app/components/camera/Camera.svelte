@@ -669,7 +669,7 @@
                 verticalAlignment="center"
                 width={60} />
             <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
-                <canvasView bind:this={takPictureBtnCanvas} on:draw={drawTakePictureBtnBorder}> </canvasView>
+                <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
                 <gridlayout backgroundColor={colorPrimary} borderRadius="50%" height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} isUserInteractionEnabled={false} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
