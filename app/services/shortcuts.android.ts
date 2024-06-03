@@ -19,9 +19,12 @@ const ADAPTIVE_BITMAP_SIZE = 108 * ADAPTIVE_BITMAP_SCALE;
 const ADAPTIVE_BITMAP_VISIBLE_SIZE = 72 * ADAPTIVE_BITMAP_SCALE;
 const ADAPTIVE_BITMAP_IMAGE_SIZE = ADAPTIVE_BITMAP_VISIBLE_SIZE + 5 * ADAPTIVE_BITMAP_SCALE;
 // const PADDING_COLOR_OVERLAY = '#00000088';
-
-const ShortcutManagerCompat = androidx.core.content.pm.ShortcutManagerCompat;
-const ShortcutInfoCompat = androidx.core.content.pm.ShortcutInfoCompat;
+let ShortcutManagerCompat: typeof androidx.core.content.pm.ShortcutManagerCompat;
+let ShortcutInfoCompat: typeof androidx.core.content.pm.ShortcutInfoCompat;
+if (CARD_APP) {
+    ShortcutManagerCompat = androidx.core.content.pm.ShortcutManagerCompat;
+    ShortcutInfoCompat = androidx.core.content.pm.ShortcutInfoCompat;
+}
 DEV_LOG && console.log('ShortcutManagerCompat', ShortcutManagerCompat);
 export default class ShortcutsService {
     imagesToRecycle = [];
