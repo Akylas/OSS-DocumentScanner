@@ -8,7 +8,7 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AndroidActivityBackPressedEventData, Application, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
-    import { OCRData, QRCodeData } from 'plugin-nativeprocessor';
+    import { OCRData, QRCodeData, Quad } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -56,12 +56,6 @@
     let page: NativeViewElementNode<Page>;
 
     const items: ObservableArray<OCRPage> = document.getObservablePages();
-    let recrop = false;
-    // let editingImage: ImageSource;
-    let quad;
-    let quads;
-    $: quads = quad ? [quad] : [];
-    let quadChanged = false;
     let currentIndex = startPageIndex;
     let currentItem: OCRPage;
     let currentItemOCRData: OCRData;
@@ -263,31 +257,6 @@
     async function shareItem(item: OCRPage) {
         try {
             await share({ file: item.imagePath });
-        } catch (error) {
-            showError(error);
-        }
-    }
-    let cropItem: ImportImageData = {};
-    async function cropEdit() {
-        //TODO: recrop into modal window
-        try {
-            const item = items.getItem(currentIndex);
-            if (!item.sourceImageWidth) {
-                const size = getImageSize(item.sourceImagePath);
-                item.sourceImageWidth = size.width;
-                item.sourceImageHeight = size.height;
-                item.sourceImageRotation = 0;
-            }
-            cropItem = {
-                imagePath: item.sourceImagePath,
-                imageWidth: item.sourceImageWidth,
-                imageHeight: item.sourceImageHeight,
-                imageRotation: item.sourceImageRotation,
-                undos: [],
-                redos: []
-            };
-            quad = JSON.parse(JSON.stringify(item.crop));
-            recrop = true;
         } catch (error) {
             showError(error);
         }
@@ -596,20 +565,38 @@
         collectionView?.nativeView?.refreshVisibleItems();
     }
 
-    async function onRecropTapFinish(cancel = false) {
+    let cropItem: ImportImageData = {};
+    async function cropEdit() {
+        //TODO: recrop into modal window
         try {
-            if (recrop) {
-                showLoading();
-                DEV_LOG && console.log('onRecropTapFinish', cancel, quadChanged, quad);
-                // let s see if quads changed and update image
-                if (quadChanged && !cancel) {
-                    await document.updatePageCrop(currentIndex, quad);
-                    // updateImageUris();
-                    quadChanged = false;
-                    quads = [];
+            const item = items.getItem(currentIndex);
+            if (!item.sourceImageWidth) {
+                const size = getImageSize(item.sourceImagePath);
+                item.sourceImageWidth = size.width;
+                item.sourceImageHeight = size.height;
+                item.sourceImageRotation = 0;
+            }
+            cropItem = {
+                imagePath: item.sourceImagePath,
+                imageWidth: item.sourceImageWidth,
+                imageHeight: item.sourceImageHeight,
+                imageRotation: item.sourceImageRotation,
+                undos: [],
+                redos: []
+            };
+            const quad = JSON.parse(JSON.stringify(item.crop));
+            const component = (await import('~/components/edit/CropEditView.svelte')).default;
+            const result: Quad = await showModal({
+                page: component,
+                fullscreen: true,
+                props: {
+                    cropItem,
+                    quad
                 }
-                cropItem = {};
-                recrop = false;
+            });
+            if (result) {
+                showLoading();
+                await document.updatePageCrop(currentIndex, result);
             }
         } catch (error) {
             showError(error);
@@ -617,26 +604,13 @@
             hideLoading();
         }
     }
-    function resetCrop() {
-        const shouldInverse = cropItem.imageRotation % 180 !== 0;
-        const imageWidth = shouldInverse ? cropItem.imageHeight : cropItem.imageWidth;
-        const imageHeight = shouldInverse ? cropItem.imageWidth : cropItem.imageHeight;
-        quad = [
-            [0, 0],
-            [imageWidth - 0, 0],
-            [imageWidth - 0, imageHeight - 0],
-            [0, imageHeight - 0]
-        ];
-    }
     function refreshPager() {
         pager?.nativeView?.refresh();
     }
     onThemeChanged(refreshPager);
 
     function onGoBack() {
-        if (recrop) {
-            onRecropTapFinish(true);
-        } else if (editingTitle) {
+        if (editingTitle) {
             editingTitle = false;
         } else {
             const item = items.getItem(currentIndex);
@@ -730,9 +704,6 @@
                 <mdbutton class="actionBarButton" text="mdi-qrcode-scan" variant="text" on:tap={detectQRCode} />
             {/if}
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
-            <!-- <checkbox checked={$enhanced} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => ($enhanced = e.value)} /> -->
-            <!-- <checkbox checked={$whitepaper} marginLeft={4} text={lc('whitepaper')} verticalAlignment="middle" on:checkedChange={(e) => ($whitepaper = e.value)} /> -->
-            <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
         </stacklayout>
         <collectionview bind:this={collectionView} id="filters" colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
@@ -761,12 +732,6 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <gridlayout backgroundColor="black" row={1} rowSpan={4} rows="*,auto,auto" visibility={recrop ? 'visible' : 'hidden'}>
-            <CropView {...cropItem ? cropItem : null} bind:quadChanged bind:quads />
-            <label color="white" fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
-            <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
-            <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={2} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
-        </gridlayout>
         <CActionBar {onGoBack} onTitleTap={() => (editingTitle = true)} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />

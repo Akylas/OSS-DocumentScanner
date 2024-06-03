@@ -281,7 +281,7 @@
         quadChanged = undos.length > 0;
         canvasView.nativeView.invalidate();
     }
-    function applyUndo() {
+    export function applyUndo() {
         try {
             if (undos.length) {
                 const lastUndo = undos.pop();
@@ -290,13 +290,14 @@
                     mappedQuads: JSON.stringify(mappedQuads)
                 });
                 updateUndoRedo(lastUndo);
+                dispatch('undosChanged');
             }
         } catch (error) {
             showError(error);
         }
     }
 
-    function applyRedo() {
+    export function applyRedo() {
         try {
             if (redos.length) {
                 const lastRedo = redos.pop();
@@ -305,6 +306,7 @@
                     mappedQuads: JSON.stringify(mappedQuads)
                 });
                 updateUndoRedo(lastRedo);
+                dispatch('undosChanged');
             }
         } catch (error) {
             showError(error);

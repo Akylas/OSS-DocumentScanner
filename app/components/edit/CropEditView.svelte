@@ -1,126 +1,63 @@
 <script lang="ts">
-    import { lc } from '@nativescript-community/l';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img } from '@nativescript-community/ui-image';
-    import { ApplicationSettings, ImageSource, View, querySelectorAll } from '@nativescript/core';
-    import { cropDocument } from 'plugin-nativeprocessor';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { Pager } from '@nativescript-community/ui-pager';
+    import { AndroidActivityBackPressedEventData, Application, GridLayout, Page, confirm } from '@nativescript/core';
+    import { closeModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
-    import RotableImageView from '~/components/common/RotableImageView.svelte';
-    import { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/ui';
-    import { recycleImages } from '~/utils/images';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, IMG_COMPRESS, IMG_FORMAT } from '~/utils/constants';
+    import { lc } from '~/helpers/locale';
+    import { ImportImageData } from '~/models/OCRDocument';
+    import { windowInset } from '~/variables';
 
-    let recrop = false;
-    let topView: NativeViewElementNode<View>;
-    let collectionView: NativeViewElementNode<CollectionView>;
-    let rotableImageView: RotableImageView;
+    let page: NativeViewElementNode<Page>;
+    let pager: NativeViewElementNode<Pager>;
+    let cropView: CropView;
 
-    const dispatch = createEventDispatcher<{
-        finished: null;
-        croppedImageChanged: null;
-    }>();
-
-    export let croppedImagePath: string;
-    export let colorType: ColorMatricesType = null;
-    export let croppedImageRotation: number = 0;
-    export let editingImage: ImageSource;
+    export let cropItem: ImportImageData;
     export let quad;
+    export let quadChanged = false;
     let quads;
-    $: quads = [quad];
-    let quadChanged = false;
-
-    let item;
-    $: {
-        item = {
-            image: croppedImagePath,
-            rotation: croppedImageRotation,
-            colorType
-        };
-        refreshCollectionView();
+    $: quads = quad ? [quad] : [];
+    // export let editingImage;
+    // export let quads;
+    // export let qrcode: QRCodeData = null;
+    function onRecropTapFinish() {
+        closeModal(quadChanged ? quads[0] : undefined);
     }
 
-    async function onTapFinish() {
-        if (recrop) {
-            // let s see if quads changed and update image
-            if (quadChanged) {
-                const images = await cropDocument(editingImage, [quad]);
-                const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-                const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
-                await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, compressFormat, compressQuality);
-                recycleImages(images);
-
-                //we remove from cache so that everything gets updated
-                // if (__IOS__) {
-                //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
-                //     getImagePipeline().clearCaches();
-                // } else {
-                //     getImagePipeline().evictFromCache(croppedImagePath);
-                // }
-                croppedImagePath = croppedImagePath;
-                const views = querySelectorAll(topView.nativeView, 'imageRotation');
-                views.forEach((view) => (view as Img).updateImageUri());
-                refreshCollectionView();
-                dispatch('croppedImageChanged');
-                quadChanged = false;
-            }
-            recrop = false;
-        } else {
-            dispatch('finished');
-        }
+    function resetCrop() {
+        const shouldInverse = cropItem.imageRotation % 180 !== 0;
+        const imageWidth = shouldInverse ? cropItem.imageHeight : cropItem.imageWidth;
+        const imageHeight = shouldInverse ? cropItem.imageWidth : cropItem.imageHeight;
+        quad = [
+            [0, 0],
+            [imageWidth - 0, 0],
+            [imageWidth - 0, imageHeight - 0],
+            [0, imageHeight - 0]
+        ];
     }
-
-    async function applyRotation(newRotation: number) {
-        try {
-            await rotableImageView.rotateToRotation(newRotation, true);
-        } catch (error) {
-            console.error(error, error.stack);
-        }
-        croppedImageRotation = item.rotation = newRotation;
-        refreshCollectionView();
+    async function onUndo() {
+        cropView?.applyUndo();
     }
-
-    function refreshCollectionView() {
-        collectionView?.nativeView?.refreshVisibleItems();
+    async function onRedo() {
+        cropView?.applyRedo();
     }
-
-    async function rotateImageLeft() {
-        return applyRotation((item.rotation ?? 0) - 90);
+    async function onUndosChanged() {
+        //trigger update
+        cropItem = cropItem;
     }
-    async function rotateImageRight() {
-        return applyRotation((item.rotation ?? 0) + 90);
-    }
-
-    async function applyImageTransform(i) {
-        colorType = item.colorType = i.colorType;
-    }
-
-    const filters = ColorMatricesTypes.map((k) => ({
-        id: k,
-        text: lc(k.id),
-        colorType: k
-    }));
 </script>
 
-<gridlayout bind:this={topView} backgroundColor="black" rows="*,auto,auto" {...$$restProps}>
-    <RotableImageView bind:this={rotableImageView} {item} zoomable={true} />
-    <CropView {editingImage} rowSpan={2} visibility={recrop ? 'visible' : 'hidden'} bind:quadChanged bind:quads />
-    <gridlayout row="1" rows="auto,auto" visibility={recrop ? 'collapse' : 'visible'}>
-        <stacklayout orientation="horizontal" verticalAlignment="top">
-            <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => (recrop = true)} />
-            <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
-            <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
-        </stacklayout>
-        <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={1}>
-            <Template let:item>
-                <gridlayout padding={4} rows="*,24" on:tap={applyImageTransform(item)}>
-                    <image colorMatrix={getColorMatrix(item.colorType)} imageRotation={croppedImageRotation} src={croppedImagePath} />
-                    <label color="white" fontSize={10} row={1} text={item.text} textAlignment="center" />
-                </gridlayout>
-            </Template>
-        </collectionview>
+<page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
+    <gridlayout backgroundColor="black" rows="auto,*,auto" android:paddingBottom={$windowInset.bottom}>
+        <CropView bind:this={cropView} {...cropItem ? cropItem : null} row={1} bind:quadChanged bind:quads on:undosChanged={onUndosChanged} />
+        <label color="white" fontSize={13} marginBottom={10} row={1} text={lc('crop_edit_doc')} textAlignment="center" />
+        <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" row={2} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
+        <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={2} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null}>
+            <mdbutton class="actionBarButton" defaultVisualState="black" isEnabled={cropItem?.undos.length > 0} text="mdi-undo" variant="text" on:tap={onUndo} />
+            <mdbutton class="actionBarButton" defaultVisualState="black" isEnabled={cropItem?.redos.length > 0} text="mdi-redo" variant="text" on:tap={onRedo} />
+        </CActionBar>
     </gridlayout>
-    <mdbutton class="fab" elevation={0} horizontalAlignment="center" row={2} text="mdi-check" variant="text" verticalAlignment="bottom" on:tap={onTapFinish} />
-</gridlayout>
+</page>
