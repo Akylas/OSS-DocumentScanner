@@ -44,7 +44,7 @@
         "@nativescript-community/sqlite": "3.5.0",
         "@nativescript-community/systemui": "1.1.22",
         "@nativescript-community/text": "1.6.4",
-        "@nativescript-community/ui-cameraview": "0.3.3",
+        "@nativescript-community/ui-cameraview": "0.3.4",
         "@nativescript-community/ui-canvas": "4.6.24",
         "@nativescript-community/ui-canvaslabel": "1.2.27",
         "@nativescript-community/ui-checkbox": "^2.0.12",

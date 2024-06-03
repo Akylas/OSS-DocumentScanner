@@ -3,7 +3,7 @@
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
+    import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce } from '@nativescript/core/utils';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
@@ -43,6 +43,7 @@
 
     let page: NativeViewElementNode<Page>;
     let cameraView: NativeViewElementNode<CameraView>;
+    let focusRing: NativeViewElementNode<AbsoluteLayout>;
     let takPictureBtnCanvas: NativeViewElementNode<CanvasView>;
     let cropView: NativeViewElementNode<CropView>;
 
@@ -391,11 +392,33 @@
         smallImageRotation = rotation;
     }
     $: canSaveDoc = nbPages > 0;
-
+    function animateFocusRing(x: number, y: number) {
+        const view = focusRing?.nativeView;
+        view._batchUpdate(() => {
+            view.left = x - 35;
+            view.top = y - 35;
+            view.opacity = 1;
+            view.scaleX = 1;
+            view.scaleY = 1;
+        });
+        view.animate({
+            delay: 500,
+            duration: 300,
+            opacity: 0,
+            scale: {
+                x: 0.7,
+                y: 0.7
+            }
+        });
+    }
     function focusCamera(e) {
         try {
-            DEV_LOG && console.log('focusCamera', e.getX(), e.getY());
-            cameraView.nativeElement.focusAtPoint(e.getX(), e.getY());
+            const x = e.getX();
+            const y = e.getY();
+            DEV_LOG && console.log('focusCamera', x, y);
+            animateFocusRing(x, y);
+            const view = cameraView.nativeView;
+            view.focusAtPoint(x,y);
         } catch (error) {
             showError(error);
         }
@@ -578,24 +601,29 @@
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
-        <cameraView
-            bind:this={cameraView}
-            {aspectRatio}
-            autoFocus={true}
-            captureMode={1}
-            enablePinchZoom={true}
-            flashMode={_actualFlashMode}
-            ios:iosCaptureMode="videoPhotoWithoutAudio"
-            jpegQuality={compressQuality}
-            {pictureSize}
-            rowSpan={viewsize === 'full' ? 4 : 2}
-            {stretch}
-            {zoom}
-            on:cameraOpen={onCameraOpen}
-            on:loaded={applyProcessor}
-            on:zoom={onZoom}
-            on:tap={focusCamera} />
-        <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} isUserInteractionEnabled={false} rowSpan={viewsize === 'full' ? 4 : 2} {stretch} strokeWidth={3} />
+        <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2}>
+            <cameraView
+                bind:this={cameraView}
+                {aspectRatio}
+                autoFocus={true}
+                captureMode={1}
+                enablePinchZoom={true}
+                flashMode={_actualFlashMode}
+                ios:iosCaptureMode="videoPhotoWithoutAudio"
+                height="100%"
+                jpegQuality={compressQuality}
+                {pictureSize}
+                {stretch}
+                width="100%"
+                {zoom}
+                on:cameraOpen={onCameraOpen}
+                on:loaded={applyProcessor}
+                on:zoom={onZoom}
+                on:tap={focusCamera} />
+            <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} height="100%" isUserInteractionEnabled={false} {stretch} strokeWidth={3} width="100%" />
+            <absoluteLayout bind:this={focusRing} borderColor="white" borderRadius="50%" borderWidth={1.5} height={70} opacity={0} width={70} />
+        </absolutelayout>
+
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} {onGoBack}>
             {#if startOnCam}
@@ -620,6 +648,7 @@
                 horizontalAlignment="left"
                 isSelected={batchMode}
                 marginLeft={16}
+                marginTop={20}
                 selectedColor={colorPrimary}
                 subtitle={lc('batch_mode')}
                 text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
