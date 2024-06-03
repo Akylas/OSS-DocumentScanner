@@ -1,0 +1,14 @@
+### Bug fixes
+- camera settings not being translated
+- Translated using Weblate (German)
+- Translated using Weblate (Spanish)
+- Translated using Weblate (Arabic)
+- rewrote qrcode handling and fixed color palette
+- Translated using Weblate (Italian)
+- Translated using Weblate (Turkish)
+- Translated using Weblate (Hindi)
+- Translated using Weblate (Punjabi)
+- Translated using Weblate (Japanese)
+- Translated using Weblate (Galician)
+- Translated using Weblate (French)
+- Translated using Weblate (En
