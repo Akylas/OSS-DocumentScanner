@@ -1,0 +1,41 @@
+name: 'build_android'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.10.0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3'
+      
+      - uses: maxim-lobanov/setup-android-tools@v1
+        with:
+          packages: |
+            ndk;26.1.10909125
+            platforms;android-34
+          cache: true
+
+      - name: Install NativeScript
+        run: |
+          python3 -m pip install --upgrade pip six
+          npm i -g nativescript --ignore-scripts --legacy-peer-deps
+          ns usage-reporting disable
+          ns error-reporting disable
+
+
