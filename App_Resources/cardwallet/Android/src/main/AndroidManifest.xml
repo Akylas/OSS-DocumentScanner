@@ -42,6 +42,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts"
+                   android:resource="@xml/shortcuts" /> 
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <!-- <activity android:name="com.nativescript.preferences.NativescriptSettingsActivity"

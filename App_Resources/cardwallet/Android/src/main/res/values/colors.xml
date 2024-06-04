@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="shortcut_background">#F5F5F5</color>
     <color name="seed">#DC3D5D</color>
     <color name="md_theme_light_primary">#B61E44</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>

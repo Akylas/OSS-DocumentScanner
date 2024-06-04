@@ -478,6 +478,12 @@
                                 uris.push(imageUris.get(index).toString());
                             }
                         }
+                        break;
+                    case 'com.akylas.documentscanner.OPEN_CAMERA':
+                        setTimeout(() => {
+                            onStartCam();
+                        }, 0);
+                        break;
                 }
                 DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 if (uris.length) {
