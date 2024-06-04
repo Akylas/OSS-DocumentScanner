@@ -347,7 +347,10 @@
         if (__ANDROID__) {
             DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
             if (Application.servicesStarted !== true) {
-                return Application.once('servicesStarted', () => innerOnAndroidIntent(event));
+                return Application.once('servicesStarted', () => {
+                    DEV_LOG && console.log('servicesStarted for intent');
+                    innerOnAndroidIntent(event);
+                });
             }
             if (securityService.validating) {
                 return securityService.once('validated', () => innerOnAndroidIntent(event));
@@ -370,6 +373,12 @@
                                 uris.push(imageUris.get(index).toString());
                             }
                         }
+                        break;
+                    case 'com.akylas.documentscanner.OPEN_CAMERA':
+                        setTimeout(() => {
+                            onStartCam();
+                        }, 0);
+                        break;
                 }
                 DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 if (uris.length) {

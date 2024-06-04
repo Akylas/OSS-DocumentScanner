@@ -44,6 +44,10 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="application/pdf" />
             </intent-filter>
+
+            <meta-data android:name="android.app.shortcuts"
+                   android:resource="@xml/shortcuts" /> 
+
         </activity>
         <!-- <activity android:name=".CameraActivity" android:theme="@style/AppTheme"
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"

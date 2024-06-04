@@ -1,0 +1,11 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+      android:shortcutId="compose"
+      android:icon="@mipmap/shortcut_camera"
+      android:shortcutShortLabel="@string/camera">
+      <intent
+        android:action="com.akylas.documentscanner.OPEN_CAMERA"
+        android:targetClass="com.akylas.documentscanner.MainActivity" 
+        android:targetPackage="com.akylas.documentscanner" />
+    </shortcut>
+  </shortcuts>
