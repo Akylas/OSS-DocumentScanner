@@ -6,7 +6,9 @@
 #import <opencv2/opencv.hpp>
 #import <DocumentDetector.h>
 #import <DocumentOCR.h>
+#ifdef WITH_QRCODE
 #import <QRCode.h>
+#endif
 
 @implementation OpencvDocumentProcessDelegate
 
@@ -19,7 +21,7 @@
   self.detectQRCode = false;
   return [self init];
 }
-- (instancetype)initWithCropView:(NSCropView*) view onQRCode(OnQRCode*)onQRCode {
+- (instancetype)initWithCropView:(NSCropView*) view onQRCode:(id<OnQRCode>)onQRCode {
   self.onQRCode = onQRCode;
   return [self initWithCropView:view];
 }
@@ -524,10 +526,11 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 // PRAGMA: detectQRCode
 +(void)detectQRCodeSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+#ifdef WITH_QRCODE
   @try {
     cv::Mat srcBitmapMat;
     UIImageToMat(image, srcBitmapMat);
-    std::string result = readQRCode(srcBitmapMat, 0, options_);
+    std::string result = readQRCode(srcBitmapMat, 0, std::string([options UTF8String]));
     dispatch_async(dispatch_get_main_queue(), ^(void) {
       [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
       
@@ -544,6 +547,9 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       
     });
   }
+#else
+  [delegate onComplete:nil error:nil];
+#endif
 }
 
 +(void)detectQRCode:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
@@ -588,7 +594,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       break;
   }
 
-  NSMutableArray* points = NSMutableArray.alloc().init();
+  NSMutableArray* points = [[NSMutableArray alloc] init];
   if (self.detectDocuments) {
     NSArray* result = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0 scale:1.0 options:nil];
     if (result != nil) {
@@ -598,8 +604,9 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       [((AutoScanHandler*)self.innerAutoScanHandler) processWithPoints: points];
     }
   }
+#ifdef WITH_QRCODE
   if (self.detectQRCode) {
-      std::string qrcodeResult qrcodeResult = readQRCode(mat, 0, self.detectQRCodeOptions);
+      std::string qrcodeResult = readQRCode(mat, 0, self.detectQRCodeOptions);
       NSError *error = nil;
       id qrcode = [NSJSONSerialization JSONObjectWithData:[[NSString stringWithUTF8String:result.c_str()] UTF8String] options:0 error:&error];
       if (error) {
@@ -613,9 +620,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       }
       
   }
-  
-  
-  
+#endif
   self.cropView.videoGravity = cameraView.videoGravity;
   self.cropView.imageSize = CGSizeMake(mat.size().width, mat.size().height);
   self.cropView.quads = points;
