@@ -127,6 +127,7 @@
                         maxLines={2}
                         paddingTop={5}
                         row={1}
+                        selectable={true}
                         sharedTransitionTag={item.labelSharedTransitionTag}
                         text={item.subtitle}
                         textAlignment="center"
@@ -144,6 +145,7 @@
                         maxLines={2}
                         paddingTop={5}
                         row={1}
+                        selectable={true}
                         sharedTransitionTag={item.labelSharedTransitionTag}
                         text={item.subtitle}
                         textAlignment="center"

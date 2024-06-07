@@ -801,7 +801,7 @@
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
                         <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
-                        <label fontSize={30} fontWeight="bold" maxLines={2} row={1} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
+                        <label fontSize={30} fontWeight="bold" maxLines={2} row={1} selectable={true} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
                     </gridlayout>
                 </Template>
             </pager>
