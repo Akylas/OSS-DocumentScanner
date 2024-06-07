@@ -181,8 +181,8 @@ export class SyncService extends Observable {
         // }
     }
     async importFolderFromWebdav(remotePath: string, folder: Folder, ignores?: string[]) {
-        console.log('importFolderFromWebdav', remotePath, folder.path, ignores);
         const remoteDocuments = (await this.getRemoteFolderDirectories(remotePath)) as FileStat[];
+        DEV_LOG && console.log('importFolderFromWebdav', remotePath, folder.path, ignores);
         for (let index = 0; index < remoteDocuments.length; index++) {
             const remoteDocument = remoteDocuments[index];
             if (ignores?.indexOf(remoteDocument.basename) >= 0) {
@@ -233,7 +233,7 @@ export class SyncService extends Observable {
             pageIds = pages.map((p) => p.id);
             await this.importFolderFromWebdav(data.filename, docDataFolder, ['data.json']);
             await doc.addPages(pages);
-            await doc.save({}, true, false);
+            await doc.save({ _synced: 1 }, true, false);
             TEST_LOG && console.log('importFolderFromWebdav done');
             documentsService.notify({ eventName: 'documentAdded', object: documentsService, doc });
         } catch (error) {

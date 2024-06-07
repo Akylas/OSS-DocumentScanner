@@ -150,8 +150,11 @@ export class OCRDocument extends Observable implements Document {
                 attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + compressFormat);
                 DEV_LOG && console.log('add page', pageId, attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
                 if (imagePath) {
-                    const file = File.fromPath(imagePath);
-                    await file.copy(attributes.imagePath);
+                    // if the same nothing to do, must be while syncing
+                    if (imagePath !== attributes.imagePath) {
+                        const file = File.fromPath(imagePath);
+                        await file.copy(attributes.imagePath);
+                    }
                 } else if (image) {
                     const imageSource = new ImageSource(image);
                     await imageSource.saveToFileAsync(attributes.imagePath, compressFormat, compressQuality);
@@ -177,10 +180,15 @@ export class OCRDocument extends Observable implements Document {
                         baseName += '.' + compressFormat;
                     }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
-                    const file = File.fromPath(sourceImagePath);
-                    await file.copy(actualSourceImagePath);
-                    DEV_LOG && console.log('add page source image copied', actualSourceImagePath, File.exists(actualSourceImagePath), File.fromPath(actualSourceImagePath).size);
-                    attributes.sourceImagePath = actualSourceImagePath;
+                    // if the same nothing to do, must be while syncing
+                    if (actualSourceImagePath !== sourceImagePath) {
+                        const file = File.fromPath(sourceImagePath);
+                        await file.copy(actualSourceImagePath);
+                        DEV_LOG && console.log('add page source image copied', actualSourceImagePath, File.exists(actualSourceImagePath), File.fromPath(actualSourceImagePath).size);
+                        attributes.sourceImagePath = actualSourceImagePath;
+                    } else {
+                        attributes.sourceImagePath = actualSourceImagePath;
+                    }
                 }
                 if (id) {
                     try {
