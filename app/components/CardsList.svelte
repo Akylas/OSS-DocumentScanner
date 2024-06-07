@@ -738,9 +738,13 @@
                 ],
                 anchor: event.object,
                 onClose: (item) => {
+                    const changed = itemTemplateSelector(viewStyle) !== itemTemplateSelector(item.id);
+                    DEV_LOG && console.log('selectViewStyle', viewStyle, item.id, itemTemplateSelector(viewStyle), itemTemplateSelector(item.id), changed);
                     viewStyle = item.id;
-                    DEV_LOG && console.log('selectViewStyle', viewStyle);
                     ApplicationSettings.setString('documents_list_view_style', viewStyle);
+                    if (changed) {
+                        collectionView?.nativeView.refresh();
+                    }
                 }
             });
         } catch (error) {
@@ -777,7 +781,7 @@
                 return '0 0 0 0';
         }
     }
-    function itemTemplateSelector(item) {
+    function itemTemplateSelector(viewStyle, item?) {
         switch (viewStyle) {
             case 'columns':
             case 'list':
@@ -860,7 +864,7 @@
             id="list"
             colWidth={getColWidth(viewStyle)}
             itemOverlap={getItemOverlap(viewStyle)}
-            {itemTemplateSelector}
+            itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={100}
             row={1}
