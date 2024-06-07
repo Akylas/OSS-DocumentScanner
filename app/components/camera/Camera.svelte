@@ -418,7 +418,7 @@
             DEV_LOG && console.log('focusCamera', x, y);
             animateFocusRing(x, y);
             const view = cameraView.nativeView;
-            view.focusAtPoint(x,y);
+            view.focusAtPoint(x, y);
         } catch (error) {
             showError(error);
         }

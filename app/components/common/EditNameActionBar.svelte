@@ -51,7 +51,7 @@
         backgroundColor="transparent"
         col={1}
         defaultVisualState={labelsDefaultVisualState}
-        padding="4 0 4 0"
+        android:padding="4 0 4 0"
         text={document.name}
         verticalTextAlignment="center"
         on:layoutChanged={onTextFieldFocus} />

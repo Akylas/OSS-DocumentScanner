@@ -4,13 +4,9 @@
 #import <Webkit/Webkit.h>
 #import "nsdocumentscanner-Swift.h"
 
-@protocol OnQRCode
-- (void)onQRCodes:(NSString* data);
-@end
-
 @interface OpencvDocumentProcessDelegate : NSObject <ProcessRawVideoSampleBufferDelegate>
 @property (nullable, retain, nonatomic) NSCropView *cropView;
-@property (nullable, retain, nonatomic) OnQRCode *onQRCode;
+@property (nullable, retain, nonatomic) id<OnQRCode> onQRCode;
 @property (nullable, retain, nonatomic) AutoScanHandler *innerAutoScanHandler;
 @property (nullable, retain, nonatomic) NSObject *autoScanHandler;
 @property (nonatomic, assign) NSInteger  previewResizeThreshold;
@@ -19,7 +15,7 @@
 @property (nonatomic, assign) NSString*  detectQRCodeOptions;
 
 - (instancetype)initWithCropView:(NSCropView*) view;
-- (instancetype)initWithCropView:(NSCropView*) view onQRCode(OnQRCode*)onQRCode;
+- (instancetype)initWithCropView:(NSCropView*) view onQRCode:(id<OnQRCode>)onQRCode;
 - (void) setAutoScanHandler:(NSObject *)value;
 
 
