@@ -206,6 +206,7 @@
             if (didAdd) {
                 nbPages = pagesToAdd.length;
                 const lastPage = pagesToAdd[pagesToAdd.length - 1];
+                DEV_LOG && console.log('setCurrentImage', JSON.stringify(lastPage));
                 setCurrentImage(lastPage.imagePath, lastPage.rotation, true);
                 if (!batchMode) {
                     await saveCurrentDocument();
