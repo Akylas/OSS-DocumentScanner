@@ -350,9 +350,11 @@
                 clearImages();
                 zoomImagePath = image;
                 zoomImage = await loadImage(imagePath, { sourceWidth: width, sourceHeight: height, resizeThreshold: ZOOM_IMAGE_MAX_SIZE });
-                zoomImageScale = width / zoomImage.width;
-                zoomImageShader = new BitmapShader(zoomImage, TileMode.CLAMP, TileMode.CLAMP);
-                shaderPaint.setShader(zoomImageShader);
+                if (zoomImage?.android) {
+                    zoomImageScale = width / zoomImage.width;
+                    zoomImageShader = new BitmapShader(zoomImage, TileMode.CLAMP, TileMode.CLAMP);
+                    shaderPaint.setShader(zoomImageShader);
+                }
             }
             const w = Utils.layout.toDeviceIndependentPixels(nCanvas.getMeasuredWidth()) - 2 * padding;
             const h = Utils.layout.toDeviceIndependentPixels(nCanvas.getMeasuredHeight()) - 2 * padding;
