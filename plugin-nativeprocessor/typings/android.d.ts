@@ -761,6 +761,7 @@ declare namespace com {
 						public onResult(param0: java.lang.Exception, param1: any): void;
 					}
 					export class Companion {
+						static printPDF(context: android.content.Context, src: string, name: string);
 						static compressPDF(src: string, dst: string, jpegQuality: number);
 						static generatePDF(context: android.content.Context, destFolder: string, fileName: string, options: string);
 						static generatePDFASync(context: android.content.Context, destFolder: string, fileName: string, options: string, callback: FunctionCallback);
