@@ -426,7 +426,14 @@
 
     async function editBrightnessContrast(event) {
         try {
-            const current = items.getItem(currentIndex);
+            function getCurrentBrightness() {
+                const current = items.getItem(currentIndex);
+                return typeof current.brightness === 'string' ? null : current.brightness;
+            }
+            function getCurrentContrast() {
+                const current = items.getItem(currentIndex);
+                return typeof current.contrast === 'string' ? null : current.contrast;
+            }
             await showSlidersPopover({
                 debounceDuration: 0,
                 anchor: event.object,
@@ -441,9 +448,9 @@
                         step: __IOS__ ? 1 : undefined,
                         // value: 0,
                         formatter: (v) => (v / 100).toFixed(),
-                        value: Math.round(Math.max(-1, Math.min(current.brightness ?? 0, 5)) * 100),
+                        value: Math.round(Math.max(-1, Math.min(getCurrentBrightness() ?? 0, 5)) * 100),
                         onChange: debounce((value) => {
-                            applyBrightnessContrast(value / 100, current.contrast);
+                            applyBrightnessContrast(value / 100, getCurrentContrast());
                         }, 10)
                     },
                     {
@@ -455,9 +462,9 @@
                         formatter: (v) => (v / 100).toFixed(),
                         step: __IOS__ ? 1 : undefined,
                         // value: 10,
-                        value: Math.round(Math.max(0, Math.min(current.contrast ?? 1, 4)) * 100),
+                        value: Math.round(Math.max(0, Math.min(getCurrentContrast() ?? 1, 4)) * 100),
                         onChange: debounce((value) => {
-                            applyBrightnessContrast(current.brightness, value / 100);
+                            applyBrightnessContrast(getCurrentBrightness(), value / 100);
                         }, 10)
                     }
                 ]
