@@ -357,3 +357,8 @@ export async function importPdfToTempImages(pdfPath: string, options?: Partial<P
         );
     });
 }
+
+export function printPDF(filePath: string, name: string) {
+    const context = Utils.android.getCurrentActivity();
+    com.akylas.documentscanner.utils.PDFUtils.Companion.printPDF(context, filePath, name);
+}

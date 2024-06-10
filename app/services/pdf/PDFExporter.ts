@@ -29,7 +29,12 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
             //         page.colorMatrix = getColorMatrix(page.colorType);
             //     }
             // });
-            const options = JSON.stringify({ ...pdfCanvas.options, text_scale: Screen.mainScreen.scale * 1.4, pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })) });
+            const options = JSON.stringify({
+                ...pdfCanvas.options,
+                // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
+                text_scale: Screen.mainScreen.scale * 1.4,
+                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
+            });
             DEV_LOG && console.log('exportPDFAsync', folder, filename, compress, options);
             com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(
                 Utils.android.getApplicationContext(),

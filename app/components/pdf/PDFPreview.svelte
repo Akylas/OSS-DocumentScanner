@@ -6,7 +6,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { ApplicationSettings, File, ObservableArray, Screen, View, knownFolders } from '@nativescript/core';
+    import { ApplicationSettings, File, ObservableArray, Screen, Utils, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -24,6 +24,7 @@
     import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
     import { getPageColorMatrix } from '~/utils/matrix';
+    import { printPDF } from 'plugin-nativeprocessor';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -108,6 +109,17 @@
             showError(error);
         }
     }
+    async function onPrintPDF() {
+        try {
+            showLoading(l('exporting'));
+            const filePath = await exportPDFAsync({ pages, document });
+            hideLoading();
+            DEV_LOG && console.log('print pdf', filePath);
+            printPDF(filePath, document?.name || 'PDF');
+        } catch (error) {
+            showError(error);
+        }
+    }
 
     async function selectOption(option: string, event, valueTransformer?, fullRefresh = true) {
         try {
@@ -181,7 +193,7 @@
             return result;
         }
         Object.assign(result, {
-            margin: paper_size === 'full' ? 0 : page_padding,
+            margin: paper_size === 'full' ? 0 : Utils.layout.toDeviceIndependentPixels(page_padding),
             src: page.imagePath,
             imageRotation: page.rotation,
             colorMatrix: getPageColorMatrix(page, color === 'black_white' ? 'grayscale' : undefined)
@@ -262,7 +274,7 @@
 
 <!-- we use a frame to be able to navigate to settings from the modal-->
 <frame id="modal-frame">
-    <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all">
+    <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all" statusBarColor={colorSurface}>
         <gridlayout rows="auto,*">
             <drawer bind:this={drawer} row={1}>
                 <gridlayout rows="auto,*,auto" prop:mainContent android:paddingBottom={$windowInset.bottom}>
@@ -308,7 +320,7 @@
                     </pager>
                     <!-- <checkbox checked={draw_ocr_overlay} margin={14} row={1} text={lc('draw_ocr_overlay')} verticalAlignment="top" on:checkedChange={(e) => updateOption('draw_ocr_overlay', e.value)} /> -->
                     <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
-                    <gridlayout backgroundColor={colorSurfaceContainerHigh} columns="*,*" row={2}>
+                    <gridlayout columns="*,*" row={2}>
                         <mdbutton text={lc('export')} on:tap={exportPDF} />
                         <mdbutton col={1} text={lc('open')} on:tap={openPDF} />
                     </gridlayout>
@@ -384,7 +396,7 @@
                             verticalAlignment="center"
                             on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
                             ios:margin={14} />
-                        <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} on:tap={tapForCheckBox} />
+                        <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} verticalAlignment="center" on:tap={tapForCheckBox} />
                     </stacklayout>
 
                     <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} text="mdi-chevron-up" textAlignment="center" width="100%" on:tap={() => drawer?.close()} />
@@ -392,6 +404,7 @@
             </drawer>
 
             <CActionBar modalWindow={true} title={lc('preview')}>
+                <mdbutton class="actionBarButton" text="mdi-printer" variant="text" on:tap={onPrintPDF} />
                 <mdbutton class="actionBarButton" text="mdi-cog" variant="text" on:tap={showPDFSettings} />
             </CActionBar>
         </gridlayout>

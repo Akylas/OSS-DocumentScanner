@@ -8,7 +8,17 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.Bundle
+import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
+import android.print.PageRange
+import android.print.PrintDocumentAdapter
+import android.print.PrintDocumentAdapter.LayoutResultCallback
+import android.print.PrintDocumentAdapter.WriteResultCallback
+import android.print.PrintAttributes
+import android.print.PrintDocumentInfo
+import android.print.PrintManager
+import android.util.Log
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.colors.ColorConstants
 import com.itextpdf.kernel.font.PdfFontFactory
@@ -51,6 +61,34 @@ import kotlin.math.min
 
 
 class PDFUtils {
+    
+    class PDFPrintDocumentAdapter(private val context: Context, private val pdfFilePath: String, private val documentName: String) : PrintDocumentAdapter() {
+
+        override fun onLayout(oldAttributes: PrintAttributes, newAttributes: PrintAttributes, cancellationSignal: CancellationSignal, callback: LayoutResultCallback, extras: Bundle) {
+            callback.onLayoutFinished(PrintDocumentInfo.Builder(documentName).setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build(), true)
+        }
+    
+        override fun onWrite(pages: Array<out PageRange>, destination: ParcelFileDescriptor, cancellationSignal: CancellationSignal, callback: WriteResultCallback) {
+            try {
+                var inputStream = if (pdfFilePath.startsWith("content://")) {
+                    val uri = Uri.parse(pdfFilePath)
+                    context.contentResolver.openInputStream(uri)
+                } else FileInputStream(File(pdfFilePath))
+                val outputStream = FileOutputStream(destination.fileDescriptor)
+                val buffer = ByteArray(1024)
+                var bytesRead: Int = inputStream!!.read(buffer)
+                while (bytesRead > 0) {
+                    outputStream.write(buffer, 0, bytesRead)
+                    bytesRead = inputStream!!.read(buffer)
+                }
+                inputStream!!.close()
+                outputStream.close()
+                callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
+            } catch (e: IOException) {
+                callback.onWriteFailed(e.localizedMessage)
+            }
+        }
+    }
     interface FunctionCallback {
         fun onResult(e: Exception?, result: Any?)
     }
@@ -62,6 +100,16 @@ class PDFUtils {
     }
     companion object {
         const val BLACK_WHITE_COLOR_MATRIX = "[0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0,0,0,1,0]"
+
+
+        
+        @Throws(IOException::class)
+        fun printPDF(context: Context, filePath: String, name: String) {
+            val printAdapter = PDFUtils.PDFPrintDocumentAdapter(context, filePath, name)
+            val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
+            printManager.print(name, printAdapter, null)
+        }
+        
         @Throws(IOException::class)
         fun compressPDF(src: String?, dest: String?, compressionLevel: Int, jpgQuality: Int) {
             val writer = PdfWriter(dest, WriterProperties().setCompressionLevel(compressionLevel).setFullCompressionMode(true))
@@ -186,6 +234,7 @@ class PDFUtils {
                 return null
             }
             if (hasColorMatrix) {
+                Log.d("JS", "hasColorMatrix " + colorMatrix)
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
