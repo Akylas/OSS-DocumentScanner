@@ -52,7 +52,7 @@ async function _getFileContentsBuffer(context: WebDAVClientContext, filePath: st
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
     return response;
 }
 
@@ -113,7 +113,7 @@ export class WebDAVClient {
             options
         );
         const response = await request(requestOptions);
-        await handleResponseCode(context, response);
+        await handleResponseCode(context, response, requestOptions);
         const responseData = await response.content.toStringAsync();
         if (!responseData) {
             throw new Error('Failed parsing directory contents: Empty response');
@@ -147,6 +147,7 @@ export class WebDAVClient {
             default:
                 throw new Error(`Invalid output format: ${format}`);
         }
+        DEV_LOG && console.log('getFileContents', filePath, format, options.destinationFilePath);
         return processResponsePayload(response, body, options.details);
     }
     async getFileDownloadLink(filePath: string) {

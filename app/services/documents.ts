@@ -177,15 +177,19 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             })
         );
     }
-    async update(page: OCRPage, data?: Partial<OCRPage>) {
+    async update(page: OCRPage, data?: Partial<OCRPage>, updateModifiedDate = true) {
         if (!data) {
-            const toUpdate = {
-                modifiedDate: Date.now()
-            };
+            const toUpdate: Partial<OCRPage> = {};
+            if (updateModifiedDate) {
+                toUpdate.modifiedDate = Date.now();
+            }
             await this.update(page, toUpdate);
             return page;
         }
-        data.modifiedDate = Date.now();
+
+        if (updateModifiedDate && !data.modifiedDate) {
+            data.modifiedDate = Date.now();
+        }
         const toSave: Partial<Document> = {};
         const toUpdate: any = {};
         Object.keys(data).forEach((k) => {

@@ -282,7 +282,7 @@
         }
     }
     async function onItemTap(item: Item) {
-        DEV_LOG && console.log('onItemTap', ignoreTap, item);
+        DEV_LOG && console.log('onItemTap', ignoreTap, JSON.stringify(item));
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -392,20 +392,26 @@
     }
 
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
+        if ((event.object as OCRDocument).id !== document.id) {
+            return;
+        }
         DEV_LOG && console.log('onPagesAdded', VIEW_ID);
+        document = event.object as OCRDocument;
         try {
             if (items) {
                 const length = items.length;
                 items.push(...event.pages.map((page, index) => ({ page, selected: false, index: length })));
             }
+            updateQRCodes();
         } catch (error) {
             showError(error, { silent: true });
         }
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        if (event.object !== document) {
+        if ((event.object as OCRDocument).id !== document.id) {
             return;
         }
+        document = event.object as OCRDocument;
         const index = event.pageIndex;
         const current = items.getItem(index);
         if (current) {
@@ -423,12 +429,14 @@
         }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
-        if (event.object !== document) {
+        if ((event.object as OCRDocument).id !== document.id) {
             return;
         }
+        document = event.object as OCRDocument;
         const index = event.pageIndex;
         items.splice(index, 1);
         items.forEach((item, index) => (item.index = index + 1));
+        updateQRCodes();
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
@@ -439,7 +447,7 @@
         }
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
-        if (document === event.doc) {
+        if (document.id === event.doc.id) {
             document = event.doc;
         }
     }
@@ -465,7 +473,7 @@
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
-        document.on('pagesAdded', onPagesAdded);
+        documentsService.on('documentPagesAdded', onPagesAdded);
 
         shortcutService.updateShortcuts(document);
         // refresh();
@@ -481,7 +489,7 @@
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageDeleted', onDocumentPageDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        document?.off('pagesAdded', onPagesAdded);
+        documentsService.off('documentPagesAdded', onPagesAdded);
     });
     // onThemeChanged(refreshCollectionView);
 
@@ -663,7 +671,7 @@
             if (option) {
                 switch (option.id) {
                     case 'camera':
-                        await importImageFromCamera({ inverseUseSystemCamera: false });
+                        await importImageFromCamera({ document, inverseUseSystemCamera: false });
                         break;
                     case 'import':
                         await importDocument();
@@ -826,11 +834,11 @@
                 class="fab"
                 horizontalAlignment="right"
                 iosIgnoreSafeArea={true}
+                margin={`16 16 ${$windowInset.bottom + 16} 16`}
                 rowSpan={3}
                 text="mdi-plus"
                 verticalAlignment="bottom"
-                on:tap={throttle(() => onAddButton(), 500)}
-                android:marginBottom={$windowInset.bottom} />
+                on:tap={throttle(() => onAddButton(), 500)} />
             <!-- </stacklayout> -->
         </gridlayout>
         <CActionBar

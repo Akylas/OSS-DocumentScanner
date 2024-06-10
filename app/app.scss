@@ -212,8 +212,8 @@ mdtextfield,
         ripple-color: var(--colorOnTertiary);
     }
     &:disabled {
-        color: #ffffff44;
-        ripple-color: #ffffff44;
+        color: #999;
+        ripple-color: #999;
     }
     &:black, &:dark {
         color: white;
@@ -225,10 +225,6 @@ mdtextfield,
     &:white, &:light {
         color: black;
         ripple-color: black;
-        // &:disabled {
-        //     color: #00000044;
-        //     ripple-color: #00000044;
-        // }
     }
 }
 

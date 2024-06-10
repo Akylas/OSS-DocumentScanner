@@ -4,8 +4,9 @@ import { encodePath } from '../tools/path';
 import { calculateDataLength } from '../tools/size';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode } from '../response';
-import { AuthType, BufferLike, ErrorCode, Headers, PutFileContentsOptions, WebDAVClientContext, WebDAVClientError } from '../types';
+import { AuthType, BufferLike, ErrorCode, Headers, PutFileContentsOptions, WebDAVClientContext } from '../types';
 import { path } from '@nativescript/core';
+import { HTTPError } from '~/utils/error';
 
 export async function putFileContents(context: WebDAVClientContext, filePath: string, data: string | BufferLike | File, options: PutFileContentsOptions = {}): Promise<boolean> {
     DEV_LOG && console.log('putFileContents', filePath, data);
@@ -38,10 +39,10 @@ export async function putFileContents(context: WebDAVClientContext, filePath: st
     );
     const response = await request(requestOptions);
     try {
-        await handleResponseCode(context, response);
+        await handleResponseCode(context, response, requestOptions);
     } catch (err) {
-        const error = err as WebDAVClientError;
-        if (error.status === 412 && !overwrite) {
+        const error = err as HTTPError;
+        if (error.statusCode === 412 && !overwrite) {
             return false;
         } else {
             throw error;

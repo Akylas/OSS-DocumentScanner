@@ -38,7 +38,9 @@
         SETTINGS_CROP_ENABLED,
         SETTINGS_DOCUMENT_NAME_FORMAT,
         SETTINGS_IMPORT_PDF_IMAGES,
-        USE_SYSTEM_CAMERA
+        SETTINGS_WEBDAV_AUTO_SYNC,
+        USE_SYSTEM_CAMERA,
+        WEBDAV_AUTO_SYNC
     } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import { DocumentsService, documentsService } from '~/services/documents';
@@ -375,6 +377,21 @@
                             currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
                         }
                     ] as any);
+            case 'sync':
+                return [
+                    {
+                        id: 'webdav',
+                        rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
+                        title: lc('webdav_sync'),
+                        description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
+                    },
+                    {
+                        type: 'switch',
+                        id: SETTINGS_WEBDAV_AUTO_SYNC,
+                        title: lc('webdav_auto_sync'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_WEBDAV_AUTO_SYNC, WEBDAV_AUTO_SYNC)
+                    }
+                ];
             case 'document_naming':
                 return [
                     {
@@ -698,14 +715,11 @@
                         options: () => getSubSettings('images')
                     },
                     {
-                        type: 'sectionheader',
-                        title: lc('sync')
-                    },
-                    {
-                        id: 'webdav',
-                        rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
-                        title: lc('webdav_sync'),
-                        description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
+                        id: 'sub_settings',
+                        icon: 'mdi-autorenew',
+                        title: lc('sync'),
+                        description: lc('sync_settings_desc'),
+                        options: () => getSubSettings('sync')
                     },
                     {
                         type: 'sectionheader',

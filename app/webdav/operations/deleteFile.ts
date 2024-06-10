@@ -14,5 +14,5 @@ export async function deleteFile(context: WebDAVClientContext, filename: string,
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
 }

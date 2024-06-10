@@ -13,7 +13,7 @@
     fontSize={18}
     height={26}
     horizontalAlignment="left"
-    margin={10}
+    margin={5}
     rowSpan={2}
     text="mdi-check"
     textAlignment="center"

@@ -339,6 +339,11 @@
     }
 
     function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
+        if ((event.object as OCRDocument).id !== document.id) {
+            return;
+        }
+        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
+        document = event.object as OCRDocument;
         DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         try {
             if (items) {
@@ -350,9 +355,10 @@
         }
     }
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        if (event.object !== document) {
+        if ((event.object as OCRDocument).id !== document.id) {
             return;
         }
+        document = event.object as OCRDocument;
         const index = event.pageIndex;
         const current = items.getItem(index);
         if (current) {
@@ -370,9 +376,10 @@
         }
     }
     function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
-        if (event.object !== document) {
+        if ((event.object as OCRDocument).id !== document.id) {
             return;
         }
+        document = event.object as OCRDocument;
         const index = event.pageIndex;
         items.splice(index, 1);
         for (let i = index; i < items.length; i++) {
@@ -383,7 +390,7 @@
     }
     function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
         DEV_LOG && console.log('onDocumentUpdated', document);
-        if (document === event.doc) {
+        if (document.id === event.doc.id) {
             document = event.doc;
         }
     }
@@ -417,7 +424,7 @@
         documentsService.on('documentsDeleted', onDocumentsDeleted);
         documentsService.on('documentPageDeleted', onDocumentPageDeleted);
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
-        document.on('pagesAdded', onPagesAdded);
+        documentsService.on('documentPagesAdded', onPagesAdded);
     });
     onDestroy(() => {
         DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
@@ -430,7 +437,7 @@
         documentsService.off('documentsDeleted', onDocumentsDeleted);
         documentsService.off('documentPageDeleted', onDocumentPageDeleted);
         documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        document.off('pagesAdded', onPagesAdded);
+        documentsService.off('documentPagesAdded', onPagesAdded);
     });
     // onThemeChanged(refreshCollectionView);
 

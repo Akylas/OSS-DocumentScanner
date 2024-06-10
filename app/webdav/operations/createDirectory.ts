@@ -2,8 +2,9 @@ import { encodePath, getAllDirectories, makePathAbsolute, normalisePath } from '
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode } from '../response';
 import { getStat } from './stat';
-import { CreateDirectoryOptions, FileStat, WebDAVClientContext, WebDAVClientError } from '../types';
+import { CreateDirectoryOptions, FileStat, WebDAVClientContext } from '../types';
 import { path } from '@nativescript/core';
+import { HTTPError } from '~/utils/error';
 
 export async function createDirectory(context: WebDAVClientContext, dirPath: string, options: CreateDirectoryOptions = {}) {
     if (options.recursive === true) return createDirectoryRecursively(context, dirPath, options);
@@ -16,7 +17,7 @@ export async function createDirectory(context: WebDAVClientContext, dirPath: str
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
 }
 
 /**
@@ -58,8 +59,8 @@ async function createDirectoryRecursively(context: WebDAVClientContext, dirPath:
                 throw new Error(`Path includes a file: ${dirPath}`);
             }
         } catch (err) {
-            const error = err as WebDAVClientError;
-            if (error.status === 404) {
+            const error = err as HTTPError;
+            if (error.statusCode === 404) {
                 creating = true;
                 await createDirectory(context, testPath, {
                     ...options,

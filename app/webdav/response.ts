@@ -1,21 +1,24 @@
+import { HTTPError } from '~/utils/error';
 import { parseRawXML } from './tools/dav';
-import { Response, ResponseDataDetailed, WebDAVClientContext, WebDAVClientError } from './types';
+import { Response, ResponseDataDetailed, WebDAVClientContext } from './types';
 
-export async function createErrorFromResponse(response: Response, prefix: string = '') {
+export async function createErrorFromResponse(response: Response, requestParams, prefix: string = '') {
     const result = await parseRawXML(await response.content.toStringAsync());
     // console.log('createErrorFromResponse', response.statusCode, await response.content.toStringAsync(), JSON.stringify(result));
-    const err: WebDAVClientError = new Error(`${prefix}Invalid response ${response.statusCode}: ${result.error?.message}`) as WebDAVClientError;
-    err.status = response.statusCode;
-    err.response = response;
-    return err;
+
+    return new HTTPError({
+        statusCode: response.statusCode,
+        message: prefix + result.error?.message,
+        requestParams
+    });
 }
 
-export async function handleResponseCode(context: WebDAVClientContext, response: Response) {
+export async function handleResponseCode(context: WebDAVClientContext, response: Response, requestOptions) {
     const { statusCode } = response;
     // DEV_LOG && console.log('handleResponseCode', response.statusCode, response.headers);
     // if (statusCode === 401 && context.digest) return response;
     if (statusCode >= 400) {
-        const err = await createErrorFromResponse(response);
+        const err = await createErrorFromResponse(response, requestOptions);
         throw err;
     }
     return response;

@@ -2,8 +2,9 @@ import { XMLParser } from 'fast-xml-parser';
 import nestedProp from 'nested-property';
 import { decodeHTMLEntities } from './encode';
 import { encodePath, normalisePath } from './path';
-import { DAVResult, DAVResultPropstatResponse, DAVResultRaw, DAVResultResponse, DAVResultResponseProps, DiskQuotaAvailable, FileStat, SearchResult, WebDAVClientError } from '../types';
+import { DAVResult, DAVResultPropstatResponse, DAVResultRaw, DAVResultResponse, DAVResultResponseProps, DiskQuotaAvailable, FileStat, SearchResult } from '../types';
 import { basename } from './path';
+import { HTTPError } from '~/utils/error';
 
 enum PropertyType {
     Array = 'array',
@@ -144,9 +145,13 @@ export function parseStat(result: DAVResult, filename: string, isDetailed: boole
     const [_, statusCodeStr, statusText] = statusLine.split(' ', 3);
     const statusCode = parseInt(statusCodeStr, 10);
     if (statusCode >= 400) {
-        const err: WebDAVClientError = new Error(`Invalid response: ${statusCode} ${statusText}`) as WebDAVClientError;
-        err.status = statusCode;
-        throw err;
+        // const err: WebDAVClientError = new Error(`Invalid response: ${statusCode} ${statusText}`) as WebDAVClientError;
+        // err.status = statusCode;
+        throw new HTTPError({
+            message: statusText,
+            statusCode,
+            requestParams: null
+        });
     }
 
     const filePath = normalisePath(filename);

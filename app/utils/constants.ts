@@ -13,6 +13,7 @@ export const SETTINGS_IMPORT_PDF_IMAGES = 'import_pdf_images';
 export const SETTINGS_CAMERA_SETTINGS = 'camera_settings';
 export const SETTINGS_CROP_ENABLED = 'cropEnabled';
 export const SETTINGS_ALWAYS_PROMPT_CROP_EDIT = 'always_prompt_crop_edit';
+export const SETTINGS_WEBDAV_AUTO_SYNC = 'webdav_auto_sync';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -20,6 +21,7 @@ export const IMG_FORMAT = 'jpg';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
+export const WEBDAV_AUTO_SYNC = true;
 export const DEFAULT__BATCH_CHUNK_SIZE = 10;
 export const FILTER_ROW_HEIGHT = CARD_APP ? 55 : 85;
 export const FILTER_COL_WIDTH = CARD_APP ? FILTER_ROW_HEIGHT / CARD_RATIO : 60;

@@ -25,7 +25,6 @@ if (CARD_APP) {
     ShortcutManagerCompat = androidx.core.content.pm.ShortcutManagerCompat;
     ShortcutInfoCompat = androidx.core.content.pm.ShortcutInfoCompat;
 }
-DEV_LOG && console.log('ShortcutManagerCompat', ShortcutManagerCompat);
 export default class ShortcutsService {
     imagesToRecycle = [];
     /**

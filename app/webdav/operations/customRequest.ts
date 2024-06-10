@@ -10,6 +10,6 @@ export async function customRequest(context: WebDAVClientContext, remotePath: st
     }
     const finalOptions = prepareRequestOptions(requestOptions, context, {});
     const response = await request(finalOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, finalOptions);
     return response;
 }

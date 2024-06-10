@@ -17,5 +17,5 @@ export async function copyFile(context: WebDAVClientContext, filename: string, d
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
 }

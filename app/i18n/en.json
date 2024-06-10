@@ -54,6 +54,7 @@
     "cards": "cards",
     "color": "color",
     "color_desc": "improve colors and reduce unwanted color shades",
+    "columns": "columns",
     "comments": "comments",
     "computing": "computing...",
     "condensed": "condensed",
@@ -261,6 +262,7 @@
     "sure_cancel_import": "are you sure you want to cancel?",
     "sure_go_back": "are you sure you want to go back?",
     "sync": "sync",
+    "sync_settings_desc": "synchronization settings",
     "system": "system",
     "test": "test",
     "theme": {
@@ -281,6 +283,7 @@
     "use_system_camera_desc": "use system camera instead of app view (long press would use the inversed behavior). When enabled some features like batch or auto-scan will be disabled",
     "username": "username",
     "version": "version",
+    "webdav_auto_sync": "automatically sync with WebDAV on launch and document changes",
     "webdav_config": "webdav configuration",
     "webdav_sync": "webdav documents sync",
     "webdav_sync_desc": "enable webdav to sync your documents (backup)",

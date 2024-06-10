@@ -2,7 +2,7 @@ import { ApplicationSettings, File, Folder, ImageSource, Observable, path } from
 import { debounce, throttle } from '@nativescript/core/utils';
 import { cropDocument, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { Document, OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { IMG_COMPRESS, IMG_FORMAT } from '~/utils/constants';
+import { IMG_COMPRESS, IMG_FORMAT, SETTINGS_WEBDAV_AUTO_SYNC, WEBDAV_AUTO_SYNC } from '~/utils/constants';
 import { showError } from '~/utils/error';
 import { loadImage, recycleImages } from '~/utils/images';
 import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';
@@ -11,6 +11,8 @@ import { basename } from '~/webdav/tools/path';
 import { networkService } from './api';
 import { DocumentsService, documentsService } from './documents';
 import { lc } from '@nativescript-community/l';
+import { prefs } from './preferences';
+import { getImagePipeline } from '@nativescript-community/ui-image';
 
 const SETTINGS_KEY = 'webdav_config';
 function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
@@ -45,6 +47,7 @@ export class SyncService extends Observable {
     client: WebDAVClient;
     token;
     password;
+    autoSync = true;
 
     get enabled() {
         return !!this.client;
@@ -58,7 +61,7 @@ export class SyncService extends Observable {
         const documentsToDeleteOnRemote = JSON.parse(ApplicationSettings.getString('sync_docs_to_remove_remote', '[]'));
         documentsToDeleteOnRemote.push(...event.documents.map((d) => d.id));
         ApplicationSettings.setString('sync_docs_to_remove_remote', JSON.stringify(documentsToDeleteOnRemote));
-        this.syncDocuments(false);
+        this.syncDocuments();
     }
     onDocumentUpdated(event) {
         // TODO: fast and dirty
@@ -67,7 +70,13 @@ export class SyncService extends Observable {
             this.syncDocuments();
         }
     }
+    onAutoSyncPrefChanged() {
+        this.autoSync = ApplicationSettings.getBoolean(SETTINGS_WEBDAV_AUTO_SYNC, WEBDAV_AUTO_SYNC);
+        DEV_LOG && console.log('onAutoSyncPrefChanged', this.autoSync);
+    }
     async start() {
+        prefs.on(`key:${SETTINGS_WEBDAV_AUTO_SYNC}`, this.onAutoSyncPrefChanged);
+        this.onAutoSyncPrefChanged();
         const configStr = ApplicationSettings.getString(SETTINGS_KEY);
         if (configStr) {
             const config = JSON.parse(configStr);
@@ -91,6 +100,7 @@ export class SyncService extends Observable {
         }
     }
     stop() {
+        prefs.off(`key:${SETTINGS_WEBDAV_AUTO_SYNC}`, this.onAutoSyncPrefChanged);
         documentsService.off('documentAdded', this.onDocumentAdded, this);
         documentsService.off('documentUpdated', this.onDocumentUpdated, this);
         documentsService.off('documentsDeleted', this.onDocumentDeleted, this);
@@ -150,7 +160,13 @@ export class SyncService extends Observable {
     }
     async sendFolderToWebDav(folder: Folder, remotePath: string) {
         DEV_LOG && console.log('sendFolderToWebDav', folder, remotePath);
-        await this.client.createDirectory(remotePath, { recursive: false });
+        try {
+            await this.client.createDirectory(remotePath, { recursive: false });
+        } catch (error) {
+            if (error.statusCode !== 405) {
+                throw error;
+            }
+        }
         const entities = await folder.getEntities();
         for (let index = 0; index < entities.length; index++) {
             const entity = entities[index];
@@ -181,6 +197,9 @@ export class SyncService extends Observable {
         // }
     }
     async importFolderFromWebdav(remotePath: string, folder: Folder, ignores?: string[]) {
+        if (!folder?.path) {
+            throw new Error('importFolderFromWebdav missing folder');
+        }
         const remoteDocuments = (await this.getRemoteFolderDirectories(remotePath)) as FileStat[];
         DEV_LOG && console.log('importFolderFromWebdav', remotePath, folder.path, ignores);
         for (let index = 0; index < remoteDocuments.length; index++) {
@@ -261,8 +280,8 @@ export class SyncService extends Observable {
             })
         ) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
+        DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
         if (dataJSON.modifiedDate > document.modifiedDate) {
-            // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             let needsRemoteDocUpdate = false;
             const { pages: docPages, ...docProps } = document.toJSONObject();
             const { pages: remotePages, ...remoteProps } = dataJSON;
@@ -275,9 +294,31 @@ export class SyncService extends Observable {
                     toUpdate[k] = remoteProps[k];
                 }
             });
-            const { toBeAdded: missingRemotePages, toBeDeleted: removedRemotePages, union: toBeSyncPages } = findArrayDiffs(remotePages, docPages as OCRPage[], (a, b) => a.id === b.id);
+            const { toBeAdded: missingLocalPages, toBeDeleted: removedRemotePages, union: toBeSyncPages } = findArrayDiffs(docPages as OCRPage[], remotePages, (a, b) => a.id === b.id);
 
-            TEST_LOG && console.log('document need to be synced FROM webdav!', toUpdate, missingRemotePages, removedRemotePages, toBeSyncPages);
+            TEST_LOG &&
+                console.log(
+                    'document need to be synced FROM webdav!',
+                    toUpdate,
+                    missingLocalPages,
+                    removedRemotePages,
+                    toBeSyncPages.map((p) => p.id)
+                );
+            TEST_LOG &&
+                console.log(
+                    'missingLocalPages',
+                    missingLocalPages.map((p) => p.id)
+                );
+            TEST_LOG &&
+                console.log(
+                    'removedRemotePages',
+                    removedRemotePages.map((p) => p.id)
+                );
+            TEST_LOG &&
+                console.log(
+                    'toBeSyncPages',
+                    toBeSyncPages.map((p) => p.id)
+                );
             for (let index = 0; index < removedRemotePages.length; index++) {
                 const pageToRemove = removedRemotePages[index];
                 const pageIndex = (docPages as OCRPage[]).findIndex((p) => p.id === pageToRemove.id);
@@ -285,52 +326,62 @@ export class SyncService extends Observable {
                     document.deletePage(pageIndex);
                 }
             }
-            for (let index = 0; index < missingRemotePages.length; index++) {
-                const missingRemotePage = missingRemotePages[index];
-                const pageDataFolder = docDataFolder.getFolder(missingRemotePage.id);
-                missingRemotePage.sourceImagePath = path.join(pageDataFolder.path, basename(missingRemotePage.sourceImagePath));
-                missingRemotePage.imagePath = path.join(pageDataFolder.path, basename(missingRemotePage.imagePath));
-                await this.importFolderFromWebdav(path.join(remoteDocPath, missingRemotePage.id), pageDataFolder);
+            for (let index = 0; index < missingLocalPages.length; index++) {
+                const missingLocalPage = missingLocalPages[index];
+                const pageDataFolder = docDataFolder.getFolder(missingLocalPage.id);
+                missingLocalPage.sourceImagePath = path.join(pageDataFolder.path, basename(missingLocalPage.sourceImagePath));
+                missingLocalPage.imagePath = path.join(pageDataFolder.path, basename(missingLocalPage.imagePath));
+                await this.importFolderFromWebdav(path.join(remoteDocPath, missingLocalPage.id), pageDataFolder);
+
                 // we insert page one by one because of the index
                 await document.addPage(
-                    missingRemotePage,
-                    remotePages.findIndex((p) => p.id === missingRemotePage.id)
+                    missingLocalPage,
+                    remotePages.findIndex((p) => p.id === missingLocalPage.id)
                 );
-                await document.save();
+                // await document.save();
             }
             for (let index = 0; index < toBeSyncPages.length; index++) {
-                const remotePageToSync = toBeSyncPages[index];
-                const localPageIndex = (docPages as OCRPage[]).findIndex((p) => p.id === remotePageToSync.id);
-                const localPage = (docPages as OCRPage[])[localPageIndex];
+                const localPage = toBeSyncPages[index];
+                const localPageIndex = (docPages as OCRPage[]).findIndex((p) => p.id === localPage.id);
+                const remotePageIndex = remotePages.findIndex((p) => p.id === localPage.id);
+                const remotePageToSync = remotePages[remotePageIndex];
+                TEST_LOG && console.log('sync page', remotePageToSync.id, remotePageToSync.modifiedDate, localPage.modifiedDate);
                 if (remotePageToSync.modifiedDate > localPage.modifiedDate) {
                     //we need to update the data and then recreate the image if necessary
                     const { imagePath: localImagePath, sourceImagePath: localSourceImagePath, ...pageProps } = localPage;
                     const { imagePath: remoteImagePath, sourceImagePath: remoteSourceImagePath, ...remotePageProps } = remotePageToSync;
-                    const pageTooUpdate: Partial<OCRPage> = {};
+                    const pageToUpdate: Partial<OCRPage> = {};
                     Object.keys(remotePageProps).forEach((k) => {
                         if (k.startsWith('_')) {
                             return;
                         }
-                        if (remotePageProps[k] !== pageProps[k]) {
-                            pageTooUpdate[k] = remotePageProps[k];
+                        if (remotePageProps[k] !== pageProps[k] && JSON.stringify(remotePageProps[k]) !== JSON.stringify(pageProps[k])) {
+                            pageToUpdate[k] = remotePageProps[k];
                         }
                     });
                     // check if we need to recreate the image
-                    if (pageTooUpdate.crop || pageTooUpdate.transforms) {
+                    let imageChanged = false;
+                    TEST_LOG && console.log('sync page FROM webdav!', remotePageToSync.id, JSON.stringify(pageToUpdate));
+                    if (pageToUpdate.crop || pageToUpdate.transforms) {
                         const file = File.fromPath(localPage.imagePath);
-                        DEV_LOG && console.log('page sync needed size update', file.size);
-                        await cropDocumentFromFile(localPage.sourceImagePath, [pageTooUpdate.crop], {
+                        const crop = pageToUpdate.crop || localPage.crop;
+                        const transforms = pageToUpdate.transforms || localPage.transforms;
+                        imageChanged = true;
+                        DEV_LOG && console.log('page sync needed size update', file.size, transforms, crop);
+
+                        await cropDocumentFromFile(localPage.sourceImagePath, [crop], {
                             saveInFolder: file.parent.path,
                             fileName: file.name,
                             compressFormat: IMG_FORMAT,
-                            compressQuality: IMG_COMPRESS
+                            compressQuality: IMG_COMPRESS,
+                            transforms
                         });
-                        pageTooUpdate.size = file.size;
-                    } else if (pageTooUpdate.size === 0) {
+                        pageToUpdate.size = file.size;
+                    } else if (pageToUpdate.size === 0) {
                         const file = File.fromPath(localPage.imagePath);
-                        pageTooUpdate.size = file.size;
+                        pageToUpdate.size = file.size;
                     }
-                    await document.updatePage(localPageIndex, pageTooUpdate);
+                    await document.updatePage(localPageIndex, pageToUpdate, imageChanged);
                 } else if (remotePageToSync.modifiedDate < localPage.modifiedDate) {
                     //we need to update the data and then recreate the image if necessary
                     const { imagePath: localImagePath, sourceImagePath: localSourceImagePath, ...pageProps } = localPage;
@@ -345,6 +396,7 @@ export class SyncService extends Observable {
                         }
                     });
                     // check if we need to upload the image
+                    TEST_LOG && console.log('sync page FROM local!', remotePageToSync.id, JSON.stringify(pageTooUpdate));
                     if (pageTooUpdate.crop || pageTooUpdate.transforms) {
                         await this.client.putFileContents(path.join(remoteDocPath, basename(localImagePath)), localImagePath);
                     }
@@ -362,17 +414,32 @@ export class SyncService extends Observable {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             const { pages: docPages, ...docProps } = document.toJSONObject();
             const { pages: remotePages, ...remoteProps } = dataJSON;
-            const toUpdate = {};
-            Object.keys(remoteProps).forEach((k) => {
-                if (k.startsWith('_')) {
-                    return;
-                }
-                if (remoteProps[k] !== docProps[k]) {
-                    toUpdate[k] = remoteProps[k];
-                }
-            });
-            const { toBeAdded: missingRemotePages, toBeDeleted: removedRemotePages, union: toBeSyncPages } = findArrayDiffs(docPages as OCRPage[], remotePages, (a, b) => a.id === b.id);
-            TEST_LOG && console.log('document need to be synced FROM local!', toUpdate);
+            // const toUpdate = {};
+            // Object.keys(remoteProps).forEach((k) => {
+            //     if (k.startsWith('_')) {
+            //         return;
+            //     }
+            //     if (remoteProps[k] !== docProps[k]) {
+            //         toUpdate[k] = remoteProps[k];
+            //     }
+            // });
+            const { toBeAdded: missingRemotePages, toBeDeleted: removedRemotePages, union: toBeSyncPages } = findArrayDiffs(remotePages, docPages as OCRPage[], (a, b) => a.id === b.id);
+            TEST_LOG && console.log('document need to be synced FROM local!', remoteDocPath, document.pages.length);
+            TEST_LOG &&
+                console.log(
+                    'missingRemotePages',
+                    missingRemotePages.map((p) => p.id)
+                );
+            TEST_LOG &&
+                console.log(
+                    'removedRemotePages',
+                    removedRemotePages.map((p) => p.id)
+                );
+            TEST_LOG &&
+                console.log(
+                    'toBeSyncPages',
+                    toBeSyncPages.map((p) => p.id)
+                );
             for (let index = 0; index < missingRemotePages.length; index++) {
                 const missingRemotePage = missingRemotePages[index];
                 const pageDataFolder = docDataFolder.getFolder(missingRemotePage.id);
@@ -382,17 +449,74 @@ export class SyncService extends Observable {
                 const removedRemotePage = removedRemotePages[index];
                 await this.client.deleteFile(path.join(remoteDocPath, removedRemotePage.id));
             }
-            await this.client.putFileContents(path.join(remoteDocPath, 'data.json'), document.toString());
-            return document.save({ _synced: 1 }, false);
+
+            for (let index = 0; index < toBeSyncPages.length; index++) {
+                const remotePage = toBeSyncPages[index];
+                const remotePageIndex = remotePages.findIndex((p) => p.id === remotePage.id);
+                const localPageIndex = (docPages as OCRPage[]).findIndex((p) => p.id === remotePage.id);
+                const localPageToSync = docPages[remotePageIndex];
+                TEST_LOG && console.log('sync page', localPageToSync.id, localPageToSync.modifiedDate, remotePage.modifiedDate);
+                if (remotePage.modifiedDate > localPageToSync.modifiedDate) {
+                    //we need to update the data and then recreate the image if necessary
+                    const { imagePath: localImagePath, sourceImagePath: localSourceImagePath, ...pageProps } = localPageToSync;
+                    const { imagePath: remoteImagePath, sourceImagePath: remoteSourceImagePath, ...remotePageProps } = remotePage;
+                    const pageTooUpdate: Partial<OCRPage> = {};
+                    Object.keys(remotePageProps).forEach((k) => {
+                        if (k.startsWith('_')) {
+                            return;
+                        }
+                        if (remotePageProps[k] !== pageProps[k] && JSON.stringify(remotePageProps[k]) !== JSON.stringify(pageProps[k])) {
+                            pageTooUpdate[k] = remotePageProps[k];
+                        }
+                    });
+                    // check if we need to recreate the image
+                    TEST_LOG && console.log('sync page FROM webdav!', localPageToSync.id, JSON.stringify(pageTooUpdate));
+                    if (pageTooUpdate.crop || pageTooUpdate.transforms) {
+                        const file = File.fromPath(localPageToSync.imagePath);
+                        DEV_LOG && console.log('page sync needed size update', file.size);
+                        await cropDocumentFromFile(localPageToSync.sourceImagePath, [pageTooUpdate.crop], {
+                            saveInFolder: file.parent.path,
+                            fileName: file.name,
+                            compressFormat: IMG_FORMAT,
+                            compressQuality: IMG_COMPRESS
+                        });
+                        pageTooUpdate.size = file.size;
+                    } else if (pageTooUpdate.size === 0) {
+                        const file = File.fromPath(localPageToSync.imagePath);
+                        pageTooUpdate.size = file.size;
+                    }
+                    await document.updatePage(localPageIndex, pageTooUpdate);
+                } else if (remotePage.modifiedDate < localPageToSync.modifiedDate) {
+                    //we need to update the data and then recreate the image if necessary
+                    const { imagePath: localImagePath, sourceImagePath: localSourceImagePath, ...pageProps } = localPageToSync;
+                    const { imagePath: remoteImagePath, sourceImagePath: remoteSourceImagePath, ...remotePageProps } = remotePage;
+                    const pageTooUpdate: Partial<OCRPage> = {};
+                    Object.keys(pageProps).forEach((k) => {
+                        if (k.startsWith('_')) {
+                            return;
+                        }
+                        if (remotePageProps[k] !== pageProps[k]) {
+                            pageTooUpdate[k] = pageProps[k];
+                        }
+                    });
+                    // check if we need to upload the image
+                    TEST_LOG && console.log('sync page FROM local!', localPageToSync.id, JSON.stringify(pageTooUpdate));
+                    if (pageTooUpdate.crop || pageTooUpdate.transforms) {
+                        await this.client.putFileContents(path.join(remoteDocPath, basename(localImagePath)), localImagePath);
+                    }
+                }
+            }
+            await this.client.putFileContents(path.join(remoteDocPath, 'data.json'), document.toString(), { overwrite: true });
+            return document.save({ _synced: 1 });
         } else if (document._synced === 0) {
             TEST_LOG && console.log('syncDocumentOnWebdav just changing sync state');
-            return document.save({ _synced: 1 }, false);
+            return document.save({ _synced: 1 });
         }
     }
     syncRunning = false;
-    syncDocuments = throttle(async (bothWays = false) => {
+    syncDocuments = throttle(async (force = false, bothWays = false) => {
         try {
-            if (!networkService.connected || !this.client || this.syncRunning) {
+            if ((!force && !this.autoSync) || !networkService.connected || !this.client || this.syncRunning) {
                 return;
             }
             this.syncRunning = true;
@@ -411,7 +535,7 @@ export class SyncService extends Observable {
             if (bothWays) {
                 await this.ensureRemoteFolder();
                 const remoteDocuments = (await this.getRemoteFolderDirectories(this.remoteFolder)) as FileStat[];
-
+                TEST_LOG && console.log('remoteDocuments', JSON.stringify(remoteDocuments));
                 const {
                     toBeAdded: missingLocalDocuments,
                     toBeDeleted: missingRemoteDocuments,
@@ -442,6 +566,7 @@ export class SyncService extends Observable {
                         await this.removeDocumentFromWebdav(path.join(this.remoteFolder, id));
                     }
                 }
+                ApplicationSettings.remove('sync_docs_to_remove_remote');
                 for (let index = 0; index < missingRemoteDocuments.length; index++) {
                     await this.addDocumentToWebdav(missingRemoteDocuments[index]);
                 }
@@ -456,6 +581,7 @@ export class SyncService extends Observable {
                 if (documentsToSync.length) {
                     await this.ensureRemoteFolder();
                     const remoteDocuments = (await this.getRemoteFolderDirectories(this.remoteFolder)) as FileStat[];
+                    TEST_LOG && console.log('remoteDocuments', JSON.stringify(remoteDocuments));
                     const {
                         toBeAdded: missingLocalDocuments,
                         toBeDeleted: missingRemoteDocuments,

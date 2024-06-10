@@ -173,7 +173,7 @@
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         // let index = -1;
         const document = event.object as OCRDocument;
-        const index = documents.findIndex((d) => d.doc === document);
+        const index = documents.findIndex((d) => d.doc.id === document.id);
         if (index >= 0) {
             if (event.pageIndex === 0) {
                 if (!!event.imageUpdated) {
@@ -187,7 +187,11 @@
                     }
                 }
             }
-            documents.setItem(index, documents.getItem(index));
+            const item = documents?.getItem(index);
+            if (item) {
+                item.doc = document;
+                documents.setItem(index, item);
+            }
         }
     }
     function onSyncState(event: EventData & { state: 'running' | 'finished' }) {
@@ -478,7 +482,7 @@
             if (!syncEnabled) {
                 return showSyncSettings();
             }
-            await syncService.syncDocuments(true);
+            await syncService.syncDocuments(true, true);
         } catch (error) {
             showError(error);
         }

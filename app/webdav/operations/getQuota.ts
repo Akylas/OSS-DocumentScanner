@@ -20,7 +20,7 @@ export async function getQuota(context: WebDAVClientContext, options: GetQuotaOp
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
     const responseData = await response.content.toStringAsync();
     const result = await parseXML(responseData);
     const quota = parseQuota(result);

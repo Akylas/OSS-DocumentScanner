@@ -89,8 +89,10 @@ export class OCRDocument extends Observable implements Document {
         const attributes = { ...otherPageData, id: pageId, document_id: docId } as OCRPage;
         attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
         if (imagePath) {
-            const file = File.fromPath(imagePath);
-            await file.copy(attributes.imagePath);
+            if (imagePath !== attributes.imagePath) {
+                const file = File.fromPath(imagePath);
+                await file.copy(attributes.imagePath);
+            }
         } else if (image) {
             const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
             const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
@@ -99,7 +101,7 @@ export class OCRDocument extends Observable implements Document {
             return;
         }
         attributes.size = File.fromPath(attributes.imagePath).size;
-        // DEV_LOG && console.log('add1 page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
+        DEV_LOG && console.log('add single page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
         if (sourceImagePath) {
             let baseName = sourceImagePath
                 .split('/')
@@ -109,9 +111,11 @@ export class OCRDocument extends Observable implements Document {
                 baseName += '.' + IMG_FORMAT;
             }
             const actualSourceImagePath = path.join(pageFileData.path, baseName);
-            const file = File.fromPath(sourceImagePath);
-            await file.copy(actualSourceImagePath);
             attributes.sourceImagePath = actualSourceImagePath;
+            if (actualSourceImagePath !== sourceImagePath) {
+                const file = File.fromPath(sourceImagePath);
+                await file.copy(actualSourceImagePath);
+            }
         }
         // we add 1000 to each pageIndex so that we can reorder them
         // if (!attributes.pageIndex) {
@@ -129,7 +133,7 @@ export class OCRDocument extends Observable implements Document {
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
-        this.notify({ eventName: 'pagesAdded', pages: [addedPage] });
+        documentsService.notify({ eventName: 'documentPagesAdded', pages: [addedPage], object: this });
     }
 
     async addPages(pagesData?: PageData[]) {
@@ -181,13 +185,10 @@ export class OCRDocument extends Observable implements Document {
                     }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
                     // if the same nothing to do, must be while syncing
+                    attributes.sourceImagePath = actualSourceImagePath;
                     if (actualSourceImagePath !== sourceImagePath) {
                         const file = File.fromPath(sourceImagePath);
                         await file.copy(actualSourceImagePath);
-                        DEV_LOG && console.log('add page source image copied', actualSourceImagePath, File.exists(actualSourceImagePath), File.fromPath(actualSourceImagePath).size);
-                        attributes.sourceImagePath = actualSourceImagePath;
-                    } else {
-                        attributes.sourceImagePath = actualSourceImagePath;
                     }
                 }
                 if (id) {
@@ -212,7 +213,7 @@ export class OCRDocument extends Observable implements Document {
             if (this.#observables) {
                 this.#observables.push(...pages);
             }
-            this.notify({ eventName: 'pagesAdded', pages });
+            documentsService.notify({ eventName: 'documentPagesAdded', pages, object: this as any });
         }
     }
 
@@ -229,6 +230,7 @@ export class OCRDocument extends Observable implements Document {
 
     async deletePage(pageIndex: number) {
         const removed = this.pages.splice(pageIndex, 1);
+        DEV_LOG && console.log('delete page', pageIndex);
         if (this.pages.length === 0) {
             return documentsService.deleteDocuments([this]);
         }
@@ -242,6 +244,7 @@ export class OCRDocument extends Observable implements Document {
             await docData.getFolder(removedPage.id).remove();
         }
         documentsService.notify({ eventName: 'documentPageDeleted', object: this as any, pageIndex });
+        await this.save({}, true, false);
         return this;
     }
 
@@ -276,11 +279,9 @@ export class OCRDocument extends Observable implements Document {
             this.#observables.splice(oldIndex, 1);
             this.#observables.splice(newIndex, 0, item);
         }
-        return this.save();
+        return this.save({}, true);
     }
     onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
-        // page.notify({ eventName: 'updated', object: page });
-        // this.notify({ eventName: 'pageUpdated', object: page, pageIndex });
         documentsService.notify({ eventName: 'documentPageUpdated', object: this as any, pageIndex, imageUpdated });
     }
     getObservablePages() {
@@ -297,7 +298,16 @@ export class OCRDocument extends Observable implements Document {
     }
 
     async save(data: Partial<OCRDocument> = {}, updateModifiedDate = false, notify = true) {
-        data.pagesOrder = this.pages.map((p) => p.id);
+        if (data.pagesOrder) {
+            this.pages = this.pages.sort(function (a, b) {
+                return data.pagesOrder.indexOf(a.id) - data.pagesOrder.indexOf(b.id);
+            });
+            if (this.#observables) {
+                this.#observables.splice(0, this.pages.length, ...this.pages);
+            }
+        } else {
+            data.pagesOrder = this.pages.map((p) => p.id);
+        }
         await documentsService.documentRepository.update(this, data, updateModifiedDate);
         if (notify) {
             documentsService.notify({ eventName: 'documentUpdated', object: documentsService, doc: this, updateModifiedDate });
@@ -326,7 +336,6 @@ export class OCRDocument extends Observable implements Document {
             compressQuality
         });
         const image = images[0];
-        DEV_LOG && console.log('updatePageCrop done', image);
         // const croppedImagePath = page.imagePath;
         // await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         // if (__IOS__) {
@@ -352,7 +361,6 @@ export class OCRDocument extends Observable implements Document {
         const page = this.pages[pageIndex];
         const file = File.fromPath(page.imagePath);
         DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
-        DEV_LOG && console.log('updatePageTransforms2', page.sourceImagePath, File.exists(page.sourceImagePath), File.fromPath(page.sourceImagePath).size);
         const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
         const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
         const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
@@ -363,7 +371,6 @@ export class OCRDocument extends Observable implements Document {
             compressQuality
         });
         const image = images[0];
-        DEV_LOG && console.log('updatePageTransforms done', image);
 
         await this.updatePage(
             pageIndex,

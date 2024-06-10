@@ -21,7 +21,7 @@ export async function getSearch(context: WebDAVClientContext, searchArbiter: str
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
     const responseText = await response.content.toStringAsync();
     const responseData = await parseXML(responseText);
     const results = parseSearch(responseData, searchArbiter, isDetailed);

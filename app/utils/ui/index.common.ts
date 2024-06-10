@@ -25,7 +25,7 @@ import {
 } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl, wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
-import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, processFromFile } from 'plugin-nativeprocessor';
+import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, printPDF, processFromFile } from 'plugin-nativeprocessor';
 import { showModal } from 'svelte-native';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -479,12 +479,12 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                             })
                     )
                 ).flat();
-                DEV_LOG && console.log('pagesToAdd', JSON.stringify(pagesToAdd));
+                DEV_LOG && console.log('pagesToAdd', document?.id, JSON.stringify(pagesToAdd));
                 if (pagesToAdd.length) {
                     const nbPagesBefore = document?.pages.length ?? 0;
                     if (document) {
                         await document.addPages(pagesToAdd);
-                        await document.save({}, false);
+                        await document.save({}, true);
                         showSnack({ message: lc('imported_nb_pages', pagesToAdd.length) });
                     } else {
                         document = await OCRDocument.createDocument(pagesToAdd);
@@ -685,6 +685,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
             { id: 'open', name: lc('open'), icon: 'mdi-eye' },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
             { id: 'export', name: lc('export'), icon: 'mdi-export' },
+            { id: 'print', name: lc('print'), icon: 'mdi-printer' },
             { id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }
         ] as any)
     );
@@ -742,6 +743,15 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             item.subtitle = exportDirectoryName;
                             options.setItem(0, item);
                         }
+                        break;
+                    }
+                    case 'print': {
+                        await closePopover();
+                        await showLoading(l('exporting'));
+                        const filePath = await exportPDFAsync({ pages, document });
+                        hideLoading();
+                        DEV_LOG && console.log('print pdf', filePath);
+                        printPDF(filePath, document?.name || 'PDF');
                         break;
                     }
                     case 'open': {

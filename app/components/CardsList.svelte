@@ -114,9 +114,13 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onDocumentUpdated', event.doc, index);
+        DEV_LOG && console.log('onDocumentUpdated', index, event.doc);
         if (index >= 0) {
-            documents.setItem(index, documents.getItem(index));
+            const item = documents?.getItem(index);
+            if (item) {
+                item.doc = event.doc;
+                documents.setItem(index, item);
+            }
         }
     }
     function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
@@ -132,13 +136,16 @@
         updateNoDocument();
     }
     function getImageView(index: number) {
-        return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
+        const view = collectionView?.nativeView?.getViewForItemAtIndex(index);
+        DEV_LOG && console.log('getImageView', index, view, collectionView, collectionView?.nativeElement, collectionView?.nativeElement?.nativeViewProtected);
+        return view?.getViewById<Img>('imageView');
     }
 
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         // let index = -1;
         const document = event.object as OCRDocument;
-        const index = documents.findIndex((d) => d.doc === document);
+        const index = documents.findIndex((d) => d.doc.id === document.id);
+        DEV_LOG && console.log('CardList onDocumentPageUpdated', index, event.pageIndex, event.imageUpdated);
         if (index >= 0) {
             if (event.pageIndex === 0) {
                 if (!!event.imageUpdated) {
@@ -152,7 +159,11 @@
                     }
                 }
             }
-            documents.setItem(index, documents.getItem(index));
+            const item = documents?.getItem(index);
+            if (item) {
+                item.doc = document;
+                documents.setItem(index, item);
+            }
         }
     }
     let syncRunning = false;
@@ -166,6 +177,7 @@
         colorSurfaceContainerHigh,
         colorOnBackground,
         colorOnPrimary,
+        colorPrimary,
         colorSurfaceContainerLow,
         colorOnSecondary,
         colorSurfaceContainer,
@@ -597,7 +609,7 @@
             if (!syncEnabled) {
                 return showSyncSettings();
             }
-            await syncService.syncDocuments(true);
+            await syncService.syncDocuments(true, true);
         } catch (error) {
             showError(error);
         }
@@ -681,7 +693,7 @@
                 // translateX: (side === 'right' ? -delta : delta) - width
             },
             backDrop: {
-                translateX: side === 'right' ? -delta : delta,
+                translateX: side === 'right' ? -delta : delta.dev,
                 opacity: progress * 0.01
             }
         };
@@ -731,11 +743,12 @@
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
             await showPopoverMenu({
                 options: [
-                    { id: 'cardholder', name: lc('cardholder'), icon: 'mdi-view-agenda' },
-                    { id: 'full', name: lc('full'), icon: 'mdi-view-split-horizontal' },
-                    { id: 'columns', name: lc('columns'), icon: 'mdi-view-grid' },
-                    { id: 'list', name: lc('list'), icon: 'mdi-view-day' }
+                    { id: 'cardholder', name: lc('cardholder'), icon: 'mdi-view-agenda', color: viewStyle === 'cardholder' ? colorPrimary : undefined },
+                    { id: 'full', name: lc('full'), icon: 'mdi-view-split-horizontal', color: viewStyle === 'full' ? colorPrimary : undefined },
+                    { id: 'columns', name: lc('columns'), icon: 'mdi-view-grid', color: viewStyle === 'columns' ? colorPrimary : undefined },
+                    { id: 'list', name: lc('list'), icon: 'mdi-view-day', color: viewStyle === 'list' ? colorPrimary : undefined }
                 ],
+                vertPos: VerticalPosition.BELOW,
                 anchor: event.object,
                 onClose: (item) => {
                     const changed = itemTemplateSelector(viewStyle) !== itemTemplateSelector(item.id);
@@ -899,9 +912,9 @@
                                 item={item.doc.pages[0]}
                                 sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                                 stretch="aspectFill" />
-                            <gridlayout style="z-index:10;" margin="10 20 0 0">
+                            <gridlayout borderRadius={12}>
                                 <SelectedIndicator selected={item.selected} />
-                                <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                                <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
                             </gridlayout>
                         </gridlayout>
                         <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
@@ -936,9 +949,9 @@
                             item={item.doc.pages[0]}
                             sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                             stretch="aspectFill" />
-                        <gridlayout style="z-index:10;" margin="10 20 0 0">
+                        <gridlayout borderRadius={12}>
                             <SelectedIndicator selected={item.selected} />
-                            <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                            <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
                         </gridlayout>
                     </gridlayout>
 
@@ -984,7 +997,7 @@
                             item={item.doc.pages[0]}
                             sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
                             stretch="aspectFill" />
-                        <gridlayout style="z-index:10;" margin="10 20 0 0">
+                        <gridlayout>
                             <SelectedIndicator selected={item.selected} />
                             <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
                         </gridlayout>
@@ -1063,8 +1076,9 @@
         <CActionBar title={l('cards')}>
             <mdbutton
                 class="actionBarButton"
+                class:infinite-rotate={syncRunning}
                 isEnabled={!syncRunning}
-                text="mdi-sync"
+                text="mdi-autorenew"
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments}

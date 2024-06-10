@@ -28,13 +28,13 @@ export async function lock(context: WebDAVClientContext, pathStr: string, option
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
     const responseData = await response.content.toStringAsync();
     const lockPayload = parseGenericResponse(responseData);
     const token = nestedProp.get(lockPayload, 'prop.lockdiscovery.activelock.locktoken.href');
     const serverTimeout = nestedProp.get(lockPayload, 'prop.lockdiscovery.activelock.timeout');
     if (!token) {
-        const err = createErrorFromResponse(response, 'No lock token received: ');
+        const err = createErrorFromResponse(response, requestOptions, 'No lock token received: ');
         throw err;
     }
     return {
@@ -56,9 +56,9 @@ export async function unlock(context: WebDAVClientContext, pathStr: string, toke
         options
     );
     const response = await request(requestOptions);
-    await handleResponseCode(context, response);
+    await handleResponseCode(context, response, requestOptions);
     if (response.statusCode !== 204 && response.statusCode !== 200) {
-        const err = createErrorFromResponse(response);
+        const err = createErrorFromResponse(response, requestOptions);
         throw err;
     }
 }
