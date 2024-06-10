@@ -454,7 +454,7 @@ export class SyncService extends Observable {
                 const remotePage = toBeSyncPages[index];
                 const remotePageIndex = remotePages.findIndex((p) => p.id === remotePage.id);
                 const localPageIndex = (docPages as OCRPage[]).findIndex((p) => p.id === remotePage.id);
-                const localPageToSync = docPages[remotePageIndex];
+                const localPageToSync = docPages[localPageIndex];
                 TEST_LOG && console.log('sync page', localPageToSync.id, localPageToSync.modifiedDate, remotePage.modifiedDate);
                 if (remotePage.modifiedDate > localPageToSync.modifiedDate) {
                     //we need to update the data and then recreate the image if necessary
