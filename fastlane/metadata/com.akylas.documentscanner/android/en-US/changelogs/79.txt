@@ -1,0 +1,12 @@
+### Features
+- camera shortcut
+- print PDF directly from the app
+
+### Bug fixes
+- bring back capture button animation while autoscan is enabled
+- remove red eye flash mode
+- Translated using Weblate (French)
+- Translated using Weblate (Arabic)
+- Translated using Weblate (Galician)
+- sync fix
+- many sync/update fixes
