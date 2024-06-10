@@ -460,32 +460,38 @@ export class SyncService extends Observable {
                     //we need to update the data and then recreate the image if necessary
                     const { imagePath: localImagePath, sourceImagePath: localSourceImagePath, ...pageProps } = localPageToSync;
                     const { imagePath: remoteImagePath, sourceImagePath: remoteSourceImagePath, ...remotePageProps } = remotePage;
-                    const pageTooUpdate: Partial<OCRPage> = {};
+                    const pageToUpdate: Partial<OCRPage> = {};
                     Object.keys(remotePageProps).forEach((k) => {
                         if (k.startsWith('_')) {
                             return;
                         }
                         if (remotePageProps[k] !== pageProps[k] && JSON.stringify(remotePageProps[k]) !== JSON.stringify(pageProps[k])) {
-                            pageTooUpdate[k] = remotePageProps[k];
+                            pageToUpdate[k] = remotePageProps[k];
                         }
                     });
                     // check if we need to recreate the image
-                    TEST_LOG && console.log('sync page FROM webdav!', localPageToSync.id, JSON.stringify(pageTooUpdate));
-                    if (pageTooUpdate.crop || pageTooUpdate.transforms) {
+                    TEST_LOG && console.log('sync page FROM webdav!', localPageToSync.id, JSON.stringify(pageToUpdate));
+                    let imageChanged = false;
+                    if (pageToUpdate.crop || pageToUpdate.transforms) {
                         const file = File.fromPath(localPageToSync.imagePath);
-                        DEV_LOG && console.log('page sync needed size update', file.size);
-                        await cropDocumentFromFile(localPageToSync.sourceImagePath, [pageTooUpdate.crop], {
+
+                        const crop = pageToUpdate.crop || localPageToSync.crop;
+                        const transforms = pageToUpdate.transforms || localPageToSync.transforms;
+                        DEV_LOG && console.log('page sync needed size update', file.size, transforms, crop);
+                        await cropDocumentFromFile(localPageToSync.sourceImagePath, [crop], {
                             saveInFolder: file.parent.path,
                             fileName: file.name,
                             compressFormat: IMG_FORMAT,
-                            compressQuality: IMG_COMPRESS
+                            compressQuality: IMG_COMPRESS,
+                            transforms
                         });
-                        pageTooUpdate.size = file.size;
-                    } else if (pageTooUpdate.size === 0) {
+                        pageToUpdate.size = file.size;
+                        imageChanged = true;
+                    } else if (pageToUpdate.size === 0) {
                         const file = File.fromPath(localPageToSync.imagePath);
-                        pageTooUpdate.size = file.size;
+                        pageToUpdate.size = file.size;
                     }
-                    await document.updatePage(localPageIndex, pageTooUpdate);
+                    await document.updatePage(localPageIndex, pageToUpdate, imageChanged);
                 } else if (remotePage.modifiedDate < localPageToSync.modifiedDate) {
                     //we need to update the data and then recreate the image if necessary
                     const { imagePath: localImagePath, sourceImagePath: localSourceImagePath, ...pageProps } = localPageToSync;
