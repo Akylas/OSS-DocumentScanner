@@ -74,7 +74,8 @@ checkbox {
 }
 
 
-mdbutton {
+mdbutton[variant=flat],mdbutton[variant=contained] {
+    background-color: var(--colorPrimary);
     color: var(--colorOnPrimary);
 }
 
