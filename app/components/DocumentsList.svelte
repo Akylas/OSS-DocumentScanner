@@ -383,6 +383,22 @@
                             onStartCam();
                         }, 0);
                         break;
+
+                    case 'android.intent.action.MAIN':
+                        const extras = intent.getExtras();
+                        const bundleAction = extras?.getString('action');
+                        switch (bundleAction) {
+                            case 'view':
+                                const id = extras?.getString('id');
+                                if (id) {
+                                    const document = await documentsService.documentRepository.get(id);
+                                    if (document) {
+                                        goToDocumentView(document);
+                                    }
+                                }
+                                break;
+                        }
+                        break;
                 }
                 DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 if (uris.length) {

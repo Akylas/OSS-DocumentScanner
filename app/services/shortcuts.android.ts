@@ -35,61 +35,81 @@ export default class ShortcutsService {
      * used card shortcut is discarded.
      */
     async updateShortcuts(document: OCRDocument) {
-        // TODO: try to run this in the thread
-        const context = Utils.android.getApplicationContext();
-        // if (document.archiveStatus == 1) {
-        //     // Don't add archived card to menu
-        //     return;
-        // }
-        const shortcutId = document.id;
+        try {
+            DEV_LOG && console.log('updateShortcuts', document.id);
+            // TODO: try to run this in the thread
+            const context = Utils.android.getApplicationContext();
+            // if (document.archiveStatus == 1) {
+            //     // Don't add archived card to menu
+            //     return;
+            // }
+            const shortcutId = document.id;
 
-        const nlist = ShortcutManagerCompat.getDynamicShortcuts(context);
-        const list: androidx.core.content.pm.ShortcutInfoCompat[] = [];
-        for (let index = 0; index < nlist.size(); index++) {
-            list.push(nlist.get(index));
-        }
+            const nlist = ShortcutManagerCompat.getDynamicShortcuts(context);
+            const list: androidx.core.content.pm.ShortcutInfoCompat[] = [];
+            for (let index = 0; index < nlist.size(); index++) {
+                list.push(nlist.get(index));
+            }
 
-        // Sort the shortcuts by rank, so working with the relative order will be easier.
-        // This sorts so that the lowest rank is first.
-        list.sort((a, b) => a.getRank() - b.getRank());
-        // java.util.Collections.sort(nlist, java.util.Comparator.comparingInt(ShortcutInfoCompat.class['getRank']));
+            // Sort the shortcuts by rank, so working with the relative order will be easier.
+            // This sorts so that the lowest rank is first.
+            list.sort((a, b) => a.getRank() - b.getRank());
+            // java.util.Collections.sort(nlist, java.util.Comparator.comparingInt(ShortcutInfoCompat.class['getRank']));
 
-        const foundIndex = list.findIndex((d) => d.getId() === shortcutId);
+            const foundIndex = list.findIndex((d) => d.getId() === shortcutId);
+            DEV_LOG &&
+                console.log(
+                    'updateShortcuts list',
+                    shortcutId,
+                    foundIndex,
+                    list.map((a) => a.getId())
+                );
+            if (foundIndex !== -1) {
+                // If the item is already found, then the list needs to be
+                // reordered, so that the selected item now has the lowest
+                // rank, thus letting it survive longer.
+                list.splice(foundIndex, 1);
+            }
+            list.unshift((await this.createShortcutBuilder(context, document)).build());
+            DEV_LOG &&
+                console.log(
+                    'updateShortcuts list1',
+                    shortcutId,
+                    list.map((a) => a.getId())
+                );
+            const finalList = new java.util.LinkedList<androidx.core.content.pm.ShortcutInfoCompat>();
+            let rank = 0;
 
-        if (foundIndex !== -1) {
-            // If the item is already found, then the list needs to be
-            // reordered, so that the selected item now has the lowest
-            // rank, thus letting it survive longer.
-            list.splice(foundIndex, 1);
-        }
-        list.unshift((await this.createShortcutBuilder(context, document)).build());
+            // The ranks are now updated; the order in the list is the rank.
+            finalList.addLast(list[0]);
+            for (let index = 1; index < list.length; index++) {
+                const prevShortcut = list[index];
+                let prevDocument: OCRDocument;
+                try {
+                    prevDocument = await documentsService.documentRepository.get(prevShortcut.getId());
+                } catch (error) {}
 
-        const finalList = new java.util.LinkedList<androidx.core.content.pm.ShortcutInfoCompat>();
-        let rank = 0;
+                // skip outdated that no longer exist
+                if (prevShortcut && prevDocument) {
+                    const updatedShortcut = (await this.createShortcutBuilder(context, prevDocument)).setRank(rank).build();
+                    finalList.addLast(updatedShortcut);
+                    rank++;
 
-        // The ranks are now updated; the order in the list is the rank.
-        finalList.addLast(list[0]);
-        for (let index = 1; index < list.length; index++) {
-            const prevShortcut = list[index];
-            const prevDocument = await documentsService.documentRepository.get(prevShortcut.getId());
-
-            // skip outdated that no longer exist
-            if (prevShortcut) {
-                const updatedShortcut = (await this.createShortcutBuilder(context, prevDocument)).setRank(rank).build();
-                finalList.addLast(updatedShortcut);
-                rank++;
-
-                // trim the list
-                if (rank >= MAX_SHORTCUTS) {
-                    break;
+                    // trim the list
+                    if (rank >= MAX_SHORTCUTS) {
+                        break;
+                    }
                 }
             }
+
+            const result = ShortcutManagerCompat.setDynamicShortcuts(context, finalList);
+            DEV_LOG && console.log('updateShortcuts result', result);
+        } catch (error) {
+            console.error(error, error.stack);
+        } finally {
+            recycleImages(this.imagesToRecycle);
+            this.imagesToRecycle = [];
         }
-
-        const result = ShortcutManagerCompat.setDynamicShortcuts(context, finalList);
-
-        recycleImages(this.imagesToRecycle);
-        this.imagesToRecycle = [];
     }
 
     /**
@@ -108,7 +128,7 @@ export default class ShortcutsService {
         intent.setFlags(intent.getFlags() | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
         const bundle = new android.os.Bundle();
         bundle.putString('id', document.id);
-        bundle.putBoolean('view', true);
+        bundle.putString('action', 'view');
         intent.putExtras(bundle);
 
         // Bitmap iconBitmap = Utils.retrieveCardImage(context, loyaltyCard.id, ImageLocationType.icon);

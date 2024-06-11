@@ -496,6 +496,21 @@
                             onStartCam();
                         }, 0);
                         break;
+                    case 'android.intent.action.MAIN':
+                        const extras = intent.getExtras();
+                        const bundleAction = extras?.getString('action');
+                        switch (bundleAction) {
+                            case 'view':
+                                const id = extras?.getString('id');
+                                if (id) {
+                                    const document = await documentsService.documentRepository.get(id);
+                                    if (document) {
+                                        goToDocumentView(document);
+                                    }
+                                }
+                                break;
+                        }
+                        break;
                 }
                 DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 if (uris.length) {
@@ -820,25 +835,24 @@
                     name: lc('import_from_file'),
                     icon: 'mdi-file-document-plus-outline'
                 }
-            ]
-                .concat(
-                    __IOS__
-                        ? [
-                              {
-                                  id: 'import_image',
-                                  name: lc('import_from_image'),
-                                  icon: 'mdi-image-plus-outline'
-                              }
-                          ]
-                        : []
-                )
-                .concat([
-                    {
-                        id: 'add_manual',
-                        name: lc('add_manual'),
-                        icon: 'mdi-plus'
-                    }
-                ]);
+            ].concat(
+                __IOS__
+                    ? [
+                          {
+                              id: 'import_image',
+                              name: lc('import_from_image'),
+                              icon: 'mdi-image-plus-outline'
+                          }
+                      ]
+                    : []
+            );
+            // .concat([
+            //     {
+            //         id: 'add_manual',
+            //         name: lc('add_manual_card'),
+            //         icon: 'mdi-plus'
+            //     }
+            // ]);
             const option = await showBottomSheet({
                 parent: this,
                 view: OptionSelect,
