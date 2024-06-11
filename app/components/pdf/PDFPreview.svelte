@@ -403,7 +403,7 @@
                 </wraplayout>
             </drawer>
 
-            <CActionBar modalWindow={true} title={lc('preview')}>
+            <CActionBar modalWindow={true} title={lc('pdf_preview')}>
                 <mdbutton class="actionBarButton" text="mdi-printer" variant="text" on:tap={onPrintPDF} />
                 <mdbutton class="actionBarButton" text="mdi-cog" variant="text" on:tap={showPDFSettings} />
             </CActionBar>
