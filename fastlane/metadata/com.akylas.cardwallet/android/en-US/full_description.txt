@@ -1,0 +1,9 @@
+<p>The <i>OSS Card Wallet</i> is an Open Source app to scan and store all your cards. You either scan using your camera or by importing an image. The app will automatically detect you cards and barcodes within the photo and will crop the image.</p>
+* Automatic Barcode/QRCode detection
+* Manually add Barcode/QRCode
+* use OCR to store content for easy access / copy
+* Secure your data with biometrics
+* share / export in PDF / images. You can even do it for multiple documents at once
+* directly print from your phone!
+* Shortcuts for recently used cards for easy access
+* quickly display barcode/QRCode for easy scan
