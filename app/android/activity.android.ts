@@ -9,7 +9,7 @@ function getThemeColor(context, colorResId) {
 }
 
 const TAG = '[MainActivity]';
-const FLAG_SECURE = 2; // android.view.WindowManager.LayoutParams.FLAG_SECURE
+const FLAG_SECURE = 8192; // android.view.WindowManager.LayoutParams.FLAG_SECURE
 @NativeClass()
 @JavaProxy('__PACKAGE__.MainActivity')
 export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
@@ -53,6 +53,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     public onNewIntent(intent: android.content.Intent): void {
+        DEV_LOG && console.log(TAG, 'onNewIntent', intent.getAction());
         this._callbacks.onNewIntent(this, intent, super.setIntent, super.onNewIntent);
     }
 
@@ -78,6 +79,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     public onPostResume(): void {
+        DEV_LOG && console.log(TAG, 'onPostResume', this.getIntent().getAction());
         this._callbacks.onPostResume(this, super.onPostResume);
     }
 
