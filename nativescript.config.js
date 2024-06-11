@@ -22,6 +22,8 @@ module.exports = {
     android: {
         plugins: {
             'plugin-nativeprocessor': {
+                // based on the app the plugin is built with our without qrcode.
+                // so both apps cant use the same aar. we use a suffix to differentiate them
                 aarSuffix: CARD_APP ? '-cardwallet' : '-documentscanner'
             }
         },
@@ -29,6 +31,7 @@ module.exports = {
         gradleVersion: '8.6',
         markingMode: 'none',
         codeCache: true,
+        // for cardwallet we enable qrcode. and then we filter aar to only use the one we want
         gradleArgs: CARD_APP ? ['-PwithQRCode', '-PaarIgnoreFilter=**/*documentscanner*'] : ['-PaarIgnoreFilter=**/*cardwallet*'],
         enableMultithreadedJavascript: false,
         ...(loggingEnabled
