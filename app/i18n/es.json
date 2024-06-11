@@ -54,6 +54,7 @@
     "cards": "tarjetas",
     "color": "color",
     "color_desc": "realza los colores y reduce los matices innecesarios",
+    "columns": "columnas",
     "comments": "comentarios",
     "computing": "procesando...",
     "condensed": "compacto",
@@ -269,6 +270,7 @@
     "sure_cancel_import": "¿estas seguro que quieres cancelar?",
     "sure_go_back": "¿Estás seguro de que quieres volver?",
     "sync": "sincronizar",
+    "sync_settings_desc": "configuración de sincronización",
     "system": "sistema",
     "test": "probar",
     "theme": {
@@ -289,6 +291,7 @@
     "use_system_camera_desc": "usar la cámara del sistema en lugar de la vista de la aplicación (una pulsación larga usaría el comportamiento inverso). Al activar esta opción, algunas funciones como el escaneo automático o por lotes se desactivarán",
     "username": "nombre usuario",
     "version": "versión",
+    "webdav_auto_sync": "sincronizar automáticamente con WebDAV al iniciar y realizar cambios en los documentos",
     "webdav_config": "configuración webdav",
     "webdav_sync": "sincronizar documentos webdav",
     "webdav_sync_desc": "habilita webdav para sincronizar tus documentos (copia de seguridad)",
