@@ -1,10 +1,2 @@
 ### Features
-- added webdav support added enhance and whitepaper filters a ton of fixes and improvements
-- working on tesseract progress
-- download ocr data if needed on ocr request fix: rewrote ocr data view
-- ocr settings gui
-- animated scanner in preview chore: started to implement qrcode detection
-- more options to export pdf
-- allow to show fullscreen images of selected documents
-- allow to export pdf with preview and configuration
-- you can now export to PDF with OCR data include as transp
+- first version!
