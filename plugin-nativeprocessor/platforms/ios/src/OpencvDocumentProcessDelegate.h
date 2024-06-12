@@ -45,11 +45,18 @@
 
 // PRAGMA: ocrDocument
 +(void)ocrDocumentSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
-
 +(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 +(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 
+// PRAGMA: detectQRCode
++(void)detectQRCodeFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 
+// PRAGMA: generateQRCode
 +(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 +(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  hintSize:(NSInteger)hintSize options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
+
+// PRAGMA: process
++(void)processSync:(UIImage*)image processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale;
++(void)process:(UIImage*)image processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(void)processFromFile:(NSString*)src processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 @end

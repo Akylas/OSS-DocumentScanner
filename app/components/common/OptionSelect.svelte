@@ -198,7 +198,7 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight} on:dataPopulated={onDataPopulated}>
+        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight} on:dataPopulated={onDataPopulated} ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
                 <svelte:component
                     this={component}

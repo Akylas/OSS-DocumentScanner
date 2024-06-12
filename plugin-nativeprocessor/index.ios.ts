@@ -9,6 +9,7 @@ class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
     reject;
     progress;
     onCompleteError(result: any, error): void {
+        DEV_LOG && console.log('onCompleteError', result, error);
         if (error) {
             this.reject(error);
         } else {
@@ -87,24 +88,14 @@ export async function getJSONDocumentCornersFromFile(src: string, options: Corne
     });
 }
 export async function processFromFile(src: string, processes: any[], options: LoadImageOptions = {}): Promise<any[]> {
-    throw new Error('not implemented');
-    // return new Promise((resolve, reject) => {
-    // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.processFromFile(
-    //     Utils.android.getApplicationContext(),
-    //     src,
-    //     JSON.stringify(processes),
-    //     new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
-    //         onResult(e, result) {
-    //             if (e) {
-    //                 reject(e);
-    //             } else {
-    //                 resolve(result ? JSON.parse(result) : []);
-    //             }
-    //         }
-    //     }),
-    //     options ? JSON.stringify(options) : null
-    // );
-    // });
+    return new Promise((resolve, reject) => {
+        try {
+            DEV_LOG && console.log('processFromFile');
+            OpencvDocumentProcessDelegate.processFromFileProcessesOptionsDelegate(src, processes, JSON.stringify(options), CompletionDelegateImpl.initWithResolveReject(resolve, reject));
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
 export async function getColorPalette(
     editingImage: ImageSource,

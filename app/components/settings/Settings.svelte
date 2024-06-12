@@ -1196,19 +1196,21 @@
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">
-                    <stacklayout
-                        backgroundColor="#ea4bae"
-                        borderRadius={10}
-                        horizontalAlignment="center"
-                        margin="10 16 0 16"
-                        orientation="horizontal"
-                        padding={10}
-                        rippleColor="white"
-                        verticalAlignment="center"
-                        on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
-                        <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
-                        <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
-                    </stacklayout>
+                    {#if __ANDROID__}
+                        <stacklayout
+                            backgroundColor="#ea4bae"
+                            borderRadius={10}
+                            horizontalAlignment="center"
+                            margin="10 16 0 16"
+                            orientation="horizontal"
+                            padding={10}
+                            rippleColor="white"
+                            verticalAlignment="center"
+                            on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
+                            <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
+                            <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
+                        </stacklayout>
+                    {/if}
 
                     <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
                         <image borderRadius="50%" height={50} horizontalAlignment="center" src="res://icon" width={50} />
