@@ -54,6 +54,7 @@
     "cards": "tarxetas",
     "color": "cor",
     "color_desc": "mellora as cores e reduce as sombras non desexadas",
+    "columns": "columnas",
     "comments": "comentarios",
     "computing": "a calcular...",
     "condensed": "compacta",
@@ -269,6 +270,7 @@
     "sure_cancel_import": "tes certeza de querer desbotar?",
     "sure_go_back": "tes certeza de querer volver atrás?",
     "sync": "sincr",
+    "sync_settings_desc": "axustes de sincronización",
     "system": "sistema",
     "test": "proba",
     "theme": {
@@ -289,6 +291,7 @@
     "use_system_camera_desc": "usar a cámara do sistema no lugar do visor da app (a pulsación longa reverte o comportamento). Ao activala desactivarás algunhas funcións como escaneo por lotes ou auto-escaneado",
     "username": "identificador",
     "version": "versión",
+    "webdav_auto_sync": "sincroniza automáticamente no incio e con cambios nos documentos usando WebDAV",
     "webdav_config": "configuración WebDAV",
     "webdav_sync": "Sincr webdav de documentos",
     "webdav_sync_desc": "activar a sincr webdav dos teus documentos (copia apoio)",
