@@ -1,2 +1,0 @@
-*Bug fixes*
-- use new PDF exporter in all cases (with specified options)

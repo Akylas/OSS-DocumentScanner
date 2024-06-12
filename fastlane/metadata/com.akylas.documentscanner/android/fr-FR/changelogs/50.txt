@@ -1,2 +1,0 @@
-### Bug fixes
-- **android:** error while taking picture with  torchmode
