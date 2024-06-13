@@ -1,4 +1,4 @@
-<p>The <i>OSS Portefeuille</i> est une application Open Source pour scanner et stocker toutes vos cartes. Vous numérisez soit en utilisant votre caméra, soit en important une image. L'application détecte automatiquement les cartes et codes-barres dans la photo et va recadrer l'image.</p>
+<i>OSS Portefeuille</i> est une application Open Source pour scanner et stocker toutes vos cartes. Vous numérisez soit en utilisant votre caméra, soit en important une image. L'application détecte automatiquement les cartes et codes-barres dans la photo et va recadrer l'image.
 * Détection automatique du code barre/QRCode
 * Ajoutez manuellement le code barre/QRCode
 * utilisez l'OCR pour stocker du contenu pour un accès facile / copie

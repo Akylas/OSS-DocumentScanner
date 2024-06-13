@@ -203,7 +203,7 @@ lane :get_changelog  do |params|
     ignorePlatform = "android"
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: 'markdown', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform]).split(/[\n]/).uniq
+  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform]).split(/[\n]/).uniq
   logs = logs.map {|l| 
     if (!display_links)
       # remove github issues
@@ -316,7 +316,7 @@ platform :android do
     metadata_dir="metadata/#{app_identifier}/android"
     require 'fileutils'
     system 'mkdir', '-p', metadata_dir
-    writeFileIfNotExist("#{metadata_dir}/fr-FR/changelogs/#{version}.txt", changelog)
+    # writeFileIfNotExist("#{metadata_dir}/fr-FR/changelogs/#{version}.txt", changelog)
     writeFileIfNotExist("#{metadata_dir}/en-US/changelogs/#{version}.txt", changelog)
     # Create a new branch and upload a PR for it.
     sh("git add #{metadata_dir}; git commit -m '#{version} release notes' --allow-empty")

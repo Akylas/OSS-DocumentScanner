@@ -1,2 +1,0 @@
-*Bug fixes*
-- *android:* error while exporting a PDF fix #12

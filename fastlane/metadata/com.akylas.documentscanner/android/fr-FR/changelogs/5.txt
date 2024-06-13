@@ -1,5 +1,0 @@
-*Features*
-- you can now export to PDF with OCR data include as transparent text
-
-*Bug fixes*
-- fully working PDF export preview with options

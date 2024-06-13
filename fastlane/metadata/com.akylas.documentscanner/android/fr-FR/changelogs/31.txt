@@ -1,2 +1,0 @@
-*Bug fixes*
-- *android:* theme change regression fix

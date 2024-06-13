@@ -1,2 +1,0 @@
-*Bug fixes*
-- *android:* regression fix where loading dialog would not hide anymore

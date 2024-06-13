@@ -1,2 +1,0 @@
-### Bug fixes
-- show a warning dialog about the new auto scan feature

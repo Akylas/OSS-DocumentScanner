@@ -1,2 +1,0 @@
-*Features*
-- new camera settings `aspectRatio`, `stretch` and `viewSize`

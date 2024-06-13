@@ -1,2 +1,0 @@
-*Bug fixes*
-- fix error while trying to change language (for good!)

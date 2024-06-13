@@ -1,2 +1,0 @@
-*Bug fixes*
-- pdf export is now running in a thread

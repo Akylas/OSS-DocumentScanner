@@ -13,7 +13,7 @@
         android:maxSdkVersion="29"
         tools:ignore="ScopedStorage"
         tools:replace="android:maxSdkVersion" />
-    <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />

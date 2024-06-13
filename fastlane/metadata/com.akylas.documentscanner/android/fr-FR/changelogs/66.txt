@@ -1,2 +1,0 @@
-### Bug fixes
-- dont ask for fingerprint when taking photo from system camera

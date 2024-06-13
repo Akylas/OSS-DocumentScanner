@@ -1,2 +1,0 @@
-### Bug fixes
-- permission error on android <= 29
