@@ -3,8 +3,12 @@
 
 #include <opencv2/opencv.hpp>
 #include <jsoncons/json.hpp>
-#include <MultiFormatWriter.h>
+
+#ifdef __APPLE__
+#include <ZXingCpp/ReadBarcode.h>
+#else
 #include <ReadBarcode.h>
+#endif
 
 struct ScanPlusQRCodeResult {
     std::vector<std::vector<cv::Point>> points;

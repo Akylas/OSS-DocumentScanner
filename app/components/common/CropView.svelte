@@ -350,7 +350,7 @@
                 clearImages();
                 zoomImagePath = image;
                 zoomImage = await loadImage(imagePath, { sourceWidth: width, sourceHeight: height, resizeThreshold: ZOOM_IMAGE_MAX_SIZE });
-                if (zoomImage?.android) {
+                if (zoomImage?.android || zoomImage?.ios) {
                     zoomImageScale = width / zoomImage.width;
                     zoomImageShader = new BitmapShader(zoomImage, TileMode.CLAMP, TileMode.CLAMP);
                     shaderPaint.setShader(zoomImageShader);
@@ -422,7 +422,7 @@
         shaderMatrix.reset();
         shaderMatrix.postScale(zoomImageScale, zoomImageScale, 0, 0);
         shaderMatrix.postScale(2, 2, point[0], point[1]);
-        zoomImageShader.setLocalMatrix(shaderMatrix);
+        zoomImageShader?.setLocalMatrix(shaderMatrix);
 
         canvas.translate(drawingPosition[0] - point[0], drawingPosition[1] - point[1]);
         canvas.drawCircle(point[0], point[1], glassSize, shaderPaint);

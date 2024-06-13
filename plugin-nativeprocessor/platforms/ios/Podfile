@@ -1,0 +1,1 @@
+pod 'zxing-cpp/Core', :path => '../../../zxingcpp'

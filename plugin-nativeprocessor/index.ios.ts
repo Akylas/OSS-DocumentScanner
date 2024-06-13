@@ -8,26 +8,29 @@ class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
     resolve;
     reject;
     progress;
+    shouldParse;
     onCompleteError(result: any, error): void {
-        DEV_LOG && console.log('onCompleteError', result, error);
         if (error) {
             this.reject(error);
         } else {
-            if (typeof result === 'string') {
+            DEV_LOG && console.log('onCompleteError', result, error);
+            if (this.shouldParse  && typeof result === 'string') {
                 this.resolve(result ? JSON.parse(result) : null);
+            } else {
+                this.resolve(result);
             }
-            this.resolve(result);
         }
     }
     onProgress(progress: number): void {
         this.progress?.(progress);
     }
 
-    static initWithResolveReject(resolve, reject, progress?) {
+    static initWithResolveReject(resolve, reject, progress?, shouldParse = true) {
         const delegate = CompletionDelegateImpl.new() as CompletionDelegateImpl;
         delegate.resolve = resolve;
         delegate.reject = reject;
         delegate.onProgress = progress;
+        delegate.shouldParse = shouldParse;
         return delegate;
     }
 }
@@ -90,8 +93,12 @@ export async function getJSONDocumentCornersFromFile(src: string, options: Corne
 export async function processFromFile(src: string, processes: any[], options: LoadImageOptions = {}): Promise<any[]> {
     return new Promise((resolve, reject) => {
         try {
-            DEV_LOG && console.log('processFromFile');
-            OpencvDocumentProcessDelegate.processFromFileProcessesOptionsDelegate(src, processes, JSON.stringify(options), CompletionDelegateImpl.initWithResolveReject(resolve, reject));
+            OpencvDocumentProcessDelegate.processFromFileProcessesOptionsDelegate(
+                src,
+                JSON.stringify(processes),
+                JSON.stringify(options),
+                CompletionDelegateImpl.initWithResolveReject(resolve, reject)
+            );
         } catch (error) {
             reject(error);
         }
@@ -192,116 +199,40 @@ export async function detectQRCodeFromFile(src: string, options?: Partial<Detect
             reject(error);
         }
     });
-    // return new Promise<QRCodeData>((resolve, reject) => {
-    //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCodeFromFile(
-    //         Utils.android.getApplicationContext(),
-    //         src,
-    //         new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
-    //             onResult(e, result) {
-    //                 if (e) {
-    //                     reject(e);
-    //                 } else {
-    //                     resolve(result ? JSON.parse(result) : null);
-    //                 }
-    //             }
-    //         }),
-    //         options ? JSON.stringify(options) : ''
-    //     );
-    // });
 }
 
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
-    // const data = NSString.stringWithString(text).dataUsingEncoding(NSISOLatin1StringEncoding);
-    // let generatorKey;
-    // switch (format) {
-    //     case 'qrcode':
-    //         generatorKey = 'CIQRCodeGenerator';
-    //         break;
-    //     case 'pdf417':
-    //         generatorKey = 'CIPDF417BarcodeGenerator';
-    //         break;
-    //     case 'aztec':
-    //         generatorKey = 'CIAztecCodeGenerator';
-    //         break;
-    //     case 'upce':
-    //     case 'code39':
-    //     case 'code39mod43':
-    //     case 'code93':
-    //     case 'ean13':
-    //     case 'ean8':
-    //     case 'upca':
-    //     case 'code128':
-    //         generatorKey = 'CICode128BarcodeGenerator';
-    //         break;
-    // }
-    // if (generatorKey) {
-    //     const filter = CIFilter.filterWithName(generatorKey);
-    //     if (filter) {
-    //         filter.setValueForKey(data, 'inputMessage');
-    //         // filter.setValueForKey('H', 'inputCorrectionLevel');
-
-    //         let output = filter.outputImage;
-    //         if (output) {
-    //             if (options?.frontColor || options?.backColor) {
-    //                 //change qrcode color : #1e3259
-    //                 const filterFalseColor = CIFilter.filterWithName('CIFalseColor');
-    //                 filterFalseColor.setDefaults();
-    //                 filterFalseColor.setValueForKey(output, 'inputImage');
-    //                 // convert method
-    //                 if (options?.frontColor) {
-    //                     const color = options.frontColor instanceof Color ? options.frontColor : new Color(options.frontColor);
-    //                     filterFalseColor.setValueForKey(CIColor.colorWithCGColor(color.ios.CGColor), 'inputColor0');
-    //                 } else {
-    //                     filterFalseColor.setValueForKey(CIColor.colorWithString('black'), 'inputColor0');
-    //                 }
-    //                 if (options?.backColor) {
-    //                     const color = options.backColor instanceof Color ? options.backColor : new Color(options.backColor);
-    //                     filterFalseColor.setValueForKey(CIColor.colorWithCGColor(color.ios.CGColor), 'inputColor1');
-    //                 } else {
-    //                     filterFalseColor.setValueForKey(CIColor.colorWithString('white'), 'inputColor1');
-    //                 }
-    //                 output = filterFalseColor.outputImage;
-    //             }
-    //             const scaleX = width / output.extent.size.width;
-    //             const scaleY = height / output.extent.size.height;
-
-    //             output = output.imageByApplyingTransform(CGAffineTransformMakeScale(scaleX, scaleY));
-
-    //             const context = CIContext.context();
-    //             if (context) {
-    //                 // if we create the UIImage directly from the CIImage then it wont be drawn correctly in UIImageView
-    //                 // the contentMode won't be respected, and it won't even draw with SDAnimatedImageView
-    //                 const CGImage = context.createCGImageFromRect(output, output.extent);
-    //                 return new ImageSource(UIImage.imageWithCGImageScaleOrientation(CGImage, UIScreen.mainScreen.scale, UIImageOrientation.Up));
-    //             }
-    //         }
-    //     }
-    // }
-    return null;
+    return new Promise<ImageSource>((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.generateQRCodeFormatWidthHeightOptionsDelegate(
+                text,
+                format,
+                width,
+                height,
+                options ? JSON.stringify(options) : '',
+                CompletionDelegateImpl.initWithResolveReject((image) => {
+                    resolve(new ImageSource(image));
+                }, reject)
+            );
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
 
 export async function generateQRCodeSVG(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
-    return new Promise<any>((resolve, reject) => {
-
-        // isMatrix: Aztec | DataMatrix | MaxiCode | PDF417 | QRCode | MicroQRCode | RMQRCode
-        // use it to generate image squared or not
-        DEV_LOG && console.log('generateQRCodeSVG', text, hintSize);
-        com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSVG(
-            text,
-            format,
-            hintSize,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
-                onResult(e, result) {
-                    if (e) {
-                        reject(e);
-                    } else {
-                        DEV_LOG && console.log('generateQRCodeSVG done', result);
-                        resolve(result);
-                    }
-                }
-            }),
-            options ? JSON.stringify(options) : ''
-        );
+    return new Promise<string>((resolve, reject) => {
+        try {
+            OpencvDocumentProcessDelegate.generateQRCodeSVGFormatSizeHintOptionsDelegate(
+                text,
+                format,
+                hintSize,
+                options ? JSON.stringify(options) : '',
+                CompletionDelegateImpl.initWithResolveReject(resolve, reject, undefined, false)
+            );
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 

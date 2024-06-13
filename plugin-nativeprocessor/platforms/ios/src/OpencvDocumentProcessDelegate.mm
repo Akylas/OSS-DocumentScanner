@@ -9,6 +9,7 @@
 #ifdef WITH_QRCODE
 #import <QRCode.h>
 #endif
+#import <Utils.h>
 
 @implementation OpencvDocumentProcessDelegate
 
@@ -337,9 +338,9 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     UIImage* image = [ImageUtils readImageFromFile:src options:options];
     CGFloat scale = 1.0;
     if ([[imageSize objectForKey:@"rotation"] intValue] % 180 != 0) {
-        scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
+      scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
     } else {
-        scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.width;
+      scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.width;
     }
     [self getJSONDocumentCornersSync:image shrunkImageHeight:0 imageRotation:[imageRotation intValue] delegate:delegate scale:scale options:optionsStr];
   });
@@ -348,7 +349,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 // PRAGMA: cropDocument
 +(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat compressQuality:(CGFloat)compressQuality   {
   @try {
-//    CFTimeInterval startTime = CACurrentMediaTime();
+    //    CFTimeInterval startTime = CACurrentMediaTime();
     NSError *error = nil;
     NSArray* quadsArray = [NSJSONSerialization JSONObjectWithData:[quads dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
     NSMutableArray* images = [NSMutableArray array];
@@ -401,10 +402,10 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
         NSString* imagePath = [NSString stringWithFormat:@"%@/%@", saveInFolder, fileName ?: [NSString stringWithFormat:@"cropedBitmap_%@.%@", index, compressFormat]];
         if ([compressFormat isEqualToString:@"jpg"]) {
           NSError *error = nil;
-//          std::vector<int> compression_params;
-//          compression_params.push_back(IMWRITE_JPEG_QUALITY);
-//          compression_params.push_back(compressQuality);
-//          cv::imwrite([imagePath UTF8String], dstBitmapMat);
+          //          std::vector<int> compression_params;
+          //          compression_params.push_back(IMWRITE_JPEG_QUALITY);
+          //          compression_params.push_back(compressQuality);
+          //          cv::imwrite([imagePath UTF8String], dstBitmapMat);
           [UIImageJPEGRepresentation(MatToUIImage(dstBitmapMat), compressQuality/ 100.0) writeToFile:imagePath options:NSDataWritingAtomic error:&error];
         } else {
           [UIImagePNGRepresentation(MatToUIImage(dstBitmapMat)) writeToFile:imagePath options:NSDataWritingAtomic error:&error];
@@ -420,7 +421,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       }
       index++;
     };
-//    NSLog(@"cropDocumentSync %f ms", (CACurrentMediaTime() - startTime)*1000.0);
+    //    NSLog(@"cropDocumentSync %f ms", (CACurrentMediaTime() - startTime)*1000.0);
     dispatch_async(dispatch_get_main_queue(), ^(void) {
       if ([images count] > 0) {
         [delegate onComplete:images error:nil];
@@ -530,7 +531,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   @try {
     cv::Mat srcBitmapMat;
     UIImageToMat(image, srcBitmapMat);
-    std::string result = readQRCode(srcBitmapMat, 0, std::string([options UTF8String]));
+    std::string result = readQRCode(srcBitmapMat, 0, std::string([options UTF8String]), 1.0);
     dispatch_async(dispatch_get_main_queue(), ^(void) {
       [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
       
@@ -564,8 +565,25 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   });
 }
 
-// PRAGMA: detectQRCode
-+(void)generateQRCodeSync:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+// PRAGMA: generateQRCode
++(void)generateQRCodeSync:(NSString*)text format:(NSString*)format  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+  @try {
+    cv::Mat result = generateQRCode(std::string([text UTF8String]), std::string([format UTF8String]), width, height, std::string([options UTF8String]));
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:MatToUIImage(result) error:nil];
+    });
+  }
+  @catch (NSException *exception) {
+    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+    
+    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:nil error:err];
+      
+    });
+  }
 }
 
 +(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
@@ -575,46 +593,81 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   });
 }
 
+// PRAGMA: generateQRCode
++(void)generateQRCodeSVGSync:(NSString*)text format:(NSString*)format  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
+  @try {
+    std::string result = generateQRCodeSVG(std::string([text UTF8String]), std::string([format UTF8String]), sizeHint, std::string([options UTF8String]));
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
+    });
+  }
+  @catch (NSException *exception) {
+    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+    
+    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+      [delegate onComplete:nil error:err];
+      
+    });
+  }
+}
+
++(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    [self generateQRCodeSVGSync:text format:fromat  sizeHint:sizeHint  options:options delegate:delegate];
+  });
+}
 
 // PRAGMA: process
 +(void)processSync:(UIImage*)image processes:(NSString*)processes options:(NSString*)optionsStr delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale {
-#ifdef WITH_QRCODE
   @try {
     cv::Mat srcBitmapMat;
     UIImageToMat(image, srcBitmapMat);
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
     CGFloat shrunkImageHeight = (scale != 1.0) ? 0 : 500;
-
+    
     NSError *error = nil;
     NSArray* processesJSON = (NSArray*)[NSJSONSerialization JSONObjectWithData:[processes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
-      if (error) {
-        throw error;
-      } else {
-        NSMutableArray* result = [[NSMutableArray alloc] init];
-        for (NSString* process in processesJSON)
-        {
-            if ([process isEqualToString:@"qrcode"]) {
-              std::string qrcode = readQRCode(srcBitmapMat, 0, std::string([optionsStr UTF8String]));
-              [result addObject:[NSString stringWithUTF8String:qrcode.c_str()]];
-            } else if ([process isEqualToString:@"palette"]) {
-              std::string colors = getPaletteString(srcBitmapMat, true,
-                                    [([options objectForKey:@"shrunkImageHeight"] ?: @(shrunkImageHeight)) floatValue],
-                                    [([options objectForKey:@"colorsFilterDistanceThreshold"] ?: @(20)) intValue],
-                                    [([options objectForKey:@"nbColors"] ?: @(5)) intValue],
-                                    true,
-                                    [([options objectForKey:@"colorPalette"] ?: @(2)) intValue]);
-              [result addObject:[NSString stringWithUTF8String:colors.c_str()]];
-            }
+    if (error) {
+      throw error;
+    } else {
+      NSMutableArray* result = [[NSMutableArray alloc] init];
+      for (NSDictionary* process in processesJSON)
+      {
+        NSString* type = [process objectForKey:@"type"];
+        if ([type isEqualToString:@"qrcode"]) {
+#ifdef WITH_QRCODE
+          NSData *jsonData = [NSJSONSerialization dataWithJSONObject:process
+                                                             options:0
+                                                               error:&error];
+          NSString* str = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+          std::string processOptions = std::string([str UTF8String]);
+          std::string qrcode = readQRCode(srcBitmapMat, 0, processOptions, scale);
+          [result addObject:[NSString stringWithUTF8String:qrcode.c_str()]];
+#endif
+          
+        } else if ([type isEqualToString:@"palette"]) {
+          std::string colors = getPaletteString(srcBitmapMat, true,
+                                                [([options objectForKey:@"shrunkImageHeight"] ?: @(shrunkImageHeight)) intValue],
+                                                [([options objectForKey:@"colorsFilterDistanceThreshold"] ?: @(20)) intValue],
+                                                [([options objectForKey:@"nbColors"] ?: @(5)) intValue],
+                                                true,
+                                                (ColorSpace)[([options objectForKey:@"colorPalette"] ?: @(2)) intValue]);
+          [result addObject:[NSString stringWithUTF8String:colors.c_str()]];
         }
-        dispatch_async(dispatch_get_main_queue(), ^(void) {
-          [delegate onComplete:[NSString stringWithFormat:@"[%@]" , [result componentsJoinedByString:@","]] error:nil];
-        });
       }
+      dispatch_async(dispatch_get_main_queue(), ^(void) {
+        [delegate onComplete:[NSString stringWithFormat:@"[%@]" , [result componentsJoinedByString:@","]] error:nil];
+      });
+    }
     // UIImageToMat(image, srcBitmapMat);
     // std::string result = readQRCode(srcBitmapMat, 0, std::string([options UTF8String]));
     // dispatch_async(dispatch_get_main_queue(), ^(void) {
     //   [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
-      
+    
     // });
   }
   @catch (NSException *exception) {
@@ -627,9 +680,6 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       
     });
   }
-#else
-  [delegate onComplete:nil error:nil];
-#endif
 }
 
 +(void)process:(UIImage*)image processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
@@ -640,14 +690,14 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 +(void)processFromFile:(NSString*)src processes:(NSString*)processes options:(NSString*)optionsStr delegate:(id<CompletionDelegate>)delegate {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
-   NSDictionary* imageSize = [ImageUtils getImageSize: src];
+    NSDictionary* imageSize = [ImageUtils getImageSize: src];
     NSNumber* imageRotation = [options objectForKey:@"imageRotation"] ?: @(0);
     UIImage* image = [ImageUtils readImageFromFile:src options:options];
     CGFloat scale = 1.0;
     if ([[imageSize objectForKey:@"rotation"] intValue] % 180 != 0) {
-        scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
+      scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
     } else {
-        scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.width;
+      scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.width;
     }
     [self processSync:image processes:processes options:optionsStr delegate:delegate scale:scale];
   });
@@ -672,7 +722,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     default:
       break;
   }
-
+  
   NSMutableArray* points = [[NSMutableArray alloc] init];
   if (self.detectDocuments) {
     NSArray* result = [OpencvDocumentProcessDelegate findDocumentCornersInMat:mat shrunkImageHeight:self.previewResizeThreshold imageRotation:0 scale:1.0 options:nil];
@@ -685,19 +735,22 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   }
 #ifdef WITH_QRCODE
   if (self.detectQRCode) {
-      std::string qrcodeResult = readQRCode(mat, 0, self.detectQRCodeOptions);
+    std::string qrcodeResult = readQRCode(mat, 0, std::string([self.detectQRCodeOptions UTF8String]), 1.0);
+    if (qrcodeResult.length() > 0) {
+      NSString* nsResult = [NSString stringWithUTF8String:qrcodeResult.c_str()];
       NSError *error = nil;
-      id qrcode = [NSJSONSerialization JSONObjectWithData:[[NSString stringWithUTF8String:result.c_str()] UTF8String] options:0 error:&error];
+      id qrcode = [NSJSONSerialization JSONObjectWithData:[nsResult dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
       if (error) {
-          // Handle error
+        // Handle error
       } else {
-          if (qrcode.length() > 0) {
-            NSDictionary* qrcode = [((NSArray*)qrcode) objectAtIndex:0];
-            pointsList.add(pointFromJSONArray(qrcode.getJSONArray("position")));
-            onQRCode?.onQRCodes([NSString stringWithUTF8String:result.c_str()])
+        NSDictionary* qrcode = [((NSArray*)qrcode) objectAtIndex:0];
+        [points addObjectsFromArray:[qrcode objectForKey:@"position"]];
+        if (self.onQRCode) {
+          [self.onQRCode onQRCodes:nsResult];
         }
       }
-      
+    }
+    
   }
 #endif
   self.cropView.videoGravity = cameraView.videoGravity;

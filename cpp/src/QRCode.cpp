@@ -1,8 +1,15 @@
 #ifdef  WITH_QRCODE
 #include "./include/QRCode.h"
-#include "BitMatrix.h"
-#include "Barcode.h"
-#include "WriteBarcode.h"
+
+#ifdef __APPLE__
+#include <ZXingCpp/BitMatrix.h>
+#include <ZXingCpp/Barcode.h>
+#include <ZXingCpp/WriteBarcode.h>
+#else
+#include <BitMatrix.h>
+#include <Barcode.h>
+#include <WriteBarcode.h>
+#endif
 #include <regex>
 
 using namespace std;
@@ -13,9 +20,9 @@ ZXing::ImageView ImageViewFromMat(const cv::Mat& image)
 
     auto fmt = ImageFormat::None;
     switch (image.channels()) {
-        case 1: fmt = ImageFormat::Lum; break;
+      case 1: fmt = ImageFormat::Lum; break;
         case 3: fmt = ImageFormat::BGR; break;
-        case 4: fmt = ImageFormat::BGRA; break;
+        case 4: fmt = ImageFormat::BGRX; break;
     }
 
     if (image.depth() != CV_8U || fmt == ImageFormat::None)
@@ -161,13 +168,17 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
 std::string prepareSVGCode(std::string code, jsoncons::json j, bool useFallbackColor) {
     replace(code, "fill=\"#FFFFFF\"", "fill=\"transparent\"");
     if (j != nullptr) {
+        std::string color;
         if (useFallbackColor) {
-            if (j.contains("fallbackColor")) {
-                replace(code, "fill=\"#000000\"", "fill=\"" + j["fallbackColor"].as<string>() + "\"");
-            }
+            color = j["fallbackColor"].as<string>();
         } else {
-            if (j.contains("color")) {
-                replace(code, "fill=\"#000000\"", "fill=\"" + j["color"].as<string>() + "\"");
+            color = j["color"].as<string>();
+        }
+        if (!color.empty()) {
+            if (code.find("fill=") != std::string::npos) {
+                replace(code, "fill=\"#000000\"", "fill=\"" + color + "\"");
+            } else {
+                replace(code, "<path d", "<path fill=\"" + color + "\" d");            
             }
         }
     }
@@ -209,14 +220,6 @@ std::string generateQRCodeSVG(std::string text, std::string format, int size_hin
         }
         return "";
     }
-
-
-//    auto matrix = writer.encode(text, width, height);
-//    auto bitmap = ToMatrix<uint8_t>(matrix);
-//    const unsigned char *buffer = bitmap.data();
-//    cv::Mat resultMat(height,width,CV_8UC1,(unsigned char*)buffer);
-//    return resultMat;
-
 }
 
 #endif

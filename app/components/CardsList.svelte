@@ -969,7 +969,7 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <stacklayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                    <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
                     </stacklayout>
 
@@ -1017,7 +1017,7 @@
                         </gridlayout>
                     </gridlayout>
 
-                    <stacklayout prop:rightDrawer height={100} layout="horizontal" padding={20} verticalAlignment="top">
+                    <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
                     </stacklayout>
 
