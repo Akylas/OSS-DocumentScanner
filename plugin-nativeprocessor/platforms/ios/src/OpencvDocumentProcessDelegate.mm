@@ -604,7 +604,8 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 // PRAGMA: generateQRCode
 +(void)generateQRCodeSVGSync:(NSString*)text format:(NSString*)format  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
-  @try {
+ #ifdef WITH_QRCODE
+ @try {
     std::string result = generateQRCodeSVG(std::string([text UTF8String]), std::string([format UTF8String]), sizeHint, std::string([options UTF8String]));
     dispatch_async(dispatch_get_main_queue(), ^(void) {
       [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
@@ -621,6 +622,9 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       
     });
   }
+#else
+  [delegate onComplete:nil error:nil];
+#endif
 }
 
 +(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
