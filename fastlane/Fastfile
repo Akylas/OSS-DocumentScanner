@@ -178,7 +178,7 @@ lane :build_flavor do |params|
   #     )
   #   end
   when 'alpha','beta','production'
-    upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor)
+    upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options)
   end
   
   if !git_tag_exists(tag: tag)
@@ -323,6 +323,7 @@ platform :android do
   end
 
   lane :upload_store   do |params| 
+    options = params[:options]
     track = params[:flavor]
     if (track == 'beta') 
       track = 'internal'
@@ -333,7 +334,10 @@ platform :android do
       metadata_path:File.join(".", "fastlane/metadata", app_identifier, "android"),
       track_promote_to: track,
       json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
-      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab')
+      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab'),
+      skip_upload_screenshots: !options[:upload_screenshots],
+      skip_upload_images: !options[:upload_images],
+      skip_upload_metadata: !options[:upload_metadata]
     )
   end
 
