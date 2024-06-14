@@ -79,7 +79,8 @@
                 const result = await openFilePicker({
                     extensions: ['file/*'],
                     multipleSelection: false,
-                    pickerMode: 0
+                    pickerMode: 0,
+                    forceSAF: true
                 });
                 if (File.exists(result.files[0])) {
                     const file = File.fromPath(result.files[0]);

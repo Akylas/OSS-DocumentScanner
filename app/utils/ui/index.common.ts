@@ -533,7 +533,8 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
                     mimeTypes: ['image/*', 'application/pdf'],
                     documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
                     multipleSelection: true,
-                    pickerMode: 0
+                    pickerMode: 0,
+                    forceSAF: true
                 })
             )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
                 .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith('content://') && s.endsWith('.pdf') ? 'file://' + s : s));
@@ -733,7 +734,8 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                     case 'set_export_directory': {
                         const result = await pickFolder({
                             multipleSelection: false,
-                            permissions: { write: true, persistable: true, read: true }
+                            permissions: { write: true, persistable: true, read: true },
+                            forceSAF: true
                         });
                         if (result.folders.length) {
                             exportDirectory = result.folders[0];

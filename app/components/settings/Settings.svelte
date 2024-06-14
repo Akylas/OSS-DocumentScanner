@@ -282,6 +282,7 @@
                                       DEV_LOG && console.log('onTap', item);
                                       const result = await pickFolder({
                                           multipleSelection: false,
+                                          forceSAF: true,
                                           permissions: { write: true, persistable: true, read: true }
                                       });
                                       if (result.folders.length) {
@@ -800,17 +801,18 @@
                     break;
                 }
                 case 'export_settings':
-                    if (__ANDROID__ && SDK_VERSION < 29) {
-                        const permRes = await request('storage');
-                        if (!isPermResultAuthorized(permRes)) {
-                            throw new Error(lc('missing_storage_perm_settings'));
-                        }
-                    }
+                    // if (__ANDROID__ && SDK_VERSION < 29) {
+                    //     const permRes = await request('storage');
+                    //     if (!isPermResultAuthorized(permRes)) {
+                    //         throw new Error(lc('missing_storage_perm_settings'));
+                    //     }
+                    // }
                     const jsonStr = ApplicationSettings.getAllJSON();
                     if (jsonStr) {
                         const result = await saveFile({
                             name: `${__APP_ID__}_settings_${dayjs().format('YYYY-MM-DD')}.json`,
-                            data: jsonStr
+                            data: jsonStr,
+                            forceSAF: true
                         });
                         DEV_LOG && console.log('export_settings done', result, jsonStr);
                     }
@@ -819,7 +821,8 @@
                     const result = await openFilePicker({
                         extensions: ['json'],
                         multipleSelection: false,
-                        pickerMode: 0
+                        pickerMode: 0,
+                        forceSAF: true
                     });
                     const filePath = result.files[0];
                     if (filePath && File.exists(filePath)) {

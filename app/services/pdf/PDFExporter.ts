@@ -15,12 +15,12 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
         filename = getFileNameForDocument(document) + '.pdf';
     }
     if (__ANDROID__) {
-        if (SDK_VERSION <= 29) {
-            const result = await request('storage');
-            if (!isPermResultAuthorized(result)) {
-                throw new PermissionError(lc('storage_permission_needed'));
-            }
-        }
+        // if (SDK_VERSION <= 29) {
+        //     const result = await request('storage');
+        //     if (!isPermResultAuthorized(result)) {
+        //         throw new PermissionError(lc('storage_permission_needed'));
+        //     }
+        // }
         const start = Date.now();
         return new Promise((resolve, reject) => {
             const pdfCanvas = new PDFCanvas();
