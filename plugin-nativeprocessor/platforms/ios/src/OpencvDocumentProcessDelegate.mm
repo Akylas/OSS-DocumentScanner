@@ -526,12 +526,12 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 
 // PRAGMA: detectQRCode
-+(void)detectQRCodeSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
++(void)detectQRCodeSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale {
 #ifdef WITH_QRCODE
   @try {
     cv::Mat srcBitmapMat;
     UIImageToMat(image, srcBitmapMat);
-    std::string result = readQRCode(srcBitmapMat, 0, std::string([options UTF8String]), 1.0);
+    std::string result = readQRCode(srcBitmapMat, 0, std::string([options UTF8String]), scale);
     dispatch_async(dispatch_get_main_queue(), ^(void) {
       [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
       
@@ -555,13 +555,22 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 +(void)detectQRCode:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self detectQRCodeSync:image options:options delegate:delegate];
+    [self detectQRCodeSync:image options:options delegate:delegate scale:1.0];
   });
 }
-+(void)detectQRCodeFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
++(void)detectQRCodeFromFile:(NSString*)src options:(NSString*)optionsStr delegate:(id<CompletionDelegate>)delegate {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
-    [self detectQRCodeSync:image options:options delegate:delegate];
+    NSDictionary* options = [ImageUtils toJSON:optionsStr];
+    NSDictionary* imageSize = [ImageUtils getImageSize: src];
+    NSNumber* imageRotation = [options objectForKey:@"imageRotation"] ?: @(0);
+    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    CGFloat scale = 1.0;
+    if ([[imageSize objectForKey:@"rotation"] intValue] % 180 != 0) {
+      scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
+    } else {
+      scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.width;
+    }
+    [self detectQRCodeSync:image options:optionsStr delegate:delegate scale:scale];
   });
 }
 
