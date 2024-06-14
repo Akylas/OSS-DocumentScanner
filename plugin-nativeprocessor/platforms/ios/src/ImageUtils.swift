@@ -165,8 +165,8 @@ class ImageUtils : NSObject {
     if (imageProperties != nil) {
       let width = imageProperties![kCGImagePropertyPixelWidth] as! Double;
       let height = imageProperties![kCGImagePropertyPixelHeight] as! Double;
-      let orientation = imageProperties![kCGImagePropertyOrientation] as! Int;
-      let uiOrientation = UIImage.Orientation.init(CGImagePropertyOrientation(rawValue: UInt32(orientation))!);
+      let orientation = imageProperties![kCGImagePropertyOrientation] as? Int;
+      let uiOrientation = UIImage.Orientation.init(CGImagePropertyOrientation(rawValue: UInt32(orientation ?? 1))!);
       var degrees: Int = 0
       switch uiOrientation {
       case .down, .downMirrored:
