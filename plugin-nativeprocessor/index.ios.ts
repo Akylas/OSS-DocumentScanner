@@ -13,8 +13,7 @@ class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
         if (error) {
             this.reject(error);
         } else {
-            DEV_LOG && console.log('onCompleteError', result, error);
-            if (this.shouldParse  && typeof result === 'string') {
+            if (this.shouldParse && typeof result === 'string') {
                 this.resolve(result ? JSON.parse(result) : null);
             } else {
                 this.resolve(result);

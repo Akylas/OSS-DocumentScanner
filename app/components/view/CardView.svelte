@@ -65,15 +65,38 @@
 <script lang="ts">
     $: qrcodeColorMatrix = isDarkTheme($currentRealTheme) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
-    let { colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorError } = $colors;
-    $: ({ colorSurfaceContainerHigh, colorBackground, colorSurfaceContainer, colorPrimary, colorTertiary, colorOutline, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorError } = $colors);
+    let {
+        colorSurfaceContainerHigh,
+        colorBackground,
+        colorSurfaceContainer,
+        colorPrimary,
+        colorTertiary,
+        colorOutline,
+        colorSurface,
+        colorOnBackground,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorError
+    } = $colors;
+    $: ({
+        colorSurfaceContainerHigh,
+        colorBackground,
+        colorSurfaceContainer,
+        colorPrimary,
+        colorTertiary,
+        colorOutline,
+        colorSurface,
+        colorOnBackground,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorError
+    } = $colors);
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
     let editingTitle = false;
     let topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
     let statusBarStyle: any = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
-
     let qrcodes: QRCodeData;
     // let currentQRCodeImage: ImageSource;
     // let currentQRCode: QRCodeSingleData;
@@ -84,7 +107,8 @@
     let pager: NativeViewElementNode<Pager>;
     // let items: ObservableArray<Item> = null;
     onThemeChanged(() => {
-        updateQRCodes($colors.colorOnSurface);
+        DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
+        updateQRCodes($colors.colorOnBackground);
     });
     // $: {
     const pages = document.getObservablePages();
@@ -118,7 +142,7 @@
         }, timeout);
     }
 
-    function updateQRCodes(color = $colors.colorOnSurface) {
+    function updateQRCodes(color = $colors.colorOnBackground) {
         DEV_LOG &&
             console.log(
                 'updateQRCodes',
@@ -772,7 +796,6 @@
             iosOverflowSafeArea={true}
             {items}
             orientation="horizontal"
-            paddingBottom={88}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}
@@ -809,7 +832,16 @@
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
                         <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
-                        <label fontSize={30} fontWeight="bold" maxLines={2} row={1} selectable={true} sharedTransitionTag={'qrcodelabel' + index} text={item?.text} textAlignment="center" />
+                        <label
+                            fontSize={30}
+                            fontWeight="bold"
+                            ios:linkColor={colorOnBackground}
+                            maxLines={2}
+                            row={1}
+                            selectable={true}
+                            sharedTransitionTag={'qrcodelabel' + index}
+                            text={item?.text}
+                            textAlignment="center" />
                     </gridlayout>
                 </Template>
             </pager>

@@ -41,6 +41,7 @@ declare namespace svelteNative.JSX {
         TLabelAttributes,
         {
             autoFontSize?: boolean;
+            linkColor?: string;
             verticalTextAlignment?: string;
             maxLines?: number;
             minFontSize?: number;

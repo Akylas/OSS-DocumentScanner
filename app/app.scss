@@ -63,11 +63,11 @@ mdbutton {
 mdtextfield, mdtextview {
     stroke-color: var(--colorOutline);
     placeholder-color: var(--colorOutline);
-    color: var(--colorOnSurface);
+    color: var(--colorOnBackground);
 }
 
 checkbox {
-    color: var(--colorOnSurface);
+    color: var(--colorOnBackground);
     fill-color: var(--colorPrimary);
     on-check-color: var(--colorOnPrimary);
     on-tint-color: var(--colorPrimary);
@@ -169,12 +169,12 @@ frame {
     white-space: normal;
     font-weight: 400;
     padding: 0 16 0 16;
-    color: var(--colorOnSurface);
+    color: var(--colorOnBackground);
 }
 
 .actionBarSubtitle {
     font-size: 13;
-    color: var(--colorOnSurface);
+    color: var(--colorOnBackground);
 }
 
 
@@ -203,8 +203,8 @@ mdtextfield,
     width: var(--actionBarHeight);
     height: var(--actionBarHeight);
     font-size: 24;
-    color: var(--colorOnSurface);
-    ripple-color: var(--colorOnSurface);
+    color: var(--colorOnBackground);
+    ripple-color: var(--colorOnBackground);
 
     
 
@@ -261,7 +261,7 @@ mdtextfield,
 .icon-label {
     @extend .mdi;
 
-    color: var(--colorOnSurface);
+    color: var(--colorOnBackground);
 
     width: var(--actionBarButtonHeight);
     height: var(--actionBarButtonHeight);

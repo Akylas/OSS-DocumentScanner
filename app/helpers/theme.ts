@@ -23,25 +23,32 @@ let autoDarkToBlack = getBoolean('auto_black', false);
 const ThemeBlack = 'ns-black';
 
 Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanceChangedEventData) => {
-    DEV_LOG && console.log('systemAppearanceChangedEvent', theme, event.newValue, autoDarkToBlack);
-    if (theme === 'auto') {
-        event.cancel = true;
-        let realTheme = event.newValue as Themes;
-        if (autoDarkToBlack && realTheme === 'dark') {
-            realTheme = 'black';
-        }
-        if (__ANDROID__) {
-            const activity = Application.android.startActivity;
-            if (activity) {
-                com.akylas.documentscanner.Utils.Companion.applyDayNight(activity, true);
+    try {
+        DEV_LOG && console.log('systemAppearanceChangedEvent', theme, event.newValue, autoDarkToBlack);
+        if (theme === 'auto') {
+            event.cancel = true;
+            let realTheme = event.newValue as Themes;
+            if (autoDarkToBlack && realTheme === 'dark') {
+                realTheme = 'black';
             }
+            if (__ANDROID__) {
+                const activity = Application.android.startActivity;
+                if (activity) {
+                    com.akylas.documentscanner.Utils.Companion.applyDayNight(activity, true);
+                }
+            }
+            Theme.setMode(Theme.Auto, undefined, realTheme, false);
+            updateThemeColors(realTheme);
+            DEV_LOG && console.log('systemAppearanceChangedEvent 1', realTheme);
+            //close any popover as they are not updating with theme yet
+            closePopover();
+            DEV_LOG && console.log('systemAppearanceChangedEvent 2', realTheme);
+            currentRealTheme.set(realTheme);
+            DEV_LOG && console.log('systemAppearanceChangedEvent notify', realTheme);
+            globalObservable.notify({ eventName: 'theme', data: realTheme });
         }
-        Theme.setMode(Theme.Auto, undefined, realTheme, false);
-        updateThemeColors(realTheme);
-        //close any popover as they are not updating with theme yet
-        closePopover();
-        currentRealTheme.set(realTheme);
-        globalObservable.notify({ eventName: 'theme', data: realTheme });
+    } catch (error) {
+        showError(error);
     }
 });
 
@@ -144,7 +151,7 @@ function getSystemAppearance() {
     if (typeof Application.systemAppearance === 'function') {
         return Application.systemAppearance();
     }
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     return Application.systemAppearance;
 }
 

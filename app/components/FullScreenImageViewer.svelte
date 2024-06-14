@@ -124,6 +124,7 @@
                         color={labelColor}
                         fontSize={30}
                         fontWeight="bold"
+                        ios:linkColor={colorOnBackground}
                         maxLines={2}
                         paddingTop={5}
                         row={1}
