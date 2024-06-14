@@ -8,7 +8,7 @@
 
 <label
     backgroundColor={colorPrimary}
-    borderRadius="50%"
+    borderRadius={10 * $fontScale}
     color={colorOnPrimary}
     fontSize={14}
     fontWeight="bold"

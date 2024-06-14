@@ -1213,7 +1213,7 @@
                     {/if}
 
                     <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
-                        <image borderRadius="50%" height={50} horizontalAlignment="center" src="res://icon" width={50} />
+                        <image borderRadius="25" height={50} horizontalAlignment="center" src="res://icon" width={50} />
                         <label fontSize={13} marginTop={4} text={version} on:longPress={(event) => onLongPress('version', event)} />
                     </stacklayout>
                 </gridlayout>

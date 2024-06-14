@@ -7,7 +7,7 @@
 
 <label
     backgroundColor={colorPrimary}
-    borderRadius="50%"
+    borderRadius={13}
     color={colorOnPrimary}
     fontFamily={$fonts.mdi}
     fontSize={18}

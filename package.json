@@ -45,7 +45,7 @@
         "@nativescript-community/systemui": "1.1.22",
         "@nativescript-community/text": "1.6.4",
         "@nativescript-community/ui-cameraview": "0.3.4",
-        "@nativescript-community/ui-canvas": "4.6.25",
+        "@nativescript-community/ui-canvas": "4.6.27",
         "@nativescript-community/ui-canvaslabel": "1.2.28",
         "@nativescript-community/ui-checkbox": "^2.0.12",
         "@nativescript-community/ui-collectionview": "5.3.34",
@@ -153,7 +153,6 @@
         "./webpdfviewer"
     ],
     "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript-community/ui-svg": "portal:../ui-canvas/packages/ui-svg"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
     }
 }
