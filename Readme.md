@@ -1,7 +1,9 @@
-<!-- <p align="center"><img src="fastlane/metadata/android/en-US/images/featureGraphic.png" width="100%"></a></p> -->
+This repository is now the home of 2 apps
 
-<!-- <img title="" src="./fastlane/metadata/com.akylas.documentscanner/android/en-US/images/icon.png" align="right" width="64"> -->
-<img title="" src="./featureGraphic.png">
+<div>
+<img title="" src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/featureGraphic.png" width="45%">
+<img title="" src="fastlane/metadata/com.akylas.cardwallet/android/en-US/images/featureGraphic.png" width="45%">
+</div>
 
 <!-- # OSS Document Scanner -->
 
@@ -9,36 +11,22 @@
 [![GitHub repo stars](https://img.shields.io/github/stars/Akylas/OSS-DocumentScanner?style=flat)](https://github.com/Akylas/OSS-DocumentScanner/stargazers)
 [![GitHub License](https://img.shields.io/github/license/Akylas/OSS-DocumentScanner)](https://github.com/Akylas/OSS-DocumentScanner/blob/master/COPYING)
 [![GitHub All Releases](https://img.shields.io/github/downloads/Akylas/OSS-DocumentScanner/total.svg)](https://github.com/Akylas/OSS-DocumentScanner/releases/)
-[![GitHub release](https://img.shields.io/github/v/release/Akylas/OSS-DocumentScanner?display_name=release)](https://github.com/Akylas/OSS-DocumentScanner/releases/latest)
+[![GitHub release](https://img.shields.io/github/v/release/Akylas/OSS-DocumentScanner?display_name=release&filter=*scanner*)](https://github.com/Akylas/OSS-DocumentScanner/releases)
+[![GitHub release](https://img.shields.io/github/v/release/Akylas/OSS-DocumentScanner?display_name=release&filter=*wallet*)](https://github.com/Akylas/OSS-DocumentScanner/releases)
+
 [![Small translation badge](https://hosted.weblate.org/widgets/oss-document-scanner/-/svg-badge.svg)](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
-
-<!-- <h1 align="center">Scan all your documents</h1>
-<p align="center">
-  <a href="https://github.com/Akylas/OSS-DocumentScanner" alt="License"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
- <a href="https://github.com/Akylas/OSS-DocumentScanner/releases" alt="Release version"><img src="https://img.shields.io/github/downloads/akylas/com.akylas.documentscanner/total"/></a> -->
-
  ## Installation
 
 <!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.machiav3lli.backup/) -->
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/com.akylas.documentscanner)
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=com.akylas.documentscanner)
-[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/OSS-DocumentScanner/releases)
-<div>
 
-<a href="https://apps.apple.com/us/app/oss-document-scanner/id6472918564"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
-</div>
+| OSS Document Scanner | Oss CardWallet |
+|----------------------|----------------|
+|[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/com.akylas.documentscanner)|[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/com.akylas.cardwallet)|
+|[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=com.akylas.documentscanner)|[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=com.akylas.cardwallet)|
+|[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/OSS-DocumentScanner/releases)|[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/OSS-DocumentScanner/releases)|
+|<div><a href="https://apps.apple.com/us/app/oss-document-scanner/id6472918564"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a></div>||
  
-<!-- <p align="center">
-<br>You can get the <a href="https://github.com/com.akylas.documentscanner/releases/latest">latest release on GitHub</a>
-</p>
-<div align="center">
-<a href="https://apt.izzysoft.de/packages/com.akylas.documentscanner/"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80"></a>
-<a href='https://play.google.com/store/apps/details?id=com.akylas.documentscanner&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'  height="82"/></a>
-<br>
-<a href="https://testflight.apple.com/join/sxiV4ZKL"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
-</div>
-</div> -->
-<h2 align="center">Enjoying OSS Document Scanner?</h2>
+<h2 align="center">Enjoying OSS Document Scanner or OSS Card Wallet?</h2>
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
 <br>
 <br>
@@ -51,7 +39,9 @@ Open Source app to scan your documents.
 
 ## Screenshots
 
-| <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
+| <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/1_en-US.png" width=30%> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/2_en-US.png" width=30%> | <img src="fastlane/metadata/com.akylas.documentscanner/android/en-US/images/phoneScreenshots/3_en-US.png" width=30%> |
+
+| <img src="fastlane/metadata/com.akylas.cardwallet/android/en-US/images/phoneScreenshots/2_en-US.png" width=30%> | <img src="fastlane/metadata/com.akylas.cardwallet/android/en-US/images/phoneScreenshots/5_en-US.png" width=30%> | <img src="fastlane/metadata/com.akylas.cardwallet/android/en-US/images/phoneScreenshots/3_en-US.png" width=30%> |
 
 ## Having issues, suggestions and feedback?
 
