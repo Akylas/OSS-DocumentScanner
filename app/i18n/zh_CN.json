@@ -185,7 +185,7 @@
     "magnifier_sensitivity": "放大镜灵敏度",
     "magnifier_sensitivity_desc": "修改调整裁剪范围时，放大镜的灵敏度",
     "missing_storage_perm_settings": "导出应用设置需要存储权限",
-    "move_data": "移动数据？",
+    "move_data": "迁移数据？",
     "move_data_desc": "你的所有应用数据将被迁移，完成后应用会强制重启",
     "moving_files": "移动文件",
     "name": "姓名",
