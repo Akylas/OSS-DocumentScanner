@@ -415,28 +415,30 @@
         // }
     }
     function onItemTouch(item: Item, event) {
-        // const index = documents.findIndex((d) => d.doc.id === item.doc.id);
-        switch (event.action) {
-            case 'down':
-                (event.object as View).animate({
-                    duration: 100,
-                    translate: {
-                        x: 0,
-                        y: -40
-                    }
-                });
-                break;
+        if (__ANDROID__) {
+            // const index = documents.findIndex((d) => d.doc.id === item.doc.id);
+            switch (event.action) {
+                case 'down':
+                    (event.object as View).animate({
+                        duration: 100,
+                        translate: {
+                            x: 0,
+                            y: -40
+                        }
+                    });
+                    break;
 
-            case 'up':
-            case 'cancel':
-                (event.object as View).animate({
-                    duration: 100,
-                    translate: {
-                        x: 0,
-                        y: 0
-                    }
-                });
-                break;
+                case 'up':
+                case 'cancel':
+                    (event.object as View).animate({
+                        duration: 100,
+                        translate: {
+                            x: 0,
+                            y: 0
+                        }
+                    });
+                    break;
+            }
         }
     }
     const onItemTap = throttle(async function (item: Item) {

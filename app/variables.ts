@@ -181,48 +181,94 @@ export function updateThemeColors(theme: string) {
             }
         });
     } else {
-        if (theme === 'dark' || theme === 'black') {
-            currentColors.colorPrimary = '#7DDB82';
-            currentColors.colorOnPrimary = '#00390F';
-            currentColors.colorPrimaryContainer = '#00531A';
-            currentColors.colorOnPrimaryContainer = '#98F89C';
-            currentColors.colorSecondary = '#B9CCB4';
-            currentColors.colorOnSecondary = '#243424';
-            currentColors.colorSecondaryContainer = '#3A4B39';
-            currentColors.colorOnSecondaryContainer = '#D5E8D0';
-            currentColors.colorBackground = '#1A1C19';
-            currentColors.colorOnBackground = '#E2E3DD';
-            currentColors.colorSurface = '#121411';
-            currentColors.colorOnSurface = '#C6C7C1';
-            currentColors.colorSurfaceInverse = '#F9FAF4';
-            currentColors.colorOnSurfaceInverse = '#121411';
-            currentColors.colorOutline = '#8C9388';
-            currentColors.colorSurfaceVariant = '#424940';
-            currentColors.colorOnSurfaceVariant = '#C2C9BD';
-            currentColors.colorSurfaceContainer = '#121411';
-            currentColors.colorError = '#FFB4AB';
-            currentColors.colorOnError = '#690005';
+        if (CARD_APP) {
+            if (theme === 'dark' || theme === 'black') {
+                currentColors.colorPrimary = '#FFB2B9';
+                currentColors.colorOnPrimary = '#67001F';
+                currentColors.colorPrimaryContainer = '#91002F';
+                currentColors.colorOnPrimaryContainer = '#FFDADC';
+                currentColors.colorSecondary = '#E5BDBF';
+                currentColors.colorOnSecondary = '#44292C';
+                currentColors.colorSecondaryContainer = '#5C3F42';
+                currentColors.colorOnSecondaryContainer = '#FFDADC';
+                currentColors.colorBackground = '#201A1A';
+                currentColors.colorOnBackground = '#ECE0E0';
+                currentColors.colorSurface = '#201A1A';
+                currentColors.colorOnSurface = '#ECE0E0';
+                currentColors.colorSurfaceInverse = '#ECE0E0';
+                currentColors.colorOnSurfaceInverse = '#201A1A';
+                currentColors.colorOutline = '#9F8C8D';
+                currentColors.colorSurfaceVariant = '#524344';
+                currentColors.colorOnSurfaceVariant = '#D7C1C2';
+                currentColors.colorSurfaceContainer = '#121411';
+                currentColors.colorError = '#FFB4AB';
+                currentColors.colorOnError = '#690005';
+            } else {
+                currentColors.colorPrimary = '#B61E44';
+                currentColors.colorOnPrimary = '#FFFFFF';
+                currentColors.colorPrimaryContainer = '#FFDADC';
+                currentColors.colorOnPrimaryContainer = '#400010';
+                currentColors.colorSecondary = '#765659';
+                currentColors.colorOnSecondary = '#FFFFFF';
+                currentColors.colorSecondaryContainer = '#FFDADC';
+                currentColors.colorOnSecondaryContainer = '#2C1517';
+                currentColors.colorBackground = '#FFFBFF';
+                currentColors.colorOnBackground = '#201A1A';
+                currentColors.colorSurface = '#FFFBFF';
+                currentColors.colorOnSurface = '#201A1A';
+                currentColors.colorSurfaceInverse = '#201A1A';
+                currentColors.colorOnSurfaceInverse = '#FFFBFF';
+                currentColors.colorOutline = '#857374';
+                currentColors.colorSurfaceVariant = '#F4DDDE';
+                currentColors.colorOnSurfaceVariant = '#524344';
+                currentColors.colorSurfaceContainer = '#DEE5D9';
+                currentColors.colorError = '#BA1A1A';
+                currentColors.colorOnError = '#FFFFFF';
+            }
         } else {
-            currentColors.colorPrimary = '#006E25';
-            currentColors.colorOnPrimary = '#FFFFFF';
-            currentColors.colorPrimaryContainer = '#98F89C';
-            currentColors.colorOnPrimaryContainer = '#002106';
-            currentColors.colorSecondary = '#526350';
-            currentColors.colorOnSecondary = '#FFFFFF';
-            currentColors.colorSecondaryContainer = '#D5E8D0';
-            currentColors.colorOnSecondaryContainer = '#101F10';
-            currentColors.colorBackground = '#FCFDF7';
-            currentColors.colorOnBackground = '#1A1C19';
-            currentColors.colorSurface = '#F9FAF4';
-            currentColors.colorOnSurface = '#1A1C19';
-            currentColors.colorSurfaceInverse = '#121411';
-            currentColors.colorOnSurfaceInverse = '#C6C7C1';
-            currentColors.colorOutline = '#72796F';
-            currentColors.colorSurfaceVariant = '#DEE5D9';
-            currentColors.colorOnSurfaceVariant = '#424940';
-            currentColors.colorSurfaceContainer = '#DEE5D9';
-            currentColors.colorError = '#BA1A1A';
-            currentColors.colorOnError = '#FFFFFF';
+            if (theme === 'dark' || theme === 'black') {
+                currentColors.colorPrimary = '#7DDB82';
+                currentColors.colorOnPrimary = '#00390F';
+                currentColors.colorPrimaryContainer = '#00531A';
+                currentColors.colorOnPrimaryContainer = '#98F89C';
+                currentColors.colorSecondary = '#B9CCB4';
+                currentColors.colorOnSecondary = '#243424';
+                currentColors.colorSecondaryContainer = '#3A4B39';
+                currentColors.colorOnSecondaryContainer = '#D5E8D0';
+                currentColors.colorBackground = '#1A1C19';
+                currentColors.colorOnBackground = '#E2E3DD';
+                currentColors.colorSurface = '#121411';
+                currentColors.colorOnSurface = '#C6C7C1';
+                currentColors.colorSurfaceInverse = '#F9FAF4';
+                currentColors.colorOnSurfaceInverse = '#121411';
+                currentColors.colorOutline = '#8C9388';
+                currentColors.colorSurfaceVariant = '#424940';
+                currentColors.colorOnSurfaceVariant = '#C2C9BD';
+                currentColors.colorSurfaceContainer = '#121411';
+                currentColors.colorError = '#FFB4AB';
+                currentColors.colorOnError = '#690005';
+            } else {
+                currentColors.colorPrimary = '#006E25';
+                currentColors.colorOnPrimary = '#FFFFFF';
+                currentColors.colorPrimaryContainer = '#98F89C';
+                currentColors.colorOnPrimaryContainer = '#002106';
+                currentColors.colorSecondary = '#526350';
+                currentColors.colorOnSecondary = '#FFFFFF';
+                currentColors.colorSecondaryContainer = '#D5E8D0';
+                currentColors.colorOnSecondaryContainer = '#101F10';
+                currentColors.colorBackground = '#FCFDF7';
+                currentColors.colorOnBackground = '#1A1C19';
+                currentColors.colorSurface = '#F9FAF4';
+                currentColors.colorOnSurface = '#1A1C19';
+                currentColors.colorSurfaceInverse = '#121411';
+                currentColors.colorOnSurfaceInverse = '#C6C7C1';
+                currentColors.colorOutline = '#72796F';
+                currentColors.colorSurfaceVariant = '#DEE5D9';
+                currentColors.colorOnSurfaceVariant = '#424940';
+                currentColors.colorSurfaceContainer = '#DEE5D9';
+                currentColors.colorError = '#BA1A1A';
+                currentColors.colorOnError = '#FFFFFF';
+            }
         }
 
         themer.setPrimaryColor(currentColors.colorPrimary);

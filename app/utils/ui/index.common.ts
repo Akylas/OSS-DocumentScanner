@@ -632,7 +632,7 @@ export async function showPopoverMenu<T = any>({
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
             borderRadius: 10,
-            elevation: 3,
+            elevation: __ANDROID__ ? 3 : 0,
             margin: 4,
             fontWeight: 500,
             backgroundColor: colorSurfaceContainer,
