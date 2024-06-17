@@ -198,12 +198,13 @@ lane :get_changelog  do |params|
   flavor = params[:flavor]
   puts "get_changelog "+  platform + " "+  flavor
   ignorePlatform = 'ios'
+  ignoreAppScope = /wallet/ =~ app_identifier ? 'scanner' : 'wallet'
   display_links = flavor == 'github'
   if(platform == "ios") 
     ignorePlatform = "android"
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform]).split(/[\n]/).uniq
+  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform, ignoreAppScope]).split(/[\n]/).uniq
   logs = logs.map {|l| 
     if (!display_links)
       # remove github issues
