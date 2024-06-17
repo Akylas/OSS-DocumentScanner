@@ -969,7 +969,7 @@
                             showSnack({ message: l('feedback_sent') });
                         }
                     } else {
-                        openLink(GIT_URL + 'issues');
+                        openLink(GIT_URL + '/issues');
                     }
                     break;
                 }
