@@ -52,7 +52,7 @@
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
     <gridlayout backgroundColor="black" rows="auto,*,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <CropView bind:this={cropView} {...cropItem ? cropItem : null} row={1} bind:quadChanged bind:quads on:undosChanged={onUndosChanged} />
-        <label color="white" fontSize={13} marginBottom={10} row={2} text={lc('crop_edit_doc')} textAlignment="center" />
+        <label color="white" fontSize={13} padding={10} row={2} text={lc('crop_edit_doc')} textAlignment="center" textWrap={true} />
         <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" row={3} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />
         <mdbutton class="icon-btn" color="white" horizontalAlignment="right" marginRight={10} row={3} text="mdi-arrow-expand-all" variant="text" verticalAlignment="center" on:tap={resetCrop} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null}>
