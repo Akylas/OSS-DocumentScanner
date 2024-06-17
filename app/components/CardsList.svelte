@@ -137,7 +137,7 @@
     }
     function getImageView(index: number) {
         const view = collectionView?.nativeView?.getViewForItemAtIndex(index);
-        DEV_LOG && console.log('getImageView', index, view, collectionView, collectionView?.nativeElement, collectionView?.nativeElement?.nativeViewProtected);
+        DEV_LOG && console.log('getImageView', index, view);
         return view?.getViewById<Img>('imageView');
     }
 
@@ -151,11 +151,12 @@
                 if (!!event.imageUpdated) {
                     const imageView = getImageView(index);
                     DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
+                    const page = document.pages[event.pageIndex];
+                    getImagePipeline().evictFromCache(page.imagePath);
                     if (imageView) {
                         imageView?.updateImageUri();
-                    } else {
-                        const page = document.pages[event.pageIndex];
-                        getImagePipeline().evictFromCache(page.imagePath);
+                    } else if (__IOS__) {
+                        collectionView?.nativeElement?.refreshVisibleItems();
                     }
                 }
             }

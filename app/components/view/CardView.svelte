@@ -444,10 +444,12 @@
             items.setItem(index, { ...current, page });
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
+                DEV_LOG && console.log('view onDocumentPageUpdated update image', imageView);
+                getImagePipeline().evictFromCache(current.page.imagePath);
                 if (imageView) {
                     imageView?.updateImageUri();
-                } else {
-                    getImagePipeline().evictFromCache(current.page.imagePath);
+                } else if (__IOS__) {
+                    collectionView?.nativeElement?.refreshVisibleItems();
                 }
             }
         }

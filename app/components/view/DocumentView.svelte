@@ -366,10 +366,11 @@
             const page = document.getObservablePages().getItem(index);
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
+                getImagePipeline().evictFromCache(current.page.imagePath);
                 if (imageView) {
                     imageView?.updateImageUri();
-                } else {
-                    getImagePipeline().evictFromCache(current.page.imagePath);
+                } else if (__IOS__) {
+                    collectionView?.nativeElement?.refreshVisibleItems();
                 }
             }
             items.setItem(index, { ...current, page });
