@@ -102,7 +102,7 @@
         <collectionview bind:this={collectionview} {items} row={2} rowHeight={150}>
             <Template let:item>
                 <gridlayout rows="*,auto" on:tap={() => selectItem(item)}>
-                    <SvgView backgroundColor="white" borderRadius={20} {item} rippleColor={colorPrimary} stretch="aspectFit" />
+                    <SvgView backgroundColor="white" {item} rippleColor={colorPrimary} stretch="aspectFit" />
                     <label fontSize={24} fontWeight="bold" maxLines={2} paddingBottom={15} row={1} text={item.format} textAlignment="center" verticalAlignment="bottom" />
                 </gridlayout>
             </Template>

@@ -10,7 +10,7 @@ post_install do |installer|
             config.build_settings['DEVELOPMENT_TEAM'] = '3UUB5NM43K'
             config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
             config.build_settings['OTHER_SWIFT_FLAGS'] = '-DSUPPRESS_WARNINGS'
-            config.build_settings['OTHER_CFLAGS'] = '-DZXING_EXPERIMENTAL_API -DWITH_QRCODE -DZXING_READERS -DZXING_WRITERS'
+            config.build_settings['OTHER_CFLAGS'] = '-DZXING_EXPERIMENTAL_API -DWITH_QRCODE -DZXING_READERS -DZXING_WRITERS -DZXING_USE_ZINT -DZXING_USE_BUNDLED_ZINT'
         end
     end
 end

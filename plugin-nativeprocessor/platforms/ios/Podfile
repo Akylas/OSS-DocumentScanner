@@ -1,1 +1,1 @@
-pod 'zxing-cpp/Core', :path => '../../../zxingcpp'
+pod 'zxing-cpp/CoreZint', :path => '../../../zxingcpp'
