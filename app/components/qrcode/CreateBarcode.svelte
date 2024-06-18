@@ -91,8 +91,17 @@
         }, 200);
     }
 
-    function selectItem(item) {
-        closeModal({ format: item.format, text });
+    async function selectItem(item) {
+        try {
+            if (text){
+                const  result = await getQRCodeSVG({ format: item.format, text }, 200, 'black');
+                if (result?.length) {
+                    closeModal({ format: item.format, text });
+                }
+            }
+            
+        } catch (error) {
+        }
     }
 </script>
 
