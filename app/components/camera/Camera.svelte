@@ -11,7 +11,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { closeModal } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { writable } from 'svelte/store';
+    import { get, writable } from 'svelte/store';
     import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
@@ -50,6 +50,7 @@
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
         JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
+    DEV_LOG && console.log('cameraOptions', get(cameraOptionsStore));
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
     cameraOptionsStore.subscribe((newValue) => {
