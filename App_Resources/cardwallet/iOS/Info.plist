@@ -5,7 +5,7 @@
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleVersion</key>
-    <string>5</string>
+    <string>6</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
@@ -44,9 +44,9 @@
       <true/>
     </dict>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Import images to scan them</string>
+    <string>Allow access to images to scan cards from your library</string>
     <key>NSCameraUsageDescription</key>
-    <string>Camera is used to scan your documents</string>
+    <string>Allow access to the camera so that you scan cards using the camera</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>CADisableMinimumFrameDurationOnPhone</key>
