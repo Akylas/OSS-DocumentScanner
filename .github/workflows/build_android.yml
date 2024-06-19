@@ -5,7 +5,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: ['android-github', 'android-beta', 'ios-alpha']
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -17,12 +20,14 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: 17
 
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3'
+          python-version: 3
+
+      - uses: maxim-lobanov/setup-xcode@v1
       
       - uses: maxim-lobanov/setup-android-tools@v1
         with:
@@ -34,8 +39,26 @@ jobs:
       - name: Install NativeScript
         run: |
           python3 -m pip install --upgrade pip six
-          npm i -g nativescript --ignore-scripts --legacy-peer-deps
+          npm i -g @akylas/nativescript-cli --ignore-scripts --legacy-peer-deps
           ns usage-reporting disable
           ns error-reporting disable
+
+      - name: fetch externals
+        run: |
+          git submodule update --init --remote --recursive
+
+      - name: Install fastlane
+        run: |
+          bundle install
+
+      - name: Set new version
+        run: |
+           ${{ steps.get_version_or_prompt.outputs.result }}
+
+      - name: Build
+        run: |
+          VARIANT=${{matrix.variant}}
+          VARIANT=${VARIANT/-/ } # replace all - with spaces
+          bundle exec ${VARIANT}
 
 

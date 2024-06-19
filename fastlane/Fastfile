@@ -144,7 +144,7 @@ lane :build_flavor do |params|
 
   tag = "#{app_identifier}/#{platform}/#{flavor}/#{version}/#{versionCode}";
   changelog = get_changelog(platform:platform, flavor:flavor)
-  if platform == 'android')
+  if (platform == 'android')
     write_changelog(version:versionCode, changelog: flavor != 'github' ? changelog : get_changelog(platform:platform, flavor:'store'));
   end
   case flavor
