@@ -5,7 +5,7 @@ This repository is now the home of 2 apps
 <img title="" src="fastlane/metadata/com.akylas.cardwallet/android/en-US/images/featureGraphic.png" width="45%">
 </div>
 
-<!-- # OSS Document Scanner -->
+<div align="center">
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](COC.md)
 [![GitHub repo stars](https://img.shields.io/github/stars/Akylas/OSS-DocumentScanner?style=flat)](https://github.com/Akylas/OSS-DocumentScanner/stargazers)
@@ -15,18 +15,21 @@ This repository is now the home of 2 apps
 [![GitHub release](https://img.shields.io/github/v/release/Akylas/OSS-DocumentScanner?display_name=release&filter=*wallet*)](https://github.com/Akylas/OSS-DocumentScanner/releases)
 
 [![Small translation badge](https://hosted.weblate.org/widgets/oss-document-scanner/-/svg-badge.svg)](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
+</div>
+
  ## Installation
 
 <!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.machiav3lli.backup/) -->
+<div align="center">
 
 | OSS Document Scanner | Oss CardWallet |
 |:--------------------:|:--------------:|
 |[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/com.akylas.documentscanner)|[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/com.akylas.cardwallet)|
 |[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=com.akylas.documentscanner)|[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=com.akylas.cardwallet)|
 |[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/OSS-DocumentScanner/releases)|[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/OSS-DocumentScanner/releases)|
-|[<img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58">](https://apps.apple.com/us/app/oss-document-scanner/id6472918564)||
+|[<img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58">](https://apps.apple.com/us/app/oss-document-scanner/id6472918564)|[<img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58">](https://apps.apple.com/app/oss-cardwallet/id6504414362)|
 |[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="58">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.akylas.documentscanner%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FAkylas%2FOSS-DocumentScanner%22%2C%22author%22%3A%22Akylas%22%2C%22name%22%3A%22OSS%20Document%20Scanner%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22Document%20Scanner%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22github%2F(.%2B)%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%221%5C%22%2C%5C%22versionDetection%5C%22%3Afalse%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D)|[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="58">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.akylas.cardwallet%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FAkylas%2FOSS-DocumentScanner%22%2C%22author%22%3A%22Akylas%22%2C%22name%22%3A%22OSS%20Card%20Wallet%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22Card%20Wallet%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22github%2F(.%2B)%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%221%5C%22%2C%5C%22versionDetection%5C%22%3Afalse%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D)|
-
+</div>
  
 <h2 align="center">Enjoying OSS Document Scanner or OSS Card Wallet?</h2>
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
@@ -67,6 +70,8 @@ The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/o
 	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
   </a>
 </p>
+
+Feature Graphic generated with [hotpot.ai](https://hotpot.ai/design/google-play-feature-graphic)
 
 ## Building Setup
 
