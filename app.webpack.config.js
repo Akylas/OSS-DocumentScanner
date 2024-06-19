@@ -161,6 +161,7 @@ module.exports = (env, params = {}) => {
     const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
+    console.log('supportedLocales', supportedLocales);
     config.externals.push('~/licenses.json');
     config.externals.push(function ({ context, request }, cb) {
         if (/i18n$/i.test(context)) {
@@ -410,7 +411,7 @@ module.exports = (env, params = {}) => {
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
-    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
+    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.map((l) => l.replace('_', '-').toLowerCase()).join('|')}).\js`)));
 
     // config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = function (module) {

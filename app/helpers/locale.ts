@@ -24,7 +24,8 @@ export const onLanguageChanged = createGlobalEventListener('language');
 export const onTimeChanged = createGlobalEventListener('time');
 
 async function loadDayjsLang(newLang: string) {
-    const toLoad = newLang.replace('_', '-');
+    const toLoad = newLang.replace('_', '-').toLowerCase();
+    DEV_LOG && console.log('loadDayjsLang', newLang, toLoad);
     try {
         await import(`dayjs/locale/${toLoad}.js`);
         dayjs.locale(toLoad);
@@ -62,13 +63,22 @@ function setLang(newLang) {
     } else {
         // Application.android.foregroundActivity?.recreate();
         try {
-            let appLocale;
+            let appLocale: androidx.core.os.LocaleListCompat;
             if (newLang === 'auto') {
                 appLocale = androidx.core.os.LocaleListCompat.getEmptyLocaleList();
             } else {
-                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang + ',' + actualNewLang.split('_')[0]);
+                const langs = [...new Set([actualNewLang, actualNewLang.split('_')[0]])].join(',');
+                DEV_LOG && console.log('forLanguageTags', langs);
+                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(langs);
+                const strLangTags = appLocale
+                    .toLanguageTags()
+                    .split(',')
+                    .filter((s) => s !== 'und');
+                if (strLangTags.length !== appLocale.size()) {
+                    appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(strLangTags.join(','));
+                }
             }
-            DEV_LOG && console.log('appLocale', appLocale, actualNewLang);
+            DEV_LOG && console.log('appLocale', appLocale.toLanguageTags(), actualNewLang);
             // Call this on the main thread as it may require Activity.restart()
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
             currentLocale = null;
