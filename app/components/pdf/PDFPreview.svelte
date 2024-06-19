@@ -404,7 +404,9 @@
             </drawer>
 
             <CActionBar modalWindow={true} title={lc('pdf_preview')}>
-                <mdbutton class="actionBarButton" text="mdi-printer" variant="text" on:tap={onPrintPDF} />
+                {#if __ANDROID__}
+                    <mdbutton class="actionBarButton" text="mdi-printer" variant="text" on:tap={onPrintPDF} />
+                {/if}
                 <mdbutton class="actionBarButton" text="mdi-cog" variant="text" on:tap={showPDFSettings} />
             </CActionBar>
         </gridlayout>

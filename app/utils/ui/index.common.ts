@@ -681,14 +681,15 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
     updateDirectoryName();
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
-            { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
-            { id: 'open', name: lc('open'), icon: 'mdi-eye' },
-            { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
-            { id: 'export', name: lc('export'), icon: 'mdi-export' },
-            { id: 'print', name: lc('print'), icon: 'mdi-printer' },
-            { id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }
-        ] as any)
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : [])
+            .concat([
+                { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
+                { id: 'open', name: lc('open'), icon: 'mdi-eye' },
+                { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
+                { id: 'export', name: lc('export'), icon: 'mdi-export' }
+            ] as any)
+            .concat(__ANDROID__ ? ([{ id: 'print', name: lc('print'), icon: 'mdi-printer' }] as any) : [])
+            .concat([{ id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }] as any)
     );
     return showPopoverMenu({
         options,
