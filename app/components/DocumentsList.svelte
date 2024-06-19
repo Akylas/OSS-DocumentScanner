@@ -89,17 +89,11 @@
     async function refresh() {
         try {
             syncEnabled = syncService.enabled;
-            DEV_LOG && console.log('syncEnabled', syncEnabled);
+            DEV_LOG && console.log('syncEnabled', syncEnabled, Date.now());
             const r = await documentsService.documentRepository.search({
                 orderBy: SqlQuery.createFromTemplateString`id DESC`
                 // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
             });
-            // const r = await OCRDocument.find({
-            //     order: {
-            //         id: 'DESC'
-            //     },
-            //     take: 50
-            // });
             documents = new ObservableArray(
                 r.map((doc) => ({
                     doc,
