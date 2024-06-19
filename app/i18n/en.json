@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Card Wallet"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Allow access to the camera so that you scan cards using the camera",
+                    "NSPhotoLibraryUsageDescription": "Allow access to images to scan cards from your library"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -157,8 +165,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "Camera is used to scan your documents",
-                "NSPhotoLibraryUsageDescription": "Import images to scan them"
+                "NSCameraUsageDescription": "Allow access to the camera so that you scan documents using the camera",
+                "NSPhotoLibraryUsageDescription": "Allow access to images to scan documents from your library"
             }
         }
     },
