@@ -1,0 +1,6 @@
+Bug fixes:
+- some locales not loading correctly (like chinese)
+- link not showing in document name format dialogs
+- ensure keyboard is always hidden when necessary
+- better material design 3 fab buttons
+- Translations update
