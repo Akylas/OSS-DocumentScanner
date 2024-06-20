@@ -738,12 +738,12 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={$windowInset.bottom + 16} orientation="horizontal" row={1} verticalAlignment="bottom">
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(), 500)} />
-                <mdbutton id="fab" class="fab" margin="8 16 16 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
+                <mdbutton id="fab" class="fab" margin="0 16 0 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
             </stacklayout>
         {/if}
 

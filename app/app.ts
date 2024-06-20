@@ -174,6 +174,10 @@ try {
     });
     themer.createShape('medium', {
         cornerFamily: 'rounded' as any,
+        cornerSize: 16
+    });
+    themer.createShape('small', {
+        cornerFamily: 'rounded' as any,
         cornerSize: 12
     });
     if (__ANDROID__) {

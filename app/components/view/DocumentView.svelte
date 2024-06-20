@@ -605,12 +605,12 @@
             </Template>
         </collectionview>
 
-        <stacklayout bind:this={fabHolder} horizontalAlignment="right" orientation="horizontal" row={1} verticalAlignment="bottom" android:marginBottom={$windowInset.bottom}>
+        <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={$windowInset.bottom + 16} orientation="horizontal" row={1} verticalAlignment="bottom">
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}
             <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
-            <mdbutton class="fab" margin="16 16 16 8" text="mdi-plus" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+            <mdbutton class="fab" margin="0 16 0 16" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
         </stacklayout>
 
         <CActionBar
