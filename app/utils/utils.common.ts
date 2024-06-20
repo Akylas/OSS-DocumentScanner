@@ -25,7 +25,7 @@ export function getFormatedDateForFilename(value?: number, dateFormat = Applicat
 
     DEV_LOG && console.log('getFormatedDateForFilename', value, now, dateFormat, now.valueOf(), now.toISOString(), now.format(dateFormat));
     let result: string;
-    switch (dateFormat) {
+    switch (dateFormat.trim()) {
         case 'timestamp':
             result = now.valueOf() + '';
             break;
