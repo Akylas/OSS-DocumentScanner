@@ -166,7 +166,7 @@
         "info": {
             "plist": {
                 "NSCameraUsageDescription": "Allow access to the camera so that you scan documents using the camera",
-                "NSPhotoLibraryUsageDescription": "Allow access to images to scan documents from your library"
+                "NSPhotoLibraryUsageDescription": "Allow access to images so that you can choose an image from your library, scan it with the app and create a card from it"
             }
         }
     },
