@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Portafoglio Carte"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Consenti l'accesso alla fotocamera per eseguire la scansione delle carte",
+                    "NSPhotoLibraryUsageDescription": "Consenti l'accesso alle immagini per importare le carte dalla tua libreria"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -166,8 +174,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "La fotocamera viene utilizzata per la scansione dei documenti",
-                "NSPhotoLibraryUsageDescription": "Importa le immagini per scansionarle"
+                "NSCameraUsageDescription": "Consenti l'accesso alla fotocamera per eseguire la scansione dei documenti",
+                "NSPhotoLibraryUsageDescription": "Consenti l'accesso alle immagini per scegliere un'immagine dalla tua libreria, scansionarla con l'app e creare una carta"
             }
         }
     },
