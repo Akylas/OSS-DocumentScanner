@@ -154,5 +154,6 @@
     ],
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
-    }
+    },
+    "packageManager": "yarn@4.3.1"
 }
