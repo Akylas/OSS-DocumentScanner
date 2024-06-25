@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS कार्ड वॉलेट"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "कैमरे तक पहुंच की अनुमति दें ताकि आप कैमरे का उपयोग करके कार्ड स्कैन कर सकें",
+                    "NSPhotoLibraryUsageDescription": "अपनी लाइब्रेरी से कार्ड स्कैन करने के लिए छवियों तक पहुंच की अनुमति दें"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -165,8 +173,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "कैमरे का उपयोग आपके दस्तावेज़ों को स्कैन करने के लिए किया जाता है",
-                "NSPhotoLibraryUsageDescription": "छवियों को स्कैन करने के लिए उन्हें आयात करें"
+                "NSCameraUsageDescription": "कैमरे तक पहुंच की अनुमति दें ताकि आप कैमरे का उपयोग करके दस्तावेज़ों को स्कैन कर सकें",
+                "NSPhotoLibraryUsageDescription": "छवियों तक पहुंच की अनुमति दें ताकि आप अपनी लाइब्रेरी से एक छवि चुन सकें, उसे ऐप से स्कैन कर सकें और उससे एक कार्ड बना सकें"
             }
         }
     },

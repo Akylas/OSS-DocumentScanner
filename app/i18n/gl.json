@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Card Wallet"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Permitir o acceso á cámara para poder escanear tarxetas usando a cámara",
+                    "NSPhotoLibraryUsageDescription": "Permitir o acceso a imaxes para escanear tarxetas desde a galería"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -165,8 +173,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "A cámara utilízase para escanear os documentos",
-                "NSPhotoLibraryUsageDescription": "Importar imaxes para escanealas"
+                "NSCameraUsageDescription": "Permitir o acceso á cámara para poder escanear documentos usando a cámara",
+                "NSPhotoLibraryUsageDescription": "Permitir o acceso a imaxes para poder escoller unha imaxe da galería e escaneala coa app e crear unha tarxeta desde ela"
             }
         }
     },
