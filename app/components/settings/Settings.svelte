@@ -812,7 +812,7 @@
                     }
                     break;
                 case 'import_settings':
-                const result = await openFilePicker({
+                    const result = await openFilePicker({
                         extensions: ['json'],
 
                         multipleSelection: false,
