@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "Cartera para tarjetas OSS"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Permita el acceso a la cámara para escanear tarjetas utilizando la cámara",
+                    "NSPhotoLibraryUsageDescription": "Permita el acceso a imágenes para escanear tarjetas de su biblioteca"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -21,7 +29,7 @@
     "always": "siempre",
     "always_prompt_crop_edit": "solicitar siempre la edición de la región del documento",
     "always_prompt_crop_edit_desc": "Al escanear con la cámara sin el modo por lotes, habilitarlo garantiza que siempre se le solicitará que confirme/edite el área del documento antes de crearlo",
-    "ask_everytime": "pedir cada vez",
+    "ask_everytime": "consultar cada vez",
     "aspect_fill": "rellenar al tamaño",
     "aspect_fit": "encajar al tamaño",
     "aspect_ratio": "relación de tamaño",
@@ -36,7 +44,7 @@
     "auto_scan_distance_threshold_desc": "cuando la cámara se mueve el escaneo automático necesita determinar si seguimos viendo el mismo documento. este es el umbral de distancia",
     "auto_scan_duration": "duración de la exploración automática",
     "auto_scan_duration_desc": "duración en milisegundos antes de que se añada el documento",
-    "auto_scan_first_use": "La nueva función de escaneado automático está activada por defecto. Escaneará automáticamente los documentos. Debido a la naturaleza de la función, no se te pedirá que modifiques las esquinas de los documentos.\n¿Desea mantener activada la función de escaneado automático?\n(puede cambiarlo en la configuración o con una pulsación larga en el botón de captura)",
+    "auto_scan_first_use": "La nueva función de escaneado automático está activada por defecto. Escaneará automáticamente los documentos. Debido a la naturaleza de la función, no se le pedirá que modifique las esquinas de los documentos.\n¿Desea mantener activada la función de escaneado automático?\n(puede cambiarlo en la configuración o con una pulsación larga en el botón de captura)",
     "autoscan": "escaneo automático",
     "autoscan_settings": "configuración de escaneo automático",
     "backup_restore": "copia de seguridad / restauración",
@@ -102,7 +110,7 @@
     "draw_ocr_overlay": "dibujar la superposición OCR",
     "draw_ocr_text": "texto OCR transparente en PDF",
     "email": "correo electrónico",
-    "enable": "habilitar",
+    "enable": "activar",
     "enabled": "activado",
     "english": "Inglés",
     "enhance": "mejorar",
@@ -113,12 +121,12 @@
     "expanded": "expandido",
     "export": "exportar",
     "export_folder": "carpeta a exportar",
-    "export_settings": "ajustes de exportación",
+    "export_settings": "exportar ajustes",
     "export_settings_desc": "exporta todos los ajustes de la aplicación para poder importarlos más tarde",
     "exporting": "exportando",
     "failed": "fallido",
     "feedback_sent": "comentarios enviados",
-    "file_naming_settings": "configuraciones relacionadas con el nombre de las imágenes/PDF durante la exportación",
+    "file_naming_settings": "ajustes relacionados con el nombre de las imágenes/PDF durante la exportación",
     "file_naming_template": "plantilla para nombrar archivos",
     "filename_date_format": "formato de la fecha del nombre del archivo",
     "filename_date_format_desc": "El nombre del archivo exportado se basa en la hora actual. Esto le permite cambiar el formato",
@@ -165,8 +173,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "La cámara se utiliza para escanear sus documentos",
-                "NSPhotoLibraryUsageDescription": "Importar imágenes para escanearlas"
+                "NSCameraUsageDescription": "Permita el acceso a la cámara para escanear documentos utilizando la cámara",
+                "NSPhotoLibraryUsageDescription": "Permita el acceso a imágenes para que pueda elegir una imagen de su biblioteca, escanearla con la app y crear una tarjeta a partir de ella"
             }
         }
     },
@@ -220,7 +228,7 @@
     "pdf_export_jpeg_quality": "Nivel de compresión JPG para el PDF exportado. Puedes poner 0 para desactivar la compresión JPG",
     "pdf_export_settings": "Configuración de exportación de PDF",
     "pdf_filename": "nombre del archivo pdf exportado",
-    "pdf_import": "Importar PDF",
+    "pdf_import": "Importación de PDF",
     "pdf_import_settings": "Ajustes de importación de PDF",
     "pdf_one_image_per_page": "cada página como una imagen",
     "pdf_one_image_per_pdf_image": "buscar imágenes en el PDF e importarlas (el resto de datos, como el texto, no se importarán)",
@@ -230,6 +238,7 @@
     "pdf_settings_desc": "todos los ajustes relacionados con el PDF",
     "picture_size": "tamaño de la imagen",
     "please_choose_export_folder_again": "Por favor, seleccione la carpeta de exportación de nuevo para arreglar. No se debe pedir de nuevo",
+    "please_restart_app": "por favor, reinicie la aplicación para ver el cambio",
     "portrait": "retrato",
     "preferences": "preferencias",
     "preview": "previsualizar",
@@ -277,7 +286,7 @@
     "successful": "completado",
     "sure_cancel_import": "¿está seguro que desea cancelar?",
     "sure_go_back": "¿está seguro de que desea volver?",
-    "sync": "sincronizar",
+    "sync": "Sincronización",
     "sync_settings_desc": "ajustes de sincronización",
     "system": "sistema",
     "test": "probar",
