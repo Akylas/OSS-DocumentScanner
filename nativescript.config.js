@@ -34,6 +34,7 @@ module.exports = {
         // for cardwallet we enable qrcode. and then we filter aar to only use the one we want
         gradleArgs: CARD_APP ? ['-PwithQRCode', '-PaarIgnoreFilter=**/*documentscanner*'] : ['-PaarIgnoreFilter=**/*cardwallet*'],
         enableMultithreadedJavascript: false,
+        handleTimeZoneChanges: true,
         ...(loggingEnabled
             ? {
                   forceLog: true,
