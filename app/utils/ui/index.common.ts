@@ -1,7 +1,9 @@
+import { ConfirmOptions } from '@akylas/nativescript/ui/dialogs/dialogs-common';
 import { request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
+import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { AlertDialog, MDCAlertControlerOptions, PromptOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+import { AlertDialog, MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -19,18 +21,17 @@ import {
     SharedTransition,
     Utils,
     View,
-    ViewBase,
     knownFolders,
     path
 } from '@nativescript/core';
-import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl, wrapNativeException } from '@nativescript/core/utils';
+import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
+import { create as createImagePicker } from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
 import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, printPDF, processFromFile } from 'plugin-nativeprocessor';
-import { showModal } from 'svelte-native';
-import { NativeViewElementNode, createElement } from 'svelte-native/dom';
-import { get } from 'svelte/store';
-import { create as createImagePicker } from '@nativescript/imagepicker';
 import type { ComponentProps } from 'svelte';
+import { showModal } from 'svelte-native';
+import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
@@ -38,6 +39,10 @@ import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { l, lc } from '~/helpers/locale';
 import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+import { ocrService } from '~/services/ocr';
+import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
+import { exportPDFAsync } from '~/services/pdf/PDFExporter';
+import { securityService } from '~/services/security';
 import {
     ALWAYS_PROMPT_CROP_EDIT,
     AREA_SCALE_MIN_FACTOR,
@@ -58,34 +63,28 @@ import {
     TRANSFORMS_SPLIT,
     USE_SYSTEM_CAMERA
 } from '~/utils/constants';
-import { ocrService } from '~/services/ocr';
-import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
-import { exportPDFAsync } from '~/services/pdf/PDFExporter';
-import { securityService } from '~/services/security';
 import { PermissionError, SilentError, showError } from '~/utils/error';
 import { recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
+import { goBack } from '~/utils/svelte/ui';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
 import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
-import { Label } from '@nativescript-community/ui-label';
-import { ConfirmOptions } from '@akylas/nativescript/ui/dialogs/dialogs-common';
-import { goBack } from '~/utils/svelte/ui';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
-export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
-    element: NativeViewElementNode<T>;
-    viewInstance: U;
-}
+// export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
+//     element: NativeViewElementNode<T>;
+//     viewInstance: U;
+// }
 
-export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
-    const dummy = createElement('fragment', window.document as any);
-    const viewInstance = new viewSpec({ target: dummy, props });
-    const element = dummy.firstElement() as NativeViewElementNode<View>;
-    return { element, viewInstance };
-}
+// export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
+//     const dummy = createElement('fragment', window.document as any);
+//     const viewInstance = new viewSpec({ target: dummy, props });
+//     const element = dummy.firstElement() as NativeViewElementNode<View>;
+//     return { element, viewInstance };
+// }
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

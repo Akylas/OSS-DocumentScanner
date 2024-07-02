@@ -2,7 +2,7 @@ import { throttle } from '@akylas/nativescript/utils/common';
 import { Frame, Observable, View } from '@nativescript/core';
 import { onDestroy } from 'svelte';
 import { closeModal as sCloseModal, goBack as sGoBack, navigate as sNavigate, showModal as sShowModal } from 'svelte-native';
-import { BackNavigationOptions, NavigationOptions, ShowModalOptions } from 'svelte-native/dom';
+import { BackNavigationOptions, NavigationOptions, ShowModalOptions, resolveFrame } from 'svelte-native/dom';
 import { asSvelteTransition, easings } from 'svelte-native/transitions';
 import { get_current_component } from 'svelte/internal';
 
@@ -96,14 +96,14 @@ export function createEventDispatcher<T>() {
 }
 
 export function goBack(options?: BackNavigationOptions) {
-    const frame = Frame.topmost();
+    const frame = resolveFrame(options.frame);
     // this means the frame is animating
     // doing goBack would mean boing back up 2 levels because
     // the animating context is not yet in the backStack
     if (frame['_executingContext']) {
         return;
     }
-    const backStackEntry = frame.backStack[frame.backStack.length - 1];
+    const backStackEntry = options.backStackEntry || frame.backStack[frame.backStack.length - 1];
     if (!backStackEntry) {
         //this could happen if back is pressed too quickly on android
         return;
