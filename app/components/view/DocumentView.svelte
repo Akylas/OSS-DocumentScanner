@@ -395,8 +395,15 @@
             document = event.doc;
         }
     }
-    function onDocumentsDeleted(event: EventData & { documents }) {
-        if (event.documents.indexOf(document) !== -1) {
+    function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
+        DEV_LOG &&
+            console.log(
+                'DocumentView onDocumentsDeleted',
+                event.documents.map((d) => d.id),
+                document.id
+            );
+        if (event.documents.findIndex((d) => d.id === document.id) !== -1) {
+            DEV_LOG && console.log('DocumentView onDocumentsDeleted closing', document.id);
             goBack({
                 // null is important to say no transition! (override enter transition)
                 transition: null

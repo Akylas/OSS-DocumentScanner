@@ -441,6 +441,11 @@ export class DocumentsService extends Observable {
         this.started = true;
     }
     async deleteDocuments(documents: OCRDocument[]) {
+        DEV_LOG &&
+            console.log(
+                'deleteDocuments',
+                documents.map((d) => d.id)
+            );
         // await this.documentRepository.delete(model);
         await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d)))));
         // await OCRDocument.delete(docs.map((d) => d.id));

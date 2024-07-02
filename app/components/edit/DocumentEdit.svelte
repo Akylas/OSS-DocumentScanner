@@ -6,7 +6,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { OCRData, QRCodeData, Quad } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
@@ -339,14 +339,6 @@
             showError(err);
         }
     }
-    onDestroy(() => {
-        DEV_LOG && console.log('DocumentEdit', 'onDestroy');
-        // document.clearObservableArray(items);
-        // if (editingImage) {
-        //     recycleImages(editingImage);
-        //     editingImage = null;
-        // }
-    });
 
     async function deleteCurrentPage() {
         try {
@@ -369,16 +361,12 @@
                 });
             }
             if (result) {
-                try {
-                    if (deleteDocument) {
-                        await documentsService.deleteDocuments([document]);
-                    } else {
-                        await document.deletePage(currentIndex);
-                        const newIndex = currentIndex < items.length - 1 ? currentIndex : currentIndex - 1;
-                        pager.nativeView.scrollToIndexAnimated(newIndex, true);
-                    }
-                } catch (err) {
-                    showError(err, err.stack);
+                if (deleteDocument) {
+                    await documentsService.deleteDocuments([document]);
+                } else {
+                    await document.deletePage(currentIndex);
+                    const newIndex = currentIndex < items.length - 1 ? currentIndex : currentIndex - 1;
+                    pager.nativeView.scrollToIndexAnimated(newIndex, true);
                 }
             }
         } catch (err) {
@@ -544,7 +532,10 @@
     }
     function onDocumentsDeleted(event: EventData & { documents }) {
         if (event.documents.indexOf(document) !== -1) {
+            const frame = Frame.topmost();
             goBack({
+                frame,
+                backStackEntry: frame.backStack[0],
                 // null is important to say no transition! (override enter transition)
                 transition: null
             });
@@ -559,7 +550,7 @@
         documentsService.on('documentPageUpdated', onDocumentPageUpdated);
     });
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentEdit on Destroy');
+        DEV_LOG && console.log('DocumentEdit onDestroy');
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }

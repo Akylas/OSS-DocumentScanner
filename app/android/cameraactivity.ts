@@ -1,9 +1,5 @@
 import { AndroidActivityBackPressedEventData, AndroidActivityRequestPermissionsEventData, AndroidActivityResultEventData, Application, Frame, GridLayout, Trace, View } from '@nativescript/core';
 import { CSSUtils } from '@nativescript/core/css/system-classes';
-// import Camera from '~/components/Camera.svelte';
-import { start as startThemeHelper } from '~/helpers/theme';
-import { resolveComponentElement } from '~/utils/ui';
-// import { resolveComponentElement } from '~/utils/ui';
 
 const ROOT_VIEW_ID_EXTRA = 'com.tns.activity.rootViewId';
 const activityRootViewsMap = new Map<number, WeakRef<View>>();
