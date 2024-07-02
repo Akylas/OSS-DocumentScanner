@@ -742,11 +742,11 @@
                         unselectAll();
                         break;
                     case 'ocr':
-                        detectOCR({ documents: getSelectedDocuments() });
+                    await detectOCR({ documents: getSelectedDocuments() });
                         unselectAll();
                         break;
                     case 'transform':
-                        transformPages({ documents: getSelectedDocuments() });
+                    await transformPages({ documents: getSelectedDocuments() });
                         unselectAll();
                         break;
                     case 'delete':

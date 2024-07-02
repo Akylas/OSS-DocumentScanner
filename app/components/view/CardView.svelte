@@ -625,7 +625,7 @@
                             unselectAll();
                             break;
                         case 'transform':
-                            transformPages({ documents: [document] });
+                            await transformPages({ documents: [document] });
                             unselectAll();
                             break;
                         case 'delete':
