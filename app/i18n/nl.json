@@ -151,6 +151,7 @@
     "image_settings": "afbeeldings­instellingen",
     "image_settings_desc": "alle afbeeldings­gerelateerde instellingen",
     "image_size_threshold": "drempel­waarde voor afbeeldings­grootte",
+    "image_size_threshold_desc": "afbeeldingen die in PDF zĳn ingevoegd met een grotere breedte of hoogte worden verkleind",
     "images_saved": "afbeeldingen opgeslagen",
     "import_from_file": "importeren uit bestand",
     "import_from_image": "importeren uit afbeelding",
@@ -159,6 +160,13 @@
     "import_settings_desc": "importeer alle instellingen van een vorige back-up",
     "imported_nb_pages": "%1$s pagina's geïmporteerd",
     "internal_storage": "interne opslag",
+    "ios": {
+        "info": {
+            "plist": {
+                "NSCameraUsageDescription": "Geef toegang tot de camera zodat u documenten kunt scannen met de camera"
+            }
+        }
+    },
     "italian": "Italiaans",
     "items_per_page": "pagina's per vel",
     "jpeg_quality": "JPEG-kwaliteit",
@@ -173,6 +181,7 @@
     "list_used_third_parties": "lĳst met gebruikte bibliotheken van derde partĳen",
     "loading": "aan het laden",
     "magnifier_sensitivity": "gevoeligheid vergrootglas",
+    "magnifier_sensitivity_desc": "verander de gevoeligheid van het vergroot­glas terwĳl u de bĳsnĳd­zone wĳzigt",
     "missing_storage_perm_settings": "opslag­rechten zĳn vereist om instellingen te exporteren",
     "move_data": "gegevens verplaatsen?",
     "moving_files": "bestanden aan het verplaatsen",
@@ -181,6 +190,7 @@
     "new_passcode": "nieuwe pincode",
     "no_card_yet": "voeg een kaart toe met behulp van de camera of importeer er een uit een afbeelding",
     "no_document_found": "geen document gevonden",
+    "no_document_yet": "voeg een document toe via de camera of importeer een document uit een afbeelding",
     "no_qrcode": "geen QR-code gevonden",
     "no_qrcode_found": "geen QR-code gevonden",
     "no_text_found_in_page": "er is geen tekst gedetecteerd in uw document",
@@ -203,6 +213,7 @@
     "password": "wacht­woord",
     "password_not_saved": "wacht­woord niet opgeslagen",
     "pdf_export": "PDF-export",
+    "pdf_export_jpeg_quality": "JPEG-compressie­niveau voor geëxporteerde PDF. U kunt 0 invoeren om JPEG-compressie uit te schakelen",
     "pdf_export_settings": "PDF-export­instellingen",
     "pdf_filename": "bestands­naam voor de geëxporteerde PDF",
     "pdf_import": "PDF-import",
@@ -222,6 +233,7 @@
     "quality": "kwaliteit",
     "reduce_image_size": "afbeeldings­grootte verkleinen",
     "remote_folder": "externe map",
+    "remote_folder_desc": "externe map om de gegevens van en naar te synchroniseren",
     "restart": "herstarten",
     "restart_app": "app herstarten",
     "review_application": "app reviewen",
@@ -241,6 +253,7 @@
     "send": "versturen",
     "send_feedback": "feedback versturen",
     "server_address": "server­adres",
+    "set_filename_format_settings": "u kunt het bestandsnaam­formaat instellen via de instellingen",
     "settings": {
         "title": "instellingen"
     },
@@ -248,6 +261,7 @@
     "share_application": "app delen",
     "share_images": "afbeeldingen delen",
     "show_fullscreen_images": "volledig scherm",
+    "show_love": "Als u het project leuk vindt, deel dan wat liefde of draag zelfs bĳ",
     "source_code": "bron­code",
     "start": "starten",
     "start_on_cam": "app opstarten op het camera­scherm",
@@ -277,6 +291,7 @@
     "use_system_camera": "systeem­camera gebruiken",
     "username": "gebruikers­naam",
     "version": "versie",
+    "webdav_auto_sync": "automatisch synchroniseren met WebDAV bĳ het opstarten en wĳzigingen bĳhouden",
     "webdav_config": "WebDAV-configuratie",
     "webdav_sync": "WebDAV-document­synchronisatie",
     "webdav_sync_desc": "schakel WebDAV in om uw documenten te synchroniseren (back-uppen)",
