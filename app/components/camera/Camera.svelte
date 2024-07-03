@@ -101,6 +101,7 @@
                       currentResolution: cameraView.nativeView.getCurrentResolutionInfo()
                   }
                 : {};
+            DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
             await showBottomSheet({
                 parent: page,
                 view: CameraSettingsBottomSheet,

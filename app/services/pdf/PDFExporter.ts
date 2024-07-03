@@ -35,9 +35,10 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                 text_scale: Screen.mainScreen.scale * 1.4,
                 pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
             });
-            DEV_LOG && console.log('exportPDFAsync', folder, filename, compress, options);
+            const context = Utils.android.getApplicationContext();
+            DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);
             com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(
-                Utils.android.getApplicationContext(),
+                context,
                 folder,
                 filename,
                 options,
