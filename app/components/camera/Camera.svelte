@@ -203,7 +203,7 @@
                 maxHeight: 4500
             });
             const didAdd = await processAndAddImage(image, autoScan);
-            DEV_LOG && console.log('takePicture got image', batchMode, image, didAdd, Date.now() - start, 'ms');
+            DEV_LOG && console.log('takePicture got image', batchMode, !!image, didAdd, Date.now() - start, 'ms');
             if (didAdd) {
                 nbPages = pagesToAdd.length;
                 const lastPage = pagesToAdd[pagesToAdd.length - 1];
@@ -216,7 +216,13 @@
             DEV_LOG && console.log('takePicture done', didAdd);
         } catch (err) {
             // we can get a native error here
-            showError(wrapNativeException(err));
+            const error = wrapNativeException(err);
+            if (__ANDROID__ && /(closed|submit)/.test(error.message)) {
+                DEV_LOG && console.warn('ignored error', error);
+                // ignore camera closed errors as they can happen whil app is going to background
+            } else {
+                showError(error);
+            }
         } finally {
             takingPicture = false;
             if (autoScanHandler) {
