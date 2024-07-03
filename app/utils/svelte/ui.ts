@@ -96,14 +96,14 @@ export function createEventDispatcher<T>() {
 }
 
 export function goBack(options?: BackNavigationOptions) {
-    const frame = resolveFrame(options.frame);
+    const frame = resolveFrame(options?.frame);
     // this means the frame is animating
     // doing goBack would mean boing back up 2 levels because
     // the animating context is not yet in the backStack
     if (frame['_executingContext']) {
         return;
     }
-    const backStackEntry = options.backStackEntry || frame.backStack[frame.backStack.length - 1];
+    const backStackEntry = options?.backStackEntry || frame.backStack[frame.backStack.length - 1];
     if (!backStackEntry) {
         //this could happen if back is pressed too quickly on android
         return;
