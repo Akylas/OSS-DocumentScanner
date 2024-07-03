@@ -860,7 +860,7 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
             }
         }
     }
-    DEV_LOG && console.log('exporting images', exportFormat, exportQuality, outputImageNames);
+    DEV_LOG && console.log('exporting images', exportFormat, exportQuality, exportDirectory, outputImageNames);
     showLoading(l('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
@@ -895,6 +895,7 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
                             } else {
                                 finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
                             }
+                            DEV_LOG && console.log('finalMessagePart', finalMessagePart);
                         }
                         const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
                         (imageSource.android as android.graphics.Bitmap).compress(
@@ -937,8 +938,17 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
 export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = VerticalPosition.BELOW) {
     let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
+    DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName, exportDirectory.split(/(\/|%3A)/));
     function updateDirectoryName() {
-        exportDirectoryName = exportDirectory.split(/(\/|%3A)/).pop();
+        if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+            const context = Utils.android.getApplicationContext();
+            const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
+            exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
+        }
+        exportDirectoryName = exportDirectoryName
+            .split('/')
+            .filter((s) => s.length)
+            .pop();
     }
     updateDirectoryName();
 
