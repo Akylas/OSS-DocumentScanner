@@ -12,7 +12,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
-    import { l, lc } from '~/helpers/locale';
+    import { getFileNameForDocument, l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { IMAGE_CONTEXT_OPTIONS } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
@@ -20,7 +20,6 @@
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { showError } from '~/utils/error';
     import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
-    import { getFileNameForDocument } from '~/utils/utils.common';
     import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
     import { getPageColorMatrix } from '~/utils/matrix';

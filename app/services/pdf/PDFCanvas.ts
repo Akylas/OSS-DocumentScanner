@@ -1,9 +1,9 @@
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-import { ApplicationSettings, ImageSource, Screen, Utils } from '@nativescript/core';
+import { ApplicationSettings, Screen } from '@nativescript/core';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
-import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
-import { loadImage, recycleImages } from '~/utils/images';
 import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/utils/constants';
+import { loadImage, recycleImages } from '~/utils/images';
+import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 
 export interface PDFExportBaseOptions {
     reduce_image_size: boolean;

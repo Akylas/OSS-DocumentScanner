@@ -3,12 +3,11 @@ import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
 import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
-import { lc } from '~/helpers/locale';
+import { getFileNameForDocument, lc } from '~/helpers/locale';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import type { OCRDocument } from '~/models/OCRDocument';
 import dayjs from 'dayjs';
-import { getFileNameForDocument } from '~/utils/utils.common';
 export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {

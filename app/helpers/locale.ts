@@ -8,6 +8,8 @@ import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
 import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+import { OCRDocument } from '~/models/OCRDocument';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
 
@@ -264,3 +266,33 @@ export const slu = derived([$lang], () => lu);
 export const scformatDate = derived($lang, () => formatDate);
 export const scformatTime = derived([$lang, clock_24Store], () => formatTime);
 export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);
+
+
+export function cleanFilename(str) {
+    return str.replace(/[|?*<\":>+\[\]'"]+/g, '').replace(/[\\\s\t\n\/]+/g, '_');
+}
+export function getFormatedDateForFilename(value?: number, dateFormat = ApplicationSettings.getString('filename_date_format', FILENAME_DATE_FORMAT), clean = true) {
+    const now = dayjs(value);
+
+    DEV_LOG && console.log('getFormatedDateForFilename', value, now, dateFormat, now.valueOf(), now.toISOString(), now.format(dateFormat));
+    let result: string;
+    switch (dateFormat.trim()) {
+        case 'timestamp':
+            result = now.valueOf() + '';
+            break;
+        case 'iso':
+            result = now.toISOString();
+            break;
+        default:
+            result = now.format(dateFormat);
+            break;
+    }
+    return clean ? cleanFilename(result) : result;
+}
+export function getFileNameForDocument(document?: OCRDocument) {
+    const useDocumentName = ApplicationSettings.getBoolean('filename_use_document_name', FILENAME_USE_DOCUMENT_NAME);
+    if (useDocumentName && document?.name) {
+        return cleanFilename(document.name);
+    }
+    return getFormatedDateForFilename();
+}

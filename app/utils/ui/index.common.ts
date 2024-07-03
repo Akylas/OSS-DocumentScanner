@@ -37,7 +37,7 @@ import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
-import { l, lc } from '~/helpers/locale';
+import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, l, lc } from '~/helpers/locale';
 import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
@@ -70,7 +70,7 @@ import { goBack } from '~/utils/svelte/ui';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
-import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
+import { doInBatch, getImageSize } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -198,28 +198,6 @@ export async function hideLoading() {
     if (loadingIndicator) {
         loadingIndicator.hide();
     }
-}
-
-function chunk<T>(array: T[], size) {
-    return Array.from<T, T[]>({ length: Math.ceil(array.length / size) }, (value, index) => array.slice(index * size, index * size + size));
-}
-
-export async function doInBatch<T, U>(array: T[], handler: (T, index: number) => Promise<U>, chunkSize: number = DEFAULT__BATCH_CHUNK_SIZE) {
-    const chunks = chunk(array, chunkSize);
-    const result: U[] = [];
-    // we use allSettled to wait for all even if one failed
-    // that way we are sure we are finished on error and we can handle things correctly
-    const promises = chunks.map((s, i) => () => Promise.allSettled(s.map((value, j) => handler(value, i * chunkSize + j))));
-    for (let index = 0; index < promises.length; index++) {
-        const subResult = await promises[index]();
-        const firstError = subResult.find((s) => s.status === 'rejected')?.['reason'];
-        if (firstError) {
-            throw firstError;
-        }
-        const values: U[] = subResult.map((s) => s['value']);
-        result.push(...values);
-    }
-    return result;
 }
 
 export async function importAndScanImageOrPdfFromUris(uris: string[], document?: OCRDocument, canGoToView = true) {
