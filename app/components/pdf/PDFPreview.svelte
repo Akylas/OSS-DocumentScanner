@@ -90,7 +90,13 @@
                 );
                 const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                 hideLoading();
-                const onSnack = await showSnack({ message: lc('pdf_saved', File.fromPath(filePath).name), actionText: lc('open') });
+                let filename;
+                if (__ANDROID__ && filePath.startsWith('content://')) {
+                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split('/').pop();
+                } else {
+                    filename = filePath.split('/').pop();
+                }
+                const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
                 if (onSnack.reason === 'action') {
                     openFile(filePath);
                 }

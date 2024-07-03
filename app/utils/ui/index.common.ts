@@ -788,7 +788,13 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                             hideLoading();
                             DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
-                            const onSnack = await showSnack({ message: lc('pdf_saved', File.fromPath(filePath).name), actionText: lc('open') });
+                            let filename;
+                            if (__ANDROID__ && filePath.startsWith('content://')) {
+                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split('/').pop();
+                            } else {
+                                filename = filePath.split('/').pop();
+                            }
+                            const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
                                 openFile(filePath);
