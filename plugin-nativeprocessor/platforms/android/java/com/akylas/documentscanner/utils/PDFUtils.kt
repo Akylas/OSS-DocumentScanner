@@ -128,7 +128,7 @@ class PDFUtils {
                     // Get image
                     val imgRef = iter.next()
                     val stream = xObjects.getAsStream(imgRef)
-                    if (PdfName.Image == stream.getAsName(PdfName.Subtype)) {
+                    if (stream != null && PdfName.Image == stream.getAsName(PdfName.Subtype)) {
                         val image = PdfImageXObject(stream)
                         val imageBytes = image.imageBytes
                         val imgBytes = ByteArrayOutputStream()
@@ -229,12 +229,9 @@ class PDFUtils {
                     calculateInSampleSize(imageWidth.toInt(), imageHeight.toInt(), reqWidth.toInt(), reqHeight.toInt())
             }
             finalBitmapOptions.inMutable = colorMatrix != null
-            val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
-            if (bmp == null) {
-                return null
-            }
+            val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions) ?: return null
             if (hasColorMatrix) {
-                Log.d("JS", "hasColorMatrix " + colorMatrix)
+                Log.d("JS", "hasColorMatrix $colorMatrix")
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
@@ -319,9 +316,7 @@ class PDFUtils {
             val pages = jsonOps.getJSONArray("pages")
             val pagesCount = pages.length()
             val isLandscape = orientation == "landscape"
-            if(paperSize == "full") {
-                itemsPerPage = 1
-            }
+
 //            when (paperSize) {
 //                "full" -> {
 //                    pageSize = PageSize(page.optInt("width", 0).toFloat(), page.optInt("height", 0).toFloat())
@@ -338,6 +333,7 @@ class PDFUtils {
             val pdfDoc = PdfDocument(writer)
             var document: Document? = null
             if (paperSize == "full") {
+                itemsPerPage = 1
                 for (i in 0..<pagesCount) {
                     val page = pages.getJSONObject(i)
                     val imageRotation = page.optInt("rotation", 0)
@@ -349,7 +345,7 @@ class PDFUtils {
                     var imageRatio = image.imageHeight / imageHeight
 
                     val pageSize = if (imageRotation % 180 !== 0) PageSize(image.imageHeight, image.imageWidth) else PageSize(image.imageWidth, image.imageHeight)
-                    if (i == 0) {
+                    if (document == null) {
                         document = Document(pdfDoc, pageSize)
                         val font =  PdfFontFactory.createRegisteredFont("helvetica")
                         document.setFont(font)
