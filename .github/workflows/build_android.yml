@@ -32,7 +32,7 @@ jobs:
       - uses: maxim-lobanov/setup-android-tools@v1
         with:
           packages: |
-            ndk;26.1.10909125
+            ndk;26.3.11579264
             platforms;android-34
           cache: true
 
