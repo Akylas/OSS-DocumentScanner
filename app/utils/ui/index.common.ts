@@ -862,6 +862,7 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
                     // const imageSource = await ImageSource.fromFile(imagePath);
                     imageSource = await getTransformedImage(page);
                     if (__ANDROID__ && toGallery) {
+                        await request('storage');
                         com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(Utils.android.getApplicationContext(), imageSource.android, exportFormat, exportQuality, fileName);
                     } else if (__ANDROID__ && exportDirectory.startsWith('content://')) {
                         const context = Utils.android.getApplicationContext();

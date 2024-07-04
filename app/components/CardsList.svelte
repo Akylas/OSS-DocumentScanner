@@ -1,7 +1,7 @@
 <script lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+    import { request } from '@nativescript-community/perms';
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
-    import { throttle } from '@nativescript/core/utils';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { LottieView } from '@nativescript-community/ui-lottie';
@@ -10,7 +10,7 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
-    import { filesize } from 'filesize';
+    import { throttle } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -21,9 +21,10 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
+    import { securityService } from '~/services/security';
     import { syncService } from '~/services/sync';
+    import { CARD_RATIO } from '~/utils/constants';
     import { showError } from '~/utils/error';
     import { fade, navigate } from '~/utils/svelte/ui';
     import {
@@ -40,8 +41,6 @@
         transformPages
     } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
-    import { securityService } from '~/services/security';
-    import { qrcodeService } from '~/services/qrcode';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -478,7 +477,7 @@
             try {
                 const intent = event.intent as android.content.Intent;
                 const action = intent.getAction();
-                const uris = [];
+                let uris: string[] = [];
                 switch (action) {
                     case 'android.intent.action.SEND':
                         const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
@@ -516,6 +515,24 @@
                         break;
                 }
                 DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
+                if (__ANDROID__ && uris.length) {
+                    const needsStoragePermission = uris.find((d) => d.startsWith('file://'));
+                    if (needsStoragePermission) {
+                        await request('storage');
+                        uris = uris.map((u) => {
+                            if (u.startsWith('file://')) {
+                                const newUri = androidx.core.content.FileProvider.getUriForFile(
+                                    Utils.android.getApplicationContext(),
+                                    __APP_ID__ + '.provider',
+                                    new java.io.File(u.replace('file://', ''))
+                                );
+                                return newUri?.toString() || u;
+                            } else {
+                                return u;
+                            }
+                        });
+                    }
+                }
                 if (uris.length) {
                     await importAndScanImageOrPdfFromUris(uris);
                 }

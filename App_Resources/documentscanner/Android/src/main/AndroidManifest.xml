@@ -6,8 +6,13 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission 
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:ignore="ScopedStorage" tools:replace="android:maxSdkVersion" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" tools:replace="android:maxSdkVersion"/>
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.INTERNET" />

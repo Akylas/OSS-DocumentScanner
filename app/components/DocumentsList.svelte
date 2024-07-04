@@ -9,7 +9,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, File, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
@@ -43,6 +43,7 @@
     } from '~/utils/ui';
     import { colors, fontScale, windowInset } from '~/variables';
     import { securityService } from '~/services/security';
+    import { request } from '@nativescript-community/perms';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -344,7 +345,6 @@
 
     async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
         if (__ANDROID__) {
-            DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
             if (Application.servicesStarted !== true) {
                 return Application.once('servicesStarted', () => {
                     DEV_LOG && console.log('servicesStarted for intent');
@@ -357,7 +357,8 @@
             try {
                 const intent = event.intent as android.content.Intent;
                 const action = intent.getAction();
-                const uris = [];
+                let uris: string[] = [];
+                DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating, action);
                 switch (action) {
                     case 'android.intent.action.SEND':
                         const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
@@ -396,7 +397,23 @@
                         break;
                 }
                 DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
-                if (uris.length) {
+                if (__ANDROID__ && uris.length) {
+                    const needsStoragePermission = uris.find((d) => d.startsWith('file://'));
+                    if (needsStoragePermission) {
+                        await request('storage');
+                        uris = uris.map((u) => {
+                            if (u.startsWith('file://')) {
+                                const newUri = androidx.core.content.FileProvider.getUriForFile(
+                                    Utils.android.getApplicationContext(),
+                                    __APP_ID__ + '.provider',
+                                    new java.io.File(u.replace('file://', ''))
+                                );
+                                return newUri?.toString() || u;
+                            } else {
+                                return u;
+                            }
+                        });
+                    }
                     await importAndScanImageOrPdfFromUris(uris);
                 }
             } catch (error) {
