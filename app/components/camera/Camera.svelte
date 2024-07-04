@@ -5,7 +5,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
-    import { debounce } from '@nativescript/core/utils';
+    import { debounce, wrapNativeException } from '@nativescript/core/utils';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
@@ -32,7 +32,7 @@
         TRANSFORMS_SPLIT
     } from '~/utils/constants';
     import { documentsService } from '~/services/documents';
-    import { showError, wrapNativeException } from '~/utils/error';
+    import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
     import { navigate } from '~/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
