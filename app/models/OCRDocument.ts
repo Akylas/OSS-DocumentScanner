@@ -5,7 +5,7 @@ import { getFormatedDateForFilename } from '~/helpers/locale';
 import { DocumentsService, documentsService } from '~/services/documents';
 import type { MatricesTypes, Matrix } from '~/utils/color_matrix';
 import { doInBatch } from '~/utils/utils.common';
-import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT, SETTINGS_DOCUMENT_NAME_FORMAT } from '../utils/constants';
+import { DOCUMENT_NAME_FORMAT, IMG_COMPRESS, IMG_FORMAT, SEPARATOR, SETTINGS_DOCUMENT_NAME_FORMAT } from '../utils/constants';
 
 export interface ImportImageData {
     imagePath?: string;
@@ -101,7 +101,7 @@ export class OCRDocument extends Observable implements Document {
         DEV_LOG && console.log('add single page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
         if (sourceImagePath) {
             let baseName = sourceImagePath
-                .split('/')
+                .split(SEPARATOR)
                 .pop()
                 .replace(/%[a-zA-Z\d]{2}/, '');
             if (!baseName.endsWith(IMG_FORMAT)) {
@@ -173,8 +173,8 @@ export class OCRDocument extends Observable implements Document {
                     attributes.sourceImagePath = actualSourceImagePath;
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
-                        .replace(/%252F/g, '/') // for Android content:// paths
-                        .split('/')
+                        .replace(/%252F/g, SEPARATOR) // for Android content:// paths
+                        .split(SEPARATOR)
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
                     if (!baseName.endsWith(compressFormat)) {

@@ -39,6 +39,7 @@ import { handleResponseCode, processResponsePayload } from './response';
 import { parseXML, prepareFileFromProps } from './tools/dav';
 import { HttpsResponse, HttpsResponseLegacy } from '@nativescript-community/https';
 import { fromBase64 } from './tools/encode';
+import { SEPARATOR } from '~/utils/constants';
 
 const DEFAULT_CONTACT_HREF = 'mail:contact@akylas.fr';
 
@@ -57,7 +58,7 @@ async function _getFileContentsBuffer(context: WebDAVClientContext, filePath: st
 }
 
 function getDirectoryFiles(result: DAVResult, serverRemoteBasePath: string, requestedRemotePath: string, isDetailed: boolean = false, includeSelf: boolean = false): FileStat[] {
-    const serverBase = path.join(serverRemoteBasePath, '/');
+    const serverBase = path.join(serverRemoteBasePath, SEPARATOR);
     // Extract the response items (directory contents)
     const {
         multistatus: { response: responseItems }
@@ -72,7 +73,7 @@ function getDirectoryFiles(result: DAVResult, serverRemoteBasePath: string, requ
             propstat: { prop: props }
         } = item;
         // Process the true full filename (minus the base server path)
-        const filename = serverBase === '/' ? decodeURIComponent(normalisePath(href)) : decodeURIComponent(normalisePath(path.join(serverBase, href)));
+        const filename = serverBase === SEPARATOR ? decodeURIComponent(normalisePath(href)) : decodeURIComponent(normalisePath(path.join(serverBase, href)));
         return prepareFileFromProps(props, filename, isDetailed);
     });
 
@@ -97,8 +98,8 @@ export class WebDAVClient {
     async getDirectoryContents(remotePath: string, options: GetDirectoryContentsOptions = {}) {
         const context = this.context;
         const _remotePath = remotePath.startsWith('http') ? remotePath : path.join(context.remoteURL, encodePath(remotePath));
-        // if (!_remotePath.endsWith('/')) {
-        //     _remotePath += '/';
+        // if (!_remotePath.endsWith(SEPARATOR)) {
+        //     _remotePath += SEPARATOR;
         // }
         const requestOptions = prepareRequestOptions(
             {
@@ -206,7 +207,7 @@ export function createContext(remoteURL: string, options: WebDAVClientOptions = 
     }
     if (!remoteBasePath) {
         const array = remoteURL.split('//');
-        remoteBasePath = array[0] + '//' + array[1].split('/')[0];
+        remoteBasePath = array[0] + '//' + array[1].split(SEPARATOR)[0];
     }
     const context = {
         authType,
@@ -241,7 +242,7 @@ export function createClient(remoteURL: string, options: WebDAVClientOptions = {
     //     getDirectoryContents: async (remotePath: string, options: GetDirectoryContentsOptions = {}) => {
     //         const requestOptions = prepareRequestOptions(
     //             {
-    //                 url: joinURL(context.remoteURL, encodePath(remotePath), '/'),
+    //                 url: joinURL(context.remoteURL, encodePath(remotePath), SEPARATOR),
     //                 method: 'PROPFIND' as any,
     //                 headers: {
     //                     Accept: 'text/plain,application/xml',

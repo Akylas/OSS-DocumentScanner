@@ -5,6 +5,7 @@ import { getStat } from './stat';
 import { CreateDirectoryOptions, FileStat, WebDAVClientContext } from '../types';
 import { path } from '@nativescript/core';
 import { HTTPError } from '~/utils/error';
+import { SEPARATOR } from '~/utils/constants';
 
 export async function createDirectory(context: WebDAVClientContext, dirPath: string, options: CreateDirectoryOptions = {}) {
     if (options.recursive === true) return createDirectoryRecursively(context, dirPath, options);
@@ -28,8 +29,8 @@ export async function createDirectory(context: WebDAVClientContext, dirPath: str
  * @return string Path of the collection with appended trailing "/" in case the `path` does not have it.
  */
 function ensureCollectionPath(path: string): string {
-    if (!path.endsWith('/')) {
-        return path + '/';
+    if (!path.endsWith(SEPARATOR)) {
+        return path + SEPARATOR;
     }
     return path;
 }

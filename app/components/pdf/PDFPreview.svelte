@@ -14,7 +14,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { getFileNameForDocument, l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { IMAGE_CONTEXT_OPTIONS } from '~/utils/constants';
+    import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/models/localized_constant';
     import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';
@@ -90,10 +90,10 @@
                 const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                 hideLoading();
                 let filename;
-                if (__ANDROID__ && filePath.startsWith('content://')) {
-                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split('/').pop();
+                if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split(SEPARATOR).pop();
                 } else {
-                    filename = filePath.split('/').pop();
+                    filename = filePath.split(SEPARATOR).pop();
                 }
                 const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
                 if (onSnack.reason === 'action') {

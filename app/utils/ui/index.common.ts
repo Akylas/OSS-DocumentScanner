@@ -45,6 +45,7 @@ import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
 import {
     ALWAYS_PROMPT_CROP_EDIT,
+    ANDROID_CONTENT,
     AREA_SCALE_MIN_FACTOR,
     COLOR_PALETTE_RESIZE_THRESHOLD,
     CROP_ENABLED,
@@ -57,6 +58,7 @@ import {
     PDF_IMPORT_IMAGES,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
+    SEPARATOR,
     SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
     SETTINGS_CROP_ENABLED,
     SETTINGS_IMPORT_PDF_IMAGES,
@@ -213,7 +215,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         const [pdf, images] = uris.reduce(
             ([p, f], e) => {
                 let testStr = e.toLowerCase();
-                if (__ANDROID__ && e.startsWith('content://')) {
+                if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
                     testStr = com.akylas.documentscanner.utils.ImageUtil.Companion.getFileName(Utils.android.getApplicationContext(), e);
                 }
                 return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
@@ -514,7 +516,7 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
                     forceSAF: true
                 })
             )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
-                .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith('content://') && s.endsWith('.pdf') ? 'file://' + s : s));
+                .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith(ANDROID_CONTENT) && s.endsWith('.pdf') ? 'file://' + s : s));
         }
 
         // }
@@ -767,10 +769,10 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             hideLoading();
                             DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
                             let filename;
-                            if (__ANDROID__ && filePath.startsWith('content://')) {
-                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split('/').pop();
+                            if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split(SEPARATOR).pop();
                             } else {
-                                filename = filePath.split('/').pop();
+                                filename = filePath.split(SEPARATOR).pop();
                             }
                             const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
                             if (onSnack.reason === 'action') {
@@ -864,7 +866,7 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
                     if (__ANDROID__ && toGallery) {
                         await request('storage');
                         com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(Utils.android.getApplicationContext(), imageSource.android, exportFormat, exportQuality, fileName);
-                    } else if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+                    } else if (__ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT)) {
                         const context = Utils.android.getApplicationContext();
                         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
                         let outfile = outdocument.createFile('image/jpeg', destinationName);
@@ -925,13 +927,13 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
     let exportDirectoryName = exportDirectory;
     DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName, exportDirectory.split(/(\/|%3A)/));
     function updateDirectoryName() {
-        if (__ANDROID__ && exportDirectory.startsWith('content://')) {
+        if (__ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT)) {
             const context = Utils.android.getApplicationContext();
             const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
             exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
         }
         exportDirectoryName = exportDirectoryName
-            .split('/')
+            .split(SEPARATOR)
             .filter((s) => s.length)
             .pop();
     }
@@ -1566,7 +1568,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
 
             let tempPictureUri;
             const context = Utils.android.getApplicationContext();
-            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + '/' + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
+            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + SEPARATOR + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
             const nativeFile = new java.io.File(picturePath);
 
             if (SDK_VERSION >= 21) {

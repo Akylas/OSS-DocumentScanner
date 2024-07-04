@@ -684,36 +684,28 @@ Mat DocumentDetector::resizeImageMax()
 //     }
 // }
 
-void splitString(const string &str, const string &delimiters, vector<string> &tokens)
-{
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos = str.find_first_of(delimiters, lastPos);
 
-    while (string::npos != pos || string::npos != lastPos)
-    {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
-    }
+std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
+  std::vector<std::string> tokens;
+  size_t start = 0, end = 0;
+  while ((end = str.find(delimiter, start)) != std::string::npos) {
+    tokens.push_back(str.substr(start, end - start));
+    start = end + delimiter.size();
+  }
+  tokens.push_back(str.substr(start));
+  return tokens;
 }
 
 void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool useRGB)
 {
     // cout << "applyTransforms = " << transforms << endl;
-    std::vector<std::string> transformArray;
-    splitString(transforms, "|", transformArray);
+    std::vector<std::string> transformArray = split(transforms, "|");
     for (size_t i = 0; i < transformArray.size(); i++)
     {
         std::string transform = transformArray[i];
+        std::vector<std::string> options = split(transform, "_");
         if (transform.starts_with("whitepaper"))
         {
-            std::vector<std::string> options;
-            splitString(transform, "_", options);
             if (options.size() > 1)
             {
                 whiteboardEnhance(srcMat, srcMat, options[1]);
@@ -735,8 +727,6 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
             ColorSpace colorSpace = ColorSpace::HSV;
             ColorSpace paletteColorSpace = ColorSpace::BGR;
             int paletteNbColors = 5;
-            std::vector<std::string> options;
-            splitString(transform, "_", options);
             if (options.size() > 1)
             {
                 resizeThreshold = std::stoi(options[1]);

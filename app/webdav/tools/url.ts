@@ -5,7 +5,7 @@ import { normalisePath } from './path';
 //     const url = new URL(fullURL);
 //     let urlPath = url.pathname;
 //     if (urlPath.length <= 0) {
-//         urlPath = '/';
+//         urlPath = SEPARATOR;
 //     }
 //     return normalisePath(urlPath);
 // }
@@ -14,7 +14,7 @@ import { normalisePath } from './path';
 //     return path.join.apply(
 //         this,
 //         parts.reduce((output, nextPart, partIndex) => {
-//             if (partIndex === 0 || nextPart !== '/' || (nextPart === '/' && output[output.length - 1] !== '/')) {
+//             if (partIndex === 0 || nextPart !== SEPARATOR || (nextPart === SEPARATOR && output[output.length - 1] !== SEPARATOR)) {
 //                 output.push(nextPart);
 //             }
 //             return output;

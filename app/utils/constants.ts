@@ -17,6 +17,9 @@ export const SETTINGS_WEBDAV_AUTO_SYNC = 'webdav_auto_sync';
 
 export const TRANSFORMS_SPLIT = '|';
 
+export const ANDROID_CONTENT = 'content://';
+export const SEPARATOR = '/';
+
 export const IMG_FORMAT = 'jpg';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
