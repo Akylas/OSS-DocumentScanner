@@ -1,10 +1,10 @@
-import { CustomError, PermissionError, SilentError, wrapNativeException } from '~/utils/error';
+import { CustomError, PermissionError, SilentError } from '~/utils/error';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
 import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
 import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
-import { SDK_VERSION } from '@nativescript/core/utils';
+import { SDK_VERSION, wrapNativeException } from '@nativescript/core/utils';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import type { OCRDocument } from '~/models/OCRDocument';
 import dayjs from 'dayjs';
