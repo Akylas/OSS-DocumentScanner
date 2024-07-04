@@ -218,7 +218,7 @@
         } catch (err) {
             // we can get a native error here
             const error = wrapNativeException(err);
-            if (__ANDROID__ && /(closed|submit)/.test(error.message)) {
+            if (__ANDROID__ && /(closed|submit|failed)/.test(error.message)) {
                 DEV_LOG && console.warn('ignored error', error);
                 // ignore camera closed errors as they can happen whil app is going to background
             } else {
