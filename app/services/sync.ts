@@ -99,11 +99,15 @@ export class SyncService extends Observable {
             documentsService.on('documentsDeleted', this.onDocumentDeleted, this);
         }
     }
-    stop() {
+    async stop() {
         prefs.off(`key:${SETTINGS_WEBDAV_AUTO_SYNC}`, this.onAutoSyncPrefChanged);
         documentsService.off('documentAdded', this.onDocumentAdded, this);
         documentsService.off('documentUpdated', this.onDocumentUpdated, this);
         documentsService.off('documentsDeleted', this.onDocumentDeleted, this);
+        if (this.syncRunning) {
+            // if sync is running wait for it to be finished
+            await new Promise((resolve) => this.once('syncState', resolve));
+        }
     }
 
     async saveData({ remoteURL, username, password, remoteFolder, authType = AuthType.Password, token }) {

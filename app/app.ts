@@ -146,13 +146,14 @@ try {
             start();
         }
     });
-    Application.on(Application.exitEvent, () => {
+    Application.on(Application.exitEvent, async () => {
         DEV_LOG && console.log('exit');
         launched = false;
         //  ocrService.stop();
         try {
             securityService.stop();
-            syncService.stop();
+            // wait for sync to stop to stop documentService as their could be writes to the db
+            await syncService.stop();
             documentsService.stop();
         } catch (error) {
             console.error(error, error.stack);
