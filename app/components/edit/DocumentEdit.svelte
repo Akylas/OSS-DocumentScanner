@@ -478,7 +478,7 @@
         updatingTransform = true;
         try {
             const page = items.getItem(currentIndex);
-            const currentTransforms = page.transforms?.split(TRANSFORMS_SPLIT) || [];
+            const currentTransforms = (page.transforms?.split(TRANSFORMS_SPLIT) || []).filter((s) => s?.length);
             if (value) {
                 if (currentTransforms.indexOf(type) === -1) {
                     await showLoading(l('computing'));

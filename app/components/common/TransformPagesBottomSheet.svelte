@@ -39,7 +39,7 @@
         } else {
             transforms.push(transform);
         }
-        transforms = transforms.filter((s) => !!s && s.length);
+        transforms = transforms.filter((s) => s?.length);
     }
 
     function refreshCollectionView() {
