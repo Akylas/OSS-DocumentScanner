@@ -1,0 +1,9 @@
+Bug fixes:
+- correctly go back after document deletion to prevent actions on already deleted document
+- allow self signed certificates for nextcloud sync
+- prevent errors when app closed while on cmaera view
+- prevent error while exporting images at sdcard root
+- prevent error on pdf export completion
+- bring back storage permission to fix multiple issues  on different Android versions
+- error while importing image from other app which could be a remote image (like nextcloud)
+- Translations upda
