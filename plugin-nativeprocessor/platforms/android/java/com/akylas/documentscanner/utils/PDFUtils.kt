@@ -89,9 +89,6 @@ class PDFUtils {
             }
         }
     }
-    interface FunctionCallback {
-        fun onResult(e: Exception?, result: Any?)
-    }
     class PDFLoadImageOptions {
 
         var imageSizeThreshold: Int = 0

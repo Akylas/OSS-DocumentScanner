@@ -1,5 +1,4 @@
-import { ImageAsset, ImageSource, Utils } from '@nativescript/core';
-import { getImageSize } from './utils';
+import { ImageSource, Utils } from '@nativescript/core';
 
 export async function loadImage(imagePath, loadOptions: { width?; height?; resizeThreshold?; sourceWidth?; sourceHeight?; jpegQuality? } = {}) {
     loadOptions.resizeThreshold = loadOptions.resizeThreshold || 4500;

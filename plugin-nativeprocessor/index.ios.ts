@@ -111,7 +111,7 @@ export async function getColorPalette(
     // return new Promise((resolve, reject) => {
     //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
     //         editingImage['android'] || editingImage,
-    //         new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //         new com.akylas.documentscanner.utils.FunctionCallback({
     //             onResult(e, result) {
     //                 if (e) {
     //                     reject(e);
@@ -136,7 +136,7 @@ export async function getColorPaletteFromFile(
     // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPaletteFromFile(
     //     Utils.android.getApplicationContext(),
     //     src,
-    //     new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+    //     new com.akylas.documentscanner.utils.FunctionCallback({
     //         onResult(e, result) {
     //             if (e) {
     //                 reject(e);

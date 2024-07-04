@@ -569,7 +569,7 @@
         try {
             const item = items.getItem(currentIndex);
             if (!item.sourceImageWidth) {
-                const size = getImageSize(item.sourceImagePath);
+                const size = await getImageSize(item.sourceImagePath);
                 item.sourceImageWidth = size.width;
                 item.sourceImageHeight = size.height;
                 item.sourceImageRotation = 0;

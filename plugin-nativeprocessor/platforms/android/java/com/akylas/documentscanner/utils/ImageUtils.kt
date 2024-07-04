@@ -18,6 +18,7 @@ import org.json.JSONObject
 import java.io.FileDescriptor
 import java.io.FileNotFoundException
 import java.io.IOException
+import kotlin.concurrent.thread
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
@@ -308,7 +309,7 @@ class ImageUtil {
             }
             return rotationAngle
         }
-        fun getImageSize(context: Context, src: String): IntArray {
+        fun getImageSizeSync(context: Context, src: String): IntArray {
             val bitmapOptions = BitmapFactory.Options()
             bitmapOptions.inJustDecodeBounds = true
             var pfd: ParcelFileDescriptor? = null
@@ -333,6 +334,17 @@ class ImageUtil {
                 rotationAngle = calculateAngleFromFile(src)
             }
             return intArrayOf(bitmapOptions.outWidth, bitmapOptions.outHeight, rotationAngle)
+        }
+
+        fun getImageSize(context: Context, src: String, callback: FunctionCallback) {
+            thread(start = true) {
+                try {
+                    var result = getImageSizeSync(context,src)
+                    callback.onResult(null, result)
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
         }
 
         fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?, sourceSize:Pair<Int, Int>?): Bitmap? {

@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
 import com.akylas.documentscanner.utils.ImageUtil
+import com.akylas.documentscanner.utils.FunctionCallback
 import com.nativescript.cameraview.ImageAnalysisCallback
 import com.nativescript.cameraview.ImageAsyncProcessor
 import org.json.JSONArray
@@ -47,10 +48,6 @@ constructor(
     var detectQRCode = false
     var detectDocuments = true
     var detectQRCodeOptions = "{\"resizeThreshold\":500}"
-
-    interface FunctionCallback {
-        fun onResult(e: Exception?, result: Any?)
-    }
 
     interface OnTestBitmap {
         fun onTestBitmap(bitmap: Bitmap)
@@ -286,7 +283,7 @@ constructor(
             thread(start = true) {
                 var bitmap: Bitmap? = null
                 try {
-                    var imageSize = ImageUtil.getImageSize(context, src)
+                    var imageSize = ImageUtil.getImageSizeSync(context, src)
                     val loadingOptions = ImageUtil.LoadImageOptions(options);
                     bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                     if (bitmap == null || bitmap.byteCount == 0) {
@@ -414,7 +411,7 @@ constructor(
                 var bitmap: Bitmap? = null
                 try {
                     var shrunkImageHeight = shrunkImageHeight
-                    var imageSize = ImageUtil.getImageSize(context, src)
+                    var imageSize = ImageUtil.getImageSizeSync(context, src)
                     val loadingOptions = ImageUtil.LoadImageOptions(options);
                     bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                     if (bitmap == null) {
@@ -542,7 +539,7 @@ constructor(
                     val processesArray = JSONArray(processes)
                     if (processesArray.length() > 0) {
                         var result = ArrayList<String>()
-                        var imageSize = ImageUtil.getImageSize(context, src)
+                        var imageSize = ImageUtil.getImageSizeSync(context, src)
                         val loadingOptions = ImageUtil.LoadImageOptions(options);
                         bitmap = ImageUtil.readBitmapFromFile(context, src, loadingOptions, Pair(imageSize[0], imageSize[1]))
                         if (bitmap == null) {

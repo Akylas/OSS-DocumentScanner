@@ -41,7 +41,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                 folder,
                 filename,
                 options,
-                new com.akylas.documentscanner.utils.PDFUtils.FunctionCallback({
+                new com.akylas.documentscanner.utils.FunctionCallback({
                     onResult(e, result) {
                         if (e) {
                             if (/could not create file/.test(e.toString())) {

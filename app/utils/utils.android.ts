@@ -37,7 +37,22 @@ export async function removeFolderContent(src: string) {
     return Promise.all((await folder.getEntities()).map((e) => e.remove()));
 }
 
-export function getImageSize(imagePath: string) {
-    const result = com.akylas.documentscanner.utils.ImageUtil.Companion.getImageSize(Utils.android.getApplicationContext(), imagePath);
-    return { width: result[0], height: result[1], rotation: result[2] };
+export async function getImageSize(imagePath: string) {
+    return new Promise<{ width: number; height: number; rotation: number }>((resolve, reject) => {
+        com.akylas.documentscanner.utils.ImageUtil.Companion.getImageSize(
+            Utils.android.getApplicationContext(),
+            imagePath,
+            new com.akylas.documentscanner.utils.FunctionCallback({
+                onResult(e, result) {
+                    if (e) {
+                        reject(e);
+                    } else {
+                        resolve({ width: result[0], height: result[1], rotation: result[2] });
+                    }
+                }
+            })
+        );
+    });
+    // const result = com.akylas.documentscanner.utils.ImageUtil.Companion.getImageSize(Utils.android.getApplicationContext(), imagePath);
+    // return { width: result[0], height: result[1], rotation: result[2] };
 }

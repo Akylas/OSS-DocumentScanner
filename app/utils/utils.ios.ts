@@ -14,7 +14,7 @@ export async function removeFolderContent(src: string, dst: string) {
     throw new Error('not implemented on iOS');
 }
 
-export function getImageSize(imagePath: string) {
+export async function getImageSize(imagePath: string) {
     const size = ImageUtils.getImageSize(imagePath);
     return { width: size.objectForKey('width'), height: size.objectForKey('height'), rotation: size.objectForKey('rotation') };
 }

@@ -11,91 +11,106 @@ declare namespace com {
 				public static class: java.lang.Class<com.akylas.documentscanner.AbstractBiMap<any,any>>;
 				public getKeys(): java.util.Set<any>;
 				public getValues(): java.util.Set<any>;
+				public static copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
 				public get(param0: any): any;
+				public containsKey(key: any): boolean;
 				public putAll(param0: java.util.Map<any,any>): void;
 				public values(): java.util.Set<any>;
-				public merge(param0: any, param1: any, param2: any /* any<any,any,any>*/): any;
-				public computeIfAbsent(param0: any, param1: any /* any*/): any;
-				public getOrDefault(param0: any, param1: any): any;
+				public replace(key: any, oldValue: any, newValue: any): boolean;
 				public containsKey(param0: any): boolean;
-				public replaceAll(param0: any /* any<any,any,any>*/): void;
+				public forcePut(it: any, a: any): any;
 				public constructor();
-				public remove(param0: any, param1: any): boolean;
-				public putIfAbsent(param0: any, param1: any): any;
-				public static copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+				public static ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
+				public getOrDefault(key: any, defaultValue: any): any;
+				public remove(it: any): any;
+				public forEach(action: any /* any*/): void;
+				public replaceAll(function_: any /* any<any,any,any>*/): void;
+				public static entry(k: any, v: any): java.util.Map.Entry<any,any>;
 				public remove(param0: any): any;
 				public getSize(): number;
 				public hashCode(): number;
-				public compute(param0: any, param1: any /* any<any,any,any>*/): any;
-				public static ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
 				public clear(): void;
 				public equals(param0: any): boolean;
+				public remove(key: any, value: any): boolean;
+				public containsValue(value: any): boolean;
 				public isEmpty(): boolean;
-				public computeIfPresent(param0: any, param1: any /* any<any,any,any>*/): any;
+				public replace(key: any, value: any): any;
+				public computeIfPresent(key: any, remappingFunction: any /* any<any,any,any>*/): any;
+				public put(key: any, value: any): any;
 				public containsValue(param0: any): boolean;
-				public replace(param0: any, param1: any, param2: any): boolean;
+				public getkeyForValue(value: any): any;
 				public values(): java.util.Collection<any>;
 				public forcePut(param0: any, param1: any): any;
-				public replace(param0: any, param1: any): any;
-				public static entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
 				public getEntries(): java.util.Set<java.util.Map.Entry<any,any>>;
+				public constructor(direct: java.util.Map<any,any>, reverse: java.util.Map<any,any>);
 				public entrySet(): java.util.Set<java.util.Map.Entry<any,any>>;
-				public constructor(param0: java.util.Map<any,any>, param1: java.util.Map<any,any>);
+				public get(key: any): any;
+				public putAll(it: java.util.Map<any,any>): void;
 				public keySet(): java.util.Set<any>;
+				public computeIfAbsent(key: any, mappingFunction: any /* any*/): any;
 				public size(): number;
 				public getInverse(): com.akylas.documentscanner.BiMap<any,any>;
+				public putIfAbsent(key: any, value: any): any;
 				public put(param0: any, param1: any): any;
-				public getkeyForValue(param0: any): any;
+				public compute(key: any, remappingFunction: any /* any<any,any,any>*/): any;
 				public getInverse(): com.akylas.documentscanner.MutableBiMap<any,any>;
-				public forEach(param0: any /* any*/): void;
+				public merge(key: any, value: any, remappingFunction: any /* any<any,any,any>*/): any;
 			}
 			export namespace AbstractBiMap {
 				export class BiMapEntry extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.AbstractBiMap.BiMapEntry>;
+					public setValue(a: any): any;
 					public equals(param0: any): boolean;
+					public static comparingByValue(cmp: java.util.Comparator<any>): java.util.Comparator<any>;
 					public getValue(): any;
 					public static comparingByKey(): java.util.Comparator<any>;
 					public static comparingByValue(): java.util.Comparator<any>;
+					public static comparingByKey(cmp: java.util.Comparator<any>): java.util.Comparator<any>;
+					public constructor(this$0: java.util.Map.Entry<any,any>);
 					public getKey(): any;
-					public static comparingByValue(param0: java.util.Comparator<any>): java.util.Comparator<any>;
-					public constructor(param0: java.util.Map.Entry<any,any>);
 					public hashCode(): number;
 					public setValue(param0: any): any;
-					public static comparingByKey(param0: java.util.Comparator<any>): java.util.Comparator<any>;
 				}
 				export class BiMapSet<T>  extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.AbstractBiMap.BiMapSet<any>>;
-					public constructor(param0: java.util.Set<T>, param1: any, param2: any);
 					public addAll(param0: java.util.Collection<any>): boolean;
 					public isEmpty(): boolean;
 					public add(param0: any): boolean;
 					public spliterator(): java.util.Spliterator<any>;
+					public removeAll(elements: java.util.Collection<any>): boolean;
 					public containsAll(param0: java.util.Collection<any>): boolean;
 					public size(): number;
-					public static copyOf(param0: java.util.Collection<any>): java.util.Set<any>;
+					public addAll(elements: java.util.Collection<any>): boolean;
 					public getSize(): number;
+					public containsAll(elements: java.util.Collection<any>): boolean;
 					public iterator(): java.util.Iterator<any>;
 					public clear(): void;
+					public contains(element: any): boolean;
+					public toArray(generator: any /* any*/): androidNative.Array<any>;
 					public hashCode(): number;
 					public toArray(param0: androidNative.Array<any>): androidNative.Array<any>;
 					public contains(param0: any): boolean;
-					public removeIf(param0: any /* any*/): boolean;
-					public removeAll(param0: java.util.Collection<any>): boolean;
+					public forEach(action: any /* any*/): void;
+					public remove(key: any): boolean;
 					public remove(param0: any): boolean;
+					public removeAll(param0: java.util.Collection<any>): boolean;
+					public static copyOf(coll: java.util.Collection<any>): java.util.Set<any>;
+					public constructor(a: java.util.Set<T>, elements: any, keyGetter: any);
 					public parallelStream(): java.util.stream.Stream<any>;
 					public toArray(): androidNative.Array<any>;
 					public iterator(): java.util.Iterator<T>;
 					public retainAll(param0: java.util.Collection<any>): boolean;
 					public equals(param0: any): boolean;
-					public toArray(param0: any /* any*/): androidNative.Array<any>;
+					public add(element: T): boolean;
+					public retainAll(elements: java.util.Collection<any>): boolean;
+					public removeIf(filter: any /* any*/): boolean;
 					public stream(): java.util.stream.Stream<any>;
 					public spliterator(): java.util.Spliterator<T>;
-					public forEach(param0: any /* any*/): void;
-					public add(param0: T): boolean;
+					public toArray(array: androidNative.Array<any>): androidNative.Array<any>;
 				}
 				export class BiMapSetIterator<T>  extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.AbstractBiMap.BiMapSetIterator<any>>;
-					public constructor(param0: java.util.Iterator<any>, param1: any, param2: any);
+					public constructor(this$0: java.util.Iterator<any>, iterator: any, keyGetter: any);
 					public next(): T;
 					public hasNext(): boolean;
 					public remove(): void;
@@ -111,27 +126,26 @@ declare namespace com {
 			export class AutoScanHandler extends java.lang.Object {
 				public static class: java.lang.Class<com.akylas.documentscanner.AutoScanHandler>;
 				public clearAll(): void;
-				public process(param0: java.util.List<any>): void;
+				public constructor(context: globalAndroid.content.Context, cropView: com.akylas.documentscanner.CropView);
+				public setPreAutoScanDelay(a: number): void;
+				public constructor(context: globalAndroid.content.Context, cropView: com.akylas.documentscanner.CropView, onAutoScan: com.akylas.documentscanner.AutoScanHandler.OnAutoScan);
+				public setDistanceThreshod(a: number): void;
+				public setAutoScanDuration(a: number): void;
+				public constructor(context: globalAndroid.content.Context);
 				public getPreAutoScanDelay(): number;
-				public setAutoScanDuration(param0: number): void;
-				public startAutoScanJob(param0: java.util.List<any>): void;
-				public constructor(param0: globalAndroid.content.Context, param1: com.akylas.documentscanner.CropView);
-				public setEnabled(param0: boolean): void;
-				public setDistanceThreshod(param0: number): void;
-				public replaceHash(param0: number, param1: number): void;
-				public startAutoScanPreJob(param0: java.util.List<any>): void;
-				public constructor(param0: globalAndroid.content.Context);
+				public replaceHash(exception: number, this_: number): void;
+				public process(it: java.util.List<any>): void;
+				public setEnabled(value: boolean): void;
+				public startAutoScanPreJob(this_: java.util.List<any>): void;
 				public getEnabled(): boolean;
 				public getDistanceThreshod(): number;
+				public startAutoScanJob(delayMs: java.util.List<any>): void;
 				public getAutoScanDuration(): number;
-				public constructor(param0: globalAndroid.content.Context, param1: com.akylas.documentscanner.CropView, param2: com.akylas.documentscanner.AutoScanHandler.OnAutoScan);
-				public setPreAutoScanDelay(param0: number): void;
 			}
 			export namespace AutoScanHandler {
-				export class Companion extends java.lang.Object {
-					public static class: java.lang.Class<com.akylas.documentscanner.AutoScanHandler.Companion>;
-					public getTAG(): string;
-					public getHash(param0: java.util.List<any>): number;
+				export namespace Companion {
+					 function getTAG(): string;
+					 function getHash(points: java.util.List<any>): number;
 				}
 				export class OnAutoScan extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.AutoScanHandler.OnAutoScan>;
@@ -174,63 +188,63 @@ declare namespace com {
 					entrySet(): java.util.Set<java.util.Map.Entry<K,V>>;
 					equals(param0: any): boolean;
 					hashCode(): number;
-					getOrDefault(param0: any, param1: V): V;
-					forEach(param0: any /* any*/): void;
-					replaceAll(param0: any /* any<any,any,any>*/): void;
-					putIfAbsent(param0: K, param1: V): V;
-					remove(param0: any, param1: any): boolean;
-					replace(param0: K, param1: V, param2: V): boolean;
-					replace(param0: K, param1: V): V;
-					computeIfAbsent(param0: K, param1: any /* any*/): V;
-					computeIfPresent(param0: K, param1: any /* any<any,any,any>*/): V;
-					compute(param0: K, param1: any /* any<any,any,any>*/): V;
-					merge(param0: K, param1: V, param2: any /* any<any,any,any>*/): V;
+					getOrDefault(key: any, defaultValue: V): V;
+					forEach(action: any /* any*/): void;
+					replaceAll(function_: any /* any<any,any,any>*/): void;
+					putIfAbsent(key: K, value: V): V;
+					remove(key: any, value: any): boolean;
+					replace(key: K, oldValue: V, newValue: V): boolean;
+					replace(key: K, value: V): V;
+					computeIfAbsent(key: K, mappingFunction: any /* any*/): V;
+					computeIfPresent(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+					compute(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+					merge(key: K, value: V, remappingFunction: any /* any<any,any,any>*/): V;
 					of(): java.util.Map<any,any>;
-					of(param0: any, param1: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any, param16: any, param17: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any, param16: any, param17: any, param18: any, param19: any): java.util.Map<any,any>;
-					ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
-					entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
-					copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+					of(k1: any, v1: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any, k9: any, v9: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any, k9: any, v9: any, k10: any, v10: any): java.util.Map<any,any>;
+					ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
+					entry(k: any, v: any): java.util.Map.Entry<any,any>;
+					copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
 				});
 				public constructor();
-				public computeIfPresent(param0: K, param1: any /* any<any,any,any>*/): V;
+				public static copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
+				public getOrDefault(key: any, defaultValue: V): V;
 				public entrySet(): java.util.Set<java.util.Map.Entry<K,V>>;
 				public putAll(param0: java.util.Map<any,any>): void;
-				public replace(param0: K, param1: V): V;
+				public computeIfPresent(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+				public merge(key: K, value: V, remappingFunction: any /* any<any,any,any>*/): V;
 				public keySet(): java.util.Set<K>;
 				public containsKey(param0: any): boolean;
-				public replaceAll(param0: any /* any<any,any,any>*/): void;
+				public replace(key: K, oldValue: V, newValue: V): boolean;
 				public put(param0: K, param1: V): V;
-				public compute(param0: K, param1: any /* any<any,any,any>*/): V;
-				public remove(param0: any, param1: any): boolean;
-				public replace(param0: K, param1: V, param2: V): boolean;
+				public computeIfAbsent(key: K, mappingFunction: any /* any*/): V;
+				public static ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
 				public remove(param0: any): V;
-				public getOrDefault(param0: any, param1: V): V;
-				public static copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+				public forEach(action: any /* any*/): void;
+				public replaceAll(function_: any /* any<any,any,any>*/): void;
+				public static entry(k: any, v: any): java.util.Map.Entry<any,any>;
 				public hashCode(): number;
 				public getInverse(): com.akylas.documentscanner.BiMap<V,K>;
-				public static ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
 				public clear(): void;
 				public equals(param0: any): boolean;
+				public remove(key: any, value: any): boolean;
+				public putIfAbsent(key: K, value: V): V;
 				public isEmpty(): boolean;
+				public replace(key: K, value: V): V;
 				public containsValue(param0: any): boolean;
 				public getValues(): java.util.Set<V>;
-				public static entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
-				public putIfAbsent(param0: K, param1: V): V;
-				public computeIfAbsent(param0: K, param1: any /* any*/): V;
 				public values(): java.util.Collection<V>;
 				public size(): number;
 				public get(param0: any): V;
-				public forEach(param0: any /* any*/): void;
-				public merge(param0: K, param1: V, param2: any /* any<any,any,any>*/): V;
+				public compute(key: K, remappingFunction: any /* any<any,any,any>*/): V;
 			}
 		}
 	}
@@ -241,48 +255,48 @@ declare namespace com {
 		export namespace documentscanner {
 			export class CropView extends globalAndroid.view.View {
 				public static class: java.lang.Class<com.akylas.documentscanner.CropView>;
+				public setAnimationDuration(a: number): void;
 				public getStrokeWidth(): number;
 				public getScale(): number;
-				public setProgressFillPaint(param0: globalAndroid.graphics.Paint): void;
-				public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet, param2: number);
+				public constructor(context: globalAndroid.content.Context);
 				public onKeyDown(param0: number, param1: globalAndroid.view.KeyEvent): boolean;
+				public setScaleType(value: androidx.camera.view.PreviewView.ScaleType): void;
+				public replaceProgressHash(oldValue: number, newValue: number): void;
+				public setImageHeight(a: number): void;
 				public getLinePaint(): globalAndroid.graphics.Paint;
-				public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet, param2: number, param3: number);
+				public unscheduleDrawable(who: globalAndroid.graphics.drawable.Drawable): void;
 				public sendAccessibilityEvent(param0: number): void;
+				public updateProgress(hash: number, i: number): void;
+				public constructor(context: globalAndroid.content.Context, attrs: globalAndroid.util.AttributeSet);
 				public onKeyUp(param0: number, param1: globalAndroid.view.KeyEvent): boolean;
-				public setQuadsAnimated(param0: java.util.List<any>): void;
 				public onKeyLongPress(param0: number, param1: globalAndroid.view.KeyEvent): boolean;
-				public constructor(param0: globalAndroid.content.Context);
 				public getImageHeight(): number;
 				public getScaleType(): androidx.camera.view.PreviewView.ScaleType;
 				public onKeyMultiple(param0: number, param1: number, param2: globalAndroid.view.KeyEvent): boolean;
-				public updateProgress(param0: number, param1: number): void;
+				public setImageWidth(a: number): void;
 				public unscheduleDrawable(param0: globalAndroid.graphics.drawable.Drawable, param1: java.lang.Runnable): void;
-				public setImageWidth(param0: number): void;
-				public setDrawFill(param0: boolean): void;
-				public unscheduleDrawable(param0: globalAndroid.graphics.drawable.Drawable): void;
-				public setStrokeWidth(param0: number): void;
-				public setColors(param0: java.util.List<java.lang.Integer>): void;
-				public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
+				public setQuadsAnimated(this_: java.util.List<any>): void;
+				public onDraw(alpha: globalAndroid.graphics.Canvas): void;
+				public constructor(context: globalAndroid.content.Context, attrs: globalAndroid.util.AttributeSet, defStyleAttr: number, defStyleRes: number);
 				public getColors(): java.util.List<java.lang.Integer>;
-				public setScale(param0: number): void;
-				public setFillPaint(param0: globalAndroid.graphics.Paint): void;
-				public replaceProgressHash(param0: number, param1: number): void;
+				public setScale(a: number): void;
 				public getQuads(): java.util.List<java.util.List<globalAndroid.graphics.Point>>;
-				public setScaleType(param0: androidx.camera.view.PreviewView.ScaleType): void;
+				public constructor(context: globalAndroid.content.Context, attrs: globalAndroid.util.AttributeSet, defStyleAttr: number);
+				public setProgressFillPaint(a: globalAndroid.graphics.Paint): void;
 				public getProgressFillPaint(): globalAndroid.graphics.Paint;
 				public invalidateDrawable(param0: globalAndroid.graphics.drawable.Drawable): void;
-				public interpolatePoint(param0: globalAndroid.graphics.Point, param1: globalAndroid.graphics.Point, param2: number): globalAndroid.graphics.Point;
-				public onDraw(param0: globalAndroid.graphics.Canvas): void;
+				public setStrokeWidth(a: number): void;
+				public setFillPaint(a: globalAndroid.graphics.Paint): void;
 				public sendAccessibilityEventUnchecked(param0: globalAndroid.view.accessibility.AccessibilityEvent): void;
-				public setQuads(param0: java.util.List<any>): void;
+				public setQuads(value: java.util.List<any>): void;
 				public getFillPaint(): globalAndroid.graphics.Paint;
-				public setImageHeight(param0: number): void;
+				public setDrawFill(a: boolean): void;
 				public getAnimationDuration(): number;
 				public scheduleDrawable(param0: globalAndroid.graphics.drawable.Drawable, param1: java.lang.Runnable, param2: number): void;
-				public setAnimationDuration(param0: number): void;
 				public getDrawFill(): boolean;
 				public getImageWidth(): number;
+				public setColors(a: java.util.List<java.lang.Integer>): void;
+				public interpolatePoint(point1: globalAndroid.graphics.Point, point2: globalAndroid.graphics.Point, value: number): globalAndroid.graphics.Point;
 			}
 		}
 	}
@@ -293,89 +307,89 @@ declare namespace com {
 		export namespace documentscanner {
 			export class CustomImageAnalysisCallback extends java.lang.Object {
 				public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback>;
-				public setDetectQRCodeOptions(param0: string): void;
-				public process(param0: androidx.camera.core.ImageProxy, param1: androidx.camera.core.ImageInfo, param2: com.nativescript.cameraview.ImageAsyncProcessor): void;
+				public setDetectQRCode(a: boolean): void;
+				public constructor(context: globalAndroid.content.Context, cropView: com.akylas.documentscanner.CropView);
+				public constructor(context: globalAndroid.content.Context);
 				public getAutoScanHandler(): com.akylas.documentscanner.AutoScanHandler;
-				public setDetectQRCode(param0: boolean): void;
-				public setDetectDocuments(param0: boolean): void;
+				public getDetectDocuments(): boolean;
 				public getPreviewResizeThreshold(): number;
-				public constructor(param0: globalAndroid.content.Context, param1: com.akylas.documentscanner.CropView, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.OnQRCode);
-				public constructor(param0: globalAndroid.content.Context, param1: com.akylas.documentscanner.CropView);
+				public constructor(context: globalAndroid.content.Context, cropView: com.akylas.documentscanner.CropView, onQRCode: com.akylas.documentscanner.CustomImageAnalysisCallback.OnQRCode);
+				public setAutoScanHandler(value: com.akylas.documentscanner.AutoScanHandler): void;
+				public setDetectDocuments(a: boolean): void;
 				public getDetectQRCode(): boolean;
-				public setAutoScanHandler(param0: com.akylas.documentscanner.AutoScanHandler): void;
-				public setTestBitmap(param0: globalAndroid.graphics.Bitmap): void;
-				public setPreviewResizeThreshold(param0: number): void;
 				public getDetectQRCodeOptions(): string;
-				public constructor(param0: globalAndroid.content.Context);
-				public getTestBitmap(): globalAndroid.graphics.Bitmap;
+				public setPreviewResizeThreshold(a: number): void;
+				public process(image: androidx.camera.core.ImageProxy, planes: androidx.camera.core.ImageInfo, imageWidth: com.nativescript.cameraview.ImageAsyncProcessor): void;
+				public setDetectQRCodeOptions(a: string): void;
 			}
 			export namespace CustomImageAnalysisCallback {
-				export class Companion extends java.lang.Object {
-					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.Companion>;
-					public static readQRCodeSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: string): void;
-					public static pointsFromJSONString(param0: string): java.util.List<java.util.List<globalAndroid.graphics.Point>>;
-					public static cropDocumentSync(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string): void;
-					public static ocrDocument(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: string, param3: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress): void;
-					public static cropDocument(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string): void;
-					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number): void;
-					public static getJSONDocumentCornersSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number): void;
-					public static generateQRCode(param0: string, param1: string, param2: number, param3: number, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param5: string): void;
-					public static generateQRCodeSVG(param0: string, param1: string, param2: number, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param5: string): void;
-					public static getJSONDocumentCorners(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number): void;
-					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param4: number, param5: string): void;
-					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param5: number, param5: number, param6: string): void;
-					public static ocrDocumentFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress): void;
-					public static generateQRCode(param0: string, param1: string, param2: number, param3: number, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static generateQRCodeSVG(param0: string, param1: string, param2: number, param4: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static cropDocumentSync(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string): void;
-					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number): void;
-					public static getJSONDocumentCornersFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string): void;
-					public static ocrDocumentFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string): void;
-					public static readQRCodeFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static getJSONDocumentCornersFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: number, param5: string): void;
-					public static ocrDocument(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static cropDocumentSync(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string): void;
-					public static ocrDocumentFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string): void;
-					public static getJSONDocumentCorners(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number): void;
-					public static getColorPaletteSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number): void;
-					public static readQRCode(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static processFromFile(param0: globalAndroid.content.Context, param1: string, param2: string, param3: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param4: string): void;
-					public static getColorPaletteFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: string): void;
-					public static getColorPaletteSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static cropDocument(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string): void;
-					public static readQRCodeSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static readQRCodeFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string): void;
-					public static getJSONDocumentCorners(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static pointFromJSONArray(param0: org.json.JSONArray, param1: number): java.util.List<globalAndroid.graphics.Point>;
-					public static cropDocumentFromFile(param0: globalAndroid.content.Context, param1: string, param2: string, param3: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param4: string): void;
-					public static pointsFromJSONArray(param0: org.json.JSONArray): java.util.List<java.util.List<globalAndroid.graphics.Point>>;
-					public static cropDocumentSync(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string, param6: number): void;
-					public static generateQRCodeSync(param0: string, param1: string, param2: number, param3: number): globalAndroid.graphics.Bitmap;
-					public static getColorPaletteSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number, param4: number): void;
-					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number, param4: number): void;
-					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number, param3: number, param4: number, param5: number): void;
-					public static cropDocument(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string, param6: number): void;
-					public static getJSONDocumentCornersFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: number, param4: string): void;
-					public static readQRCode(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: string): void;
-					public static ocrDocument(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: string): void;
-					public static getColorPalette(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static getJSONDocumentCornersSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number): void;
-					public static getColorPaletteSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param2: number): void;
-					public static getJSONDocumentCornersSync(param0: globalAndroid.graphics.Bitmap, param1: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback): void;
-					public static generateQRCodeSync(param0: string, param1: string, param2: number, param3: number, param4: string): globalAndroid.graphics.Bitmap;
-					public static cropDocument(param0: globalAndroid.graphics.Bitmap, param1: string, param2: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback, param3: string, param4: string, param5: string): void;
-				}
-				export class FunctionCallback extends java.lang.Object {
-					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback>;
-					/**
-					 * Constructs a new instance of the com.akylas.documentscanner.CustomImageAnalysisCallback$FunctionCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
-					 */
-					public constructor(implementation: {
-						onResult(param0: java.lang.Exception, param1: any): void;
-					});
-					public constructor();
-					public onResult(param0: java.lang.Exception, param1: any): void;
+				export namespace Companion {
+					 function generateQRCodeSVG(text: string, format: string, sizeHint: number, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function generateQRCodeSync(text: string, format: string, width: number, height: number): globalAndroid.graphics.Bitmap;
+					 function cropDocument(bitmap: globalAndroid.graphics.Bitmap, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback, transforms: string, saveInFolder: string, fileName: string): void;
+					 function getJSONDocumentCorners(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function ocrDocument(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string, progress: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress): void;
+					 function getColorPalette(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function generateQRCodeSVGSync(text: string, format: string, sizeHint: number, options: string): string;
+					 function ocrDocument(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function readQRCodeSync(bitmap: globalAndroid.graphics.Bitmap, options: string, scale: number): string;
+					 function getColorPaletteSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number): string;
+					 function getColorPaletteSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, nbColors: number): string;
+					 function pointFromJSONArray(i: org.json.JSONArray, list: number): java.util.List<globalAndroid.graphics.Point>;
+					 function ocrDocumentSync(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getJSONDocumentCorners(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, imageRotation: number, scale: number, options: string): void;
+					 function getJSONDocumentCornersSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number): string;
+					 function cropDocumentFromFile(context: globalAndroid.content.Context, src: string, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function ocrDocumentFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string, progress: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress): void;
+					 function readQRCodeSync(bitmap: globalAndroid.graphics.Bitmap): string;
+					 function generateQRCodeSync(text: string, format: string, width: number, height: number, options: string): globalAndroid.graphics.Bitmap;
+					 function ocrDocument(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getJSONDocumentCornersFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getColorPaletteFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, nbColors: number, colorPalette: number, options: string): void;
+					 function cropDocumentSync(bitmap: globalAndroid.graphics.Bitmap, quads: string, transforms: string, saveInFolder: string, fileName: string): any;
+					 function getJSONDocumentCornersSync(bitmap: globalAndroid.graphics.Bitmap): string;
+					 function cropDocumentSync(out: globalAndroid.graphics.Bitmap, imagePath: string, result: string, e: string, a: string, cropWidth: string, cropHeight: number): any;
+					 function getColorPaletteFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getColorPaletteFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, options: string): void;
+					 function getColorPalette(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, colorsFilterDistanceThreshold: number): void;
+					 function getJSONDocumentCornersSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number, imageRotation: number, scale: number, options: string): string;
+					 function cropDocument(bitmap: globalAndroid.graphics.Bitmap, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback, transforms: string): void;
+					 function getJSONDocumentCorners(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, imageRotation: number, scale: number): void;
+					 function generateQRCodeSVGSync(text: string, format: string, sizeHint: number): string;
+					 function generateQRCode(text: string, format: string, width: number, height: number, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function ocrDocumentSync(this_: globalAndroid.graphics.Bitmap, bitmap: com.akylas.documentscanner.utils.FunctionCallback, callback: string, options: com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress): void;
+					 function getColorPalette(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, nbColors: number, colorPalette: number): void;
+					 function pointsFromJSONArray(i: org.json.JSONArray): java.util.List<java.util.List<globalAndroid.graphics.Point>>;
+					 function processFromFile(context: globalAndroid.content.Context, src: string, processes: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function ocrDocumentSync(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function getColorPaletteSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, nbColors: number, colorPalette: number): string;
+					 function ocrDocumentFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getJSONDocumentCorners(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, imageRotation: number): void;
+					 function getJSONDocumentCornersFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, options: string): void;
+					 function cropDocument(bitmap: globalAndroid.graphics.Bitmap, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback, transforms: string, saveInFolder: string): void;
+					 function readQRCode(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getColorPalette(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number): void;
+					 function getColorPaletteFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, nbColors: number, options: string): void;
+					 function readQRCodeSync(bitmap: globalAndroid.graphics.Bitmap, options: string): string;
+					 function cropDocument(bitmap: globalAndroid.graphics.Bitmap, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback, transforms: string, saveInFolder: string, fileName: string, compressFormat: string): void;
+					 function cropDocument(bitmap: globalAndroid.graphics.Bitmap, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function cropDocumentSync(bitmap: globalAndroid.graphics.Bitmap, quads: string, saveInFolder: string, fileName: string): any;
+					 function getJSONDocumentCornersSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number, imageRotation: number): string;
+					 function getColorPalette(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, nbColors: number): void;
+					 function pointsFromJSONString(str: string): java.util.List<java.util.List<globalAndroid.graphics.Point>>;
+					 function generateQRCode(text: string, format: string, width: number, height: number, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getColorPaletteFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number, colorsFilterDistanceThreshold: number, options: string): void;
+					 function readQRCodeFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function readQRCode(bitmap: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function getColorPaletteSync(bitmap: globalAndroid.graphics.Bitmap): string;
+					 function getJSONDocumentCornersSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number, imageRotation: number, scale: number): string;
+					 function getColorPaletteSync(bitmap: globalAndroid.graphics.Bitmap, shrunkImageHeight: number, colorsFilterDistanceThreshold: number): string;
+					 function cropDocumentSync(bitmap: globalAndroid.graphics.Bitmap, quads: string, transforms: string, saveInFolder: string, fileName: string, compressFormat: string): any;
+					 function readQRCodeFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function generateQRCodeSVG(text: string, format: string, sizeHint: number, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+					 function getJSONDocumentCorners(image: globalAndroid.graphics.Bitmap, callback: com.akylas.documentscanner.utils.FunctionCallback, shrunkImageHeight: number): void;
+					 function ocrDocumentFromFile(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+					 function cropDocument(bitmap: globalAndroid.graphics.Bitmap, quads: string, callback: com.akylas.documentscanner.utils.FunctionCallback, transforms: string, saveInFolder: string, fileName: string, compressFormat: string, compressQuality: number): void;
 				}
 				export class FunctionCallbackProgress extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallbackProgress>;
@@ -387,14 +401,6 @@ declare namespace com {
 					});
 					public constructor();
 					public onProgress(param0: number): void;
-				}
-				export class ImageNotFoundException extends java.lang.Exception {
-					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.ImageNotFoundException>;
-					public constructor(param0: string, param1: java.lang.Throwable, param2: boolean, param3: boolean);
-					public constructor(param0: string, param1: java.lang.Throwable);
-					public constructor(param0: string);
-					public constructor(param0: java.lang.Throwable);
-					public constructor();
 				}
 				export class OnQRCode extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.CustomImageAnalysisCallback.OnQRCode>;
@@ -433,15 +439,14 @@ declare namespace com {
 				public static class: java.lang.Class<com.akylas.documentscanner.HashBiMap<any,any>>;
 				public getValues(): java.util.Set<any>;
 				public forcePut(param0: any, param1: any): any;
-				public constructor(param0: number);
-				public constructor(param0: java.util.Map<any,any>, param1: java.util.Map<any,any>);
+				public constructor(direct: java.util.Map<any,any>, reverse: java.util.Map<any,any>);
+				public constructor(capacity: number);
 				public getInverse(): com.akylas.documentscanner.MutableBiMap<any,any>;
 				public constructor();
 			}
 			export namespace HashBiMap {
-				export class Companion extends java.lang.Object {
-					public static class: java.lang.Class<com.akylas.documentscanner.HashBiMap.Companion>;
-					public create(param0: java.util.Map<any,any>): com.akylas.documentscanner.HashBiMap<any,any>;
+				export namespace Companion {
+					 function create(this_: java.util.Map<any,any>): com.akylas.documentscanner.HashBiMap<any,any>;
 				}
 			}
 		}
@@ -453,44 +458,44 @@ declare namespace com {
 		export namespace documentscanner {
 			export class MaxSizeHashMap<K, V>  extends java.util.LinkedHashMap<any,any> {
 				public static class: java.lang.Class<com.akylas.documentscanner.MaxSizeHashMap<any,any>>;
-				public constructor(param0: number, param1: number);
 				public getKeys(): java.util.Set<any>;
+				public static copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
 				public get(param0: any): any;
 				public putAll(param0: java.util.Map<any,any>): void;
-				public merge(param0: any, param1: any, param2: any /* any<any,any,any>*/): any;
-				public constructor(param0: java.util.Map<any,any>);
-				public computeIfAbsent(param0: any, param1: any /* any*/): any;
+				public constructor(maxSize: number);
+				public constructor(initialCapacity: number, loadFactor: number, accessOrder: boolean);
+				public replace(key: any, oldValue: any, newValue: any): boolean;
 				public getValues(): java.util.Collection<any>;
-				public getOrDefault(param0: any, param1: any): any;
 				public containsKey(param0: any): boolean;
-				public replaceAll(param0: any /* any<any,any,any>*/): void;
-				public removeEldestEntry(param0: java.util.Map.Entry<any,any>): boolean;
 				public constructor();
-				public remove(param0: any, param1: any): boolean;
-				public putIfAbsent(param0: any, param1: any): any;
-				public static copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+				public static ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
+				public getOrDefault(key: any, defaultValue: any): any;
+				public forEach(action: any /* any*/): void;
+				public replaceAll(function_: any /* any<any,any,any>*/): void;
+				public static entry(k: any, v: any): java.util.Map.Entry<any,any>;
 				public remove(param0: any): any;
 				public getSize(): number;
 				public hashCode(): number;
-				public compute(param0: any, param1: any /* any<any,any,any>*/): any;
-				public static ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
 				public clear(): void;
 				public equals(param0: any): boolean;
+				public remove(key: any, value: any): boolean;
 				public isEmpty(): boolean;
-				public computeIfPresent(param0: any, param1: any /* any<any,any,any>*/): any;
+				public replace(key: any, value: any): any;
+				public computeIfPresent(key: any, remappingFunction: any /* any<any,any,any>*/): any;
 				public containsValue(param0: any): boolean;
-				public replace(param0: any, param1: any, param2: any): boolean;
+				public removeEldestEntry(eldest: java.util.Map.Entry<any,any>): boolean;
 				public values(): java.util.Collection<any>;
-				public replace(param0: any, param1: any): any;
-				public static entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
 				public getEntries(): java.util.Set<java.util.Map.Entry<any,any>>;
 				public entrySet(): java.util.Set<java.util.Map.Entry<any,any>>;
+				public constructor(initialCapacity: number, loadFactor: number);
 				public keySet(): java.util.Set<any>;
+				public computeIfAbsent(key: any, mappingFunction: any /* any*/): any;
 				public size(): number;
-				public constructor(param0: number, param1: number, param2: boolean);
+				public putIfAbsent(key: any, value: any): any;
 				public put(param0: any, param1: any): any;
-				public constructor(param0: number);
-				public forEach(param0: any /* any*/): void;
+				public compute(key: any, remappingFunction: any /* any<any,any,any>*/): any;
+				public constructor(m: java.util.Map<any,any>);
+				public merge(key: any, value: any, remappingFunction: any /* any<any,any,any>*/): any;
 			}
 		}
 	}
@@ -524,31 +529,31 @@ declare namespace com {
 					entrySet(): java.util.Set<java.util.Map.Entry<K,V>>;
 					equals(param0: any): boolean;
 					hashCode(): number;
-					getOrDefault(param0: any, param1: V): V;
-					forEach(param0: any /* any*/): void;
-					replaceAll(param0: any /* any<any,any,any>*/): void;
-					putIfAbsent(param0: K, param1: V): V;
-					remove(param0: any, param1: any): boolean;
-					replace(param0: K, param1: V, param2: V): boolean;
-					replace(param0: K, param1: V): V;
-					computeIfAbsent(param0: K, param1: any /* any*/): V;
-					computeIfPresent(param0: K, param1: any /* any<any,any,any>*/): V;
-					compute(param0: K, param1: any /* any<any,any,any>*/): V;
-					merge(param0: K, param1: V, param2: any /* any<any,any,any>*/): V;
+					getOrDefault(key: any, defaultValue: V): V;
+					forEach(action: any /* any*/): void;
+					replaceAll(function_: any /* any<any,any,any>*/): void;
+					putIfAbsent(key: K, value: V): V;
+					remove(key: any, value: any): boolean;
+					replace(key: K, oldValue: V, newValue: V): boolean;
+					replace(key: K, value: V): V;
+					computeIfAbsent(key: K, mappingFunction: any /* any*/): V;
+					computeIfPresent(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+					compute(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+					merge(key: K, value: V, remappingFunction: any /* any<any,any,any>*/): V;
 					of(): java.util.Map<any,any>;
-					of(param0: any, param1: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any, param16: any, param17: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any, param16: any, param17: any, param18: any, param19: any): java.util.Map<any,any>;
-					ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
-					entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
-					copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+					of(k1: any, v1: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any, k9: any, v9: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any, k9: any, v9: any, k10: any, v10: any): java.util.Map<any,any>;
+					ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
+					entry(k: any, v: any): java.util.Map.Entry<any,any>;
+					copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
 					size(): number;
 					isEmpty(): boolean;
 					containsKey(param0: any): boolean;
@@ -563,65 +568,65 @@ declare namespace com {
 					entrySet(): java.util.Set<java.util.Map.Entry<K,V>>;
 					equals(param0: any): boolean;
 					hashCode(): number;
-					getOrDefault(param0: any, param1: V): V;
-					forEach(param0: any /* any*/): void;
-					replaceAll(param0: any /* any<any,any,any>*/): void;
-					putIfAbsent(param0: K, param1: V): V;
-					remove(param0: any, param1: any): boolean;
-					replace(param0: K, param1: V, param2: V): boolean;
-					replace(param0: K, param1: V): V;
-					computeIfAbsent(param0: K, param1: any /* any*/): V;
-					computeIfPresent(param0: K, param1: any /* any<any,any,any>*/): V;
-					compute(param0: K, param1: any /* any<any,any,any>*/): V;
-					merge(param0: K, param1: V, param2: any /* any<any,any,any>*/): V;
+					getOrDefault(key: any, defaultValue: V): V;
+					forEach(action: any /* any*/): void;
+					replaceAll(function_: any /* any<any,any,any>*/): void;
+					putIfAbsent(key: K, value: V): V;
+					remove(key: any, value: any): boolean;
+					replace(key: K, oldValue: V, newValue: V): boolean;
+					replace(key: K, value: V): V;
+					computeIfAbsent(key: K, mappingFunction: any /* any*/): V;
+					computeIfPresent(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+					compute(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+					merge(key: K, value: V, remappingFunction: any /* any<any,any,any>*/): V;
 					of(): java.util.Map<any,any>;
-					of(param0: any, param1: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any, param16: any, param17: any): java.util.Map<any,any>;
-					of(param0: any, param1: any, param2: any, param3: any, param4: any, param5: any, param6: any, param7: any, param8: any, param9: any, param10: any, param11: any, param12: any, param13: any, param14: any, param15: any, param16: any, param17: any, param18: any, param19: any): java.util.Map<any,any>;
-					ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
-					entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
-					copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+					of(k1: any, v1: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any, k9: any, v9: any): java.util.Map<any,any>;
+					of(k1: any, v1: any, k2: any, v2: any, k3: any, v3: any, k4: any, v4: any, k5: any, v5: any, k6: any, v6: any, k7: any, v7: any, k8: any, v8: any, k9: any, v9: any, k10: any, v10: any): java.util.Map<any,any>;
+					ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
+					entry(k: any, v: any): java.util.Map.Entry<any,any>;
+					copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
 				});
 				public constructor();
-				public computeIfPresent(param0: K, param1: any /* any<any,any,any>*/): V;
+				public static copyOf(map: java.util.Map<any,any>): java.util.Map<any,any>;
+				public getOrDefault(key: any, defaultValue: V): V;
 				public entrySet(): java.util.Set<java.util.Map.Entry<K,V>>;
 				public putAll(param0: java.util.Map<any,any>): void;
-				public replace(param0: K, param1: V): V;
+				public computeIfPresent(key: K, remappingFunction: any /* any<any,any,any>*/): V;
+				public merge(key: K, value: V, remappingFunction: any /* any<any,any,any>*/): V;
 				public keySet(): java.util.Set<K>;
 				public containsKey(param0: any): boolean;
-				public replaceAll(param0: any /* any<any,any,any>*/): void;
+				public replace(key: K, oldValue: V, newValue: V): boolean;
 				public getInverse(): com.akylas.documentscanner.MutableBiMap<V,K>;
 				public put(param0: K, param1: V): V;
-				public compute(param0: K, param1: any /* any<any,any,any>*/): V;
-				public remove(param0: any, param1: any): boolean;
-				public replace(param0: K, param1: V, param2: V): boolean;
+				public computeIfAbsent(key: K, mappingFunction: any /* any*/): V;
+				public static ofEntries(entries: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
 				public remove(param0: any): V;
-				public getOrDefault(param0: any, param1: V): V;
-				public static copyOf(param0: java.util.Map<any,any>): java.util.Map<any,any>;
+				public forEach(action: any /* any*/): void;
+				public replaceAll(function_: any /* any<any,any,any>*/): void;
+				public static entry(k: any, v: any): java.util.Map.Entry<any,any>;
 				public hashCode(): number;
 				public getInverse(): com.akylas.documentscanner.BiMap<V,K>;
-				public static ofEntries(param0: androidNative.Array<java.util.Map.Entry<any,any>>): java.util.Map<any,any>;
 				public clear(): void;
 				public equals(param0: any): boolean;
+				public remove(key: any, value: any): boolean;
+				public putIfAbsent(key: K, value: V): V;
 				public isEmpty(): boolean;
+				public replace(key: K, value: V): V;
 				public containsValue(param0: any): boolean;
 				public getValues(): java.util.Set<V>;
-				public static entry(param0: any, param1: any): java.util.Map.Entry<any,any>;
 				public forcePut(param0: K, param1: V): V;
-				public putIfAbsent(param0: K, param1: V): V;
-				public computeIfAbsent(param0: K, param1: any /* any*/): V;
 				public values(): java.util.Collection<V>;
 				public size(): number;
 				public get(param0: any): V;
-				public forEach(param0: any /* any*/): void;
-				public merge(param0: K, param1: V, param2: any /* any<any,any,any>*/): V;
+				public compute(key: K, remappingFunction: any /* any<any,any,any>*/): V;
 			}
 		}
 	}
@@ -632,8 +637,8 @@ declare namespace com {
 		export namespace documentscanner {
 			export class YuvByteBuffer extends java.lang.Object {
 				public static class: java.lang.Class<com.akylas.documentscanner.YuvByteBuffer>;
-				public constructor(param0: globalAndroid.media.Image, param1: java.nio.ByteBuffer);
 				public getType(): number;
+				public constructor(size: globalAndroid.media.Image, this_: java.nio.ByteBuffer);
 				public getBuffer(): java.nio.ByteBuffer;
 			}
 			export namespace YuvByteBuffer {
@@ -643,17 +648,17 @@ declare namespace com {
 					public getHeight(): number;
 					public getU(): com.akylas.documentscanner.YuvByteBuffer.PlaneWrapper;
 					public getWidth(): number;
-					public constructor(param0: globalAndroid.media.Image);
+					public constructor(a: globalAndroid.media.Image);
 					public getV(): com.akylas.documentscanner.YuvByteBuffer.PlaneWrapper;
 				}
 				export class PlaneWrapper extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.YuvByteBuffer.PlaneWrapper>;
 					public getRowStride(): number;
+					public constructor(width: number, height: number, plane: globalAndroid.media.Image.Plane);
 					public getBuffer(): java.nio.ByteBuffer;
 					public getHeight(): number;
 					public getPixelStride(): number;
 					public getWidth(): number;
-					public constructor(param0: number, param1: number, param2: globalAndroid.media.Image.Plane);
 				}
 			}
 		}
@@ -666,8 +671,8 @@ declare namespace com {
 			export class YuvToRgbConverter extends java.lang.Object {
 				public static class: java.lang.Class<com.akylas.documentscanner.YuvToRgbConverter>;
 				public destroy(): void;
-				public constructor(param0: globalAndroid.content.Context);
-				public yuvToRgb(param0: globalAndroid.media.Image, param1: globalAndroid.graphics.Bitmap): void;
+				public constructor(context: globalAndroid.content.Context);
+				public yuvToRgb(rgbaType: globalAndroid.media.Image, yuvBuffer: globalAndroid.graphics.Bitmap): void;
 			}
 		}
 	}
@@ -701,72 +706,150 @@ declare namespace com {
 	export namespace akylas {
 		export namespace documentscanner {
 			export namespace utils {
+				export class FileUtils extends java.lang.Object {
+					public static class: java.lang.Class<com.akylas.documentscanner.utils.FileUtils>;
+					public constructor();
+				}
+				export namespace FileUtils {
+					export namespace Companion {
+						 function getUriFromFile(a: globalAndroid.content.Context, b: string): globalAndroid.net.Uri;
+					}
+				}
+			}
+		}
+	}
+}
+
+declare namespace com {
+	export namespace akylas {
+		export namespace documentscanner {
+			export namespace utils {
+				export class FunctionCallback extends java.lang.Object {
+					public static class: java.lang.Class<com.akylas.documentscanner.utils.FunctionCallback>;
+					/**
+					 * Constructs a new instance of the com.akylas.documentscanner.utils.FunctionCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+					 */
+					public constructor(implementation: {
+						onResult(param0: java.lang.Exception, param1: any): void;
+					});
+					public constructor();
+					public onResult(param0: java.lang.Exception, param1: any): void;
+				}
+			}
+		}
+	}
+}
+
+declare namespace com {
+	export namespace akylas {
+		export namespace documentscanner {
+			export namespace utils {
 				export class ImageUtil extends java.lang.Object {
 					public static class: java.lang.Class<com.akylas.documentscanner.utils.ImageUtil>;
 					public constructor();
 				}
 				export namespace ImageUtil {
-					export class Companion extends java.lang.Object {
-						public static class: java.lang.Class<com.akylas.documentscanner.utils.ImageUtil.Companion>;
-						public static getFileName(arg0: globalAndroid.content.Context, e: string): string;
-						public static getImageSize(param0: globalAndroid.content.Context, param1: string): number[];
-						public static readBitmapFromFile(param0: globalAndroid.content.Context, param1: string, param2: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions): globalAndroid.graphics.Bitmap;
-						public static readBitmapFromFile(param0: globalAndroid.content.Context, param1: string, param2: string): globalAndroid.graphics.Bitmap;
-						public static saveBitmapToGallery(param0: globalAndroid.content.Context, bitmap: globalAndroid.graphics.Bitmap, exportFormat: string, exportQuality: number, fileName: string);
-						public static calculateInSampleSize(param0: number, param1: number, param2: number, param3: number): number;
-						public static getTargetFormat(param0: string): globalAndroid.graphics.Bitmap.CompressFormat;
+					export namespace Companion {
+						 function getFileName(context: globalAndroid.content.Context, src: string): string;
+						 function getImageSizeSync(uri: globalAndroid.content.Context, resolver: string): androidNative.Array<number>;
+						 function readBitmapFromFile(resolver: globalAndroid.content.Context, matrix: string, rotationAngle: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions, opts: any): globalAndroid.graphics.Bitmap;
+						 function calculateInSampleSize(halfWidth: number, totalPixels: number, totalReqPixelsCap: number, reqWidth: number): number;
+						 function getImageSize(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+						 function getFileName(result: globalAndroid.content.Context, this_: globalAndroid.net.Uri): string;
+						 function getTargetFormat(format: string): globalAndroid.graphics.Bitmap.CompressFormat;
+						 function saveBitmapToGallery(e: globalAndroid.content.Context, values: globalAndroid.graphics.Bitmap, url: string, cr: number, this_: string): void;
+						 function readBitmapFromFile(context: globalAndroid.content.Context, src: string, opts: string): globalAndroid.graphics.Bitmap;
 					}
 					export class ImageAssetOptions extends java.lang.Object {
 						public static class: java.lang.Class<com.akylas.documentscanner.utils.ImageUtil.ImageAssetOptions>;
-						public setAutoScaleFactor(param0: boolean): void;
-						public setWidth(param0: number): void;
+						public getAutoRotate(): boolean;
+						public constructor(sourceSize: any);
 						public getAutoScaleFactor(): boolean;
-						public constructor(param0: globalAndroid.graphics.BitmapFactory.Options);
 						public getWidth(): number;
-						public setHeight(param0: number): void;
-						public setKeepAspectRatio(param0: boolean): void;
+						public setWidth(a: number): void;
+						public setHeight(a: number): void;
+						public setAutoRotate(a: boolean): void;
 						public getKeepAspectRatio(): boolean;
-						public constructor(param0: globalAndroid.graphics.BitmapFactory.Options, param1: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions);
 						public getHeight(): number;
+						public constructor(sourceSize: any, options: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions);
+						public setKeepAspectRatio(a: boolean): void;
+						public setAutoScaleFactor(a: boolean): void;
+					}
+					export class ImageNotFoundException extends java.lang.Exception {
+						public static class: java.lang.Class<com.akylas.documentscanner.utils.ImageUtil.ImageNotFoundException>;
+						public constructor();
+						public constructor(src: string);
+						public constructor(message: string, cause: java.lang.Throwable, enableSuppression: boolean, writableStackTrace: boolean);
+						public constructor(message: string, cause: java.lang.Throwable);
+						public constructor(cause: java.lang.Throwable);
 					}
 					export class LoadImageOptions extends java.lang.Object {
 						public static class: java.lang.Class<com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions>;
-						public setAutoScaleFactor(param0: boolean): void;
-						public setWidth(param0: number): void;
-						public setMaxHeight(param0: number): void;
-						public setMaxWidth(param0: number): void;
+						public setMaxWidth(a: number): void;
 						public getResizeThreshold(): number;
-						public constructor(param0: org.json.JSONObject);
-						public getHeight(): number;
-						public initWithJSON(param0: org.json.JSONObject): void;
+						public setSourceHeight(a: number): void;
 						public getAutoScaleFactor(): boolean;
-						public getWidth(): number;
 						public getMaxWidth(): number;
 						public getMaxHeight(): number;
-						public setHeight(param0: number): void;
-						public setKeepAspectRatio(param0: boolean): void;
+						public setResizeThreshold(a: number): void;
+						public getSourceWidth(): number;
 						public getKeepAspectRatio(): boolean;
-						public setResizeThreshold(param0: number): void;
-						public constructor(param0: string);
+						public setOptions(a: org.json.JSONObject): void;
+						public getSourceHeight(): number;
+						public setHeight(a: number): void;
+						public getHeight(): number;
+						public setSourceWidth(a: number): void;
+						public setMaxHeight(a: number): void;
+						public getAutoRotate(): boolean;
+						public getWidth(): number;
+						public constructor(this_: string);
+						public setWidth(a: number): void;
+						public setAutoRotate(a: boolean): void;
+						public initWithJSON(jsonOpts: org.json.JSONObject): void;
+						public getOptions(): org.json.JSONObject;
+						public setKeepAspectRatio(a: boolean): void;
+						public setAutoScaleFactor(a: boolean): void;
+						public constructor(jsonOpts: org.json.JSONObject);
 					}
 				}
-				export namespace PDFUtils {
-					export class FunctionCallback extends java.lang.Object {
-						public static class: java.lang.Class<FunctionCallback>;
-						/**
-						 * Constructs a new instance of the com.akylas.documentscanner.CustomImageAnalysisCallback$FunctionCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
-						 */
-						public constructor(implementation: { onResult(param0: java.lang.Exception, param1: any): void });
-						public constructor();
-						public onResult(param0: java.lang.Exception, param1: any): void;
-					}
-					export class Companion {
-						static printPDF(context: android.content.Context, src: string, name: string);
-						static compressPDF(src: string, dst: string, jpegQuality: number);
-						static generatePDF(context: android.content.Context, destFolder: string, fileName: string, options: string);
-						static generatePDFASync(context: android.content.Context, destFolder: string, fileName: string, options: string, callback: FunctionCallback);
-						static importPdfToTempImages(param0: globalAndroid.content.Context, pdfPath: string, param2: FunctionCallback, options:string): void;
+			}
+		}
+	}
+}
 
+declare namespace com {
+	export namespace akylas {
+		export namespace documentscanner {
+			export namespace utils {
+				export class PDFUtils extends java.lang.Object {
+					public static class: java.lang.Class<com.akylas.documentscanner.utils.PDFUtils>;
+					public static BLACK_WHITE_COLOR_MATRIX: string; // "[0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0,0,0,1,0]"
+					public constructor();
+				}
+				export namespace PDFUtils {
+					export namespace Companion {
+						 function printPDF(printManager: globalAndroid.content.Context, this_: string, context: string): void;
+						 function importPdfToTempImages(context: globalAndroid.content.Context, src: string, callback: com.akylas.documentscanner.utils.FunctionCallback, options: string): void;
+						 function generatePDFASync(context: globalAndroid.content.Context, destFolder: string, fileName: string, options: string, callback: com.akylas.documentscanner.utils.FunctionCallback): void;
+						 function generatePDF(page: globalAndroid.content.Context, imageRotation: string, imageSrc: string, imageWidth: string): string;
+						 function compressPDF(imageBytes: string, imgBytes: string, imgRef: number, stream: number): void;
+					}
+					export class PDFLoadImageOptions extends java.lang.Object {
+						public static class: java.lang.Class<com.akylas.documentscanner.utils.PDFUtils.PDFLoadImageOptions>;
+						public constructor();
+						public getImageSizeThreshold(): number;
+						public getImageScale(): number;
+						public setImageScale(a: number): void;
+						public setQuality(a: number): void;
+						public getQuality(): number;
+						public setImageSizeThreshold(a: number): void;
+					}
+					export class PDFPrintDocumentAdapter extends java.lang.Object {
+						public static class: java.lang.Class<com.akylas.documentscanner.utils.PDFUtils.PDFPrintDocumentAdapter>;
+						public onWrite(inputStream: androidNative.Array<any>, outputStream: globalAndroid.os.ParcelFileDescriptor, buffer: globalAndroid.os.CancellationSignal, bytesRead: any): void;
+						public constructor();
+						public onLayout(oldAttributes: any, newAttributes: any, cancellationSignal: globalAndroid.os.CancellationSignal, callback: any, extras: globalAndroid.os.Bundle): void;
+						public constructor(context: globalAndroid.content.Context, pdfFilePath: string, documentName: string);
 					}
 				}
 			}

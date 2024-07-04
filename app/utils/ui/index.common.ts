@@ -292,7 +292,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                 new Promise<ImportImageData>(async (resolve, reject) => {
                     try {
                         const start = Date.now();
-                        const imageSize = getImageSize(sourceImagePath);
+                        const imageSize = await getImageSize(sourceImagePath);
                         DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize), Date.now() - start, 'ms');
 
                         const imageRotation = imageSize.rotation;
@@ -1478,7 +1478,7 @@ export async function processCameraImage({
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
     let quads: Quads;
-    const imageSize = getImageSize(imagePath);
+    const imageSize = await getImageSize(imagePath);
     const imageRotation = imageSize.rotation;
     const imageWidth = imageSize.width;
     const imageHeight = imageSize.height;

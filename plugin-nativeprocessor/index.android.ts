@@ -20,7 +20,7 @@ export async function cropDocument(editingImage: ImageSource, quads, transforms 
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.cropDocument(
             editingImage.android,
             JSON.stringify(quads),
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -39,7 +39,7 @@ export async function cropDocumentFromFile(src: string, quads, options: CropOpti
             Utils.android.getApplicationContext(),
             src,
             JSON.stringify(quads),
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -56,7 +56,7 @@ export async function getJSONDocumentCorners(editingImage: ImageSource, resizeTh
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCorners(
             editingImage.android,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -75,7 +75,7 @@ export async function getJSONDocumentCornersFromFile(src: string, options: Corne
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersFromFile(
             Utils.android.getApplicationContext(),
             src,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -94,7 +94,7 @@ export async function processFromFile(src: string, processes: any[], options: Lo
             Utils.android.getApplicationContext(),
             src,
             JSON.stringify(processes),
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -117,7 +117,7 @@ export async function processFromFile(src: string, processes: any[], options: Lo
 //         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getJSONDocumentCornersAndImage(
 //             imageProxy,
 //             processor,
-//             new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+//             new com.akylas.documentscanner.utils.FunctionCallback({
 //                 onResult(e, result: java.util.HashMap<string, any>) {
 //                     if (e) {
 //                         reject(e);
@@ -142,7 +142,7 @@ export async function getColorPalette(
     return new Promise((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
             editingImage['android'] || editingImage,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -167,7 +167,7 @@ export async function getColorPaletteFromFile(
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPaletteFromFile(
             Utils.android.getApplicationContext(),
             src,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -188,7 +188,7 @@ export async function ocrDocument(editingImage: ImageSource, options?: Partial<D
     return new Promise<OCRData>((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.ocrDocument(
             editingImage.android,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -211,7 +211,7 @@ export async function ocrDocumentFromFile(src: string, options?: Partial<DetectO
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.ocrDocumentFromFile(
             Utils.android.getApplicationContext(),
             src,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -234,7 +234,7 @@ export async function detectQRCode(editingImage: ImageSource | android.graphics.
     return new Promise<QRCodeData>((resolve, reject) => {
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCode(
             editingImage['android'] || editingImage,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -253,7 +253,7 @@ export async function detectQRCodeFromFile(src: string, options: Partial<DetectQ
         com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.readQRCodeFromFile(
             Utils.android.getApplicationContext(),
             src,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -276,7 +276,7 @@ export async function generateQRCodeImage(text: string, format: string, width: n
             format,
             width,
             height,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -298,7 +298,7 @@ export async function generateQRCodeSVG(text: string, format: string, hintSize: 
             text,
             format,
             hintSize,
-            new com.akylas.documentscanner.CustomImageAnalysisCallback.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
@@ -344,7 +344,7 @@ export async function importPdfToTempImages(pdfPath: string, options?: Partial<P
         com.akylas.documentscanner.utils.PDFUtils.Companion.importPdfToTempImages(
             Utils.android.getApplicationContext(),
             pdfPath,
-            new com.akylas.documentscanner.utils.PDFUtils.FunctionCallback({
+            new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
                         reject(e);
