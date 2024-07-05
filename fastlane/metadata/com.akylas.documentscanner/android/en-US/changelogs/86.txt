@@ -1,0 +1,4 @@
+Bug fixes:
+- better support of "remote" imported image like from Nextcloud
+- permission issue while exporting to Download folder (default)
+- Translations update
