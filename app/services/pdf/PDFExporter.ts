@@ -1,23 +1,25 @@
 import { Screen, Utils, knownFolders } from '@nativescript/core';
-import { wrapNativeException } from '@nativescript/core/utils';
+import { SDK_VERSION, wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
-import { CustomError, SilentError } from '~/utils/error';
+import { CustomError, PermissionError, SilentError } from '~/utils/error';
 import { getPageColorMatrix } from '~/utils/matrix';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
+import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
         filename = getFileNameForDocument(document) + '.pdf';
     }
     if (__ANDROID__) {
-        // if (SDK_VERSION <= 29) {
-        //     const result = await request('storage');
-        //     if (!isPermResultAuthorized(result)) {
-        //         throw new PermissionError(lc('storage_permission_needed'));
-        //     }
-        // }
+        if (SDK_VERSION <= 29) {
+            const result = await request('storage');
+            DEV_LOG && console.log('exportPDFAsync', 'perm result', result);
+            if (!isPermResultAuthorized(result)) {
+                throw new PermissionError(lc('storage_permission_needed'));
+            }
+        }
         // return new Promise((resolve, reject) => {
         // pages.forEach((page) => {
         //     if (page.colorType && !page.colorMatrix) {
