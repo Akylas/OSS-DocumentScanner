@@ -14,3 +14,5 @@ export function checkIfCaonBackButtonnGoBack(view: View, callback) {
     // Android only for now
     callback();
 }
+
+export function onAndroidNewItent() {}

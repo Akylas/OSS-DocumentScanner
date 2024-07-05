@@ -1687,3 +1687,11 @@ export async function confirmGoBack({ onGoBack, message }: { onGoBack?; message?
         showError(error);
     }
 }
+
+export async function onStartCam(inverseUseSystemCamera = false) {
+    try {
+        await importImageFromCamera({ inverseUseSystemCamera });
+    } catch (error) {
+        showError(error);
+    }
+}
