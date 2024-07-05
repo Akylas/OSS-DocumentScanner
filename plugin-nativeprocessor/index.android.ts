@@ -18,7 +18,6 @@ import { wrapNativeException } from '@akylas/nativescript/utils';
 import { SilentError } from '~/utils/error';
 
 function androidFunctionCallbackPromise<T>(onCallback: (calback: com.akylas.documentscanner.utils.FunctionCallback) => void, transformer = (v) => v, errorHandler = (e) => wrapNativeException(e)) {
-    DEV_LOG && console.log('androidFunctionCallbackPromise', new Error().stack);
     return new Promise<T>((resolve, reject) => {
         onCallback(
             new com.akylas.documentscanner.utils.FunctionCallback({
