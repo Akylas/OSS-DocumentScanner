@@ -515,7 +515,7 @@ class PDFUtils {
                 val result = JSONArray()
                 try {
                     var uri = Uri.parse(src)
-                    var pdfFileName = ImageUtil.getFileName(context, uri)
+                    var pdfFileName = ImageUtil.getFileNameSync(context, uri)
                     var compressFormat = "jpg"
                     var compressQuality = 100
                     var scale = 2.0

@@ -27,7 +27,7 @@ import {
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
-import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, printPDF, processFromFile } from 'plugin-nativeprocessor';
+import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getFileName, getJSONDocumentCornersFromFile, importPdfToTempImages, printPDF, processFromFile } from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
 import { showModal } from 'svelte-native';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
@@ -212,15 +212,24 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
-        const [pdf, images] = uris.reduce(
-            ([p, f], e) => {
+
+        const [pdf, images] = await uris.reduce(
+            async (acc, e) => {
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
-                    testStr = com.akylas.documentscanner.utils.ImageUtil.Companion.getFileName(Utils.android.getApplicationContext(), e);
+                    testStr = await getFileName(e);
                 }
-                return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
+                acc.then((obj) => {
+                    if (testStr.endsWith('.pdf')) {
+                        obj[0].push(e);
+                    } else {
+                        obj[1].push(e);
+                    }
+                });
+                return acc;
+                // return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
             },
-            [[], []]
+            Promise.resolve([[], []] as [string[], string[]])
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
 

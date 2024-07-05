@@ -750,7 +750,8 @@ declare namespace com {
 				}
 				export namespace ImageUtil {
 					export namespace Companion {
-						 function getFileName(context: globalAndroid.content.Context, src: string): string;
+						 function getFileNameSync(context: globalAndroid.content.Context, src: string): string;
+						 function getFileName(context: globalAndroid.content.Context, src: string, callback: FunctionCallback);
 						 function getImageSizeSync(uri: globalAndroid.content.Context, resolver: string): androidNative.Array<number>;
 						 function readBitmapFromFile(resolver: globalAndroid.content.Context, matrix: string, rotationAngle: com.akylas.documentscanner.utils.ImageUtil.LoadImageOptions, opts: any): globalAndroid.graphics.Bitmap;
 						 function calculateInSampleSize(halfWidth: number, totalPixels: number, totalReqPixelsCap: number, reqWidth: number): number;
