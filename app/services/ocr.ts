@@ -2,12 +2,13 @@ import { ApplicationSettings, File, Folder, ImageSource, Observable, knownFolder
 import { ocrDocument, ocrDocumentFromFile } from 'plugin-nativeprocessor';
 import { OCRDocument } from '~/models/OCRDocument';
 import { loadImage, recycleImages } from '~/utils/images';
-import { request } from '@nativescript-community/https';
-import { networkService } from './api';
+import { HttpsRequestOptions, request } from '@nativescript-community/https';
+import { networkService, wrapNativeHttpException } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { getCurrentISO3Language, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { hideLoading, hideSnackMessage, showLoading, showSnackMessage, updateLoadingProgress } from '~/utils/ui';
-import { NoNetworkError } from '~/utils/error';
+import { HTTPError, NoNetworkError } from '~/utils/error';
+import { wrapNativeException } from '@akylas/nativescript/utils';
 
 const languages = {
     afr: 'Afrikaans',
@@ -311,10 +312,13 @@ export class OCRService extends Observable {
             const url = downloadURL + lang + '.traineddata';
             const destinationFolder = Folder.fromPath(this.baseDataPath).getFolder(dataType);
             const destinationFile = path.join(destinationFolder.path, lang + '.traineddata');
+            const requestParams = {
+                url,
+                method: 'GET'
+            } as HttpsRequestOptions;
             try {
                 const result = await request({
-                    url,
-                    method: 'GET',
+                    ...requestParams,
                     onProgress(current, total) {
                         const progress = Math.round(((index + current / total) / langArray.length) * 100);
                         updateProgress(progress);
@@ -327,7 +331,7 @@ export class OCRService extends Observable {
                 if (File.exists(destinationFile)) {
                     File.fromPath(destinationFile).remove();
                 }
-                throw error;
+                throw wrapNativeHttpException(error, requestParams);
             }
         }
         if (hideLoadingDialog) {

@@ -277,3 +277,8 @@ export async function importPdfToTempImages(pdfPath: string, options?: Partial<P
         PDFUtils.importPdfToTempImagesDelegateOptions(pdfPath, CompletionDelegateImpl.initWithResolveReject(resolve, reject), options ? JSON.stringify(options) : '');
     });
 }
+
+export async function getImageSize(imagePath: string) {
+    const size = ImageUtils.getImageSize(imagePath);
+    return { width: size.objectForKey('width'), height: size.objectForKey('height'), rotation: size.objectForKey('rotation') };
+}

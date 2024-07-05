@@ -14,15 +14,17 @@ import {
     Quads
 } from '.';
 import { CropView } from './CropView';
+import { wrapNativeException } from '@akylas/nativescript/utils';
+import { SilentError } from '~/utils/error';
 
-function androidFunctionCallbackPromise<T>(onCallback: (calback: com.akylas.documentscanner.utils.FunctionCallback) => void, transformer = (v) => v) {
+function androidFunctionCallbackPromise<T>(onCallback: (calback: com.akylas.documentscanner.utils.FunctionCallback) => void, transformer = (v) => v, errorHandler = (e) => wrapNativeException(e)) {
     DEV_LOG && console.log('androidFunctionCallbackPromise', new Error().stack);
     return new Promise<T>((resolve, reject) => {
         onCallback(
             new com.akylas.documentscanner.utils.FunctionCallback({
                 onResult(e, result) {
                     if (e) {
-                        reject(e);
+                        reject(errorHandler(e));
                     } else {
                         try {
                             resolve(transformer(result));
@@ -278,8 +280,26 @@ export function printPDF(filePath: string, name: string) {
 }
 
 export async function getFileName(src: string) {
-    DEV_LOG && console.log('getFileName', src);
     return androidFunctionCallbackPromise<string>((callback) => {
         com.akylas.documentscanner.utils.ImageUtil.Companion.getFileName(Utils.android.getApplicationContext(), src, callback);
     });
+}
+
+export function generatePDFASync(destFolder: string, fileName: string, options: string, errorHandler) {
+    return androidFunctionCallbackPromise<string>(
+        (callback) => {
+            com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(Utils.android.getApplicationContext(), destFolder, fileName, options, callback);
+        },
+        (r) => r,
+        errorHandler
+    );
+}
+
+export async function getImageSize(imagePath: string) {
+    return androidFunctionCallbackPromise<{ width: number; height: number; rotation: number }>(
+        (callback) => {
+            com.akylas.documentscanner.utils.ImageUtil.Companion.getImageSize(Utils.android.getApplicationContext(), imagePath, callback);
+        },
+        (r) => ({ width: r[0], height: r[1], rotation: r[2] })
+    );
 }

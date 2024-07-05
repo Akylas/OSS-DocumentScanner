@@ -6,26 +6,26 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
-    import { OCRData, QRCodeData, Quad } from 'plugin-nativeprocessor';
+    import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { goBack, showModal } from '~/utils/svelte/ui';
     import { Writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
-    import CropView from '~/components/common/CropView.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
     import { TRANSFORMS } from '~/models/localized_constant';
+    import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
+    import { shortcutService } from '~/services/shortcuts';
+    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
+    import { goBack, showModal } from '~/utils/svelte/ui';
     import {
         ColorMatricesTypes,
         copyTextToClipboard,
@@ -40,9 +40,7 @@
         showPopoverMenu,
         showSlidersPopover
     } from '~/utils/ui';
-    import { getImageSize } from '~/utils/utils';
     import { colors, windowInset } from '~/variables';
-    import { shortcutService } from '~/services/shortcuts';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
 
     // technique for only specific properties to get updated on store change

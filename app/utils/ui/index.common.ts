@@ -27,7 +27,18 @@ import {
 import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import dayjs from 'dayjs';
-import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getFileName, getJSONDocumentCornersFromFile, importPdfToTempImages, printPDF, processFromFile } from 'plugin-nativeprocessor';
+import {
+    CropResult,
+    Quads,
+    cropDocumentFromFile,
+    detectQRCodeFromFile,
+    getFileName,
+    getImageSize,
+    getJSONDocumentCornersFromFile,
+    importPdfToTempImages,
+    printPDF,
+    processFromFile
+} from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
 import { showModal } from 'svelte-native';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
@@ -50,7 +61,6 @@ import {
     COLOR_PALETTE_RESIZE_THRESHOLD,
     CROP_ENABLED,
     DEFAULT_EXPORT_DIRECTORY,
-    DEFAULT__BATCH_CHUNK_SIZE,
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
     IMG_FORMAT,
@@ -72,7 +82,7 @@ import { goBack } from '~/utils/svelte/ui';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
-import { doInBatch, getImageSize } from '../utils';
+import { doInBatch } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 

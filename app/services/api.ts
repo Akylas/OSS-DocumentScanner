@@ -1,6 +1,6 @@
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { CustomError, HTTPError, NoNetworkError } from '~/utils/error';
+import { CustomError, HTTPError, NoNetworkError, TimeoutError } from '~/utils/error';
 import * as https from '@nativescript-community/https';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { wrapNativeException } from '@akylas/nativescript/utils';
@@ -157,6 +157,19 @@ async function handleRequestRetry(requestParams: HttpRequestOptions, retry = 0) 
     });
 }
 
+export function wrapNativeHttpException(error, requestParams: HttpRequestOptions) {
+    return wrapNativeException(error, (message) => {
+        if (/(SocketTimeout|SocketException|UnknownHost)/.test(message)) {
+            return new TimeoutError();
+        } else {
+            return new HTTPError({
+                message,
+                statusCode: -1,
+                requestParams
+            });
+        }
+    });
+}
 async function handleRequestResponse<T>(response: https.HttpsResponse<https.HttpsResponseLegacy<T>>, requestParams: HttpRequestOptions, requestStartTime, retry): Promise<T> {
     const statusCode = response.statusCode;
     let content: T;
@@ -222,14 +235,6 @@ export async function request<T = any>(requestParams: HttpRequestOptions, retry 
         const response = await https.request<T>(requestParams);
         return handleRequestResponse<T>(response, requestParams, requestStartTime, retry);
     } catch (error) {
-        throw wrapNativeException(
-            error,
-            (message) =>
-                new HTTPError({
-                    message,
-                    statusCode: -1,
-                    requestParams
-                })
-        );
+        throw wrapNativeHttpException(error, requestParams);
     }
 }

@@ -1,13 +1,11 @@
-import { CustomError, PermissionError, SilentError } from '~/utils/error';
-import type { WorkerEventType } from '~/workers/BaseWorker';
-import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
-import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
-import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
+import { Screen, Utils, knownFolders } from '@nativescript/core';
+import { wrapNativeException } from '@nativescript/core/utils';
+import { generatePDFASync } from 'plugin-nativeprocessor';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
-import { SDK_VERSION, wrapNativeException } from '@nativescript/core/utils';
-import { isPermResultAuthorized, request } from '@nativescript-community/perms';
-import type { OCRDocument } from '~/models/OCRDocument';
-import dayjs from 'dayjs';
+import { CustomError, SilentError } from '~/utils/error';
+import { getPageColorMatrix } from '~/utils/matrix';
+import type { WorkerEventType } from '~/workers/BaseWorker';
+import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
@@ -20,43 +18,28 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
         //         throw new PermissionError(lc('storage_permission_needed'));
         //     }
         // }
-        const start = Date.now();
-        return new Promise((resolve, reject) => {
-            const pdfCanvas = new PDFCanvas();
-            // pages.forEach((page) => {
-            //     if (page.colorType && !page.colorMatrix) {
-            //         page.colorMatrix = getColorMatrix(page.colorType);
-            //     }
-            // });
-            const options = JSON.stringify({
-                ...pdfCanvas.options,
-                // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
-                text_scale: Screen.mainScreen.scale * 1.4,
-                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
-            });
-            const context = Utils.android.getApplicationContext();
-            DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);
-            com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(
-                context,
-                folder,
-                filename,
-                options,
-                new com.akylas.documentscanner.utils.FunctionCallback({
-                    onResult(e, result) {
-                        if (e) {
-                            if (/could not create file/.test(e.toString())) {
-                                reject(new SilentError(lc('please_choose_export_folder_again')));
-                            } else {
-                                reject(wrapNativeException(e));
-                            }
-                        } else {
-                            resolve(result);
-                        }
-                        DEV_LOG && console.log('exportPDFAsync', 'done', JSON.stringify(pdfCanvas.options), options.length, Date.now() - start, 'ms');
-                    }
-                })
-            );
+        // return new Promise((resolve, reject) => {
+        // pages.forEach((page) => {
+        //     if (page.colorType && !page.colorMatrix) {
+        //         page.colorMatrix = getColorMatrix(page.colorType);
+        //     }
+        // });
+        const options = JSON.stringify({
+            ...getPDFDefaultExportOptions(),
+            // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
+            text_scale: Screen.mainScreen.scale * 1.4,
+            pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
         });
+        const context = Utils.android.getApplicationContext();
+        DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);
+        return generatePDFASync(folder, filename, options, (e) => {
+            if (/could not create file/.test(e.toString())) {
+                return new SilentError(lc('please_choose_export_folder_again'));
+            } else {
+                return wrapNativeException(e);
+            }
+        });
+        // });
     } else {
         const worker = new Worker('~/workers/PDFExportWorker');
         const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
