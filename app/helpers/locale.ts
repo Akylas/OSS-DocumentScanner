@@ -177,13 +177,13 @@ prefs.on('key:clock_24', () => {
 });
 
 let currentLocale = null;
-export function getLocaleDisplayName(locale?) {
+export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
     if (__IOS__) {
         if (!currentLocale) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
         const localeStr = currentLocale.localizedStringForLanguageCode(locale || lang);
-        return localeStr ? capitalize(localeStr) : locale || lang;
+        return localeStr ? capitalize(localeStr) : canReturnEmpty ? undefined : locale || lang;
     } else {
         if (!currentLocale) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
@@ -266,7 +266,6 @@ export const slu = derived([$lang], () => lu);
 export const scformatDate = derived($lang, () => formatDate);
 export const scformatTime = derived([$lang, clock_24Store], () => formatTime);
 export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);
-
 
 export function cleanFilename(str) {
     return str.replace(/[|?*<\":>+\[\]'"]+/g, '').replace(/[\\\s\t\n\/]+/g, '_');
