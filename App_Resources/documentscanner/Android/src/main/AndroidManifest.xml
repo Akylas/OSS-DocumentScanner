@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools" android:installLocation="auto">
     <supports-screens android:smallScreens="true" android:normalScreens="true"
         android:largeScreens="true" android:xlargeScreens="true" />
     <uses-feature
@@ -13,9 +13,9 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" tools:replace="android:maxSdkVersion" />
-    <uses-permission android:name="android.permission.CAMERA" android:requiredFeature="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.INTERNET" android:requiredFeature="false" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
     <application android:requestLegacyExternalStorage="true" android:name=".MainApplication"

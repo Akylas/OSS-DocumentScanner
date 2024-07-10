@@ -55,7 +55,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     private var startAnimationQuads: List<List<Point>>? = null
     private var mAnimator: ValueAnimator? = null
 
-    val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    var linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     var fillPaint: Paint? = null
     var progressFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     var colors = listOf(0xFF007AFF.toInt())

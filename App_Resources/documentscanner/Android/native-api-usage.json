@@ -1,6 +1,7 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "android.hardware.camera2:CameraManager",
         "android.view:View.OnApplyWindowInsetsListener",
         "android.view:WindowInsets",
         "android.graphics:Insets",

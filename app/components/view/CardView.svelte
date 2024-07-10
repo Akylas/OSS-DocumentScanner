@@ -40,7 +40,7 @@
         showPopoverMenu,
         transformPages
     } from '~/utils/ui';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { request } from '@nativescript-community/perms';
@@ -642,18 +642,24 @@
         try {
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const rowHeight = 58;
-            const options = [
-                {
-                    id: 'camera',
-                    name: lc('add_from_camera'),
-                    icon: 'mdi-camera'
-                },
-                {
-                    id: 'import',
-                    name: lc('import_from_file'),
-                    icon: 'mdi-file-document-plus-outline'
-                }
-            ]
+            const options = (
+                $hasCamera
+                    ? [
+                          {
+                              id: 'camera',
+                              name: lc('add_from_camera'),
+                              icon: 'mdi-camera'
+                          }
+                      ]
+                    : []
+            )
+                .concat([
+                    {
+                        id: 'import',
+                        name: lc('import_from_file'),
+                        icon: 'mdi-file-document-plus-outline'
+                    }
+                ])
                 .concat(
                     __IOS__
                         ? [

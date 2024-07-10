@@ -4,6 +4,7 @@ import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale
 import { get, writable } from 'svelte/store';
 import { getRealTheme, theme } from './helpers/theme';
 import { SDK_VERSION } from '@nativescript/core/utils';
+import { deviceHasCamera } from '@nativescript-community/ui-cameraview';
 
 export const colors = writable({
     colorPrimary: '',
@@ -56,6 +57,7 @@ export const screenRatio = screenWidthDips / screenHeightDips;
 
 export const fontScale = writable(1);
 export const isRTL = writable(false);
+export const hasCamera = writable(true);
 
 function updateSystemFontScale(value) {
     fontScale.set(value);
@@ -97,6 +99,8 @@ const onInitRootView = function () {
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         const context = Utils.android.getApplicationContext();
         const nUtils = com.akylas.documentscanner.Utils.Companion;
+        hasCamera.set(deviceHasCamera());
+        DEV_LOG && console.log('hasCamera', get(hasCamera));
 
         const resources = Utils.android.getApplicationContext().getResources();
         updateSystemFontScale(resources.getConfiguration().fontScale);

@@ -1,6 +1,5 @@
 <script context="module" lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-    import { throttle } from '@nativescript/core/utils';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
@@ -9,8 +8,9 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, File, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
-    import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
+    import { throttle } from '@nativescript/core/utils';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -32,7 +32,6 @@
         detectOCR,
         goToDocumentView,
         importAndScanImage,
-        importAndScanImageOrPdfFromUris,
         importImageFromCamera,
         onAndroidNewItent,
         onBackButton,
@@ -42,9 +41,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, windowInset } from '~/variables';
-    import { securityService } from '~/services/security';
-    import { request } from '@nativescript-community/perms';
+    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -678,8 +675,15 @@
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(), 500)} />
-                <mdbutton id="fab" class="fab" margin="0 16 0 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
+                <mdbutton
+                    class={$hasCamera ? 'small-fab' : 'fab'}
+                    horizontalAlignment="center"
+                    text="mdi-file-document-plus-outline"
+                    verticalAlignment="center"
+                    on:tap={throttle(() => importDocument(), 500)} />
+                {#if $hasCamera}
+                    <mdbutton id="fab" class="fab" margin="0 16 0 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
+                {/if}
             </stacklayout>
         {/if}
 

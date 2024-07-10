@@ -41,7 +41,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -766,28 +766,35 @@
         try {
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const rowHeight = 58;
-            const options = [
-                {
-                    id: 'camera',
-                    name: lc('add_from_camera'),
-                    icon: 'mdi-camera'
-                },
-                {
-                    id: 'import',
-                    name: lc('import_from_file'),
-                    icon: 'mdi-file-document-plus-outline'
-                }
-            ].concat(
-                __IOS__
+            const options = (
+                $hasCamera
                     ? [
                           {
-                              id: 'import_image',
-                              name: lc('import_from_image'),
-                              icon: 'mdi-image-plus-outline'
+                              id: 'camera',
+                              name: lc('add_from_camera'),
+                              icon: 'mdi-camera'
                           }
                       ]
                     : []
-            );
+            )
+                .concat([
+                    {
+                        id: 'import',
+                        name: lc('import_from_file'),
+                        icon: 'mdi-file-document-plus-outline'
+                    }
+                ])
+                .concat(
+                    __IOS__
+                        ? [
+                              {
+                                  id: 'import_image',
+                                  name: lc('import_from_image'),
+                                  icon: 'mdi-image-plus-outline'
+                              }
+                          ]
+                        : []
+                );
             // .concat([
             //     {
             //         id: 'add_manual',

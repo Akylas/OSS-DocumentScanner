@@ -51,7 +51,7 @@
     import { navigate } from '~/utils/svelte/ui';
     import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts, hasCamera, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { Label } from '@nativescript-community/ui-label';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
@@ -654,7 +654,7 @@
                         : ([] as any)
                 )
                 .concat(
-                    __ANDROID__
+                    __ANDROID__ && $hasCamera
                         ? [
                               {
                                   id: 'sub_settings',
@@ -673,14 +673,22 @@
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
-                    },
-                    {
-                        id: 'sub_settings',
-                        icon: 'mdi-file-star-four-points',
-                        title: lc('autoscan'),
-                        description: lc('autoscan_settings'),
-                        options: () => getSubSettings('autoscan')
-                    },
+                    }
+                ] as any)
+                .concat(
+                    $hasCamera
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-file-star-four-points',
+                                  title: lc('autoscan'),
+                                  description: lc('autoscan_settings'),
+                                  options: () => getSubSettings('autoscan')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat([
                     {
                         id: 'sub_settings',
                         icon: 'mdi-file-document-edit',

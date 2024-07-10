@@ -37,7 +37,7 @@
         transformPages,
         updateSnackMessage
     } from '~/utils/ui';
-    import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, hasCamera, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     const rowMargin = 8;
@@ -616,8 +616,10 @@
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}
-            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
-            <mdbutton class="fab" margin="0 16 0 16" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+            <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
+            {#if $hasCamera}
+                <mdbutton class="fab" margin="0 16 0 16" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+            {/if}
         </stacklayout>
 
         <CActionBar
