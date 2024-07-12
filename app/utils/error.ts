@@ -138,7 +138,7 @@ export class NoNetworkError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'no_network'
+                    message: lc('no_network')
                 },
                 props
             ),
@@ -150,6 +150,17 @@ export interface HTTPErrorProps {
     statusCode: number;
     message: string;
     requestParams: HTTPSOptions;
+}
+
+export class NoSpaceLeftError extends CustomError {
+    constructor(props: Error) {
+        super(
+            Object.assign(props, {
+                message: lc('no_space_left')
+            }),
+            'NoSpaceLeftError'
+        );
+    }
 }
 export class HTTPError extends CustomError {
     statusCode: number;
