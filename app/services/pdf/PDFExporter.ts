@@ -7,10 +7,11 @@ import { getPageColorMatrix } from '~/utils/matrix';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
+import { PDF_EXT } from '~/utils/constants';
 export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
-        filename = getFileNameForDocument(document) + '.pdf';
+        filename = getFileNameForDocument(document) + PDF_EXT;
     }
     if (__ANDROID__) {
         if (SDK_VERSION <= 29) {
@@ -53,7 +54,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                 messageData;
                 id?: number;
                 nativeDataKeys: string[];
-                nativeDatas?: { [k: string]: any };
+                // nativeDatas?: { [k: string]: any };
             };
         }) {
             const data = event.data;
@@ -72,16 +73,16 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                     // executor.reject(createErrorFromMessage(message));
                     // } else {
                     const id = data.id;
-                    if (data.nativeDataKeys?.length > 0) {
-                        const nativeDatas: { [k: string]: any } = {};
-                        if (__ANDROID__) {
-                            data.nativeDataKeys.forEach((k) => {
-                                nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
-                                com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
-                            });
-                            data.nativeDatas = nativeDatas;
-                        }
-                    }
+                    // if (data.nativeDataKeys?.length > 0) {
+                    //     const nativeDatas: { [k: string]: any } = {};
+                    //     if (__ANDROID__) {
+                    //         data.nativeDataKeys.forEach((k) => {
+                    //             nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
+                    //             com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
+                    //         });
+                    //         data.nativeDatas = nativeDatas;
+                    //     }
+                    // }
                     if (data.error) {
                         executor.reject(new CustomError(JSON.parse(data.error)));
                     } else {

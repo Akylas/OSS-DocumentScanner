@@ -228,7 +228,6 @@ class PDFUtils {
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions) ?: return null
             if (hasColorMatrix) {
-                Log.d("JS", "hasColorMatrix $colorMatrix")
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
@@ -300,6 +299,7 @@ class PDFUtils {
             val color = jsonOps.optString("color", "color")
             val blackAndWhite = color == "black_white"
             val drawOcrText = jsonOps.optBoolean("draw_ocr_text", true)
+            val overwrite = jsonOps.optBoolean("overwrite", false)
             val debug = jsonOps.optBoolean("debug", false)
             val pagePadding = jsonOps.optInt("page_padding", 0).toFloat()
             val textScale = jsonOps.optDouble("text_scale", 3.0).toFloat()
@@ -479,7 +479,14 @@ class PDFUtils {
                 val outDocument =
                     androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(destFolder))
                         ?: throw Exception("could not create access folder $destFolder")
-                val outfile = outDocument.createFile("application/pdf", fileName) ?: outDocument.findFile(fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+
+
+                var outfile: androidx.documentfile.provider.DocumentFile
+                if (overwrite) {
+                    outfile = outDocument.findFile(fileName) ?: outDocument.createFile("application/pdf", fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+                } else {
+                    outfile = outDocument.createFile("application/pdf", fileName) ?: outDocument.findFile(fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+                }
                 val os = context.contentResolver.openOutputStream(outfile.uri)
                     ?: throw Exception("could not open file ${outfile.uri} for writing")
                 FileInputStream(java.io.File(generateFilePath)).use { input ->

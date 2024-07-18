@@ -1,8 +1,8 @@
-import { ApplicationSettings, File, Folder, knownFolders, path } from '@nativescript/core';
-import { Observable } from '@nativescript/core/data/observable';
+import { ApplicationSettings, EventData, File, Folder, Observable, knownFolders, path } from '@nativescript/core';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
+import { EVENT_DOCUMENT_DELETED } from '~/utils/constants';
 import NSQLDatabase from './NSQLDatabase';
 const sql = SqlQuery.createFromTemplateString;
 
@@ -275,7 +275,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     async createDocument(document: Document) {
         document.createdDate = document.modifiedDate = Date.now();
         document._synced = 0;
-        return this.create(cleanUndefined(document));
+        return this.create(cleanUndefined({ ...document, pagesOrder: document.pagesOrder ? JSON.stringify(document.pagesOrder) : undefined }));
     }
 
     async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
@@ -293,6 +293,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
 
     async update(document: OCRDocument, data?: Partial<OCRDocument>, updateModifiedDate = true) {
+        // DEV_LOG && console.log('doc update', data);
         if (!data) {
             const toUpdate: Partial<OCRDocument> = {
                 _synced: 0
@@ -364,7 +365,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         Object.assign(document, {
             id,
             ...others,
-            pagesOrder: typeof pagesOrder === 'string' ? JSON.parse(pagesOrder) : pagesOrder
+            pagesOrder: typeof pagesOrder === 'string' && pagesOrder.length ? JSON.parse(pagesOrder) : pagesOrder
         });
 
         let pages = await this.pagesRepository.search({ where: sql`document_id = ${document.id}` });
@@ -389,18 +390,51 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
 }
 
+export interface DocumentAddedEventData extends EventData {
+    doc: OCRDocument;
+}
+export interface DocumentPagesAddedEventData extends EventData {
+    object: OCRDocument;
+    pages: OCRPage[];
+}
+export interface DocumentPageDeletedEventData extends EventData {
+    object: OCRDocument;
+    pageIndex: number;
+}
+export interface DocumentPageUpdatedEventData extends EventData {
+    object: OCRDocument;
+    pageIndex: number;
+    imageUpdated: boolean;
+}
+export interface DocumentUpdatedEventData extends EventData {
+    doc: OCRDocument;
+    updateModifiedDate: boolean;
+}
+export interface DocumentDeletedEventData extends EventData {
+    documents: OCRDocument[];
+}
+
+export type DocumentEvents = DocumentAddedEventData | DocumentDeletedEventData | DocumentUpdatedEventData | DocumentPagesAddedEventData | DocumentPageDeletedEventData | DocumentPageUpdatedEventData;
+
+let ID = 0;
 export class DocumentsService extends Observable {
     static DB_NAME = 'db.sqlite';
     static DB_VERSION = 2;
     rootDataFolder: string;
     dataFolder: Folder;
+    id: number;
     // connection: Connection;
     started = false;
     db: NSQLDatabase;
     pageRepository: PageRepository;
     tagRepository: TagRepository;
     documentRepository: DocumentRepository;
-    async start() {
+
+    constructor() {
+        super();
+        this.id = ID++;
+    }
+    async start(db?) {
         if (this.started) {
             return;
         }
@@ -420,16 +454,25 @@ export class DocumentsService extends Observable {
             rootDataFolder = knownFolders.externalDocuments().path;
         }
         this.rootDataFolder = rootDataFolder;
-        DEV_LOG && console.log('DocumentsService', 'start', rootDataFolder);
+        DEV_LOG && console.log('DocumentsService', 'start', this.id, rootDataFolder, !!db);
         dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
-        const filePath = path.join(rootDataFolder, DocumentsService.DB_NAME);
-        DEV_LOG && console.log('DocumentsService', 'dbFileName', filePath, File.exists(filePath));
+        if (db) {
+            this.db = new NSQLDatabase(db, {
+                // for now it breaks
+                // threading: true,
+                transformBlobs: false
+            } as any);
+        } else {
+            const filePath = path.join(rootDataFolder, DocumentsService.DB_NAME);
+            DEV_LOG && console.log('DocumentsService', 'dbFileName', filePath, File.exists(filePath));
 
-        this.db = new NSQLDatabase(filePath, {
-            // for now it breaks
-            // threading: true,
-            transformBlobs: false
-        } as any);
+            this.db = new NSQLDatabase(filePath, {
+                // for now it breaks
+                // threading: true,
+                transformBlobs: false
+            } as any);
+        }
+
         this.pageRepository = new PageRepository(this.db);
         this.tagRepository = new TagRepository(this.db);
         this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository);
@@ -450,7 +493,7 @@ export class DocumentsService extends Observable {
         await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d)))));
         // await OCRDocument.delete(docs.map((d) => d.id));
         documents.forEach((doc) => doc.removeFromDisk());
-        this.notify({ eventName: 'documentsDeleted', documents });
+        this.notify({ eventName: EVENT_DOCUMENT_DELETED, documents } as DocumentDeletedEventData);
     }
     stop() {
         DEV_LOG && console.log('DocumentsService stop');

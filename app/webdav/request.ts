@@ -45,6 +45,7 @@ export function prepareRequestOptions(requestOptions: RequestOptions | RequestOp
     // const finalOptions = cloneShallow(requestOptions) as RequestOptionsWithState;
     const finalOptions = { ...requestOptions, ...(userOptions || {}) } as RequestOptionsWithState;
     finalOptions.headers = mergeHeaders(context.headers, finalOptions.headers || {}, userOptions.headers || {});
+    finalOptions.responseOnMainThread = false;
     // if (typeof userOptions.data !== 'undefined') {
     //     finalOptions.data = userOptions.data;
     // }
@@ -69,8 +70,9 @@ export function prepareRequestOptions(requestOptions: RequestOptions | RequestOp
 async function _request<T = any>(requestOptions: RequestOptionsWithState) {
     DEV_LOG && console.log('webdav request', JSON.stringify(requestOptions));
     try {
-        const result = await request<T>({ ...requestOptions, body: requestOptions.data as any });
-        return result;
+        const response = await request<T>({ ...requestOptions, body: requestOptions.data as any });
+        DEV_LOG && console.log('webdavRequest response', response.statusCode, requestOptions.url);
+        return response;
     } catch (error) {
         throw wrapNativeHttpException(error, requestOptions);
     }
@@ -93,7 +95,6 @@ async function webdavRequest<T>(requestOptions: RequestOptionsWithState): Promis
     }
     // Perform digest request + check
     const response = await _request(requestOptions);
-    DEV_LOG && console.log('webdavRequest response', response.statusCode, response.headers, response.content.toString());
     if (response.statusCode === 401) {
         _digest.hasDigestAuth = parseDigestAuth(response, _digest);
         if (_digest.hasDigestAuth) {

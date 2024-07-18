@@ -1,4 +1,4 @@
-import { throttle } from '@akylas/nativescript/utils/common';
+import { throttle } from '@nativescript/core/utils/common';
 import { Frame, Observable, View } from '@nativescript/core';
 import { onDestroy } from 'svelte';
 import { closeModal as sCloseModal, goBack as sGoBack, navigate as sNavigate, showModal as sShowModal } from 'svelte-native';
@@ -82,6 +82,7 @@ export function conditionalEvent(node, { condition, event, callback }) {
     };
 }
 
+// we use our own impl to prevent custom event with details prop
 export function createEventDispatcher<T>() {
     const component = get_current_component();
     return (type, event?: T) => {

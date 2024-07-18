@@ -26,6 +26,7 @@ export interface PDFExportOptions {
     folder?: string;
     filename?: string;
     compress?: boolean;
+    options?: PDFExportBaseOptions;
 }
 
 export function getPDFDefaultExportOptions() {

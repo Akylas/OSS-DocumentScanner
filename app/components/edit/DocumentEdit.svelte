@@ -17,13 +17,13 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { TRANSFORMS } from '~/models/localized_constant';
+    import { TRANSFORMS } from '~/utils/localized_constant';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { documentsService } from '~/services/documents';
+    import { DocumentDeletedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
-    import { showError } from '~/utils/error';
+    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
+    import { showError } from '~/utils/showError';
     import { share } from '~/utils/share';
     import { goBack, showModal } from '~/utils/svelte/ui';
     import {
@@ -523,12 +523,12 @@
         }
     }
 
-    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
+    function onDocumentUpdated(event: DocumentUpdatedEventData) {
         if (document === event.doc) {
             document = event.doc;
         }
     }
-    function onDocumentsDeleted(event: EventData & { documents }) {
+    function onDocumentsDeleted(event: DocumentDeletedEventData) {
         if (event.documents.indexOf(document) !== -1) {
             const frame = Frame.topmost();
             goBack({
@@ -543,18 +543,18 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.on('documentUpdated', onDocumentUpdated);
-        documentsService.on('documentsDeleted', onDocumentsDeleted);
-        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
     });
     onDestroy(() => {
         DEV_LOG && console.log('DocumentEdit onDestroy');
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.off('documentUpdated', onDocumentUpdated);
-        documentsService.off('documentsDeleted', onDocumentsDeleted);
-        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
     });
 
     function refreshCollectionView() {

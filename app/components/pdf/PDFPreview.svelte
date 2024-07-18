@@ -1,29 +1,29 @@
 <script context="module" lang="ts">
     import { Paint } from '@nativescript-community/ui-canvas';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import DrawerElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
+    import DrawerElement from '@nativescript-community/ui-drawer/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { ApplicationSettings, File, ObservableArray, Screen, Utils, View, knownFolders } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, Screen, Utils, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
+    import { printPDF } from 'plugin-nativeprocessor';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { getFileNameForDocument, l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
-    import { PDF_OPTIONS } from '~/models/localized_constant';
     import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';
-    import { showError } from '~/utils/error';
-    import { getColorMatrix, hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
+    import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
+    import { PDF_OPTIONS } from '~/utils/localized_constant';
+    import { getPageColorMatrix } from '~/utils/matrix';
+    import { showError } from '~/utils/showError';
+    import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
     import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
-    import { getPageColorMatrix } from '~/utils/matrix';
-    import { printPDF } from 'plugin-nativeprocessor';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -383,15 +383,6 @@
                         variant="outline"
                         width={tWidth}
                         on:tap={(e) => selectSilderOption('page_padding', e)} />
-                    <!-- <checkbox
-                    checked={reduce_image_size}
-                    height={tHeight}
-                    margin={tMargin}
-                    text={lc('reduce_image_size')}
-                    verticalAlignment="center"
-                    width={tWidth}
-                    on:checkedChange={(e) => updateOption('reduce_image_size', e.value)}
-                    ios:margin={14} /> -->
                     <stacklayout orientation="horizontal" width={tWidth}>
                         <checkbox
                             id="checkbox"

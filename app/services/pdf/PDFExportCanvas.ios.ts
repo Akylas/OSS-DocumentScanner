@@ -2,11 +2,12 @@ import { Canvas } from '@nativescript-community/ui-canvas/canvas';
 import { Folder, Screen, knownFolders } from '@nativescript/core';
 import PDFExportCanvasBase from './PDFExportCanvas.common';
 import { PDFExportOptions } from './PDFCanvas';
+import { PDF_EXT } from '~/utils/constants';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export({ pages, folder = knownFolders.temp().path, filename = Date.now() + '.pdf' }: PDFExportOptions) {
+    async export({ pages, folder = knownFolders.temp().path, filename = Date.now() + PDF_EXT, options = this.options }: PDFExportOptions) {
         const start = Date.now();
-        const options = this.options;
+        // const options = this.options;
         if (options.paper_size === 'full') {
             // we enforce 1 item per page
             options.items_per_page = 1;
@@ -41,8 +42,8 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         //     }
         //     UIGraphicsEndPDFContext();
 
-        //     if (!filename.endsWith('.pdf')) {
-        //         filename += '.pdf';
+        //     if (!filename.endsWith(PDF_EXT)) {
+        //         filename += PDF_EXT;
         //     }
         //     const pdfFile = Folder.fromPath(folder).getFile(filename);
         //     await pdfFile.write(pdfData);
@@ -100,8 +101,8 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         }
         UIGraphicsEndPDFContext();
 
-        if (!filename.endsWith('.pdf')) {
-            filename += '.pdf';
+        if (!filename.endsWith(PDF_EXT)) {
+            filename += PDF_EXT;
         }
         const pdfFile = Folder.fromPath(folder).getFile(filename);
         await pdfFile.write(pdfData);

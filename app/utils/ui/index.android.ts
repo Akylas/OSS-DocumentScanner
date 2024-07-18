@@ -1,10 +1,11 @@
 import { request } from '@nativescript-community/perms';
-import { AndroidActivityNewIntentEventData, Application, Page, Utils, View } from '@nativescript/core';
+import { AndroidActivityNewIntentEventData, Application, Color, Page, Utils, View } from '@nativescript/core';
 import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
-import { showError } from '../error';
+import { showError } from '../showError';
 import { throttle } from '@nativescript/core/utils';
 import { securityService } from '~/services/security';
 import { documentsService } from '~/services/documents';
+import { lc } from '@nativescript-community/l';
 
 export * from './index.common';
 
@@ -117,3 +118,38 @@ export const onAndroidNewItent = throttle(async function onAndroidNewItent(event
     DEV_LOG && console.log('onAndroidNewItent', Application.servicesStarted, securityService.validating);
     innerOnAndroidIntent(event);
 }, 500);
+
+// TODO: move to a plugin
+export async function pickColor(color: Color | string, options: { alpha?: boolean } = {}) {
+    return new Promise<Color>((resolve) => {
+        const activity = Application.android.startActivity;
+        if (!(color instanceof Color)) {
+            color = new Color(color as any);
+        }
+        const builder = new com.skydoves.colorpickerview.ColorPickerDialog.Builder(activity)
+            .setTitle(lc('pick_color'))
+            .attachAlphaSlideBar(options.alpha !== false)
+            .setPositiveButton(
+                lc('choose'),
+                new com.skydoves.colorpickerview.listeners.ColorListener({
+                    onColorSelected(color: number) {
+                        resolve(new Color(color));
+                    }
+                })
+            )
+            .setNegativeButton(
+                lc('cancel'),
+                new android.content.DialogInterface.OnClickListener({
+                    onClick(dialogInterface) {
+                        dialogInterface.dismiss();
+                        resolve(null);
+                    }
+                })
+            )
+            .setBottomSpace(12); // set a bottom space between the last slidebar and buttons.
+
+        builder.getColorPickerView().setInitialColor(color.android);
+        const popup = builder.create();
+        popup.show();
+    });
+}

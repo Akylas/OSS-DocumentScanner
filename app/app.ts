@@ -24,9 +24,10 @@ import { networkService } from './services/api';
 import { ocrService } from './services/ocr';
 import { securityService } from './services/security';
 import { syncService } from './services/sync';
-import { showError } from './utils/error';
+import { showError } from './utils/showError';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 import { SETTINGS_APP_VERSION, SETTINGS_FIRST_OPEN } from './utils/constants';
+import { setDocumentsService } from './models/OCRDocument';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
@@ -120,6 +121,7 @@ try {
         try {
             Application.servicesStarted = false;
             DEV_LOG && console.log('start');
+            setDocumentsService(documentsService);
             await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(), documentsService.start()]);
             Application.servicesStarted = true;
             DEV_LOG && console.log('servicesStarted');
@@ -180,6 +182,11 @@ try {
     themer.createShape('small', {
         cornerFamily: 'rounded' as any,
         cornerSize: 12
+    });
+
+    themer.createShape('none', {
+        cornerFamily: 'rounded' as any,
+        cornerSize: 0
     });
     if (__ANDROID__) {
         Page.on('shownModally', function (event) {

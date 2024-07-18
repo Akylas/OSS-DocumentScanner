@@ -308,7 +308,7 @@
     "use_system_camera_desc": "utilisez la caméra système au lieu de la vue de l'application (un appui long utilisera le comportement inversé). Activé, certaines fonctionnalités telles que le traitement par lots ou l'analyse automatique seront désactivées",
     "username": "nom d'utilisateur",
     "version": "version",
-    "webdav_auto_sync": "synchronisation automatique avec WebDAV lors du lancement et des modifications de documents",
+    "auto_sync": "synchronisation automatique lors du lancement et des modifications de documents",
     "webdav_config": "configuration webdav",
     "webdav_sync": "synchronisation webdav des documents",
     "webdav_sync_desc": "permet à webdav de synchroniser vos documents (backup)",

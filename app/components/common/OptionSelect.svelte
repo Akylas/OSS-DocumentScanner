@@ -104,7 +104,7 @@
     }
     let ignoreNextOnCheckBoxChange = false;
     function onCheckedChanged(item, event) {
-        DEV_LOG && console.log('onCheckedChanged', event.value, ignoreNextOnCheckBoxChange);
+        // DEV_LOG && console.log('onCheckedChanged', event.value, ignoreNextOnCheckBoxChange);
         clearCheckboxTimer();
         if (ignoreNextOnCheckBoxChange) {
             ignoreNextOnCheckBoxChange = false;

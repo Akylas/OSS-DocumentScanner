@@ -291,7 +291,7 @@
     "use_system_camera": "systeem­camera gebruiken",
     "username": "gebruikers­naam",
     "version": "versie",
-    "webdav_auto_sync": "automatisch synchroniseren met WebDAV bĳ het opstarten en wĳzigingen bĳhouden",
+    "auto_sync": "automatisch synchroniseren bĳ het opstarten en wĳzigingen bĳhouden",
     "webdav_config": "WebDAV-configuratie",
     "webdav_sync": "WebDAV-document­synchronisatie",
     "webdav_sync_desc": "schakel WebDAV in om uw documenten te synchroniseren (back-uppen)",

@@ -8,7 +8,7 @@ import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { getCurrentISO3Language, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { hideLoading, hideSnackMessage, showLoading, showSnackMessage, updateLoadingProgress } from '~/utils/ui';
 import { HTTPError, NoNetworkError } from '~/utils/error';
-import { wrapNativeException } from '@akylas/nativescript/utils';
+import { wrapNativeException } from '@nativescript/core/utils';
 
 const languages = {
     afr: 'Afrikaans',

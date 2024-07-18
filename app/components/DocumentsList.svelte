@@ -5,7 +5,6 @@
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
@@ -24,9 +23,10 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { documentsService } from '~/services/documents';
+    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
-    import { showError } from '~/utils/error';
+    import { EVENT_DOCUMENT_ADDED, EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, EVENT_STATE, EVENT_SYNC_STATE } from '~/utils/constants';
+    import { showError } from '~/utils/showError';
     import { fade, navigate } from '~/utils/svelte/ui';
     import {
         detectOCR,
@@ -88,7 +88,6 @@
     async function refresh() {
         try {
             syncEnabled = syncService.enabled;
-            DEV_LOG && console.log('syncEnabled', syncEnabled, Date.now());
             const r = await documentsService.documentRepository.search({
                 orderBy: SqlQuery.createFromTemplateString`id DESC`
                 // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
@@ -122,7 +121,7 @@
         nbDocuments = documents?.length ?? 0;
         showNoDocument = nbDocuments === 0;
     }
-    function onDocumentAdded(event: EventData & { doc }) {
+    function onDocumentAdded(event: DocumentAddedEventData) {
         DEV_LOG && console.log('onDocumentAdded', nbDocuments);
         documents?.unshift({
             doc: event.doc,
@@ -131,7 +130,7 @@
         updateNoDocument();
         collectionView?.nativeElement.scrollToIndex(0, false);
     }
-    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
+    function onDocumentUpdated(event: DocumentUpdatedEventData) {
         let index = -1;
         documents?.some((d, i) => {
             if (d.doc.id === event.doc.id) {
@@ -148,7 +147,7 @@
             }
         }
     }
-    function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
+    function onDocumentsDeleted(event: DocumentDeletedEventData) {
         for (let index = documents.length - 1; index >= 0; index--) {
             if (event.documents.indexOf(documents.getItem(index).doc) !== -1) {
                 documents.splice(index, 1);
@@ -214,13 +213,13 @@
                 onAndroidNewItent({ intent } as any);
             }
         }
-        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.on('documentPageDeleted', onDocumentPageUpdated);
-        documentsService.on('documentAdded', onDocumentAdded);
-        documentsService.on('documentUpdated', onDocumentUpdated);
-        documentsService.on('documentsDeleted', onDocumentsDeleted);
-        syncService.on('syncState', onSyncState);
-        syncService.on('state', refresh);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_ADDED, onDocumentAdded);
+        documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        syncService.on(EVENT_SYNC_STATE, onSyncState);
+        syncService.on(EVENT_STATE, refresh);
         // refresh();
     });
     onDestroy(() => {
@@ -230,13 +229,13 @@
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
         }
-        documentsService.on('documentPageDeleted', onDocumentPageUpdated);
-        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.off('documentUpdated', onDocumentUpdated);
-        documentsService.off('documentAdded', onDocumentAdded);
-        documentsService.off('documentsDeleted', onDocumentsDeleted);
-        syncService.off('syncState', onSyncState);
-        syncService.off('state', refresh);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
+        documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        syncService.off(EVENT_SYNC_STATE, onSyncState);
+        syncService.off(EVENT_STATE, refresh);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -424,26 +423,27 @@
     async function syncDocuments() {
         try {
             if (!syncEnabled) {
-                return showSyncSettings();
+                // return showSyncSettings();
+                return;
             }
-            await syncService.syncDocuments(true, true);
+            await syncService.syncDocuments({ force: true, bothWays: true });
         } catch (error) {
             showError(error);
         }
     }
-    async function showSyncSettings() {
-        try {
-            const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-            await showBottomSheet({
-                parent: this,
-                skipCollapsedState: true,
-                view: WebdavConfig,
-                ignoreTopSafeArea: true
-            });
-        } catch (error) {
-            showError(error);
-        }
-    }
+    // async function showSyncSettings() {
+    //     try {
+    //         const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
+    //         await showBottomSheet({
+    //             parent: this,
+    //             skipCollapsedState: true,
+    //             view: WebdavConfig,
+    //             ignoreTopSafeArea: true
+    //         });
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
 
     // function setLottieColor(colorStr) {
     //     if (!colorStr) {
@@ -521,13 +521,13 @@
         return condensed ? 80 : 150;
     }
     function getImageMargin(viewStyle) {
-        switch (viewStyle) {
-            case 'condensed':
-                return 0;
-
-            default:
-                return 10;
-        }
+        return 10;
+        // switch (viewStyle) {
+        //     case 'condensed':
+        //         return 10;
+        //     default:
+        //         return 10;
+        // }
     }
 
     $: textPaint.color = colorOnBackground || 'black';
@@ -621,7 +621,6 @@
                     borderRadius={12}
                     fontSize={14 * $fontScale}
                     margin={8}
-                    padding={10}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
@@ -633,13 +632,14 @@
                         horizontalAlignment="left"
                         item={item.doc.pages[0]}
                         marginBottom={getImageMargin(viewStyle)}
+                        marginLeft={10}
                         marginTop={getImageMargin(viewStyle)}
                         sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0]?.id}`}
                         stretch="aspectFill"
                         width={getItemImageHeight(viewStyle)} />
-                    <SelectedIndicator horizontalAlignment="left" margin={2} selected={item.selected} />
-                    <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
-                    <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} />
+                    <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
+                    <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
+                    <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} />
                 </canvasview>
             </Template>
         </collectionView>
@@ -695,8 +695,7 @@
                 text="mdi-autorenew"
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
-                on:tap={syncDocuments}
-                on:longPress={showSyncSettings} />
+                on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
         </CActionBar>

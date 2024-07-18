@@ -308,7 +308,7 @@
     "use_system_camera_desc": "usar a cámara do sistema no lugar do visor da app (a pulsación longa reverte o comportamento). Ao activala desactivarás algunhas funcións como escaneo por lotes ou auto-escaneado",
     "username": "identificador",
     "version": "versión",
-    "webdav_auto_sync": "sincroniza automáticamente no incio e con cambios nos documentos usando WebDAV",
+    "auto_sync": "sincroniza automáticamente no incio e con cambios nos documentos",
     "webdav_config": "configuración WebDAV",
     "webdav_sync": "Sincr webdav de documentos",
     "webdav_sync_desc": "activar a sincr webdav dos teus documentos (copia apoio)",

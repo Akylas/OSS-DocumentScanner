@@ -309,7 +309,7 @@
     "use_system_camera_desc": "usa la fotocamera di sistema invece della visualizzazione interna all'app (una pressione prolungata attiva il comportamento inverso). Se abilitate, alcune funzionalità come la scansione batch o automatica verranno disabilitate",
     "username": "nome utente",
     "version": "versione",
-    "webdav_auto_sync": "sincronizza automaticamente con WebDAV all'avvio e alla modifica dei documenti",
+    "auto_sync": "sincronizza automaticamente all'avvio e alla modifica dei documenti",
     "webdav_config": "configurazione webdav",
     "webdav_sync": "sincronizzazione dei documenti webdav",
     "webdav_sync_desc": "abilita webdav per sincronizzare i documenti (backup)",

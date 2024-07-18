@@ -101,6 +101,7 @@ export class WebDAVClient {
         // if (!_remotePath.endsWith(SEPARATOR)) {
         //     _remotePath += SEPARATOR;
         // }
+        DEV_LOG && console.log('getDirectoryContent', _remotePath);
         const requestOptions = prepareRequestOptions(
             {
                 url: _remotePath,
@@ -114,6 +115,7 @@ export class WebDAVClient {
             options
         );
         const response = await request(requestOptions);
+        DEV_LOG && console.log('getDirectoryContent done', _remotePath);
         await handleResponseCode(context, response, requestOptions);
         const responseData = await response.content.toStringAsync();
         if (!responseData) {
@@ -148,7 +150,7 @@ export class WebDAVClient {
             default:
                 throw new Error(`Invalid output format: ${format}`);
         }
-        DEV_LOG && console.log('getFileContents', filePath, format, options.destinationFilePath);
+        // DEV_LOG && console.log('getFileContents', format, body);
         return processResponsePayload(response, body, options.details);
     }
     async getFileDownloadLink(filePath: string) {

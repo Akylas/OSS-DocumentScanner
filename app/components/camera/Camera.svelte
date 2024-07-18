@@ -17,6 +17,7 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, PageData } from '~/models/OCRDocument';
+    import { documentsService } from '~/services/documents';
     import {
         AUTO_SCAN_DELAY,
         AUTO_SCAN_DISTANCETHRESHOLD,
@@ -24,16 +25,16 @@
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
         IMAGE_CONTEXT_OPTIONS,
-        IMG_COMPRESS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
-        TRANSFORMS_SPLIT
+        SETTINGS_IMAGE_EXPORT_FORMAT,
+        TRANSFORMS_SPLIT,
+        getImageExportSettings
     } from '~/utils/constants';
-    import { documentsService } from '~/services/documents';
-    import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
+    import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
@@ -76,8 +77,8 @@
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
     let editing = false;
-
-    const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+    const imageExportSettings = getImageExportSettings();
+    const compressQuality = imageExportSettings.imageQuality;
     const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
 
@@ -135,7 +136,7 @@
                 tempImagePath = image;
             } else {
                 imageSource = new ImageSource(image);
-                const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+                const compressFormat = ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
                 tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${compressQuality}`);
                 await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
                 //clear memory as soon as possible

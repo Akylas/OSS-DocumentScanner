@@ -5,12 +5,10 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { OCRPage } from '~/models/OCRDocument';
     import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/utils/constants';
-    import { concatTwoColorMatrices } from '~/utils/color_matrix';
-    import { showError } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
     import { getPageColorMatrix } from '~/utils/matrix';
+    import { showError } from '~/utils/showError';
     import { createEventDispatcher } from '~/utils/svelte/ui';
-    import { getColorMatrix } from '~/utils/ui';
 
     const dispatch = createEventDispatcher();
     export let zoomable = false;

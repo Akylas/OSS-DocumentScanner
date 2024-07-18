@@ -1,7 +1,7 @@
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
 import migrate from 'kiss-orm/dist/Databases/Common/migrate';
-import { SQLiteDatabase, openOrCreate } from '@nativescript-community/sqlite';
+import { SQLiteDatabase, openOrCreate, wrapDb } from '@nativescript-community/sqlite';
 import { NoSpaceLeftError } from '~/utils/error';
 
 function formatIdentifier(i: string): string {
@@ -11,13 +11,17 @@ function formatIdentifier(i: string): string {
 export default class NSQLDatabase implements DatabaseInterface {
     db: SQLiteDatabase;
     constructor(
-        filePath: string,
+        filePathOrDb: any,
         options?: {
             threading?: boolean;
             flags?: number;
         }
     ) {
-        this.db = openOrCreate(filePath, options);
+        if (typeof filePathOrDb === 'string') {
+            this.db = openOrCreate(filePathOrDb, options);
+        } else {
+            this.db = wrapDb(filePathOrDb, options);
+        }
     }
 
     async disconnect(): Promise<void> {

@@ -4,11 +4,11 @@
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { showError } from '~/utils/error';
     import { colors, fonts } from '~/variables';
     // import SearchCollectionView from './SearchCollectionView.svelte';
     import { Template } from 'svelte-native/components';
     import { ocrService } from '~/services/ocr';
+    import { showError } from '~/utils/showError';
     import MiniSearch from '~/utils/minisearch';
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Frame } from '@nativescript/core';
+    import { showError } from '~/utils/showError';
     import { onMount } from 'svelte';
-    import { showError } from '~/utils/error';
     import { closeModal, conditionalEvent, fade, goBack } from '~/utils/svelte/ui';
     import { windowInset } from '~/variables';
 

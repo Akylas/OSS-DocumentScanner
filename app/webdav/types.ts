@@ -118,10 +118,10 @@ export enum ErrorCode {
 export interface FileStat {
     filename: string;
     basename: string;
-    lastmod: string;
+    lastmod: string | number | Date;
     size: number;
     type: 'file' | 'directory';
-    etag: string | null;
+    etag?: string;
     mime?: string;
     props?: DAVResultResponseProps;
 }

@@ -19,7 +19,9 @@ export async function getStat(context: WebDAVClientContext, filename: string, op
         context,
         options
     );
+    DEV_LOG && console.log('getStat');
     const response = await request(requestOptions);
+    DEV_LOG && console.log('getStat got response');
     await handleResponseCode(context, response, requestOptions);
     const responseData = await response.content.toStringAsync();
     const result = await parseXML(responseData);

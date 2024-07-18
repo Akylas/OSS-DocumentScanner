@@ -4,15 +4,13 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
-    import { TRANSFORMS } from '~/models/localized_constant';
-    import { showError } from '~/utils/error';
+    import { TRANSFORMS } from '~/utils/localized_constant';
+    import { showError } from '~/utils/showError';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover } from '~/utils/ui';
     import { colors, screenHeightDips, windowInset } from '~/variables';
     import ListItem from './ListItem.svelte';

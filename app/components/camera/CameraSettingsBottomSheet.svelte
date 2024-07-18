@@ -9,12 +9,12 @@
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
-    import { TRANSFORMS } from '~/models/localized_constant';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
     import { MatricesTypes } from '~/utils/color_matrix';
+    import { TRANSFORMS } from '~/utils/localized_constant';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);

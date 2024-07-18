@@ -1,16 +1,12 @@
 <script lang="ts">
-    import { Application, OrientationChangedEventData } from '@nativescript/core';
-    import { Img } from '@nativescript-community/ui-image';
     import { Pager } from '@nativescript-community/ui-pager';
+    import { Application, OrientationChangedEventData } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
-    import { showError } from '~/utils/error';
-    import { share } from '~/utils/share';
     import { colors, windowInset } from '~/variables';
-    import { OCRPage } from '~/models/OCRDocument';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorOnBackground } = $colors);

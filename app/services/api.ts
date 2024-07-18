@@ -1,9 +1,9 @@
-import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
-import { EventData, Observable } from '@nativescript/core/data/observable';
-import { CustomError, HTTPError, NoNetworkError, TimeoutError } from '~/utils/error';
 import * as https from '@nativescript-community/https';
 import { Application, ApplicationEventData } from '@nativescript/core';
-import { wrapNativeException } from '@akylas/nativescript/utils';
+import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
+import { EventData, Observable } from '@nativescript/core/data/observable';
+import { wrapNativeException } from '@nativescript/core/utils';
+import { HTTPError, NoNetworkError, TimeoutError } from '~/utils/error';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
 export type { Headers } from '@nativescript-community/https';

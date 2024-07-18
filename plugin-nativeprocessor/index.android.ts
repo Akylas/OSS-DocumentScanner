@@ -14,7 +14,7 @@ import {
     Quads
 } from '.';
 import { CropView } from './CropView';
-import { wrapNativeException } from '@akylas/nativescript/utils';
+import { wrapNativeException } from '@nativescript/core/utils';
 import { SilentError } from '~/utils/error';
 
 function androidFunctionCallbackPromise<T>(onCallback: (calback: com.akylas.documentscanner.utils.FunctionCallback) => void, transformer = (v) => v, errorHandler = (e) => wrapNativeException(e)) {

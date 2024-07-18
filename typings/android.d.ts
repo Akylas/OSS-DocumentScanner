@@ -6,9 +6,11 @@ declare namespace com {
     }
     export namespace akylas {
         export namespace documentscanner {
-            export class WorkersContext {
-                public static getValue(key): any;
-                public static setValue(key: string, value);
+            export namespace WorkersContext {
+                export class Companion {
+                    public static getValue(key): any;
+                    public static setValue(key: string, value);
+                }
             }
             export namespace Utils {
                 export class Companion {
@@ -23,7 +25,6 @@ declare namespace com {
                     static getSystemLocale(): java.util.Locale;
                 }
             }
-            
         }
     }
 }
