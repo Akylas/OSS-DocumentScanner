@@ -55,12 +55,16 @@ jobs:
 
       - name: Set new version
         run: |
-           ${{ steps.get_version_or_prompt.outputs.result }}
+           ./node_modules/.bin/set-version  ${{ steps.get_version_or_prompt.outputs.result }
 
       - name: Build
         run: |
-          VARIANT=${{matrix.variant}}
-          VARIANT=${VARIANT/-/ } # replace all - with spaces
-          bundle exec ${VARIANT}
+           ${{ steps.get_version_or_prompt.outputs.result }}
+
+      # - name: Build
+      #   run: |
+      #     VARIANT=${{matrix.variant}}
+      #     VARIANT=${VARIANT/-/ } # replace all - with spaces
+      #     bundle exec ${VARIANT}
 
 
