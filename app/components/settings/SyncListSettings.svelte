@@ -14,6 +14,7 @@
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
     import { createWebdavConfig } from '~/services/sync/Webdav';
     import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
+    import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
     import { PermissionError } from '~/utils/error';
@@ -91,6 +92,20 @@
                         fullscreen: true,
                         props: {
                             data: item as WebdavPDFSyncServiceOptions
+                        }
+                    });
+                    if (result) {
+                        configToUpdate = createWebdavConfig(result);
+                    }
+                    break;
+                }
+                case 'webdav_image': {
+                    const page = (await import('~/components/settings/WebdavImageSyncSettings.svelte')).default;
+                    const result: WebdavImageSyncServiceOptions = await showModal({
+                        page,
+                        fullscreen: true,
+                        props: {
+                            data: item as WebdavImageSyncServiceOptions
                         }
                     });
                     if (result) {
@@ -186,7 +201,6 @@
                                         data
                                     }
                                 });
-                                DEV_LOG && console.log('adding item', result);
                                 if (result) {
                                     configToAdd = createWebdavConfig(result);
                                 }
@@ -201,7 +215,20 @@
                                         data
                                     }
                                 });
-                                DEV_LOG && console.log('adding item', result);
+                                if (result) {
+                                    configToAdd = createWebdavConfig(result);
+                                }
+                                break;
+                            }
+                            case 'webdav_image': {
+                                const page = (await import('~/components/settings/WebdavImageSyncSettings.svelte')).default;
+                                const result: WebdavImageSyncServiceOptions = await showModal({
+                                    page,
+                                    fullscreen: true,
+                                    props: {
+                                        data
+                                    }
+                                });
                                 if (result) {
                                     configToAdd = createWebdavConfig(result);
                                 }

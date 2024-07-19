@@ -7,7 +7,7 @@ import { BaseImageSyncService, BaseImageSyncServiceOptions } from './BaseImageSy
 import { WebdavSyncOptions } from './Webdav';
 import { SERVICES_SYNC_MASK } from './types';
 
-export interface LocalFolderImageSyncServiceOptions extends BaseImageSyncServiceOptions, WebdavSyncOptions {}
+export interface WebdavImageSyncServiceOptions extends BaseImageSyncServiceOptions, WebdavSyncOptions {}
 
 export class WebdavImageSyncService extends BaseImageSyncService {
     shouldSync(force?: boolean, event?: DocumentEvents) {

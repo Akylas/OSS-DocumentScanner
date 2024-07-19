@@ -5,36 +5,39 @@
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
+    import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
-    import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
-    import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
+    import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
+    import { ANDROID_CONTENT, FILENAME_DATE_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
     import { showError } from '~/utils/showError';
+    import { closeModal } from '~/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
-    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
-    import { closeModal } from '~/utils/svelte/ui';
+    import WebdavSettingsView from './WebdavSettingsView.svelte';
     // technique for only specific properties to get updated on store change
     $: ({ colorOutline, colorPrimary, colorOnSurfaceVariant } = $colors);
 
+    const imageExportSettings = getImageExportSettings();
     const pdfExportSettings = getPDFDefaultExportOptions();
-    export let data: LocalFolderPDFSyncServiceOptions = {} as any;
+    export let data: WebdavImageSyncServiceOptions = null;
+
+    let collectionView: NativeViewElementNode<CollectionView>;
     const store = writable(
         Object.assign(
             {
                 exportOptions: pdfExportSettings,
+                ...imageExportSettings,
                 autoSync: false,
                 enabled: true,
                 fileNameFormat: ApplicationSettings.getString(SETTINGS_FILE_NAME_FORMAT, FILENAME_DATE_FORMAT),
-                useDocumentName: ApplicationSettings.getBoolean(SETTINGS_FILE_NAME_USE_DOCUMENT_NAME, FILENAME_USE_DOCUMENT_NAME),
-                color: SERVICES_SYNC_COLOR['folder_pdf'] as string | Color
+                color: SERVICES_SYNC_COLOR['folder_image'] as string | Color
             },
             data
         )
@@ -43,23 +46,25 @@
     // let folderPathName = data.folderPathName;
     const variant = 'filled';
 
+    let webdavView: WebdavSettingsView;
+
     async function save() {
-        const result = get(store);
-        if (result.localFolderPath) {
+        if (webdavView?.validateSave()) {
+            const result = get(store);
             closeModal(result);
-        } else {
-            showError(lc('missing_export_folder'), { showAsSnack: true });
         }
     }
-    async function selectFolder() {
-        const result = await pickFolder({
-            multipleSelection: false,
-            permissions: { write: true, persistable: true, read: true }
-        });
-        if (result.folders.length) {
-            $store.localFolderPath = result.folders[0];
-            // folderPathName = updateDirectoryName(localFolderPath);
+    function updateDirectoryName(folderPath: string) {
+        let exportDirectoryName = folderPath;
+        if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
+            const context = Utils.android.getApplicationContext();
+            const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
+            exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
         }
+        return exportDirectoryName
+            .split(SEPARATOR)
+            .filter((s) => s.length)
+            .pop();
     }
 
     const items = new ObservableArray([
@@ -73,20 +78,7 @@
             value: $store.enabled
         },
         {
-            type: 'textfield',
-            onTap: selectFolder,
-            text: $store.localFolderPath,
-            icon: 'mdi-folder-open',
-            textFieldProperties: {
-                autocapitalizationType: 'none',
-                autocorrect: false,
-                editable: false,
-                hint: lc('folder_sync_desc'),
-                paddingRight: 100,
-                placeholder: lc('folder'),
-                returnKeyType: 'done',
-                variant
-            } as TextFieldProperties
+            type: 'webdav'
         },
         {
             type: 'switch',
@@ -94,12 +86,6 @@
             title: lc('auto_sync'),
             description: lc('local_auto_sync_desc'),
             value: $store.autoSync
-        },
-        {
-            type: 'switch',
-            id: 'useDocumentName',
-            title: lc('filename_use_document_name'),
-            value: $store.useDocumentName
         },
         {
             id: 'setting',
@@ -120,7 +106,30 @@
             type: 'prompt'
         },
         {
-            type: 'pdfoptions'
+            id: 'setting',
+            key: 'imageFormat',
+            title: lc('image_format'),
+            currentValue: () => $store.imageFormat,
+            description: lc('image_format_desc'),
+            rightValue: () => ($store.imageFormat || imageExportSettings.imageFormat).toUpperCase(),
+            valueType: 'string',
+            values: [
+                { value: null, title: lc('default_value') },
+                { value: 'jpg', title: 'JPEG' },
+                { value: 'png', title: 'PNG' }
+            ]
+        },
+        {
+            id: 'setting',
+            key: 'imageQuality',
+            min: 10,
+            max: 100,
+            step: 1,
+            title: lc('image_quality'),
+            description: lc('image_quality_desc'),
+            type: 'slider',
+            rightValue: () => $store.imageQuality,
+            currentValue: () => $store.imageQuality
         }
     ]);
 
@@ -145,7 +154,7 @@
         }
     }
     let ignoreNextOnCheckBoxChange = false;
-    async function onCheckBox(item, event, pdfOption?: string) {
+    async function onCheckBox(item, event) {
         if (ignoreNextOnCheckBoxChange || item.value === event.value) {
             return;
         }
@@ -156,11 +165,7 @@
         try {
             ignoreNextOnCheckBoxChange = true;
             DEV_LOG && console.log('updating setting for checkbox', item.id, item.key, value);
-            if (pdfOption) {
-                $store.exportOptions[pdfOption] = value;
-            } else {
-                $store[item.key || item.id] = value;
-            }
+            $store[item.key || item.id] = value;
         } catch (error) {
             showError(error);
         } finally {
@@ -298,15 +303,21 @@
             showError(error);
         }
     }
+    // store.subscribe(() => {
+    //     updateItem({ type: 'webdav' }, 'type');
+    // });
 </script>
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={() => changeColor(item)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />
                 </ListItemAutoSize>
+            </Template>
+            <Template key="webdav" let:item>
+                <WebdavSettingsView bind:this={webdavView} {store} />
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
@@ -326,15 +337,12 @@
                     <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
-            <Template key="pdfoptions" let:item>
-                <PdfSyncSettingsView {store} on:uppdate={() => updateItem({ type: 'pdfoptions' }, 'type')} />
-            </Template>
             <Template let:item>
                 <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                 </ListItemAutoSize>
             </Template>
         </collectionview>
-        <CActionBar canGoBack modalWindow={true} title={lc('pdf_sync_settings')}>
+        <CActionBar canGoBack modalWindow={true} title={lc('image_sync_settings')}>
             <mdbutton text={lc('save')} variant="text" verticalAlignment="middle" on:tap={save} />
             <!-- <mdbutton class="actionBarButton" text={lc('save')} variant="text" on:tap={save} /> -->
         </CActionBar>
