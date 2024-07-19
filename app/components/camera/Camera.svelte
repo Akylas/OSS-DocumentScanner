@@ -51,7 +51,7 @@
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
         JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
-    DEV_LOG && console.log('cameraOptions', get(cameraOptionsStore));
+    $: DEV_LOG && console.log('cameraOptions', JSON.stringify($cameraOptionsStore));
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
     cameraOptionsStore.subscribe((newValue) => {
