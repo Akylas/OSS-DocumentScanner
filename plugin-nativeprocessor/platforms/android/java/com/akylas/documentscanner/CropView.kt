@@ -243,6 +243,9 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         invalidate()
     }
     fun replaceProgressHash(oldValue: Long, newValue:Long) {
+        if (oldValue == null || newValue == null) {
+            return;
+        }
         if(autoScanProgress.containsKey(oldValue) ) {
             autoScanProgress[newValue] = autoScanProgress[oldValue]!!
             // we don't remove as the MaxSizeHashMap will handle it
