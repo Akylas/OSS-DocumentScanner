@@ -3,7 +3,6 @@
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { throttle } from '@nativescript/core/utils';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
@@ -47,6 +46,7 @@
         showLoading,
         showPDFPopoverMenu,
         showPopoverMenu,
+        showSnack,
         transformPages
     } from '~/utils/ui';
     import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';

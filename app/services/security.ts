@@ -1,9 +1,9 @@
 import { Application, ApplicationEventData, Observable } from '@nativescript/core';
 import { BiometricAuth, ERROR_CODES, VerifyBiometricOptions } from '@nativescript/biometrics';
 import { booleanProperty, stringProperty } from './BackendService';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { l, lc } from '~/helpers/locale';
 import { showModal } from 'svelte-native';
+import { showSnack } from '~/utils/ui';
 
 export interface PasscodeWindowOptions {
     creation?: boolean;

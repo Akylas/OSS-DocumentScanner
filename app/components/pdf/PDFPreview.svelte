@@ -3,7 +3,6 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import DrawerElement from '@nativescript-community/ui-drawer/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { ApplicationSettings, ObservableArray, Screen, Utils, View, knownFolders } from '@nativescript/core';
@@ -21,7 +20,7 @@
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { getPageColorMatrix } from '~/utils/matrix';
     import { showError } from '~/utils/showError';
-    import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover } from '~/utils/ui';
+    import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
     // let bitmapPaint: Paint;
@@ -96,7 +95,7 @@
                     filename = filePath.split(SEPARATOR).pop();
                 }
                 const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
-                if (onSnack.reason === 'action') {
+                if (onSnack?.reason === 'action') {
                     openFile(filePath);
                 }
             }

@@ -3,7 +3,6 @@
     import { EventData, Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
@@ -38,7 +37,8 @@
         showMatrixLevelPopover,
         showPDFPopoverMenu,
         showPopoverMenu,
-        showSlidersPopover
+        showSlidersPopover,
+        showSnack
     } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';

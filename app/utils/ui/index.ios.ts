@@ -1,5 +1,5 @@
 import { Color, IOSHelper, View } from '@nativescript/core';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from './index.common';
 
 export * from './index.common';
 

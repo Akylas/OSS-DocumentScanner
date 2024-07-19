@@ -4,7 +4,7 @@ import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { AlertDialog, MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
@@ -90,6 +90,12 @@ import { navigate } from '../svelte/ui';
 import { doInBatch, saveImage } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
+
+export async function showSnack(options: SnackBarOptions) {
+    try {
+        return mdShowSnack(options);
+    } catch (error) {}
+}
 
 // export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
 //     element: NativeViewElementNode<T>;
@@ -799,7 +805,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                                 filename = filePath.split(SEPARATOR).pop();
                             }
                             const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
-                            if (onSnack.reason === 'action') {
+                            if (onSnack?.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
                                 openFile(filePath);
                             }

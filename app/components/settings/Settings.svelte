@@ -5,7 +5,6 @@
     import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, ObservableArray, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
@@ -52,7 +51,7 @@
     import { share } from '~/utils/share';
     import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
+    import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, hasCamera, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';

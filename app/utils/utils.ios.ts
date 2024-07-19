@@ -1,5 +1,4 @@
-import { File, ImageSource, View, path } from '@nativescript/core';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { File, ImageSource, path } from '@nativescript/core';
 
 export * from './utils.common';
 

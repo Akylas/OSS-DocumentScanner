@@ -3,12 +3,11 @@ import { wrapNativeException } from '@akylas/nativescript/utils';
 import { l, lc } from '@nativescript-community/l';
 import { Label } from '@nativescript-community/ui-label';
 import { MDCAlertControlerOptions, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { get } from 'svelte/store';
 import { colors } from '~/variables';
 import { NoNetworkError, TimeoutError } from './error';
 import { Sentry, isSentryEnabled } from './sentry';
-import { createView } from './ui';
+import { createView, showSnack } from './ui';
 
 export async function showError(
     err: Error | string,
