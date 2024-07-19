@@ -829,7 +829,7 @@
                         forceSAF: true
                     });
                     const filePath = result.files[0];
-                    DEV_LOG && console.log('import_settings from file picker', filePath, File.exists(filePath));
+                    DEV_LOG && console.log('import_settings from file picker', filePath, filePath && File.exists(filePath));
                     if (filePath && File.exists(filePath)) {
                         showLoading();
                         const text = await File.fromPath(filePath).readText();
