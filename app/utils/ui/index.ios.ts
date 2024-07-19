@@ -24,6 +24,7 @@ export async function pickColor(color: Color | string, { alpha, anchor }: { alph
                 color = new Color(color as any);
             }
             this._doneResolve = resolve;
+            //@ts-ignore
             const colorSelectionController = new MSColorSelectionViewController(null);
             colorSelectionController.color = color.ios;
 
@@ -38,6 +39,7 @@ export async function pickColor(color: Color | string, { alpha, anchor }: { alph
             controller.popoverPresentationController.sourceRect = CGRectOffset(bounds, Math.min(deltaX, width / 2), Math.min(deltaY, height / 2));
 
             function _onDismiss() {
+                //@ts-ignore
                 const color = controller.popoverPresentationController.delegate.color;
                 controller.popoverPresentationController.delegate = null;
                 resolve(color);
@@ -57,6 +59,7 @@ export async function pickColor(color: Color | string, { alpha, anchor }: { alph
                         }
                     },
                     {
+                        //@ts-ignore
                         protocols: [MSColorSelectionViewControllerDelegate]
                     }
                 )
