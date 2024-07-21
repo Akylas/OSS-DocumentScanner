@@ -89,7 +89,7 @@
         "util": "0.12.5"
     },
     "devDependencies": {
-        "@akylas/nativescript-android-runtime": "/home/mguillon/dev/nativescript/android-runtime/dist/akylas-nativescript-android-runtime-8.8.0-alpha.11.tgz",
+        "@akylas/nativescript-android-runtime": "8.6.3",
         "@akylas/nativescript-ios-runtime": "8.7.0-1",
         "@akylas/nativescript-webpack": "5.0.21",
         "@babel/core": "^7.24.7",
