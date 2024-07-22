@@ -7,11 +7,7 @@ const INTENT_EXTRA = 'com.tns.activity';
 
 declare module '@nativescript/core/ui/frame' {
     interface Frame {
-        _saveFragmentsState();
         _getFragmentManager();
-    }
-    interface AndroidFrame {
-        frameId: number;
     }
 }
 export let moduleLoaded: boolean;
