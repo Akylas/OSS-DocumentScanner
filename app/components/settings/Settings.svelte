@@ -940,7 +940,8 @@
                     break;
                 case 'feedback': {
                     if (SENTRY_ENABLED) {
-                        const view = createView(StackLayout, {
+                        const view = createView(ScrollView);
+                        const stackLayout = createView(StackLayout, {
                             padding: 10
                         });
                         const commentsTF = createView(TextView, {
@@ -962,9 +963,10 @@
                             variant: 'outline',
                             returnKeyType: 'next'
                         });
-                        view.addChild(nameTF);
-                        view.addChild(emailTF);
-                        view.addChild(commentsTF);
+                        stackLayout.addChild(nameTF);
+                        stackLayout.addChild(emailTF);
+                        stackLayout.addChild(commentsTF);
+                        view.content = stackLayout;
                         const result = await confirm({
                             title: lc('send_feedback'),
                             okButtonText: l('send'),

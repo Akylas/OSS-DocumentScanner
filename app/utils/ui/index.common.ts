@@ -1691,7 +1691,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
     }
 }
 
-export function createView<T extends View>(claz: new () => T, props: Partial<Pick<T, keyof T>>, events?) {
+export function createView<T extends View>(claz: new () => T, props: Partial<Pick<T, keyof T>> = {}, events?) {
     const view: T = new claz();
     Object.assign(view, props);
     if (events) {
