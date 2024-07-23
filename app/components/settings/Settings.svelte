@@ -7,7 +7,7 @@
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
-    import { ApplicationSettings, File, ObservableArray, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { ApplicationSettings, File, ObservableArray, ScrollView, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -1067,18 +1067,28 @@
                             }
                         });
                     } else {
+                        let selectedIndex = -1;
+                        const currentValue = item.currentValue?.() ?? item.currentValue;
+                        const options = item.values.map((k, index) => {
+                            const selected = currentValue === k.value;
+                            if (selected) {
+                                selectedIndex = index;
+                            }
+                            return {
+                                name: k.title || k.name,
+                                data: k.value,
+                                boxType: 'circle',
+                                type: 'checkbox',
+                                value: selected
+                            };
+                        });
                         const result = await showAlertOptionSelect(
                             {
                                 height: Math.min(item.values.length * 56, 400),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
                                 ...item,
-                                options: item.values.map((k) => ({
-                                    name: k.title || k.name,
-                                    data: k.value,
-                                    boxType: 'circle',
-                                    type: 'checkbox',
-                                    value: (item.currentValue?.() ?? item.currentValue) === k.value
-                                }))
+                                selectedIndex,
+                                options
                             },
                             {
                                 title: item.title,
