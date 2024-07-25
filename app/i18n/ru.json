@@ -9,10 +9,14 @@
             "name": "OSS Document Scanner"
         }
     },
-    "a3": "a3",
-    "a4": "a4",
-    "about": "о приложении",
-    "allow_app_screenshot": "разрешить скриншот приложения",
+    "a3": "A3",
+    "a4": "A4",
+    "about": "О приложении",
+    "add_from_camera": "Добавить с камеры",
+    "add_qrcode_camera": "Добавить штрихкод с камеры",
+    "add_qrcode_file": "Добавить штрихкод с изображения",
+    "add_qrcode_manual": "Добавить штрихкод вручную",
+    "allow_app_screenshot": "Разрешить скриншоты приложения",
     "aspect_fill": "масштабирование",
     "aspect_fit": "заполнение",
     "aspect_ratio": "соотношение сторон",

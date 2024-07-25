@@ -2,7 +2,6 @@
     "uses":[
         "com.akylas.documentscanner:CropView",
         "com.akylas.documentscanner:CustomImageAnalysisCallback",
-        "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallback",
         "com.akylas.documentscanner:CustomImageAnalysisCallback.OnQRCode",
         "com.akylas.documentscanner:CustomImageAnalysisCallback.FunctionCallbackProgress",
         "com.akylas.documentscanner:CustomImageAnalysisCallback.Companion",
@@ -13,9 +12,11 @@
         "com.akylas.documentscanner:ImagePicker.OnResult",
         "com.akylas.documentscanner.utils:ImageUtil",
         "com.akylas.documentscanner.utils:ImageUtil.Companion",
+        "com.akylas.documentscanner.utils:FileUtils",
+        "com.akylas.documentscanner.utils:FileUtils.Companion",
         "com.akylas.documentscanner.utils:PDFUtils",
         "com.akylas.documentscanner.utils:PDFUtils.PDFPrintDocumentAdapter",
-        "com.akylas.documentscanner.utils:PDFUtils.FunctionCallback",
+        "com.akylas.documentscanner.utils:FunctionCallback",
         "com.akylas.documentscanner.utils:PDFUtils.Companion"
     ]
 }

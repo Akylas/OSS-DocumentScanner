@@ -1,12 +1,15 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "android.hardware.camera2:CameraManager",
         "android.view:View.OnApplyWindowInsetsListener",
         "android.view:WindowInsets",
         "android.graphics:Insets",
         "android.graphics:Bitmap.CompressFormat",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
+        "com.akylas.documentscanner:WorkersContext",
+        "com.akylas.documentscanner:WorkersContext.Companion",
         "com.akylas.documentscanner:Utils",
         "com.akylas.documentscanner:Utils.Companion",
         "androidx.appcompat.app:AppCompatDelegate",
@@ -17,7 +20,12 @@
         "android.text.format:DateFormat",
         "android.graphics:BitmapShader",
         "androidx.documentfile.provider:DocumentFile",
-        "android.widget:Toast"
+        "android.widget:Toast",
+        "com.skydoves.colorpickerview.listeners:ColorListener",
+        "com.skydoves.colorpickerview:ActionMode",
+        "com.skydoves.colorpickerview:ColorPickerDialog",
+        "com.skydoves.colorpickerview:ColorPickerDialog.Builder",
+        "com.skydoves.colorpickerview:ColorPickerView"
     ],
     "blacklist": [
         "android.widget:DatePicker",
@@ -37,7 +45,6 @@
         "androidx.appcompat.widget:SearchView.OnQueryTextListener",
         "androidx.appcompat.widget:Toolbar.OnMenuItemClickListener",
         "androidx.appcompat.widget:AppCompatTextView",
-
         "org.ow2.asmdex*:*",
         "org.nativescript.widgets:TabItemSpec*",
         "org.nativescript.widgets:TabsBar*",

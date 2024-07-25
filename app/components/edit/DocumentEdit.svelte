@@ -3,29 +3,28 @@
     import { EventData, Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, ObservableArray, Page, PageTransition, Screen, SharedTransition, TextField, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
-    import { OCRData, QRCodeData, Quad } from 'plugin-nativeprocessor';
+    import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { goBack, showModal } from '~/utils/svelte/ui';
     import { Writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
-    import CropView from '~/components/common/CropView.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { TRANSFORMS } from '~/utils/localized_constant';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
-    import { TRANSFORMS } from '~/models/localized_constant';
-    import { documentsService } from '~/services/documents';
+    import { DocumentDeletedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
-    import { showError } from '~/utils/error';
+    import { shortcutService } from '~/services/shortcuts';
+    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
+    import { showError } from '~/utils/showError';
     import { share } from '~/utils/share';
+    import { goBack, showModal } from '~/utils/svelte/ui';
     import {
         ColorMatricesTypes,
         copyTextToClipboard,
@@ -38,11 +37,10 @@
         showMatrixLevelPopover,
         showPDFPopoverMenu,
         showPopoverMenu,
-        showSlidersPopover
+        showSlidersPopover,
+        showSnack
     } from '~/utils/ui';
-    import { getImageSize } from '~/utils/utils';
     import { colors, windowInset } from '~/variables';
-    import { shortcutService } from '~/services/shortcuts';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
 
     // technique for only specific properties to get updated on store change
@@ -339,14 +337,6 @@
             showError(err);
         }
     }
-    onDestroy(() => {
-        DEV_LOG && console.log('DocumentEdit', 'onDestroy');
-        // document.clearObservableArray(items);
-        // if (editingImage) {
-        //     recycleImages(editingImage);
-        //     editingImage = null;
-        // }
-    });
 
     async function deleteCurrentPage() {
         try {
@@ -369,16 +359,12 @@
                 });
             }
             if (result) {
-                try {
-                    if (deleteDocument) {
-                        await documentsService.deleteDocuments([document]);
-                    } else {
-                        await document.deletePage(currentIndex);
-                        const newIndex = currentIndex < items.length - 1 ? currentIndex : currentIndex - 1;
-                        pager.nativeView.scrollToIndexAnimated(newIndex, true);
-                    }
-                } catch (err) {
-                    showError(err, err.stack);
+                if (deleteDocument) {
+                    await documentsService.deleteDocuments([document]);
+                } else {
+                    await document.deletePage(currentIndex);
+                    const newIndex = currentIndex < items.length - 1 ? currentIndex : currentIndex - 1;
+                    pager.nativeView.scrollToIndexAnimated(newIndex, true);
                 }
             }
         } catch (err) {
@@ -490,7 +476,7 @@
         updatingTransform = true;
         try {
             const page = items.getItem(currentIndex);
-            const currentTransforms = page.transforms?.split(TRANSFORMS_SPLIT) || [];
+            const currentTransforms = (page.transforms?.split(TRANSFORMS_SPLIT) || []).filter((s) => s?.length);
             if (value) {
                 if (currentTransforms.indexOf(type) === -1) {
                     await showLoading(l('computing'));
@@ -537,14 +523,17 @@
         }
     }
 
-    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
+    function onDocumentUpdated(event: DocumentUpdatedEventData) {
         if (document === event.doc) {
             document = event.doc;
         }
     }
-    function onDocumentsDeleted(event: EventData & { documents }) {
+    function onDocumentsDeleted(event: DocumentDeletedEventData) {
         if (event.documents.indexOf(document) !== -1) {
+            const frame = Frame.topmost();
             goBack({
+                frame,
+                backStackEntry: frame.backStack[0],
                 // null is important to say no transition! (override enter transition)
                 transition: null
             });
@@ -554,18 +543,18 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.on('documentUpdated', onDocumentUpdated);
-        documentsService.on('documentsDeleted', onDocumentsDeleted);
-        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
     });
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentEdit on Destroy');
+        DEV_LOG && console.log('DocumentEdit onDestroy');
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.off('documentUpdated', onDocumentUpdated);
-        documentsService.off('documentsDeleted', onDocumentsDeleted);
-        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
     });
 
     function refreshCollectionView() {
@@ -578,7 +567,7 @@
         try {
             const item = items.getItem(currentIndex);
             if (!item.sourceImageWidth) {
-                const size = getImageSize(item.sourceImagePath);
+                const size = await getImageSize(item.sourceImagePath);
                 item.sourceImageWidth = size.width;
                 item.sourceImageHeight = size.height;
                 item.sourceImageRotation = 0;

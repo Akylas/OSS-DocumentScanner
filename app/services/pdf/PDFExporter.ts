@@ -1,62 +1,48 @@
-import { CustomError, PermissionError, SilentError, wrapNativeException } from '~/utils/error';
+import { Screen, Utils, knownFolders } from '@nativescript/core';
+import { SDK_VERSION, wrapNativeException } from '@nativescript/core/utils';
+import { generatePDFASync } from 'plugin-nativeprocessor';
+import { getFileNameForDocument, lc } from '~/helpers/locale';
+import { CustomError, PermissionError, SilentError } from '~/utils/error';
+import { getPageColorMatrix } from '~/utils/matrix';
 import type { WorkerEventType } from '~/workers/BaseWorker';
-import PDFCanvas, { PDFExportOptions } from './PDFCanvas';
-import { ApplicationSettings, Screen, Utils, knownFolders } from '@nativescript/core';
-import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
-import { lc } from '~/helpers/locale';
-import { SDK_VERSION } from '@nativescript/core/utils';
+import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
-import type { OCRDocument } from '~/models/OCRDocument';
-import dayjs from 'dayjs';
-import { getFileNameForDocument } from '~/utils/utils.common';
+import { PDF_EXT } from '~/utils/constants';
 export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
-        filename = getFileNameForDocument(document) + '.pdf';
+        filename = getFileNameForDocument(document) + PDF_EXT;
     }
     if (__ANDROID__) {
-        // if (SDK_VERSION <= 29) {
-        //     const result = await request('storage');
-        //     if (!isPermResultAuthorized(result)) {
-        //         throw new PermissionError(lc('storage_permission_needed'));
+        if (SDK_VERSION <= 29) {
+            const result = await request('storage');
+            DEV_LOG && console.log('exportPDFAsync', 'perm result', result);
+            if (!isPermResultAuthorized(result)) {
+                throw new PermissionError(lc('storage_permission_needed'));
+            }
+        }
+        // return new Promise((resolve, reject) => {
+        // pages.forEach((page) => {
+        //     if (page.colorType && !page.colorMatrix) {
+        //         page.colorMatrix = getColorMatrix(page.colorType);
         //     }
-        // }
-        const start = Date.now();
-        return new Promise((resolve, reject) => {
-            const pdfCanvas = new PDFCanvas();
-            // pages.forEach((page) => {
-            //     if (page.colorType && !page.colorMatrix) {
-            //         page.colorMatrix = getColorMatrix(page.colorType);
-            //     }
-            // });
-            const options = JSON.stringify({
-                ...pdfCanvas.options,
-                // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
-                text_scale: Screen.mainScreen.scale * 1.4,
-                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
-            });
-            DEV_LOG && console.log('exportPDFAsync', folder, filename, compress, options);
-            com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(
-                Utils.android.getApplicationContext(),
-                folder,
-                filename,
-                options,
-                new com.akylas.documentscanner.utils.PDFUtils.FunctionCallback({
-                    onResult(e, result) {
-                        if (e) {
-                            if (/could not create file/.test(e.toString())) {
-                                reject(new SilentError(lc('please_choose_export_folder_again')));
-                            } else {
-                                reject(wrapNativeException(e));
-                            }
-                        } else {
-                            resolve(result);
-                        }
-                        DEV_LOG && console.log('exportPDFAsync', 'done', JSON.stringify(pdfCanvas.options), options.length, Date.now() - start, 'ms');
-                    }
-                })
-            );
+        // });
+        const options = JSON.stringify({
+            ...getPDFDefaultExportOptions(),
+            // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
+            text_scale: Screen.mainScreen.scale * 1.4,
+            pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
         });
+        const context = Utils.android.getApplicationContext();
+        DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);
+        return generatePDFASync(folder, filename, options, (e) => {
+            if (/could not create file/.test(e.toString())) {
+                return new SilentError(lc('please_choose_export_folder_again'));
+            } else {
+                return wrapNativeException(e);
+            }
+        });
+        // });
     } else {
         const worker = new Worker('~/workers/PDFExportWorker');
         const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
@@ -68,7 +54,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                 messageData;
                 id?: number;
                 nativeDataKeys: string[];
-                nativeDatas?: { [k: string]: any };
+                // nativeDatas?: { [k: string]: any };
             };
         }) {
             const data = event.data;
@@ -87,16 +73,16 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
                     // executor.reject(createErrorFromMessage(message));
                     // } else {
                     const id = data.id;
-                    if (data.nativeDataKeys?.length > 0) {
-                        const nativeDatas: { [k: string]: any } = {};
-                        if (__ANDROID__) {
-                            data.nativeDataKeys.forEach((k) => {
-                                nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
-                                com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
-                            });
-                            data.nativeDatas = nativeDatas;
-                        }
-                    }
+                    // if (data.nativeDataKeys?.length > 0) {
+                    //     const nativeDatas: { [k: string]: any } = {};
+                    //     if (__ANDROID__) {
+                    //         data.nativeDataKeys.forEach((k) => {
+                    //             nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
+                    //             com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
+                    //         });
+                    //         data.nativeDatas = nativeDatas;
+                    //     }
+                    // }
                     if (data.error) {
                         executor.reject(new CustomError(JSON.parse(data.error)));
                     } else {

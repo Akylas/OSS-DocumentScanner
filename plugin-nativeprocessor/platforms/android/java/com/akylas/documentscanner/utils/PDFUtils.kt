@@ -89,9 +89,6 @@ class PDFUtils {
             }
         }
     }
-    interface FunctionCallback {
-        fun onResult(e: Exception?, result: Any?)
-    }
     class PDFLoadImageOptions {
 
         var imageSizeThreshold: Int = 0
@@ -128,7 +125,7 @@ class PDFUtils {
                     // Get image
                     val imgRef = iter.next()
                     val stream = xObjects.getAsStream(imgRef)
-                    if (PdfName.Image == stream.getAsName(PdfName.Subtype)) {
+                    if (stream != null && PdfName.Image == stream.getAsName(PdfName.Subtype)) {
                         val image = PdfImageXObject(stream)
                         val imageBytes = image.imageBytes
                         val imgBytes = ByteArrayOutputStream()
@@ -229,12 +226,8 @@ class PDFUtils {
                     calculateInSampleSize(imageWidth.toInt(), imageHeight.toInt(), reqWidth.toInt(), reqHeight.toInt())
             }
             finalBitmapOptions.inMutable = colorMatrix != null
-            val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions)
-            if (bmp == null) {
-                return null
-            }
+            val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions) ?: return null
             if (hasColorMatrix) {
-                Log.d("JS", "hasColorMatrix " + colorMatrix)
                 val jsonArray = JSONArray(colorMatrix)
                 val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
                 val canvas = android.graphics.Canvas(bmp)
@@ -306,6 +299,7 @@ class PDFUtils {
             val color = jsonOps.optString("color", "color")
             val blackAndWhite = color == "black_white"
             val drawOcrText = jsonOps.optBoolean("draw_ocr_text", true)
+            val overwrite = jsonOps.optBoolean("overwrite", false)
             val debug = jsonOps.optBoolean("debug", false)
             val pagePadding = jsonOps.optInt("page_padding", 0).toFloat()
             val textScale = jsonOps.optDouble("text_scale", 3.0).toFloat()
@@ -319,9 +313,7 @@ class PDFUtils {
             val pages = jsonOps.getJSONArray("pages")
             val pagesCount = pages.length()
             val isLandscape = orientation == "landscape"
-            if(paperSize == "full") {
-                itemsPerPage = 1
-            }
+
 //            when (paperSize) {
 //                "full" -> {
 //                    pageSize = PageSize(page.optInt("width", 0).toFloat(), page.optInt("height", 0).toFloat())
@@ -338,6 +330,7 @@ class PDFUtils {
             val pdfDoc = PdfDocument(writer)
             var document: Document? = null
             if (paperSize == "full") {
+                itemsPerPage = 1
                 for (i in 0..<pagesCount) {
                     val page = pages.getJSONObject(i)
                     val imageRotation = page.optInt("rotation", 0)
@@ -349,7 +342,7 @@ class PDFUtils {
                     var imageRatio = image.imageHeight / imageHeight
 
                     val pageSize = if (imageRotation % 180 !== 0) PageSize(image.imageHeight, image.imageWidth) else PageSize(image.imageWidth, image.imageHeight)
-                    if (i == 0) {
+                    if (document == null) {
                         document = Document(pdfDoc, pageSize)
                         val font =  PdfFontFactory.createRegisteredFont("helvetica")
                         document.setFont(font)
@@ -486,7 +479,14 @@ class PDFUtils {
                 val outDocument =
                     androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(destFolder))
                         ?: throw Exception("could not create access folder $destFolder")
-                val outfile = outDocument.createFile("application/pdf", fileName) ?: outDocument.findFile(fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+
+
+                var outfile: androidx.documentfile.provider.DocumentFile
+                if (overwrite) {
+                    outfile = outDocument.findFile(fileName) ?: outDocument.createFile("application/pdf", fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+                } else {
+                    outfile = outDocument.createFile("application/pdf", fileName) ?: outDocument.findFile(fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+                }
                 val os = context.contentResolver.openOutputStream(outfile.uri)
                     ?: throw Exception("could not open file ${outfile.uri} for writing")
                 FileInputStream(java.io.File(generateFilePath)).use { input ->
@@ -522,7 +522,7 @@ class PDFUtils {
                 val result = JSONArray()
                 try {
                     var uri = Uri.parse(src)
-                    var pdfFileName = ImageUtil.getFileName(context, uri)
+                    var pdfFileName = ImageUtil.getFileNameSync(context, uri)
                     var compressFormat = "jpg"
                     var compressQuality = 100
                     var scale = 2.0

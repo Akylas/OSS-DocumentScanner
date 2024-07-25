@@ -1,0 +1,10 @@
+Features:
+- new Sync service allow sync of appdata/PDFs/images to WebDAV/Local folder.
+
+Bug fixes:
+- some OCR languages were "empty" thus letting the user think that language was not available
+- phone camera capability is now optional
+- support devices without camera
+- monochrome icon
+- correctly report
+- Translations update

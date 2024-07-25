@@ -1,15 +1,16 @@
 <script context="module" lang="ts">
-    import { debounce } from '@nativescript/core/utils';
     import { BitmapShader, Canvas, CanvasView, Matrix, Paint, Path, Style, TileMode } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, ImageSource, Screen, TouchGestureEventData, Utils } from '@nativescript/core';
+    import { debounce } from '@nativescript/core/utils';
     import { QRCodeData, QuadPoint, Quads } from 'plugin-nativeprocessor';
+    import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { colors } from '~/variables';
+    import { MAGNIFIER_SENSITIVITY } from '~/utils/constants';
     import { loadImage, recycleImages } from '~/utils/images';
-    import { IMAGE_DECODE_HEIGHT, MAGNIFIER_SENSITIVITY } from '~/utils/constants';
-    import { createEventDispatcher, onDestroy } from 'svelte';
+    import { showError } from '~/utils/showError';
+    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { colors } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
-    import { showError } from '~/utils/error';
     const padding = 20;
     const ZOOOM_GLASS_SIZE = 50;
     const ZOOM_IMAGE_MAX_SIZE = Math.max(Screen.mainScreen.widthDIPs, Screen.mainScreen.heightDIPs);

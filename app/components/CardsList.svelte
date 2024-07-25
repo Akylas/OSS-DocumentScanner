@@ -1,7 +1,6 @@
 <script lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
-    import { throttle } from '@nativescript/core/utils';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { LottieView } from '@nativescript-community/ui-lottie';
@@ -9,8 +8,8 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
-    import { AndroidActivityBackPressedEventData, AndroidActivityNewIntentEventData } from '@nativescript/core/application/application-interfaces';
-    import { filesize } from 'filesize';
+    import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
+    import { throttle } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -21,17 +20,26 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO } from '~/utils/constants';
-    import { documentsService } from '~/services/documents';
+    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
-    import { showError } from '~/utils/error';
+    import {
+        CARD_RATIO,
+        EVENT_DOCUMENT_ADDED,
+        EVENT_DOCUMENT_DELETED,
+        EVENT_DOCUMENT_PAGE_DELETED,
+        EVENT_DOCUMENT_PAGE_UPDATED,
+        EVENT_DOCUMENT_UPDATED,
+        EVENT_STATE,
+        EVENT_SYNC_STATE
+    } from '~/utils/constants';
+    import { showError } from '~/utils/showError';
     import { fade, navigate } from '~/utils/svelte/ui';
     import {
         detectOCR,
         goToDocumentView,
         importAndScanImage,
-        importAndScanImageOrPdfFromUris,
         importImageFromCamera,
+        onAndroidNewItent,
         onBackButton,
         showImagePopoverMenu,
         showPDFPopoverMenu,
@@ -39,9 +47,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
-    import { securityService } from '~/services/security';
-    import { qrcodeService } from '~/services/qrcode';
+    import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -68,7 +74,6 @@
     async function refreshSyncState() {
         try {
             syncEnabled = syncService.enabled;
-            DEV_LOG && console.log('syncEnabled', syncEnabled);
             const r = await documentsService.documentRepository.search({
                 orderBy: CARD_APP ? SqlQuery.createFromTemplateString`id ASC` : SqlQuery.createFromTemplateString`id DESC`
                 // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
@@ -97,7 +102,7 @@
         showNoDocument = nbDocuments === 0;
         // console.log('updateNoDocument', showNoDocument);
     }
-    function onDocumentAdded(event: EventData & { doc }) {
+    function onDocumentAdded(event: DocumentAddedEventData) {
         documents[CARD_APP ? 'push' : 'unshift']({
             doc: event.doc,
             selected: false
@@ -106,7 +111,7 @@
         collectionView?.nativeElement.scrollToIndex(documents.length - 1, true, SnapPosition.END);
         DEV_LOG && console.log('onDocumentAdded', nbDocuments);
     }
-    function onDocumentUpdated(event: EventData & { doc }) {
+    function onDocumentUpdated(event: DocumentUpdatedEventData) {
         let index = -1;
         documents.some((d, i) => {
             if (d.doc.id === event.doc.id) {
@@ -123,7 +128,7 @@
             }
         }
     }
-    function onDocumentsDeleted(event: EventData & { documents: OCRDocument[] }) {
+    function onDocumentsDeleted(event: DocumentDeletedEventData) {
         for (let index = documents.length - 1; index >= 0; index--) {
             const item = documents.getItem(index);
             if (event.documents.indexOf(item.doc) !== -1) {
@@ -212,13 +217,13 @@
                 onAndroidNewItent({ intent } as any);
             }
         }
-        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.on('documentPageDeleted', onDocumentPageUpdated);
-        documentsService.on('documentAdded', onDocumentAdded);
-        documentsService.on('documentUpdated', onDocumentUpdated);
-        documentsService.on('documentsDeleted', onDocumentsDeleted);
-        syncService.on('syncState', onSyncState);
-        syncService.on('state', refreshSyncState);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_ADDED, onDocumentAdded);
+        documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        syncService.on(EVENT_SYNC_STATE, onSyncState);
+        syncService.on(EVENT_STATE, refreshSyncState);
         // refresh();
     });
     onDestroy(() => {
@@ -227,13 +232,13 @@
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
         }
-        documentsService.on('documentPageDeleted', onDocumentPageUpdated);
-        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.off('documentUpdated', onDocumentUpdated);
-        documentsService.off('documentAdded', onDocumentAdded);
-        documentsService.off('documentsDeleted', onDocumentsDeleted);
-        syncService.off('syncState', onSyncState);
-        syncService.off('state', refreshSyncState);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
+        documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        syncService.off(EVENT_SYNC_STATE, onSyncState);
+        syncService.off(EVENT_STATE, refreshSyncState);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -466,68 +471,7 @@
                 unselectAll();
             }
         });
-    async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
-        if (__ANDROID__) {
-            DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
-            if (Application.servicesStarted !== true) {
-                return Application.once('servicesStarted', () => innerOnAndroidIntent(event));
-            }
-            if (securityService.validating) {
-                return securityService.once('validated', () => innerOnAndroidIntent(event));
-            }
-            try {
-                const intent = event.intent as android.content.Intent;
-                const action = intent.getAction();
-                const uris = [];
-                switch (action) {
-                    case 'android.intent.action.SEND':
-                        const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
-                        if (imageUri) {
-                            uris.push(imageUri.toString());
-                        }
-                        break;
-                    case 'android.intent.action.SEND_MULTIPLE':
-                        const imageUris = intent.getParcelableArrayListExtra('android.intent.extra.STREAM') as java.util.ArrayList<android.net.Uri>;
-                        if (imageUris) {
-                            for (let index = 0; index < imageUris.size(); index++) {
-                                uris.push(imageUris.get(index).toString());
-                            }
-                        }
-                        break;
-                    case 'com.akylas.documentscanner.OPEN_CAMERA':
-                        setTimeout(() => {
-                            onStartCam();
-                        }, 0);
-                        break;
-                    case 'android.intent.action.MAIN':
-                        const extras = intent.getExtras();
-                        const bundleAction = extras?.getString('action');
-                        switch (bundleAction) {
-                            case 'view':
-                                const id = extras?.getString('id');
-                                if (id) {
-                                    const document = await documentsService.documentRepository.get(id);
-                                    if (document) {
-                                        goToDocumentView(document);
-                                    }
-                                }
-                                break;
-                        }
-                        break;
-                }
-                DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
-                if (uris.length) {
-                    await importAndScanImageOrPdfFromUris(uris);
-                }
-            } catch (error) {
-                showError(error);
-            }
-        }
-    }
-    const onAndroidNewItent = throttle(async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
-        DEV_LOG && console.log('onAndroidNewItent', Application.servicesStarted, securityService.validating);
-        innerOnAndroidIntent(event);
-    }, 500);
+
     function getSelectedDocuments() {
         const selected = [];
         documents.forEach((d, index) => {
@@ -625,26 +569,27 @@
     async function syncDocuments() {
         try {
             if (!syncEnabled) {
-                return showSyncSettings();
+                return;
+                // return showSyncSettings();
             }
-            await syncService.syncDocuments(true, true);
+            await syncService.syncDocuments({ force: true, bothWays: true });
         } catch (error) {
             showError(error);
         }
     }
-    async function showSyncSettings() {
-        try {
-            const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-            await showBottomSheet({
-                parent: this,
-                skipCollapsedState: true,
-                view: WebdavConfig,
-                ignoreTopSafeArea: true
-            });
-        } catch (error) {
-            showError(error);
-        }
-    }
+    // async function showSyncSettings() {
+    //     try {
+    //         const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
+    //         await showBottomSheet({
+    //             parent: this,
+    //             skipCollapsedState: true,
+    //             view: WebdavConfig,
+    //             ignoreTopSafeArea: true
+    //         });
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
 
     // function setLottieColor(colorStr) {
     //     if (!colorStr) {
@@ -742,11 +687,11 @@
                         unselectAll();
                         break;
                     case 'ocr':
-                        detectOCR({ documents: getSelectedDocuments() });
+                        await detectOCR({ documents: getSelectedDocuments() });
                         unselectAll();
                         break;
                     case 'transform':
-                        transformPages({ documents: getSelectedDocuments() });
+                        await transformPages({ documents: getSelectedDocuments() });
                         unselectAll();
                         break;
                     case 'delete':
@@ -827,28 +772,35 @@
         try {
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const rowHeight = 58;
-            const options = [
-                {
-                    id: 'camera',
-                    name: lc('add_from_camera'),
-                    icon: 'mdi-camera'
-                },
-                {
-                    id: 'import',
-                    name: lc('import_from_file'),
-                    icon: 'mdi-file-document-plus-outline'
-                }
-            ].concat(
-                __IOS__
+            const options = (
+                $hasCamera
                     ? [
                           {
-                              id: 'import_image',
-                              name: lc('import_from_image'),
-                              icon: 'mdi-image-plus-outline'
+                              id: 'camera',
+                              name: lc('add_from_camera'),
+                              icon: 'mdi-camera'
                           }
                       ]
                     : []
-            );
+            )
+                .concat([
+                    {
+                        id: 'import',
+                        name: lc('import_from_file'),
+                        icon: 'mdi-file-document-plus-outline'
+                    }
+                ])
+                .concat(
+                    __IOS__
+                        ? [
+                              {
+                                  id: 'import_image',
+                                  name: lc('import_from_image'),
+                                  icon: 'mdi-image-plus-outline'
+                              }
+                          ]
+                        : []
+                );
             // .concat([
             //     {
             //         id: 'add_manual',
@@ -1098,8 +1050,7 @@
                 text="mdi-autorenew"
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
-                on:tap={syncDocuments}
-                on:longPress={showSyncSettings} />
+                on:tap={syncDocuments} />
 
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />

@@ -59,6 +59,9 @@
         canvas?.nativeView?.redraw();
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        if (!text) {
+            return;
+        }
         iconPaint.fontFamily = fontFamily;
         iconPaint.textSize = fontSize || (small ? 16 : 24);
         iconPaint.color = isEnabled ? (isSelected ? selectedColor : actualColor) : 'lightgray';

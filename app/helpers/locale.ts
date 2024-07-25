@@ -5,9 +5,11 @@ import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
-import { showError } from '~/utils/error';
+import { showError } from '~/utils/showError';
 import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+import { OCRDocument } from '~/models/OCRDocument';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
 
@@ -175,13 +177,13 @@ prefs.on('key:clock_24', () => {
 });
 
 let currentLocale = null;
-export function getLocaleDisplayName(locale?) {
+export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
     if (__IOS__) {
         if (!currentLocale) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
         const localeStr = currentLocale.localizedStringForLanguageCode(locale || lang);
-        return localeStr ? capitalize(localeStr) : locale || lang;
+        return localeStr ? capitalize(localeStr) : canReturnEmpty ? undefined : locale || lang;
     } else {
         if (!currentLocale) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
@@ -264,3 +266,5 @@ export const slu = derived([$lang], () => lu);
 export const scformatDate = derived($lang, () => formatDate);
 export const scformatTime = derived([$lang, clock_24Store], () => formatTime);
 export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);
+
+export { cleanFilename, getFormatedDateForFilename, getFileNameForDocument } from '~/utils/utils';

@@ -5,7 +5,7 @@
     import { OCRData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { copyTextToClipboard } from '~/utils/ui';
 
     export let ocrData: OCRData;

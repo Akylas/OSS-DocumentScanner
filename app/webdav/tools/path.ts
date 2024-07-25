@@ -1,3 +1,5 @@
+import { SEPARATOR } from '~/utils/constants';
+
 const SEP_PATH_POSIX = '__PATH_SEPARATOR_POSIX__';
 const SEP_PATH_WINDOWS = '__PATH_SEPARATOR_WINDOWS__';
 
@@ -45,7 +47,7 @@ export function encodePath(filePath: string): string {
     try {
         const replaced = filePath.replace(/\//g, SEP_PATH_POSIX).replace(/\\\\/g, SEP_PATH_WINDOWS);
         const formatted = encodeURIComponent(replaced);
-        return formatted.split(SEP_PATH_WINDOWS).join('\\\\').split(SEP_PATH_POSIX).join('/');
+        return formatted.split(SEP_PATH_WINDOWS).join('\\\\').split(SEP_PATH_POSIX).join(SEPARATOR);
     } catch (err) {
         throw err;
     }
@@ -53,18 +55,18 @@ export function encodePath(filePath: string): string {
 
 export function getAllDirectories(directory: string): string[] {
     DEV_LOG && console.log('getAllDirectories', directory);
-    if (!directory || directory === '/') return [];
+    if (!directory || directory === SEPARATOR) return [];
     let currentPath = directory;
     const output: string[] = [];
     do {
         output.push(currentPath);
         currentPath = dirname(currentPath);
-    } while (currentPath && currentPath !== '/');
+    } while (currentPath && currentPath !== SEPARATOR);
     return output;
 }
 
 export function makePathAbsolute(pathStr: string): string {
-    return pathStr.startsWith('/') ? pathStr : '/' + pathStr;
+    return pathStr.startsWith(SEPARATOR) ? pathStr : SEPARATOR + pathStr;
 }
 
 export function normalisePath(normalisedPath: string): string {

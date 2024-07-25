@@ -18,6 +18,7 @@ import org.json.JSONObject
 import java.io.FileDescriptor
 import java.io.FileNotFoundException
 import java.io.IOException
+import kotlin.concurrent.thread
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
@@ -133,7 +134,7 @@ class ImageUtil {
     companion object {
 
         @SuppressLint("Range")
-        fun getFileName(context: Context, uri: Uri): String? {
+        fun getFileNameSync(context: Context, uri: Uri): String? {
             var result: String? = null
             if (uri.scheme == "content") {
                 val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
@@ -151,8 +152,17 @@ class ImageUtil {
             }
             return result
         }
-        fun getFileName(context: Context, src: String): String? {
-            return getFileName(context, Uri.parse(src))
+        fun getFileNameSync(context: Context, src: String): String? {
+            return getFileNameSync(context, Uri.parse(src))
+        }
+        fun getFileName(context: Context, src: String, callback: FunctionCallback) {
+            thread(start = true) {
+                try {
+                    callback.onResult(null, getFileNameSync(context, Uri.parse(src)))
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
         }
         fun getTargetFormat(format: String?): Bitmap.CompressFormat {
             return when (format) {
@@ -308,7 +318,7 @@ class ImageUtil {
             }
             return rotationAngle
         }
-        fun getImageSize(context: Context, src: String): IntArray {
+        fun getImageSizeSync(context: Context, src: String): IntArray {
             val bitmapOptions = BitmapFactory.Options()
             bitmapOptions.inJustDecodeBounds = true
             var pfd: ParcelFileDescriptor? = null
@@ -333,6 +343,17 @@ class ImageUtil {
                 rotationAngle = calculateAngleFromFile(src)
             }
             return intArrayOf(bitmapOptions.outWidth, bitmapOptions.outHeight, rotationAngle)
+        }
+
+        fun getImageSize(context: Context, src: String, callback: FunctionCallback) {
+            thread(start = true) {
+                try {
+                    var result = getImageSizeSync(context,src)
+                    callback.onResult(null, result)
+                } catch (e: Exception) {
+                    callback.onResult(e, null)
+                }
+            }
         }
 
         fun readBitmapFromFile(context: Context, src: String, options: LoadImageOptions?, sourceSize:Pair<Int, Int>?): Bitmap? {

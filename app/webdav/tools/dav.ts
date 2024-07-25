@@ -5,6 +5,7 @@ import { encodePath, normalisePath } from './path';
 import { DAVResult, DAVResultPropstatResponse, DAVResultRaw, DAVResultResponse, DAVResultResponseProps, DiskQuotaAvailable, FileStat, SearchResult } from '../types';
 import { basename } from './path';
 import { HTTPError } from '~/utils/error';
+import { SEPARATOR } from '~/utils/constants';
 
 enum PropertyType {
     Array = 'array',
@@ -179,7 +180,7 @@ export function parseSearch(result: DAVResult, searchArbiter: string, isDetailed
         if (result.propstat === undefined) {
             return;
         }
-        const filename = result.href.split('/').map(decodeURIComponent).join('/');
+        const filename = result.href.split(SEPARATOR).map(decodeURIComponent).join(SEPARATOR);
         response.results.push(prepareFileFromProps(result.propstat.prop, filename, isDetailed));
     });
 

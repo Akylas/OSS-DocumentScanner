@@ -1,12 +1,11 @@
 <script context="module" lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
-    import { throttle } from '@nativescript/core/utils';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
+    import { throttle } from '@nativescript/core/utils';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -19,12 +18,12 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { documentsService } from '~/services/documents';
-    import { showError } from '~/utils/error';
+    import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
+    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGES_ADDED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED } from '~/utils/constants';
+    import { showError } from '~/utils/showError';
     import { goBack, navigate } from '~/utils/svelte/ui';
     import {
         detectOCR,
-        getColorMatrix,
         hideLoading,
         importAndScanImage,
         importImageFromCamera,
@@ -33,12 +32,9 @@
         showLoading,
         showPDFPopoverMenu,
         showPopoverMenu,
-        showSnackMessage,
-        transformPages,
-        updateSnackMessage
+        transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
-    import { getPageColorMatrix } from '~/utils/matrix';
+    import { colors, fontScale, hasCamera, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     const rowMargin = 8;
     const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
@@ -389,14 +385,21 @@
             items.setItem(i, item);
         }
     }
-    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
-        DEV_LOG && console.log('onDocumentUpdated', document);
+    function onDocumentUpdated(event: DocumentUpdatedEventData) {
+        // DEV_LOG && console.log('onDocumentUpdated', document);
         if (document.id === event.doc.id) {
             document = event.doc;
         }
     }
-    function onDocumentsDeleted(event: EventData & { documents }) {
-        if (event.documents.indexOf(document) !== -1) {
+    function onDocumentsDeleted(event: DocumentDeletedEventData) {
+        DEV_LOG &&
+            console.log(
+                'DocumentView onDocumentsDeleted',
+                event.documents.map((d) => d.id),
+                document.id
+            );
+        if (event.documents.findIndex((d) => d.id === document.id) !== -1) {
+            DEV_LOG && console.log('DocumentView onDocumentsDeleted closing', document.id);
             goBack({
                 // null is important to say no transition! (override enter transition)
                 transition: null
@@ -421,11 +424,11 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.on('documentUpdated', onDocumentUpdated);
-        documentsService.on('documentsDeleted', onDocumentsDeleted);
-        documentsService.on('documentPageDeleted', onDocumentPageDeleted);
-        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.on('documentPagesAdded', onPagesAdded);
+        documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.on(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageDeleted);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
     onDestroy(() => {
         DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
@@ -434,11 +437,11 @@
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.off('documentUpdated', onDocumentUpdated);
-        documentsService.off('documentsDeleted', onDocumentsDeleted);
-        documentsService.off('documentPageDeleted', onDocumentPageDeleted);
-        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.off('documentPagesAdded', onPagesAdded);
+        documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageDeleted);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
     // onThemeChanged(refreshCollectionView);
 
@@ -609,8 +612,10 @@
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}
-            <mdbutton class="small-fab" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
-            <mdbutton class="fab" margin="0 16 0 16" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+            <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
+            {#if $hasCamera}
+                <mdbutton class="fab" margin="0 16 0 16" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+            {/if}
         </stacklayout>
 
         <CActionBar

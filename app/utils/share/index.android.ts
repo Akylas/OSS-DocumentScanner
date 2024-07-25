@@ -36,7 +36,7 @@ export async function share(content: Content, options: Options = {}) {
         const newFile = new java.io.File(filePath);
         let shareableFileUri;
         if (sdkVersionInt >= 21) {
-            shareableFileUri = androidx.core.content.FileProvider.getUriForFile(currentActivity, Application.android.nativeApp.getPackageName() + '.provider', newFile);
+            shareableFileUri = androidx.core.content.FileProvider.getUriForFile(currentActivity, __APP_ID__ + '.provider', newFile);
         } else {
             shareableFileUri = android.net.Uri.fromFile(newFile);
         }
@@ -47,7 +47,7 @@ export async function share(content: Content, options: Options = {}) {
         const newFile = new java.io.File(file);
         let shareableFileUri;
         if (sdkVersionInt >= 21) {
-            shareableFileUri = androidx.core.content.FileProvider.getUriForFile(currentActivity, Application.android.nativeApp.getPackageName() + '.provider', newFile);
+            shareableFileUri = androidx.core.content.FileProvider.getUriForFile(currentActivity, __APP_ID__ + '.provider', newFile);
         } else {
             shareableFileUri = android.net.Uri.fromFile(newFile);
         }

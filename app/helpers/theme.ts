@@ -2,7 +2,7 @@ import Theme from '@nativescript-community/css-theme';
 import { Application, Device, EventData, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
 import { prefs } from '~/services/preferences';
-import { showError } from '~/utils/error';
+import { showError } from '~/utils/showError';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 import { updateThemeColors } from '~/variables';
 import { lc } from '~/helpers/locale';

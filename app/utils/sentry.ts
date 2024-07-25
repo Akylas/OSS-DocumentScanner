@@ -1,8 +1,7 @@
-import { Application, NavigatedData, Page, Trace, TraceErrorHandler, View } from '@nativescript/core';
-import * as SentryType from '@nativescript-community/sentry';
-import { install } from '~/utils/logging';
-import * as Tracing from '@nativescript-community/sentry/tracing';
 import { GestureRootView } from '@nativescript-community/gesturehandler';
+import * as SentryType from '@nativescript-community/sentry';
+import { Application, NavigatedData, Page, Trace, TraceErrorHandler } from '@nativescript/core';
+import { install } from '~/utils/logging';
 
 export let Sentry: typeof SentryType;
 export let isSentryEnabled = false;

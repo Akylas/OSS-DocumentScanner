@@ -1,3 +1,4 @@
+import { SEPARATOR } from '~/utils/constants';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode, processResponsePayload } from '../response';
 import { parseXML } from '../tools/dav';
@@ -6,7 +7,7 @@ import { DiskQuota, GetQuotaOptions, ResponseDataDetailed, WebDAVClientContext }
 import { path } from '@nativescript/core';
 
 export async function getQuota(context: WebDAVClientContext, options: GetQuotaOptions = {}): Promise<DiskQuota | null | ResponseDataDetailed<DiskQuota | null>> {
-    const pathStr = options.path || '/';
+    const pathStr = options.path || SEPARATOR;
     const requestOptions = prepareRequestOptions(
         {
             url: path.join(context.remoteURL, pathStr),

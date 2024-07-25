@@ -9,16 +9,15 @@
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
-    import { TRANSFORMS } from '~/models/localized_constant';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
     import { MatricesTypes } from '~/utils/color_matrix';
+    import { TRANSFORMS } from '~/utils/localized_constant';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
-    const isAndroid = __ANDROID__;
 
     const textFieldWidth = (screenWidthDips - 20 - 22 - 16) / 2;
 
@@ -29,8 +28,7 @@
     export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
     export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
 
-    // DEV_LOG && console.log('resolutions', resolutions);
-    // DEV_LOG && console.log('currentResolutions', currentResolution);
+    DEV_LOG && console.log('CameraSettingsBottomSheet', JSON.stringify(currentResolution), JSON.stringify(resolutions));
 
     // $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
 
@@ -124,6 +122,7 @@
         {
             id: 'stretch',
             title: lc('camera_preview_stretch'),
+            default: 'aspectFit',
             options: {
                 aspectFit: { name: lc('aspect_fit') },
                 aspectFill: { name: lc('aspect_fill') }
@@ -132,6 +131,7 @@
         {
             id: 'viewsize',
             title: lc('camera_view_size'),
+            default: 'limited',
             options: {
                 full: { name: lc('full') },
                 limited: { name: lc('limited') }
@@ -143,6 +143,7 @@
                   {
                       id: 'aspectRatio',
                       title: lc('aspect_ratio'),
+                      default: '4:3',
                       options: {
                           '4:3': { name: '4:3' },
                           '16:9': { name: '16:9' }

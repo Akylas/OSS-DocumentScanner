@@ -1,8 +1,10 @@
+import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
+import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { AlertDialog, MDCAlertControlerOptions, PromptOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { AlertDialog, MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
@@ -19,73 +21,93 @@ import {
     SharedTransition,
     Utils,
     View,
-    ViewBase,
     knownFolders,
     path
 } from '@nativescript/core';
-import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl, wrapNativeException } from '@nativescript/core/utils';
-import dayjs from 'dayjs';
-import { CropResult, Quads, cropDocumentFromFile, detectQRCodeFromFile, getJSONDocumentCornersFromFile, importPdfToTempImages, printPDF, processFromFile } from 'plugin-nativeprocessor';
-import { showModal } from 'svelte-native';
-import { NativeViewElementNode, createElement } from 'svelte-native/dom';
-import { get } from 'svelte/store';
+import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
+import dayjs from 'dayjs';
+import {
+    CropResult,
+    Quads,
+    cropDocumentFromFile,
+    detectQRCodeFromFile,
+    getFileName,
+    getImageSize,
+    getJSONDocumentCornersFromFile,
+    importPdfToTempImages,
+    printPDF,
+    processFromFile
+} from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
+import { showModal } from 'svelte-native';
+import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
-import { l, lc } from '~/helpers/locale';
+import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, l, lc } from '~/helpers/locale';
 import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import {
-    ALWAYS_PROMPT_CROP_EDIT,
-    AREA_SCALE_MIN_FACTOR,
-    COLOR_PALETTE_RESIZE_THRESHOLD,
-    CROP_ENABLED,
-    DEFAULT_EXPORT_DIRECTORY,
-    DEFAULT__BATCH_CHUNK_SIZE,
-    DOCUMENT_NOT_DETECTED_MARGIN,
-    IMG_COMPRESS,
-    IMG_FORMAT,
-    PDFImportImages,
-    PDF_IMPORT_IMAGES,
-    PREVIEW_RESIZE_THRESHOLD,
-    QRCODE_RESIZE_THRESHOLD,
-    SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
-    SETTINGS_CROP_ENABLED,
-    SETTINGS_IMPORT_PDF_IMAGES,
-    TRANSFORMS_SPLIT,
-    USE_SYSTEM_CAMERA
-} from '~/utils/constants';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
-import { PermissionError, SilentError, showError } from '~/utils/error';
+import {
+    ALWAYS_PROMPT_CROP_EDIT,
+    ANDROID_CONTENT,
+    AREA_SCALE_MIN_FACTOR,
+    COLOR_PALETTE_RESIZE_THRESHOLD,
+    CROP_ENABLED,
+    DEFAULT_EXPORT_DIRECTORY,
+    DOCUMENT_NOT_DETECTED_MARGIN,
+    IMG_COMPRESS,
+    IMG_FORMAT,
+    PDFImportImages,
+    PDF_EXT,
+    PDF_IMPORT_IMAGES,
+    PREVIEW_RESIZE_THRESHOLD,
+    QRCODE_RESIZE_THRESHOLD,
+    SEPARATOR,
+    SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
+    SETTINGS_CROP_ENABLED,
+    SETTINGS_IMAGE_EXPORT_FORMAT,
+    SETTINGS_IMAGE_EXPORT_QUALITY,
+    SETTINGS_IMPORT_PDF_IMAGES,
+    TRANSFORMS_SPLIT,
+    USE_SYSTEM_CAMERA,
+    getImageExportSettings
+} from '~/utils/constants';
+import { PermissionError, SilentError } from '~/utils/error';
+import { showError } from '../showError';
 import { recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
+import { goBack } from '~/utils/svelte/ui';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
-import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getImageSize } from '../utils';
-import { Label } from '@nativescript-community/ui-label';
-import { ConfirmOptions } from '@akylas/nativescript/ui/dialogs/dialogs-common';
-import { goBack } from '~/utils/svelte/ui';
+import { doInBatch, saveImage } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
-export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
-    element: NativeViewElementNode<T>;
-    viewInstance: U;
+export async function showSnack(options: SnackBarOptions) {
+    try {
+        return mdShowSnack(options);
+    } catch (error) {}
 }
 
-export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
-    const dummy = createElement('fragment', window.document as any);
-    const viewInstance = new viewSpec({ target: dummy, props });
-    const element = dummy.firstElement() as NativeViewElementNode<View>;
-    return { element, viewInstance };
-}
+// export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
+//     element: NativeViewElementNode<T>;
+//     viewInstance: U;
+// }
+
+// export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
+//     const dummy = createElement('fragment', window.document as any);
+//     const viewInstance = new viewSpec({ target: dummy, props });
+//     const element = dummy.firstElement() as NativeViewElementNode<View>;
+//     return { element, viewInstance };
+// }
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -201,28 +223,6 @@ export async function hideLoading() {
     }
 }
 
-function chunk<T>(array: T[], size) {
-    return Array.from<T, T[]>({ length: Math.ceil(array.length / size) }, (value, index) => array.slice(index * size, index * size + size));
-}
-
-export async function doInBatch<T, U>(array: T[], handler: (T, index: number) => Promise<U>, chunkSize: number = DEFAULT__BATCH_CHUNK_SIZE) {
-    const chunks = chunk(array, chunkSize);
-    const result: U[] = [];
-    // we use allSettled to wait for all even if one failed
-    // that way we are sure we are finished on error and we can handle things correctly
-    const promises = chunks.map((s, i) => () => Promise.allSettled(s.map((value, j) => handler(value, i * chunkSize + j))));
-    for (let index = 0; index < promises.length; index++) {
-        const subResult = await promises[index]();
-        const firstError = subResult.find((s) => s.status === 'rejected')?.['reason'];
-        if (firstError) {
-            throw firstError;
-        }
-        const values: U[] = subResult.map((s) => s['value']);
-        result.push(...values);
-    }
-    return result;
-}
-
 export async function importAndScanImageOrPdfFromUris(uris: string[], document?: OCRDocument, canGoToView = true) {
     let pagesToAdd: PageData[] = [];
     let items: ImportImageData[] = [];
@@ -233,15 +233,24 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
-        const [pdf, images] = uris.reduce(
-            ([p, f], e) => {
+
+        const [pdf, images] = await uris.reduce(
+            async (acc, e) => {
                 let testStr = e.toLowerCase();
-                if (__ANDROID__ && e.startsWith('content://')) {
-                    testStr = com.akylas.documentscanner.utils.ImageUtil.Companion.getFileName(Utils.android.getApplicationContext(), e);
+                if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
+                    testStr = await getFileName(e);
                 }
-                return testStr.endsWith('.pdf') ? [[...p, e], f] : [p, [...f, e]];
+                acc.then((obj) => {
+                    if (testStr.endsWith(PDF_EXT)) {
+                        obj[0].push(e);
+                    } else {
+                        obj[1].push(e);
+                    }
+                });
+                return acc;
+                // return testStr.endsWith(PDF_EXT) ? [[...p, e], f] : [p, [...f, e]];
             },
-            [[], []]
+            Promise.resolve([[], []] as [string[], string[]])
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
 
@@ -280,8 +289,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
             }
             DEV_LOG && console.log('showPromptOptionSelect', result);
         }
-        const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-        const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+        const imageExportSettings = getImageExportSettings();
 
         // now we process PDF files
         // We do it in batch of 5 to prevent memory issues
@@ -294,8 +302,8 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                         DEV_LOG && console.log('importFromPdf', pdfPath, Date.now() - start, 'ms');
                         const pdfImages = await importPdfToTempImages(pdfPath, {
                             importPDFImages: pdfImportsImages === PDFImportImages.always,
-                            compressFormat,
-                            compressQuality
+                            compressFormat: imageExportSettings.imageFormat,
+                            compressQuality: imageExportSettings.imageQuality
                         });
                         DEV_LOG && console.log('importFromPdf done ', pdfPath, pdfImages, Date.now() - start, 'ms');
                         resolve(pdfImages);
@@ -313,7 +321,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                 new Promise<ImportImageData>(async (resolve, reject) => {
                     try {
                         const start = Date.now();
-                        const imageSize = getImageSize(sourceImagePath);
+                        const imageSize = await getImageSize(sourceImagePath);
                         DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize), Date.now() - start, 'ms');
 
                         const imageRotation = imageSize.rotation;
@@ -408,8 +416,8 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                                 // rotation: item.imageRotation,
                                                 fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
                                                 saveInFolder: knownFolders.temp().path,
-                                                compressFormat,
-                                                compressQuality
+                                                compressFormat: imageExportSettings.imageFormat,
+                                                compressQuality: imageExportSettings.imageQuality
                                             }))
                                         );
                                         // we generate
@@ -537,7 +545,7 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
                     forceSAF: true
                 })
             )?.files // not sure why we need to add file:// to pdf files on android < 12 but we get an error otherwise
-                .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith('content://') && s.endsWith('.pdf') ? 'file://' + s : s));
+                .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith(ANDROID_CONTENT) && s.endsWith(PDF_EXT) ? 'file://' + s : s));
         }
 
         // }
@@ -740,6 +748,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         });
                         if (result.folders.length) {
                             exportDirectory = result.folders[0];
+                            DEV_LOG && console.log('set_export_directory', exportDirectory);
                             ApplicationSettings.setString('pdf_export_directory', exportDirectory);
                             updateDirectoryName();
                             const item = options.getItem(0);
@@ -780,7 +789,7 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         const result = await prompt({
                             okButtonText: lc('ok'),
                             cancelButtonText: lc('cancel'),
-                            defaultText: getFileNameForDocument(document) + '.pdf',
+                            defaultText: getFileNameForDocument(document) + PDF_EXT,
                             hintText: lc('pdf_filename')
                         });
                         if (result?.result && result?.text?.length) {
@@ -789,8 +798,14 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                             hideLoading();
                             DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
-                            const onSnack = await showSnack({ message: lc('pdf_saved', File.fromPath(filePath).name), actionText: lc('open') });
-                            if (onSnack.reason === 'action') {
+                            let filename;
+                            if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split(SEPARATOR).pop();
+                            } else {
+                                filename = filePath.split(SEPARATOR).pop();
+                            }
+                            const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
+                            if (onSnack?.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
                                 openFile(filePath);
                             }
@@ -824,15 +839,14 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
     const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
     const imagePaths = sortedPages.map((page) => page.imagePath);
 
-    const exportFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-    const exportQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+    const imageExportSettings = getImageExportSettings();
     const canSetName = !toGallery && imagePaths.length === 1;
     let outputImageNames = [];
     if (canSetName) {
         const result = await prompt({
             okButtonText: lc('ok'),
             cancelButtonText: lc('cancel'),
-            defaultText: getFileNameForDocument() + '.' + exportFormat,
+            defaultText: getFileNameForDocument() + '.' + imageExportSettings.imageFormat,
             hintText: lc('image_filename'),
             view: createView(Label, {
                 padding: '10 20 0 20',
@@ -861,7 +875,7 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
             }
         }
     }
-    DEV_LOG && console.log('exporting images', exportFormat, exportQuality, outputImageNames);
+    DEV_LOG && console.log('exporting images', imageExportSettings.imageFormat, imageExportSettings.imageQuality, exportDirectory, outputImageNames);
     showLoading(l('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
@@ -873,49 +887,65 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
                 try {
                     const fileName = outputImageNames[index];
                     let destinationName = fileName;
-                    if (!destinationName.endsWith(exportFormat)) {
-                        destinationName += '.' + exportFormat;
+                    if (!destinationName.endsWith(imageExportSettings.imageFormat)) {
+                        destinationName += '.' + imageExportSettings.imageFormat;
                     }
                     // const imageSource = await ImageSource.fromFile(imagePath);
                     imageSource = await getTransformedImage(page);
-                    if (__ANDROID__ && toGallery) {
-                        com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(Utils.android.getApplicationContext(), imageSource.android, exportFormat, exportQuality, fileName);
-                    } else if (__ANDROID__ && exportDirectory.startsWith('content://')) {
-                        const context = Utils.android.getApplicationContext();
-                        const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
-                        let outfile = outdocument.createFile('image/jpeg', destinationName);
-                        if (outfile == null) {
-                            outfile = outdocument.findFile(destinationName);
-                        }
-                        if (!outfile) {
-                            throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
-                        }
-                        if (!finalMessagePart) {
-                            if (canSetName) {
-                                finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
-                            } else {
-                                finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
-                            }
-                        }
-                        const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
-                        (imageSource.android as android.graphics.Bitmap).compress(
-                            exportFormat === 'png' ? android.graphics.Bitmap.CompressFormat.PNG : android.graphics.Bitmap.CompressFormat.JPEG,
-                            exportQuality,
-                            stream
-                        );
-                        // destinationPaths.push(outfile.getUri().toString());
-                    } else {
-                        const destinationPath = path.join(exportDirectory, destinationName);
-                        await imageSource.saveToFileAsync(destinationPath, exportFormat, exportQuality);
-                        // destinationPaths.push(destinationPath);
-                        if (!finalMessagePart) {
-                            if (canSetName) {
-                                finalMessagePart = destinationPath;
-                            } else {
-                                finalMessagePart = exportDirectory;
-                            }
-                        }
-                    }
+
+                    finalMessagePart = await saveImage(imageSource, {
+                        exportDirectory,
+                        fileName,
+                        toGallery,
+                        ...imageExportSettings,
+                        reportName: canSetName
+                    });
+                    // if (__ANDROID__ && toGallery) {
+                    //     await request('storage');
+                    //     com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(
+                    //         Utils.android.getApplicationContext(),
+                    //         imageSource.android,
+                    //         imageExportSettings.imageFormat,
+                    //         imageExportSettings.imageQuality,
+                    //         fileName
+                    //     );
+                    // } else if (__ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT)) {
+                    //     const context = Utils.android.getApplicationContext();
+                    //     const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
+                    //     let outfile = outdocument.createFile('image/jpeg', destinationName);
+                    //     if (outfile == null) {
+                    //         outfile = outdocument.findFile(destinationName);
+                    //     }
+                    //     if (!outfile) {
+                    //         throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
+                    //     }
+                    //     if (!finalMessagePart) {
+                    //         if (canSetName) {
+                    //             finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
+                    //         } else {
+                    //             finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
+                    //         }
+                    //         DEV_LOG && console.log('finalMessagePart', finalMessagePart);
+                    //     }
+                    //     const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
+                    //     (imageSource.android as android.graphics.Bitmap).compress(
+                    //         imageExportSettings.imageFormat === 'png' ? android.graphics.Bitmap.CompressFormat.PNG : android.graphics.Bitmap.CompressFormat.JPEG,
+                    //         imageExportSettings.imageQuality,
+                    //         stream
+                    //     );
+                    //     // destinationPaths.push(outfile.getUri().toString());
+                    // } else {
+                    //     const destinationPath = path.join(exportDirectory, destinationName);
+                    //     await imageSource.saveToFileAsync(destinationPath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
+                    //     // destinationPaths.push(destinationPath);
+                    //     if (!finalMessagePart) {
+                    //         if (canSetName) {
+                    //             finalMessagePart = destinationPath;
+                    //         } else {
+                    //             finalMessagePart = exportDirectory;
+                    //         }
+                    //     }
+                    // }
                     resolve();
                 } catch (error) {
                     if (/error creating file/.test(error.toString())) {
@@ -935,11 +965,25 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
     }
 }
 
+export function getDirectoryName(folderPath: string) {
+    let exportDirectoryName = folderPath;
+    if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
+        const context = Utils.android.getApplicationContext();
+        const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
+        exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
+    }
+    return exportDirectoryName
+        .split(SEPARATOR)
+        .filter((s) => s.length)
+        .pop();
+}
+
 export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = VerticalPosition.BELOW) {
     let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
+    DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName, exportDirectory.split(/(\/|%3A)/));
     function updateDirectoryName() {
-        exportDirectoryName = exportDirectory.split(/(\/|%3A)/).pop();
+        exportDirectoryName = getDirectoryName(exportDirectory);
     }
     updateDirectoryName();
 
@@ -1382,8 +1426,8 @@ export async function addCurrentImageToDocument({
     const strTransforms = transforms?.join(TRANSFORMS_SPLIT) ?? '';
     DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
     const images: CropResult[] = [];
-    const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-    const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+    const compressFormat = ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+    const compressQuality = ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS);
     if (quads) {
         images.push(
             ...(await cropDocumentFromFile(sourceImagePath, quads, {
@@ -1482,7 +1526,7 @@ export async function processCameraImage({
     const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
     const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
     let quads: Quads;
-    const imageSize = getImageSize(imagePath);
+    const imageSize = await getImageSize(imagePath);
     const imageRotation = imageSize.rotation;
     const imageWidth = imageSize.width;
     const imageHeight = imageSize.height;
@@ -1572,7 +1616,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
 
             let tempPictureUri;
             const context = Utils.android.getApplicationContext();
-            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + '/' + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
+            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + SEPARATOR + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
             const nativeFile = new java.io.File(picturePath);
 
             if (SDK_VERSION >= 21) {
@@ -1647,7 +1691,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
     }
 }
 
-export function createView<T extends View>(claz: new () => T, props: Partial<Pick<T, keyof T>>, events?) {
+export function createView<T extends View>(claz: new () => T, props: Partial<Pick<T, keyof T>> = {}, events?) {
     const view: T = new claz();
     Object.assign(view, props);
     if (events) {
@@ -1671,4 +1715,23 @@ export async function confirmGoBack({ onGoBack, message }: { onGoBack?; message?
     } catch (error) {
         showError(error);
     }
+}
+
+export async function onStartCam(inverseUseSystemCamera = false) {
+    try {
+        await importImageFromCamera({ inverseUseSystemCamera });
+    } catch (error) {
+        showError(error);
+    }
+}
+
+export function getNameFormatHTMLArgs() {
+    const cols = get(colors);
+    return [
+        `<span style="background-color:${cols.colorSurfaceContainerHigh};">iso</span>`,
+        '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
+        `<span style="background-color:${cols.colorSurfaceContainerHigh};">timestamp</span>`,
+        `<span style="background-color:${cols.colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
+        `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
+    ];
 }

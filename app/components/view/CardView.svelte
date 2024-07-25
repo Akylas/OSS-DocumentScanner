@@ -3,7 +3,6 @@
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { throttle } from '@nativescript/core/utils';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
@@ -21,10 +20,19 @@
     import { l, lc } from '~/helpers/locale';
     import { currentRealTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { CARD_RATIO, IMAGE_CONTEXT_OPTIONS, QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
-    import { documentsService } from '~/services/documents';
+    import {
+        CARD_RATIO,
+        EVENT_DOCUMENT_DELETED,
+        EVENT_DOCUMENT_PAGES_ADDED,
+        EVENT_DOCUMENT_PAGE_DELETED,
+        EVENT_DOCUMENT_PAGE_UPDATED,
+        EVENT_DOCUMENT_UPDATED,
+        IMAGE_CONTEXT_OPTIONS,
+        QRCODE_RESIZE_THRESHOLD
+    } from '~/utils/constants';
+    import { DocumentDeletedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
     import { getQRCodeSVG, qrcodeService } from '~/services/qrcode';
-    import { PermissionError, showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { recycleImages } from '~/utils/images';
     import { goBack, navigate, showModal } from '~/utils/svelte/ui';
     import {
@@ -38,15 +46,17 @@
         showLoading,
         showPDFPopoverMenu,
         showPopoverMenu,
+        showSnack,
         transformPages
     } from '~/utils/ui';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { getPageColorMatrix } from '~/utils/matrix';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { request } from '@nativescript-community/perms';
     import { generateQRCodeSVG } from 'plugin-nativeprocessor';
     import { shortcutService } from '~/services/shortcuts';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
+    import { PermissionError } from '~/utils/error';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -464,7 +474,7 @@
         items.forEach((item, index) => (item.index = index + 1));
         updateQRCodes();
     }
-    function onDocumentsDeleted(event: EventData & { documents }) {
+    function onDocumentsDeleted(event: DocumentDeletedEventData) {
         if (event.documents.indexOf(document) !== -1) {
             goBack({
                 // null is important to say no transition! (override enter transition)
@@ -472,7 +482,7 @@
             });
         }
     }
-    function onDocumentUpdated(event: EventData & { doc: OCRDocument }) {
+    function onDocumentUpdated(event: DocumentUpdatedEventData) {
         if (document.id === event.doc.id) {
             document = event.doc;
         }
@@ -495,11 +505,11 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.on('documentUpdated', onDocumentUpdated);
-        documentsService.on('documentsDeleted', onDocumentsDeleted);
-        documentsService.on('documentPageDeleted', onDocumentPageDeleted);
-        documentsService.on('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.on('documentPagesAdded', onPagesAdded);
+        documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.on(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageDeleted);
+        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.on(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
 
         shortcutService.updateShortcuts(document);
         // refresh();
@@ -511,11 +521,11 @@
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
-        documentsService.off('documentUpdated', onDocumentUpdated);
-        documentsService.off('documentsDeleted', onDocumentsDeleted);
-        documentsService.off('documentPageDeleted', onDocumentPageDeleted);
-        documentsService.off('documentPageUpdated', onDocumentPageUpdated);
-        documentsService.off('documentPagesAdded', onPagesAdded);
+        documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
+        documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageDeleted);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
     // onThemeChanged(refreshCollectionView);
 
@@ -625,7 +635,7 @@
                             unselectAll();
                             break;
                         case 'transform':
-                            transformPages({ documents: [document] });
+                            await transformPages({ documents: [document] });
                             unselectAll();
                             break;
                         case 'delete':
@@ -642,18 +652,24 @@
         try {
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const rowHeight = 58;
-            const options = [
-                {
-                    id: 'camera',
-                    name: lc('add_from_camera'),
-                    icon: 'mdi-camera'
-                },
-                {
-                    id: 'import',
-                    name: lc('import_from_file'),
-                    icon: 'mdi-file-document-plus-outline'
-                }
-            ]
+            const options = (
+                $hasCamera
+                    ? [
+                          {
+                              id: 'camera',
+                              name: lc('add_from_camera'),
+                              icon: 'mdi-camera'
+                          }
+                      ]
+                    : []
+            )
+                .concat([
+                    {
+                        id: 'import',
+                        name: lc('import_from_file'),
+                        icon: 'mdi-file-document-plus-outline'
+                    }
+                ])
                 .concat(
                     __IOS__
                         ? [

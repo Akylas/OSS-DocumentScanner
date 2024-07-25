@@ -18,7 +18,7 @@ android {
         }
     }
     if (project.hasProperty("tempBuild")) {
-        ndkVersion "26.1.10909125"
+        ndkVersion project.ndkVersion
         externalNativeBuild {
             cmake {
                 path "src/main/cpp/CMakeLists.txt"

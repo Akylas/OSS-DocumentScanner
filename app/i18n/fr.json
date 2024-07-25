@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Portefeuille"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Autoriser l'accès à l'appareil photo afin de pouvoir numériser des cartes à partir de la caméra",
+                    "NSPhotoLibraryUsageDescription": "Autoriser l'accès aux images pour numériser les cartes de votre bibliothèque"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -165,8 +173,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "L'appareil photo est utilisé pour analyser vos documents",
-                "NSPhotoLibraryUsageDescription": "Importer des images pour les scanner"
+                "NSCameraUsageDescription": "Autoriser l'accès à l'appareil photo pour pouvoir numériser des documents à partir de la caméra",
+                "NSPhotoLibraryUsageDescription": "Autoriser l'accès aux images pour que vous puissiez choisir une image dans votre bibliothèque, la scanner avec l'application et créer une carte à partir de cette image"
             }
         }
     },
@@ -230,6 +238,7 @@
     "pdf_settings_desc": "tous les paramètres relatifs aux PDF",
     "picture_size": "image taille",
     "please_choose_export_folder_again": "Veuillez sélectionner à nouveau le dossier d'exportation pour résoudre le problème.Cela ne devrait pas être redemandé",
+    "please_restart_app": "veuillez redémarrer l'application pour voir le changement",
     "portrait": "portrait",
     "preferences": "préférences",
     "preview": "Aperçu",
@@ -299,7 +308,7 @@
     "use_system_camera_desc": "utilisez la caméra système au lieu de la vue de l'application (un appui long utilisera le comportement inversé). Activé, certaines fonctionnalités telles que le traitement par lots ou l'analyse automatique seront désactivées",
     "username": "nom d'utilisateur",
     "version": "version",
-    "webdav_auto_sync": "synchronisation automatique avec WebDAV lors du lancement et des modifications de documents",
+    "auto_sync": "synchronisation automatique lors du lancement et des modifications de documents",
     "webdav_config": "configuration webdav",
     "webdav_sync": "synchronisation webdav des documents",
     "webdav_sync_desc": "permet à webdav de synchroniser vos documents (backup)",

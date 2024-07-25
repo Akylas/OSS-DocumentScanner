@@ -6,9 +6,9 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { ocrService } from '~/services/ocr';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { colors, fonts } from '~/variables';
+    import { ocrService } from '~/services/ocr';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorOnSurface, colorOnPrimary, colorOutline, colorSurfaceContainer } = $colors);

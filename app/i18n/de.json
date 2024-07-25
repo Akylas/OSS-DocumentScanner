@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Kartenetui"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Erlaubt den Zugriff auf die Kamera, um damit Karten scannen zu können",
+                    "NSPhotoLibraryUsageDescription": "Erlaubt den Zugriff auf gespeicherte Bilder, um Karten aus der Bibliothek scannen zu können"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -159,8 +167,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "Die Kamera wird genutzt, um Ihre Dokumente zu scannen",
-                "NSPhotoLibraryUsageDescription": "Importiere Bilder, um sie zu scannen"
+                "NSCameraUsageDescription": "Erlaubt den Zugriff auf die Kamera, um Dokumente zu scannen",
+                "NSPhotoLibraryUsageDescription": "Erlaube Zugriff auf Bilder. So kann ein Bild ausgewählt und mit der App gescannt werden, um eine Karte daraus zu machen."
             }
         }
     },
@@ -224,6 +232,7 @@
     "pdf_settings_desc": "Alle PDF-bezogenen Einstellungen",
     "picture_size": "Bildgröße",
     "please_choose_export_folder_again": "Bitte wählen Sie den Exportordner erneut, um dies zu beheben. Es sollte nicht erneut nachgefragt werden",
+    "please_restart_app": "Bitte die App neu starten, um die Änderungen zu sehen",
     "portrait": "Hochformat",
     "preferences": "Präferenzen",
     "preview": "Vorschau",

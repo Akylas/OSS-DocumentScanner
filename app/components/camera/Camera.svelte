@@ -5,7 +5,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
-    import { debounce } from '@nativescript/core/utils';
+    import { debounce, wrapNativeException } from '@nativescript/core/utils';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
@@ -17,6 +17,7 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import { l, lc } from '~/helpers/locale';
     import { OCRDocument, PageData } from '~/models/OCRDocument';
+    import { documentsService } from '~/services/documents';
     import {
         AUTO_SCAN_DELAY,
         AUTO_SCAN_DISTANCETHRESHOLD,
@@ -24,16 +25,16 @@
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
         IMAGE_CONTEXT_OPTIONS,
-        IMG_COMPRESS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
-        TRANSFORMS_SPLIT
+        SETTINGS_IMAGE_EXPORT_FORMAT,
+        TRANSFORMS_SPLIT,
+        getImageExportSettings
     } from '~/utils/constants';
-    import { documentsService } from '~/services/documents';
-    import { showError, wrapNativeException } from '~/utils/error';
     import { recycleImages } from '~/utils/images';
+    import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
@@ -50,7 +51,7 @@
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
         JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
-    DEV_LOG && console.log('cameraOptions', get(cameraOptionsStore));
+    $: DEV_LOG && console.log('cameraOptions', JSON.stringify($cameraOptionsStore));
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
     cameraOptionsStore.subscribe((newValue) => {
@@ -76,8 +77,8 @@
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
     let editing = false;
-
-    const compressQuality = ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS);
+    const imageExportSettings = getImageExportSettings();
+    const compressQuality = imageExportSettings.imageQuality;
     const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
 
@@ -101,6 +102,7 @@
                       currentResolution: cameraView.nativeView.getCurrentResolutionInfo()
                   }
                 : {};
+            DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
             await showBottomSheet({
                 parent: page,
                 view: CameraSettingsBottomSheet,
@@ -134,7 +136,7 @@
                 tempImagePath = image;
             } else {
                 imageSource = new ImageSource(image);
-                const compressFormat = ApplicationSettings.getString('image_export_format', IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
+                const compressFormat = ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
                 tempImagePath = path.join(knownFolders.temp().path, `capture_${Date.now()}.${compressQuality}`);
                 await imageSource.saveToFileAsync(tempImagePath, compressFormat, compressQuality);
                 //clear memory as soon as possible
@@ -203,7 +205,7 @@
                 maxHeight: 4500
             });
             const didAdd = await processAndAddImage(image, autoScan);
-            DEV_LOG && console.log('takePicture got image', batchMode, image, didAdd, Date.now() - start, 'ms');
+            DEV_LOG && console.log('takePicture got image', batchMode, !!image, didAdd, Date.now() - start, 'ms');
             if (didAdd) {
                 nbPages = pagesToAdd.length;
                 const lastPage = pagesToAdd[pagesToAdd.length - 1];
@@ -216,7 +218,13 @@
             DEV_LOG && console.log('takePicture done', didAdd);
         } catch (err) {
             // we can get a native error here
-            showError(wrapNativeException(err));
+            const error = wrapNativeException(err);
+            if (__ANDROID__ && /(closed|submit|failed)/.test(error.message)) {
+                DEV_LOG && console.warn('ignored error', error);
+                // ignore camera closed errors as they can happen whil app is going to background
+            } else {
+                showError(error);
+            }
         } finally {
             takingPicture = false;
             if (autoScanHandler) {

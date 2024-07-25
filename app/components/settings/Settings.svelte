@@ -2,11 +2,12 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
+    import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { TextView, TextViewProperties } from '@nativescript-community/ui-material-textview';
-    import { ApplicationSettings, File, Folder, ObservableArray, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { TextView } from '@nativescript-community/ui-material-textview';
+    import { ApplicationSettings, File, ObservableArray, ScrollView, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -14,6 +15,8 @@
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import { getLocaleDisplayName, l, lc, lu, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
+    import { DocumentsService, documentsService } from '~/services/documents';
+    import { securityService } from '~/services/security';
     import {
         ALWAYS_PROMPT_CROP_EDIT,
         AUTO_SCAN_DELAY,
@@ -22,7 +25,6 @@
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
         DEFAULT_EXPORT_DIRECTORY,
-        DEFAULT_PDF_OPTIONS,
         DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NAME_FORMAT,
         DOCUMENT_NOT_DETECTED_MARGIN,
@@ -37,27 +39,22 @@
         SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
         SETTINGS_CROP_ENABLED,
         SETTINGS_DOCUMENT_NAME_FORMAT,
+        SETTINGS_FILE_NAME_FORMAT,
+        SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
+        SETTINGS_IMAGE_EXPORT_FORMAT,
+        SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
-        SETTINGS_WEBDAV_AUTO_SYNC,
-        USE_SYSTEM_CAMERA,
-        WEBDAV_AUTO_SYNC
+        USE_SYSTEM_CAMERA
     } from '~/utils/constants';
-    import { PDF_OPTIONS } from '~/models/localized_constant';
-    import { DocumentsService, documentsService } from '~/services/documents';
-    import { securityService } from '~/services/security';
-    import { syncService } from '~/services/sync';
-    import { showError } from '~/utils/error';
+    import { PDF_OPTIONS } from '~/utils/localized_constant';
+    import { Sentry } from '~/utils/sentry';
     import { share } from '~/utils/share';
+    import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
-    import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui';
+    import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts, hasCamera, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    import { Label } from '@nativescript-community/ui-label';
-    import { Sentry, isSentryEnabled } from '~/utils/sentry';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
-    import { SDK_VERSION } from '@nativescript-community/sentry';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
 </script>
@@ -213,11 +210,11 @@
                 return [
                     {
                         id: 'setting',
-                        key: 'image_export_format',
+                        key: SETTINGS_IMAGE_EXPORT_FORMAT,
                         title: lc('image_format'),
-                        currentValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT),
+                        currentValue: () => ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT),
                         description: lc('image_format_desc'),
-                        rightValue: () => ApplicationSettings.getString('image_export_format', IMG_FORMAT).toUpperCase(),
+                        rightValue: () => ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT).toUpperCase(),
                         valueType: 'string',
                         values: [
                             { value: 'jpg', title: 'JPEG' },
@@ -226,15 +223,15 @@
                     },
                     {
                         id: 'setting',
-                        key: 'image_export_quality',
+                        key: SETTINGS_IMAGE_EXPORT_QUALITY,
                         min: 10,
                         max: 100,
                         step: 1,
                         title: lc('image_quality'),
                         description: lc('image_quality_desc'),
                         type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS),
-                        currentValue: () => ApplicationSettings.getNumber('image_export_quality', IMG_COMPRESS)
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS),
+                        currentValue: () => ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS)
                     }
                 ];
             case 'pdf_import': {
@@ -381,17 +378,35 @@
             case 'sync':
                 return [
                     {
-                        id: 'webdav',
-                        rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
-                        title: lc('webdav_sync'),
-                        description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
+                        id: 'data_sync',
+                        // rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
+                        title: lc('data_sync'),
+                        description: lc('data_sync_desc')
                     },
                     {
-                        type: 'switch',
-                        id: SETTINGS_WEBDAV_AUTO_SYNC,
-                        title: lc('webdav_auto_sync'),
-                        value: ApplicationSettings.getBoolean(SETTINGS_WEBDAV_AUTO_SYNC, WEBDAV_AUTO_SYNC)
+                        id: 'image_sync',
+                        // rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
+                        title: lc('image_sync'),
+                        description: lc('image_sync_desc')
+                    },
+                    {
+                        id: 'pdf_sync',
+                        // rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
+                        title: lc('pdf_sync'),
+                        description: lc('pdf_sync_desc')
                     }
+                    // {
+                    //     id: 'webdav',
+                    //     rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
+                    //     title: lc('webdav_sync'),
+                    //     description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
+                    // },
+                    // {
+                    //     type: 'switch',
+                    //     id: SETTINGS_REMOTE_AUTO_SYNC,
+                    //     title: lc('auto_sync'),
+                    //     value: ApplicationSettings.getBoolean(SETTINGS_REMOTE_AUTO_SYNC, AUTO_SYNC)
+                    // }
                 ];
             case 'document_naming':
                 return [
@@ -401,14 +416,7 @@
                         useHTML: true,
                         title: lc('document_name_date_format'),
                         description: lc('document_name_date_format_desc'),
-                        full_description: lc(
-                            'document_name_date_format_fulldesc',
-                            `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
-                            '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
-                            `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
-                            `<span style="background-color:${colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
-                            `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
-                        ),
+                        full_description: lc('document_name_date_format_fulldesc', ...getNameFormatHTMLArgs()),
                         onLinkTap: ({ link }) => {
                             openLink(link);
                         },
@@ -426,24 +434,17 @@
                     },
                     {
                         type: 'switch',
-                        id: 'filename_use_document_name',
+                        id: SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
                         title: lc('filename_use_document_name'),
-                        value: ApplicationSettings.getBoolean('filename_use_document_name', FILENAME_USE_DOCUMENT_NAME)
+                        value: ApplicationSettings.getBoolean(SETTINGS_FILE_NAME_USE_DOCUMENT_NAME, FILENAME_USE_DOCUMENT_NAME)
                     },
                     {
                         id: 'setting',
-                        key: 'filename_date_format',
+                        key: SETTINGS_FILE_NAME_FORMAT,
                         useHTML: true,
                         title: lc('filename_date_format'),
                         description: lc('filename_date_format_desc'),
-                        full_description: lc(
-                            'filename_date_format_fulldesc',
-                            `<span style="background-color:${colorSurfaceContainerHigh};">iso</span>`,
-                            '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
-                            `<span style="background-color:${colorSurfaceContainerHigh};">timestamp</span>`,
-                            `<span style="background-color:${colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
-                            `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
-                        ),
+                        full_description: lc('filename_date_format_fulldesc', ...getNameFormatHTMLArgs()),
                         onLinkTap: ({ link }) => {
                             openLink(link);
                         },
@@ -452,7 +453,7 @@
                             autocapitalizationType: 'none',
                             autocorrect: false
                         } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getString('filename_date_format', FILENAME_DATE_FORMAT),
+                        rightValue: () => ApplicationSettings.getString(SETTINGS_FILE_NAME_FORMAT, FILENAME_DATE_FORMAT),
                         type: 'prompt'
                     }
                 ];
@@ -654,7 +655,7 @@
                         : ([] as any)
                 )
                 .concat(
-                    __ANDROID__
+                    __ANDROID__ && $hasCamera
                         ? [
                               {
                                   id: 'sub_settings',
@@ -673,14 +674,22 @@
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
-                    },
-                    {
-                        id: 'sub_settings',
-                        icon: 'mdi-file-star-four-points',
-                        title: lc('autoscan'),
-                        description: lc('autoscan_settings'),
-                        options: () => getSubSettings('autoscan')
-                    },
+                    }
+                ] as any)
+                .concat(
+                    $hasCamera
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-file-star-four-points',
+                                  title: lc('autoscan'),
+                                  description: lc('autoscan_settings'),
+                                  options: () => getSubSettings('autoscan')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat([
                     {
                         id: 'sub_settings',
                         icon: 'mdi-file-document-edit',
@@ -820,7 +829,7 @@
                         forceSAF: true
                     });
                     const filePath = result.files[0];
-                    DEV_LOG && console.log('import_settings from file picker', filePath, File.exists(filePath));
+                    DEV_LOG && console.log('import_settings from file picker', filePath, filePath && File.exists(filePath));
                     if (filePath && File.exists(filePath)) {
                         showLoading();
                         const text = await File.fromPath(filePath).readText();
@@ -901,19 +910,19 @@
                         message: GIT_URL
                     });
                     break;
-                case 'webdav':
-                    const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-                    const saved = await showBottomSheet({
-                        parent: this,
-                        view: WebdavConfig,
-                        ignoreTopSafeArea: true
-                    });
-                    if (saved) {
-                        const index = items.indexOf(item);
-                        DEV_LOG && console.log('webdav done', item, index);
-                        items.setItem(index, item);
-                    }
-                    break;
+                // case 'webdav':
+                //     const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
+                //     const saved = await showBottomSheet({
+                //         parent: this,
+                //         view: WebdavConfig,
+                //         ignoreTopSafeArea: true
+                //     });
+                //     if (saved) {
+                //         const index = items.indexOf(item);
+                //         DEV_LOG && console.log('webdav done', item, index);
+                //         items.setItem(index, item);
+                //     }
+                //     break;
                 case 'review':
                     openLink(STORE_REVIEW_LINK);
                     break;
@@ -931,7 +940,8 @@
                     break;
                 case 'feedback': {
                     if (SENTRY_ENABLED) {
-                        const view = createView(StackLayout, {
+                        const view = createView(ScrollView);
+                        const stackLayout = createView(StackLayout, {
                             padding: 10
                         });
                         const commentsTF = createView(TextView, {
@@ -953,9 +963,10 @@
                             variant: 'outline',
                             returnKeyType: 'next'
                         });
-                        view.addChild(nameTF);
-                        view.addChild(emailTF);
-                        view.addChild(commentsTF);
+                        stackLayout.addChild(nameTF);
+                        stackLayout.addChild(emailTF);
+                        stackLayout.addChild(commentsTF);
+                        view.content = stackLayout;
                         const result = await confirm({
                             title: lc('send_feedback'),
                             okButtonText: l('send'),
@@ -1056,18 +1067,28 @@
                             }
                         });
                     } else {
+                        let selectedIndex = -1;
+                        const currentValue = item.currentValue?.() ?? item.currentValue;
+                        const options = item.values.map((k, index) => {
+                            const selected = currentValue === k.value;
+                            if (selected) {
+                                selectedIndex = index;
+                            }
+                            return {
+                                name: k.title || k.name,
+                                data: k.value,
+                                boxType: 'circle',
+                                type: 'checkbox',
+                                value: selected
+                            };
+                        });
                         const result = await showAlertOptionSelect(
                             {
                                 height: Math.min(item.values.length * 56, 400),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
                                 ...item,
-                                options: item.values.map((k) => ({
-                                    name: k.title || k.name,
-                                    data: k.value,
-                                    boxType: 'circle',
-                                    type: 'checkbox',
-                                    value: (item.currentValue?.() ?? item.currentValue) === k.value
-                                }))
+                                selectedIndex,
+                                options
                             },
                             {
                                 title: item.title,
@@ -1100,6 +1121,19 @@
 
                     break;
                 }
+                case 'data_sync':
+                case 'image_sync':
+                case 'pdf_sync':
+                    const component = (await import('~/components/settings/SyncListSettings.svelte')).default;
+                    navigate({
+                        page: component,
+                        props: {
+                            title: item.title,
+                            description: item.description,
+                            type: item.id.split('_')[0]
+                        }
+                    });
+                    break;
                 default: {
                     const needsUpdate = await item.onTap?.(item, event);
                     if (needsUpdate) {
@@ -1194,7 +1228,7 @@
     onThemeChanged(refreshCollectionView);
 </script>
 
-<page id="settingsPage" actionBarHidden={true}>
+<page id="syncSettingsPage" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
