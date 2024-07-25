@@ -279,7 +279,6 @@ export default class SyncWorker extends Observable {
         type?: number;
         event?: DocumentEvents;
     } = {}) {
-        DEV_LOG && console.error('syncDocumentsQueue');
         return this.queue.add(() => this.syncDocumentsInternal({ force, bothWays, type, event }));
     }
     async syncDocumentsInternal({
@@ -740,6 +739,7 @@ export default class SyncWorker extends Observable {
                     if (documentsToSync.length) {
                         await service.ensureRemoteFolder();
                         const remoteFiles = await service.getRemoteFolderFiles('');
+                        DEV_LOG && console.log('remoteFiles', remoteFiles);
                         for (let index = 0; index < localDocuments.length; index++) {
                             const doc = localDocuments[index];
                             for (let j = 0; j < doc.pages.length; j++) {
@@ -840,13 +840,14 @@ context.onmessage = (event) => {
         } catch (error) {}
     }
     if (Array.isArray(event.data.nativeData)) {
-        event.data.nativeData = (event.data.nativeData as any[]).reduce((acc, key) => {
+        event.data.nativeData = (event.data.nativeData as string[]).reduce((acc, key) => {
+            const actualKey = key.split('$$$')[1];
             if (__ANDROID__) {
-                const native = (acc[key] = com.akylas.documentscanner.WorkersContext.Companion.getValue(key));
+                const native = (acc[actualKey] = com.akylas.documentscanner.WorkersContext.Companion.getValue(key));
                 com.akylas.documentscanner.WorkersContext.Companion.setValue(key, null);
             } else {
-                // TODO: write iOS
-                throw new Error('not implemented');
+                acc[actualKey] = WorkerContext.getValue(key);
+                WorkerContext.setValue(key, null);
             }
             return acc;
         }, {});

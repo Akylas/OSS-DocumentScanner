@@ -366,17 +366,22 @@ export class SyncService extends Observable {
                 }
                 this.messagePromises[id].push({ reject, resolve, timeoutTimer });
                 const keys = Object.keys(nativeData);
+                const nativeDataKeysPrefix = Date.now() + '$$$';
                 if (__ANDROID__) {
                     keys.forEach((k) => {
-                        // DEV_LOG && console.log('setting native data', k, nativeData[k]);
-                        com.akylas.documentscanner.WorkersContext.Companion.setValue(k, nativeData[k]._native || nativeData[k]);
+                        com.akylas.documentscanner.WorkersContext.Companion.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
+                    });
+                } else {
+                    keys.forEach((k) => {
+                        WorkerContext.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
                     });
                 }
                 const data = {
                     error: !!error ? JSON.stringify(error.toJSON() ? error.toJSON() : { message: error.toString(), ...error }) : undefined,
                     id,
+                    nativeDataKeysPrefix,
                     messageData: !!messageData ? JSON.stringify(messageData) : undefined,
-                    nativeData: keys,
+                    nativeData: keys.map((k) => nativeDataKeysPrefix + k),
                     type
                 };
                 // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
@@ -386,17 +391,22 @@ export class SyncService extends Observable {
         } else {
             // DEV_LOG && console.info('Sync', 'postMessage', 'test');
             const keys = Object.keys(nativeData);
+            const nativeDataKeysPrefix = Date.now() + '$$$';
             if (__ANDROID__) {
                 keys.forEach((k) => {
-                    // DEV_LOG && console.log('setting native data', k, nativeData[k]);
-                    com.akylas.documentscanner.WorkersContext.Companion.setValue(k, nativeData[k]._native || nativeData[k]);
+                    com.akylas.documentscanner.WorkersContext.Companion.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
+                });
+            } else {
+                keys.forEach((k) => {
+                    WorkerContext.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
                 });
             }
             const data = {
                 error: !!error ? JSON.stringify({ message: error.toString(), ...error }) : undefined,
                 id,
+                nativeDataKeysPrefix,
                 messageData: !!messageData ? JSON.stringify(messageData) : undefined,
-                nativeData: keys,
+                nativeData: keys.map((k) => nativeDataKeysPrefix + k),
                 type
             };
             // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
