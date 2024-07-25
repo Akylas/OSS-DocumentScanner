@@ -51,14 +51,14 @@
             showError(lc('missing_export_folder'), { showAsSnack: true });
         }
     }
-    async function selectFolder() {
+    async function selectFolder(item) {
         const result = await pickFolder({
             multipleSelection: false,
             permissions: { write: true, persistable: true, read: true }
         });
         if (result.folders.length) {
-            $store.localFolderPath = result.folders[0];
-            // folderPathName = updateDirectoryName(localFolderPath);
+            item.text = $store.localFolderPath = result.folders[0];
+            updateItem(item);
         }
     }
 
@@ -73,6 +73,7 @@
             value: $store.enabled
         },
         {
+            key: 'folder',
             type: 'textfield',
             onTap: selectFolder,
             text: $store.localFolderPath,
@@ -313,11 +314,12 @@
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
-                    <textfield text={item.text} {...item.textFieldProperties} />
+                    <textfield isUserInteractionEnabled={false} text={item.text} {...item.textFieldProperties} />
                     <mdbutton
                         class="icon-btn"
                         color={colorOnSurfaceVariant}
                         horizontalAlignment="right"
+                        isUserInteractionEnabled={false}
                         text={item.icon}
                         variant="text"
                         verticalAlignment="middle"
