@@ -40,7 +40,7 @@ import {
     processFromFile
 } from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
-import { showModal } from 'svelte-native';
+import { showModal } from '~/utils/svelte/ui';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
