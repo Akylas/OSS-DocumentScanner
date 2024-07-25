@@ -33,12 +33,10 @@
     <key>UISupportedInterfaceOrientations</key>
     <array>
       <string>UIInterfaceOrientationPortrait</string>
-      <!-- <string>UIInterfaceOrientationPortraitUpsideDown</string> -->
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
       <string>UIInterfaceOrientationPortrait</string>
-      <!-- <string>UIInterfaceOrientationPortraitUpsideDown</string> -->
     </array>
     <key>NSAppTransportSecurity</key>
     <dict>
@@ -46,9 +44,9 @@
       <true/>
     </dict>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Import images to scan them</string>
+    <string>Allow access to images so that you can choose an image from your library, scan it with the app and create a card from it</string>
     <key>NSCameraUsageDescription</key>
-    <string>Camera is used to scan your documents</string>
+    <string>Allow access to the camera so that you scan documents using the camera</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>CADisableMinimumFrameDurationOnPhone</key>
