@@ -973,7 +973,7 @@
                             cancelButtonText: l('cancel'),
                             view
                         });
-                        if (result) {
+                        if (result && nameTF.text?.length && commentsTF.text?.length) {
                             const eventId = Sentry.captureMessage('User Feedback');
 
                             Sentry.captureUserFeedback({
