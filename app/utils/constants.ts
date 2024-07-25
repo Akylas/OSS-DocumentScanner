@@ -79,7 +79,7 @@ export const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
 
 export function getImageExportSettings() {
     return {
-        imageFormat: ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg',
+        imageFormat: ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg',
         imageQuality: ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS)
     };
 }
