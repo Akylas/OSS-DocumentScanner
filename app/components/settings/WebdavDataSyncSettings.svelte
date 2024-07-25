@@ -63,7 +63,10 @@
 
     async function changeColor() {
         try {
-            $store.color = (await pickColor($store.color)).hex;
+            const newColor = await pickColor($store.color);
+            if (newColor) {
+                $store.color = newColor.hex;
+            }
         } catch (error) {
             showError(error);
         }

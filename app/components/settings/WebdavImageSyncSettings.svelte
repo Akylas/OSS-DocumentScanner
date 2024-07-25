@@ -297,7 +297,11 @@
 
     async function changeColor(item) {
         try {
-            $store.color = (await pickColor($store.color)).hex;
+            const newColor = await pickColor($store.color);
+            if (newColor) {
+                $store.color = newColor.hex;
+                updateItem(item, 'type');
+            }
             updateItem(item, 'type');
         } catch (error) {
             showError(error);
