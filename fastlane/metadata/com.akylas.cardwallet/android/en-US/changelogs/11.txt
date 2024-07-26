@@ -1,0 +1,7 @@
+Bug fixes:
+- correctly show feedback comment field on small devices
+- prevent error while changing sync service color
+- prevent error while adding WebDAV sync service
+- error while exporting images
+- select folder fix in Local folder sync settings
+- Translations update
