@@ -20,8 +20,8 @@ ext {
     lottieVersion = "6.2.0"
     ndkVersion = "27.0.11902837"
     licenseReporterVersion = "2.4"
-    sentryVersion = "7.9.0"
-    sentryGradleVersion = "4.6.0"
-    cameraxVersion = "1.4.0-beta01"
+    sentryVersion = "7.12.1"
+    sentryGradleVersion = "4.10.0"
+    cameraxVersion = "1.4.0-beta02"
     itextpdfVersion = "7.2.5"
 }
