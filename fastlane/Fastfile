@@ -204,24 +204,27 @@ lane :get_changelog  do |params|
     ignorePlatform = "android"
   end
   isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform, ignoreAppScope]).split(/[\n]/).uniq
-  translateLogs = logs.select {|v| v =~ /Translated using Weblate/ }
-  logs = (logs - translateLogs).map {|l| 
-    if (!display_links)
-      # remove github issues
-      l = l.gsub(/\s\#\d*/, '')
+  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform, ignoreAppScope])
+  if (!logs.empty?)
+    logs = logs.split(/[\n]/).uniq
+    translateLogs = logs.select {|v| v =~ /Translated using Weblate/ }
+    logs = (logs - translateLogs).map {|l| 
+      if (!display_links)
+        # remove github issues
+        l = l.gsub(/\s\#\d*/, '')
+      end
+      # remove platform tags
+      l = l.gsub(/\*\*\w*:\*\*\s/, '')
+      # remove sentry references
+      l = l.gsub(/[A-Z]+-[A-Z0-9]+(?=$|\s\()/, '')
+      l
+    }
+    if (!translateLogs.empty?)
+      logs.push("- Translations update")
     end
-    # remove platform tags
-    l = l.gsub(/\*\*\w*:\*\*\s/, '')
-    # remove sentry references
-    l = l.gsub(/[A-Z]+-[A-Z0-9]+(?=$|\s\()/, '')
-    l
-  }
-  if (!translateLogs.empty?)
-    logs.push("- Translations update")
+    logs = logs.join("\n")
+    puts logs
   end
-  logs = logs.join("\n")
-  puts logs
   logs
 end
 
