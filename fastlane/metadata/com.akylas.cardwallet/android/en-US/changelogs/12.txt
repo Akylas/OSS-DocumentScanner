@@ -1,0 +1,4 @@
+Bug fixes:
+- smaller monochrome icon
+- ensure option select dialog allows to show all options
+- Translations update
