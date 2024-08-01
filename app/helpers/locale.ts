@@ -8,7 +8,7 @@ import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/showError';
 import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
-import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
 import { OCRDocument } from '~/models/OCRDocument';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
@@ -218,7 +218,7 @@ async function internalSelectLanguage() {
     });
     return showAlertOptionSelect(
         {
-            height: Math.min(actions.length * 56, 400),
+            height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
             rowHeight: 56,
             selectedIndex,
             options

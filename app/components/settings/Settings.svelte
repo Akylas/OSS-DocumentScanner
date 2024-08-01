@@ -18,6 +18,7 @@
     import { DocumentsService, documentsService } from '~/services/documents';
     import { securityService } from '~/services/security';
     import {
+        ALERT_OPTION_MAX_HEIGHT,
         ALWAYS_PROMPT_CROP_EDIT,
         AUTO_SCAN_DELAY,
         AUTO_SCAN_DISTANCETHRESHOLD,
@@ -1084,7 +1085,7 @@
                         });
                         const result = await showAlertOptionSelect(
                             {
-                                height: Math.min(item.values.length * 56, 400),
+                                height: Math.min(item.values.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
                                 ...item,
                                 selectedIndex,

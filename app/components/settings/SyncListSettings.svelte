@@ -17,6 +17,7 @@
     import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { PermissionError } from '~/utils/error';
     import { showError } from '~/utils/showError';
     import { showModal } from '~/utils/svelte/ui';
@@ -180,7 +181,7 @@
                     const selection = await showAlertOptionSelect(
                         {
                             fontWeight: 'normal',
-                            height: Math.min(options.length * 56, 400),
+                            height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                             rowHeight: 56,
                             options
                         },

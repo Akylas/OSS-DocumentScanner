@@ -7,7 +7,7 @@
     import { AuthType } from '~/webdav';
     import CActionBar from '../common/CActionBar.svelte';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import { ANDROID_CONTENT, FILENAME_DATE_FORMAT, IMG_COMPRESS, IMG_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, SETTINGS_IMAGE_EXPORT_QUALITY, getImageExportSettings } from '~/utils/constants';
+    import { ALERT_OPTION_MAX_HEIGHT, ANDROID_CONTENT, FILENAME_DATE_FORMAT, IMG_COMPRESS, IMG_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, SETTINGS_IMAGE_EXPORT_QUALITY, getImageExportSettings } from '~/utils/constants';
     import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
     import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
     import { get, writable } from 'svelte/store';
@@ -264,7 +264,7 @@
                     } else {
                         const result = await showAlertOptionSelect(
                             {
-                                height: Math.min(item.values.length * 56, 400),
+                                height: Math.min(item.values.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
                                 ...item,
                                 options: item.values.map((k) => ({

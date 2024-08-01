@@ -13,7 +13,7 @@
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
-    import { ANDROID_CONTENT, FILENAME_DATE_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
+    import { ALERT_OPTION_MAX_HEIGHT, ANDROID_CONTENT, FILENAME_DATE_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
     import { showError } from '~/utils/showError';
     import { closeModal } from '~/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
@@ -244,7 +244,7 @@
                     } else {
                         const result = await showAlertOptionSelect(
                             {
-                                height: Math.min(item.values.length * 56, 400),
+                                height: Math.min(item.values.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
                                 ...item,
                                 options: item.values.map((k) => ({

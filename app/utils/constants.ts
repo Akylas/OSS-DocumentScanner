@@ -30,6 +30,8 @@ export const PDF_EXT = '.pdf';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
+export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
+
 export const AUTO_SYNC = true;
 export const DEFAULT__BATCH_CHUNK_SIZE = 10;
 export const FILTER_ROW_HEIGHT = CARD_APP ? 55 : 85;

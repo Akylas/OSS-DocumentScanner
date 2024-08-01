@@ -10,6 +10,7 @@ import { writable } from 'svelte/store';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { showAlertOptionSelect } from '~/utils/ui';
 import { closePopover } from '@nativescript-community/ui-popover/svelte';
+import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black';
 
@@ -74,7 +75,7 @@ export async function selectTheme() {
         const actions: Themes[] = ['auto', 'light', 'dark', 'black'];
         const result = await showAlertOptionSelect(
             {
-                height: Math.min(actions.length * 56, 400),
+                height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
                 options: actions
                     .map((k) => ({ name: getThemeDisplayName(k), data: k }))

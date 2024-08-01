@@ -12,7 +12,7 @@
     import { l, lc } from '~/helpers/locale';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
-    import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+    import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
     import { showError } from '~/utils/showError';
     import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
@@ -240,7 +240,7 @@
                     } else {
                         const result = await showAlertOptionSelect(
                             {
-                                height: Math.min(item.values.length * 56, 400),
+                                height: Math.min(item.values.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: item.autoSizeListItem ? undefined : 56,
                                 ...item,
                                 options: item.values.map((k) => ({
