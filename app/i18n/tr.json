@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Kart Cüzdanı"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Kamerayı kullanarak kartları tarayabilmeniz için kameraya erişime izin verin",
+                    "NSPhotoLibraryUsageDescription": "Kütüphanenizdeki kartları taramak için görüntülere erişime izin verin"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -12,6 +20,11 @@
     "a3": "a3",
     "a4": "a4",
     "about": "hakkında",
+    "add_from_camera": "kameradan ekle",
+    "add_manual_card": "manuel kart ekleme",
+    "add_qrcode_camera": "kameradan barkod ekle",
+    "add_qrcode_file": "resimden barkod ekle",
+    "add_qrcode_manual": "manuel olarak barkod ekle",
     "allow_app_screenshot": "uygulamada ekran görüntüsü alınmasına izin ver",
     "always": "her zaman",
     "always_prompt_crop_edit": "her zaman belge bölgesi düzenleme istemi",
@@ -32,6 +45,7 @@
     "auto_scan_duration": "otomatik tarama süresi",
     "auto_scan_duration_desc": "belge eklenmeden önce milisaniye cinsinden süre",
     "auto_scan_first_use": "yeni bir otomatik tarama özelliği varsayılan olarak etkindir. Belgeleri otomatik olarak tarayacaktır. Özelliğin doğası gereği belge köşelerinde değişiklik yapmanız istenmeyecektir.\nOtomatik taramayı etkin tutmak istiyor musunuz?\n(ayarlardan veya tarama düğmesine uzun basarak değiştirebilirsiniz)",
+    "auto_sync": "otomatik senkronizasyon",
     "autoscan": "otomatik tara",
     "autoscan_settings": "otomatik tarama ayarları",
     "backup_restore": "yedekleme / geri yükleme",
@@ -52,8 +66,10 @@
     "capturing": "çekiliyor",
     "cardholder": "kart sahibi",
     "cards": "kartlar",
+    "choose": "seç",
     "color": "renk",
     "color_desc": "renkleri iyileştir ve istenmeyen renk tonlarını azalt",
+    "columns": "sütunlar",
     "comments": "yorumlar",
     "computing": "işlem yapılıyor...",
     "condensed": "yoğunlaştırılmış",
@@ -71,6 +87,9 @@
     "current_passcode": "Eski PIN",
     "dark": "koyu",
     "data_location": "veri konumu",
+    "data_sync": "uygulama veri senkronizasyonu",
+    "data_sync_desc": "Uygulamayı birden fazla cihazda kullanabilmeniz için uygulama verilerini senkronize edin",
+    "default_value": "varsayılan",
     "delete": "sil",
     "delete_page": "sil",
     "detect_qrcode": "QR kodunu algıla",
@@ -121,6 +140,8 @@
     "filters": "filtreler",
     "finish": "bitir",
     "flash_mode": "ışık modu",
+    "folder": "klasör",
+    "folder_sync_desc": "dosyaların yazılacağı klasör",
     "format": "biçim",
     "french": "fransızca",
     "full": "tam",
@@ -141,7 +162,12 @@
     "image_settings_desc": "görüntü ile ilgili tüm ayarlar",
     "image_size_threshold": "görüntü boyutu eşiği",
     "image_size_threshold_desc": "PDF dosyasına genişliği/yüksekliği daha yüksek olacak şekilde eklenen görüntüler yeniden boyutlandırılır",
+    "image_sync": "belge görüntülerini senkronize et",
+    "image_sync_desc": "Uygulanan filtreler, dönüştürmeler, vs. ile belge görüntülerini senkronize edin",
+    "image_sync_settings": "görüntü senkronizasyon ayarları",
     "images_saved": "görüntüler kaydedildi",
+    "import_from_file": "dosyadan içe aktar",
+    "import_from_image": "görüntüden içe aktar",
     "import_pdf_images": "PDF Görüntüleri içe aktarma modu",
     "import_pdf_images_desc": "PDF'den görüntülerin nasıl içe aktarılacağını seçin. Bunu her zaman ayarlardan değiştirebilirsiniz",
     "import_settings": "ayarları içe aktar",
@@ -151,8 +177,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "Kamera belgelerinizi taramak için kullanılır",
-                "NSPhotoLibraryUsageDescription": "Taramak için görüntüleri içe aktarın"
+                "NSCameraUsageDescription": "Kamerayı kullanarak belgeleri tarayabilmeniz için kameraya erişime izin verin",
+                "NSPhotoLibraryUsageDescription": "Kitaplığınızdan bir resim seçebilmeniz, uygulama ile tarayabilmeniz ve bundan bir kart oluşturabilmeniz için resimlere erişime izin verin"
             }
         }
     },
@@ -169,9 +195,13 @@
     "list": "liste",
     "list_used_third_parties": "kullanılan üçüncü parti yazılımları",
     "loading": "yükleniyor",
+    "local_auto_sync_desc": "belge değişikliklerinde otomatik senkronize et",
+    "local_folder": "yerel klasör",
     "magnifier_sensitivity": "büyüteç hassasiyeti",
     "magnifier_sensitivity_desc": "kırpma bölgesini ayarlarken büyüteç hassasiyetini değiştirme",
+    "missing_export_folder": "dışa aktarma klasörü eksik",
     "missing_storage_perm_settings": "ayarları dışa aktarmak için depolama izni gereklidir",
+    "missing_webdav_password": "WebDAV şifresi eksik. Yerel olarak kaydedilmediğini unutmayın, bu nedenle ayarları her değiştirdiğinizde girmeniz gerekir",
     "move_data": "veriler taşınsın mı?",
     "move_data_desc": "tüm uygulama verileriniz taşınacak ve sonunda uygulama yeniden başlatılacak",
     "moving_files": "dosyalar taşınıyor",
@@ -181,8 +211,10 @@
     "no_card_yet": "kamerayı kullanarak bir kart ekleyin veya bir görüntüden bir kart içe aktarın",
     "no_document_found": "hiçbir belge bulunamadı",
     "no_document_yet": "kamerayı kullanarak bir belge oluşturun veya bir görüntüden içe belge aktarın",
+    "no_network": "ağ yok",
     "no_qrcode": "QR kodu bulunamadı",
     "no_qrcode_found": "QR kodu bulunamadı",
+    "no_space_left": "cihazınızın boş depolama alanı tükeniyor gibi görünüyor",
     "no_text_found_in_page": "belgenizde metin algılanamadı",
     "none": "yok",
     "ocr_computing": "metin algılanıyor (%1$s%%)...",
@@ -210,11 +242,17 @@
     "pdf_import_settings": "PDF içe aktarma ayarları",
     "pdf_one_image_per_page": "her sayfa bir resim olarak",
     "pdf_one_image_per_pdf_image": "PDF görüntülerini bulma ve içe aktarma (metin gibi diğer tüm veriler içe aktarılmayacaktır)",
+    "pdf_preview": "PDF Önizleme",
     "pdf_saved": "PDF kaydedildi: %1$s",
     "pdf_settings": "PDF ayarları",
     "pdf_settings_desc": "PDF ile ilgili tüm ayarlar",
+    "pdf_sync": "belge PDF'lerini senkronize et",
+    "pdf_sync_desc": "PDF belgelerini uygulanan ayarlar, filtreler, dönüşümler, vs. ile senkronize edin",
+    "pdf_sync_settings": "pdf senkronizasyon ayarları",
+    "pick_color": "renk seç",
     "picture_size": "görüntü boyutu",
     "please_choose_export_folder_again": "Düzeltmek için lütfen dışa aktarma klasörünü tekrar seçin. Tekrar sorulmayacaktır",
+    "please_restart_app": "değişikliği görmek için lütfen uygulamayı yeniden başlatın",
     "portrait": "dikey",
     "preferences": "tercihler",
     "preview": "ön izleme",
@@ -223,6 +261,7 @@
     "qrcode_found": "bir QR kodu bulundu ve kaydedildi!",
     "quality": "kalite",
     "reduce_image_size": "görüntü boyutunu küçült",
+    "remote_data_auto_sync": "uygulama başlangıcında ve belge değişikliklerinde otomatik senkronize et",
     "remote_folder": "uzak klasör",
     "remote_folder_desc": "verileri senkronize etmek için uzak klasör",
     "restart": "yeniden başlat",
@@ -239,6 +278,7 @@
     "security_settings": "güvenlik ayarları",
     "select_all": "tümünü seç",
     "select_language": "dil seç",
+    "select_sync_service": "senkronizasyon hizmetini seçin",
     "select_theme": "tema seç",
     "selected": "%1$s seçildi",
     "send": "Göndermek",
@@ -263,6 +303,8 @@
     "sure_cancel_import": "iptal etmek istediğinize emin misiniz?",
     "sure_go_back": "geri dönmek istediğine emin misin?",
     "sync": "senkronizasyon",
+    "sync_service_color_desc": "renk, farklı senkronizasyon hizmetlerinizi ayırt etmek için kullanılır",
+    "sync_settings_desc": "senkronizasyon ayarları",
     "system": "sistem",
     "test": "test",
     "theme": {
@@ -284,6 +326,7 @@
     "username": "kullanıcı adı",
     "version": "sürüm",
     "webdav_config": "webdav yapılandırması",
+    "webdav_server": "WebDAV sunucusu",
     "webdav_sync": "webdav belge senkronizasyonu",
     "webdav_sync_desc": "belgelerinizi senkronize etmesi için webdav'ı etkinleştirin (yedekleme)",
     "whitepaper": "beyaz sayfa",
