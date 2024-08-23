@@ -34,16 +34,16 @@ export function getColorMatrix(type: MatricesTypes, ...args): Matrix {
     return ColorMatrices[type]?.fn?.apply(ColorMatrices, args) ?? null;
 }
 
-export function getPageColorMatrix(page: OCRPage, forcedColorType?: MatricesTypes, brightness: number = null, contrast: number = null) {
+export function getPageColorMatrix(page: OCRPage, forcedColorType?: MatricesTypes, brightness?: number, contrast?: number) {
     if (page) {
         const result = forcedColorType ? getColorMatrix(forcedColorType) : page.colorMatrix || getColorMatrix(page.colorType);
         brightness = brightness || page.brightness;
         contrast = contrast || page.contrast;
-        const hasBrightness = brightness !== null && !isNaN(brightness) && brightness !== 0;
-        const hasContrast = contrast !== null && !isNaN(contrast) && contrast !== 1;
+        const hasBrightness = typeof brightness === 'number' && !isNaN(brightness) && brightness !== 0;
+        const hasContrast = typeof contrast === 'number' && !isNaN(contrast) && contrast !== 1;
         // DEV_LOG && console.log('getPageColorMatrix', page.brightness, page.contrast);
         if (hasBrightness || hasContrast) {
-            const subMatrix = getColorMatrix('brightnessAndContrast', brightness ?? 0, contrast ?? 1);
+            const subMatrix = getColorMatrix('brightnessAndContrast', hasBrightness ? brightness : 0, hasContrast ? contrast : 1);
             return result ? concatTwoColorMatrices(result, subMatrix) : subMatrix;
         }
         return result;
