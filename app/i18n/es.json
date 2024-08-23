@@ -169,7 +169,7 @@
     "image_size_threshold": "límites del tamaño de la imagen",
     "image_size_threshold_desc": "Se cambiará el tamaño de las imágenes insertadas en PDF con un ancho/alto mayor",
     "image_sync": "sincronizar imágenes del documento",
-    "image_sync_desc": "sincronizar las imágenes del documento con sus filtros, transformaciones…",
+    "image_sync_desc": "sincronizar las imágenes del documento con filtros aplicados, transformaciones…",
     "image_sync_settings": "configuración de sincronización de imágenes",
     "images_saved": "imágenes guardadas",
     "import_from_file": "importar desde archivo",

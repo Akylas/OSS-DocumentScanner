@@ -169,7 +169,7 @@
     "image_size_threshold": "seuil de taille de l'image",
     "image_size_threshold_desc": "les images avec une largeur/hauteur plus élevée seront redimensionnées",
     "image_sync": "synchro des images de document",
-    "image_sync_desc": "synchro des images des documents avec les modifications (filtres, transformation, ...)",
+    "image_sync_desc": "synchro des images des documents avec les filtres, transformation, …",
     "image_sync_settings": "paramètres de synchro d'image",
     "images_saved": "Images sauvegardées",
     "import_from_file": "importation depuis un fichier",
