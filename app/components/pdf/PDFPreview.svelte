@@ -40,7 +40,7 @@
     let { orientation, paper_size, color, items_per_page, page_padding, draw_ocr_overlay, draw_ocr_text } = pdfCanvas.options;
     $: ({ orientation, paper_size, color, items_per_page, page_padding, draw_ocr_overlay, draw_ocr_text } = $optionsStore);
     optionsStore.subscribe((newValue) => {
-        // DEV_LOG && console.log('saving options', newValue);
+        DEV_LOG && console.log('saving options', newValue);
         Object.assign(pdfCanvas.options, newValue);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
@@ -90,11 +90,11 @@
                 hideLoading();
                 let filename;
                 if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
-                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split(SEPARATOR).pop();
+                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
                 } else {
                     filename = filePath.split(SEPARATOR).pop();
                 }
-                const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
+                const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
                 if (onSnack?.reason === 'action') {
                     openFile(filePath);
                 }

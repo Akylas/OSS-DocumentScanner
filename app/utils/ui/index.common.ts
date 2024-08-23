@@ -800,11 +800,11 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                             DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
                             let filename;
                             if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
-                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath)).split(SEPARATOR).pop();
+                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
                             } else {
                                 filename = filePath.split(SEPARATOR).pop();
                             }
-                            const onSnack = await showSnack({ message: lc('pdf_saved', filename), actionText: lc('open') });
+                            const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
                             if (onSnack?.reason === 'action') {
                                 DEV_LOG && console.log('openFile', filePath);
                                 openFile(filePath);
@@ -970,7 +970,7 @@ export function getDirectoryName(folderPath: string) {
     if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
         const context = Utils.android.getApplicationContext();
         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
-        exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
+        exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri()) || exportDirectoryName;
     }
     return exportDirectoryName
         .split(SEPARATOR)
