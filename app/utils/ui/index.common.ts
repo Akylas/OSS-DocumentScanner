@@ -1731,7 +1731,7 @@ export function getNameFormatHTMLArgs() {
         `<span style="background-color:${cols.colorSurfaceContainerHigh};">iso</span>`,
         '<a href="https://en.m.wikipedia.org/wiki/ISO_8601">ISO 8641</a>',
         `<span style="background-color:${cols.colorSurfaceContainerHigh};">timestamp</span>`,
-        `<span style="background-color:${cols.colorSurfaceContainerHigh};">Y,M,D,H,S...</span>`,
+        `<span style="background-color:${cols.colorSurfaceContainerHigh};">YYYY,M,MM,D,H,s...</span>`,
         `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
     ];
 }
