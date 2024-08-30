@@ -163,7 +163,7 @@
     "image_size_threshold": "Schwellenwert für Bildgröße",
     "image_size_threshold_desc": "in PDFs eingefügte Bilder mit höherer Breite/Höhe werden in der Größe angepasst",
     "image_sync": "Synchronisation der Dokumentenabbilder",
-    "image_sync_desc": "Synchronisiert Dokumentenabbilder mit angewandten Filtern, Veränderungen,  etc …",
+    "image_sync_desc": "Synchronisiert Dokumentenabbilder mit angewandten Filtern, Veränderungen, etc …",
     "image_sync_settings": "Synchronisationseinstellungen für Bilder",
     "images_saved": "Bilder gespeichert",
     "import_from_file": "aus Datei importieren",
@@ -178,7 +178,7 @@
         "info": {
             "plist": {
                 "NSCameraUsageDescription": "Erlaubt den Zugriff auf die Kamera, um Dokumente zu scannen",
-                "NSPhotoLibraryUsageDescription": "Erlaube Zugriff auf Bilder. So kann ein Bild ausgewählt und mit der App gescannt werden, um eine Karte daraus zu machen."
+                "NSPhotoLibraryUsageDescription": "Erlaube Zugriff auf Bilder. So kann ein Bild ausgewählt und mit der App gescannt werden, um eine Karte daraus zu machen"
             }
         }
     },
@@ -201,6 +201,7 @@
     "magnifier_sensitivity_desc": "ändert die Empfindlichkeit der Lupe während dem ändern der Auswahl",
     "missing_export_folder": "Fehlender Export-Ordner",
     "missing_storage_perm_settings": "zum Exportieren der Einstellungen ist eine Speichererlaubnis erforderlich",
+    "missing_webdav_password": "Fehlendes WebDAV-Passwort. Beachten Sie, dass das Passwort nicht gespeichert wird und Sie es bei jeder Einstellungsänderung erneut eingeben müssen",
     "move_data": "Daten verschieben?",
     "move_data_desc": "All deine Anwendungsdaten werden verschoben und im Anschluss ein Neustart der App erzwungen",
     "moving_files": "Verschiebe Dateien",
@@ -213,6 +214,7 @@
     "no_network": "Kein Netzwerk",
     "no_qrcode": "kein QR-Code gefunden",
     "no_qrcode_found": "kein QR-Code gefunden",
+    "no_space_left": "Nicht ausreichender Speicherplatz auf Ihrem Gerät",
     "no_text_found_in_page": "Es wurde kein Text in Ihrem Dokument erkannt",
     "none": "nichts",
     "ocr_computing": "Text aufspüren (%1$s%%) …",
@@ -244,6 +246,10 @@
     "pdf_saved": "PDF gespeichert: %1$s",
     "pdf_settings": "PDF-Einstellungen",
     "pdf_settings_desc": "Alle PDF-bezogenen Einstellungen",
+    "pdf_sync": "Synchronisation der Dokumenten PDFs",
+    "pdf_sync_desc": "Synchronisiert Dokumenten PDFs mit angewandeten Einstellungen, Filtern, Veränderungen, etc ...",
+    "pdf_sync_settings": "PDF Synchronisationseinstellungen",
+    "pick_color": "Farbauswahl",
     "picture_size": "Bildgröße",
     "please_choose_export_folder_again": "Bitte wählen Sie den Exportordner erneut, um dies zu beheben. Es sollte nicht erneut nachgefragt werden",
     "please_restart_app": "Bitte die App neu starten, um die Änderungen zu sehen",
@@ -255,6 +261,7 @@
     "qrcode_found": "Ein QR-Code wurde gefunden und gespeichert!",
     "quality": "Qualität",
     "reduce_image_size": "Bildergröße verkleinern",
+    "remote_data_auto_sync": "Automatisch synchronisieren beim Starten der App und bei Dokumentenänderungen",
     "remote_folder": "Cloud-Ordner",
     "remote_folder_desc": "Cloud-Ordner, mit dem die Daten abgeglichen werden",
     "restart": "Neustarten",
@@ -271,6 +278,7 @@
     "security_settings": "Sicherheitseinstellungen",
     "select_all": "alle auswählen",
     "select_language": "Sprache wählen",
+    "select_sync_service": "Auswahl Synchronisationsservice",
     "select_theme": "Thema auswählen",
     "selected": "%1$s ausgewählt",
     "send": "schicken",
@@ -295,6 +303,7 @@
     "sure_cancel_import": "Sind Sie sicher, dass Sie abbrechen wollen?",
     "sure_go_back": "Sind Sie sicher, dass Sie zurückgehen wollen?",
     "sync": "Synchronisation",
+    "sync_service_color_desc": "Diese Farbe dient dazu verschiedene Synchronisationsservices zu unterscheiden",
     "sync_settings_desc": "Synchronisationseinstellungen",
     "system": "System",
     "test": "Test",
@@ -318,6 +327,7 @@
     "version": "Version",
     "webdav_auto_sync": "beim Starten und bei Änderungen von Dokumenten automatisch mit WebDAV synchronisieren",
     "webdav_config": "WebDAV-Einstellungen",
+    "webdav_server": "WebDAV Server",
     "webdav_sync": "WebDAV Dokumenten-Abgleichung",
     "webdav_sync_desc": "Aktiviere WebDAV, um Dokumente abzugleichen (Sicherung)",
     "whitepaper": "Weißes Papier",
