@@ -685,15 +685,21 @@ Mat DocumentDetector::resizeImageMax()
 // }
 
 
-std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
-  std::vector<std::string> tokens;
-  size_t start = 0, end = 0;
-  while ((end = str.find(delimiter, start)) != std::string::npos) {
-    tokens.push_back(str.substr(start, end - start));
-    start = end + delimiter.size();
-  }
-  tokens.push_back(str.substr(start));
-  return tokens;
+std::vector<std::string> split(const std::string& str, const std::string& token) {
+    vector<std::string>result;
+    std::string toSplit(str);
+    while(toSplit.size()){
+        int index = toSplit.find(token);
+        if(index!=string::npos){
+            result.push_back(toSplit.substr(0,index));
+            toSplit = toSplit.substr(index+token.size());
+            if(toSplit.size()==0)result.push_back(toSplit);
+        }else{
+            result.push_back(toSplit);
+            break;
+        }
+    }
+    return result;
 }
 
 void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool useRGB)
