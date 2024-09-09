@@ -734,7 +734,7 @@
                                 QRCodeOnly: true
                             }
                         });
-                        if (qrcodes.length) {
+                        if (qrcodes?.length) {
                             //we add the qrcode to the first page (less risk of it being removed with the page)
                             await addQRCodes(qrcodes);
                             found = true;
@@ -758,7 +758,7 @@
                                     )
                                 )
                             ).filter((q) => !!q);
-                            if (qrcodes.length) {
+                            if (qrcodes?.length) {
                                 //we add the qrcode to the first page (less risk of it being removed with the page)
                                 await addQRCodes(qrcodes.flat());
                                 found = true;
