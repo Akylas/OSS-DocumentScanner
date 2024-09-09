@@ -7,7 +7,7 @@ import { getPageColorMatrix } from '~/utils/matrix';
 import PDFCanvas from './PDFCanvas';
 
 export async function getTransformedImage(page: OCRPage, options: { width?; height?; scale?; colorMatrix?; rotation?; brightness?; contrast? } = {}, loadOptions = {}) {
-    // DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
+    DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
     const imageSource = await loadImage(page.imagePath, { sourceWidth: page.width, sourceHeight: page.height, ...loadOptions });
     if (isNaN(imageSource.width)) {
         throw new Error(lc('error_loading_image', page.imagePath, File.exists(page.imagePath)));
