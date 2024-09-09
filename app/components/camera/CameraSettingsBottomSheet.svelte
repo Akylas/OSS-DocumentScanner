@@ -29,6 +29,7 @@
     export let currentResolution: { pictureSize: string; aspectRatio: string } = null;
 
     DEV_LOG && console.log('CameraSettingsBottomSheet', JSON.stringify(currentResolution), JSON.stringify(resolutions));
+    $: DEV_LOG && console.log('cameraOptions', JSON.stringify($cameraOptionsStore));
 
     // $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
 
