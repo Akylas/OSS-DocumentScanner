@@ -177,18 +177,18 @@ prefs.on('key:clock_24', () => {
 });
 
 let currentLocale = null;
-export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
+export function getLocaleDisplayName(locale?) {
     if (__IOS__) {
         if (!currentLocale) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
-        const localeStr = currentLocale.localizedStringForLanguageCode(locale || lang);
-        return localeStr ? capitalize(localeStr) : canReturnEmpty ? undefined : locale || lang;
+        const localeStr = currentLocale.displayNameForKeyForValue(NSLocaleIdentifier, locale || lang);
+        return localeStr ? capitalize(localeStr) : locale || lang;
     } else {
         if (!currentLocale) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
         }
-        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
+        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayName(currentLocale));
     }
 }
 export function getCurrentISO3Language() {
