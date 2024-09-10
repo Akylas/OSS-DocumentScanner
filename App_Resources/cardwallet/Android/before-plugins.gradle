@@ -7,7 +7,7 @@ ext {
     androidxVersion = "1.13.1" // core
     androidXAppCompat = "1.7.0"
     androidXAppCompatVersion = "1.7.0"
-    androidXFragment = "1.7.1"
+    androidXFragment = "1.8.3"
     androidXTransition = "1.5.0"
     androidXRecyclerViewVersion = "1.4.0-alpha01"
     androidxViewPager2Version = "1.1.0"
