@@ -75,7 +75,9 @@ import {
     SETTINGS_IMAGE_EXPORT_FORMAT,
     SETTINGS_IMAGE_EXPORT_QUALITY,
     SETTINGS_IMPORT_PDF_IMAGES,
+    SETTINGS_TRANSFORM_BATCH_SIZE,
     TRANSFORMS_SPLIT,
+    TRANSFORM_BATCH_SIZE,
     USE_SYSTEM_CAMERA,
     getImageExportSettings
 } from '~/utils/constants';
@@ -956,7 +958,8 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
                 } finally {
                     recycleImages(imageSource);
                 }
-            })
+            }),
+        ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
     );
     if (outputImageNames.length === 1) {
         showSnack({ message: lc('image_saved', finalMessagePart) });
@@ -1193,19 +1196,23 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
                 text: lc('updating_pages', progress),
                 progress: 0
             });
-            await doInBatch(pages, async (p: PageTransformData, index) => {
-                await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
-                    colorType: updateOptions.colorType,
-                    colorMatrix: updateOptions.colorMatrix
-                });
+            await doInBatch(
+                pages,
+                async (p: PageTransformData, index) => {
+                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
+                        colorType: updateOptions.colorType,
+                        colorMatrix: updateOptions.colorMatrix
+                    });
 
-                pagesDone += 1;
-                const progress = Math.round((pagesDone / totalPages) * 100);
-                updateSnackMessage({
-                    text: lc('updating_pages', progress),
-                    progress
-                });
-            });
+                    pagesDone += 1;
+                    const progress = Math.round((pagesDone / totalPages) * 100);
+                    updateSnackMessage({
+                        text: lc('updating_pages', progress),
+                        progress
+                    });
+                },
+                ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
+            );
         }
     } catch (error) {
         throw error;

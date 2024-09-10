@@ -45,6 +45,8 @@
         SETTINGS_IMAGE_EXPORT_FORMAT,
         SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
+        SETTINGS_TRANSFORM_BATCH_SIZE,
+        TRANSFORM_BATCH_SIZE,
         USE_SYSTEM_CAMERA
     } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
@@ -376,6 +378,21 @@
                             currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
                         }
                     ] as any);
+            case 'operations':
+                return [
+                    {
+                        id: 'setting',
+                        key: SETTINGS_TRANSFORM_BATCH_SIZE,
+                        min: 1,
+                        max: 10,
+                        step: 1,
+                        title: lc('transformer_batch_size'),
+                        description: lc('transformer_batch_size_desc'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE),
+                        currentValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
+                    }
+                ];
             case 'sync':
                 return [
                     {
@@ -721,7 +738,14 @@
                     },
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-autorenew',
+                        icon: 'mdi-function',
+                        title: lc('operations'),
+                        description: lc('operations_settings_desc'),
+                        options: () => getSubSettings('operations')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-',
                         title: lc('sync'),
                         description: lc('sync_settings_desc'),
                         options: () => getSubSettings('sync')

@@ -19,6 +19,7 @@ export const SETTINGS_REMOTE_AUTO_SYNC = 'webdav_auto_sync'; // we cant rename a
 export const SETTINGS_SYNC_SERVICES = 'sync_services'; // we cant rename as it was already used before
 export const SETTINGS_IMAGE_EXPORT_FORMAT = 'image_export_format';
 export const SETTINGS_IMAGE_EXPORT_QUALITY = 'image_export_quality';
+export const SETTINGS_TRANSFORM_BATCH_SIZE = 'transform_batch_size';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -47,6 +48,7 @@ export const USE_SYSTEM_CAMERA = false;
 export const CROP_ENABLED = true;
 export const ALWAYS_PROMPT_CROP_EDIT = false;
 export const MAGNIFIER_SENSITIVITY = 0.8;
+export const TRANSFORM_BATCH_SIZE = 3;
 export const AUTO_SCAN_ENABLED = true;
 export const FILENAME_USE_DOCUMENT_NAME = true;
 export const FILENAME_DATE_FORMAT = 'timestamp';
