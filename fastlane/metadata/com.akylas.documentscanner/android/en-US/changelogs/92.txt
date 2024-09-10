@@ -1,0 +1,12 @@
+Features:
+- new setting to change the number of images to be transformed in parallel. The default has been lower to prevent memory out crashes
+
+Bug fixes:
+- misleading date format examples
+- prevent error while exporting PDF with changed brightness/contrast
+- prevent error with some export file path
+- differentiate languages variants based on the locale
+- prevent error when no qrcode is found
+- allow sharing PDF with the app
+- prevent memory leak while cropping images
+- updated CameraX hopefully
