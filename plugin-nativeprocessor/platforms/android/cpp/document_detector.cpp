@@ -315,6 +315,8 @@ static void native_crop(JNIEnv *env, jobject type, jobject srcBitmap, jstring po
     }
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop transform %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
     mat_to_bitmap(env, dstBitmapMat, outBitmap);
+    srcBitmapMat.release();
+    dstBitmapMat.release();
 //    __android_log_print(ANDROID_LOG_INFO,     TAG, "native_crop done %d ms\n", duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count());
 }
 
