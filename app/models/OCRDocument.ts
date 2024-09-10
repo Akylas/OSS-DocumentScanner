@@ -274,17 +274,11 @@ export class OCRDocument extends Observable implements Document {
         //compute diff update
         const page = this.pages[pageIndex];
         if (page) {
-            const toUpdate = {};
-            Object.keys(data).forEach((k) => {
-                if (data[k] !== page[k]) {
-                    toUpdate[k] = data[k];
-                }
-            });
-            DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), JSON.stringify(toUpdate), page.toString());
-            if (Object.keys(toUpdate).length === 0) {
+            DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), page.toString());
+            if (Object.keys(data).length === 0) {
                 return;
             }
-            await documentsService.pageRepository.update(page, toUpdate);
+            await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
             await this.save({}, true, true);
