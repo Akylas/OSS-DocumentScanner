@@ -271,10 +271,20 @@ export class OCRDocument extends Observable implements Document {
     }
 
     async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false) {
+        //compute diff update
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), page.toString());
         if (page) {
-            await documentsService.pageRepository.update(page, data);
+            const toUpdate = {};
+            Object.keys(data).forEach((k) => {
+                if (data[k] !== page[k]) {
+                    toUpdate[k] = data[k];
+                }
+            });
+            DEV_LOG && console.log('updatePage', pageIndex, JSON.stringify(data), JSON.stringify(toUpdate), page.toString());
+            if (Object.keys(toUpdate).length === 0) {
+                return;
+            }
+            await documentsService.pageRepository.update(page, toUpdate);
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
             await this.save({}, true, true);
@@ -384,26 +394,36 @@ export class OCRDocument extends Observable implements Document {
         const file = File.fromPath(page.imagePath);
         DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, page.imagePath, transforms, file.parent.path, file.name);
         const imageExportSettings = getImageExportSettings();
-        const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
-            transforms,
-            saveInFolder: file.parent.path,
-            fileName: file.name,
-            compressFormat: imageExportSettings.imageFormat,
-            compressQuality: imageExportSettings.imageQuality
-        });
-        const image = images[0];
-
-        await this.updatePage(
-            pageIndex,
-            {
+        if (transforms === page.transforms) {
+            await this.updatePage(
+                pageIndex,
+                {
+                    ...optionalUpdates
+                },
+                false
+            );
+        } else {
+            const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
                 transforms,
-                width: image.width,
-                height: image.height,
-                size: file.size,
-                ...optionalUpdates
-            },
-            true
-        );
+                saveInFolder: file.parent.path,
+                fileName: file.name,
+                compressFormat: imageExportSettings.imageFormat,
+                compressQuality: imageExportSettings.imageQuality
+            });
+            const image = images[0];
+
+            await this.updatePage(
+                pageIndex,
+                {
+                    transforms,
+                    width: image.width,
+                    height: image.height,
+                    size: file.size,
+                    ...optionalUpdates
+                },
+                true
+            );
+        }
     }
 }
 
