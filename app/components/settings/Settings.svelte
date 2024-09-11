@@ -745,7 +745,7 @@
                     },
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-',
+                        icon: 'mdi-sync',
                         title: lc('sync'),
                         description: lc('sync_settings_desc'),
                         options: () => getSubSettings('sync')
