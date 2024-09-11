@@ -159,7 +159,7 @@ class PDFUtils : NSObject {
                   } else {
                     try image.pngData()?.write(to: imageURL, options: Data.WritingOptions.atomic)
                   }
-                  urls[nbImages] = imageURL.absoluteString
+                  urls[nbImages] = imageURL.absoluteString.removingPercentEncoding!
                   nbImages += 1
                 } catch {
                   _error = error
@@ -181,14 +181,14 @@ class PDFUtils : NSObject {
           context.drawPDFPage(pdfPage)
           
           let image = UIImage.init(cgImage: context.makeImage()!)
-          let imageURL = tmpDirURL.appendingPathComponent("\(pdfFileName)_\(i+1).\(compressFormat)")
+          let imageURL = tmpDirURL.appendingPathComponent("\(pdfFileName)_\(i+1).\(compressFormat)", isDirectory: false)
           do {
             if (compressFormat == "jpg") {
               try image.jpegData(compressionQuality: CGFloat(compressQuality) / 100.0)?.write(to: imageURL, options: Data.WritingOptions.atomic)
             } else {
               try image.pngData()?.write(to: imageURL, options: Data.WritingOptions.atomic)
             }
-            urls[i] = imageURL.absoluteString
+            urls[i] = imageURL.absoluteString.removingPercentEncoding!
           } catch {
             _error = error
           }
