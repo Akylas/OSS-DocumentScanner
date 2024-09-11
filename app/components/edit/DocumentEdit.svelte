@@ -252,13 +252,6 @@
             showError(error);
         }
     }
-    async function shareItem(item: OCRPage) {
-        try {
-            await share({ file: item.imagePath });
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function showImageExportPopover(event) {
         try {
             await showImagePopoverMenu([items.getItem(currentIndex)], event.object, VerticalPosition.ABOVE);
