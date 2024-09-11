@@ -13,7 +13,7 @@
     export let store: Writable<{ exportOptions: PDFExportBaseOptions }>;
     export let variant = 'filled';
     export let textFieldHeight = 'auto';
-    export let textFieldPadding = '24 16 8 16'; // '10 20 10 20'
+    export let textFieldPadding = __ANDROID__ ?'24 16 8 16' : '10 10 0 10';
 
     const tMargin = '4 10 4 10';
     const tWidth = (Screen.mainScreen.widthDIPs - 41) / 2;

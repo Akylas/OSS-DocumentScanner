@@ -175,7 +175,7 @@
     }
 
     const tMargin = '4 10 4 10';
-    const tPadding = '10 20 10 20';
+    const tPadding = __ANDROID__ ? '10 20 10 20' : '0 10 0 10';
     const tWidth = (Screen.mainScreen.widthDIPs - 41) / 2;
     const tHeight = 'auto';
 
