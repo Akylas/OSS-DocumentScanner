@@ -1052,7 +1052,7 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
                         try {
                             for (let index = 0; index < pages.length; index++) {
                                 const page = pages[index];
-                                if (page.colorMatrix) {
+                                if (page.colorMatrix || page.rotation !== 0) {
                                     const imageSource = await getTransformedImage(page);
                                     images.push(imageSource);
                                 } else {

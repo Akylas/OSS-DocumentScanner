@@ -1,3 +1,4 @@
+import { DeviceContext } from '@nativescript-community/sentry/integrations';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
 import { ApplicationSettings, Screen } from '@nativescript/core';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
@@ -157,21 +158,23 @@ export default class PDFCanvas {
             reqHeight = temp;
         }
         this.updateBitmapPaint(page);
-        const scale = options.paper_size === 'full' ? 1 : options.imageLoadScale;
+        const scale = options.paper_size === 'full' ? options.imageLoadScale : 1;
         const image = await loadImage(src, {
-            width: reqWidth * scale,
-            height: reqHeight * scale,
+            width: toDrawWidth * scale,
+            height: toDrawHeight * scale,
             sourceWidth: imageWidth,
             sourceHeight: imageHeight,
             jpegQuality: options.jpegQuality,
             resizeThreshold: options.imageSizeThreshold
         });
 
-        const imageScale = toDrawWidth / image.width;
+        const imageScale = reqWidth / image.width;
         // now we draw the resized and transformed image
         canvas.save();
+        canvas.translate(toDrawWidth / 2, toDrawHeight / 2);
+        canvas.rotate(page.rotation, 0, 0);
         canvas.scale(imageScale, imageScale, 0, 0);
-        canvas.drawBitmap(image, 0, 0, bitmapPaint);
+        canvas.drawBitmap(image, -image.width / 2, -image.height / 2, bitmapPaint);
         canvas.restore();
         recycleImages(image);
 
@@ -196,10 +199,9 @@ export default class PDFCanvas {
         const canvas = this.canvas;
         const w = canvas.getWidth() - 2;
         const h = canvas.getHeight() - 2;
-        // DEV_LOG && console.log('drawPages', pages.length, this.options, canvas.getWidth(), canvas.getHeight(), w, h);
+        DEV_LOG && console.log('drawPages', pages.length, this.options, canvas.getWidth(), canvas.getHeight(), w, h);
 
         const nbItems = pages.length;
-        const srcs = pages.map((page) => page.imagePath);
         // console.log('drawPDFPage', w, h, nbItems, srcs);
         const canvasRatio = w / h;
         if (paper_size === 'full') {
