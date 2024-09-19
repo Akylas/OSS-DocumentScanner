@@ -1,14 +1,14 @@
 import { File, Folder, path } from '@nativescript/core';
 import { type OCRDocument, type OCRPage, getDocumentsService } from '~/models/OCRDocument';
-import { AuthType, FileStat, WebDAVClient, createClient, createContext } from '~/webdav';
+import { DocumentEvents, DocumentsService } from '~/services/documents';
+import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
+import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
 import { basename } from '~/webdav/tools/path';
-import { DocumentEvents, DocumentsService } from '../documents';
-import { BaseDataSyncService, BaseDataSyncServiceOptions } from './BaseDataSyncService';
 // import { timeout } from '~/utils/ui';
-import { type Headers, networkService } from '../api';
-import { WebdavSyncOptions } from './Webdav';
-import { SERVICES_SYNC_MASK } from './types';
 import { lc } from '@nativescript-community/l';
+import { networkService } from '~/services/api';
+import { WebdavSyncOptions } from '~/services/sync/Webdav';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 
 export interface WebdavDataSyncOptions extends BaseDataSyncServiceOptions, WebdavSyncOptions {}
 
