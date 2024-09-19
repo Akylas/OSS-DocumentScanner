@@ -105,6 +105,7 @@ export class OCRDocument extends Observable implements Document {
 
     async addPage(pageData: PageData, index: number = this.pages.length) {
         const docId = this.id;
+        const dataFolderPath = documentsService.dataFolder.path;
         const docData = documentsService.dataFolder.getFolder(docId);
         const { id, imagePath, sourceImagePath, image, ...otherPageData } = pageData;
         const pageId = id || Date.now() + '_' + index;
@@ -144,7 +145,7 @@ export class OCRDocument extends Observable implements Document {
         // if (!attributes.pageIndex) {
         //     attributes.pageIndex = index + 1000;
         // }
-        const addedPage = await documentsService.pageRepository.createPage(attributes);
+        const addedPage = await documentsService.pageRepository.createPage(attributes, dataFolderPath);
         // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
 
         //using saved image to disk
@@ -160,7 +161,8 @@ export class OCRDocument extends Observable implements Document {
     }
 
     async addPages(pagesData?: PageData[]) {
-        DEV_LOG && console.log('addPages', JSON.stringify(pagesData));
+        const dataFolderPath = documentsService.dataFolder.path;
+        DEV_LOG && console.log('addPages', dataFolderPath, JSON.stringify(pagesData));
         if (pagesData) {
             const docId = this.id;
             const docData = this.folderPath;
@@ -222,7 +224,7 @@ export class OCRDocument extends Observable implements Document {
                         }
                     } catch (error) {}
                 }
-                return documentsService.pageRepository.createPage(attributes);
+                return documentsService.pageRepository.createPage(attributes, dataFolderPath);
             });
             // for (let index = 0; index < length; index++) {}
             // DEV_LOG && console.log('addPages done', JSON.stringify(pages));
@@ -246,7 +248,7 @@ export class OCRDocument extends Observable implements Document {
     // }
 
     async removeFromDisk() {
-        const docData = documentsService.dataFolder.getFolder(this.id);
+        const docData = this.folderPath;
         return docData.remove();
     }
 
@@ -260,7 +262,7 @@ export class OCRDocument extends Observable implements Document {
             this.#observables.splice(pageIndex, 1);
         }
         await documentsService.pageRepository.delete(removed[0]);
-        const docData = documentsService.dataFolder.getFolder(this.id);
+        const docData = this.folderPath;
         for (let index = 0; index < removed.length; index++) {
             const removedPage = removed[index];
             await docData.getFolder(removedPage.id).remove();

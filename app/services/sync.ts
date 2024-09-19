@@ -314,7 +314,7 @@ export class SyncService extends Observable {
             const eventData = messageData as any;
             switch (data.type) {
                 case 'event':
-                    // DEV_LOG && console.log('worker event', eventData.eventName, eventData.target, !!eventData.object, Object.keys(eventData));
+                    // DEV_LOG && console.info('worker event', documentsService.id, eventData.eventName, eventData.target, !!eventData.object, Object.keys(eventData));
                     if (eventData.target === 'documentsService') {
                         if (eventData.doc) {
                             eventData.doc = OCRDocument.fromJSON(eventData.doc);
@@ -326,13 +326,15 @@ export class SyncService extends Observable {
                             eventData.pages = eventData.pages.map((d) => OCRPage.fromJSON(d));
                         }
                         if (eventData.object) {
-                            eventData.object = OCRDocument.fromJSON(eventData.doc);
+                            eventData.object = OCRDocument.fromJSON(eventData.object);
                         }
+                        // DEV_LOG && console.info('worker notifying event', documentsService.id, eventData.eventName, documentsService.notify);
                         documentsService.notify({ ...eventData, object: eventData.object || documentsService });
                     } else {
                         this.notify({ ...eventData });
                     }
                     break;
+
                 case 'error':
                     showError(CustomError.fromObject(eventData.error));
                     break;
@@ -344,6 +346,7 @@ export class SyncService extends Observable {
             }
         } catch (error) {
             console.error(error, error.stack);
+            showError(error);
         }
     }
     async sendMessageToWorker<T = any>(type: string, messageData?, id?: number, error?, isResponse = false, timeout = 0, nativeData?): Promise<T> {
@@ -432,12 +435,12 @@ export class SyncService extends Observable {
             }
             // send syncState event right now for the UI to be updated as soon as possible
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
-            DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent);
+            // DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent);
             if (!this.worker) {
                 const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
                 worker.onmessage = this.onWorkerMessage.bind(this);
             }
-            DEV_LOG && console.warn('syncDocumentsInternal1', type, fromEvent);
+            // DEV_LOG && console.warn('syncDocumentsInternal1', type, fromEvent);
             let eventData;
             if (event) {
                 const { object, ...otherProps } = event;

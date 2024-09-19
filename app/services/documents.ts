@@ -152,9 +152,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         return this.applyMigrations();
     }
 
-    async createPage(page: OCRPage) {
+    async createPage(page: OCRPage, dataFolder: string) {
         const createdDate = Date.now();
-        const dataFolder = documentsService.dataFolder.path;
         return this.create(
             cleanUndefined({
                 ...page,
@@ -454,8 +453,8 @@ export class DocumentsService extends Observable {
             rootDataFolder = knownFolders.externalDocuments().path;
         }
         this.rootDataFolder = rootDataFolder;
-        DEV_LOG && console.log('DocumentsService', 'start', this.id, rootDataFolder, !!db);
         dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
+        DEV_LOG && console.info('DocumentsService', 'start', this.id, rootDataFolder, !!db, dataFolder.path);
         if (db) {
             this.db = new NSQLDatabase(db, {
                 // for now it breaks
