@@ -1,0 +1,3 @@
+Bug fixes:
+- missing sync setting icon
+- prevent errors while syncing data from webdav
