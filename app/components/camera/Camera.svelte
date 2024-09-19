@@ -12,7 +12,6 @@
     import { closeModal } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
-    import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
     import { l, lc } from '~/helpers/locale';
@@ -38,6 +37,7 @@
     import { navigate } from '~/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
+    import type CameraSettingsBottomSheet__SvelteComponent_ from '~/components/camera/CameraSettingsBottomSheet.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -103,12 +103,13 @@
                   }
                 : {};
             DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
+            const CameraSettingsBottomSheet = (await import('~/components/camera/CameraSettingsBottomSheet.svelte')).default;
             await showBottomSheet({
                 parent: page,
                 view: CameraSettingsBottomSheet,
                 backgroundOpacity: 0.8,
                 skipCollapsedState: true,
-                closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
+                closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet__SvelteComponent_) => {
                     ApplicationSettings.setString('defaultColorType', bottomsheetComponent.colorType);
                     if (bottomsheetComponent.colorMatrix) {
                         ApplicationSettings.setString('defaultColorMatrix', JSON.stringify(bottomsheetComponent.colorMatrix));
