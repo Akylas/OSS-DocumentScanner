@@ -238,7 +238,7 @@
                         editable={false}
                         hint={item.title}
                         margin="4 8 4 8"
-                        text={item.options[$cameraOptionsStore[item.id] || item.default].name}
+                        text={item.options[$cameraOptionsStore[item.id] || item.default]?.name || $cameraOptionsStore[item.id]}
                         variant="outline"
                         width={textFieldWidth}
                         on:tap={(e) => selectOption(item, e)} />
