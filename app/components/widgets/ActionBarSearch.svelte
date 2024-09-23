@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Utils } from '@nativescript/core';
+    import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { colors } from '~/variables';
@@ -77,6 +78,9 @@
             filter = query;
         }
     }
+    onDestroy(() => {
+        blurTextField();
+    });
 </script>
 
 <gridlayout backgroundColor={colorBackground} col={1} colSpan={2} visibility={visible ? 'visible' : 'hidden'}>

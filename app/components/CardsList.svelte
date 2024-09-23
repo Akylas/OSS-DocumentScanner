@@ -851,7 +851,7 @@
     }
 </script>
 
-<page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
         <collectionView
