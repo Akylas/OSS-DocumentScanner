@@ -1001,6 +1001,7 @@
                 </swipemenu>
             </Template>
         </collectionView>
+        <progress backgroundColor="transparent" busy={true} indeterminate={true} row={1} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
             <flexlayout
                 flexDirection="column"

@@ -62,6 +62,10 @@ declare namespace svelteNative.JSX {
         stepSize?: number;
         trackBackgroundColor?: string;
     }
+    interface ProgressAttributes {
+        busy?: boolean;
+        indeterminate?: boolean;
+    }
     type TPageAugmentedAttributes = Override<
         TPageAttributes,
         {
