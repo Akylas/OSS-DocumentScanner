@@ -7,7 +7,7 @@
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
-    import { ApplicationSettings, File, ObservableArray, ScrollView, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { ApplicationSettings, File, ObservableArray, Page, ScrollView, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -45,6 +45,7 @@
         SETTINGS_IMAGE_EXPORT_FORMAT,
         SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
+        SETTINGS_MAGNIFIER_SENSITIVITY,
         SETTINGS_TRANSFORM_BATCH_SIZE,
         TRANSFORM_BATCH_SIZE,
         USE_SYSTEM_CAMERA
@@ -57,6 +58,7 @@
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, hasCamera, windowInset } from '~/variables';
+    import type ImageProcessingSettingsBottomSheet__SvelteComponent_ from '~/components/widgets/ImageProcessingSettingsBottomSheet.svelte';
     import IconButton from '../common/IconButton.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
@@ -68,6 +70,7 @@
     $: ({ colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
+    let page: NativeViewElementNode<Page>;
 
     let items: ObservableArray<any>;
 
@@ -163,17 +166,17 @@
                     },
                     {
                         id: 'setting',
-                        key: 'magnifier_sensitivity',
+                        key: SETTINGS_MAGNIFIER_SENSITIVITY,
                         min: 10,
                         max: 100,
                         step: 1,
-                        formatter: (value) => value / 100,
+                        formatter: (value) => (value / 100).toFixed(2),
                         transformValue: (value, item) => value / 100,
                         title: lc('magnifier_sensitivity'),
                         description: lc('magnifier_sensitivity_desc'),
                         type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY),
-                        currentValue: () => ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY) * 100
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_MAGNIFIER_SENSITIVITY, MAGNIFIER_SENSITIVITY),
+                        currentValue: () => ApplicationSettings.getNumber(SETTINGS_MAGNIFIER_SENSITIVITY, MAGNIFIER_SENSITIVITY) * 100
                     }
                 ];
             case 'autoscan':
@@ -230,6 +233,7 @@
                         min: 10,
                         max: 100,
                         step: 1,
+                        formatter: (value) => value.toFixed(),
                         title: lc('image_quality'),
                         description: lc('image_quality_desc'),
                         type: 'slider',
@@ -357,6 +361,7 @@
                             min: 0.5,
                             max: 10,
                             step: 0.5,
+                            formatter: (value) => value.toFixed(1),
                             title: lc('image_load_scale'),
                             description: lc('image_load_scale_desc'),
                             type: 'slider',
@@ -371,6 +376,7 @@
                             min: 1,
                             max: 100,
                             step: 1,
+                            formatter: (value) => value.toFixed(),
                             title: lc('jpeg_quality'),
                             description: lc('pdf_export_jpeg_quality'),
                             type: 'slider',
@@ -386,45 +392,36 @@
                         min: 1,
                         max: 10,
                         step: 1,
+                        formatter: (value) => value.toFixed(),
                         title: lc('transformer_batch_size'),
                         description: lc('transformer_batch_size_desc'),
                         type: 'slider',
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE),
                         currentValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
+                    },
+                    {
+                        id: 'image_processing_settings',
+                        title: lc('image_processing_settings'),
+                        description: lc('image_processing_settings_desc')
                     }
                 ];
             case 'sync':
                 return [
                     {
                         id: 'data_sync',
-                        // rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                         title: lc('data_sync'),
                         description: lc('data_sync_desc')
                     },
                     {
                         id: 'image_sync',
-                        // rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                         title: lc('image_sync'),
                         description: lc('image_sync_desc')
                     },
                     {
                         id: 'pdf_sync',
-                        // rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
                         title: lc('pdf_sync'),
                         description: lc('pdf_sync_desc')
                     }
-                    // {
-                    //     id: 'webdav',
-                    //     rightValue: () => (syncService.enabled ? lc('on') : lc('off')),
-                    //     title: lc('webdav_sync'),
-                    //     description: () => (syncService.enabled ? syncService.remoteURL : lc('webdav_sync_desc'))
-                    // },
-                    // {
-                    //     type: 'switch',
-                    //     id: SETTINGS_REMOTE_AUTO_SYNC,
-                    //     title: lc('auto_sync'),
-                    //     value: ApplicationSettings.getBoolean(SETTINGS_REMOTE_AUTO_SYNC, AUTO_SYNC)
-                    // }
                 ];
             case 'document_naming':
                 return [
@@ -959,7 +956,6 @@
                 case 'third_party':
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
-                        parent: this,
                         view: ThirdPartySoftwareBottomSheet
                     });
                     break;
@@ -1013,6 +1009,14 @@
                     } else {
                         openLink(GIT_URL + '/issues');
                     }
+                    break;
+                }
+                case 'image_processing_settings': {
+                    const view = (await import('~/components/widgets/ImageProcessingSettingsBottomSheet.svelte')).default;
+                    await showBottomSheet({
+                        view,
+                        skipCollapsedState: true
+                    });
                     break;
                 }
                 case 'store_setting':
@@ -1253,7 +1257,7 @@
     onThemeChanged(refreshCollectionView);
 </script>
 
-<page id="syncSettingsPage" actionBarHidden={true}>
+<page bind:this={page} id="syncSettingsPage" actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>

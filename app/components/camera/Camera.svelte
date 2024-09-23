@@ -29,7 +29,6 @@
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
         SETTINGS_IMAGE_EXPORT_FORMAT,
-        TRANSFORMS_SPLIT,
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
@@ -37,7 +36,6 @@
     import { navigate } from '~/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
-    import type CameraSettingsBottomSheet__SvelteComponent_ from '~/components/camera/CameraSettingsBottomSheet.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -103,22 +101,14 @@
                   }
                 : {};
             DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
-            const CameraSettingsBottomSheet = (await import('~/components/camera/CameraSettingsBottomSheet.svelte')).default;
+            const view = (await import('~/components/widgets/ImageProcessingSettingsBottomSheet.svelte')).default;
             await showBottomSheet({
                 parent: page,
-                view: CameraSettingsBottomSheet,
+                view,
                 backgroundOpacity: 0.8,
                 skipCollapsedState: true,
-                closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet__SvelteComponent_) => {
-                    ApplicationSettings.setString('defaultColorType', bottomsheetComponent.colorType);
-                    if (bottomsheetComponent.colorMatrix) {
-                        ApplicationSettings.setString('defaultColorMatrix', JSON.stringify(bottomsheetComponent.colorMatrix));
-                    } else {
-                        ApplicationSettings.remove('defaultColorMatrix');
-                    }
-                    ApplicationSettings.setString('defaultTransforms', bottomsheetComponent.transforms.join(TRANSFORMS_SPLIT));
-                },
                 props: {
+                    showCameraSettings: true,
                     cameraOptionsStore,
                     ...addedProps
                 }

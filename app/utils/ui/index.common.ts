@@ -60,7 +60,12 @@ import {
     AREA_SCALE_MIN_FACTOR,
     COLOR_PALETTE_RESIZE_THRESHOLD,
     CROP_ENABLED,
+    DEFAULT_BRIGHTNESS,
+    DEFAULT_COLORMATRIX,
+    DEFAULT_COLORTYPE,
+    DEFAULT_CONTRAST,
     DEFAULT_EXPORT_DIRECTORY,
+    DEFAULT_TRANSFORM,
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
     IMG_FORMAT,
@@ -72,6 +77,11 @@ import {
     SEPARATOR,
     SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
     SETTINGS_CROP_ENABLED,
+    SETTINGS_DEFAULT_BRIGHTNESS,
+    SETTINGS_DEFAULT_COLORMATRIX,
+    SETTINGS_DEFAULT_COLORTYPE,
+    SETTINGS_DEFAULT_CONTRAST,
+    SETTINGS_DEFAULT_TRANSFORM,
     SETTINGS_IMAGE_EXPORT_FORMAT,
     SETTINGS_IMAGE_EXPORT_QUALITY,
     SETTINGS_IMPORT_PDF_IMAGES,
@@ -90,6 +100,7 @@ import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
 import { doInBatch, saveImage } from '../utils';
+import { MatricesTypes } from '../color_matrix';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -398,6 +409,11 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                 }
             }
             if (items) {
+                const transforms = ApplicationSettings.getString(SETTINGS_DEFAULT_TRANSFORM, DEFAULT_TRANSFORM);
+                const colorType = ApplicationSettings.getString(SETTINGS_DEFAULT_COLORTYPE, DEFAULT_COLORTYPE) as MatricesTypes;
+                const contrast = ApplicationSettings.getNumber(SETTINGS_DEFAULT_CONTRAST, DEFAULT_CONTRAST);
+                const brightness = ApplicationSettings.getNumber(SETTINGS_DEFAULT_BRIGHTNESS, DEFAULT_BRIGHTNESS);
+                const colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
                 DEV_LOG &&
                     console.log(
                         'items after crop',
@@ -416,6 +432,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                         images.push(
                                             ...(await cropDocumentFromFile(item.imagePath, item.quads, {
                                                 // rotation: item.imageRotation,
+                                                transforms,
                                                 fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
                                                 saveInFolder: knownFolders.temp().path,
                                                 compressFormat: imageExportSettings.imageFormat,
@@ -461,6 +478,11 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                             }
                                             result.push({
                                                 ...image,
+                                                transforms,
+                                                colorMatrix,
+                                                colorType,
+                                                contrast,
+                                                brightness,
                                                 crop: item.quads?.[index] || [
                                                     [0, 0],
                                                     [item.imageWidth - 0, 0],
@@ -478,7 +500,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                                                           colors
                                                       }
                                                     : {})
-                                            });
+                                            } as PageData);
                                         }
                                     }
                                     DEV_LOG && console.log('cropAndOtherDone', index, Date.now() - start, 'ms');

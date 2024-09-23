@@ -5,7 +5,7 @@
     import { QRCodeData, QuadPoint, Quads } from 'plugin-nativeprocessor';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { MAGNIFIER_SENSITIVITY } from '~/utils/constants';
+    import { MAGNIFIER_SENSITIVITY, SETTINGS_MAGNIFIER_SENSITIVITY } from '~/utils/constants';
     import { loadImage, recycleImages } from '~/utils/images';
     import { showError } from '~/utils/showError';
     import { createEventDispatcher } from '~/utils/svelte/ui';
@@ -171,7 +171,7 @@
         }
         return [-1, []] as [number, number[]];
     }
-    const sensitivityFactor = ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY);
+    const sensitivityFactor = ApplicationSettings.getNumber(SETTINGS_MAGNIFIER_SENSITIVITY, MAGNIFIER_SENSITIVITY);
     let changeOnTouch = false;
     let lastUndo;
     function onTouch(event: TouchGestureEventData) {

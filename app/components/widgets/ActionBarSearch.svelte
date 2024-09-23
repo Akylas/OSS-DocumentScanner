@@ -63,7 +63,7 @@
                     searchAsTypeTimer = setTimeout(() => {
                         searchAsTypeTimer = null;
                         refresh(false, query);
-                    }, 1000);
+                    }, 500);
                 } else {
                     // the timeout is to allow svelte to see changes with $:
                     setTimeout(() => {

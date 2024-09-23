@@ -125,6 +125,7 @@
             min: 10,
             max: 100,
             step: 1,
+            formatter: (value) => value.toFixed(),
             title: lc('image_quality'),
             description: lc('image_quality_desc'),
             type: 'slider',

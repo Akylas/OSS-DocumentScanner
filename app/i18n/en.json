@@ -153,6 +153,8 @@
     "image_import": "import an image",
     "image_load_scale": "image scale",
     "image_load_scale_desc": "scale applied to image inserted in PDF",
+    "image_processing_settings": "image processing settings",
+    "image_processing_settings_desc": "set transforms, brightness, contrast ... which will be applied on every new scan",
     "image_quality": "image quality",
     "image_quality_desc": "compression quality (0-100) used for JPG images throughout the app",
     "image_saved": "image saved",
