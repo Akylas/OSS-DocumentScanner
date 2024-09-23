@@ -1218,13 +1218,11 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
                 text: lc('updating_pages', progress),
                 progress: 0
             });
+            const { transforms, ...otherUpdates } = updateOptions;
             await doInBatch(
                 pages,
                 async (p: PageTransformData, index) => {
-                    await p.document.updatePageTransforms(p.pageIndex, updateOptions.transforms.join(TRANSFORMS_SPLIT), {
-                        colorType: updateOptions.colorType,
-                        colorMatrix: updateOptions.colorMatrix
-                    });
+                    await p.document.updatePageTransforms(p.pageIndex, transforms.join(TRANSFORMS_SPLIT), otherUpdates);
 
                     pagesDone += 1;
                     const progress = Math.round((pagesDone / totalPages) * 100);

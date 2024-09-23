@@ -4,23 +4,28 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
+    import { MatricesTypes } from '~/utils/color_matrix';
+    import { DEFAULT_BRIGHTNESS, DEFAULT_COLORMATRIX, DEFAULT_COLORTYPE, DEFAULT_CONTRAST, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
     import { TRANSFORMS } from '~/utils/localized_constant';
     import { showError } from '~/utils/showError';
-    import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover } from '~/utils/ui';
+    import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showSlidersPopover } from '~/utils/ui';
     import { colors, screenHeightDips, windowInset } from '~/variables';
     import ListItem from './ListItem.svelte';
+    import ListItemAutoSize from './ListItemAutoSize.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 
     export let transforms = [];
-    export let colorType = null;
-    export let colorMatrix: number[] = null;
+    export let colorType = DEFAULT_COLORTYPE as MatricesTypes;
+    export let colorMatrix: number[] = DEFAULT_COLORMATRIX;
+    export let contrast = DEFAULT_CONTRAST;
+    export let brightness = DEFAULT_BRIGHTNESS;
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -108,6 +113,8 @@
     function startUpdate() {
         console.log('startUpdate', colorType, colorMatrix);
         closeBottomSheet({
+            brightness,
+            contrast,
             transforms,
             colorType,
             colorMatrix
@@ -115,6 +122,48 @@
     }
     const maxHeight = 40 + Object.keys(TRANSFORMS).length * 70 + 80;
     const maxScreenHeight = screenHeightDips - $windowInset.top - $windowInset.bottom;
+
+    async function editBrightnessContrast(event) {
+        try {
+            await showSlidersPopover({
+                debounceDuration: 0,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                items: [
+                    {
+                        title: lc('brightness'),
+                        icon: 'mdi-brightness-5',
+                        min: -100,
+                        max: 500,
+                        resetValue: 0,
+                        step: __IOS__ ? 1 : undefined,
+                        // value: 0,
+                        formatter: (v) => (v / 100).toFixed(2),
+                        value: Math.round(Math.max(-1, Math.min(brightness ?? DEFAULT_BRIGHTNESS, 5)) * 100),
+                        onChange: (value) => {
+                            brightness = value / 100;
+                        }
+                    },
+                    {
+                        title: lc('contrast'),
+                        icon: 'mdi-contrast-box',
+                        min: 0,
+                        max: 400,
+                        resetValue: 100,
+                        formatter: (v) => (v / 100).toFixed(2),
+                        step: __IOS__ ? 1 : undefined,
+                        // value: 10,
+                        value: Math.round(Math.max(0, Math.min(contrast ?? DEFAULT_CONTRAST, 4)) * 100),
+                        onChange: (value) => {
+                            contrast = value / 100;
+                        }
+                    }
+                ]
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <gesturerootview id="transformBottomSheet" padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
@@ -133,15 +182,8 @@
                             on:checkedChange={(e) => onCheckedChanged(item, e)} />
                     </ListItem>
                 {/each}
-                <!-- <checkbox checked={transforms.indexOf('enhance') !== -1} marginLeft={4} text={lc('enhance')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('enhance')} />
-            <checkbox
-                checked={transforms.indexOf('whitepaper') !== -1}
-                marginLeft={4}
-                text={lc('whitepaper')}
-                verticalAlignment="middle"
-                on:checkedChange={(e) => addOrRemoveTransform('whitepaper')} />
-            <checkbox checked={transforms.indexOf('color') !== -1} marginLeft={4} text={lc('color')} verticalAlignment="middle" on:checkedChange={(e) => addOrRemoveTransform('color')} /> -->
-                <!-- <mdbutton variant="text" class="icon-btn" text="mdi-invert-colors" on:tap={() => setColorType((colorType + 1) % 3)} on:longPress={setBlackWhiteLevel} /> -->
+                <ListItemAutoSize rightValue={brightness.toFixed(2)} title={lc('brightness')} on:tap={editBrightnessContrast} />
+                <ListItemAutoSize rightValue={contrast.toFixed(2)} title={lc('contrast')} on:tap={editBrightnessContrast} />
             </stacklayout>
             <label class="sectionBigHeader" text={lc('filters')} />
             <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal">
