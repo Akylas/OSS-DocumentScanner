@@ -29,6 +29,9 @@
     "always": "always",
     "always_prompt_crop_edit": "always prompt for document region edit",
     "always_prompt_crop_edit_desc": "When capturing from camera without batch mode, enabling this ensure you are always prompted to confirm/edit the document region before creating the document",
+    "app": {
+        "name": "OSS Document Scanner dev"
+    },
     "ask_everytime": "ask everytime",
     "aspect_fill": "aspect fill",
     "aspect_fit": "aspect fit",
@@ -198,7 +201,7 @@
     "local_auto_sync_desc": "automatically sync on document changes",
     "local_folder": "local folder",
     "magnifier_sensitivity": "magnifier sensitivity",
-    "magnifier_sensitivity_desc": "change the sensitivity of the magnifying glass while changing the crop zone",
+    "magnifier_sensitivity_desc": "sensitivity of the dragging of corners. 1 means as fast as your finger moves",
     "missing_export_folder": "missing export folder",
     "missing_storage_perm_settings": "storage permission is needed to export settings",
     "missing_webdav_password": "Missing WebDAV password. Note that it is not saved locally so you need to enter it every time you modify the settings",
