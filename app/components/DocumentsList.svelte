@@ -48,22 +48,11 @@
 </script>
 
 <script lang="ts">
+    import ActionBarSearch from './widgets/ActionBarSearch.svelte';
+
     // technique for only specific properties to get updated on store change
-    let { colorPrimaryContainer, colorOnBackground } = $colors;
-    $: ({
-        colorSurfaceContainerHigh,
-        colorOnBackground,
-        colorSurfaceContainerLow,
-        colorOnSecondary,
-        colorSurfaceContainer,
-        colorOnSurfaceVariant,
-        colorOutline,
-        colorOutlineVariant,
-        colorSurface,
-        colorPrimaryContainer,
-        colorOnPrimaryContainer,
-        colorError
-    } = $colors);
+    let { colorBackground, colorPrimaryContainer, colorOnBackground } = $colors;
+    $: ({ colorBackground, colorSurfaceContainerHigh, colorOnBackground, colorOnSurfaceVariant, colorSurface, colorPrimaryContainer, colorError } = $colors);
 
     interface Item {
         doc: OCRDocument;
@@ -76,22 +65,47 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let lottieView: NativeViewElementNode<LottieView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
+    let search: ActionBarSearch;
 
     let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'expanded');
     $: condensed = viewStyle === 'condensed';
-    let syncEnabled = syncService.enabled;
+    const syncEnabled = syncService.enabled;
     let syncRunning = false;
+
+    let lastRefreshFilter = null;
+    let showSearch = false;
+    let loading = false;
+    let nbSelected = 0;
+    let ignoreTap = false;
     // let items: ObservableArray<{
     //     doc: OCRDocument; selected: boolean
     // }> = null;
+    $: if (nbSelected > 0) search.unfocusSearch();
 
-    async function refresh() {
+    async function refresh(force = true, filter?: string) {
+        if (loading || (!force && lastRefreshFilter === filter)) {
+            return;
+        }
+        lastRefreshFilter = filter;
+        loading = true;
         try {
-            syncEnabled = syncService.enabled;
-            const r = await documentsService.documentRepository.search({
-                orderBy: SqlQuery.createFromTemplateString`id DESC`
-                // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
-            });
+            DEV_LOG && console.log('DocumentsList', 'refresh', filter);
+            let r: OCRDocument[];
+            if (filter?.length) {
+                r = await documentsService.documentRepository.search({
+                    select: SqlQuery.createFromTemplateString`DISTINCT d.*`,
+                    postfix: SqlQuery.createFromTemplateString` d \nJOIN Page p ON p.document_id = d.id`,
+                    orderBy: SqlQuery.createFromTemplateString`id DESC`,
+                    where: new SqlQuery([
+                        `p.name LIKE '%${filter}%'
+   OR d.name LIKE '%${filter}%' OR p.ocrData LIKE '%${filter}%'`
+                    ])
+                });
+            } else {
+                r = await documentsService.documentRepository.search({
+                    orderBy: SqlQuery.createFromTemplateString`id DESC`
+                });
+            }
             documents = new ObservableArray(
                 r.map((doc) => ({
                     doc,
@@ -114,8 +128,11 @@
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
             showError(error);
+        } finally {
+            loading = false;
         }
     }
+    const refreshSimple = () => refresh();
 
     function updateNoDocument() {
         nbDocuments = documents?.length ?? 0;
@@ -219,7 +236,7 @@
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
-        syncService.on(EVENT_STATE, refresh);
+        syncService.on(EVENT_STATE, refreshSimple);
         // refresh();
     });
     onDestroy(() => {
@@ -235,7 +252,7 @@
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         syncService.off(EVENT_SYNC_STATE, onSyncState);
-        syncService.off(EVENT_STATE, refresh);
+        syncService.off(EVENT_STATE, refreshSimple);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -261,11 +278,10 @@
             if (documentsService.started) {
                 refresh();
             } else {
-                documentsService.once('started', refresh);
+                documentsService.once('started', refreshSimple);
             }
         }
     }
-    let nbSelected = 0;
     function selectItem(item: Item) {
         if (!item.selected) {
             documents.some((d, index) => {
@@ -295,21 +311,8 @@
             nbSelected = 0;
             documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
         }
-        // documents?.forEach((d, index) => {
-        //         d.selected = false;
-        //         documents.setItem(index, d);
-        //     });
-        // refresh();
     }
-    let ignoreTap = false;
     function onItemLongPress(item: Item, event?) {
-        // if (event && event.ios && event.ios.state !== 1) {
-        //     return;
-        // }
-        // if (event && event.ios) {
-        //     ignoreTap = true;
-        // }
-        // console.log('onItemLongPress', item, Object.keys(event));
         if (item.selected) {
             unselectItem(item);
         } else {
@@ -401,6 +404,7 @@
             }
         }
     }
+
     async function selectViewStyle(event) {
         try {
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
@@ -431,58 +435,11 @@
             showError(error);
         }
     }
-    // async function showSyncSettings() {
-    //     try {
-    //         const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-    //         await showBottomSheet({
-    //             parent: this,
-    //             skipCollapsedState: true,
-    //             view: WebdavConfig,
-    //             ignoreTopSafeArea: true
-    //         });
-    //     } catch (error) {
-    //         showError(error);
-    //     }
-    // }
-
-    // function setLottieColor(colorStr) {
-    //     if (!colorStr) {
-    //         return;
-    //     }
-    //     const color = new Color(colorStr);
-    //     // const nativeKeyPath: any[] = Array.create(java.lang.String, 2);
-    //     // nativeKeyPath[0] = 'trans';
-    //     // nativeKeyPath[1] = '*';
-    //     // const result = lottieView.nativeView.resolveKeyPath(new com.airbnb.lottie.model.KeyPath(nativeKeyPath));
-    //     // console.log('resolveKeyPath', result);
-    //     // lottieView.setColorValueDelegateForKeyPath(color, ['Rectangle','Rectangle', 'Fill 1']);
-    //     // lottieView.setColor(color, ['full', '**']);
-    //     // lottieView.setColorValueDelegateForKeyPath(color, ['full', 'Rectangle 3']);
-    //     // lottieView.setColor(color, ['bottom-grad', '**']);
-    //     // lottieView.setColor(color, ['trans', 'Rectangle', 'Rectangle', 'Fill 1']);
-    //     // lottieView.setColor(color, ['full', 'Rectangle 3', '**']);
-    //     lottieView?.nativeView?.setColor(color, ['**']);
-    // }
-
-    // $: setLottieColor(colorPrimaryContainer);
-
-    // function onLottieLoaded({ object: lottieView }: { object: LottieView }) {
-    //     try {
-    //         setLottieColor(colorPrimaryContainer);
-    //     } catch (error) {
-    //         showError(error);
-    //     }
-    // }
-    // function getSize(item: Item) {
-    //     return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
-    // }
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
 
-    // let lottieLightColor = new Color(colorPrimaryContainer);
-    // const
     let lottieDarkFColor;
     let lottieLightColor;
     $: {
@@ -494,24 +451,6 @@
             } else {
                 lottieLightColor = new Color(colorPrimaryContainer).lighten(10);
             }
-        }
-    }
-    async function showPDFPopover(event) {
-        try {
-            const data = getSelectedPagesAndPossibleSingleDocument();
-            await showPDFPopoverMenu(data[0], data[1], event.object);
-        } catch (err) {
-            showError(err);
-        }
-    }
-
-    async function showImageExportPopover(event) {
-        try {
-            const data = getSelectedPagesAndPossibleSingleDocument();
-
-            await showImagePopoverMenu(data[0], event.object);
-        } catch (err) {
-            showError(err);
         }
     }
     function getItemImageHeight(viewStyle) {
@@ -536,8 +475,6 @@
     function onCanvasDraw(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
-        // const w2 = w / 2;
-        // const h2 = h / 2;
         const dx = 10 + getItemImageHeight(viewStyle) + 16;
         textPaint.color = colorOnSurfaceVariant;
         canvas.drawText(
@@ -572,6 +509,25 @@
         staticLayout.draw(canvas);
     }
 
+    // #region Options
+    async function showPDFPopover(event) {
+        try {
+            const data = getSelectedPagesAndPossibleSingleDocument();
+            await showPDFPopoverMenu(data[0], data[1], event.object);
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    async function showImageExportPopover(event) {
+        try {
+            const data = getSelectedPagesAndPossibleSingleDocument();
+
+            await showImagePopoverMenu(data[0], event.object);
+        } catch (err) {
+            showError(err);
+        }
+    }
     async function showOptions(event) {
         const options = new ObservableArray([
             { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
@@ -611,7 +567,7 @@
     }
 </script>
 
-<page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
         <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={100} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
@@ -667,7 +623,13 @@
                     }}
                     loop={true}
                     src="~/assets/lottie/scanning.lottie" />
-                <label color={colorOnSurfaceVariant} flexShrink={0} fontSize={19} text={lc('no_document_yet')} textAlignment="center" textWrap={true} />
+                <label
+                    color={colorOnSurfaceVariant}
+                    flexShrink={0}
+                    fontSize={19}
+                    text={lastRefreshFilter && showSearch ? lc('no_document_found') : lc('no_document_yet')}
+                    textAlignment="center"
+                    textWrap={true} />
             </flexlayout>
         {/if}
         {#if showActionButton}
@@ -696,8 +658,10 @@
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments} />
+            <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearchTF()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+            <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         <!-- {#if nbSelected > 0} -->
         {#if nbSelected > 0}
