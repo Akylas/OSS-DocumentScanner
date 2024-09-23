@@ -1,0 +1,8 @@
+Features:
+- you can now search through documents. It will search in document/pages name and in page OCR data
+- you can set default brightness/contrast/transforms/filter. Do it either in camera/settings or in settings/operations
+
+Bug fixes:
+- better magnifier sensitivity description
+- you can change brightness/contrast in batch transform
+- Translations update
