@@ -10,7 +10,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { MatricesTypes } from '~/utils/color_matrix';
-    import { DEFAULT_BRIGHTNESS, DEFAULT_COLORMATRIX, DEFAULT_COLORTYPE, DEFAULT_CONTRAST, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
+    import { DEFAULT_BRIGHTNESS, DEFAULT_COLORMATRIX, DEFAULT_COLORTYPE, DEFAULT_CONTRAST, DEFAULT_TRANSFORM, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
     import { TRANSFORMS } from '~/utils/localized_constant';
     import { showError } from '~/utils/showError';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showSlidersPopover } from '~/utils/ui';
@@ -120,6 +120,16 @@
             colorMatrix
         });
     }
+    function resetAll() {
+        console.log('resetAll');
+        closeBottomSheet({
+            brightness: DEFAULT_BRIGHTNESS,
+            contrast: DEFAULT_CONTRAST,
+            transforms: [],
+            colorType: DEFAULT_COLORTYPE,
+            colorMatrix: DEFAULT_COLORMATRIX
+        });
+    }
     const maxHeight = 40 + Object.keys(TRANSFORMS).length * 70 + 80;
     const maxScreenHeight = screenHeightDips - $windowInset.top - $windowInset.bottom;
 
@@ -166,8 +176,8 @@
     }
 </script>
 
-<gesturerootview id="transformBottomSheet" padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
-    <scrollview>
+<gesturerootview id="transformBottomSheet" columns="*,*" padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto,auto' : '*,auto'}>
+    <scrollview colSpan={2}>
         <stacklayout>
             <label class="sectionBigHeader" text={lc('transformations')} />
             <stacklayout>
@@ -210,5 +220,6 @@
             </collectionview>
         </stacklayout>
     </scrollview>
-    <mdbutton row={1} text={lc('start')} on:tap={startUpdate} />
+    <mdbutton row={1} text={lc('apply')} on:tap={startUpdate} />
+    <mdbutton col={1} margin="12 10 12 10" row={1} text={lc('reset')} variant="outline" on:tap={resetAll} />
 </gesturerootview>

@@ -32,6 +32,7 @@
     "app": {
         "name": "OSS Document Scanner dev"
     },
+    "apply": "apply",
     "ask_everytime": "ask everytime",
     "aspect_fill": "aspect fill",
     "aspect_fit": "aspect fit",
@@ -270,6 +271,7 @@
     "remote_data_auto_sync": "automatically sync on application start and document changes",
     "remote_folder": "remote folder",
     "remote_folder_desc": "remote folder to sync the data from and to",
+    "reset": "reset",
     "restart": "restart",
     "restart_app": "restart the app",
     "review_application": "review application",
