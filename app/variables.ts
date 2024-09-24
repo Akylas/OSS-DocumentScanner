@@ -246,7 +246,7 @@ export function updateThemeColors(theme: string) {
                 currentColors.colorSecondary = '#B9CCB4';
                 currentColors.colorOnSecondary = '#243424';
                 currentColors.colorSecondaryContainer = '#3A4B39';
-                currentColors.colorOnSecondaryContainer = '#D5E8D0';;
+                currentColors.colorOnSecondaryContainer = '#D5E8D0';
                 currentColors.colorTertiary = '#A1CED5';
                 currentColors.colorOnTertiary = '#00363C';
                 currentColors.colorTertiaryContainer = '#1F4D53';
