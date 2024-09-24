@@ -1167,7 +1167,7 @@ export async function hideSnackMessage() {
         await new Animation(animationArgs).play();
         (Application.getRootView() as GridLayout).removeChild(snackMessage.element.nativeView);
         snackMessage.element.nativeElement._tearDownUI();
-        snackMessage.viewInstance.$destroy();
+        snackMessage.viewInstance?.$destroy();
         snackMessage = null;
     }
 }

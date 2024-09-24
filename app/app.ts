@@ -148,6 +148,7 @@ try {
             start();
         }
     });
+    let pageInstance;
     Application.on(Application.exitEvent, async () => {
         DEV_LOG && console.log('exit');
         launched = false;
@@ -160,6 +161,8 @@ try {
         } catch (error) {
             console.error(error, error.stack);
         }
+        pageInstance?.$destroy();
+        pageInstance = null;
     });
     if (__ANDROID__) {
         // store start intent we might received before first page is mounted
@@ -242,21 +245,12 @@ try {
     global.__onLiveSyncCore = () => {
         Application.getRootView()?._onCssStateChange();
     };
-    let rootFrame;
-    let pageInstance;
     // we use custom start cause we want gesturerootview as parent of it all to add snacK message view
     new Promise((resolve, reject) => {
         //wait for launch
         Application.on(Application.launchEvent, () => {
             DEV_LOG && console.log('launch', !!pageInstance);
             resolve(pageInstance);
-        });
-        Application.on(Application.exitEvent, () => {
-            DEV_LOG && console.log('exit', !!pageInstance);
-            if (pageInstance) {
-                pageInstance.$destroy();
-                pageInstance = null;
-            }
         });
         try {
             Application.run({
