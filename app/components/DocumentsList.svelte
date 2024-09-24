@@ -71,6 +71,7 @@
     $: condensed = viewStyle === 'condensed';
     const syncEnabled = syncService.enabled;
     let syncRunning = false;
+    $: DEV_LOG && console.log('syncEnabled', syncEnabled);
 
     let lastRefreshFilter = null;
     let showSearch = false;
@@ -426,11 +427,9 @@
     }
     async function syncDocuments() {
         try {
-            if (!syncEnabled) {
-                // return showSyncSettings();
-                return;
+            if (syncEnabled) {
+                await syncService.syncDocuments({ force: true, bothWays: true });
             }
-            await syncService.syncDocuments({ force: true, bothWays: true });
         } catch (error) {
             showError(error);
         }

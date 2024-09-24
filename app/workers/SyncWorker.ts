@@ -213,7 +213,7 @@ export default class SyncWorker extends Observable {
                     return;
                 }
                 const { object, ...other } = e;
-                this.notify({ ...e, target: 'documentsService' });
+                this.notify({ ...other, target: 'documentsService', object: object === this ? undefined : object });
             };
             setDocumentsService(documentsService);
             await documentsService.start(event.data.nativeData.db);
@@ -784,7 +784,7 @@ export default class SyncWorker extends Observable {
         TEST_LOG &&
             console.log(
                 'Sync',
-                'syncImageDocuments',
+                'syncPDFDocuments',
                 event?.eventName,
                 localDocuments.map((d) => d.id)
             );

@@ -325,8 +325,10 @@ export class SyncService extends Observable {
                         if (eventData.pages) {
                             eventData.pages = eventData.pages.map((d) => OCRPage.fromJSON(d));
                         }
-                        if (eventData.object) {
-                            eventData.object = OCRDocument.fromJSON(eventData.object);
+                        if (eventData.object?.id === eventData.doc?.id) {
+                            eventData.object = eventData.doc;
+                        } else {
+                            delete eventData.object;
                         }
                         // DEV_LOG && console.info('worker notifying event', documentsService.id, eventData.eventName, documentsService.notify);
                         documentsService.notify({ ...eventData, object: eventData.object || documentsService });
