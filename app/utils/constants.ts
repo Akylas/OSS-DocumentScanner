@@ -66,7 +66,7 @@ export const DEFAULT_TRANSFORM = '';
 export const DEFAULT_COLORTYPE = 'normal';
 export const DEFAULT_CONTRAST = 1;
 export const DEFAULT_BRIGHTNESS = 0;
-export const DEFAULT_COLORMATRIX = null;
+export const DEFAULT_COLORMATRIX = 'null';
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
     color: 'color',

@@ -10,7 +10,6 @@
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { MatricesTypes } from '~/utils/color_matrix';
-    import { debounce } from '@nativescript/core/utils';
     import {
         DEFAULT_BRIGHTNESS,
         DEFAULT_COLORMATRIX,
@@ -34,7 +33,7 @@
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorSurfaceContainer } = $colors);
+    $: ({ colorPrimary } = $colors);
 
     const textFieldWidth = (screenWidthDips - 20 - 22 - 16) / 2;
 
@@ -321,7 +320,7 @@
                 <ListItemAutoSize rightValue={contrast.toFixed(2)} title={lc('contrast')} on:tap={editBrightnessContrast} />
             </stacklayout>
             <label class="sectionHeader" text={lc('filters')} />
-            <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={1}>
+            <collectionview bind:this={collectionView} colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal">
                 <Template let:item>
                     <gridlayout padding={2} on:tap={() => setColorType(item.colorType)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                         <image

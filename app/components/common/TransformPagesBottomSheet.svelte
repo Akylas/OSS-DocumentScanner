@@ -23,7 +23,7 @@
 
     export let transforms = [];
     export let colorType = DEFAULT_COLORTYPE as MatricesTypes;
-    export let colorMatrix: number[] = DEFAULT_COLORMATRIX;
+    export let colorMatrix: number[] = JSON.parse(DEFAULT_COLORMATRIX);
     export let contrast = DEFAULT_CONTRAST;
     export let brightness = DEFAULT_BRIGHTNESS;
 
@@ -127,7 +127,7 @@
             contrast: DEFAULT_CONTRAST,
             transforms: [],
             colorType: DEFAULT_COLORTYPE,
-            colorMatrix: DEFAULT_COLORMATRIX
+            colorMatrix: JSON.parse(DEFAULT_COLORMATRIX)
         });
     }
     const maxHeight = 40 + Object.keys(TRANSFORMS).length * 70 + 80;
