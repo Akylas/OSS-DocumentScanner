@@ -220,8 +220,8 @@
                             const touchMoveXDistance = (x - prevTouchPoint[0]) * sensitivityFactor;
                             const touchMoveYDistance = (y - prevTouchPoint[1]) * sensitivityFactor;
 
-                            const newX = Math.round(quad[cornerQuadIndex][0] + touchMoveXDistance);
-                            const newY = Math.round(quad[cornerQuadIndex][1] + touchMoveYDistance);
+                            const newX = quad[cornerQuadIndex][0] + touchMoveXDistance;
+                            const newY = quad[cornerQuadIndex][1] + touchMoveYDistance;
                             const cornerNewPosition = getMatrixMappedPoint(inversedCurrentMatrix, [newX, newY]);
                             // console.log('cornerNewPosition', x, y, quad[closestCornerQuadIndex], newX, newY, cornerNewPosition);
                             // make sure the user doesn't drag the corner outside the image preview container
