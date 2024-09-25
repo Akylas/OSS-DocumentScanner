@@ -1,5 +1,6 @@
 import type { OCRPage } from '~/models/OCRDocument';
 import ColorMatrices, { MatricesTypes, Matrix, concatTwoColorMatrices } from './color_matrix';
+import { DEFAULT_BRIGHTNESS, DEFAULT_CONTRAST } from './constants';
 
 // export const IMAGE_FILTERS = {
 //     grayscale: [0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 1, 0],
@@ -39,11 +40,11 @@ export function getPageColorMatrix(page: OCRPage, forcedColorType?: MatricesType
         const result = forcedColorType ? getColorMatrix(forcedColorType) : page.colorMatrix || getColorMatrix(page.colorType);
         brightness = brightness || page.brightness;
         contrast = contrast || page.contrast;
-        const hasBrightness = typeof brightness === 'number' && !isNaN(brightness) && brightness !== 0;
-        const hasContrast = typeof contrast === 'number' && !isNaN(contrast) && contrast !== 1;
+        const hasBrightness = typeof brightness === 'number' && !isNaN(brightness) && brightness !== DEFAULT_BRIGHTNESS;
+        const hasContrast = typeof contrast === 'number' && !isNaN(contrast) && contrast !== DEFAULT_CONTRAST;
         // DEV_LOG && console.log('getPageColorMatrix', page.brightness, page.contrast);
         if (hasBrightness || hasContrast) {
-            const subMatrix = getColorMatrix('brightnessAndContrast', hasBrightness ? brightness : 0, hasContrast ? contrast : 1);
+            const subMatrix = getColorMatrix('brightnessAndContrast', hasBrightness ? brightness : DEFAULT_BRIGHTNESS, hasContrast ? contrast : DEFAULT_CONTRAST);
             return result ? concatTwoColorMatrices(result, subMatrix) : subMatrix;
         }
         return result;

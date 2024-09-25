@@ -206,14 +206,14 @@ export default class SyncWorker extends Observable {
 
     async handleStart(event: WorkerEvent) {
         if (!documentsService) {
-            DEV_LOG && console.warn('SyncWorker', 'handleStart', event.data.nativeData.db);
             documentsService = new DocumentsService();
+            DEV_LOG && console.warn('SyncWorker', 'handleStart', documentsService.id, event.data.nativeData.db);
             documentsService.notify = (e) => {
                 if (e.eventName === 'started') {
                     return;
                 }
                 const { object, ...other } = e;
-                this.notify({ ...e, target: 'documentsService' });
+                this.notify({ ...other, target: 'documentsService', object: object === this ? undefined : object });
             };
             setDocumentsService(documentsService);
             await documentsService.start(event.data.nativeData.db);
@@ -337,7 +337,7 @@ export default class SyncWorker extends Observable {
         const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : (event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({}));
 
         TEST_LOG &&
-            console.log(
+            console.info(
                 'Sync',
                 'syncDataDocuments',
                 event?.eventName,
@@ -397,7 +397,7 @@ export default class SyncWorker extends Observable {
                             const doc = await service.importDocumentFromRemote(missingLocalDocuments[index]);
                             await doc.save({ _synced: doc._synced | service.syncMask }, true, false);
                             TEST_LOG && console.log('importFolderFromWebdav done');
-                            this.notify({ eventName: EVENT_DOCUMENT_ADDED, doc });
+                            documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc });
                         }
                         for (let index = 0; index < toBeSyncDocuments.length; index++) {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
@@ -784,7 +784,7 @@ export default class SyncWorker extends Observable {
         TEST_LOG &&
             console.log(
                 'Sync',
-                'syncImageDocuments',
+                'syncPDFDocuments',
                 event?.eventName,
                 localDocuments.map((d) => d.id)
             );

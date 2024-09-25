@@ -73,39 +73,15 @@
 </script>
 
 <script lang="ts">
-    $: qrcodeColorMatrix = isDarkTheme($currentRealTheme) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
+    // $: qrcodeColorMatrix = isDarkTheme($currentRealTheme) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
-    let {
-        colorSurfaceContainerHigh,
-        colorBackground,
-        colorSurfaceContainer,
-        colorPrimary,
-        colorTertiary,
-        colorOutline,
-        colorSurface,
-        colorOnBackground,
-        colorOnSurface,
-        colorOnSurfaceVariant,
-        colorError
-    } = $colors;
-    $: ({
-        colorSurfaceContainerHigh,
-        colorBackground,
-        colorSurfaceContainer,
-        colorPrimary,
-        colorTertiary,
-        colorOutline,
-        colorSurface,
-        colorOnBackground,
-        colorOnSurface,
-        colorOnSurfaceVariant,
-        colorError
-    } = $colors);
+    let { colorSurfaceContainerHigh, colorBackground, colorTertiary, colorSurface, colorOnBackground, colorOnSurfaceVariant, colorError } = $colors;
+    $: ({ colorSurfaceContainerHigh, colorBackground, colorTertiary, colorSurface, colorOnBackground, colorOnSurfaceVariant, colorError } = $colors);
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
     let editingTitle = false;
-    let topBackgroundColor = document.pages[0].colors?.[1] || colorTertiary;
+    let topBackgroundColor = document.pages[0].colors?.[1] ?? colorTertiary;
     let statusBarStyle: any = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
     let qrcodes: QRCodeData;
     // let currentQRCodeImage: ImageSource;

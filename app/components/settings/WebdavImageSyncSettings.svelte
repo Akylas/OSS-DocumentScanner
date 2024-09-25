@@ -49,7 +49,7 @@
     let webdavView: WebdavSettingsView;
 
     async function save() {
-        if (webdavView?.validateSave()) {
+        if (await webdavView?.validateSave()) {
             const result = get(store);
             closeModal(result);
         }
@@ -125,6 +125,7 @@
             min: 10,
             max: 100,
             step: 1,
+            formatter: (value) => value.toFixed(),
             title: lc('image_quality'),
             description: lc('image_quality_desc'),
             type: 'slider',

@@ -1,4 +1,3 @@
-/* eslint-disable no-redeclare */
 import { ApplicationSettings, Observable } from '@nativescript/core';
 
 export const stringProperty = (target: Object, key: string | symbol) => {

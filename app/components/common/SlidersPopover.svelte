@@ -31,11 +31,11 @@
                 <label class="icon-label" marginTop={0} text={item.icon} />
             {/if}
             {#if item.title}
-                <label col={1} text={item.title} verticalTextAlignment="center" />
+                <label col={1} text={item.title} marginTop={4} verticalTextAlignment="center" />
             {/if}
-            <label row={1} text={(item.formatter?.(item.min) || item.min) + ''} textAlignment="center" verticalTextAlignment="center" />
-            <label col={2} row={1} text={(item.formatter?.(item.max) || item.max) + ''} textAlignment="center" verticalTextAlignment="center" />
-            <slider col={1} maxValue={item.max} minValue={item.min} row={1} stepSize={item.step} value={item.value} on:valueChange={(e) => onValueChange(item, e)} />
+            <!-- <label row={1} text={(item.formatter?.(item.min) || item.min) + ''} textAlignment="center" verticalTextAlignment="center" /> -->
+            <label col={2} row={1} text={(item.formatter?.(item.value) || item.value) + ''} textAlignment="center" verticalTextAlignment="center" />
+            <slider colSpan={2} maxValue={item.max} minValue={item.min} row={1} stepSize={item.step} value={item.value} on:valueChange={(e) => onValueChange(item, e)} />
 
             {#if item.resetValue !== undefined}
                 <IconButton col={3} color={colorPrimary} marginLeft={10} row={1} small={true} text="mdi-restore" verticalTextAlignment="center" on:tap={() => resetValue(item)} />

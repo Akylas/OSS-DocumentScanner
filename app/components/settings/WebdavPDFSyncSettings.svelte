@@ -41,7 +41,7 @@
     let webdavView: WebdavSettingsView;
 
     async function save() {
-        if (webdavView?.validateSave()) {
+        if (await webdavView?.validateSave()) {
             const result = get(store);
             closeModal(result);
             // WebdavDataSyncService.saveData({ username, password, remoteURL, remoteFolder, authType, token });

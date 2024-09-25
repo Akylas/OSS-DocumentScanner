@@ -195,6 +195,10 @@ export function updateThemeColors(theme: string) {
                 currentColors.colorOnSecondary = '#44292C';
                 currentColors.colorSecondaryContainer = '#5C3F42';
                 currentColors.colorOnSecondaryContainer = '#FFDADC';
+                currentColors.colorTertiary = '#E8C08E';
+                currentColors.colorOnTertiary = '#442B06';
+                currentColors.colorTertiaryContainer = '#5D411B';
+                currentColors.colorOnTertiaryContainer = '#FFDDB6';
                 currentColors.colorBackground = '#201A1A';
                 currentColors.colorOnBackground = '#ECE0E0';
                 currentColors.colorSurface = '#201A1A';
@@ -216,6 +220,10 @@ export function updateThemeColors(theme: string) {
                 currentColors.colorOnSecondary = '#FFFFFF';
                 currentColors.colorSecondaryContainer = '#FFDADC';
                 currentColors.colorOnSecondaryContainer = '#2C1517';
+                currentColors.colorTertiary = '#775930';
+                currentColors.colorOnTertiary = '#FFFFFF';
+                currentColors.colorTertiaryContainer = '#FFDDB6';
+                currentColors.colorOnTertiaryContainer = '#2A1800';
                 currentColors.colorBackground = '#FFFBFF';
                 currentColors.colorOnBackground = '#201A1A';
                 currentColors.colorSurface = '#FFFBFF';
@@ -239,6 +247,10 @@ export function updateThemeColors(theme: string) {
                 currentColors.colorOnSecondary = '#243424';
                 currentColors.colorSecondaryContainer = '#3A4B39';
                 currentColors.colorOnSecondaryContainer = '#D5E8D0';
+                currentColors.colorTertiary = '#A1CED5';
+                currentColors.colorOnTertiary = '#00363C';
+                currentColors.colorTertiaryContainer = '#1F4D53';
+                currentColors.colorOnTertiaryContainer = '#BCEBF2';
                 currentColors.colorBackground = '#1A1C19';
                 currentColors.colorOnBackground = '#E2E3DD';
                 currentColors.colorSurface = '#121411';
@@ -260,6 +272,10 @@ export function updateThemeColors(theme: string) {
                 currentColors.colorOnSecondary = '#FFFFFF';
                 currentColors.colorSecondaryContainer = '#D5E8D0';
                 currentColors.colorOnSecondaryContainer = '#101F10';
+                currentColors.colorTertiary = '#39656B';
+                currentColors.colorOnTertiary = '#FFFFFF';
+                currentColors.colorTertiaryContainer = '#BCEBF2';
+                currentColors.colorOnTertiaryContainer = '#001F23';
                 currentColors.colorBackground = '#FCFDF7';
                 currentColors.colorOnBackground = '#1A1C19';
                 currentColors.colorSurface = '#F9FAF4';

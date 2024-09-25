@@ -1,0 +1,6 @@
+Bug fixes:
+- new `reset` button in transform images bottom sheet
+- sync errors (not preventing actual sync)
+- ensure we dont try to create a webdav sync without the required parameters
+- prevent error while change default transform settings
+- crop view sensibility fix

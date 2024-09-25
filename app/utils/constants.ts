@@ -20,6 +20,12 @@ export const SETTINGS_SYNC_SERVICES = 'sync_services'; // we cant rename as it w
 export const SETTINGS_IMAGE_EXPORT_FORMAT = 'image_export_format';
 export const SETTINGS_IMAGE_EXPORT_QUALITY = 'image_export_quality';
 export const SETTINGS_TRANSFORM_BATCH_SIZE = 'transform_batch_size';
+export const SETTINGS_DEFAULT_TRANSFORM = 'defaultTransforms';
+export const SETTINGS_DEFAULT_COLORTYPE = 'defaultColorType';
+export const SETTINGS_DEFAULT_COLORMATRIX = 'defaultColorMatrix';
+export const SETTINGS_DEFAULT_BRIGHTNESS = 'defaultBrightness';
+export const SETTINGS_DEFAULT_CONTRAST = 'defaultContrast';
+export const SETTINGS_MAGNIFIER_SENSITIVITY = 'magnifier_sensitivity';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -56,6 +62,11 @@ export const DOCUMENT_NAME_FORMAT = 'L LTS';
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
+export const DEFAULT_TRANSFORM = '';
+export const DEFAULT_COLORTYPE = 'normal';
+export const DEFAULT_CONTRAST = 1;
+export const DEFAULT_BRIGHTNESS = 0;
+export const DEFAULT_COLORMATRIX = 'null';
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
     color: 'color',

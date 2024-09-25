@@ -117,7 +117,7 @@ export function navigate<T>(options: NavigationOptions<T>) {
     return throttledSNavigate<T>(options);
 }
 
-export function closeModal(result: any, parent?: View) {
+export function closeModal(result?: any, parent?: View) {
     return sCloseModal(result, parent);
 }
 

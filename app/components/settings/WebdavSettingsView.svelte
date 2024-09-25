@@ -66,7 +66,7 @@
         if (testConnectionSuccess === 0 && !$store.headers.Authorization) {
             await testConnection();
         }
-        if (testConnectionSuccess > 0 || ($store.remoteURL && $store.remoteFolder && $store.headers.Authorization)) {
+        if ($store.remoteURL && $store.remoteFolder && (testConnectionSuccess > 0 || $store.headers.Authorization)) {
             return true;
         } else {
             return false;

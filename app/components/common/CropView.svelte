@@ -5,7 +5,7 @@
     import { QRCodeData, QuadPoint, Quads } from 'plugin-nativeprocessor';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { MAGNIFIER_SENSITIVITY } from '~/utils/constants';
+    import { MAGNIFIER_SENSITIVITY, SETTINGS_MAGNIFIER_SENSITIVITY } from '~/utils/constants';
     import { loadImage, recycleImages } from '~/utils/images';
     import { showError } from '~/utils/showError';
     import { createEventDispatcher } from '~/utils/svelte/ui';
@@ -171,7 +171,7 @@
         }
         return [-1, []] as [number, number[]];
     }
-    const sensitivityFactor = ApplicationSettings.getNumber('magnifier_sensitivity', MAGNIFIER_SENSITIVITY);
+    const sensitivityFactor = ApplicationSettings.getNumber(SETTINGS_MAGNIFIER_SENSITIVITY, MAGNIFIER_SENSITIVITY);
     let changeOnTouch = false;
     let lastUndo;
     function onTouch(event: TouchGestureEventData) {
@@ -220,8 +220,8 @@
                             const touchMoveXDistance = (x - prevTouchPoint[0]) * sensitivityFactor;
                             const touchMoveYDistance = (y - prevTouchPoint[1]) * sensitivityFactor;
 
-                            const newX = Math.round(quad[cornerQuadIndex][0] + touchMoveXDistance);
-                            const newY = Math.round(quad[cornerQuadIndex][1] + touchMoveYDistance);
+                            const newX = quad[cornerQuadIndex][0] + touchMoveXDistance;
+                            const newY = quad[cornerQuadIndex][1] + touchMoveYDistance;
                             const cornerNewPosition = getMatrixMappedPoint(inversedCurrentMatrix, [newX, newY]);
                             // console.log('cornerNewPosition', x, y, quad[closestCornerQuadIndex], newX, newY, cornerNewPosition);
                             // make sure the user doesn't drag the corner outside the image preview container

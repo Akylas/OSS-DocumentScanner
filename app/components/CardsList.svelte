@@ -48,6 +48,7 @@
         transformPages
     } from '~/utils/ui';
     import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import ActionBarSearch from './widgets/ActionBarSearch.svelte';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -65,13 +66,24 @@
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     let lottieView: NativeViewElementNode<LottieView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
+    let search: ActionBarSearch;
 
     let syncEnabled = syncService.enabled;
-    // let items: ObservableArray<{
-    //     doc: OCRDocument; selected: boolean
-    // }> = null;
 
-    async function refreshSyncState() {
+    let lastRefreshFilter = null;
+    let showSearch = false;
+    let loading = false;
+    let nbSelected = 0;
+    let ignoreTap = false;
+
+    $: if (nbSelected > 0) search.unfocusSearch();
+
+    async function refresh(force = true, filter?: string) {
+        if (loading || (!force && lastRefreshFilter === filter)) {
+            return;
+        }
+        lastRefreshFilter = filter;
+        loading = true;
         try {
             syncEnabled = syncService.enabled;
             const r = await documentsService.documentRepository.search({
@@ -94,8 +106,11 @@
             // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
             showError(error);
+        } finally {
+            loading = false;
         }
     }
+    const refreshSimple = () => refresh();
 
     function updateNoDocument() {
         nbDocuments = documents.length;
@@ -223,7 +238,7 @@
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
-        syncService.on(EVENT_STATE, refreshSyncState);
+        syncService.on(EVENT_STATE, refreshSimple);
         // refresh();
     });
     onDestroy(() => {
@@ -238,7 +253,7 @@
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         syncService.off(EVENT_SYNC_STATE, onSyncState);
-        syncService.off(EVENT_STATE, refreshSyncState);
+        syncService.off(EVENT_STATE, refreshSimple);
     });
 
     const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
@@ -262,13 +277,12 @@
     function onNavigatedTo(e: NavigatedData) {
         if (!e.isBackNavigation) {
             if (documentsService.started) {
-                refreshSyncState();
+                refresh();
             } else {
-                documentsService.once('started', refreshSyncState);
+                documentsService.once('started', refreshSimple);
             }
         }
     }
-    let nbSelected = 0;
     function selectItem(item: Item) {
         if (!item.selected) {
             documents.some((d, index) => {
@@ -304,7 +318,6 @@
         //     });
         // refresh();
     }
-    let ignoreTap = false;
     function onItemLongPress(item: Item, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
         // if (event && event.ios && event.ios.state !== 1) {
@@ -838,7 +851,7 @@
     }
 </script>
 
-<page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} id="cardsList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout rows="auto,*">
         <!-- {/if} -->
         <collectionView
@@ -988,6 +1001,7 @@
                 </swipemenu>
             </Template>
         </collectionView>
+        <progress backgroundColor="transparent" busy={true} indeterminate={true} row={1} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
             <flexlayout
                 flexDirection="column"
@@ -1012,22 +1026,16 @@
                     }}
                     loop={true}
                     src="~/assets/lottie/scanning.lottie" />
-                <label color={colorOnSurfaceVariant} flexShrink={0} fontSize={19} text={lc('no_card_yet')} textAlignment="center" textWrap={true} />
+                <label
+                    color={colorOnSurfaceVariant}
+                    flexShrink={0}
+                    fontSize={19}
+                    text={lc(lastRefreshFilter && showSearch ? lc('no_card_found') : 'no_card_yet')}
+                    textAlignment="center"
+                    textWrap={true} />
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <!-- <stacklayout
-                bind:this={fabHolder}
-                horizontalAlignment="right"
-                iosIgnoreSafeArea={true}
-                orientation="horizontal"
-                row={1}
-                verticalAlignment="bottom"
-                android:marginBottom={$windowInset.bottom}> -->
-            <!-- {#if __IOS__}
-                    <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
-                {/if}
-                <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(), 500)} /> -->
             <mdbutton
                 bind:this={fabHolder}
                 id="fab"
@@ -1039,7 +1047,6 @@
                 text="mdi-plus"
                 verticalAlignment="bottom"
                 on:tap={throttle(() => onAddButton(), 500)} />
-            <!-- </stacklayout> -->
         {/if}
 
         <CActionBar title={l('cards')}>
@@ -1051,9 +1058,10 @@
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments} />
-
+            <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearchTF()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+            <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ maxLines: 1, autoFontSize: true }}>

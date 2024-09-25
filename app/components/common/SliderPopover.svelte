@@ -14,6 +14,7 @@
 
     function onValueChange(event) {
         if (onChange) {
+            value = event.value;
             onChange(event.value);
         }
     }
@@ -24,9 +25,9 @@
         <label class="icon-label" marginTop={0} text={icon} />
     {/if}
     {#if title}
-        <label col={1} text={title} verticalTextAlignment="center" />
+        <label col={1} marginTop={4} text={title} verticalTextAlignment="center" />
     {/if}
-    <label row={1} text={(formatter?.(min) || min) + ''} textAlignment="center" verticalTextAlignment="center" />
-    <label col={2} row={1} text={(formatter?.(max) || max) + ''} textAlignment="center" verticalTextAlignment="center" />
-    <slider col={1} maxValue={max} minValue={min} row={1} stepSize={step} {value} on:valueChange={onValueChange} />
+    <!-- <label row={1} text={(formatter?.(min) || min) + ''} textAlignment="center" verticalTextAlignment="center" /> -->
+    <label col={2} row={1} text={(formatter?.(value) || value) + ''} textAlignment="center" verticalTextAlignment="center" />
+    <slider colSpan={2} maxValue={max} minValue={min} row={1} stepSize={step} {value} on:valueChange={onValueChange} />
 </PopoverBackgroundView>

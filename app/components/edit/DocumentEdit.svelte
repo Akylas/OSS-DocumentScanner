@@ -426,7 +426,7 @@
                         resetValue: 0,
                         step: __IOS__ ? 1 : undefined,
                         // value: 0,
-                        formatter: (v) => (v / 100).toFixed(),
+                        formatter: (v) => (v / 100).toFixed(2),
                         value: Math.round(Math.max(-1, Math.min(getCurrentBrightness() ?? 0, 5)) * 100),
                         onChange: debounce((value) => {
                             applyBrightnessContrast(value / 100, getCurrentContrast());
@@ -438,7 +438,7 @@
                         min: 0,
                         max: 400,
                         resetValue: 100,
-                        formatter: (v) => (v / 100).toFixed(),
+                        formatter: (v) => (v / 100).toFixed(2),
                         step: __IOS__ ? 1 : undefined,
                         // value: 10,
                         value: Math.round(Math.max(0, Math.min(getCurrentContrast() ?? 1, 4)) * 100),

@@ -62,7 +62,6 @@
     <!-- {#if showLogo && !title}
         <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
     {/if} -->
-    <slot name="center" col={1} />
     <stacklayout col={0} orientation="horizontal">
         <slot name="left" />
         <mdbutton class={'actionBarButton ' + clazz} defaultVisualState={buttonsDefaultVisualState} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />
@@ -70,4 +69,5 @@
     <stacklayout col={2} orientation="horizontal">
         <slot />
     </stacklayout>
+    <slot name="center" col={1} />
 </gridlayout>

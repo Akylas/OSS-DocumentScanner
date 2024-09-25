@@ -12,7 +12,6 @@
     import { closeModal } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
-    import CameraSettingsBottomSheet from '~/components/camera/CameraSettingsBottomSheet.svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
     import { l, lc } from '~/helpers/locale';
@@ -30,7 +29,6 @@
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
         SETTINGS_IMAGE_EXPORT_FORMAT,
-        TRANSFORMS_SPLIT,
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
@@ -103,21 +101,14 @@
                   }
                 : {};
             DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
+            const view = (await import('~/components/widgets/ImageProcessingSettingsBottomSheet.svelte')).default;
             await showBottomSheet({
                 parent: page,
-                view: CameraSettingsBottomSheet,
+                view,
                 backgroundOpacity: 0.8,
                 skipCollapsedState: true,
-                closeCallback: (result, bottomsheetComponent: CameraSettingsBottomSheet) => {
-                    ApplicationSettings.setString('defaultColorType', bottomsheetComponent.colorType);
-                    if (bottomsheetComponent.colorMatrix) {
-                        ApplicationSettings.setString('defaultColorMatrix', JSON.stringify(bottomsheetComponent.colorMatrix));
-                    } else {
-                        ApplicationSettings.remove('defaultColorMatrix');
-                    }
-                    ApplicationSettings.setString('defaultTransforms', bottomsheetComponent.transforms.join(TRANSFORMS_SPLIT));
-                },
                 props: {
+                    showCameraSettings: true,
                     cameraOptionsStore,
                     ...addedProps
                 }
