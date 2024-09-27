@@ -7,7 +7,21 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
+    import {
+        AnimationDefinition,
+        Application,
+        ApplicationSettings,
+        Color,
+        EventData,
+        NavigatedData,
+        ObservableArray,
+        OrientationChangedEventData,
+        Page,
+        Screen,
+        StackLayout,
+        Utils,
+        View
+    } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
@@ -222,7 +236,8 @@
     }
 
     onMount(() => {
-        Application.off('snackMessageAnimation', onSnackMessageAnimation);
+        Application.on('snackMessageAnimation', onSnackMessageAnimation);
+        Application.on('orientationChanged', onOrientationChanged);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.on(Application.android.activityNewIntentEvent, onAndroidNewItent);
@@ -242,12 +257,13 @@
         // refresh();
     });
     onDestroy(() => {
-        Application.on('snackMessageAnimation', onSnackMessageAnimation);
+        Application.off('orientationChanged', onOrientationChanged);
+        Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
         }
-        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
@@ -741,15 +757,24 @@
         }
     }
 
+    let currentOrientation = Application.orientation();
+    function onOrientationChanged(event: OrientationChangedEventData) {
+        currentOrientation = event.newValue;
+        refreshCollectionView();
+        // }, 1000);
+    }
+
     function getColWidth(viewStyle) {
+        const width = currentOrientation === 'landscape' ? screenHeightDips : screenWidthDips;
         switch (viewStyle) {
             case 'columns':
-                return screenWidthDips / 2;
+                return width / 2;
             default:
-                return screenWidthDips;
+                return width;
         }
     }
     function getRowHeight(viewStyle) {
+        const width = currentOrientation === 'landscape' ? screenHeightDips : screenWidthDips;
         switch (viewStyle) {
             case 'full':
             case 'list':
@@ -757,7 +782,7 @@
             case 'cardholder':
                 return 150;
             case 'columns':
-                return (screenWidthDips / 2) * CARD_RATIO;
+                return (width / 2) * CARD_RATIO;
         }
     }
     function getItemOverlap(viewStyle) {
@@ -814,13 +839,6 @@
                           ]
                         : []
                 );
-            // .concat([
-            //     {
-            //         id: 'add_manual',
-            //         name: lc('add_manual_card'),
-            //         icon: 'mdi-plus'
-            //     }
-            // ]);
             const option = await showBottomSheet({
                 parent: this,
                 view: OptionSelect,
@@ -852,7 +870,7 @@
 </script>
 
 <page bind:this={page} id="cardsList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <!-- {/if} -->
         <collectionView
             bind:this={collectionView}

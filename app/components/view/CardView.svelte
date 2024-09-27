@@ -780,7 +780,7 @@
 </script>
 
 <page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
-    <gridlayout backgroundColor={topBackgroundColor} rows="auto,auto,*">
+    <gridlayout backgroundColor={topBackgroundColor} paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
         <collectionview
             bind:this={collectionView}
             id="view"

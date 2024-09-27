@@ -247,7 +247,7 @@
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
         }
-        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
@@ -567,7 +567,7 @@
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <!-- {/if} -->
         <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={100} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
             <Template let:item>

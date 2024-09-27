@@ -541,7 +541,7 @@
 </script>
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview
             bind:this={collectionView}
             id="view"

@@ -28,7 +28,7 @@
             android:windowSoftInputMode="stateHidden|adjustPan" android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
             android:theme="@style/LaunchScreenTheme" android:exported="true"
-            android:screenOrientation="sensorPortrait">
+            android:screenOrientation="user">
             <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
