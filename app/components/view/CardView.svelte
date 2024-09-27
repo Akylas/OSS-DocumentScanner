@@ -595,6 +595,7 @@
             });
         } else {
             const options = new ObservableArray([
+                { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -606,6 +607,9 @@
 
                 onClose: async (item) => {
                     switch (item.id) {
+                        case 'rename':
+                            editingTitle = true;
+                            break;
                         case 'ocr':
                             await detectOCR({ documents: [document] });
                             unselectAll();

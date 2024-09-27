@@ -5,6 +5,7 @@
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import {
@@ -63,6 +64,7 @@
     } from '~/utils/ui';
     import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
+    import { shortcutService } from '~/services/shortcuts';
 
     const orientation = Application.orientation();
     const rowMargin = 8;
@@ -502,7 +504,7 @@
         });
 
     function getSelectedDocuments() {
-        const selected = [];
+        const selected: OCRDocument[] = [];
         documents.forEach((d, index) => {
             if (d.selected) {
                 selected.push(d.doc);
@@ -694,13 +696,15 @@
     }
 
     async function showOptions(event) {
-        const options = new ObservableArray([
-            { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-            { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
-            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-        ] as any);
+        const options = new ObservableArray(
+            (nbSelected === 1 ? [{ id: 'rename', name: lc('rename'), icon: 'mdi-rename' }] : []).concat([
+                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
+                { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any)
+        );
         return showPopoverMenu({
             options,
             anchor: event.object,
@@ -708,6 +712,19 @@
 
             onClose: async (item) => {
                 switch (item.id) {
+                    case 'rename':
+                        const doc = getSelectedDocuments()[0];
+                        const result = await prompt({
+                            title: lc('rename'),
+                            defaultText: doc.name
+                        });
+                        if (result.result && result.text?.length) {
+                            await doc.save({
+                                name: result.text
+                            });
+                            shortcutService.updateShortcuts(doc);
+                        }
+                        break;
                     case 'share':
                         showImageExportPopover(event);
                         break;

@@ -271,6 +271,7 @@
     "remote_data_auto_sync": "automatically sync on application start and document changes",
     "remote_folder": "remote folder",
     "remote_folder_desc": "remote folder to sync the data from and to",
+    "rename": "rename",
     "reset": "reset",
     "restart": "restart",
     "restart_app": "restart the app",
