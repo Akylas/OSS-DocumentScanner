@@ -50,6 +50,9 @@ export class LocalFolderImageSyncService extends BaseImageSyncService {
     override async putFileContents(relativePath: string, localFilePath: string, options?) {
         return File.fromPath(localFilePath).copy(path.join(this.localFolderPath, relativePath));
     }
+    override putFileContentsFromData(relativePath: string, data: string, options?) {
+        return File.fromPath(path.join(this.localFolderPath, relativePath)).writeText(data);
+    }
     override async deleteFile(relativePath: string) {
         return File.fromPath(path.join(this.localFolderPath, relativePath)).remove();
     }

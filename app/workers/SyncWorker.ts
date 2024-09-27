@@ -583,12 +583,12 @@ export default class SyncWorker extends Observable {
                     needsRemoteDocUpdate = true;
                 }
             }
-            TEST_LOG && console.log('update document', toUpdate);
+            TEST_LOG && console.log('update document', needsRemoteDocUpdate, toUpdate);
             // mark the document as synced
             await document.save({ _synced: document._synced | service.syncMask, ...toUpdate });
 
             if (needsRemoteDocUpdate) {
-                await service.putFileContents(path.join(document.id, 'data.json'), document.toString());
+                await service.putFileContentsFromData(path.join(document.id, 'data.json'), document.toString());
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate) {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
@@ -692,7 +692,7 @@ export default class SyncWorker extends Observable {
                     }
                 }
             }
-            await service.putFileContents(path.join(document.id, 'data.json'), document.toString(), { overwrite: true });
+            await service.putFileContentsFromData(path.join(document.id, 'data.json'), document.toString(), { overwrite: true });
             return document.save({ _synced: document._synced | service.syncMask });
         } else if ((document._synced & service.syncMask) === 0) {
             // TEST_LOG && console.log('syncDocumentOnWebdav just changing sync state');
@@ -759,9 +759,6 @@ export default class SyncWorker extends Observable {
                                     } finally {
                                         recycleImages(imageSource);
                                     }
-                                    // const filePath = path.join(knownFolders.temp().path, name);
-                                    // await imageSource.saveToFileAsync(filePath, exportFormat, exportQuality);
-                                    // await service.putFileContents(name, filePath);
                                 }
                             }
                             await doc.document.save({ _synced: doc.document._synced | service.syncMask });
@@ -815,9 +812,6 @@ export default class SyncWorker extends Observable {
                             DEV_LOG && console.info('syncPDFDocuments', 'test', doc.id, existing?.lastmod, doc.modifiedDate);
                             if (!existing || new Date(existing.lastmod).valueOf() < doc.modifiedDate) {
                                 await service.writePDF(doc, name);
-                                // const filePath = path.join(knownFolders.temp().path, name);
-                                // await imageSource.saveToFileAsync(filePath, exportFormat, exportQuality);
-                                // await service.putFileContents(name, filePath);
                             }
                             await doc.save({ _synced: doc._synced | service.syncMask });
                         }
