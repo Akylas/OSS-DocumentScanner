@@ -29,6 +29,9 @@
     "always": "sempre",
     "always_prompt_crop_edit": "richiedi sempre la modifica dell'area del documento",
     "always_prompt_crop_edit_desc": "Quando si acquisisce dalla fotocamera senza modalità batch, abilitando questa opzione viene sempre richiesto di confermare/modificare l'area del documento prima di creare il documento",
+    "app": {
+        "name": "Sviluppatore OSS Scanner Documenti"
+    },
     "apply": "applica",
     "ask_everytime": "chiedi ogni volta",
     "aspect_fill": "riempi",
@@ -208,7 +211,7 @@
     "local_auto_sync_desc": "sincronizza automaticamente in caso di modifiche ai documenti",
     "local_folder": "cartella locale",
     "magnifier_sensitivity": "sensibilità di ingrandimento",
-    "magnifier_sensitivity_desc": "cambia la sensibilità della lente di ingrandimento durante il ridimensionamento della zona di ritaglio",
+    "magnifier_sensitivity_desc": "sensibilità del trascinamento degli angoli. 1 significa veloce quanto si muove il dito",
     "missing_export_folder": "cartella di esportazione mancante",
     "missing_storage_perm_settings": "per esportare le impostazioni è necessario autorizzare l'accesso allo spazio di archiviazione",
     "missing_webdav_password": "Password WebDAV mancante. Dato che non viene salvata localmente, è necessario inserirla ogni volta che si modificano le impostazioni",
