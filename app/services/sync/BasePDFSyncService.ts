@@ -20,6 +20,7 @@ export abstract class BasePDFSyncService extends BaseSyncService {
     // abstract updatePage(document: OCRDocument, page: OCRPage, pageIndex: number): Promise<any>;
     abstract deleteFile(remotePath: string): Promise<any>;
     abstract putFileContents(relativePath: string, localFilePath: string, options?): Promise<any>;
+    abstract putFileContentsFromData(relativePath: string, data: string, options?): Promise<any>;
     abstract writePDF(document: OCRDocument, name: string): Promise<any>;
 
     getPDFName(document: OCRDocument) {

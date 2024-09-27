@@ -3,7 +3,7 @@ import { Observable } from '@nativescript/core';
 export default class Queue extends Observable {
     private workingOnPromise = false;
     private queue = [];
-    private  pendingPromise = false;
+    private pendingPromise = false;
     add(promise) {
         return new Promise((resolve, reject) => {
             this.queue.push({

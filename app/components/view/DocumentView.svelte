@@ -507,6 +507,7 @@
             });
         } else {
             const options = new ObservableArray([
+                { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
                 { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
@@ -519,6 +520,9 @@
 
                 onClose: async (item) => {
                     switch (item.id) {
+                        case 'rename':
+                            editingTitle = true;
+                            break;
                         case 'select_all':
                             selectAll();
                             break;
@@ -541,7 +545,7 @@
 </script>
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview
             bind:this={collectionView}
             id="view"

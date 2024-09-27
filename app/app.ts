@@ -26,7 +26,7 @@ import { securityService } from './services/security';
 import { syncService } from './services/sync';
 import { showError } from './utils/showError';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
-import { SETTINGS_APP_VERSION, SETTINGS_FIRST_OPEN } from './utils/constants';
+import { SETTINGS_APP_VERSION, SETTINGS_FIRST_OPEN, SETTINGS_SYNC_ON_START } from './utils/constants';
 import { setDocumentsService } from './models/OCRDocument';
 
 declare module '@nativescript/core/application/application-common' {
@@ -126,10 +126,9 @@ try {
             Application.servicesStarted = true;
             DEV_LOG && console.log('servicesStarted');
             Application.notify({ eventName: 'servicesStarted' });
-            try {
-                await syncService.syncDocuments();
-            } catch (error) {
-                console.error('start sync error', error, error.stack);
+            if (ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)) {
+                syncService.syncDocuments();
+
             }
         } catch (error) {
             showError(error, { forcedMessage: lc('startup_error') });

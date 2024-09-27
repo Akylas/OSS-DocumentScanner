@@ -57,6 +57,9 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
     override async putFileContents(relativePath: string, localFilePath: string, options?) {
         return this.client.putFileContents(path.join(this.remoteFolder, relativePath), File.fromPath(localFilePath), options);
     }
+    override putFileContentsFromData(relativePath: string, data: string, options?) {
+        return this.client.putFileContents(path.join(this.remoteFolder, relativePath), data, options);
+    }
     override async deleteFile(relativePath: string) {
         return this.client.deleteFile(path.join(this.remoteFolder, relativePath));
     }

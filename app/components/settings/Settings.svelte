@@ -46,6 +46,7 @@
         SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
         SETTINGS_MAGNIFIER_SENSITIVITY,
+        SETTINGS_SYNC_ON_START,
         SETTINGS_TRANSFORM_BATCH_SIZE,
         TRANSFORM_BATCH_SIZE,
         USE_SYSTEM_CAMERA
@@ -407,6 +408,13 @@
                 ];
             case 'sync':
                 return [
+                    {
+                        type: 'switch',
+                        id: SETTINGS_SYNC_ON_START,
+                        title: lc('sync_on_start'),
+                        description: lc('sync_on_start_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)
+                    },
                     {
                         id: 'data_sync',
                         title: lc('data_sync'),

@@ -648,7 +648,7 @@
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">

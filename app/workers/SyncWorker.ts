@@ -583,12 +583,12 @@ export default class SyncWorker extends Observable {
                     needsRemoteDocUpdate = true;
                 }
             }
-            TEST_LOG && console.log('update document', toUpdate);
+            TEST_LOG && console.log('update document', needsRemoteDocUpdate, toUpdate);
             // mark the document as synced
             await document.save({ _synced: document._synced | service.syncMask, ...toUpdate });
 
             if (needsRemoteDocUpdate) {
-                await service.putFileContents(path.join(document.id, 'data.json'), document.toString());
+                await service.putFileContentsFromData(path.join(document.id, 'data.json'), document.toString());
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate) {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
@@ -692,7 +692,7 @@ export default class SyncWorker extends Observable {
                     }
                 }
             }
-            await service.putFileContents(path.join(document.id, 'data.json'), document.toString(), { overwrite: true });
+            await service.putFileContentsFromData(path.join(document.id, 'data.json'), document.toString(), { overwrite: true });
             return document.save({ _synced: document._synced | service.syncMask });
         } else if ((document._synced & service.syncMask) === 0) {
             // TEST_LOG && console.log('syncDocumentOnWebdav just changing sync state');
@@ -705,12 +705,14 @@ export default class SyncWorker extends Observable {
             // pages will be updated independently
             return;
         }
-        const localDocuments = event?.['pages']
+        let localDocuments = event?.['pages']
             ? [{ document: event.object as OCRDocument, pages: event['pages'] as OCRPage[] }]
             : event?.['pageIndex'] !== undefined
               ? [{ document: event.object as OCRDocument, pages: [event.object['pages'][event['pageIndex']]] as OCRPage[] }]
               : (await documentsService.documentRepository.search({})).map((d) => ({ document: d, pages: d.pages }));
 
+        // this should not happened but i got bug reports with null document. cant reproduce
+        localDocuments = localDocuments.filter((d) => !!d.document);
         TEST_LOG &&
             console.log(
                 'Sync',
@@ -739,7 +741,7 @@ export default class SyncWorker extends Observable {
                     if (documentsToSync.length) {
                         await service.ensureRemoteFolder();
                         const remoteFiles = await service.getRemoteFolderFiles('');
-                        DEV_LOG && console.log('remoteFiles', remoteFiles);
+                        DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
                         for (let index = 0; index < localDocuments.length; index++) {
                             const doc = localDocuments[index];
                             for (let j = 0; j < doc.pages.length; j++) {
@@ -759,9 +761,6 @@ export default class SyncWorker extends Observable {
                                     } finally {
                                         recycleImages(imageSource);
                                     }
-                                    // const filePath = path.join(knownFolders.temp().path, name);
-                                    // await imageSource.saveToFileAsync(filePath, exportFormat, exportQuality);
-                                    // await service.putFileContents(name, filePath);
                                 }
                             }
                             await doc.document.save({ _synced: doc.document._synced | service.syncMask });
@@ -780,7 +779,6 @@ export default class SyncWorker extends Observable {
         //     return;
         // }
         const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : (event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({}));
-
         TEST_LOG &&
             console.log(
                 'Sync',
@@ -807,7 +805,7 @@ export default class SyncWorker extends Observable {
                         await service.ensureRemoteFolder();
                         DEV_LOG && console.log('ensureRemoteFolder done');
                         const remoteFiles = await service.getRemoteFolderFiles('');
-                        DEV_LOG && console.log('remoteFiles', remoteFiles);
+                        DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
                         for (let index = 0; index < localDocuments.length; index++) {
                             const doc = localDocuments[index];
                             const name = service.getPDFName(doc);
@@ -815,9 +813,6 @@ export default class SyncWorker extends Observable {
                             DEV_LOG && console.info('syncPDFDocuments', 'test', doc.id, existing?.lastmod, doc.modifiedDate);
                             if (!existing || new Date(existing.lastmod).valueOf() < doc.modifiedDate) {
                                 await service.writePDF(doc, name);
-                                // const filePath = path.join(knownFolders.temp().path, name);
-                                // await imageSource.saveToFileAsync(filePath, exportFormat, exportQuality);
-                                // await service.putFileContents(name, filePath);
                             }
                             await doc.save({ _synced: doc._synced | service.syncMask });
                         }
@@ -833,7 +828,7 @@ export default class SyncWorker extends Observable {
 const worker = new SyncWorker(context);
 const receivedMessage = worker.receivedMessage.bind(worker);
 context.onmessage = (event) => {
-    // DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
+    DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
     if (typeof event.data.messageData === 'string') {
         try {
             event.data.messageData = JSON.parse(event.data.messageData);

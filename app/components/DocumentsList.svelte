@@ -5,7 +5,7 @@
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
-    import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
@@ -247,7 +247,7 @@
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
             Application.android.off(Application.android.activityNewIntentEvent, onAndroidNewItent);
         }
-        documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
+        documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_PAGE_DELETED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
@@ -367,7 +367,7 @@
     }
 
     function getSelectedDocuments() {
-        const selected = [];
+        const selected: OCRDocument[] = [];
         documents.forEach((d, index) => {
             if (d.selected) {
                 selected.push(d.doc);
@@ -528,13 +528,15 @@
         }
     }
     async function showOptions(event) {
-        const options = new ObservableArray([
-            { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-            { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
-            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-        ] as any);
+        const options = new ObservableArray(
+            (nbSelected === 1 ? [{ id: 'rename', name: lc('rename'), icon: 'mdi-rename' }] : []).concat([
+                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
+                { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any)
+        );
         return showPopoverMenu({
             options,
             anchor: event.object,
@@ -542,6 +544,18 @@
 
             onClose: async (item) => {
                 switch (item.id) {
+                    case 'rename':
+                        const doc = getSelectedDocuments()[0];
+                        const result = await prompt({
+                            title: lc('rename'),
+                            defaultText: doc.name
+                        });
+                        if (result.result && result.text?.length) {
+                            await doc.save({
+                                name: result.text
+                            });
+                        }
+                        break;
                     case 'share':
                         showImageExportPopover(event);
                         break;
@@ -567,7 +581,7 @@
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <!-- {/if} -->
         <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={100} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
             <Template let:item>

@@ -33,6 +33,7 @@ export abstract class BaseImageSyncService extends BaseSyncService {
     // abstract updatePage(document: OCRDocument, page: OCRPage, pageIndex: number): Promise<any>;
     abstract deleteFile(remotePath: string): Promise<any>;
     abstract putFileContents(relativePath: string, localFilePath: string, options?): Promise<any>;
+    abstract putFileContentsFromData(relativePath: string, data: string, options?): Promise<any>;
     abstract writeImage(imageSource: ImageSource, name: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean): Promise<any>;
 
     getImageName(document: OCRDocument, page: OCRPage, pageIndex: number, exportFormat: string) {
