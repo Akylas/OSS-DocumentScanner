@@ -351,13 +351,15 @@ export class SyncService extends Observable {
     queue = new Queue();
     async internalSendMessageToWorker(data) {
         this.queue.add(async () => {
-            DEV_LOG && console.log('internalSendMessageToWorker');
             if (!this.worker) {
+                // android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY);
                 const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
                 worker.onmessage = this.onWorkerMessage.bind(this);
+                // await timeout(1000);
             }
+            DEV_LOG && console.log('internalSendMessageToWorker', Date.now());
             this.worker.postMessage(data);
-            // it seems that without the timeout only consecutive send does not work
+            // it seems that without the timeout consecutive send does not work
             await timeout(150);
         });
     }

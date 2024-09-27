@@ -705,12 +705,14 @@ export default class SyncWorker extends Observable {
             // pages will be updated independently
             return;
         }
-        const localDocuments = event?.['pages']
+        let localDocuments = event?.['pages']
             ? [{ document: event.object as OCRDocument, pages: event['pages'] as OCRPage[] }]
             : event?.['pageIndex'] !== undefined
               ? [{ document: event.object as OCRDocument, pages: [event.object['pages'][event['pageIndex']]] as OCRPage[] }]
               : (await documentsService.documentRepository.search({})).map((d) => ({ document: d, pages: d.pages }));
 
+        // this should not happened but i got bug reports with null document. cant reproduce
+        localDocuments = localDocuments.filter((d) => !!d.document);
         TEST_LOG &&
             console.log(
                 'Sync',
@@ -777,7 +779,6 @@ export default class SyncWorker extends Observable {
         //     return;
         // }
         const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : (event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({}));
-
         TEST_LOG &&
             console.log(
                 'Sync',

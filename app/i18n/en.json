@@ -311,6 +311,8 @@
     "sure_cancel_import": "are you sure you want to cancel?",
     "sure_go_back": "are you sure you want to go back?",
     "sync": "sync",
+    "sync_on_start": "sync on start",
+    "sync_on_start_desc": "should the application try to sync documents on start",
     "sync_service_color_desc": "the color is used to distinguish your different sync services",
     "sync_settings_desc": "synchronization settings",
     "system": "system",

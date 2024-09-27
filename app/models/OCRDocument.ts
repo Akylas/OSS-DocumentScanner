@@ -283,7 +283,7 @@ export class OCRDocument extends Observable implements Document {
             await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
-            await this.save({}, true, false);
+            await this.save({}, true, true);
             this.onPageUpdated(pageIndex, page, imageUpdated);
         }
         DEV_LOG && console.log('updatePage done', pageIndex);

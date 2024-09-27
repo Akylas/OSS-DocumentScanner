@@ -26,6 +26,7 @@ export const SETTINGS_DEFAULT_COLORMATRIX = 'defaultColorMatrix';
 export const SETTINGS_DEFAULT_BRIGHTNESS = 'defaultBrightness';
 export const SETTINGS_DEFAULT_CONTRAST = 'defaultContrast';
 export const SETTINGS_MAGNIFIER_SENSITIVITY = 'magnifier_sensitivity';
+export const SETTINGS_SYNC_ON_START = 'sync_on_start';
 
 export const TRANSFORMS_SPLIT = '|';
 
