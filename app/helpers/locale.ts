@@ -193,7 +193,7 @@ export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
 }
 export function getCurrentISO3Language() {
     if (__IOS__) {
-        return NSLocale.alloc().initWithLocaleIdentifier(lang)['ISO639_2LanguageCode']();
+        return NSLocale.alloc().initWithLocaleIdentifier(lang).ISO639_2LanguageCode();
     } else {
         const locale = java.util.Locale.forLanguageTag(lang);
         return locale.getISO3Language();
