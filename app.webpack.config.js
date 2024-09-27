@@ -112,8 +112,8 @@ module.exports = (env, params = {}) => {
         sourceMap, // --env.sourceMap
         hiddenSourceMap, // --env.hiddenSourceMap
         inlineSourceMap, // --env.inlineSourceMap
-        sentry, // --env.sentry
-        uploadSentry,
+        sentry = false, // --env.sentry
+        uploadSentry = false,
         verbose, // --env.verbose
         uglify, // --env.uglify
         noconsole, // --env.noconsole
