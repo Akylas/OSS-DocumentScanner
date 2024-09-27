@@ -20,6 +20,8 @@ import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, Docum
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
 import { lc } from '@nativescript-community/l';
+import Queue from '~/workers/queue';
+import { timeout } from '~/utils/ui';
 
 export const syncServicesStore = writable([]);
 
@@ -201,9 +203,6 @@ export class SyncService extends Observable {
             ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
         }
         syncServicesStore.set(syncServices);
-        // syncServices.map((data) => SERVICES_TYPE_MAP[data.type].start(data));
-        // AVAILABLE_SYNC_SERVICES.forEach((sClass) => sClass.start());
-        // this.services = BaseSyncService.getEnabledServices();
         DEV_LOG && console.log('Sync', 'start', /* this.services.length,  */ this.enabled);
         if (this.enabled) {
             this.notify({ eventName: EVENT_STATE, enabled: this.enabled } as SyncEnabledEventData);
@@ -212,13 +211,11 @@ export class SyncService extends Observable {
             documentsService.on(EVENT_DOCUMENT_DELETED, this.onDocumentDeleted, this);
             documentsService.on(EVENT_DOCUMENT_PAGE_UPDATED, this.onDocumentPageUpdated, this);
             documentsService.on(EVENT_DOCUMENT_PAGES_ADDED, this.onDocumentPagesAdded, this);
-            // prefs.on(`key:${SETTINGS_REMOTE_AUTO_SYNC}`, this.onAutoSyncPrefChanged);
-            // this.onAutoSyncPrefChanged();
             DEV_LOG && console.log('SyncService', 'start');
         }
     }
     async stop() {
-        // prefs.off(`key:${SETTINGS_REMOTE_AUTO_SYNC}`, this.onAutoSyncPrefChanged);
+        DEV_LOG && console.log('Sync', 'stop');
         documentsService.off(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);
         documentsService.off(EVENT_DOCUMENT_UPDATED, this.onDocumentUpdated, this);
         documentsService.off(EVENT_DOCUMENT_DELETED, this.onDocumentDeleted, this);
@@ -351,6 +348,19 @@ export class SyncService extends Observable {
             showError(error);
         }
     }
+    queue = new Queue();
+    async internalSendMessageToWorker(data) {
+        this.queue.add(async () => {
+            DEV_LOG && console.log('internalSendMessageToWorker');
+            if (!this.worker) {
+                const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
+                worker.onmessage = this.onWorkerMessage.bind(this);
+            }
+            this.worker.postMessage(data);
+            // it seems that without the timeout only consecutive send does not work
+            await timeout(150);
+        });
+    }
     async sendMessageToWorker<T = any>(type: string, messageData?, id?: number, error?, isResponse = false, timeout = 0, nativeData?): Promise<T> {
         // DEV_LOG && console.info('Sync', 'sendMessageToWorker', type, id, timeout, isResponse, !isResponse && (id || timeout), messageData, nativeData, this.worker);
         if (!isResponse && (id || timeout)) {
@@ -391,7 +401,8 @@ export class SyncService extends Observable {
                 };
                 // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
 
-                this.worker.postMessage(data);
+                // this.worker.postMessage(data);
+                this.internalSendMessageToWorker(data);
             });
         } else {
             // DEV_LOG && console.info('Sync', 'postMessage', 'test');
@@ -414,8 +425,9 @@ export class SyncService extends Observable {
                 nativeData: keys.map((k) => nativeDataKeysPrefix + k),
                 type
             };
-            // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
-            this.worker.postMessage(data);
+            DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
+            this.internalSendMessageToWorker(data);
+            // this.worker.postMessage(data);
         }
     }
     async syncDocumentsInternal({
@@ -438,10 +450,7 @@ export class SyncService extends Observable {
             // send syncState event right now for the UI to be updated as soon as possible
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
             // DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent);
-            if (!this.worker) {
-                const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
-                worker.onmessage = this.onWorkerMessage.bind(this);
-            }
+
             // DEV_LOG && console.warn('syncDocumentsInternal1', type, fromEvent);
             let eventData;
             if (event) {

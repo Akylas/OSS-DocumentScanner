@@ -739,7 +739,7 @@ export default class SyncWorker extends Observable {
                     if (documentsToSync.length) {
                         await service.ensureRemoteFolder();
                         const remoteFiles = await service.getRemoteFolderFiles('');
-                        DEV_LOG && console.log('remoteFiles', remoteFiles);
+                        DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
                         for (let index = 0; index < localDocuments.length; index++) {
                             const doc = localDocuments[index];
                             for (let j = 0; j < doc.pages.length; j++) {
@@ -804,7 +804,7 @@ export default class SyncWorker extends Observable {
                         await service.ensureRemoteFolder();
                         DEV_LOG && console.log('ensureRemoteFolder done');
                         const remoteFiles = await service.getRemoteFolderFiles('');
-                        DEV_LOG && console.log('remoteFiles', remoteFiles);
+                        DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
                         for (let index = 0; index < localDocuments.length; index++) {
                             const doc = localDocuments[index];
                             const name = service.getPDFName(doc);
@@ -827,7 +827,7 @@ export default class SyncWorker extends Observable {
 const worker = new SyncWorker(context);
 const receivedMessage = worker.receivedMessage.bind(worker);
 context.onmessage = (event) => {
-    // DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
+    DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
     if (typeof event.data.messageData === 'string') {
         try {
             event.data.messageData = JSON.parse(event.data.messageData);

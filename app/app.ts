@@ -126,11 +126,7 @@ try {
             Application.servicesStarted = true;
             DEV_LOG && console.log('servicesStarted');
             Application.notify({ eventName: 'servicesStarted' });
-            try {
-                await syncService.syncDocuments();
-            } catch (error) {
-                console.error('start sync error', error, error.stack);
-            }
+            syncService.syncDocuments()
         } catch (error) {
             showError(error, { forcedMessage: lc('startup_error') });
         }
