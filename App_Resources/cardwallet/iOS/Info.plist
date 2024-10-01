@@ -61,5 +61,7 @@
     <true/>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
   </dict>
 </plist>
