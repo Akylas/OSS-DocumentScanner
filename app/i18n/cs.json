@@ -2,6 +2,14 @@
     "$com.akylas.cardwallet": {
         "app": {
             "name": "OSS Peněženka"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Povolit přístup k fotoaparátu pro skenování karet",
+                    "NSPhotoLibraryUsageDescription": "Povolit přístup k obrázkům pro skenování karet z vaší knihovny"
+                }
+            }
         }
     },
     "$com.akylas.documentscanner": {
@@ -12,7 +20,19 @@
     "a3": "a3",
     "a4": "a4",
     "about": "o aplikaci",
+    "add_from_camera": "přidat z kamery",
+    "add_manual_card": "přidat kartu ručně",
+    "add_qrcode_camera": "přidat čárový kód z kamery",
+    "add_qrcode_file": "přidat čárový kód z obrázku",
+    "add_qrcode_manual": "přidat čárový kód ručně",
     "allow_app_screenshot": "povolit snímek obrazovky aplikace",
+    "always": "vždy",
+    "always_prompt_crop_edit": "vždy vyzvat k úpravě regionu dokumentu",
+    "app": {
+        "name": "OSS Dokument Skener dev"
+    },
+    "apply": "použít",
+    "ask_everytime": "vždy se ptát",
     "aspect_fill": "vyplnit",
     "aspect_fit": "přizpůsobit",
     "aspect_ratio": "poměr stran",
@@ -28,9 +48,11 @@
     "auto_scan_duration": "trvání automatického skenu",
     "auto_scan_duration_desc": "trvání v milisekundách před přidáním dokumentu",
     "auto_scan_first_use": "nová funkce automatického skenu je automaticky povolena. Bude automaticky skenovat dokumenty. Kvůli její funkčnosti již nebudete dotázáni na upravení rohů dokumentu.\nChcete ponechat zapnutý automatický sken?\n(můžete to později změnit v nastavení nebo dlouhým podržením na tlačítku vyfocení)",
+    "auto_sync": "auto synchronizace",
     "autoscan": "automatický sken",
     "autoscan_settings": "nastavení automatického skenu",
     "backup_restore": "záloha / obnovení",
+    "barcore_qrcode": "čárový kód / QR kód",
     "batch_mode": "dávkový režim",
     "biometric_auto_lock": "biometrické automatické uzamčení",
     "biometric_auto_lock_desc": "při povolení bude aplikace při přechodu na pozadí automaticky uzamčena",
@@ -46,8 +68,10 @@
     "capturing": "zaznamenávání",
     "cardholder": "držitel karty",
     "cards": "karty",
+    "choose": "vybrat",
     "color": "barva",
     "color_desc": "vylepšit barvy a redukovat nechtěné barevné odstíny",
+    "columns": "sloupce",
     "comments": "komentáře",
     "computing": "vypočítávání...",
     "condensed": "zkompaktněno",
@@ -58,12 +82,16 @@
     "confirm_delete_pages": "opravdu chcete odstranit těchto %1$s stránek?",
     "confirm_passcode": "Potvrdit PIN",
     "confirm_passcode_dont_match": "Potvrzení PINu se neshoduje",
+    "contrast": "kontrast",
     "copied": "zkopírováno",
     "crop_edit_doc": "klepněte na obrazovku poblíž rohu, ale ne tak, abyste viděli lupu. Aplikace vybere nejbližší roh",
     "crop_enabled": "rozpoznat hrany dokumentu a oříznout je",
     "current_passcode": "Starý PIN",
     "dark": "tmavý",
     "data_location": "umístění dat",
+    "data_sync": "synchronizace dat aplikace",
+    "data_sync_desc": "synchronizovat data aplikace, abyste ji mohli používat na více zařízeních",
+    "default_value": "výchozí",
     "delete": "odstranit",
     "delete_page": "odstranit",
     "detect_qrcode": "detekovat QR kód",
@@ -73,6 +101,7 @@
     "document_detection_settings": "nastavení rozpoznávání dokumentů",
     "document_name_format": "formát data názvu dokumentu",
     "document_name_format_desc": "definuje formát data používaný při pojmenovávání nových dokumentů\n\n* pro formát %2$s použijte %1$s\n\n* použijte %3$s pro časové razítko epochy (trvání v ms od roku 1970).\n\n* použijte vlastní formát pomocí %4$s. \nMůžete najít další %5$s",
+    "document_naming_template": "šablona pojmenování dokumentů",
     "document_not_detected_margin": "žádné okraje dokumentů",
     "document_not_detected_margin_desc": "pokud nebude nalezen žádný dokument, budou rohy nastaveny na velikost obrázku s menším odsazením okrajů",
     "documents": "Dokumenty",
@@ -105,6 +134,7 @@
     "filters": "filtry",
     "finish": "dokončit",
     "flash_mode": "režim blesku",
+    "folder": "složka",
     "format": "formát",
     "french": "Francouzština",
     "full": "plný",
