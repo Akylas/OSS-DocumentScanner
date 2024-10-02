@@ -127,7 +127,7 @@ module.exports = (env, params = {}) => {
         playStoreBuild = true, // --env.playStoreBuild
         adhoc, // --env.adhoc
         timeline, // --env.timeline
-        locale = 'auto', // --env.locale
+        locale = 'en', // --env.locale
         theme = 'auto', // --env.theme
         keep_classnames_functionnames = false,
         startOnCam = false
