@@ -23,7 +23,7 @@
 
     export let transforms = [];
     export let colorType = DEFAULT_COLORTYPE as MatricesTypes;
-    export let colorMatrix: number[] = null;
+    export let colorMatrix: number[] = DEFAULT_COLORMATRIX;
     export let contrast = DEFAULT_CONTRAST;
     export let brightness = DEFAULT_BRIGHTNESS;
 

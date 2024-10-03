@@ -13,7 +13,6 @@
     export let rotation: number = 0;
     // export let image: ImageSource;
     // export let rotation: number;
-    export let colorMatrix: number[] = null;
     export let imageWidth: number;
     export let imageHeight: number;
     let webView: NativeViewElementNode<AWebView>;
