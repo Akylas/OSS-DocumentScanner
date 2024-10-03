@@ -58,8 +58,6 @@ export async function cropDocument(editingImage: ImageSource, quads, transforms 
 export async function cropDocumentFromFile(src: string, quads, options: CropOptions = {}) {
     return new Promise<any[]>((resolve, reject) => {
         try {
-            // nImages is a NSArray
-            DEV_LOG && console.log('cropDocumentFromFile', src, quads, options);
             OpencvDocumentProcessDelegate.cropDocumentFromFileQuadsDelegateOptions(src, JSON.stringify(quads), CompletionDelegateImpl.initWithResolveReject(resolve, reject), JSON.stringify(options));
         } catch (error) {
             reject(error);
@@ -108,23 +106,6 @@ export async function getColorPalette(
     options: Partial<GenerateColorOptions> = { resizeThreshold: 100, colorsFilterDistanceThreshold: 20, colorPalette: 5 }
 ): Promise<Quads> {
     throw new Error('not implemented');
-    // return new Promise((resolve, reject) => {
-    //     com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPalette(
-    //         editingImage['android'] || editingImage,
-    //         new com.akylas.documentscanner.utils.FunctionCallback({
-    //             onResult(e, result) {
-    //                 if (e) {
-    //                     reject(e);
-    //                 } else {
-    //                     resolve(result ? JSON.parse(result) : []);
-    //                 }
-    //             }
-    //         }),
-    //         options.resizeThreshold,
-    //         options.colorsFilterDistanceThreshold,
-    //         options.colorPalette
-    //     );
-    // });
 }
 export async function getColorPaletteFromFile(
     src: string,
@@ -132,25 +113,6 @@ export async function getColorPaletteFromFile(
     strOptions?: string
 ): Promise<Quads> {
     throw new Error('not implemented');
-    // return new Promise((resolve, reject) => {
-    // com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.getColorPaletteFromFile(
-    //     Utils.android.getApplicationContext(),
-    //     src,
-    //     new com.akylas.documentscanner.utils.FunctionCallback({
-    //         onResult(e, result) {
-    //             if (e) {
-    //                 reject(e);
-    //             } else {
-    //                 resolve(result ? JSON.parse(result) : []);
-    //             }
-    //         }
-    //     }),
-    //     options.resizeThreshold,
-    //     options.colorsFilterDistanceThreshold,
-    //     options.colorPalette,
-    //     strOptions
-    // );
-    // });
 }
 
 export async function ocrDocument(editingImage: ImageSource | UIImage, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
