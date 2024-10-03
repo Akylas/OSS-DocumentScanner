@@ -76,6 +76,7 @@ export async function saveImage(
             imageQuality,
             stream
         );
+        stream.close();
         if (reportName !== undefined) {
             if (reportName) {
                 return com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());

@@ -991,11 +991,12 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
 }
 
 export function getDirectoryName(folderPath: string) {
-    let exportDirectoryName = folderPath;
+    const exportDirectoryName = folderPath;
     if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
         const context = Utils.android.getApplicationContext();
         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
-        exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri()) || exportDirectoryName;
+        return outdocument.getName() + '@' + folderPath.slice(ANDROID_CONTENT.length).split('/')[0];
+        // exportDirectoryName = outdocument.getName() || com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri()) || exportDirectoryName;
     }
     return exportDirectoryName
         .split(SEPARATOR)
