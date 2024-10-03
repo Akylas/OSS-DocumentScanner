@@ -63,6 +63,11 @@ function updateSystemFontScale(value) {
     fontScale.set(value);
 }
 
+if (__ANDROID__) {
+    Application.android.on('dialogOnCreateView', (event) => {
+        com.akylas.documentscanner.Utils.Companion.prepareWindow(event.window);
+    });
+}
 const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
@@ -72,22 +77,15 @@ const onInitRootView = function () {
             (rootView.nativeViewProtected as android.view.View).setOnApplyWindowInsetsListener(
                 new android.view.View.OnApplyWindowInsetsListener({
                     onApplyWindowInsets(view, insets) {
-                        if (SDK_VERSION >= 29) {
-                            const inset = insets.getSystemWindowInsets();
-                            windowInset.set({
-                                top: Utils.layout.toDeviceIndependentPixels(inset.top),
-                                bottom: Utils.layout.toDeviceIndependentPixels(inset.bottom),
-                                left: Utils.layout.toDeviceIndependentPixels(inset.left),
-                                right: Utils.layout.toDeviceIndependentPixels(inset.right)
-                            });
-                        } else {
-                            windowInset.set({
-                                top: Utils.layout.toDeviceIndependentPixels(insets.getSystemWindowInsetTop()),
-                                bottom: Utils.layout.toDeviceIndependentPixels(insets.getSystemWindowInsetBottom()),
-                                left: Utils.layout.toDeviceIndependentPixels(insets.getSystemWindowInsetLeft()),
-                                right: Utils.layout.toDeviceIndependentPixels(insets.getSystemWindowInsetRight())
-                            });
-                        }
+                        const inset = com.akylas.documentscanner.Utils.Companion.getRootWindowInsets(view);
+                        DEV_LOG && console.log('onApplyWindowInsets', inset[0], inset[1], inset[2], inset[3], inset[4]);
+                        windowInset.set({
+                            top: Utils.layout.toDeviceIndependentPixels(inset[0]),
+                            bottom: Utils.layout.toDeviceIndependentPixels(Math.max(inset[1], inset[4])),
+                            left: Utils.layout.toDeviceIndependentPixels(inset[2]),
+                            right: Utils.layout.toDeviceIndependentPixels(inset[3])
+                        });
+
                         return insets;
                     }
                 })

@@ -1499,7 +1499,6 @@ export async function addCurrentImageToDocument({
                         resizeThreshold: QRCODE_RESIZE_THRESHOLD
                     }
                 );
-                // Promise.all([detectQRCode(images[0], { resizeThreshold: QRCODE_RESIZE_THRESHOLD }), getColorPalette(images[0])]);
                 DEV_LOG && console.log('qrcode and colors', qrcode, colors);
             }
             pagesToAdd.push({

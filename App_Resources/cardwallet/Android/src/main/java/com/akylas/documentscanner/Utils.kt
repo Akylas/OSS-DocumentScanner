@@ -63,5 +63,12 @@ class Utils {
         fun prepareWindow(window: Window?) {
             WindowCompat.setDecorFitsSystemWindows(window!!, false)
         }
+        fun getRootWindowInsets(view: View): IntArray {
+            val windowInsets = ViewCompat.getRootWindowInsets(view) ?: return intArrayOf(0, 0,0, 0, 0)
+            val inset = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val imeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+            val imeHeight = if (imeVisible)  windowInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom else 0
+            return intArrayOf(inset.top, inset.bottom, inset.left, inset.right, imeHeight)
+        }
     }
 }
