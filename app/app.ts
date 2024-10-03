@@ -10,6 +10,7 @@ import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
+import { prefs } from '~/services/preferences';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import { Application, ApplicationSettings, Frame, NavigatedData, Page, Trace } from '@nativescript/core';
 import { CropView } from 'plugin-nativeprocessor/CropView';
@@ -128,7 +129,6 @@ try {
             Application.notify({ eventName: 'servicesStarted' });
             if (ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)) {
                 syncService.syncDocuments();
-
             }
         } catch (error) {
             showError(error, { forcedMessage: lc('startup_error') });
@@ -164,6 +164,22 @@ try {
         pageInstance = null;
     });
     if (__ANDROID__) {
+        const FLAG_SECURE = 8192; // android.view.WindowManager.LayoutParams.FLAG_SECURE
+        Application.android.on(Application.android.activityCreateEvent, (event) => {
+            const allowScreenshot = ApplicationSettings.getBoolean('allow_screenshot', true);
+            const window = event.activity.getWindow();
+            if (!allowScreenshot) {
+                window.setFlags(FLAG_SECURE, FLAG_SECURE);
+            }
+            prefs.on('key:allow_screenshot', () => {
+                const value = ApplicationSettings.getBoolean('allow_screenshot');
+                if (!value) {
+                    window.setFlags(FLAG_SECURE, FLAG_SECURE);
+                } else {
+                    window.clearFlags(FLAG_SECURE);
+                }
+            });
+        });
         // store start intent we might received before first page is mounted
         Application.android.on(Application.android.activityNewIntentEvent, (event) => {
             Application.android['startIntent'] = event.intent;
@@ -190,23 +206,6 @@ try {
         cornerFamily: 'rounded' as any,
         cornerSize: 0
     });
-    if (__ANDROID__) {
-        Page.on('shownModally', function (event) {
-            // DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
-            com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
-        });
-        Frame.on('shownModally', function (event) {
-            // DEV_LOG && console.log('onShownModally', event.object['_dialogFragment']);
-            com.akylas.documentscanner.Utils.Companion.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
-        });
-        // GestureRootView.on('shownInBottomSheet', function (event) {
-        //     const _bottomSheetFragment = event.object['_bottomSheetFragment'];
-        //     DEV_LOG && console.log('shownInBottomSheet', _bottomSheetFragment, _bottomSheetFragment.getDialog().getWindow());
-        //     if (_bottomSheetFragment) {
-        //         com.akylas.documentscanner.Utils.prepareWindow(_bottomSheetFragment.getDialog().getWindow());
-        //     }
-        // });
-    }
     if (!PRODUCTION && DEV_LOG) {
         Page.on('navigatingTo', (event: NavigatedData) => {
             DEV_LOG && console.info('NAVIGATION', 'to', event.object, event.isBackNavigation);

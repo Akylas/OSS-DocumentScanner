@@ -73,7 +73,6 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
                 pages: document.pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
                 ...this.exportOptions
             });
-            DEV_LOG && console.log('writePDF', this.localFolderPath, filename, options);
             return generatePDFASync(this.localFolderPath, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();

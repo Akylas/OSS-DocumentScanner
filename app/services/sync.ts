@@ -2,6 +2,7 @@ import { ApplicationSettings, EventData, Observable } from '@nativescript/core';
 import { time } from '@nativescript/core/profiling';
 import { debounce } from '@nativescript/core/utils';
 import { writable } from 'svelte/store';
+import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import {
     EVENT_DOCUMENT_ADDED,
@@ -384,15 +385,9 @@ export class SyncService extends Observable {
                 this.messagePromises[id].push({ reject, resolve, timeoutTimer });
                 const keys = Object.keys(nativeData);
                 const nativeDataKeysPrefix = Date.now() + '$$$';
-                if (__ANDROID__) {
-                    keys.forEach((k) => {
-                        com.akylas.documentscanner.WorkersContext.Companion.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
-                    });
-                } else {
-                    keys.forEach((k) => {
-                        WorkerContext.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
-                    });
-                }
+                keys.forEach((k) => {
+                    setWorkerContextValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
+                });
                 const data = {
                     error: !!error ? JSON.stringify(error.toJSON() ? error.toJSON() : { message: error.toString(), ...error }) : undefined,
                     id,
@@ -410,15 +405,9 @@ export class SyncService extends Observable {
             // DEV_LOG && console.info('Sync', 'postMessage', 'test');
             const keys = Object.keys(nativeData);
             const nativeDataKeysPrefix = Date.now() + '$$$';
-            if (__ANDROID__) {
-                keys.forEach((k) => {
-                    com.akylas.documentscanner.WorkersContext.Companion.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
-                });
-            } else {
-                keys.forEach((k) => {
-                    WorkerContext.setValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
-                });
-            }
+            keys.forEach((k) => {
+                setWorkerContextValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
+            });
             const data = {
                 error: !!error ? JSON.stringify({ message: error.toString(), ...error }) : undefined,
                 id,

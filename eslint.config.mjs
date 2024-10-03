@@ -2,14 +2,16 @@ import tsParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import eslintPluginSvelte from 'eslint-plugin-svelte';
+// import stylistic from '@stylistic/eslint-plugin';
 import svelteParser from 'svelte-eslint-parser';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
-const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character'];
+const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-hhas-associated-control', 'illegal-attribute-character'];
 export default [
     ...tseslint.configs.recommendedTypeChecked,
     eslintPluginPrettierRecommended,
     eslintConfigPrettier,
+    // stylistic.configs['recommended-flat'],
     ...eslintPluginSvelte.configs['flat/recommended'],
     {
         ignores: ['**/node_modules/**/*', 'app/assets/**', 'platforms/**'],
@@ -27,7 +29,6 @@ export default [
                 __ANDROID__: 'readonly',
                 __IOS__: 'readonly',
                 DEV_LOG: 'readonly',
-                CARD_APP: 'readonly',
                 ...globals.node
             }
         },
@@ -68,7 +69,6 @@ export default [
             '@typescript-eslint/require-await': 'off',
             '@typescript-eslint/ban-ts-comment': 'warn',
             '@typescript-eslint/interface-name-prefix': 'off',
-            '@typescript-eslint/member-delimiter-style': 'error',
             '@typescript-eslint/member-ordering': 'off',
             '@typescript-eslint/no-empty-function': 'off',
             '@typescript-eslint/no-empty-interface': 'off',
@@ -86,18 +86,22 @@ export default [
             '@typescript-eslint/prefer-for-of': 'off',
             '@typescript-eslint/prefer-function-type': 'error',
             '@typescript-eslint/prefer-namespace-keyword': 'error',
-            '@typescript-eslint/quotes': [
-                'error',
-                'single',
-                {
-                    avoidEscape: true
-                }
-            ],
-            '@typescript-eslint/semi': ['error'],
             '@typescript-eslint/space-within-parens': ['off', 'never'],
             '@typescript-eslint/triple-slash-reference': 'off',
-            '@typescript-eslint/type-annotation-spacing': 'error',
             '@typescript-eslint/unified-signatures': 'off',
+            '@typescript-eslint/no-unused-expressions': 'off',
+            '@typescript-eslint/no-unsafe-function-type': 'off', // '@stylistic/type-annotation-spacing': 'error',
+            '@typescript-eslint/prefer-promise-reject-errors': 'off',
+            '@typescript-eslint/no-this-alias': 'off',
+            // '@stylistic/semi': ['error'],
+            // '@stylistic/member-delimiter-style': 'error',
+            // '@stylistic/quotes': [
+            //     'error',
+            //     'single',
+            //     {
+            //         avoidEscape: true
+            //     }
+            // ],
             'arrow-body-style': 'error',
             'arrow-parens': ['off', 'as-needed'],
             camelcase: 'off',

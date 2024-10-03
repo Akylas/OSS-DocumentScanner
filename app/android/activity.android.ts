@@ -1,3 +1,4 @@
+import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 import { AndroidActivityCallbacks, Application, ApplicationSettings, Frame, Utils, setActivityCallbacks } from '@nativescript/core';
 import { prefs } from '~/services/preferences';
 
@@ -9,7 +10,6 @@ function getThemeColor(context, colorResId) {
 }
 
 const TAG = '[MainActivity]';
-const FLAG_SECURE = 8192; // android.view.WindowManager.LayoutParams.FLAG_SECURE
 @NativeClass()
 @JavaProxy('__PACKAGE__.MainActivity')
 export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
@@ -18,18 +18,6 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     private _callbacks: AndroidActivityCallbacks;
 
     public onCreate(savedInstanceState: android.os.Bundle): void {
-        const allowScreenshot = ApplicationSettings.getBoolean('allow_screenshot', true);
-        if (!allowScreenshot) {
-            this.getWindow().setFlags(FLAG_SECURE, FLAG_SECURE);
-        }
-        prefs.on('key:allow_screenshot', () => {
-            const value = ApplicationSettings.getBoolean('allow_screenshot');
-            if (!value) {
-                this.getWindow().setFlags(FLAG_SECURE, FLAG_SECURE);
-            } else {
-                this.getWindow().clearFlags(FLAG_SECURE);
-            }
-        });
         Application.android.init(this.getApplication());
         // Set the isNativeScriptActivity in onCreate (as done in the original NativeScript activity code)
         // The JS constructor might not be called because the activity is created from Android.
@@ -45,7 +33,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         // DynamicColors
         // com.google.android.material.color.DynamicColors.applyIfAvailable(this);
         try {
-            com.akylas.documentscanner.Utils.Companion.prepareActivity(this);
+            // AppUtilsAndroid.prepareActivity(this);
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -64,8 +52,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     public onStart(): void {
         DEV_LOG && console.log(TAG, 'onStart');
         this._callbacks.onStart(this, super.onStart);
-        com.google.android.material.color.DynamicColors.applyIfAvailable(this);
-        Application.notify({ eventName: 'activity_started' });
+        // com.google.android.material.color.DynamicColors.applyIfAvailable(this);
     }
 
     public onStop(): void {

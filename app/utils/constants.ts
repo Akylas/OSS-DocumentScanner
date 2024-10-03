@@ -1,3 +1,4 @@
+import { SDK_VERSION } from '@nativescript/core/utils';
 import { ApplicationSettings, Screen, knownFolders } from '@nativescript/core';
 
 export enum PDFImportImages {
@@ -39,6 +40,8 @@ export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
 export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
+
+export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 100;
 
 export const AUTO_SYNC = true;
 export const DEFAULT__BATCH_CHUNK_SIZE = 10;

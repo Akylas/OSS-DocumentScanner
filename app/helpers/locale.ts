@@ -1,4 +1,5 @@
-import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
+import { getISO3Language } from '@akylas/nativescript-app-utils';
+import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale } from '@nativescript-community/l';
 import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
@@ -6,10 +7,10 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/showError';
-import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
-import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
-import { OCRDocument } from '~/models/OCRDocument';
+import { showAlertOptionSelect } from '~/utils/ui';
+
+import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
 
@@ -192,12 +193,7 @@ export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
     }
 }
 export function getCurrentISO3Language() {
-    if (__IOS__) {
-        return NSLocale.alloc().initWithLocaleIdentifier(lang).ISO639_2LanguageCode();
-    } else {
-        const locale = java.util.Locale.forLanguageTag(lang);
-        return locale.getISO3Language();
-    }
+    return getISO3Language(lang);
 }
 async function internalSelectLanguage() {
     // try {
@@ -243,7 +239,7 @@ export async function selectLanguage() {
 // TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
 
-Application.on('activity_started', () => {
+Application.android.on(Application.android.activityStartedEvent, () => {
     // on android after switching to auto we dont get the actual language
     // before an activity restart
     if (__ANDROID__) {
@@ -267,4 +263,4 @@ export const scformatDate = derived($lang, () => formatDate);
 export const scformatTime = derived([$lang, clock_24Store], () => formatTime);
 export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);
 
-export { cleanFilename, getFormatedDateForFilename, getFileNameForDocument } from '~/utils/utils';
+export { cleanFilename, getFileNameForDocument, getFormatedDateForFilename } from '~/utils/utils';

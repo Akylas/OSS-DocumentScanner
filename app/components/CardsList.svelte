@@ -38,6 +38,7 @@
     import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import {
+    BOTTOM_BUTTON_OFFSET,
         CARD_RATIO,
         EVENT_DOCUMENT_ADDED,
         EVENT_DOCUMENT_DELETED,
@@ -896,7 +897,7 @@
             itemOverlap={getItemOverlap(viewStyle)}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
-            paddingBottom={100}
+            paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
             rowHeight={getRowHeight(viewStyle)}
             swipeMenuId="swipeMenu"
@@ -1077,7 +1078,7 @@
                 class="fab"
                 horizontalAlignment="right"
                 iosIgnoreSafeArea={true}
-                margin={`16 16 ${$windowInset.bottom + 16} 16`}
+                margin={`16 16 ${Math.min(60, $windowInset.bottom)} 16`}
                 row={1}
                 text="mdi-plus"
                 verticalAlignment="bottom"

@@ -25,7 +25,7 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
-    import { EVENT_DOCUMENT_ADDED, EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, EVENT_STATE, EVENT_SYNC_STATE } from '~/utils/constants';
+    import { BOTTOM_BUTTON_OFFSET, EVENT_DOCUMENT_ADDED, EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, EVENT_STATE, EVENT_SYNC_STATE } from '~/utils/constants';
     import { showError } from '~/utils/showError';
     import { fade, navigate } from '~/utils/svelte/ui';
     import {
@@ -583,7 +583,13 @@
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <!-- {/if} -->
-        <collectionView bind:this={collectionView} iosOverflowSafeArea={true} items={documents} paddingBottom={100} row={1} rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
+        <collectionView
+            bind:this={collectionView}
+            iosOverflowSafeArea={true}
+            items={documents}
+            paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
+            row={1}
+            rowHeight={getItemRowHeight(viewStyle) * $fontScale}>
             <Template let:item>
                 <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
@@ -647,7 +653,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={$windowInset.bottom + 16} orientation="horizontal" row={1} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1} verticalAlignment="bottom">
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}

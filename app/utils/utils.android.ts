@@ -1,11 +1,12 @@
 import { request } from '@nativescript-community/perms';
 import { Application, File, Folder, ImageSource, Utils, path } from '@nativescript/core';
 import { ANDROID_CONTENT } from './constants';
+import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 
 export * from './utils.common';
 
 export function restartApp() {
-    com.akylas.documentscanner.Utils.Companion.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
+    AppUtilsAndroid.restartApp();
 }
 
 export async function copyFolderContent(src: string, dst: string) {
@@ -53,7 +54,6 @@ export async function saveImage(
     if (!destinationName.endsWith(imageFormat)) {
         destinationName += '.' + imageFormat;
     }
-    // DEV_LOG && console.log('saveImage', fileName, imageFormat, imageQuality, exportDirectory, destinationName);
     if (toGallery) {
         await request('storage');
         com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(Utils.android.getApplicationContext(), imageSource.android, imageFormat, imageQuality, fileName);

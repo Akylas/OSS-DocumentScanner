@@ -32,7 +32,7 @@
     }
     let searchAsTypeTimer;
     function clearSearch(clearQuery = true, hideSearch = true) {
-        DEV_LOG && console.log('clearSearch', clearQuery, hideSearch);
+        // DEV_LOG && console.log('clearSearch', clearQuery, hideSearch);
         if (searchAsTypeTimer) {
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;

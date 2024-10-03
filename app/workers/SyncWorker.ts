@@ -1,5 +1,6 @@
 import { ApplicationSettings, type EventData, File, Observable, path } from '@nativescript/core';
 import '@nativescript/core/globals';
+import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
 import { time } from '@nativescript/core/profiling';
 import type { Optional } from '@nativescript/core/utils/typescript-utils';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
@@ -837,13 +838,8 @@ context.onmessage = (event) => {
     if (Array.isArray(event.data.nativeData)) {
         event.data.nativeData = (event.data.nativeData as string[]).reduce((acc, key) => {
             const actualKey = key.split('$$$')[1];
-            if (__ANDROID__) {
-                const native = (acc[actualKey] = com.akylas.documentscanner.WorkersContext.Companion.getValue(key));
-                com.akylas.documentscanner.WorkersContext.Companion.setValue(key, null);
-            } else {
-                acc[actualKey] = WorkerContext.getValue(key);
-                WorkerContext.setValue(key, null);
-            }
+            acc[actualKey] = getWorkerContextValue(key);
+            setWorkerContextValue(key, null);
             return acc;
         }, {});
     }

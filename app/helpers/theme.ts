@@ -11,6 +11,7 @@ import { SDK_VERSION } from '@nativescript/core/utils';
 import { showAlertOptionSelect } from '~/utils/ui';
 import { closePopover } from '@nativescript-community/ui-popover/svelte';
 import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black';
 
@@ -35,7 +36,7 @@ Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanc
             if (__ANDROID__) {
                 const activity = Application.android.startActivity;
                 if (activity) {
-                    com.akylas.documentscanner.Utils.Companion.applyDayNight(activity, true);
+                    AppUtilsAndroid.applyDayNight(activity, true);
                 }
             }
             Theme.setMode(Theme.Auto, undefined, realTheme, false);
@@ -225,7 +226,7 @@ export function start() {
         if (__ANDROID__) {
             const activity = Application.android.startActivity;
             if (activity) {
-                com.akylas.documentscanner.Utils.Companion.applyDayNight(activity, true);
+                AppUtilsAndroid.applyDayNight(activity, true);
             }
         }
         currentRealTheme.set(realTheme);
@@ -251,7 +252,8 @@ export function start() {
 
         // we need to update the theme on every activity start
         // to get dynamic colors
-        Application.on('activity_started', () => {
+        Application.android.on(Application.android.activityStartedEvent, (event) => {
+            AppUtilsAndroid.applyDynamicColors(event.activity);
             getRealThemeAndUpdateColors();
         });
     } else {
