@@ -37,7 +37,6 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         } catch (error) {
             console.error(error, error.stack);
         }
-        this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
     }
 
     public onNewIntent(intent: android.content.Intent): void {
