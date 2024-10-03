@@ -1,13 +1,8 @@
 import { request } from '@nativescript-community/perms';
-import { Application, File, Folder, ImageSource, Utils, path } from '@nativescript/core';
+import { File, Folder, ImageSource, Utils, path } from '@nativescript/core';
 import { ANDROID_CONTENT } from './constants';
-import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 
 export * from './utils.common';
-
-export function restartApp() {
-    AppUtilsAndroid.restartApp();
-}
 
 export async function copyFolderContent(src: string, dst: string) {
     const folder = Folder.fromPath(src);

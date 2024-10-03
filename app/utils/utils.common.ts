@@ -2,6 +2,7 @@ import { ApplicationSettings } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { OCRDocument } from '~/models/OCRDocument';
 import { DEFAULT__BATCH_CHUNK_SIZE, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+export { restartApp } from '@akylas/nativescript-app-utils';
 
 function chunk<T>(array: T[], size) {
     return Array.from<T, T[]>({ length: Math.ceil(array.length / size) }, (value, index) => array.slice(index * size, index * size + size));
