@@ -1,0 +1,5 @@
+Bug fixes:
+- should fix the `Unexpected token u in JSON at position 0` error
+- correctly handle keyboard visibility
+- prevent errors while syncing on some SAF external folders (like nextcloud, ...)
+- Translations update
