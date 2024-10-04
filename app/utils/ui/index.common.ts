@@ -100,7 +100,7 @@ import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
 import { doInBatch, saveImage } from '../utils';
-import { MatricesTypes } from '../color_matrix';
+import { MatricesTypes, Matrix } from '../color_matrix';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -413,7 +413,13 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                 const colorType = ApplicationSettings.getString(SETTINGS_DEFAULT_COLORTYPE, DEFAULT_COLORTYPE) as MatricesTypes;
                 const contrast = ApplicationSettings.getNumber(SETTINGS_DEFAULT_CONTRAST, DEFAULT_CONTRAST);
                 const brightness = ApplicationSettings.getNumber(SETTINGS_DEFAULT_BRIGHTNESS, DEFAULT_BRIGHTNESS);
-                const colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
+                let colorMatrix: Matrix;
+                try {
+                    colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
+                } catch (error) {
+                    colorMatrix = null;
+                    ApplicationSettings.remove(SETTINGS_DEFAULT_COLORMATRIX);
+                }
                 DEV_LOG &&
                     console.log(
                         'items after crop',

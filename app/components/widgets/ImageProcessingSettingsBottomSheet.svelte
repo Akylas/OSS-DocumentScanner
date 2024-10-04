@@ -9,7 +9,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
-    import { MatricesTypes } from '~/utils/color_matrix';
+    import { MatricesTypes, Matrix } from '~/utils/color_matrix';
     import {
         DEFAULT_BRIGHTNESS,
         DEFAULT_COLORMATRIX,
@@ -43,7 +43,15 @@
     export let colorType = ApplicationSettings.getString(SETTINGS_DEFAULT_COLORTYPE, DEFAULT_COLORTYPE) as MatricesTypes;
     export let contrast = ApplicationSettings.getNumber(SETTINGS_DEFAULT_CONTRAST, DEFAULT_CONTRAST);
     export let brightness = ApplicationSettings.getNumber(SETTINGS_DEFAULT_BRIGHTNESS, DEFAULT_BRIGHTNESS);
-    export let colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
+    // export let colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
+
+    export let colorMatrix: Matrix;
+    try {
+        colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
+    } catch (error) {
+        colorMatrix = null;
+        ApplicationSettings.remove(SETTINGS_DEFAULT_COLORMATRIX);
+    }
 
     export let cameraOptionsStore: Writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>;
     export let resolutions: { pictureSize: string; aspectRatio: string }[] = null;
