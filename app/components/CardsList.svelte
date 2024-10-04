@@ -1078,7 +1078,7 @@
                 class="fab"
                 horizontalAlignment="right"
                 iosIgnoreSafeArea={true}
-                margin={`16 16 ${Math.min(60, $windowInset.bottom)} 16`}
+                margin={`16 16 ${Math.min(60, $windowInset.bottom + 16)} 16`}
                 row={1}
                 text="mdi-plus"
                 verticalAlignment="bottom"
