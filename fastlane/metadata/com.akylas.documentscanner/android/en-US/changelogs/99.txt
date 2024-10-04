@@ -1,0 +1,2 @@
+Bug fixes:
+- crash on opening default image settings
