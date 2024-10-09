@@ -11,7 +11,7 @@ export async function createDirectory(context: WebDAVClientContext, dirPath: str
     if (options.recursive === true) return createDirectoryRecursively(context, dirPath, options);
     const requestOptions = prepareRequestOptions(
         {
-            url: path.join(context.remoteURL, ensureCollectionPath(encodePath(dirPath))),
+            url: ensureCollectionPath(path.join(context.remoteURL, encodePath(dirPath))),
             method: 'MKCOL' as any
         },
         context,
