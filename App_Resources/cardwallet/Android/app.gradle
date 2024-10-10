@@ -213,18 +213,18 @@ if (project.hasProperty("sentryEnabled")) {
     // for Sentry. This executes sentry-cli automatically so
     // you don't need to do it manually.
     // Default is disabled.
-    uploadNativeSymbols = true
+    uploadNativeSymbols = false
     // Does or doesn't include the source code of native code for Sentry.
     // This executes sentry-cli with the --include-sources param. automatically so
     // you don't need to do it manually.
     // This option has an effect only when [uploadNativeSymbols] is enabled.
     // Default is disabled.
-    includeNativeSources = true
+    includeNativeSources = false
 
     // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
     // This enables source context, allowing you to see your source
     // code as part of your stack traces in Sentry.
-    includeSourceContext = true
+    includeSourceContext = false
 
     // Includes additional source directories into the source bundle.
     // These directories are resolved relative to the project directory.
