@@ -35,14 +35,14 @@ This repository is now the home of 2 apps
 **OSS Document Scanner**: 
 ```
 com.akylas.documentscanner
-85:B3:20:D6:9A:03:87:83:D2:9E:4F:DF:DE:19:06:66:DF:8B:F3:46:D7:C9:E5:5E:6A:AC:E7:5E:DA:89:F3:BA
+0D:10:AA:10:E0:3A:7E:76:97:22:BE:43:88:BE:63:BD:15:7A:7B:7B:F1:96:FB:3C:EB:AB:87:37:F9:6C:A8:71
 ```
  
 **OSS CardWallet**: 
 ```
 com.akylas.cardwallet
-C8:D6:87:F8:CA:6E:17:B1:C1:E1:EC:65:48:37:71:BB:50:47:58:2F:EE:C2:B0:ED:5D:E5:99:5A:46:BB:2D:C8
-```
+0D:10:AA:10:E0:3A:7E:76:97:22:BE:43:88:BE:63:BD:15:7A:7B:7B:F1:96:FB:3C:EB:AB:87:37:F9:6C:A8:71
+ ```
  
 <h2 align="center">Enjoying OSS Document Scanner or OSS Card Wallet?</h2>
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
