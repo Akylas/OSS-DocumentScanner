@@ -280,7 +280,7 @@
                                   type: 'rightIcon',
                                   key: 'pdf_export_directory',
                                   title: lc('export_folder'),
-                                  defaultValue: DEFAULT_EXPORT_DIRECTORY,
+                                  defaultValue: DEFAULT_EXPORT_DIRECTORY || lc('please_choose_export_folder'),
                                   description: (item) => ApplicationSettings.getString(item.key, item.defaultValue),
                                   rightBtnIcon: 'mdi-restore',
                                   onTap: async (item) => {
@@ -374,7 +374,7 @@
                             storeKey: 'default_export_options',
                             storeDefault: DEFAULT_PDF_OPTIONS_STRING,
                             key: 'jpegQuality',
-                            min: 1,
+                            min: 0,
                             max: 100,
                             step: 1,
                             formatter: (value) => value.toFixed(),
