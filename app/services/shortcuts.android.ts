@@ -3,12 +3,11 @@
 // launcher will show all 5. Instead, the number is limited
 // to 3 here, so that the most recent shortcut has a good
 
-import { Utils, path } from '@nativescript/core';
+import { Utils } from '@nativescript/core';
 import { OCRDocument } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
-import { loadImage, recycleImages } from '~/utils/images';
+import { recycleImages } from '~/utils/images';
 import { getTransformedImage } from './pdf/PDFExportCanvas.common';
-import { DEFAULT_EXPORT_DIRECTORY } from '~/utils/constants';
 
 // chance of being shown.
 const MAX_SHORTCUTS = 3;
