@@ -1,31 +1,10 @@
 {
+    "extends":"./tools/tsconfig",
     "compilerOptions": {
-        "target": "es2020",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "declaration": false,
-        "removeComments": true,
-        "emitDecoratorMetadata": false,
-        "experimentalDecorators": true,
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "preserveSymlinks": true,
-        "skipDefaultLibCheck": true,
-        "allowUnreachableCode": false,
-        "allowSyntheticDefaultImports": true,
-        "allowUnusedLabels": false,
-        "noEmitHelpers": true,
-        "noEmitOnError": false,
-        "noImplicitAny": false,
-        "noImplicitReturns": false,
-        "noImplicitUseStrict": false,
-        "noFallthroughCasesInSwitch": true,
-        "resolveJsonModule": true,
-        "lib": ["esnext", "es2017", "dom"],
-        "types": ["node", "svelte-native", "svelte"],
         "baseUrl": ".",
         "paths": {
             "~/*": ["app/*"],
+            "@shared/*": ["tools/app/*"],
             "kiss-orm": ["node_modules/@akylas/kiss-orm"],
             "kiss-orm/*": ["node_modules/@akylas/kiss-orm/*"],
             "@nativescript/core": ["node_modules/@akylas/nativescript"],
@@ -35,5 +14,4 @@
         }
     },
     "include": ["app/**/*", "typings/*.d.ts", "plugin-nativeprocessor", "plugin-nativeprocessor/typings"],
-    "exclude": ["**/node_modules", "**/build", "platforms", "**/angular"]
 }

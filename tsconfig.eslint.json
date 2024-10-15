@@ -1,4 +1,4 @@
 {
-    "extends": "./tsconfig.json",
-    "include": [".*.js", "*.js", "*.mjs", "app/**/*.ts", "app/**/*.svelte", "webpdfviewer/**/*.ts", "webpdfviewer/**/*.svelte", "typings/*.d.ts", "plugin-nativeprocessor/**/*.ts"]
+    "extends": "./tools/tsconfig.eslint.json",
+    "include": [".*.js", "*.js", "*.mjs", "tools/**/*.mjs", "app/**/*.ts", "app/**/*.svelte", "webpdfviewer/**/*.ts", "webpdfviewer/**/*.svelte", "typings/*.d.ts", "plugin-nativeprocessor/**/*.ts"]
 }
