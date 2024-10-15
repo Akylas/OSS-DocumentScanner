@@ -184,6 +184,7 @@ module.exports = (env, params = {}) => {
         });
     }
     Object.assign(config.resolve.alias, {
+        '@shared': resolve(__dirname, 'tools/app'),
         'kiss-orm': '@akylas/kiss-orm'
     });
     let appVersion;

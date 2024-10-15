@@ -1,7 +1,7 @@
 # NativeScript application
 hooks
-platforms
-node_modules/
+/platforms
+node_modules
 
 certs
 /package-lock.json
@@ -14,6 +14,9 @@ app/**/*.js
 /mochawesome-report
 /dist
 /Gemfile.lock
+
+#android
+*.aar
 
 #iOS
 *.framework

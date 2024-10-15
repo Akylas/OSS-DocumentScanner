@@ -3,8 +3,8 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "~/*": ["app/*"],
-            "@shared/*": ["tools/app/*"],
+            "~/*": ["./app/*"],
+            "@shared/*": ["./tools/app/*"],
             "kiss-orm": ["node_modules/@akylas/kiss-orm"],
             "kiss-orm/*": ["node_modules/@akylas/kiss-orm/*"],
             "@nativescript/core": ["node_modules/@akylas/nativescript"],
@@ -13,5 +13,5 @@
             "plugin-nativeprocessor/*": ["plugin-nativeprocessor/*"]
         }
     },
-    "include": ["app/**/*", "typings/*.d.ts", "plugin-nativeprocessor", "plugin-nativeprocessor/typings"],
+    "include": ["app/**/*", "tools/app/**/*", "typings/*.d.ts", "plugin-nativeprocessor", "plugin-nativeprocessor/typings"],
 }
