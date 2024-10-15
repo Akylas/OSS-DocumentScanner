@@ -4,7 +4,7 @@ import type { HTTPSOptions } from '~/services/api';
 
 Error.stackTraceLimit = Infinity;
 
-function evalTemplateString(resource: string, obj: {}) {
+function evalTemplateString(resource: string, obj: object) {
     if (!obj) {
         return resource;
     }
@@ -113,7 +113,7 @@ export class TimeoutError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'timeout_error'
+                    message: lc('timeout_error')
                 },
                 props
             ),
@@ -125,7 +125,7 @@ export class PermissionError extends CustomError {
     constructor(message?) {
         super(
             {
-                message: message ?? 'permission_error'
+                message: message ?? lc('permission_error')
             },
             'PermissionError'
         );

@@ -256,8 +256,10 @@
     "pdf_sync": "sync document PDFs",
     "pdf_sync_desc": "sync documents PDFs with applied settings, filters, transforms,...",
     "pdf_sync_settings": "pdf sync settings",
+    "permission_error": "missing permission",
     "pick_color": "pick color",
     "picture_size": "picture size",
+    "please_choose_export_folder": "Please select the export folder",
     "please_choose_export_folder_again": "Please select the export folder again to fix. It should not be asked again",
     "please_restart_app": "please restart the app the see the change",
     "portrait": "portrait",
@@ -326,6 +328,7 @@
         "title": "theme"
     },
     "third_parties": "third party libraries",
+    "timeout_error": "the request timed out. Please check your internet connection and try again",
     "toggle_camera": "toggle camera",
     "token": "token",
     "torch": "torch",
