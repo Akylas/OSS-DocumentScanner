@@ -1,9 +1,6 @@
-git_url "git@github.com:Akylas/ios_certs.git"
-
+git_url(ENV["MATCH_REPO"])
+git_branch(ENV["MATCH_BRANCH"])
+storage_mode("git")
 type("appstore") # The default type, can be: appstore, adhoc, enterprise or devel
-git_branch "akylas"
-app_identifier ENV["APP_ID"]
-username "martin.guillon@akylas.fr"  # Your Apple Developer Portal username
-
-team_id('3UUB5NM43K')
-team_name('Akylas')
+app_identifier(ENV["APP_ID"])
+username(ENV["APPLE_IDENTITY_ID"])

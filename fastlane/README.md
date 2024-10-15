@@ -37,13 +37,21 @@ Check Git Status
 
 Check Sentry Cli Status
 
-### npm_installl
+### ns_install
 
 ```sh
-[bundle exec] fastlane npm_installl
+[bundle exec] fastlane ns_install
 ```
 
 Ensure deps are installed
+
+### setup
+
+```sh
+[bundle exec] fastlane setup
+```
+
+Setup
 
 ### prepare
 
@@ -52,6 +60,14 @@ Ensure deps are installed
 ```
 
 Prepare the application.
+
+### build_and_publish
+
+```sh
+[bundle exec] fastlane build_and_publish
+```
+
+
 
 ### build_flavor
 

@@ -1,8 +1,7 @@
-app_identifier ENV["APP_ID"]
-package_name ENV["APP_ID"]
-json_key_data_raw ENV["PLAYSTORE_JSON_KEY_DATA"]
-apple_id "martin.guillon@akylas.fr"
-team_id "3UUB5NM43K"
-itunes_connect_id("martin.guillon@akylas.fr")
-itc_team_id("1469488")
-team_name('Akylas')
+app_identifier(ENV["APP_ID"])
+package_name(ENV["APP_ID"])
+apple_id(ENV["APPLE_IDENTITY_ID"])
+itunes_connect_id(ENV["APPLE_IDENTITY_ID"])
+team_name(ENV["APPLE_TEAM_NAME"])
+team_id (ENV["APPLE_TEAM_ID"])
+itc_team_id(ENV["APPL_ITC_TEAM_ID"])

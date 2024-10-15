@@ -2,6 +2,6 @@
 #
 # Ensure this file is checked in to source control!
 
-gem 'fastlane-plugin-sentry'
+gem 'fastlane-plugin-sentry', "1.25.1"
 gem 'fastlane-plugin-semantic_release', :git => 'https://github.com/farfromrefug/fastlane-plugin-semantic_release'
-
+gem 'fastlane-plugin-sftp'
