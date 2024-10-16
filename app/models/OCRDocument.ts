@@ -9,6 +9,8 @@ import {
     DocumentPagesAddedEventData,
     DocumentUpdatedEventData,
     DocumentsService,
+    FOLDER_COLOR_SEPARATOR,
+    FolderUpdatedEventData,
     sql
 } from '~/services/documents';
 import type { MatricesTypes, Matrix } from '~/utils/color_matrix';
@@ -21,6 +23,7 @@ import {
     EVENT_DOCUMENT_PAGE_DELETED,
     EVENT_DOCUMENT_PAGE_UPDATED,
     EVENT_DOCUMENT_UPDATED,
+    EVENT_FOLDER_UPDATED,
     IMG_FORMAT,
     SEPARATOR,
     SETTINGS_DOCUMENT_NAME_FORMAT,
@@ -50,13 +53,26 @@ export class Tag {
     public name: string;
 }
 
+export interface IDocFolder {
+    id: string;
+    name: string;
+    color?: string;
+    size?: number;
+    count?: number;
+}
 export class DocFolder {
     public readonly id!: string;
     public name: string;
-}
-export interface AugmentedFolder extends DocFolder {
+    public color?: string;
     size?: number;
     count?: number;
+    async save(data: Partial<IDocFolder> = {}, notify = true) {
+        await documentsService.folderRepository.update(this, data);
+        Object.assign(this, data);
+        if (notify) {
+            documentsService.notify({ eventName: EVENT_FOLDER_UPDATED, object: documentsService, folder: this } as FolderUpdatedEventData);
+        }
+    }
 }
 
 export interface Document {
@@ -446,12 +462,17 @@ export class OCRDocument extends Observable implements Document {
             );
         }
     }
-    async setFolder(folderName?: string, notify = true) {
-        // console.log('setItemGroup', groupName, item.id);
+    async setFolder(folderAndColorName?: string, notify = true) {
+        console.log('setFolder', folderAndColorName, this.folders);
         const { folderRepository } = documentsService;
         const { db } = documentsService;
-        const oldFolder = this.folders ? ({ name: this.folders[0] } as DocFolder) : null;
+        let oldFolder;
+        if (this.folders?.length) {
+            const [name, color] = this.folders[0].split(FOLDER_COLOR_SEPARATOR);
+            oldFolder = { name, color };
+        }
         let folder;
+        const [folderName, folderColor] = (folderAndColorName || '').split(FOLDER_COLOR_SEPARATOR);
         if (folderName?.length) {
             try {
                 folder = (await folderRepository.search({ where: sql`name=${folderName}` }))[0];
@@ -459,7 +480,7 @@ export class OCRDocument extends Observable implements Document {
                 console.error('setFolder', error, error.stack);
             }
             if (!folder) {
-                folder = await folderRepository.create({ id: Date.now() + '', name: folderName });
+                folder = await folderRepository.create({ id: Date.now() + '', name: folderName, ...(folderColor ? { color: folderColor } : {}) });
             }
         }
 

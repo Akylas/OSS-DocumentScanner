@@ -52,6 +52,7 @@
     <label
         class={'actionBarTitle ' + clazz}
         col={1}
+        paddingLeft={menuIconVisible ? 0 : 16}
         text={title || ''}
         textAlignment="left"
         verticalTextAlignment="center"

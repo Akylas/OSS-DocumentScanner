@@ -274,7 +274,7 @@
                     imageWidth: item.width,
                     imageHeight: item.height,
                     rotation: item.rotation,
-                    colorMatrix: getColorMatrix(item.colorType)
+                    // colorMatrix: getColorMatrix(item.colorType)
                 }
             });
         } catch (error) {

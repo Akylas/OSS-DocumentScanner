@@ -1,16 +1,14 @@
 <script context="module" lang="ts">
-    import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
-    import { groupBy } from '@shared/utils';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -23,8 +21,8 @@
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { AugmentedFolder, DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentMovedFolderEventData, DocumentUpdatedEventData, documentsService, sql } from '~/services/documents';
+    import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentMovedFolderEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -34,6 +32,7 @@
         EVENT_DOCUMENT_PAGE_DELETED,
         EVENT_DOCUMENT_PAGE_UPDATED,
         EVENT_DOCUMENT_UPDATED,
+        EVENT_FOLDER_UPDATED,
         EVENT_STATE,
         EVENT_SYNC_STATE
     } from '~/utils/constants';
@@ -54,26 +53,50 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, screenWidthDips, windowInset } from '~/variables';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
 
     interface Item {
         doc?: OCRDocument;
-        folder?: AugmentedFolder;
+        folder?: DocFolder;
         selected: boolean;
     }
 </script>
 
 <script lang="ts">
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
+    import { folderBackgroundColor } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    let { colorError, colorOnBackground, colorOnSurfaceVariant, colorOnTertiaryContainer, colorOutline, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh, colorTertiaryContainer } =
-        $colors;
-    $: ({ colorError, colorOnBackground, colorOnSurfaceVariant, colorOnTertiaryContainer, colorOutline, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh, colorTertiaryContainer } =
-        $colors);
+    let {
+        colorError,
+        colorOnBackground,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorOnTertiaryContainer,
+        colorOutline,
+        colorPrimaryContainer,
+        colorSurface,
+        colorSurfaceContainer,
+        colorSurfaceContainerHigh,
+        colorTertiaryContainer
+    } = $colors;
+    $: ({
+        colorError,
+        colorOnBackground,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorOnTertiaryContainer,
+        colorOutline,
+        colorPrimaryContainer,
+        colorSurface,
+        colorSurfaceContainer,
+        colorSurfaceContainerHigh,
+        colorTertiaryContainer
+    } = $colors);
 
     let documents: ObservableArray<Item> = null;
     let nbDocuments: number = 0;
@@ -84,9 +107,28 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
 
-    export let folder: AugmentedFolder = null;
+    export let folder: DocFolder = null;
     export let title = l('documents');
-    let folders: AugmentedFolder[];
+    let folders: DocFolder[];
+
+    $: if (folder) {
+        DEV_LOG && console.log('updating folder title', folder);
+
+        title = createNativeAttributedString({
+            spans: [
+                {
+                    fontFamily: $fonts.mdi,
+                    color: folder.color || colorOutline,
+                    verticalAlignment: 'center',
+                    text: 'mdi-folder  '
+                },
+                {
+                    verticalAlignment: 'center',
+                    text: folder.name
+                }
+            ]
+        });
+    }
 
     let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'expanded');
     $: condensed = viewStyle === 'condensed';
@@ -113,7 +155,7 @@
         loading = true;
         try {
             DEV_LOG && console.log('DocumentsList', 'refresh', filter);
-            const r = await documentsService.documentRepository.findDocuments(filter, folder, true);
+            const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true });
             DEV_LOG && console.log('r', r.length);
 
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
@@ -173,6 +215,7 @@
 
     function onDocumentMovedFolder(event: DocumentMovedFolderEventData) {
         // TODO: for now we refresh otherwise the order might be lost
+        DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolder?.id);
         if (!folder && (!event.folder || !event.oldFolder)) {
             // if (!event.folder) {
             //     const index = documents.findIndex(d=>d.doc && d.doc.id === event.object.id)
@@ -199,6 +242,23 @@
             const item = documents?.getItem(index);
             if (item) {
                 item.doc = event.doc;
+                documents.setItem(index, item);
+            }
+        }
+    }
+    function onFolderUpdated(event: FolderUpdatedEventData) {
+        let index = -1;
+        documents?.some((d, i) => {
+            if (d.folder && d.folder.id === event.folder.id) {
+                index = i;
+                return true;
+            }
+        });
+        DEV_LOG && console.log('onFolderUpdated', event.folder);
+        if (index >= 0) {
+            const item = documents?.getItem(index);
+            if (item) {
+                item.folder = event.folder;
                 documents.setItem(index, item);
             }
         }
@@ -275,6 +335,7 @@
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         documentsService.on(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
+        documentsService.on(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
         syncService.on(EVENT_STATE, refreshSimple);
         // refresh();
@@ -292,6 +353,7 @@
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         documentsService.off(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
+        documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.off(EVENT_SYNC_STATE, onSyncState);
         syncService.off(EVENT_STATE, refreshSimple);
     });
@@ -348,9 +410,15 @@
         }
     }
     function unselectAll() {
+        nbSelected = 0;
         if (documents) {
-            nbSelected = 0;
             documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: false })));
+        }
+    }
+    function selectAll() {
+        if (documents) {
+            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: true })));
+            nbSelected = documents.length;
         }
     }
     function onItemLongPress(item: Item, event?) {
@@ -416,7 +484,7 @@
                 if (d.doc) {
                     selected.push(d.doc);
                 } else if (d.folder) {
-                    selected.push(...(await documentsService.documentRepository.findDocuments(null, d.folder)));
+                    selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
                 }
             }
         }
@@ -486,6 +554,7 @@
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
+    onFolderBackgroundColorChanged(refreshCollectionView);
 
     let lottieDarkFColor;
     let lottieLightColor;
@@ -555,6 +624,13 @@
         const topText = createNativeAttributedString({
             spans: [
                 {
+                    fontFamily: $fonts.mdi,
+                    fontSize: 20 * $fontScale,
+                    color: !$folderBackgroundColor && folder.color ? folder.color : colorOutline,
+                    lineHeight: 24 * $fontScale,
+                    text: 'mdi-folder '
+                },
+                {
                     fontSize: 16 * $fontScale,
                     fontWeight: 'bold',
                     lineBreak: 'end',
@@ -563,7 +639,7 @@
                 },
                 {
                     fontSize: 14 * $fontScale,
-                    color: colorOnSurfaceVariant,
+                    color: colorOutline,
                     lineHeight: (condensed ? 14 : 20) * $fontScale,
                     text: '\n' + lc('documents_count', item.folder.count)
                 }
@@ -640,7 +716,7 @@
     }
     async function showOptions(event) {
         const options = new ObservableArray(
-            (nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
+            (folder ? [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }] : []).concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
                 { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
                 { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
                 { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') },
@@ -654,6 +730,9 @@
             onClose: async (item) => {
                 try {
                     switch (item.id) {
+                        case 'select_all':
+                            selectAll();
+                            break;
                         case 'rename':
                             const doc = getSelectedDocuments()[0];
                             const result = await prompt({
@@ -725,6 +804,37 @@
         }
         return 2;
     }
+
+    async function pickFolderColor(event) {
+        try {
+            const ColorPickerView = (await import('~/components/common/ColorPickerView.svelte')).default;
+            // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
+            const anchorView = event.object as View;
+            const color: string = await showPopover({
+                backgroundColor: colorSurfaceContainer,
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.RIGHT,
+                view: ColorPickerView,
+                anchor: anchorView,
+                props: {
+                    borderRadius: 10,
+                    elevation: __ANDROID__ ? 3 : 0,
+                    margin: 4,
+                    width: screenWidthDips * 0.7,
+                    backgroundColor: colorSurfaceContainer,
+                    defaultColor: folder.color
+                }
+            });
+            DEV_LOG && console.log('pickFolderColor', color);
+            if (color) {
+                await folder.save({ color });
+                DEV_LOG && console.log('updating folder', folder);
+                folder = folder; //for svelte to pick up change
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
@@ -769,7 +879,7 @@
             </Template>
             <Template key="folder" let:item>
                 <canvasview
-                    backgroundColor={colorSurfaceContainerHigh}
+                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
                     borderColor={colorOutline}
                     borderRadius={12}
                     borderWidth={1}
@@ -848,7 +958,12 @@
                 on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearchTF()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
-            <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+
+            {#if folder}
+                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={pickFolderColor} />
+            {:else}
+                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+            {/if}
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         <!-- {#if nbSelected > 0} -->

@@ -8,7 +8,7 @@
     import { colors } from '~/variables';
     import { AuthType } from '~/webdav';
 
-    $: ({ colorError, colorSecondary, colorOnError, colorOnSurfaceVariant } = $colors);
+    $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 
     export let store: Writable<WebdavSyncOptions>;
     let testing = false;

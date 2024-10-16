@@ -1,11 +1,13 @@
+import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
+import { deviceHasCamera } from '@nativescript-community/ui-cameraview';
 import { themer } from '@nativescript-community/ui-material-core';
 import { Application, ApplicationSettings, Color, Frame, Page, Screen, Utils } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 import { get, writable } from 'svelte/store';
 import { getRealTheme, theme } from './helpers/theme';
-import { SDK_VERSION } from '@nativescript/core/utils';
-import { deviceHasCamera } from '@nativescript-community/ui-cameraview';
-import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
+import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
+import { DEFAULT_DRAW_FOLDERS_BACKGROUND, SETTINGS_DRAW_FOLDERS_BACKGROUND } from './utils/constants';
+import { prefs } from './services/preferences';
 
 export const colors = writable({
     colorPrimary: '',
@@ -59,6 +61,14 @@ export const screenRatio = screenWidthDips / screenHeightDips;
 export const fontScale = writable(1);
 export const isRTL = writable(false);
 export const hasCamera = writable(true);
+
+export const folderBackgroundColor = writable(DEFAULT_DRAW_FOLDERS_BACKGROUND);
+prefs.on(`key:${SETTINGS_DRAW_FOLDERS_BACKGROUND}`, () => {
+    const newValue = ApplicationSettings.getBoolean(SETTINGS_DRAW_FOLDERS_BACKGROUND, DEFAULT_DRAW_FOLDERS_BACKGROUND);
+    folderBackgroundColor.set(newValue);
+    globalObservable.notify({ eventName: SETTINGS_DRAW_FOLDERS_BACKGROUND, data: newValue });
+});
+export const onFolderBackgroundColorChanged = createGlobalEventListener(SETTINGS_DRAW_FOLDERS_BACKGROUND);
 
 function updateSystemFontScale(value) {
     fontScale.set(value);

@@ -25,6 +25,7 @@
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
+        DEFAULT_DRAW_FOLDERS_BACKGROUND,
         DEFAULT_EXPORT_DIRECTORY,
         DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NAME_FORMAT,
@@ -40,6 +41,7 @@
         SETTINGS_ALWAYS_PROMPT_CROP_EDIT,
         SETTINGS_CROP_ENABLED,
         SETTINGS_DOCUMENT_NAME_FORMAT,
+        SETTINGS_DRAW_FOLDERS_BACKGROUND,
         SETTINGS_FILE_NAME_FORMAT,
         SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
         SETTINGS_IMAGE_EXPORT_FORMAT,
@@ -67,8 +69,8 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors;
-    $: ({ colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
+    let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
@@ -404,6 +406,16 @@
                         id: 'image_processing_settings',
                         title: lc('image_processing_settings'),
                         description: lc('image_processing_settings_desc')
+                    }
+                ];
+            case 'folders':
+                return [
+                    {
+                        type: 'switch',
+                        id: SETTINGS_DRAW_FOLDERS_BACKGROUND,
+                        title: lc('folder_color_as_background'),
+                        description: lc('folder_color_as_background_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_DRAW_FOLDERS_BACKGROUND, DEFAULT_DRAW_FOLDERS_BACKGROUND)
                     }
                 ];
             case 'sync':
@@ -747,6 +759,13 @@
                         title: lc('operations'),
                         description: lc('operations_settings_desc'),
                         options: () => getSubSettings('operations')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-folder-multiple',
+                        title: lc('folders'),
+                        description: lc('folders_settings_desc'),
+                        options: () => getSubSettings('folders')
                     },
                     {
                         id: 'sub_settings',

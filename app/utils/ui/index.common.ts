@@ -45,7 +45,7 @@ import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelec
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, l, lc } from '~/helpers/locale';
-import { AugmentedFolder, DocFolder, ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+import { DocFolder, ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
@@ -92,11 +92,12 @@ import { recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
 import { goBack, showModal } from '~/utils/svelte/ui';
 import { showToast } from '~/utils/ui';
-import { colors, fontScale, screenWidthDips } from '~/variables';
+import { colors, fontScale, fonts, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { showError } from '../showError';
 import { navigate } from '../svelte/ui';
 import { doInBatch, saveImage } from '../utils';
+import { createNativeAttributedString } from '@nativescript-community/text';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -1282,13 +1283,12 @@ export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
         });
     }
 }
-export async function goToFolderView(folder: AugmentedFolder, useTransition = true) {
+export async function goToFolderView(folder: DocFolder, useTransition = true) {
     if (CARD_APP) {
         const page = (await import('~/components/CardsList.svelte')).default;
         return navigate({
             page,
             props: {
-                title: folder.name,
                 folder
             }
         });
@@ -1298,7 +1298,6 @@ export async function goToFolderView(folder: AugmentedFolder, useTransition = tr
             page,
             transition: __ANDROID__ && useTransition ? SharedTransition.custom(new PageTransition(300, null, 10)) : null,
             props: {
-                title: folder.name,
                 folder
             }
         });
@@ -1655,14 +1654,20 @@ export async function promptForFolder(defaultGroup: string, groups?: DocFolder[]
     const TagView = (await import('~/components/common/FolderView.svelte')).default;
     const componentInstanceInfo = resolveComponentElement(TagView, { groups, defaultGroup });
     const modalView: View = componentInstanceInfo.element.nativeView;
-    const result = await confirm({ view: modalView, okButtonText: lc('add'), cancelButtonText: lc('cancel') });
+    const result = await confirm({
+        title: lc('move_folder'),
+        message: lc('move_folder_desc'),
+        view: modalView,
+        okButtonText: lc('move'),
+        cancelButtonText: lc('cancel')
+    });
     const currentFolderText = componentInstanceInfo.viewInstance['currentFolderText'];
     try {
         modalView._tearDownUI();
         componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
     } catch (error) {}
     if (result) {
-        return currentFolderText;
+        return currentFolderText || 'none';
     }
     return null;
 }

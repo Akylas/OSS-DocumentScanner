@@ -28,6 +28,7 @@ export const SETTINGS_DEFAULT_BRIGHTNESS = 'defaultBrightness';
 export const SETTINGS_DEFAULT_CONTRAST = 'defaultContrast';
 export const SETTINGS_MAGNIFIER_SENSITIVITY = 'magnifier_sensitivity';
 export const SETTINGS_SYNC_ON_START = 'sync_on_start';
+export const SETTINGS_DRAW_FOLDERS_BACKGROUND = 'draw_folder_background';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -66,6 +67,7 @@ export const DOCUMENT_NAME_FORMAT = 'L LTS';
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
+export const DEFAULT_DRAW_FOLDERS_BACKGROUND = false;
 export const DEFAULT_TRANSFORM = '';
 export const DEFAULT_COLORTYPE = 'normal';
 export const DEFAULT_CONTRAST = 1;
@@ -112,5 +114,7 @@ export const EVENT_DOCUMENT_DELETED = 'documentsDeleted';
 export const EVENT_DOCUMENT_PAGES_ADDED = 'documentPagesAdded';
 export const EVENT_DOCUMENT_PAGE_DELETED = 'documentPageDeleted';
 export const EVENT_DOCUMENT_PAGE_UPDATED = 'documentPageUpdated';
+export const EVENT_FOLDER_UPDATED = 'folderUpdated';
+
 export const EVENT_STATE = 'state';
 export const EVENT_SYNC_STATE = 'syncState';

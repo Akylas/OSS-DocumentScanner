@@ -1,4 +1,4 @@
-<script lang="ts">
+<script context="module" lang="ts">
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
@@ -34,8 +34,8 @@
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { AugmentedFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
+    import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -45,6 +45,7 @@
         EVENT_DOCUMENT_PAGE_DELETED,
         EVENT_DOCUMENT_PAGE_UPDATED,
         EVENT_DOCUMENT_UPDATED,
+        EVENT_FOLDER_UPDATED,
         EVENT_STATE,
         EVENT_SYNC_STATE
     } from '~/utils/constants';
@@ -71,11 +72,14 @@
     const rowMargin = 8;
     const itemWidth = (orientation === 'landscape' ? screenHeightDips : screenWidthDips) - 2 * rowMargin;
     const itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
-
     interface Item {
-        doc: OCRDocument;
+        doc?: OCRDocument;
+        folder?: DocFolder;
         selected: boolean;
     }
+</script>
+
+<script lang="ts">
     let documents: ObservableArray<Item> = null;
     let nbDocuments: number = 0;
     let showNoDocument = false;
@@ -85,9 +89,9 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
 
-    export let folder: AugmentedFolder = null;
+    export let folder: DocFolder = null;
     export let title = l('cards');
-    let folders: AugmentedFolder[];
+    let folders: DocFolder[];
 
     let syncEnabled = syncService.enabled;
 
@@ -107,10 +111,8 @@
         loading = true;
         try {
             syncEnabled = syncService.enabled;
-            const r = await documentsService.documentRepository.search({
-                orderBy: CARD_APP ? SqlQuery.createFromTemplateString`id ASC` : SqlQuery.createFromTemplateString`id DESC`
-                // , postfix: SqlQuery.createFromTemplateString`LIMIT 50`
-            });
+            const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: 'id ASC' });
+            folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
             // const r = await OCRDocument.find({
             //     order: {
             //         id: 'DESC'
@@ -164,6 +166,23 @@
             const item = documents?.getItem(index);
             if (item) {
                 item.doc = event.doc;
+                documents.setItem(index, item);
+            }
+        }
+    }
+    function onFolderUpdated(event: FolderUpdatedEventData) {
+        let index = -1;
+        documents?.some((d, i) => {
+            if (d.folder && d.folder.id === event.folder.id) {
+                index = i;
+                return true;
+            }
+        });
+        DEV_LOG && console.log('onFolderUpdated', event.folder);
+        if (index >= 0) {
+            const item = documents?.getItem(index);
+            if (item) {
+                item.folder = event.folder;
                 documents.setItem(index, item);
             }
         }
@@ -263,6 +282,7 @@
         documentsService.on(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
         syncService.on(EVENT_STATE, refreshSimple);
         // refresh();
@@ -279,6 +299,7 @@
         documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.off(EVENT_SYNC_STATE, onSyncState);
         syncService.off(EVENT_STATE, refreshSimple);
     });
@@ -335,15 +356,16 @@
         }
     }
     function unselectAll() {
+        nbSelected = 0;
         if (documents) {
-            nbSelected = 0;
             documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: false })));
         }
-        // documents?.forEach((d, index) => {
-        //         d.selected = false;
-        //         documents.setItem(index, d);
-        //     });
-        // refresh();
+    }
+    function selectAll() {
+        if (documents) {
+            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: true })));
+            nbSelected = documents.length;
+        }
     }
     function onItemLongPress(item: Item, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
@@ -706,7 +728,7 @@
 
     async function showOptions(event) {
         const options = new ObservableArray(
-            (nbSelected === 1 ? [{ id: 'rename', name: lc('rename'), icon: 'mdi-rename' }] : []).concat([
+            (folder ? [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }] : []).concat(nbSelected === 1 ? [{ id: 'rename', name: lc('rename'), icon: 'mdi-rename' }] : []).concat([
                 { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
                 { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
@@ -721,6 +743,9 @@
 
             onClose: async (item) => {
                 switch (item.id) {
+                    case 'select_all':
+                        selectAll();
+                        break;
                     case 'rename':
                         const doc = getSelectedDocuments()[0];
                         const result = await prompt({

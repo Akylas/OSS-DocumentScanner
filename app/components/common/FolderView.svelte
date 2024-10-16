@@ -62,16 +62,7 @@
 
 <gesturerootview {...$$restProps} {padding} rows="auto,auto,auto,auto" on:layoutChanged={(e) => (closeCallback = e.object['bindingContext']?.closeCallback)}>
     <mdbutton height={30} horizontalAlignment="left" margin="2" text={topFolder} visibility={topFolder ? 'visible' : 'collapse'} />
-    <textfield
-        autocapitalizationType="none"
-        hint={lc('folder')}
-        placeholder={lc('folder')}
-        returnKeyType="done"
-        row={1}
-        text={defaultFolder}
-        variant="outline"
-        on:textChange={onTextChange}
-        on:returnPress={onKeyboardReturn} />
+    <textfield hint={lc('folder')} placeholder={lc('folder')} returnKeyType="done" row={1} text={defaultFolder} variant="outline" on:textChange={onTextChange} on:returnPress={onKeyboardReturn} />
     {#if foundFolders.length > 0}
         <label marginTop={15} row={2} text={lc('existing_folders')} />
         <wraplayout margin={5} row={3}>

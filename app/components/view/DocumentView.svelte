@@ -175,22 +175,12 @@
             nbSelected = 0;
             items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: false })));
         }
-        // documents?.forEach((d, index) => {
-        //         d.selected = false;
-        //         documents.setItem(index, d);
-        //     });
-        // refresh();
     }
     function selectAll() {
         if (items) {
             items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: true })));
             nbSelected = items.length;
         }
-        // documents?.forEach((d, index) => {
-        //         d.selected = false;
-        //         documents.setItem(index, d);
-        //     });
-        // refresh();
     }
 
     function getSelectedPages() {
