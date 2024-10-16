@@ -3,10 +3,12 @@ import { Application, ApplicationEventData } from '@nativescript/core';
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { wrapNativeException } from '@nativescript/core/utils';
+import { wrapNativeHttpException } from '@shared/utils/error';
 import { HTTPError, NoNetworkError, TimeoutError } from '~/utils/error';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
 export type { Headers } from '@nativescript-community/https';
+export { wrapNativeHttpException } from '@shared/utils/error';
 
 export const NetworkConnectionStateEvent = 'connected';
 export interface NetworkConnectionStateEventData extends EventData {
@@ -17,7 +19,7 @@ export interface NetworkConnectionStateEventData extends EventData {
 }
 
 export interface HttpRequestOptions extends HTTPSOptions {
-    queryParams?: {};
+    queryParams?: object;
 }
 
 export function queryString(params, location) {
@@ -154,20 +156,6 @@ async function handleRequestRetry(requestParams: HttpRequestOptions, retry = 0) 
         statusCode: 401,
         message: 'HTTP error',
         requestParams
-    });
-}
-
-export function wrapNativeHttpException(error, requestParams: HttpRequestOptions) {
-    return wrapNativeException(error, (message) => {
-        if (/(SocketTimeout|SocketException|UnknownHost)/.test(message)) {
-            return new TimeoutError();
-        } else {
-            return new HTTPError({
-                message,
-                statusCode: -1,
-                requestParams
-            });
-        }
     });
 }
 async function handleRequestResponse<T>(response: https.HttpsResponse<https.HttpsResponseLegacy<T>>, requestParams: HttpRequestOptions, requestStartTime, retry): Promise<T> {
