@@ -34,7 +34,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=8059b6&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=e60104&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.19.3"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -87,7 +87,7 @@ __metadata:
     typescript: "npm:5.6.3"
     typescript-eslint: "npm:^8.9.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/3be008b44bac4b1ffff14d45ff22eb679a9a0438db5d4f70f5b54860175bee68bce78e42f0b013e458a5d5ea01f5d0a69958628084950fa3d73d875e42e0e2da
+  checksum: 10/e989e1956ed067b7c2644a49e2cf04f73f924f1e8cb55dd8a8e0d0d4e52cc430f586359a88a6d518824551d12c6127ce3c7449da5f54304dcfb827243f1ce645
   languageName: node
   linkType: hard
 
@@ -11107,6 +11107,7 @@ __metadata:
     svelte-loader: "npm:3.2.4"
     svelte-native: "npm:1.0.28"
     topojson-simplify: "npm:3.0.3"
+    ts-loader: "npm:9.5.1"
     util: "npm:0.12.5"
   languageName: unknown
   linkType: soft
@@ -12490,7 +12491,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-loader@npm:^9.0.0":
+"ts-loader@npm:9.5.1, ts-loader@npm:^9.0.0":
   version: 9.5.1
   resolution: "ts-loader@npm:9.5.1"
   dependencies:
