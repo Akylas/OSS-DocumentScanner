@@ -1,4 +1,6 @@
 require 'json'
+require 'fileutils'
+require 'pathname'
 class String
   def titlecase
     split(/([[:alpha:]]+)/).map(&:capitalize).join
@@ -14,27 +16,48 @@ def writeFileIfNotExist(filePath, string)
   end
 end
 
+def deleteFolder(filePath)
+  if (Dir.exist?(filePath))
+    puts "deleting: #{filePath}"
+    FileUtils.rm_rf(filePath, :secure=>true)
+    puts "deleted: #{filePath} exists: #{Dir.exist?(filePath)}"
+  end
+end
+
 fastlane_version '2.135.2'
 opt_out_usage
+
 $ios_scheme = File.basename(File.expand_path('..')).gsub(/[^a-zA-Z0-9]/, "")
-sentry_cli_path = './node_modules/.bin/sentry-cli'
+sentry_cli_path = '../node_modules/.bin/sentry-cli'
 
 i18nEnJSON = JSON.parse(File.read('../app/i18n/en.json'))
 packageJSON = JSON.parse(File.read('../package.json'))
 fastlaneOptions = packageJSON['fastlane'] || Hash.new
 # puts "packageJSON:"  + JSON.generate(packageJSON)
 puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
+puts "working directory:"  + Dir.getwd
 
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
-app_name = i18nEnJSON['$'+app_identifier]['app']['name']
-sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
-app_build_path = ENV["APP_BUILD_PATH"] || "build/documentscanner" # based on nativescript.config.js !!!
+app_name = i18nEnJSON['app']['name']
+app_resources_path = ENV["APP_RESOURCES"] || "App_Resources" # based on nativescript.config.js !!!
+app_build_path = ENV["APP_BUILD_PATH"] || "platforms" # based on nativescript.config.js !!!
+metadata_path = ENV["APP_METADATA_PATH"]  || "metadata"
+metadata_path_realpath = Pathname.new("./#{metadata_path}").realpath.to_s
+
+tag_prefix = ENV["TAG_PREFIX"] || ""
+ignore_app_scope = ENV["IGNORE_APP_SCOPE"]
+project_root_path = Pathname.new("../").realpath.to_s
+puts "app_identifier:"  + app_identifier
+puts "app_name:"  + app_name
+puts "app_build_path:"  + app_build_path
+puts "app_resources_path:"  + app_resources_path
+puts "metadata_path:"  + metadata_path
+puts "metadata_path_realpath:"  + metadata_path_realpath
+puts "project_root_path:"  + project_root_path
 
 desc 'test lane'
 lane :test do
-    Dir.chdir("..") do
-        print "TEST SUCCESSFUL!"
-    end
+    print "TEST SUCCESSFUL!"
     if (fastlaneOptions['sftp'])
       server_url = fastlaneOptions['sftp']['url']
       server_user = fastlaneOptions['sftp']['user']
@@ -47,21 +70,22 @@ lane :test do
         server_user: server_user,
         server_key: server_key,
         target_dir:  target_dir, 
-        file_paths: Dir.glob(File.expand_path(File.join("..", app_build_path, "android/app/build/outputs/apk/release/*.apk")))
+        file_paths: Dir.glob(File.expand_path(File.join(project_root_path,  app_build_path, "android/app/build/outputs/apk/release/*.apk"))),
       )
     end
 end
 desc 'Check Git Status'
 lane :checkGitStatus do
-    Dir.chdir("..") do
-        repo_status = Actions.sh("git status --porcelain -uno")
-        repo_clean = repo_status.empty?
-        if repo_clean
-          UI.success('Git status is clean, all good! 💪')
-        else
-          error_message = "Git repository is dirty! Please ensure the repo is in a clean state by committing/stashing/discarding all changes first."
-          UI.user_error!(error_message)
-        end
+    # we dont test for git status in ci cause we modify files
+    if (ENV["GITHUB_ACTIONS"] != 'true')
+      repo_status = Actions.sh("git status --porcelain -uno")
+      repo_clean = repo_status.empty?
+      if repo_clean
+        UI.success('Git status is clean, all good! 💪')
+      else
+        error_message = "Git repository is dirty! Please ensure the repo is in a clean state by committing/stashing/discarding all changes first."
+        UI.user_error!(error_message)
+      end
     end
 end
 desc 'Check Sentry Cli Status'
@@ -77,22 +101,56 @@ lane :checkSentryClitatus do
 end
 
 desc 'Ensure deps are installed'
-lane :npm_installl do |params| 
+lane :ns_install do |params| 
   sh("ns", "install")
+end
+
+desc 'Setup'
+lane :setup do |params| 
+  options = params[:options]
+  if (ENV["GITHUB_ACTIONS"] == 'true')
+    setup_ci
+    # create_keychain(
+    #   name: "action_keychain",
+    #   password: "githubaction",
+    #   default_keychain: true,
+    #   unlock: true,
+    #   timeout: 3600,
+    #   lock_when_sleeps: false
+    # )
+  end
+  # we are in fastlane folder let s move up
+  if (options[:sentry])
+    checkSentryClitatus
+  end
+  checkGitStatus
+  ns_install
 end
 
 desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
-  if (Dir.exist?(File.join("..", app_build_path, platform)))
-    puts "deleting: "  + "#{app_build_path}/#{platform}"
-    FileUtils.remove_dir(File.join("..", app_build_path, platform))
+  options = params[:options]
+  deleteFolder(File.join(project_root_path, app_build_path, platform))
+  Dir.chdir(project_root_path) do
+    if (platform == 'ios')
+      if (options[:sentry] != false)
+        sh("npm", "run", "prepare.ios.sentry")
+      else
+        sh("npm", "run", "prepare.ios")
+      end
+    else
+      sh("ns", "prepare", platform, "--release", "--env.adhoc")
+    end
   end
-  if (platform == 'ios')
-    sh("npm", "run", "prepare.ios.sentry")
-  else
-    sh("ns", "prepare", platform, "--release", "--env.adhoc")
-  end
+end
+
+lane :build_and_publish do |params|
+  platform = params[:platform]
+  flavor = params[:flavor]
+  options = params[:options]
+  setup(options: options)
+  build_flavor(platform:platform, flavor:flavor, options: options)
 end
 
 lane :build_flavor do |params| 
@@ -101,10 +159,9 @@ lane :build_flavor do |params|
   options = params[:options]
   version = ""
   versionCode = ""
-  
-  Dir.chdir("..") do
-    version  =  sh("./node_modules/.bin/get-version", platform, "version", ).gsub(/\n/,'')
-    versionCode  =  sh("./node_modules/.bin/get-version", platform, "code", ).gsub(/\n/,'')
+  Dir.chdir(project_root_path) do
+    version  =  sh("./node_modules/.bin/get-version", platform, "version").gsub(/\n/,'')
+    versionCode  =  sh("./node_modules/.bin/get-version", platform, "code").gsub(/\n/,'')
   end
   
   # there we add the platform to the dist paramater. The idea is to have different dist for ios android
@@ -113,6 +170,7 @@ lane :build_flavor do |params|
   sentryDist =  versionCode + '.' + platform # optional distribution of the release usually the buildnumber
 
   sentry_version = "#{app_identifier}@#{version}+#{versionCode}"
+  puts "working directory:"  + Dir.getwd
   puts "platform:"  + platform
   puts "flavor:"  + flavor
   puts "version:"  + version
@@ -120,29 +178,37 @@ lane :build_flavor do |params|
   puts "sentry_version:"  + sentry_version
   puts "options:"  + JSON.generate(options.to_json)
 
-  # done through webpack
   # if (options[:sentry])
   #   sentry_create_release(
-  #     project_slug: sentry_project_slug,
-  #     app_identifier: app_identifier,
   #     sentry_cli_path: sentry_cli_path,
   #     version: sentry_version
   #   )
   # end
-  # svelteCheck
-  build(flavor: flavor, options: options)
-  push_to_git_remote(tags:false)
 
-  if (options[:sentry])
-    sh("npm", "run", "sentry-set-commits", "#{sentry_version}")
-    sentry_upload(
-      project_slug: sentry_project_slug,
-      app_identifier: app_identifier,
-      sentry_cli_path: sentry_cli_path,
-    )
+  svelteCheck
+
+  build_output = build(flavor: flavor, options: options)
+
+  next 
+
+  if (ENV["GITHUB_ACTIONS"] != 'true')
+    # push anything standing
+    push_to_git_remote(tags:false)
   end
 
-  tag = "#{app_identifier}/#{platform}/#{flavor}/#{version}/#{versionCode}";
+  # commit version changes
+  if (ENV["GITHUB_ACTIONS"] == 'true')
+    # sh("git add *.plist *.gradle; git commit -m 'chore: new build' --allow-empty")
+    git_add(path: ["./*.plist", "./*.gradle"])
+    git_commit(path: ["./*.plist", "./*.gradle"], message: "chore: new build", allow_nothing_to_commit: true)
+  end
+
+  if (options[:sentry] != false)
+    # sh("npm", "run", "sentry-set-commits", "#{sentry_version}")
+    sentry_upload
+  end
+
+  tag = "#{tag_prefix}#{platform}/#{flavor}/#{version}/#{versionCode}";
   changelog = get_changelog(platform:platform, flavor:flavor)
   if (flavor != 'github' && platform == 'android')
     write_changelog(version:versionCode, changelog: flavor != 'github' ? changelog : get_changelog(platform:platform, flavor:'store'));
@@ -158,8 +224,7 @@ lane :build_flavor do |params|
       name: "#{app_name}: v#{version} Build #{versionCode}",
       tag_name: tag,
       description: changelog,
-      commitish: "master",
-      upload_assets: Dir.glob(File.expand_path(File.join("..", app_build_path, "android/app/build/outputs/apk/release/*.apk")))
+      upload_assets: Dir.glob(File.expand_path(File.join(project_root_path, app_build_path, "android/app/build/outputs/apk/release/*.apk")))
     )
   # when 'fdroid'
   #   if (fastlaneOptions['sftp'])
@@ -174,13 +239,14 @@ lane :build_flavor do |params|
   #       server_user: server_user,
   #       server_key: server_key,
   #       target_dir:  target_dir, 
-  #       file_paths: Dir.glob(File.expand_path("../platforms/android/app/build/outputs/apk/release/*.apk")),
+  #       file_paths: Dir.glob(File.expand_path("./platforms/android/app/build/outputs/apk/release/*.apk")),
   #     )
   #   end
   when 'alpha','beta','production'
-    upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options)
+    upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
   end
   
+  git_pull
   if !git_tag_exists(tag: tag)
     add_git_tag(tag: tag, force: true)
     push_git_tags(force: true)
@@ -189,22 +255,24 @@ lane :build_flavor do |params|
 end
 
 lane :svelteCheck do |params|
-sh("npm", "run", "svelte-check")
+  Dir.chdir(project_root_path) do
+    sh("npm", "run", "svelte-check")
+  end
 end
-
 
 lane :get_changelog  do |params| 
   platform = params[:platform]
   flavor = params[:flavor]
-  puts "get_changelog "+  platform + " "+  flavor
-  ignorePlatform = 'ios'
-  ignoreAppScope = /wallet/ =~ app_identifier ? 'scanner' : 'wallet'
-  display_links = flavor == 'github'
-  if(platform == "ios") 
-    ignorePlatform = "android"
+  ignoredScopes = [platform == "ios" ? 'android' : 'ios']
+  if (ignore_app_scope)
+    ignoredScopes.push(ignore_app_scope)
   end
-  isReleasable = analyze_commits(match: "#{app_identifier}/#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform, ignoreAppScope]) || ""
+  display_links = flavor == 'github'
+  puts "get_changelog "+  platform + " "+  flavor
+  puts "tag_prefix "+ tag_prefix
+  puts "ignoredScopes "+  ignoredScopes.join(", ")
+  isReleasable = analyze_commits(match: "\"#{tag_prefix}#{platform}/#{flavor}*\"", ignore_scopes: ignoredScopes, debug:true)
+  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:true ) || ""
   if (!logs.empty?)
     logs = logs.split(/[\n]/).uniq
     translateLogs = logs.select {|v| v =~ /Translated using Weblate/ }
@@ -231,34 +299,75 @@ end
 platform :ios do
   desc 'Upload Dsyms to Sentry'
   lane :sentry_upload do 
-    sentry_upload_dsym(
-      project_slug: sentry_project_slug,
-      app_identifier: app_identifier,
-    )
+    # disable for now as it uses too much storage
+    # sentry_debug_files_upload(
+    #   url: ENV["SENTRY_URL"],
+    #   org_slug: ENV["SENTRY_ORG"],
+    #   project_slug: ENV["SENTRY_PROJECT"],
+    #   wait: true,
+    #   derived_data: false,
+    #   include_sources: false,
+    #   no_unwind: true,
+    #   no_sources: true,
+    #   upload_symbol_maps: true
+    # )
+  end
+
+  private_lane :fastlane_match do |params| 
+    if (ENV["GITHUB_ACTIONS"] == 'true')
+      match(
+        type:params[:type], 
+        clone_branch_directly:true,
+        generate_apple_certs: false,
+        # keychain_name: "action_keychain",
+        # keychain_password: "githubaction"
+        readonly: true,
+        shallow_clone: true,
+        api_key: params[:api_key]
+        )
+    else
+      match(
+        type:params[:type], 
+        clone_branch_directly:true,
+        shallow_clone: true,
+        generate_apple_certs: false,
+        api_key: params[:api_key]
+        )
+    end
+  end
+
+  private_lane :setup_project do
+    
   end
   lane :upload_store  do |params| 
     if (params[:flavor] == "production")
       upload_to_app_store(
         ignore_language_directory_validation: true,
-        metadata_path:File.join(".", "fastlane/metadata", app_identifier, "ios"),
-        screenshots_path:File.join(".", "fastlane/metadata", app_identifier, "ios", "screenshots"),
+        metadata_path:File.join(metadata_path_realpath, "ios"),
+        screenshots_path:File.join(metadata_path_realpath, "ios", "screenshots"),
         force: true,
         automatic_release: true,
         reject_if_possible: true,
         submit_for_review: false,
         skip_metadata: true,
-        skip_screenshots: true,
+        skip_screenshots: !options[:upload_screenshots],
+        overwrite_screenshots: !options[:upload_screenshots],
         release_notes: {
           'default' => params[:changelog]
         },
-        submission_information: { export_compliance_uses_encryption: false,
-                                  add_id_info_uses_idfa: false }
+        submission_information: { 
+          export_compliance_uses_encryption: false,
+          add_id_info_uses_idfa: false 
+        }
       )
     else
+      build_output = params[:build_output]
       upload_to_testflight(
           changelog:params[:changelog],
           distribute_external: true,
           groups: [params[:flavor]],
+          api_key: build_output[:api_key],
+          # skip_waiting_for_build_processing: true
           notify_external_testers: true
         )
     end
@@ -266,46 +375,76 @@ platform :ios do
   end
   desc 'Fetch certificates and provisioning profiles'
   lane :certificates do
-      match(type: 'development', clone_branch_directly:true, generate_apple_certs: false)
-      match(type: "appstore", clone_branch_directly:true, generate_apple_certs: false)
+      if (ENV["GITHUB_ACTIONS"] == 'true')
+        api_key = app_store_connect_api_key(
+          key_id: ENV['APPLE_KEY_ID'],
+          issuer_id: ENV['APPLE_ISSUER_ID'],
+          key_content: ENV['APPLE_KEY_CONTENT']
+        )
+      end
+      fastlane_match(type: 'development', api_key: api_key)
+      fastlane_match(type: 'appstore', api_key: api_key)
   end
 
   desc 'Build the iOS application.'
   lane :build do |params| 
+      options = params[:options]
+      if (ENV["GITHUB_ACTIONS"] == 'true')
+        api_key = app_store_connect_api_key(
+          key_id: ENV['APPLE_KEY_ID'],
+          issuer_id: ENV['APPLE_ISSUER_ID'],
+          key_content: ENV['APPLE_KEY_CONTENT']
+        )
+      end
       if (params[:flavor] == "appcenter")
         register_devices(devices_file: "./fastlane/devices.txt")
-        match(type: "adhoc", force_for_new_devices: true, generate_apple_certs: false)
+        fastlane_match(type: 'adhoc', api_key: api_key)
       else
-        match(type: "appstore", clone_branch_directly:true, generate_apple_certs: false)
+        fastlane_match(type: 'appstore', api_key: api_key)
       end
-      prepare(platform:'ios')
+      prepare(platform:'ios', options: options)
+      if (ENV["GITHUB_ACTIONS"] == 'true')
+      #    # automatic code signing
+        update_code_signing_settings(
+          use_automatic_signing: false,
+          bundle_identifier: app_identifier,
+          code_sign_identity: "iPhone Distribution",
+          profile_name: lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING][app_identifier],
+          path: File.join(project_root_path, app_build_path, "ios", "#{$ios_scheme}.xcodeproj")
+        )
+      end
+      #   build_ios_app(
+      #     output_directory:"dist",
+      #     scheme: $ios_scheme,
+      #     workspace: "./platforms/ios/#{$ios_scheme}.xcworkspace"
+      #   )
+      # else
       build_ios_app(
+        export_xcargs: '-allowProvisioningUpdates',
+        xcargs: "-allowProvisioningUpdates",
         output_directory:"dist",
         scheme: $ios_scheme,
-        workspace: File.join(".", app_build_path, "ios/#{$ios_scheme}.xcworkspace")
+        workspace: File.join(project_root_path, app_build_path, "ios", "#{$ios_scheme}.xcworkspace"),
+        export_method: "app-store",
+        export_options: {
+          provisioningProfiles: lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
+        }
       )
+      {"api_key" => api_key}
   end
 
   desc 'Ship iOS build to Testflight.'
   lane :beta do |options|
-    checkSentryClitatus
-    # checkGitStatus
-    npm_installl(platform:'ios')
-    build_flavor(platform:'ios', flavor:'beta', options:options)
+    build_and_publish(platform:'ios', flavor:'beta', options: options)
   end
   desc 'Ship iOS build to Testflight.'
   lane :alpha do |options|
-    checkSentryClitatus
-    # checkGitStatus
-    npm_installl(platform:'ios')
-    build_flavor(platform:'ios', flavor:'alpha', options:options)
+    build_and_publish(platform:'ios', flavor:'alpha', options: options)
   end
+
   desc 'Ship iOS build to AppStore.'
   lane :production do |options|
-    checkSentryClitatus
-    # checkGitStatus
-    npm_installl(platform:'ios')
-    build_flavor(platform:'ios', flavor:'production', options:options)
+    build_and_publish(platform:'ios', flavor:'production', options: options)
   end
 end
 
@@ -322,13 +461,16 @@ platform :android do
       changelog = changelog[0..499]
     end
 
-    metadata_dir="metadata/#{app_identifier}/android"
-    require 'fileutils'
+    metadata_dir=File.join(metadata_path,"android")
+    puts "current dir: #{Dir.getwd}"
+    puts "metadata_dir: #{Pathname.new(metadata_dir).realpath.to_s}"
     system 'mkdir', '-p', metadata_dir
-    # writeFileIfNotExist("#{metadata_dir}/fr-FR/changelogs/#{version}.txt", changelog)
+    writeFileIfNotExist("#{metadata_dir}/fr-FR/changelogs/#{version}.txt", changelog)
     writeFileIfNotExist("#{metadata_dir}/en-US/changelogs/#{version}.txt", changelog)
     # Create a new branch and upload a PR for it.
-    sh("git add #{metadata_dir}; git commit -m '#{version} release notes' --allow-empty")
+    git_add(path: "./*.txt")
+    git_commit(path: "./*.txt", message: "#{version} release notes", allow_nothing_to_commit: true)
+    # sh("git add #{metadata_dir}; git commit -m '#{version} release notes' --allow-empty")
   end
 
   lane :upload_store   do |params| 
@@ -337,13 +479,14 @@ platform :android do
     if (track == 'beta') 
       track = 'internal'
     end
+
+    puts "upload_to_play_store dir: #{Dir.getwd}"
+    puts "metadata_dir: #{Pathname.new(File.join(metadata_path_realpath, "android")).realpath.to_s}"
     upload_to_play_store(
-      package_name: app_identifier,
       track: track,
-      metadata_path:File.join(".", "fastlane/metadata", app_identifier, "android"),
+      metadata_path:File.join(metadata_path_realpath, "android"),
       track_promote_to: track,
-      json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
-      aab: File.join(".", app_build_path ,'android/app/build/outputs/bundle/release/app-release.aab'),
+      aab: File.join(project_root_path, app_build_path ,"android/app/build/outputs/bundle/release/app-release.aab"),
       skip_upload_screenshots: !options[:upload_screenshots],
       skip_upload_images: !options[:upload_images],
       skip_upload_metadata: !options[:upload_metadata]
@@ -352,62 +495,46 @@ platform :android do
 
   desc 'Build the Android application.'
   lane :build do |params|
-    puts "build app_build_path:" + app_build_path
-    if (Dir.exist?(File.join("..", app_build_path, "android")))
-      puts "deleting: "  + "#{app_build_path}/android"
-      FileUtils.remove_dir(File.join("..", app_build_path, "android"))
-    end
-    if (Dir.exist?(File.join("..", app_build_path, "tempPlugin")))
-      puts "deleting: "  + "#{app_build_path}/tempPlugin"
-      FileUtils.remove_dir(File.join("..", app_build_path, "tempPlugin"))
-    end
+    deleteFolder(File.join(project_root_path, app_build_path, "android"))
+    deleteFolder(File.join(project_root_path, app_build_path, "tempPlugin"))
     options = params[:options]
     puts "build flavor:"  + params[:flavor]
     puts "build options:"  + JSON.generate(options.to_json)
     case params[:flavor]
     when 'fdroid','github'
-      if (options[:sentry])
+      if (options[:sentry] == true)
         sh("npm", "run", "build.android.production.fdroid.sentry")
       else 
         sh("npm", "run", "build.android.production.fdroid")
       end
     else
       # for now we build sentry releases for playstore to get bug reports
-      sh("npm", "run", "build.android.production.sentry")
+      if (options[:sentry] != false)
+        sh("npm", "run", "build.android.production.playstore.sentry")
+      else 
+        sh("npm", "run", "build.android.production.playstore")
+      end
     end
   end
 
+
   desc 'Ship to Github.'
   lane :github do |options|
-    if (options[:sentry])
-      checkSentryClitatus
-    end
-    checkGitStatus
-    build_flavor(platform:'android', flavor:'github', options: options)
+    build_and_publish(platform:'android', flavor:'github', options: options)
   end
 
   desc 'build for fdroid.'
   lane :fdroid do |options|
-    if (options[:sentry])
-      checkSentryClitatus
-    end
-    checkGitStatus
-    build_flavor(platform:'android', flavor:'fdroid', options: options)
+    build_and_publish(platform:'android', flavor:'fdroid', options: options)
   end
 
   desc 'Ship to Android Playstore Beta.'
   lane :beta do |options|
-    checkSentryClitatus
-    checkGitStatus
-    npm_installl(platform:'android')
-    build_flavor(platform:'android', flavor:'beta', options: options)
+    build_and_publish(platform:'android', flavor:'beta', options: options)
   end
 
   desc 'Ship to Android Playstore Alpha.'
   lane :alpha do |options|
-    checkSentryClitatus
-    checkGitStatus
-    npm_installl(platform:'android')
-    build_flavor(platform:'android', flavor:'alpha', options: options)
+    build_and_publish(platform:'android', flavor:'alpha', options: options)
   end
 end
