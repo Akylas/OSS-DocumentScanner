@@ -1,5 +1,5 @@
 {
-  "extends": "../node_modules/@tsconfig/svelte/tsconfig.json",
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "declaration": false,
     "declarationMap": false,

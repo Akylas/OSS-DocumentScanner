@@ -2324,6 +2324,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tsconfig/svelte@npm:5.0.4":
+  version: 5.0.4
+  resolution: "@tsconfig/svelte@npm:5.0.4"
+  checksum: 10/27b83fef6781cdc3bdee7737287d39a909b1e408e99512cfcb8a9b2ea78d5c6d98e43372c917b098692499a4aad3a151cbe6f994819d37a3f2973c46a30b38e4
+  languageName: node
+  linkType: hard
+
 "@types/body-parser@npm:*":
   version: 1.19.5
   resolution: "@types/body-parser@npm:1.19.5"
@@ -13554,6 +13561,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webpdfviewer@workspace:webpdfviewer"
   dependencies:
+    "@tsconfig/svelte": "npm:5.0.4"
     html-webpack-plugin: "npm:^5.6.0"
     mini-css-extract-plugin: "npm:^2.9.1"
     ts-loader: "npm:9.5.1"
