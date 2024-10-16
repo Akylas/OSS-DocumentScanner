@@ -189,7 +189,9 @@ lane :build_flavor do |params|
 
   build_output = build(flavor: flavor, options: options)
 
-  next 
+  if (options[:publish] != true)
+    next 
+  end
 
   if (ENV["GITHUB_ACTIONS"] != 'true')
     # push anything standing
