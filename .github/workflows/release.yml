@@ -39,6 +39,7 @@ jobs:
     uses: Akylas/app-tools/.github/workflows/release_android.yml@main
     if: github.event.inputs.android == 'true' && github.event.inputs.documentscanner == 'true'
     with:
+      flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
     secrets: inherit
 
@@ -46,6 +47,7 @@ jobs:
     uses: Akylas/app-tools/.github/workflows/release_android.yml@main
     if: github.event.inputs.android == 'true' && github.event.inputs.cardwallet == 'true'
     with:
+      flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
     secrets: inherit
 
@@ -53,6 +55,7 @@ jobs:
     uses: Akylas/app-tools/.github/workflows/release_android.yml@main
     if: github.event.inputs.ios == 'true' && github.event.inputs.documentscanner == 'true'
     with:
+      flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
     secrets: inherit
     
@@ -60,5 +63,6 @@ jobs:
     uses: Akylas/app-tools/.github/workflows/release_android.yml@main
     if: github.event.inputs.ios == 'true' && github.event.inputs.cardwallet == 'true'
     with:
+      flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
     secrets: inherit
