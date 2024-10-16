@@ -43,7 +43,7 @@ yarn-error.log*
 .project
 .gradle
 .env*
-!.env.ci
+!.env.ci*
 .yarn
 tmp/
 ._.DS_Store
