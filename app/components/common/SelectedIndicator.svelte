@@ -2,7 +2,7 @@
     import { colors, fonts } from '~/variables';
     export let selected: boolean = false;
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorOnPrimary } = $colors);
+    $: ({ colorOnPrimary, colorPrimary } = $colors);
 </script>
 
 <label
@@ -14,7 +14,6 @@
     height={26}
     horizontalAlignment="left"
     margin={5}
-    rowSpan={2}
     text="mdi-check"
     textAlignment="center"
     verticalAlignment="top"

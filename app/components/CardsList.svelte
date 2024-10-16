@@ -34,11 +34,11 @@
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
-    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { AugmentedFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import {
-    BOTTOM_BUTTON_OFFSET,
+        BOTTOM_BUTTON_OFFSET,
         CARD_RATIO,
         EVENT_DOCUMENT_ADDED,
         EVENT_DOCUMENT_DELETED,
@@ -84,6 +84,10 @@
     let lottieView: NativeViewElementNode<LottieView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
+
+    export let folder: AugmentedFolder = null;
+    export let title = l('cards');
+    let folders: AugmentedFolder[];
 
     let syncEnabled = syncService.enabled;
 
@@ -135,18 +139,22 @@
         // console.log('updateNoDocument', showNoDocument);
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
-        documents[CARD_APP ? 'push' : 'unshift']({
-            doc: event.doc,
-            selected: false
-        } as Item);
-        updateNoDocument();
-        collectionView?.nativeElement.scrollToIndex(documents.length - 1, true, SnapPosition.END);
-        DEV_LOG && console.log('onDocumentAdded', nbDocuments);
+        if ((!event.folder && !folder) || folder?.id === event.folder?.id) {
+            documents[CARD_APP ? 'push' : 'unshift']({
+                doc: event.doc,
+                selected: false
+            } as Item);
+            updateNoDocument();
+            collectionView?.nativeElement.scrollToIndex(documents.length - 1, true, SnapPosition.END);
+            DEV_LOG && console.log('onDocumentAdded', nbDocuments);
+        } else if (!folder && event.folder) {
+            refresh();
+        }
     }
     function onDocumentUpdated(event: DocumentUpdatedEventData) {
         let index = -1;
-        documents.some((d, i) => {
-            if (d.doc.id === event.doc.id) {
+        documents?.some((d, i) => {
+            if (d.doc && d.doc.id === event.doc.id) {
                 index = i;
                 return true;
             }
@@ -212,19 +220,19 @@
     let colorPrimaryContainer = $colors.colorPrimaryContainer;
     $: ({
         colorBackground,
-        colorSurfaceContainerHigh,
+        colorError,
         colorOnBackground,
         colorOnPrimary,
-        colorPrimary,
-        colorSurfaceContainerLow,
+        colorOnPrimaryContainer,
         colorOnSecondary,
-        colorSurfaceContainer,
         colorOnSurfaceVariant,
         colorOutline,
-        colorSurface,
+        colorPrimary,
         colorPrimaryContainer,
-        colorOnPrimaryContainer,
-        colorError
+        colorSurface,
+        colorSurfaceContainer,
+        colorSurfaceContainerHigh,
+        colorSurfaceContainerLow
     } = $colors);
 
     function onSnackMessageAnimation({ animationArgs }: EventData & { animationArgs: AnimationDefinition[] }) {
@@ -279,7 +287,7 @@
 
     async function onStartCam(inverseUseSystemCamera = false) {
         try {
-            await importImageFromCamera({ inverseUseSystemCamera });
+            await importImageFromCamera({ inverseUseSystemCamera, folder });
         } catch (error) {
             showError(error);
         }
@@ -288,7 +296,7 @@
     async function importDocument(importPDFs = true) {
         DEV_LOG && console.log('importDocument', importPDFs);
         try {
-            await importAndScanImage(null, importPDFs);
+            await importAndScanImage({ importPDFs, folder });
         } catch (error) {
             showError(error);
         }
@@ -304,7 +312,7 @@
     }
     function selectItem(item: Item) {
         if (!item.selected) {
-            documents.some((d, index) => {
+            documents?.some((d, index) => {
                 if (d === item) {
                     nbSelected++;
                     d.selected = true;
@@ -316,7 +324,7 @@
     }
     function unselectItem(item: Item) {
         if (item.selected) {
-            documents.some((d, index) => {
+            documents?.some((d, index) => {
                 if (d === item) {
                     nbSelected--;
                     d.selected = false;
@@ -329,7 +337,7 @@
     function unselectAll() {
         if (documents) {
             nbSelected = 0;
-            documents.splice(0, documents.length, ...documents.map((i) => ({ doc: i.doc, selected: false })));
+            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: false })));
         }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
@@ -418,7 +426,7 @@
     // let menuShowingIndex = -1;
     // let ignoreNextClose = false;
     function onFullCardItemTouch(item: Item, event) {
-        const index = documents.findIndex((d) => d.doc.id === item.doc.id);
+        const index = documents.findIndex((d) => d.doc && d.doc.id === item.doc.id);
         handleTouchAction(index, event);
     }
     function handleTouchAction(index, event) {
@@ -1085,7 +1093,7 @@
                 on:tap={throttle(() => onAddButton(), 500)} />
         {/if}
 
-        <CActionBar title={l('cards')}>
+        <CActionBar {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}

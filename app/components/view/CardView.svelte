@@ -75,8 +75,8 @@
 <script lang="ts">
     // $: qrcodeColorMatrix = isDarkTheme($currentRealTheme) ? [-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, -1, 0, 0, 1, 1] : [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1];
     // technique for only specific properties to get updated on store change
-    let { colorSurfaceContainerHigh, colorBackground, colorTertiary, colorSurface, colorOnBackground, colorOnSurfaceVariant, colorError } = $colors;
-    $: ({ colorSurfaceContainerHigh, colorBackground, colorTertiary, colorSurface, colorOnBackground, colorOnSurfaceVariant, colorError } = $colors);
+    let { colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorSurface, colorSurfaceContainerHigh, colorTertiary } = $colors;
+    $: ({ colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorSurface, colorSurfaceContainerHigh, colorTertiary } = $colors);
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
@@ -209,7 +209,7 @@
 
     async function importDocument(importPDFs = true) {
         try {
-            await importAndScanImage(document, importPDFs, false);
+            await importAndScanImage({ document, importPDFs, canGoToView: false });
         } catch (error) {
             showError(error);
         }
@@ -553,43 +553,47 @@
                 vertPos: VerticalPosition.BELOW,
 
                 onClose: async (item) => {
-                    switch (item.id) {
-                        case 'share':
-                            showImageExportPopover(event);
-                            break;
-                        case 'fullscreen':
-                            await fullscreenSelectedPages();
-                            unselectAll();
-                            break;
-                        case 'ocr':
-                            detectOCR({ pages: getSelectedPagesWithData() });
-                            unselectAll();
-                            break;
-                        case 'qrcode':
-                            try {
-                                let found = false;
-                                await Promise.all(
-                                    getSelectedPagesWithData().map((page) =>
-                                        qrcodeService.detectQRcode(document, page.pageIndex).then((r) => {
-                                            found = found || r?.length > 0;
-                                        })
-                                    )
-                                );
-                                if (!found) {
-                                    showSnack({ message: lc('no_qrcode_found') });
+                    try {
+                        switch (item.id) {
+                            case 'share':
+                                showImageExportPopover(event);
+                                break;
+                            case 'fullscreen':
+                                await fullscreenSelectedPages();
+                                unselectAll();
+                                break;
+                            case 'ocr':
+                                detectOCR({ pages: getSelectedPagesWithData() });
+                                unselectAll();
+                                break;
+                            case 'qrcode':
+                                try {
+                                    let found = false;
+                                    await Promise.all(
+                                        getSelectedPagesWithData().map((page) =>
+                                            qrcodeService.detectQRcode(document, page.pageIndex).then((r) => {
+                                                found = found || r?.length > 0;
+                                            })
+                                        )
+                                    );
+                                    if (!found) {
+                                        showSnack({ message: lc('no_qrcode_found') });
+                                    }
+                                } catch (error) {
+                                    showError(error);
                                 }
-                            } catch (error) {
-                                showError(error);
-                            }
-                            unselectAll();
-                            break;
-                        case 'delete':
-                            deleteSelectedPages();
-                            break;
-                        case 'transform':
-                            transformPages({ pages: getSelectedPagesWithData() });
-                            unselectAll();
-                            break;
+                                unselectAll();
+                                break;
+                            case 'delete':
+                                deleteSelectedPages();
+                                break;
+                            case 'transform':
+                                transformPages({ pages: getSelectedPagesWithData() });
+                                unselectAll();
+                                break;
+                        }
+                    } catch (error) {
+                        showError(error);
                     }
                 }
             });

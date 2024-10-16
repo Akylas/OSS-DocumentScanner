@@ -15,7 +15,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { OCRDocument, PageData } from '~/models/OCRDocument';
+    import { DocFolder, OCRDocument, PageData } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import {
         AUTO_SCAN_DELAY,
@@ -55,11 +55,12 @@
     cameraOptionsStore.subscribe((newValue) => {
         ApplicationSettings.setString(SETTINGS_CAMERA_SETTINGS, JSON.stringify(newValue));
     });
-    $: ({ aspectRatio, stretch, viewsize, pictureSize } = $cameraOptionsStore);
+    $: ({ aspectRatio, pictureSize, stretch, viewsize } = $cameraOptionsStore);
 
     export let modal = false;
     export let document: OCRDocument = null;
     export let QRCodeOnly = false;
+    export let folder: DocFolder = null;
 
     let nbPages = 0;
     let takingPicture = false;
@@ -343,7 +344,7 @@
         try {
             DEV_LOG && console.log('saveCurrentDocument', newDocument, !!theDocument);
             if (!theDocument) {
-                theDocument = document = await OCRDocument.createDocument(pagesToAdd);
+                theDocument = document = await OCRDocument.createDocument(pagesToAdd, folder);
                 if (startOnCam) {
                     await goToDocumentView(theDocument);
                 } else {

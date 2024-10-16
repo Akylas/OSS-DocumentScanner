@@ -49,7 +49,7 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    $: ({ colorSurfaceContainerHigh, colorError, colorSurfaceContainer, colorPrimary, colorOutline, colorSurface, colorOnSurfaceVariant, colorBackground } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSurface, colorSurfaceContainer, colorSurfaceContainerHigh } = $colors);
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
@@ -117,7 +117,7 @@
 
     async function importPages(importPDFs = true) {
         try {
-            await importAndScanImage(document, importPDFs, false);
+            await importAndScanImage({ document, importPDFs, canGoToView: false });
         } catch (error) {
             showError(error);
         }
@@ -173,7 +173,7 @@
     function unselectAll() {
         if (items) {
             nbSelected = 0;
-            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+            items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: false })));
         }
         // documents?.forEach((d, index) => {
         //         d.selected = false;
@@ -183,7 +183,7 @@
     }
     function selectAll() {
         if (items) {
-            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: true, index: i.index })));
+            items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: true })));
             nbSelected = items.length;
         }
         // documents?.forEach((d, index) => {

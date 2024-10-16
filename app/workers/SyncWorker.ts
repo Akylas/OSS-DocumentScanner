@@ -335,7 +335,7 @@ export default class SyncWorker extends Observable {
             // pages will be updated independently
             return;
         }
-        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : (event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({}));
+        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({})));
 
         TEST_LOG &&
             console.info(
@@ -779,7 +779,7 @@ export default class SyncWorker extends Observable {
         //     // pages will be updated independently
         //     return;
         // }
-        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : (event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({}));
+        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({})));
         TEST_LOG &&
             console.log(
                 'Sync',

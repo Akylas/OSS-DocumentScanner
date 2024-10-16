@@ -3,7 +3,7 @@ import { OCRDocument } from '~/models/OCRDocument';
 import { FileStat } from '~/webdav';
 import { BaseSyncService, BaseSyncServiceOptions } from './BaseSyncService';
 
-export interface BaseDataSyncServiceOptions extends BaseSyncServiceOptions {}
+export type BaseDataSyncServiceOptions = BaseSyncServiceOptions;
 
 export abstract class BaseDataSyncService extends BaseSyncService {
     allowToRemoveOnRemote: boolean = true;

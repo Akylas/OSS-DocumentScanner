@@ -88,18 +88,13 @@ function debounceSync(fn, delay = 300, { leading = false, trailing = true, ignor
 }
 
 export class SyncService extends Observable {
-    // autoSync = AUTO_SYNC;
-
-    // syncServices: BaseDataSyncService[];
     services: any[] = [];
     onDocumentAdded(event: DocumentAddedEventData) {
-        // only used for data sync
         DEV_LOG && console.log('SYNC', 'onDocumentAdded');
         this.syncDocumentsInternal({ event, type: SyncType.DATA | SyncType.PDF, fromEvent: EVENT_DOCUMENT_ADDED });
     }
     onDocumentDeleted(event: DocumentDeletedEventData) {
         DEV_LOG && console.log('SYNC', 'onDocumentDeleted');
-        // only used for data sync
 
         this.getStoredSyncServices()
             // .filter((s) => s instanceof BaseDataSyncService)
@@ -128,14 +123,9 @@ export class SyncService extends Observable {
         DEV_LOG && console.log('SYNC', 'onDocumentPagesAdded');
         this.syncDocumentsInternal({ event, type: SyncType.IMAGE, fromEvent: EVENT_DOCUMENT_PAGES_ADDED });
     }
-    // onAutoSyncPrefChanged() {
-    //     this.autoSync = ApplicationSettings.getBoolean(SETTINGS_REMOTE_AUTO_SYNC, AUTO_SYNC);
-    //     DEV_LOG && console.log('onAutoSyncPrefChanged', this.autoSync);
-    // }
     get enabled() {
         return this.services?.length > 0;
     }
-    // services: BaseSyncService[];
 
     getStoredSyncServices() {
         return JSON.parse(ApplicationSettings.getString(SETTINGS_SYNC_SERVICES, '[]')) as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[];
@@ -150,14 +140,11 @@ export class SyncService extends Observable {
         if (!this.enabled) {
             this.start();
         } else {
-            // SERVICES_TYPE_MAP[type].start(data);
             this.onServiceChanged();
         }
         return dataToAdd;
     }
     removeService(data) {
-        // const serviceToRemoveIndex = this.services.findIndex((s) => s.id === data.id);
-        // if (serviceToRemoveIndex !== -1) {
         const syncServices = this.getStoredSyncServices();
         const index = syncServices.findIndex((s) => s.id === data.id);
         DEV_LOG && console.log('Sync', 'removeService', index, JSON.stringify(data));
@@ -165,15 +152,10 @@ export class SyncService extends Observable {
             syncServices.splice(index, 1);
             ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
         }
-        // this.services[serviceToRemoveIndex].stop();
-        // (this.services[serviceToRemoveIndex].constructor as any).destroyInstance();
         this.onServiceChanged();
         return true;
-        // }
     }
     updateService(data) {
-        // const serviceToUpdateIndex = this.services.findIndex((s) => s.id === data.id);
-        // if (serviceToUpdateIndex !== -1) {
         const syncServices = this.getStoredSyncServices();
         const index = syncServices.findIndex((s) => s.id === data.id);
         DEV_LOG && console.log('Sync', 'updateService', index, JSON.stringify(data));
@@ -181,10 +163,6 @@ export class SyncService extends Observable {
             syncServices.splice(index, 1, data);
             ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
         }
-        //we recreate the service to ensure everything is good
-        // this.services[serviceToUpdateIndex].stop();
-        // (this.services[serviceToUpdateIndex].constructor as any).destroyInstance();
-        // SERVICES_TYPE_MAP[data.type].start(data);
         this.onServiceChanged(true);
         return true;
         // }
@@ -226,26 +204,11 @@ export class SyncService extends Observable {
             // if sync is running wait for it to be finished
             await new Promise((resolve) => this.once(EVENT_SYNC_STATE, resolve));
         }
-        // this.services.forEach((service) => service.stop());
     }
     onServiceChanged(force = false) {
         const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
         this.services = services;
         syncServicesStore.set(services);
-        // const newServices = this.getEnabledServices();
-        // const delta = newServices.length - this.services.length;
-        // DEV_LOG && console.log('onServiceChanged', force, delta);
-        // if (force || delta !== 0) {
-        //     this.services = newServices;
-        //     if (delta !== 0) {
-        //         this.notify({ eventName: EVENT_STATE, enabled: this.enabled } as SyncEnabledEventData);
-        //     }
-        //     if (delta > 0) {
-        //         syncService.syncDocuments();
-        //     } else if (newServices.length === 0) {
-        //         this.stop();
-        //     }
-        // }
     }
 
     syncRunning = false;

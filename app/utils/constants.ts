@@ -93,7 +93,9 @@ export const IMAGE_CONTEXT_OPTIONS = {
 };
 export const DEFAULT_PDF_OPTIONS_STRING = JSON.stringify(DEFAULT_PDF_OPTIONS);
 export const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
-    ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+    ? SDK_VERSION < 30
+        ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+        : undefined
     : knownFolders.externalDocuments().path;
 
 export function getImageExportSettings() {
@@ -104,6 +106,7 @@ export function getImageExportSettings() {
 }
 
 export const EVENT_DOCUMENT_ADDED = 'documentAdded';
+export const EVENT_DOCUMENT_MOVED_FOLDER = 'documentMovedFolder';
 export const EVENT_DOCUMENT_UPDATED = 'documentUpdated';
 export const EVENT_DOCUMENT_DELETED = 'documentsDeleted';
 export const EVENT_DOCUMENT_PAGES_ADDED = 'documentPagesAdded';

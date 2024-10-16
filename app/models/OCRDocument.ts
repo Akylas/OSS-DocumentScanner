@@ -1,12 +1,22 @@
 import { ApplicationSettings, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { ColorPaletteData, OCRData, QRCodeData, Quad, Quads, cropDocumentFromFile } from 'plugin-nativeprocessor';
-import { DocumentAddedEventData, DocumentPageDeletedEventData, DocumentPageUpdatedEventData, DocumentPagesAddedEventData, DocumentUpdatedEventData, DocumentsService } from '~/services/documents';
+import {
+    DocumentAddedEventData,
+    DocumentMovedFolderEventData,
+    DocumentPageDeletedEventData,
+    DocumentPageUpdatedEventData,
+    DocumentPagesAddedEventData,
+    DocumentUpdatedEventData,
+    DocumentsService,
+    sql
+} from '~/services/documents';
 import type { MatricesTypes, Matrix } from '~/utils/color_matrix';
 import { doInBatch, getFormatedDateForFilename } from '~/utils/utils.common';
 import {
     DOCUMENT_NAME_FORMAT,
     EVENT_DOCUMENT_ADDED,
+    EVENT_DOCUMENT_MOVED_FOLDER,
     EVENT_DOCUMENT_PAGES_ADDED,
     EVENT_DOCUMENT_PAGE_DELETED,
     EVENT_DOCUMENT_PAGE_UPDATED,
@@ -16,6 +26,7 @@ import {
     SETTINGS_DOCUMENT_NAME_FORMAT,
     getImageExportSettings
 } from '../utils/constants';
+import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 
 export interface ImportImageData {
     imagePath?: string;
@@ -39,12 +50,22 @@ export class Tag {
     public name: string;
 }
 
+export class DocFolder {
+    public readonly id!: string;
+    public name: string;
+}
+export interface AugmentedFolder extends DocFolder {
+    size?: number;
+    count?: number;
+}
+
 export interface Document {
     id: string;
     createdDate: number;
     modifiedDate: number;
     name?: string;
     tags: string[];
+    folders: string[];
     _synced: number;
     pagesOrder: string[];
     pages?: OCRPage[];
@@ -65,6 +86,7 @@ export class OCRDocument extends Observable implements Document {
     modifiedDate: number;
     name?: string;
     tags: string[];
+    folders: string[];
     _synced: number;
 
     pagesOrder: string[];
@@ -85,17 +107,17 @@ export class OCRDocument extends Observable implements Document {
         return doc;
     }
 
-    static async createDocument(pagesData?: PageData[], setRaw = false) {
+    static async createDocument(pagesData?: PageData[], folder?: DocFolder) {
         const date = dayjs();
         const docId = date.valueOf() + '';
         const name = getFormatedDateForFilename(date.valueOf(), ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
         // DEV_LOG && console.log('createDocument', docId);
-        const doc = await documentsService.documentRepository.createDocument({ id: docId, name } as any);
+        const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.name] } : {}) } as any);
         await doc.addPages(pagesData);
         // DEV_LOG && console.log('createDocument pages added');
         // no need to notify on create. Will be done in documentAdded
         await doc.save({}, false, false);
-        documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc } as DocumentAddedEventData);
+        documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc, folder } as DocumentAddedEventData);
         return doc;
     }
 
@@ -107,7 +129,7 @@ export class OCRDocument extends Observable implements Document {
         const docId = this.id;
         const dataFolderPath = documentsService.dataFolder.path;
         const docData = documentsService.dataFolder.getFolder(docId);
-        const { id, imagePath, sourceImagePath, image, ...otherPageData } = pageData;
+        const { id, image, imagePath, sourceImagePath, ...otherPageData } = pageData;
         const pageId = id || Date.now() + '_' + index;
         // const page = new OCRPage(pageId, docId);
         const pageFileData = docData.getFolder(pageId);
@@ -166,11 +188,11 @@ export class OCRDocument extends Observable implements Document {
         if (pagesData) {
             const docId = this.id;
             const docData = this.folderPath;
-            const length = pagesData.length;
+            const { length } = pagesData;
             const pageStartId = Date.now();
             const imageExportSettings = getImageExportSettings();
             const pages = await doInBatch(pagesData, async (data, index) => {
-                const { id, imagePath, sourceImage, sourceImagePath, image, ...pageData } = data;
+                const { id, image, imagePath, sourceImage, sourceImagePath, ...pageData } = data;
                 const pageId = id || pageStartId + '_' + index;
                 // const page = new OCRPage(pageId, docId);
                 const pageFileData = docData.getFolder(pageId);
@@ -315,7 +337,7 @@ export class OCRDocument extends Observable implements Document {
     }
     getObservablePages() {
         if (!this.#observables) {
-            const pages = this.pages;
+            const { pages } = this;
             this.#observables = new ObservableArray(pages);
             // const handler = (event: EventData & { pageIndex: number }) => {
             //     this.#observables.setItem(event.pageIndex, this.#observables.getItem(event.pageIndex));
@@ -423,6 +445,42 @@ export class OCRDocument extends Observable implements Document {
                 true
             );
         }
+    }
+    async setFolder(folderName?: string, notify = true) {
+        // console.log('setItemGroup', groupName, item.id);
+        const { folderRepository } = documentsService;
+        const { db } = documentsService;
+        const oldFolder = this.folders ? ({ name: this.folders[0] } as DocFolder) : null;
+        let folder;
+        if (folderName?.length) {
+            try {
+                folder = (await folderRepository.search({ where: sql`name=${folderName}` }))[0];
+            } catch (error) {
+                console.error('setFolder', error, error.stack);
+            }
+            if (!folder) {
+                folder = await folderRepository.create({ id: Date.now() + '', name: folderName });
+            }
+        }
+
+        if (folderName?.length) {
+            await db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id} AND folder_id IS NOT ${folder.id}`);
+            const relation = await db.query(sql` SELECT * FROM DocumentsFolders WHERE "document_id" = ${this.id} AND "folder_id" = ${folder.id}`);
+            if (relation.length === 0) {
+                await db.query(sql` INSERT INTO DocumentsFolders ( document_id, folder_id ) VALUES(${this.id}, ${folder.id})`);
+            }
+            this.folders = [folderName];
+        } else {
+            await db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
+            delete this.folders;
+        }
+        if (notify) {
+            documentsService.notify({ eventName: EVENT_DOCUMENT_MOVED_FOLDER, object: this, folder, oldFolder } as DocumentMovedFolderEventData);
+        }
+    }
+
+    async removeFromFolder() {
+        await documentsService.db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
     }
 }
 

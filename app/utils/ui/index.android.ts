@@ -107,7 +107,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                 }
             }
             if (uris.length) {
-                await importAndScanImageOrPdfFromUris(uris);
+                await importAndScanImageOrPdfFromUris({ uris });
             }
         } catch (error) {
             showError(error);

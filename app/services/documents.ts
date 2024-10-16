@@ -1,10 +1,10 @@
 import { ApplicationSettings, EventData, File, Folder, Observable, knownFolders, path } from '@nativescript/core';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
-import { Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
+import { AugmentedFolder, DocFolder, Document, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { EVENT_DOCUMENT_DELETED } from '~/utils/constants';
 import NSQLDatabase from './NSQLDatabase';
-const sql = SqlQuery.createFromTemplateString;
+export const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
 
@@ -26,7 +26,7 @@ export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
         // addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
     };
     async applyMigrations() {
-        const migrations = this.migrations;
+        const { migrations } = this;
         if (!migrations) {
             return;
         }
@@ -71,6 +71,40 @@ export class TagRepository extends BaseRepository<Tag, Tag> {
         );
         `);
         return this.applyMigrations();
+    }
+}
+export class FolderRepository extends BaseRepository<AugmentedFolder, AugmentedFolder> {
+    constructor(database: NSQLDatabase) {
+        super({
+            database,
+            table: 'Folder',
+            primaryKey: 'id',
+            model: DocFolder
+        });
+    }
+
+    async createTables() {
+        await this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "Folder" (
+            id BIGINT PRIMARY KEY NOT NULL,
+            name TEXT NOT NULL
+        );
+        `);
+        return this.applyMigrations();
+    }
+
+    findFolders() {
+        return this.search({
+            select: sql`f.*, 
+COUNT(df.document_id) AS count,
+COALESCE(SUM(p.size), 0) AS size`,
+            from: sql`Folder f`,
+            postfix: sql`
+LEFT JOIN DocumentsFolders df ON f.id = df.folder_id
+LEFT JOIN Document d ON df.document_id = d.id
+LEFT JOIN Page p ON d.id = p.document_id
+GROUP BY f.id;`
+        });
     }
 }
 export class PageRepository extends BaseRepository<OCRPage, Page> {
@@ -205,8 +239,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         Object.assign(page, toSave);
         return page;
     }
-    async createModelFromAttributes(attributes: Required<any> | OCRPage): Promise<OCRPage> {
-        const { id, document_id, imagePath, sourceImagePath, colorMatrix, ocrData, qrcode, colors, crop, ...other } = attributes;
+    async createModelFromAttributes(attributes: OCRPage): Promise<any> {
+        const { colorMatrix, colors, crop, document_id, id, imagePath, ocrData, qrcode, sourceImagePath, ...other } = attributes as any;
         const model = new OCRPage(id, document_id);
         Object.assign(model, {
             ...other,
@@ -233,7 +267,8 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     constructor(
         database: NSQLDatabase,
         public pagesRepository: PageRepository,
-        public tagsRepository: TagRepository
+        public tagsRepository: TagRepository,
+        public foldersRepository: FolderRepository
     ) {
         super({
             database,
@@ -262,6 +297,15 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE,
             FOREIGN KEY(tag_id) REFERENCES Tag(id) ON DELETE CASCADE
         );
+    `),
+            this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "DocumentsFolders" (
+            document_id TEXT,
+            folder_id TEXT,
+            PRIMARY KEY(document_id, folder_id),
+            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE,
+            FOREIGN KEY(folder_id) REFERENCES Folder(id) ON DELETE CASCADE
+        );
     `)
         ]);
         return this.applyMigrations();
@@ -272,9 +316,17 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     });
 
     async createDocument(document: Document) {
-        document.createdDate = document.modifiedDate = Date.now();
-        document._synced = 0;
-        return this.create(cleanUndefined({ ...document, pagesOrder: document.pagesOrder ? JSON.stringify(document.pagesOrder) : undefined }));
+        const { folders, ...others } = document;
+        others.createdDate = others.modifiedDate = Date.now();
+        others._synced = 0;
+        const doc = await this.create(cleanUndefined({ ...others, pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined }));
+        if (folders) {
+            for (let index = 0; index < folders.length; index++) {
+                await doc.setFolder(folders[index], false);
+            }
+            doc.folders = folders;
+        }
+        return doc;
     }
 
     async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
@@ -288,6 +340,19 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         `
         });
         document.tags = tags.map((g) => g.id);
+        return document;
+    }
+    async loadFoldersRelationship(document: OCRDocument): Promise<OCRDocument> {
+        const folders = await this.foldersRepository.search({
+            where: sql`
+            "id" IN (
+                SELECT "folder_id"
+                FROM "DocumentsFolders"
+                WHERE "document_id" = ${document.id}
+            )
+        `
+        });
+        document.folders = folders.map((g) => g.id);
         return document;
     }
 
@@ -328,7 +393,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
     async addTag(document: OCRDocument, tagId: string) {
         try {
-            let tag;
+            let tag: Tag;
             try {
                 tag = await this.tagsRepository.get(tagId);
             } catch (error) {}
@@ -351,25 +416,62 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const element = await this.get(itemId);
         return element;
     }
-    async search(args: { postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
+    async search(args: { from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
         const result = await super.search({ ...args /* , postfix: sql`d LEFT JOIN PAGE p on p.document_id = d.id` */ });
 
         // remove all documents with no Page, it is a bug and should never happen
 
         return result.filter((d) => d.pages?.length > 0);
     }
-    async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<OCRDocument> {
-        const { id, pagesOrder, ...others } = attributes;
+    async findDocuments(filter?: string, folder?: AugmentedFolder, omitThoseWithFolders = false) {
+        const args = {
+            select: sql`d.*,
+            group_concat(f.name, '#$%') AS folders`,
+            from: sql`Document d`,
+            orderBy: sql`d.id DESC`,
+            groupBy: sql`d.id`
+        } as any;
+
+        const foldersPostfix = `LEFT JOIN 
+    DocumentsFolders df ON d.id = df.document_id
+LEFT JOIN 
+    Folder f ON df.folder_id = f.id`;
+        if (filter?.length || folder) {
+            if (filter?.length) {
+                const where = `p.name LIKE '%${filter}%' OR d.name LIKE '%${filter}%' OR p.ocrData LIKE '%${filter}%'`;
+                if (folder) {
+                    args.postfix = sql` LEFT JOIN Page p ON p.document_id = d.id `;
+                    args.where = new SqlQuery([`df.folder_id = ${folder.id} AND (${where})`]);
+                } else {
+                    args.postfix = sql` LEFT JOIN Page p ON p.document_id = d.id `;
+                    args.where = new SqlQuery([where]);
+                }
+            } else {
+                args.where = new SqlQuery([`df.folder_id = ${folder.id}`]);
+            }
+            args.postfix = new SqlQuery((args.postfix ? [args.postfix] : []).concat([foldersPostfix]));
+        } else if (omitThoseWithFolders) {
+            args.select = sql`d.*`;
+            args.from = sql`Document d`;
+            args.where = sql`d.id NOT IN(SELECT document_id FROM DocumentsFolders)`;
+            // args.postfix = foldersPostfix;
+        }
+        return this.search(args);
+    }
+    async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<any> {
+        const { folders, id, pagesOrder, ...others } = attributes;
+        DEV_LOG && console.log('createModelFromAttributes', id, folders, typeof folders, folders?.split('#$%'));
         const document = new OCRDocument(id);
         Object.assign(document, {
             id,
             ...others,
+            folders: typeof folders === 'string' ? folders.split('#$%') : folders,
             pagesOrder: typeof pagesOrder === 'string' && pagesOrder.length ? JSON.parse(pagesOrder) : pagesOrder
         });
 
         let pages = await this.pagesRepository.search({ where: sql`document_id = ${document.id}` });
         if (pages.length) {
-            const pagesOrder = document.pagesOrder;
+            const { pagesOrder } = document;
             if (pagesOrder) {
                 pages = pages.sort(function (a, b) {
                     return pagesOrder.indexOf(a.id) - pagesOrder.indexOf(b.id);
@@ -391,6 +493,12 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
 export interface DocumentAddedEventData extends EventData {
     doc: OCRDocument;
+    folder?: DocFolder;
+}
+export interface DocumentMovedFolderEventData extends EventData {
+    object: OCRDocument;
+    folder?: DocFolder;
+    oldFolder?: DocFolder;
 }
 export interface DocumentPagesAddedEventData extends EventData {
     object: OCRDocument;
@@ -427,6 +535,7 @@ export class DocumentsService extends Observable {
     db: NSQLDatabase;
     pageRepository: PageRepository;
     tagRepository: TagRepository;
+    folderRepository: FolderRepository;
     documentRepository: DocumentRepository;
 
     constructor() {
@@ -474,10 +583,12 @@ export class DocumentsService extends Observable {
 
         this.pageRepository = new PageRepository(this.db);
         this.tagRepository = new TagRepository(this.db);
-        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository);
+        this.folderRepository = new FolderRepository(this.db);
+        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository);
         await this.documentRepository.createTables();
         await this.pageRepository.createTables();
         await this.tagRepository.createTables();
+        await this.folderRepository.createTables();
 
         this.notify({ eventName: 'started' });
         this.started = true;
@@ -489,7 +600,7 @@ export class DocumentsService extends Observable {
                 documents.map((d) => d.id)
             );
         // await this.documentRepository.delete(model);
-        await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d)))));
+        await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d), d.removeFromFolder()))));
         // await OCRDocument.delete(docs.map((d) => d.id));
         documents.forEach((doc) => doc.removeFromDisk());
         this.notify({ eventName: EVENT_DOCUMENT_DELETED, documents } as DocumentDeletedEventData);

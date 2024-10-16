@@ -1,10 +1,8 @@
-import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { AlertDialog, MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
+import { MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
@@ -21,11 +19,12 @@ import {
     SharedTransition,
     Utils,
     View,
-    knownFolders,
-    path
+    knownFolders
 } from '@nativescript/core';
-import { SDK_VERSION, copyToClipboard, debounce, openFile, openUrl } from '@nativescript/core/utils';
+import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
+import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
+import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
 import dayjs from 'dayjs';
 import {
     CropResult,
@@ -40,16 +39,13 @@ import {
     processFromFile
 } from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
-import { showModal } from '~/utils/svelte/ui';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
-import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
-import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, l, lc } from '~/helpers/locale';
-import { ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+import { AugmentedFolder, DocFolder, ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
@@ -92,151 +88,21 @@ import {
     getImageExportSettings
 } from '~/utils/constants';
 import { PermissionError, SilentError } from '~/utils/error';
-import { showError } from '../showError';
 import { recycleImages } from '~/utils/images';
 import { share } from '~/utils/share';
-import { goBack } from '~/utils/svelte/ui';
+import { goBack, showModal } from '~/utils/svelte/ui';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
+import { MatricesTypes, Matrix } from '../color_matrix';
+import { showError } from '../showError';
 import { navigate } from '../svelte/ui';
 import { doInBatch, saveImage } from '../utils';
-import { MatricesTypes, Matrix } from '../color_matrix';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
-export async function showSnack(options: SnackBarOptions) {
-    try {
-        return mdShowSnack(options);
-    } catch (error) {}
-}
+export * from '@shared/utils/ui';
 
-// export interface ComponentInstanceInfo<T extends ViewBase = View, U = SvelteComponent> {
-//     element: NativeViewElementNode<T>;
-//     viewInstance: U;
-// }
-
-// export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
-//     const dummy = createElement('fragment', window.document as any);
-//     const viewInstance = new viewSpec({ target: dummy, props });
-//     const element = dummy.firstElement() as NativeViewElementNode<View>;
-//     return { element, viewInstance };
-// }
-
-export function timeout(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export async function openLink(url) {
-    try {
-        // const available = await InAppBrowser.isAvailable();
-        // if (available) {
-        //     const result = await InAppBrowser.open(url, {
-        //         // iOS Properties
-        //         dismissButtonStyle: 'close',
-        //         preferredBarTintColor: colorPrimary,
-        //         preferredControlTintColor: 'white',
-        //         readerMode: false,
-        //         animated: true,
-        //         enableBarCollapsing: false,
-        //         // Android Properties
-        //         showTitle: true,
-        //         toolbarColor: colorPrimary,
-        //         secondaryToolbarColor: 'white',
-        //         enableUrlBarHiding: true,
-        //         enableDefaultShare: true,
-        //         forceCloseOnRedirection: false,
-        //     });
-        // } else {
-        openUrl(url);
-        // }
-    } catch (error) {
-        alert({
-            title: 'Error',
-            message: error.message,
-            okButtonText: 'Ok'
-        });
-    }
-}
-
-export interface ShowLoadingOptions {
-    title?: string;
-    text: string;
-    progress?: number;
-    onButtonTap?: () => void;
-}
-
-let loadingIndicator: AlertDialog & { instance?: LoadingIndicator__SvelteComponent_ };
-let showLoadingStartTime: number = null;
-function getLoadingIndicator() {
-    if (!loadingIndicator) {
-        const componentInstanceInfo = resolveComponentElement(LoadingIndicator, {});
-        const view: View = componentInstanceInfo.element.nativeView;
-        // const stack = new StackLayout()
-        loadingIndicator = new AlertDialog({
-            view,
-            cancelable: false
-        });
-        loadingIndicator.instance = componentInstanceInfo.viewInstance as LoadingIndicator__SvelteComponent_;
-    }
-    return loadingIndicator;
-}
-export function updateLoadingProgress(msg: Partial<ShowLoadingOptions>) {
-    if (showingLoading()) {
-        const loadingIndicator = getLoadingIndicator();
-        const props = {
-            progress: msg.progress
-        };
-        if (msg.text) {
-            props['text'] = msg.text;
-        }
-        loadingIndicator.instance.$set(props);
-    }
-}
-export async function showLoading(msg?: string | ShowLoadingOptions) {
-    try {
-        const text = (msg as any)?.text || (typeof msg === 'string' && msg) || lc('loading');
-        const indicator = getLoadingIndicator();
-        indicator.instance.onButtonTap = msg?.['onButtonTap'];
-        const props = {
-            showButton: !!msg?.['onButtonTap'],
-            text,
-            title: (msg as any)?.title,
-            progress: null
-        };
-        if (msg && typeof msg !== 'string' && msg?.hasOwnProperty('progress')) {
-            props.progress = msg.progress;
-        } else {
-            props.progress = null;
-        }
-        indicator.instance.$set(props);
-        if (showLoadingStartTime === null) {
-            showLoadingStartTime = Date.now();
-            indicator.show();
-        }
-    } catch (error) {
-        showError(error, { silent: true });
-    }
-}
-export function showingLoading() {
-    return showLoadingStartTime !== null;
-}
-export async function hideLoading() {
-    if (!loadingIndicator) {
-        return;
-    }
-    const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
-    if (__IOS__ && delta >= 0 && delta < 1000) {
-        await timeout(1000 - delta);
-        // setTimeout(() => hideLoading(), 1000 - delta);
-        // return;
-    }
-    showLoadingStartTime = null;
-    if (loadingIndicator) {
-        loadingIndicator.hide();
-    }
-}
-
-export async function importAndScanImageOrPdfFromUris(uris: string[], document?: OCRDocument, canGoToView = true) {
+export async function importAndScanImageOrPdfFromUris({ canGoToView = true, document, folder, uris }: { uris: string[]; document?: OCRDocument; canGoToView?: boolean; folder?: DocFolder }) {
     let pagesToAdd: PageData[] = [];
     let items: ImportImageData[] = [];
     try {
@@ -347,8 +213,8 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                             qrcode = await detectQRCodeFromFile(sourceImagePath, { resizeThreshold: QRCODE_RESIZE_THRESHOLD });
                         }
                         if (cropEnabled && quads.length === 0) {
-                            let width = imageSize.width;
-                            let height = imageSize.height;
+                            let { width } = imageSize;
+                            let { height } = imageSize;
                             if (imageRotation % 180 !== 0) {
                                 width = imageSize.height;
                                 height = imageSize.width;
@@ -373,26 +239,6 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                 'items',
                 items.map((i) => i.imagePath)
             );
-        // const sourceImagePath = selection[0].path;
-        // editingImage = await loadImage(sourceImagePath);
-
-        // if (!editingImage) {
-        //     throw new Error('failed to read imported image');
-        // }
-        // let quads = await getJSONDocumentCorners(editingImage, 300, 0);
-        // let qrcode;
-        // if (CARD_APP) {
-        //     // try to get the qrcode to show it in the import screen
-        //     qrcode = await detectQRCode(editingImage, { resizeThreshold: 900 });
-        // }
-        // if (quads.length === 0) {
-        //     quads.push([
-        //         [100, 100],
-        //         [editingImage.width - 100, 100],
-        //         [editingImage.width - 100, editingImage.height - 100],
-        //         [100, editingImage.height - 100]
-        //     ]);
-        // }
         if (items?.length) {
             if (cropEnabled) {
                 const ModalImportImage = (await import('~/components/ModalImportImages.svelte')).default;
@@ -525,7 +371,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
                         await document.save({}, true);
                         showSnack({ message: lc('imported_nb_pages', pagesToAdd.length) });
                     } else {
-                        document = await OCRDocument.createDocument(pagesToAdd);
+                        document = await OCRDocument.createDocument(pagesToAdd, folder);
                     }
                     await goToDocumentAfterScan(document, nbPagesBefore, canGoToView);
                     return document;
@@ -539,7 +385,7 @@ export async function importAndScanImageOrPdfFromUris(uris: string[], document?:
         hideLoading();
     }
 }
-export async function importAndScanImage(document?: OCRDocument, importPDFs = false, canGoToView = true) {
+export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
     await request({ storage: {}, photo: {} });
     // let selection: { files: string[]; ios?; android? };
     // let editingImage: ImageSource;
@@ -581,7 +427,7 @@ export async function importAndScanImage(document?: OCRDocument, importPDFs = fa
         // }
         DEV_LOG && console.log('selection', selection);
         if (selection?.length > 0) {
-            return await importAndScanImageOrPdfFromUris(selection, document, canGoToView);
+            return await importAndScanImageOrPdfFromUris({ uris: selection, document, canGoToView, folder });
         }
     } catch (error) {
         throw error;
@@ -651,13 +497,13 @@ export async function showConfirmOptionSelect<T>(props?: ComponentProps<OptionSe
 }
 
 export async function showPopoverMenu<T = any>({
-    options,
     anchor,
-    onClose,
-    props,
+    closeOnClose = true,
     horizPos,
-    vertPos,
-    closeOnClose = true
+    onClose,
+    options,
+    props,
+    vertPos
 }: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
@@ -714,12 +560,12 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
-        exportDirectoryName = exportDirectory.split(/(\/|%3A)/).pop();
+        exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
     }
     updateDirectoryName();
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : [])
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName }] : [])
             .concat([
                 { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
                 { id: 'open', name: lc('open'), icon: 'mdi-eye' },
@@ -815,29 +661,33 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
                         break;
                     }
                     case 'export': {
-                        await closePopover();
-                        const result = await prompt({
-                            okButtonText: lc('ok'),
-                            cancelButtonText: lc('cancel'),
-                            defaultText: getFileNameForDocument(document) + PDF_EXT,
-                            hintText: lc('pdf_filename')
-                        });
-                        if (result?.result && result?.text?.length) {
-                            showLoading(l('exporting'));
-                            DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                            const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
-                            hideLoading();
-                            DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
-                            let filename;
-                            if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
-                                filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
-                            } else {
-                                filename = filePath.split(SEPARATOR).pop();
-                            }
-                            const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
-                            if (onSnack?.reason === 'action') {
-                                DEV_LOG && console.log('openFile', filePath);
-                                openFile(filePath);
+                        if (!exportDirectory) {
+                            showSnack({ message: lc('please_choose_export_folder') });
+                        } else {
+                            await closePopover();
+                            const result = await prompt({
+                                okButtonText: lc('ok'),
+                                cancelButtonText: lc('cancel'),
+                                defaultText: getFileNameForDocument(document) + PDF_EXT,
+                                hintText: lc('pdf_filename')
+                            });
+                            if (result?.result && result?.text?.length) {
+                                showLoading(l('exporting'));
+                                DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
+                                const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
+                                hideLoading();
+                                DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
+                                let filename;
+                                if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
+                                } else {
+                                    filename = filePath.split(SEPARATOR).pop();
+                                }
+                                const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
+                                if (onSnack?.reason === 'action') {
+                                    DEV_LOG && console.log('openFile', filePath);
+                                    openFile(filePath);
+                                }
                             }
                         }
                         break;
@@ -1003,6 +853,7 @@ export function getDirectoryName(folderPath: string) {
         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
         return outdocument.getName() + '@' + folderPath.slice(ANDROID_CONTENT.length).split('/')[0];
         // exportDirectoryName = outdocument.getName() || com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri()) || exportDirectoryName;
+        // exportDirectoryName = exportDirectory?.split(/(\/|%3A)/).pop() || lc('');
     }
     return exportDirectoryName
         .split(SEPARATOR)
@@ -1015,12 +866,12 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
     let exportDirectoryName = exportDirectory;
     DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName);
     function updateDirectoryName() {
-        exportDirectoryName = getDirectoryName(exportDirectory);
+        exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
     }
     updateDirectoryName();
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName }] : []).concat([
             { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
             { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
@@ -1096,8 +947,12 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
                         }
                         break;
                     case 'export': {
-                        await closePopover();
-                        await exportImages(pages, exportDirectory);
+                        if (!exportDirectory) {
+                            showSnack({ message: lc('please_choose_export_folder') });
+                        } else {
+                            await closePopover();
+                            await exportImages(pages, exportDirectory);
+                        }
                         break;
                     }
                     case 'save_gallery': {
@@ -1307,19 +1162,19 @@ export function copyTextToClipboard(text) {
 }
 
 export async function showSliderPopover({
-    debounceDuration = 100,
-    min = 0,
-    max = 100,
-    step = 1,
-    horizPos = HorizontalPosition.ALIGN_LEFT,
     anchor,
-    vertPos = VerticalPosition.CENTER,
-    width = 0.8 * screenWidthDips,
-    value,
-    onChange,
-    title,
+    debounceDuration = 100,
+    formatter,
+    horizPos = HorizontalPosition.ALIGN_LEFT,
     icon,
-    formatter
+    max = 100,
+    min = 0,
+    onChange,
+    step = 1,
+    title,
+    value,
+    vertPos = VerticalPosition.CENTER,
+    width = 0.8 * screenWidthDips
 }: {
     title?;
     debounceDuration?;
@@ -1360,12 +1215,12 @@ export async function showSliderPopover({
     });
 }
 export async function showSlidersPopover({
+    anchor,
     debounceDuration = 100,
     horizPos = HorizontalPosition.ALIGN_LEFT,
-    anchor,
+    items,
     vertPos = VerticalPosition.CENTER,
-    width = 0.8 * screenWidthDips,
-    items
+    width = 0.8 * screenWidthDips
 }: {
     debounceDuration?;
     horizPos?;
@@ -1392,7 +1247,7 @@ export async function showSlidersPopover({
     });
 }
 
-export async function showMatrixLevelPopover({ item, anchor, currentValue, onChange }) {
+export async function showMatrixLevelPopover({ anchor, currentValue, item, onChange }) {
     if (!item.range) {
         return;
     }
@@ -1427,18 +1282,40 @@ export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
         });
     }
 }
+export async function goToFolderView(folder: AugmentedFolder, useTransition = true) {
+    if (CARD_APP) {
+        const page = (await import('~/components/CardsList.svelte')).default;
+        return navigate({
+            page,
+            props: {
+                title: folder.name,
+                folder
+            }
+        });
+    } else {
+        const page = (await import('~/components/DocumentsList.svelte')).default;
+        return navigate({
+            page,
+            transition: __ANDROID__ && useTransition ? SharedTransition.custom(new PageTransition(300, null, 10)) : null,
+            props: {
+                title: folder.name,
+                folder
+            }
+        });
+    }
+}
 
 export async function addCurrentImageToDocument({
-    colorType,
+    autoRotate,
     colorMatrix,
-    pagesToAdd,
-    sourceImagePath,
-    imageWidth,
+    colorType,
+    fileName,
     imageHeight,
     imageRotation,
+    imageWidth,
+    pagesToAdd,
     quads,
-    autoRotate,
-    fileName,
+    sourceImagePath,
     transforms = []
 }: {
     colorType?;
@@ -1536,11 +1413,11 @@ export async function addCurrentImageToDocument({
     DEV_LOG && console.log('addCurrentImageToDocument done', sourceImagePath, Date.now() - start, 'ms');
 }
 export async function processCameraImage({
-    imagePath,
     autoScan = false,
-    onBeforeModalImport,
-    onAfterModalImport,
     fileName,
+    imagePath,
+    onAfterModalImport,
+    onBeforeModalImport,
     pagesToAdd
 }: {
     imagePath: string;
@@ -1635,7 +1512,12 @@ export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumb
         return goToDocumentView(document, false);
     }
 }
-export async function importImageFromCamera({ document, canGoToView = true, inverseUseSystemCamera = false }: { document?: OCRDocument; canGoToView?: boolean; inverseUseSystemCamera? } = {}) {
+export async function importImageFromCamera({
+    canGoToView = true,
+    document,
+    folder,
+    inverseUseSystemCamera = false
+}: { document?: OCRDocument; canGoToView?: boolean; inverseUseSystemCamera?; folder?: DocFolder } = {}) {
     const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
 
     const result = await request('camera');
@@ -1664,8 +1546,8 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
             // if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
             const REQUEST_IMAGE_CAPTURE = 3453;
             function onActivityResult(args) {
-                const requestCode = args.requestCode;
-                const resultCode = args.resultCode;
+                const { requestCode } = args;
+                const { resultCode } = args;
 
                 if (requestCode === REQUEST_IMAGE_CAPTURE) {
                     Application.android.off(Application.android.activityResultEvent, onActivityResult);
@@ -1700,7 +1582,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
             });
             if (result && pagesToAdd.length) {
                 if (!document) {
-                    document = await OCRDocument.createDocument(pagesToAdd);
+                    document = await OCRDocument.createDocument(pagesToAdd, folder);
                 } else {
                     await document.addPages(pagesToAdd);
                 }
@@ -1716,6 +1598,7 @@ export async function importImageFromCamera({ document, canGoToView = true, inve
         page: Camera,
         fullscreen: true,
         props: {
+            folder,
             document
         }
     });
@@ -1733,7 +1616,7 @@ export function createView<T extends View>(claz: new () => T, props: Partial<Pic
     return view;
 }
 
-export async function confirmGoBack({ onGoBack, message }: { onGoBack?; message? } = {}) {
+export async function confirmGoBack({ message, onGoBack }: { onGoBack?; message? } = {}) {
     try {
         const result = await confirm({
             message: message || lc('sure_go_back')
@@ -1767,4 +1650,19 @@ export function getNameFormatHTMLArgs() {
         `<span style="background-color:${cols.colorSurfaceContainerHigh};">YYYY,M,MM,D,H,s...</span>`,
         `<a href="https://day.js.org/docs/en/display/format">${l('here')}</a>`
     ];
+}
+export async function promptForFolder(defaultGroup: string, groups?: DocFolder[]): Promise<string> {
+    const TagView = (await import('~/components/common/FolderView.svelte')).default;
+    const componentInstanceInfo = resolveComponentElement(TagView, { groups, defaultGroup });
+    const modalView: View = componentInstanceInfo.element.nativeView;
+    const result = await confirm({ view: modalView, okButtonText: lc('add'), cancelButtonText: lc('cancel') });
+    const currentFolderText = componentInstanceInfo.viewInstance['currentFolderText'];
+    try {
+        modalView._tearDownUI();
+        componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
+    } catch (error) {}
+    if (result) {
+        return currentFolderText;
+    }
+    return null;
 }
