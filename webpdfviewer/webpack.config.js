@@ -1,12 +1,10 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const PathsPlugin = require('tsconfig-paths-webpack-plugin').default;
 
 const sveltePreprocess = require('svelte-preprocess');
 const SRC_FOLDER = path.resolve(__dirname, 'src/');
 const DIST_FOLDER = path.resolve(__dirname, '../app/assets/webpdfviewer');
-const ASSETS_FOLDER = path.resolve(__dirname, 'public/');
 
 const ENTRY = path.resolve(SRC_FOLDER, 'main.ts');
 module.exports = (env, params = {}) => ({
