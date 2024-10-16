@@ -159,7 +159,6 @@
             DEV_LOG && console.log('r', r.length);
 
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
-            DEV_LOG && console.log('folders', folders);
             documents = new ObservableArray(
                 folders
                     .map((folder) => ({ folder, selected: false }))
