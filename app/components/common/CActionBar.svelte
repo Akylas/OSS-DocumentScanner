@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Frame } from '@nativescript/core';
+    import { CoreTypes, Frame } from '@nativescript/core';
     import { showError } from '~/utils/showError';
     import { onMount } from 'svelte';
     import { closeModal, conditionalEvent, fade, goBack } from '~/utils/svelte/ui';
@@ -18,7 +18,7 @@
     export let onTitleTap: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
-    let menuIconVisibility: string;
+    let menuIconVisibility: CoreTypes.VisibilityType;
 
     onMount(() => {
         const frame = Frame.topmost();

@@ -94,5 +94,14 @@
         variant="outline"
         on:returnPress={blurTextField}
         on:textChange={(e) => onTextChanged(e['value'])} />
-    <mdbutton class="actionBarButton" height={40} horizontalAlignment="right" isVisible={filter?.length > 0} marginTop={8} text="mdi-close" variant="text" width={40} on:tap={() => clearSearch()} />
+    <mdbutton
+        class="actionBarButton"
+        height={40}
+        horizontalAlignment="right"
+        marginTop={8}
+        text="mdi-close"
+        variant="text"
+        visibility={filter?.length > 0 ? 'visible' : 'hidden'}
+        width={40}
+        on:tap={() => clearSearch()} />
 </gridlayout>

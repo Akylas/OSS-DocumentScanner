@@ -33,12 +33,12 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorPrimary, colorSurfaceContainer, colorSurface, colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorPrimary, colorSurface, colorSurfaceContainer, colorSurfaceContainerHigh } = $colors);
 
     const pdfCanvas = new PDFCanvas();
     const optionsStore = writable(pdfCanvas.options);
-    let { orientation, paper_size, color, items_per_page, page_padding, draw_ocr_overlay, draw_ocr_text } = pdfCanvas.options;
-    $: ({ orientation, paper_size, color, items_per_page, page_padding, draw_ocr_overlay, draw_ocr_text } = $optionsStore);
+    let { color, draw_ocr_overlay, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
+    $: ({ color, draw_ocr_overlay, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
     optionsStore.subscribe((newValue) => {
         DEV_LOG && console.log('saving options', newValue);
         Object.assign(pdfCanvas.options, newValue);
@@ -209,7 +209,7 @@
         // DEV_LOG && console.log('itemTemplateSelector', items_per_page, paper_size, item.pages.length);
         return (paper_size === 'full' ? 1 : items_per_page) + '';
     }
-    function getPageLayoutProps(item: PDFCanvasItem, templatePagesCount: number) {
+    function getPageLayoutProps(item: PDFCanvasItem, templatePagesCount: number): Partial<svelteNative.JSX.GridLayoutAttributes> {
         if (paper_size === 'full') {
             return {
                 rows: '*',

@@ -273,7 +273,7 @@
                     imagePath: item.imagePath,
                     imageWidth: item.width,
                     imageHeight: item.height,
-                    rotation: item.rotation,
+                    rotation: item.rotation
                     // colorMatrix: getColorMatrix(item.colorType)
                 }
             });
@@ -696,7 +696,7 @@
         </stacklayout>
         <collectionview bind:this={collectionView} id="filters" colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
-                <gridlayout id={item.text} padding={2} on:tap={applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
+                <gridlayout id={item.text} padding={2} on:tap={() => applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
                         id="imageView"
                         borderColor={colorPrimary}

@@ -1,27 +1,26 @@
 <script lang="ts">
-    import { l, lc, slc } from '~/helpers/locale';
-    import { closeModal } from '~/utils/svelte/ui';
-    import { showError } from '~/utils/showError';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showPopoverMenu, showSliderPopover, showSlidersPopover } from '~/utils/ui';
-    import { colors, windowInset } from '~/variables';
-    import { AuthType } from '~/webdav';
-    import CActionBar from '../common/CActionBar.svelte';
-    import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import { ALERT_OPTION_MAX_HEIGHT, ANDROID_CONTENT, FILENAME_DATE_FORMAT, IMG_COMPRESS, IMG_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, SETTINGS_IMAGE_EXPORT_QUALITY, getImageExportSettings } from '~/utils/constants';
-    import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
-    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
-    import { get, writable } from 'svelte/store';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { Label } from '@nativescript-community/ui-label';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Template } from 'svelte-native/components';
-    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { pickFolder } from '@nativescript-community/ui-document-picker';
+    import { Label } from '@nativescript-community/ui-label';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
+    import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { get, writable } from 'svelte/store';
+    import { l, lc } from '~/helpers/locale';
+    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
+    import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
+    import { showError } from '~/utils/showError';
+    import { closeModal } from '~/utils/svelte/ui';
+    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { colors, windowInset } from '~/variables';
+    import CActionBar from '../common/CActionBar.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     // technique for only specific properties to get updated on store change
-    $: ({ colorError, colorOutline, colorSecondary, colorOnError, colorPrimary, colorOnSurfaceVariant } = $colors);
+    $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSecondary } = $colors);
 
     const imageExportSettings = getImageExportSettings();
     export let data: LocalFolderImageSyncServiceOptions = {} as any;

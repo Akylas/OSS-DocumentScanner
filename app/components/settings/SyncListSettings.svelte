@@ -28,8 +28,8 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let { colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh, colorError, colorOnError } = $colors;
-    $: ({ colorPrimary, colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh, colorError, colorOnError } = $colors);
+    let { colorError, colorOnError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors;
+    $: ({ colorError, colorOnError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -380,9 +380,9 @@
                         on:tap={(event) => onItemTap(item, event)} />
                     <label
                         class="mdi"
-                        prop:rightDrawer
                         backgroundColor={colorError}
                         color={colorOnError}
+                        prop:rightDrawer
                         fontSize={24}
                         rippleColor={colorOnError}
                         text="mdi-trash-can"

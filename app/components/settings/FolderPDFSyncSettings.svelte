@@ -1,28 +1,26 @@
 <script lang="ts">
     import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
+    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
     import { showError } from '~/utils/showError';
+    import { closeModal } from '~/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
-    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
-    import { closeModal } from '~/utils/svelte/ui';
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutline, colorPrimary, colorOnSurfaceVariant } = $colors);
+    $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
     const pdfExportSettings = getPDFDefaultExportOptions();
     export let data: LocalFolderPDFSyncServiceOptions = {} as any;
@@ -313,7 +311,7 @@
                 </ListItemAutoSize>
             </Template>
             <Template key="textfield" let:item>
-                <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
+                <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)} prop:rightDrawer>
                     <textfield isUserInteractionEnabled={false} text={item.text} {...item.textFieldProperties} />
                     <mdbutton
                         class="icon-btn"

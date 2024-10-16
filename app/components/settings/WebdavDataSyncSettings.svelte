@@ -3,6 +3,7 @@
     import { Color, View } from '@nativescript/core';
     import { get, writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
+    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
     import { showError } from '~/utils/showError';
     import { closeModal } from '~/utils/svelte/ui';
@@ -11,9 +12,8 @@
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import WebdavSettingsView from './WebdavSettingsView.svelte';
-    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     // technique for only specific properties to get updated on store change
-    $: ({ colorError, colorOutline, colorPrimary, colorSecondary, colorOnError, colorOnSurfaceVariant } = $colors);
+    $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSecondary } = $colors);
 
     export let data: WebdavDataSyncOptions = null;
     const store = writable(Object.assign({ autoSync: false, enabled: true, color: SERVICES_SYNC_COLOR['webdav_data'] as string | Color }, data));

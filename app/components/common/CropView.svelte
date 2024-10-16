@@ -14,6 +14,13 @@
     const padding = 20;
     const ZOOOM_GLASS_SIZE = 50;
     const ZOOM_IMAGE_MAX_SIZE = Math.max(Screen.mainScreen.widthDIPs, Screen.mainScreen.heightDIPs);
+
+    declare namespace svelteNative.JSX {
+        interface ViewAttributes {
+            'on:redo'?: (args) => void;
+            'on:undo'?: (args) => void;
+        }
+    }
 </script>
 
 <script lang="ts">

@@ -10,7 +10,7 @@
     import { onBackButton } from '~/utils/ui';
     import { colors } from '~/variables';
 
-    $: ({ colorPrimary, colorOnBackground, colorPrimaryContainer } = $colors);
+    $: ({ colorOnBackground, colorPrimary, colorPrimaryContainer } = $colors);
 
     enum State {
         CurrentPasswordQuery,
@@ -240,13 +240,13 @@
 <page bind:this={page} id="passCodeWindow" actionBarHidden={true}>
     {#if securityService.pincodeEnabled}
         <gridlayout columns="*,*,*" rows="3*,*,*,*,*" on:layoutChanged={onLayoutChanged}>
-            <gridlayout backgroundColor={colorPrimary} colSpan="3" columns="*,*,*,*" orientation="horizontal" row="0">
+            <gridlayout backgroundColor={colorPrimary} colSpan={3} columns="*,*,*,*" row={0}>
                 {#each { length: 4 } as _, i}
                     <label
                         id={'field' + i}
                         backgroundColor="white"
                         borderColor="black"
-                        borderRadius="4"
+                        borderRadius={4}
                         col={i - 1}
                         fontSize={50}
                         height={80}
@@ -258,28 +258,25 @@
                         verticalTextAlignment="center" />
                 {/each}
 
-                <label colSpan="4" color="white" fontSize="18" fontWeight="bold" paddingTop="30" text={title} textAlignment="center" verticalAlignment="top" />
-                <label colSpan="4" color="white" fontSize="16" fontWeight="bold" paddingBottom="30" text={message} textAlignment="center" verticalAlignment="bottom" />
+                <label colSpan={4} color="white" fontSize={18} fontWeight="bold" paddingTop={30} text={title} textAlignment="center" verticalAlignment="top" />
+                <label colSpan={4} color="white" fontSize={16} fontWeight="bold" paddingBottom={30} text={message} textAlignment="center" verticalAlignment="bottom" />
             </gridlayout>
             {#each { length: 10 } as _, j}
                 <mdbutton
                     backgroundColor="transparent"
-                    borderRadius="30"
+                    borderRadius={30}
                     col={j === 1 ? 1 : (j - 2) % 3}
                     color={colorPrimary}
-                    fontSize="30"
-                    height="60"
-                    key={'button' + j}
-                    ref={'button' + j}
+                    fontSize={30}
+                    height={60}
                     rippleColor={colorPrimary}
                     row={j === 1 ? 4 : 1 + Math.floor((j - 2) / 3)}
                     text={j - 1}
-                    v-for="j in 10"
                     variant="flat"
-                    width="60"
-                    on:tap={onButtonTap(j - 1 + '')} />
+                    width={60}
+                    on:tap={() => onButtonTap(j - 1 + '')} />
             {/each}
-            <mdbutton class="mdi" backgroundColor="transparent" borderRadius="30" col="2" fontSize="30" height="60" row="4" text="mdi-close" variant="flat" width="60" on:tap={clear()} />
+            <mdbutton class="mdi" backgroundColor="transparent" borderRadius={30} col={2} fontSize={30} height={60} row={4} text="mdi-close" variant="flat" width="60" on:tap={() => clear()} />
         </gridlayout>
     {:else}
         <gridlayout on:layoutChanged={onLayoutChanged}>

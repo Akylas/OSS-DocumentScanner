@@ -66,7 +66,7 @@
 </script>
 
 <gesturerootview id="ocrSettingsBottomSheet" rows="auto">
-    <stacklayout padding={16} rows="auto,auto">
+    <stacklayout padding={16}>
         <label color={colorPrimary} fontSize={20} fontWeight="bold" marginBottom={16} text={lc('quality')} />
         <stacklayout orientation="horizontal">
             {#each qualities as quality}

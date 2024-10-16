@@ -61,7 +61,6 @@
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, hasCamera, windowInset } from '~/variables';
-    import type ImageProcessingSettingsBottomSheet__SvelteComponent_ from '~/components/widgets/ImageProcessingSettingsBottomSheet.svelte';
     import IconButton from '../common/IconButton.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
