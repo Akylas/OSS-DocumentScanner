@@ -34,7 +34,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=e60104&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=e5e292&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.19.3"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -83,11 +83,12 @@ __metadata:
     svelte-native-preprocessor: "npm:~1.0.0"
     svelte-preprocess: "npm:5.1.4"
     terser-webpack-plugin: "npm:^5.3.10"
+    ts-loader: "npm:9.5.1"
     ts-patch: "npm:^3.2.1"
     typescript: "npm:5.6.3"
     typescript-eslint: "npm:^8.9.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/e989e1956ed067b7c2644a49e2cf04f73f924f1e8cb55dd8a8e0d0d4e52cc430f586359a88a6d518824551d12c6127ce3c7449da5f54304dcfb827243f1ce645
+  checksum: 10/5d2f547701353084a5467e6e613b3da011d9710684d085d1f697097c79558e3d083463d2755329027008bfe2fde11eb64cb534f548f1772c5811e8487c4877f0
   languageName: node
   linkType: hard
 
