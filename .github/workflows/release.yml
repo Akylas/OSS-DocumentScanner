@@ -21,18 +21,23 @@ on:
       cardwallet:
         description: 'Release CardWallet'
         required: true
-        default: true
+        default: false
         type: boolean
       ios:
-        description: 'Release for iOS'
+        description: 'iOS'
         required: true
-        default: true
+        default: false
         type: boolean
       android:
-        description: 'Release for Android'
+        description: 'Android'
         required: true
         default: true
         type: boolean
+      publish:
+        description: "Should we publish?"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   release-documentscanner-android:
@@ -41,6 +46,7 @@ jobs:
     with:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
+      publish: ${{ github.event.inputs.publish }}
     secrets: inherit
 
   release-cardwallet-android:
@@ -49,6 +55,7 @@ jobs:
     with:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
+      publish: ${{ github.event.inputs.publish }}
     secrets: inherit
 
   release-documentscanner-ios:
@@ -57,6 +64,7 @@ jobs:
     with:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
+      publish: ${{ github.event.inputs.publish }}
     secrets: inherit
     
   release-cardwallet-ios:
@@ -65,4 +73,5 @@ jobs:
     with:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
+      publish: ${{ github.event.inputs.publish }}
     secrets: inherit
