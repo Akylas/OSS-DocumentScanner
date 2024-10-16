@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-POSITIONAL_ARGS=()
-
 for i in "$@"; do
   case $i in
     -p|--platform)
