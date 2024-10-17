@@ -46,6 +46,7 @@
         importImageFromCamera,
         onAndroidNewItent,
         onBackButton,
+        pickFolderColor,
         promptForFolder,
         showImagePopoverMenu,
         showPDFPopoverMenu,
@@ -54,6 +55,9 @@
         transformPages
     } from '~/utils/ui';
     import { colors, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, screenWidthDips, windowInset } from '~/variables';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import ActionBarSearch from './widgets/ActionBarSearch.svelte';
+    import { folderBackgroundColor } from '~/variables';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -66,10 +70,6 @@
 </script>
 
 <script lang="ts">
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import ActionBarSearch from './widgets/ActionBarSearch.svelte';
-    import { folderBackgroundColor } from '~/variables';
-
     // technique for only specific properties to get updated on store change
     let {
         colorError,
@@ -804,30 +804,10 @@
         return 2;
     }
 
-    async function pickFolderColor(event) {
+    async function setFolderColor(event) {
         try {
-            const ColorPickerView = (await import('~/components/common/ColorPickerView.svelte')).default;
-            // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
-            const anchorView = event.object as View;
-            const color: string = await showPopover({
-                backgroundColor: colorSurfaceContainer,
-                vertPos: VerticalPosition.BELOW,
-                horizPos: HorizontalPosition.RIGHT,
-                view: ColorPickerView,
-                anchor: anchorView,
-                props: {
-                    borderRadius: 10,
-                    elevation: __ANDROID__ ? 3 : 0,
-                    margin: 4,
-                    width: screenWidthDips * 0.7,
-                    backgroundColor: colorSurfaceContainer,
-                    defaultColor: folder.color
-                }
-            });
-            DEV_LOG && console.log('pickFolderColor', color);
+            const color: string = await pickFolderColor(folder, event);
             if (color) {
-                await folder.save({ color });
-                DEV_LOG && console.log('updating folder', folder);
                 folder = folder; //for svelte to pick up change
             }
         } catch (error) {
@@ -959,7 +939,7 @@
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
 
             {#if folder}
-                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={pickFolderColor} />
+                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
             {:else}
                 <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
             {/if}

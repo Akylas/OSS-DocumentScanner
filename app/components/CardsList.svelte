@@ -58,6 +58,7 @@
         importImageFromCamera,
         onAndroidNewItent,
         onBackButton,
+        pickFolderColor,
         showImagePopoverMenu,
         showPDFPopoverMenu,
         showPopoverMenu,
@@ -918,6 +919,16 @@
             showError(error);
         }
     }
+    async function setFolderColor(event) {
+        try {
+            const color: string = await pickFolderColor(folder, event);
+            if (color) {
+                folder = folder; //for svelte to pick up change
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="cardsList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
@@ -1129,7 +1140,11 @@
                 on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearchTF()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
-            <mdbutton class="actionBarButton" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+            {#if folder}
+                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
+            {:else}
+                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+            {/if}
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         {#if nbSelected > 0}
