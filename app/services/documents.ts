@@ -97,11 +97,6 @@ export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
         return this.applyMigrations();
     }
 
-    // TODO: remove in next prod
-    migrations = Object.assign({
-        addColor: sql`ALTER TABLE Folder ADD COLUMN color TEXT`
-    });
-
     findFolders() {
         return this.search({
             select: sql`f.*, 
