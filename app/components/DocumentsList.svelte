@@ -268,8 +268,10 @@
         }
     }
     function onDocumentsDeleted(event: DocumentDeletedEventData) {
-        for (let index = documents.length - 1; index >= 0; index--) {
-            if (event.documents.indexOf(documents.getItem(index).doc) !== -1) {
+        for (let i = 0; i < event.documents.length; i++) {
+            const id = event.documents[i].id;
+            const index = documents.findIndex((item) => item.doc && item.doc.id === id);
+            if (index !== -1) {
                 documents.splice(index, 1);
                 nbSelected -= 1;
             }
