@@ -464,7 +464,7 @@ LEFT JOIN
     }
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<any> {
         const { folders, id, pagesOrder, ...others } = attributes;
-        DEV_LOG && console.log('createModelFromAttributes', id, folders, typeof folders, folders?.split('#$%'));
+        // DEV_LOG && console.log('createModelFromAttributes', id, folders, typeof folders, folders?.split('#$%'));
         const document = new OCRDocument(id);
         Object.assign(document, {
             id,
