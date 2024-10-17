@@ -37,16 +37,17 @@ fastlaneOptions = packageJSON['fastlane'] || Hash.new
 puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 puts "working directory:"  + Dir.getwd
 
+project_root_path = Pathname.new("../").realpath.to_s
+
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 app_name = i18nEnJSON['app']['name']
 app_resources_path = ENV["APP_RESOURCES"] || "App_Resources" # based on nativescript.config.js !!!
 app_build_path = ENV["APP_BUILD_PATH"] || "platforms" # based on nativescript.config.js !!!
-metadata_path = ENV["APP_METADATA_PATH"]  || "metadata"
-metadata_path_realpath = Pathname.new("./#{metadata_path}").realpath.to_s
+metadata_path = ENV["SUPPLY_METADATA_PATH"]  || "metadata"
+metadata_path_realpath = File.join(project_root_path, metadata_path)
 
 tag_prefix = ENV["TAG_PREFIX"] || ""
 ignore_app_scope = ENV["IGNORE_APP_SCOPE"]
-project_root_path = Pathname.new("../").realpath.to_s
 puts "app_identifier:"  + app_identifier
 puts "app_name:"  + app_name
 puts "app_build_path:"  + app_build_path
@@ -120,10 +121,12 @@ lane :setup do |params|
     # )
   end
   # we are in fastlane folder let s move up
-  if (options[:sentry])
+  if (options[:sentry] == true)
     checkSentryClitatus
   end
-  checkGitStatus
+  if (options[:create_tag] != false)
+    checkGitStatus
+  end
   ns_install
 end
 
@@ -134,7 +137,7 @@ lane :prepare do |params|
   deleteFolder(File.join(project_root_path, app_build_path, platform))
   Dir.chdir(project_root_path) do
     if (platform == 'ios')
-      if (options[:sentry] != false)
+      if (options[:sentry] == true)
         sh("npm", "run", "prepare.ios.sentry")
       else
         sh("npm", "run", "prepare.ios")
@@ -169,9 +172,13 @@ lane :build_flavor do |params|
   # and so to map errors correctly we use different dist for ios and android
   sentryDist =  versionCode + '.' + platform # optional distribution of the release usually the buildnumber
 
+  repository_name = fastlaneOptions['github_repository_name'] || packageJSON['repository'].match(/([^\/]+\/[^\/]+)(\.git)?$/)[1]
   sentry_version = "#{app_identifier}@#{version}+#{versionCode}"
+  dist_path = File.expand_path(File.join(project_root_path, 'dist'))
   puts "working directory:"  + Dir.getwd
+  puts "dist_path:"  + dist_path
   puts "platform:"  + platform
+  puts "repository_name:"  + repository_name
   puts "flavor:"  + flavor
   puts "version:"  + version
   puts "versionCode:"  + versionCode
@@ -189,8 +196,11 @@ lane :build_flavor do |params|
 
   build_output = build(flavor: flavor, options: options)
 
-  if (options[:publish] != true)
-    next 
+  # copy dist files to dist, already done on iOS
+  if (platform == 'android')
+    puts "copy dist files to #{dist_path}"
+    FileUtils.mkdir dist_path
+    FileUtils.cp_r(Dir.glob(File.expand_path(File.join(project_root_path, app_build_path, "android/app/build/outputs/apk/release/*.apk"))),dist_path )
   end
 
   if (ENV["GITHUB_ACTIONS"] != 'true')
@@ -205,55 +215,68 @@ lane :build_flavor do |params|
     git_commit(path: ["./*.plist", "./*.gradle"], message: "chore: new build", allow_nothing_to_commit: true)
   end
 
-  if (options[:sentry] != false)
+  if (options[:sentry] == true)
     # sh("npm", "run", "sentry-set-commits", "#{sentry_version}")
     sentry_upload
   end
 
-  tag = "#{tag_prefix}#{platform}/#{flavor}/#{version}/#{versionCode}";
-  changelog = get_changelog(platform:platform, flavor:flavor)
-  if (flavor != 'github' && platform == 'android')
-    write_changelog(version:versionCode, changelog: flavor != 'github' ? changelog : get_changelog(platform:platform, flavor:'store'));
+  if (options[:publish] != false)
+    tag = "#{tag_prefix}#{platform}/#{flavor}/#{version}/#{versionCode}";
+    changelog = get_changelog(platform:platform, flavor:flavor)
+    if (flavor != 'github' && platform == 'android')
+      write_changelog(version:versionCode, changelog: flavor != 'github' ? changelog : get_changelog(platform:platform, flavor:'store'));
+    end
+    case flavor
+    when 'appcenter'
+      upload_appcenter(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor)
+    when 'github'
+      set_github_release(
+        repository_name: repository_name,
+        api_token: ENV["GH_TOKEN"],
+        name: "#{app_name}(**#{platform}**): v#{version} Build #{versionCode}",
+        tag_name: tag,
+        description: changelog,
+        upload_assets: Dir.glob(File.join(dist_path, "*.apk"))
+      )
+    # when 'fdroid'
+    #   if (fastlaneOptions['sftp'])
+    #     server_url = fastlaneOptions['sftp']['url']
+    #     server_user = fastlaneOptions['sftp']['user']
+    #     server_port = fastlaneOptions['sftp']['port']
+    #     target_dir = fastlaneOptions['sftp']['target_dir']
+    #     server_key = fastlaneOptions['sftp']['server_key'] || "#{Dir.home}/.ssh/id_rsa"
+    #     sftp_upload(
+    #       server_url: server_url,
+    #       server_port: server_port,
+    #       server_user: server_user,
+    #       server_key: server_key,
+    #       target_dir:  target_dir, 
+    #       file_paths: Dir.glob(File.expand_path("./platforms/android/app/build/outputs/apk/release/*.apk")),
+    #     )
+    #   end
+      when 'alpha','beta','production'
+        if (platform == 'ios')
+          # we now github create releases on iOS for european users
+          set_github_release(
+            repository_name: repository_name,
+            api_token: ENV["GH_TOKEN"],
+            name: "#{app_name}(**#{platform}**): v#{version} Build #{versionCode}",
+            tag_name: tag,
+            description: changelog,
+            upload_assets: Dir.glob(File.join(File.expand_path, "*.ipa"))
+          )
+        end
+        upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
+    end
   end
-  case flavor
-  when 'appcenter'
-    upload_appcenter(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor)
-  when 'github'
-    repository_name = fastlaneOptions['github_repository_name'] || packageJSON['repository'].match(/([^\/]+\/[^\/]+)(\.git)?$/)[1]
-    set_github_release(
-      repository_name: repository_name,
-      api_token: ENV["GH_TOKEN"],
-      name: "#{app_name}: v#{version} Build #{versionCode}",
-      tag_name: tag,
-      description: changelog,
-      upload_assets: Dir.glob(File.expand_path(File.join(project_root_path, app_build_path, "android/app/build/outputs/apk/release/*.apk")))
-    )
-  # when 'fdroid'
-  #   if (fastlaneOptions['sftp'])
-  #     server_url = fastlaneOptions['sftp']['url']
-  #     server_user = fastlaneOptions['sftp']['user']
-  #     server_port = fastlaneOptions['sftp']['port']
-  #     target_dir = fastlaneOptions['sftp']['target_dir']
-  #     server_key = fastlaneOptions['sftp']['server_key'] || "#{Dir.home}/.ssh/id_rsa"
-  #     sftp_upload(
-  #       server_url: server_url,
-  #       server_port: server_port,
-  #       server_user: server_user,
-  #       server_key: server_key,
-  #       target_dir:  target_dir, 
-  #       file_paths: Dir.glob(File.expand_path("./platforms/android/app/build/outputs/apk/release/*.apk")),
-  #     )
-  #   end
-  when 'alpha','beta','production'
-    upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
+  if (options[:create_tag] != false)
+    git_pull
+    if !git_tag_exists(tag: tag)
+      add_git_tag(tag: tag, force: true)
+      push_git_tags(force: true)
+    end
+    push_to_git_remote(tags:false)
   end
-  
-  git_pull
-  if !git_tag_exists(tag: tag)
-    add_git_tag(tag: tag, force: true)
-    push_git_tags(force: true)
-  end
-  push_to_git_remote(tags:false)
 end
 
 lane :svelteCheck do |params|
@@ -463,15 +486,16 @@ platform :android do
       changelog = changelog[0..499]
     end
 
-    metadata_dir=File.join(metadata_path,"android")
+    metadata_dir=File.join(metadata_path_realpath,"android")
     puts "current dir: #{Dir.getwd}"
-    puts "metadata_dir: #{Pathname.new(metadata_dir).realpath.to_s}"
+    puts "metadata_dir: #{metadata_dir}"
     system 'mkdir', '-p', metadata_dir
-    writeFileIfNotExist("#{metadata_dir}/fr-FR/changelogs/#{version}.txt", changelog)
-    writeFileIfNotExist("#{metadata_dir}/en-US/changelogs/#{version}.txt", changelog)
+    files = [File.join(metadata_dir, "fr-FR/changelogs/#{version}.txt"), File.join(metadata_dir, "en-US/changelogs/#{version}.txt")]
+    writeFileIfNotExist(files[0], changelog)
+    writeFileIfNotExist(files[1], changelog)
     # Create a new branch and upload a PR for it.
-    git_add(path: "./*.txt")
-    git_commit(path: "./*.txt", message: "#{version} release notes", allow_nothing_to_commit: true)
+    git_add(path: files)
+    git_commit(path: files, message: "#{version} release notes", allow_nothing_to_commit: true)
     # sh("git add #{metadata_dir}; git commit -m '#{version} release notes' --allow-empty")
   end
 
@@ -511,7 +535,7 @@ platform :android do
       end
     else
       # for now we build sentry releases for playstore to get bug reports
-      if (options[:sentry] != false)
+      if (options[:sentry] == true)
         sh("npm", "run", "build.android.production.playstore.sentry")
       else 
         sh("npm", "run", "build.android.production.playstore")

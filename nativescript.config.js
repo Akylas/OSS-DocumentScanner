@@ -46,7 +46,7 @@ module.exports = {
     hooks: [
         {
             type: 'after-prepareNativeApp',
-            script: 'scripts/after-prepareNativeApp.js'
+            script: 'toosl/scripts/after-prepareNativeApp.js'
         }
     ]
 };
