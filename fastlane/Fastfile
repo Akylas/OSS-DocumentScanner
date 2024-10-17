@@ -199,8 +199,10 @@ lane :build_flavor do |params|
   # copy dist files to dist, already done on iOS
   if (platform == 'android')
     puts "copy dist files to #{dist_path}"
-    FileUtils.mkdir dist_path
-    FileUtils.cp_r(Dir.glob(File.expand_path(File.join(project_root_path, app_build_path, "android/app/build/outputs/apk/release/*.apk"))),dist_path )
+    if (Dir.exist?(dist_path) == false)
+      FileUtils.mkdir dist_path
+    end
+    FileUtils.cp_r(Dir.glob(File.join(project_root_path, app_build_path, "android/app/build/outputs/apk/release/*.apk")),dist_path )
   end
 
   if (ENV["GITHUB_ACTIONS"] != 'true')
