@@ -38,6 +38,11 @@ on:
         required: true
         type: boolean
         default: false
+      sentry:
+        description: "Should we use sentry?"
+        default: false
+        required: true
+        type: boolean
 
 jobs:
   release-documentscanner-android:
@@ -47,6 +52,7 @@ jobs:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
 
   release-cardwallet-android:
@@ -56,6 +62,7 @@ jobs:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
 
   release-documentscanner-ios:
@@ -65,6 +72,7 @@ jobs:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
     
   release-cardwallet-ios:
@@ -74,4 +82,5 @@ jobs:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
