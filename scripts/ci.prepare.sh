@@ -32,4 +32,4 @@ echo "FLAVOR    = ${FLAVOR}"
 echo "FLAVOR    = $(dirname $0)"
 
 wget https://github.com/Akylas/OSS-DocumentScanner/releases/download/dev_resources/${PLATFORM}.zip
-unzip ${PLATFORM}.zip
+unzip -o ${PLATFORM}.zip
