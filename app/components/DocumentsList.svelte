@@ -199,7 +199,7 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
-        if ((!event.folder && !folder) || folder?.id === event.folder?.id) {
+        if ((!event.folder && !folder) || folder?.name === event.folder?.name) {
             DEV_LOG && console.log('onDocumentAdded', nbDocuments);
             const index = documents?.findIndex((d) => !!d.doc);
             if (index !== -1) {

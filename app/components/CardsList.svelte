@@ -142,7 +142,7 @@
         // console.log('updateNoDocument', showNoDocument);
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
-        if ((!event.folder && !folder) || folder?.id === event.folder?.id) {
+        if ((!event.folder && !folder) || folder?.name === event.folder?.name) {
             documents?.push({
                 doc: event.doc,
                 selected: false
