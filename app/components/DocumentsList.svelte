@@ -201,12 +201,17 @@
     function onDocumentAdded(event: DocumentAddedEventData) {
         if ((!event.folder && !folder) || folder?.id === event.folder?.id) {
             DEV_LOG && console.log('onDocumentAdded', nbDocuments);
-            documents?.unshift({
-                doc: event.doc,
-                selected: false
-            } as Item);
+            const index = documents?.findIndex((d) => !!d.doc);
+            if (index !== -1) {
+                documents?.splice(index, 0, {
+                    doc: event.doc,
+                    selected: false
+                } as Item);
+                collectionView?.nativeElement.scrollToIndex(index, false);
+            } else {
+                refresh();
+            }
             updateNoDocument();
-            collectionView?.nativeElement.scrollToIndex(0, false);
         } else if (!folder && event.folder) {
             refresh();
         }

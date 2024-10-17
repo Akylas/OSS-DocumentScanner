@@ -143,7 +143,7 @@
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
         if ((!event.folder && !folder) || folder?.id === event.folder?.id) {
-            documents[CARD_APP ? 'push' : 'unshift']({
+            documents?.push({
                 doc: event.doc,
                 selected: false
             } as Item);
