@@ -268,14 +268,14 @@ lane :build_flavor do |params|
         end
         upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
     end
-  end
-  if (options[:create_tag] != false)
-    git_pull
-    if !git_tag_exists(tag: tag)
-      add_git_tag(tag: tag, force: true)
-      push_git_tags(force: true)
+    if (options[:create_tag] != false)
+      git_pull
+      if !git_tag_exists(tag: tag)
+        add_git_tag(tag: tag, force: true)
+        push_git_tags(force: true)
+      end
+      push_to_git_remote(tags:false)
     end
-    push_to_git_remote(tags:false)
   end
 end
 
