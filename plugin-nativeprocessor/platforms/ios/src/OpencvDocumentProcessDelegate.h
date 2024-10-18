@@ -2,6 +2,7 @@
 #import <CoreMedia/CoreMedia.h>
 #import <CoreVideo/CoreVideo.h>
 #import <Webkit/Webkit.h>
+#import "NativeScriptEmbedder.h"
 #import "nsdocumentscanner-Swift.h"
 
 @interface OpencvDocumentProcessDelegate : NSObject <ProcessRawVideoSampleBufferDelegate>
@@ -53,7 +54,6 @@
 
 // PRAGMA: generateQRCode
 +(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
-+(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  hintSize:(NSInteger)hintSize options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 
 // PRAGMA: generateQRCodeSVG
 +(void)generateQRCodeSVGSync:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
