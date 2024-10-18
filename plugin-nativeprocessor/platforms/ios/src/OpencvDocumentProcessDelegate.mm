@@ -321,7 +321,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 +(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate options:(NSString*)options
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
+    UIImage* image = [ImageUtils readImageFromFileSync:src :options];
     [self getJSONDocumentCornersSync:image shrunkImageHeight:shrunkImageHeight imageRotation:imageRotation delegate:delegate scale:1.0 options:options];
   });
 }
@@ -335,7 +335,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
     NSDictionary* imageSize = [ImageUtils getImageSize: src];
     NSNumber* imageRotation = [options objectForKey:@"imageRotation"] ?: @(0);
-    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    UIImage* image = [ImageUtils readImageFromFileSync:src options:options];
     CGFloat scale = 1.0;
     if ([[imageSize objectForKey:@"rotation"] intValue] % 180 != 0) {
       scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
@@ -459,7 +459,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 +(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate options:(NSString*)optionsStr {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
-    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    UIImage* image = [ImageUtils readImageFromFileSync:src options:options];
     NSNumber* compressQuality = [options objectForKey:@"compressQuality"] ?: @(100);
     [self cropDocumentSync:image quads:quads delegate:delegate transforms:([options objectForKey:@"transforms"] ?: @"") saveInFolder:[options objectForKey:@"saveInFolder"] fileName:[options objectForKey:@"fileName"] compressFormat:([options objectForKey:@"compressFormat"] ?: @"jpg") compressQuality:[compressQuality floatValue] ];
   });
@@ -519,7 +519,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 }
 +(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    UIImage* image = [ImageUtils readImageFromFile:src stringOptions:options];
+    UIImage* image = [ImageUtils readImageFromFileSync:src :options];
     [self ocrDocumentSync:image options:options delegate:delegate];
   });
 }
@@ -563,7 +563,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
     NSDictionary* imageSize = [ImageUtils getImageSize: src];
     NSNumber* imageRotation = [options objectForKey:@"imageRotation"] ?: @(0);
-    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    UIImage* image = [ImageUtils readImageFromFileSync:src options:options];
     CGFloat scale = 1.0;
     if ([[imageSize objectForKey:@"rotation"] intValue] % 180 != 0) {
       scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
@@ -709,7 +709,7 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
     NSDictionary* options = [ImageUtils toJSON:optionsStr];
     NSDictionary* imageSize = [ImageUtils getImageSize: src];
     NSNumber* imageRotation = [options objectForKey:@"imageRotation"] ?: @(0);
-    UIImage* image = [ImageUtils readImageFromFile:src options:options];
+    UIImage* image = [ImageUtils readImageFromFileSync:src options:options];
     CGFloat scale = 1.0;
     if ([[imageSize objectForKey:@"rotation"] intValue] % 180 != 0) {
       scale = [[imageSize objectForKey:@"width"] floatValue] / image.size.height;
