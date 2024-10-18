@@ -10,7 +10,7 @@ module.exports = {
     buildPath: process.env['APP_BUILD_PATH'] || 'build/documentscanner',
     webpackPackageName: '@akylas/nativescript-webpack',
     webpackConfigPath: 'app.webpack.config.js',
-    projectName: 'nsdocumentscanner',
+    projectName: process.env['PROJECT_NAME'],
     appPath: 'app',
     forceLog: loggingEnabled,
     profiling: timelineEnabled ? 'timeline' : undefined,
