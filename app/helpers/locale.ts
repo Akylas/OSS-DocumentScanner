@@ -95,7 +95,7 @@ function setLang(newLang) {
 }
 
 const deviceLanguage = getString('language', 'auto');
-function getActualLanguage(language) {
+function getActualLanguage(language: string) {
     if (language === 'auto') {
         if (__ANDROID__) {
             // N Device.language reads app config which thus does return locale app language and not device language
