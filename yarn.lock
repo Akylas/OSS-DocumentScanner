@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=85d60e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=9cbfef&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.19.3"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.6.3"
     typescript-eslint: "npm:^8.9.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/08b1f1d0750a7abae99d5031366606a5b7d2862551e9ad404d294355880987d990a4cd8ccd370a2ea4a389778dadb4f3ccca6aaae334bfeed606a18cbfb8163e
+  checksum: 10/91b9e0b511be7949d575f3132ad6b9d2806b76149a7065789b415fb75dd84a5eaa4f18d56d7f6a464030cda134194193b8891afc7c539091eb0e4a4c82a74ed2
   languageName: node
   linkType: hard
 
@@ -1078,9 +1078,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/sentry@npm:4.6.34":
-  version: 4.6.34
-  resolution: "@nativescript-community/sentry@npm:4.6.34"
+"@nativescript-community/sentry@npm:4.6.35":
+  version: 4.6.35
+  resolution: "@nativescript-community/sentry@npm:4.6.35"
   dependencies:
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
     "@sentry/browser": "npm:7.111.0"
@@ -1091,7 +1091,7 @@ __metadata:
     "@sentry/types": "npm:7.111.0"
     "@sentry/utils": "npm:7.111.0"
     stacktrace-parser: "npm:^0.1.10"
-  checksum: 10/51b7164cd9d8e3f164dcec185f30ffaf34687108f2eccb8c380f78b7e17ca23a14319040f590acb2c84ea2625ada220140d7c86d56118b8a7e8d402f940f1931
+  checksum: 10/994b52a2b1a43fa7d4b47abfe404493e6249f48aa7a806d96668a409a32eb9700255c6b98ea41f52e71d83e311ccb692c25d4c238f6173ce5a4a3f776f5fd057
   languageName: node
   linkType: hard
 
@@ -10508,7 +10508,7 @@ __metadata:
     "@nativescript-community/md5": "npm:^1.0.4"
     "@nativescript-community/perms": "npm:2.3.3"
     "@nativescript-community/preferences": "npm:1.3.2"
-    "@nativescript-community/sentry": "npm:4.6.34"
+    "@nativescript-community/sentry": "npm:4.6.35"
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/systemui": "npm:1.1.23"
     "@nativescript-community/text": "npm:1.6.5"

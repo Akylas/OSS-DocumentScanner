@@ -12,6 +12,9 @@ def truncate(string, length = 20)
 end
 def writeFileIfNotExist(filePath, string)
   if !File.exist?(filePath) 
+    if (Dir.exist?(File.basename(filePath)) == false)
+      FileUtils.mkdir File.basename(filePath)
+    end
     File.write(filePath, string)
   end
 end
@@ -28,7 +31,6 @@ fastlane_version '2.135.2'
 opt_out_usage
 
 $ios_scheme = ENV["PROJECT_NAME"] || File.basename(File.expand_path('..')).gsub(/[^a-zA-Z0-9]/, "")
-sentry_cli_path = '../node_modules/.bin/sentry-cli'
 
 i18nEnJSON = JSON.parse(File.read('../app/i18n/en.json'))
 packageJSON = JSON.parse(File.read('../package.json'))
@@ -38,6 +40,8 @@ puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 puts "working directory:"  + Dir.getwd
 
 project_root_path = Pathname.new("../").realpath.to_s
+
+sentry_cli_path = File.join(project_root_path, 'node_modules/.bin/sentry-cli')
 
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
 app_name = i18nEnJSON['app']['name']
@@ -265,7 +269,7 @@ lane :build_flavor do |params|
             name: "#{app_name}(**#{platform}**): v#{version} Build #{versionCode}",
             tag_name: tag,
             description: changelog,
-            upload_assets: Dir.glob(File.join(File.expand_path, "*.ipa"))
+            upload_assets: Dir.glob(File.join(dist_path, "*.ipa"))
           )
         end
         upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)

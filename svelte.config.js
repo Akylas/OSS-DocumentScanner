@@ -5,7 +5,6 @@ let customPreprocess;
 if (existsSync('./svelte.config.custom.js')) {
     customPreprocess = require('./svelte.config.custom.js');
 }
-console.log('customPreprocess', customPreprocess);
 // this can be called either through svelte-loader where we want either __ANDROID__ or __IOS__ to be defined but not both
 // or through svelte-check where we want both so everything is checked
 const webpack_env = process.env['NATIVESCRIPT_WEBPACK_ENV']
