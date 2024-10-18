@@ -1184,7 +1184,6 @@
                         page: component,
                         props: {
                             title: item.title,
-                            description: item.description,
                             type: item.id.split('_')[0]
                         }
                     });

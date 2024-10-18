@@ -37,7 +37,6 @@
 
     export let type: 'pdf' | 'data' | 'image' = 'data';
     export let title = null;
-    export let description = null;
     export let actionBarButtons = [{ icon: 'mdi-plus', id: 'add' }];
 
     const dataSyncServices = syncService.getStoredSyncServices();
