@@ -120,8 +120,7 @@
         "./webpdfviewer"
     ],
     "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@akylas/nativescript-app-utils": "portal:/home/mguillon/dev/nativescript/app-utils/packages/app-utils"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
     },
     "packageManager": "yarn@4.3.1"
 }
