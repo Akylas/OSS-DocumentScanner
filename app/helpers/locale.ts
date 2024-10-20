@@ -239,10 +239,10 @@ export async function selectLanguage() {
 // TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
 
-Application.android.on(Application.android.activityStartedEvent, () => {
-    // on android after switching to auto we dont get the actual language
-    // before an activity restart
-    if (__ANDROID__) {
+if (__ANDROID__) {
+    Application.android.on(Application.android.activityStartedEvent, () => {
+        // on android after switching to auto we dont get the actual language
+        // before an activity restart
         const lang = ApplicationSettings.getString('language');
         if (lang === 'auto') {
             const actualNewLang = getActualLanguage(lang);
@@ -250,8 +250,8 @@ Application.android.on(Application.android.activityStartedEvent, () => {
                 $lang.set(actualNewLang);
             }
         }
-    }
-});
+    });
+}
 
 export { l, lc, lt, lu };
 export const sl = derived([$lang], () => l);
