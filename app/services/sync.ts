@@ -69,7 +69,7 @@ export interface SyncEnabledEventData extends EventData {
 
 const SYNC_DELAY = 1000;
 
-function debounceSync(fn, delay = 300, { leading = false, trailing = true, ignoreFirstTrail = false } = {}) {
+function debounceSync(fn, delay = 300, { ignoreFirstTrail = false, leading = false, trailing = true } = {}) {
     let timer;
     return (event) => {
         let noTrail = false;
@@ -215,8 +215,8 @@ export class SyncService extends Observable {
 
     syncDocuments = debounce(
         async ({
-            force = true,
             bothWays = false,
+            force = true,
             type = SyncType.ALL
         }: {
             force?;
@@ -385,9 +385,9 @@ export class SyncService extends Observable {
         }
     }
     async syncDocumentsInternal({
-        force = false,
         bothWays = false,
         event,
+        force = false,
         fromEvent,
         type
     }: {
