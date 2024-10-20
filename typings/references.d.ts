@@ -7,6 +7,7 @@
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!LinkPresentation.d.ts" />
 /// <reference path="../node_modules/@nativescript/core/global-types.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/interop.d.ts" />
+/// <reference path="../node_modules/@akylas/nativescript-app-utils/typings/ios.d.ts" />
 
 // for nativeprocessor
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreGraphics.d.ts" />
