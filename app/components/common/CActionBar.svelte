@@ -1,8 +1,8 @@
 <script lang="ts">
     import { CoreTypes, Frame } from '@nativescript/core';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { onMount } from 'svelte';
-    import { closeModal, conditionalEvent, fade, goBack } from '~/utils/svelte/ui';
+    import { closeModal, conditionalEvent, fade, goBack } from '@shared/utils/svelte/ui';
     import { windowInset } from '~/variables';
 
     export let title: string = null;

@@ -5,8 +5,8 @@
     import { lc } from '~/helpers/locale';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
-    import { showError } from '~/utils/showError';
-    import { closeModal } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import { pickColor } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';

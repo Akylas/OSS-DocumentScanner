@@ -32,8 +32,8 @@
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
 

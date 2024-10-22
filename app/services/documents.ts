@@ -104,8 +104,17 @@ COUNT(df.document_id) AS count`,
             from: sql`Folder f`,
             postfix: sql`
 LEFT JOIN DocumentsFolders df ON f.id = df.folder_id
-LEFT JOIN Document d ON df.document_id = d.id
 GROUP BY f.id;`
+        });
+    }
+    findFolder(name: string) {
+        return this.search({
+            select: sql`f.*, 
+COUNT(pf.pack_id) AS count`,
+            from: sql`Folder f`,
+            where: sql`f.name = ${name}`,
+            postfix: sql`
+LEFT JOIN PacksFolders pf ON f.id = pf.folder_id`
         });
     }
 }
@@ -454,11 +463,14 @@ LEFT JOIN
                 args.where = new SqlQuery([`df.folder_id = ${folder.id}`]);
             }
             args.postfix = new SqlQuery((args.postfix ? [args.postfix] : []).concat([foldersPostfix]));
-        } else if (omitThoseWithFolders) {
-            args.select = sql`d.*`;
-            args.from = sql`Document d`;
-            args.where = sql`d.id NOT IN(SELECT document_id FROM DocumentsFolders)`;
-            // args.postfix = foldersPostfix;
+        } else {
+            if (omitThoseWithFolders) {
+                args.select = sql`d.*`;
+                args.from = sql`Document d`;
+                args.where = sql`d.id NOT IN(SELECT document_id FROM DocumentsFolders)`;
+            } else {
+                args.postfix = new SqlQuery((args.postfix ? [args.postfix] : []).concat([foldersPostfix]));
+            }
         }
         return this.search(args);
     }
@@ -526,6 +538,7 @@ export interface FolderUpdatedEventData extends EventData {
 }
 export interface DocumentDeletedEventData extends EventData {
     documents: OCRDocument[];
+    folders: string[];
 }
 
 export type DocumentEvents = DocumentAddedEventData | DocumentDeletedEventData | DocumentUpdatedEventData | DocumentPagesAddedEventData | DocumentPageDeletedEventData | DocumentPageUpdatedEventData;

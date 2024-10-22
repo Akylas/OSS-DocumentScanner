@@ -12,7 +12,7 @@
     import { MatricesTypes } from '~/utils/color_matrix';
     import { DEFAULT_BRIGHTNESS, DEFAULT_COLORMATRIX, DEFAULT_COLORTYPE, DEFAULT_CONTRAST, DEFAULT_TRANSFORM, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
     import { TRANSFORMS } from '~/utils/localized_constant';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showSlidersPopover } from '~/utils/ui';
     import { colors, screenHeightDips, windowInset } from '~/variables';
     import ListItem from './ListItem.svelte';

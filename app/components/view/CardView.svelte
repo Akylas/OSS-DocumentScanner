@@ -32,9 +32,9 @@
     } from '~/utils/constants';
     import { DocumentDeletedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
     import { getQRCodeSVG, qrcodeService } from '~/services/qrcode';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { recycleImages } from '~/utils/images';
-    import { goBack, navigate, showModal } from '~/utils/svelte/ui';
+    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         getColorMatrix,
@@ -56,7 +56,7 @@
     import { generateQRCodeSVG } from 'plugin-nativeprocessor';
     import { shortcutService } from '~/services/shortcuts';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import { PermissionError } from '~/utils/error';
+    import { PermissionError } from '@shared/utils/error';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 

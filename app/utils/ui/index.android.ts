@@ -1,7 +1,7 @@
 import { request } from '@nativescript-community/perms';
 import { AndroidActivityNewIntentEventData, Application, Color, Page, Utils, View } from '@nativescript/core';
 import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
-import { showError } from '../showError';
+import { showError } from '@shared/utils/showError';
 import { throttle } from '@nativescript/core/utils';
 import { securityService } from '~/services/security';
 import { documentsService } from '~/services/documents';

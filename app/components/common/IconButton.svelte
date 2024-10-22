@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { conditionalEvent } from '~/utils/svelte/ui';
+    import { conditionalEvent } from '@shared/utils/svelte/ui';
     import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
     const iconPaint = new Paint();

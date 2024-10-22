@@ -26,7 +26,7 @@
         TRANSFORMS_SPLIT
     } from '~/utils/constants';
     import { TRANSFORMS } from '~/utils/localized_constant';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { ColorMatricesTypes, getColorMatrix, showMatrixLevelPopover, showPopoverMenu, showSlidersPopover } from '~/utils/ui';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ListItem from '../common/ListItem.svelte';

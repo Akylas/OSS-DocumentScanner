@@ -6,8 +6,8 @@ import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
-import { showError } from '~/utils/showError';
-import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { showError } from '@shared/utils/showError';
+import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { showAlertOptionSelect } from '~/utils/ui';
 
 import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';

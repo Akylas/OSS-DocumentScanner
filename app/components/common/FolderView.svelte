@@ -1,10 +1,10 @@
 <svelte:options accessors />
 
 <script lang="ts">
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { onMount } from 'svelte';
     import { lc } from '~/helpers/locale';
-    import MiniSearch from '~/utils/minisearch';
+    import MiniSearch from '@shared/utils/minisearch';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
     import { DocFolder } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';

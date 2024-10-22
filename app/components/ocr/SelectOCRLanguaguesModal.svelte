@@ -8,8 +8,8 @@
     // import SearchCollectionView from './SearchCollectionView.svelte';
     import { Template } from 'svelte-native/components';
     import { ocrService } from '~/services/ocr';
-    import { showError } from '~/utils/showError';
-    import MiniSearch from '~/utils/minisearch';
+    import { showError } from '@shared/utils/showError';
+    import MiniSearch from '@shared/utils/minisearch';
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 

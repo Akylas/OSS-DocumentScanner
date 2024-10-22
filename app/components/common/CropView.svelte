@@ -7,8 +7,8 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { MAGNIFIER_SENSITIVITY, SETTINGS_MAGNIFIER_SENSITIVITY } from '~/utils/constants';
     import { loadImage, recycleImages } from '~/utils/images';
-    import { showError } from '~/utils/showError';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { colors } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
     const padding = 20;

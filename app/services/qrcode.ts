@@ -3,7 +3,7 @@ import { QRCodeSingleData, detectQRCode, detectQRCodeFromFile, generateQRCodeIma
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
-import { navigate, showModal } from '~/utils/svelte/ui';
+import { navigate, showModal } from '@shared/utils/svelte/ui';
 import { screenHeightDips, screenWidthDips } from '~/variables';
 
 const TAG = 'QRCodeService';

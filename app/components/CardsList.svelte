@@ -35,7 +35,7 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from '~/services/documents';
+    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, FOLDER_COLOR_SEPARATOR, FolderUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -49,8 +49,8 @@
         EVENT_STATE,
         EVENT_SYNC_STATE
     } from '~/utils/constants';
-    import { showError } from '~/utils/showError';
-    import { fade, navigate } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { fade, navigate } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         goToDocumentView,
@@ -188,13 +188,25 @@
             }
         }
     }
-    function onDocumentsDeleted(event: DocumentDeletedEventData) {
+    async function onDocumentsDeleted(event: DocumentDeletedEventData) {
         for (let i = 0; i < event.documents.length; i++) {
             const id = event.documents[i].id;
             const index = documents.findIndex((item) => item.doc && item.doc.id === id);
             if (index !== -1) {
                 documents.splice(index, 1);
                 nbSelected -= 1;
+            }
+        }
+        if (!folder && event.folders?.length) {
+            for (let i = 0; i < event.folders.length; i++) {
+                const name = event.folders[i].split(FOLDER_COLOR_SEPARATOR)[0];
+                const index = documents.findIndex((item) => item.folder && item.folder.name === name);
+                if (index !== -1) {
+                    const item = documents.getItem(index);
+                    const res = await documentsService.folderRepository.findFolder(name);
+                    item.folder = res[0];
+                    documents.setItem(index, documents.getItem(index));
+                }
             }
         }
         updateNoDocument();

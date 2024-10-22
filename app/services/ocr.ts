@@ -7,7 +7,7 @@ import { networkService, wrapNativeHttpException } from './api';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { getCurrentISO3Language, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { hideLoading, hideSnackMessage, showLoading, showSnackMessage, updateLoadingProgress } from '~/utils/ui';
-import { HTTPError, NoNetworkError } from '~/utils/error';
+import { HTTPError, NoNetworkError } from '@shared/utils/error';
 import { wrapNativeException } from '@nativescript/core/utils';
 
 const languages = {

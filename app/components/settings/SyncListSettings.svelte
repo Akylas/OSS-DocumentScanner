@@ -18,9 +18,9 @@
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { PermissionError } from '~/utils/error';
-    import { showError } from '~/utils/showError';
-    import { showModal } from '~/utils/svelte/ui';
+    import { PermissionError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { showModal } from '@shared/utils/svelte/ui';
     import { getDirectoryName, hideLoading, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };

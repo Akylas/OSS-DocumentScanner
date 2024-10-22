@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { conditionalEvent } from '~/utils/svelte/ui';
+    import { conditionalEvent } from '@shared/utils/svelte/ui';
     import { colors } from '~/variables';
 </script>
 

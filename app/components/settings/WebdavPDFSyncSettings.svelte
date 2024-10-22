@@ -1,7 +1,7 @@
 <script lang="ts">
     import { lc, slc } from '~/helpers/locale';
     import { WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sync/WebdavDataSyncService';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
 
     import { pickColor, showPopoverMenu } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
@@ -17,7 +17,7 @@
     import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
-    import { closeModal } from '~/utils/svelte/ui';
+    import { closeModal } from '@shared/utils/svelte/ui';
     // technique for only specific properties to get updated on store change
     $: ({ colorOutline, colorPrimary } = $colors);
 

@@ -2,7 +2,7 @@ import { Screen, Utils, knownFolders } from '@nativescript/core';
 import { SDK_VERSION, wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
-import { CustomError, PermissionError, SilentError } from '~/utils/error';
+import { CustomError, PermissionError, SilentError } from '@shared/utils/error';
 import { getPageColorMatrix } from '~/utils/matrix';
 import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';

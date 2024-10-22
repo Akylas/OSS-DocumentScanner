@@ -14,8 +14,8 @@ import {
     EVENT_SYNC_STATE,
     SETTINGS_SYNC_SERVICES
 } from '~/utils/constants';
-import { CustomError } from '~/utils/error';
-import { showError } from '~/utils/showError';
+import { CustomError } from '@shared/utils/error';
+import { showError } from '@shared/utils/showError';
 import SyncWorker, { WorkerEventType } from '~/workers/SyncWorker';
 import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, DocumentPageUpdatedEventData, DocumentPagesAddedEventData, DocumentUpdatedEventData, documentsService } from './documents';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';

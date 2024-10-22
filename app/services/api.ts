@@ -4,7 +4,7 @@ import { connectionType, getConnectionType, startMonitoring, stopMonitoring } fr
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { wrapNativeHttpException } from '@shared/utils/error';
-import { HTTPError, NoNetworkError, TimeoutError } from '~/utils/error';
+import { HTTPError, NoNetworkError, TimeoutError } from '@shared/utils/error';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
 export type { Headers } from '@nativescript-community/https';

@@ -5,8 +5,8 @@
     import { lc } from '~/helpers/locale';
     import { PDFExportBaseOptions } from '~/services/pdf/PDFCanvas';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
-    import { showError } from '~/utils/showError';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { showPopoverMenu, showSliderPopover } from '~/utils/ui';
     const dispatch = createEventDispatcher();
 

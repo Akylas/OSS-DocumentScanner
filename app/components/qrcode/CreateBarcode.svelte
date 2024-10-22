@@ -9,7 +9,7 @@
     import { FORMATS, getQRCodeSVG } from '~/services/qrcode';
     import { colors, windowInset } from '~/variables';
     import SvgView from '../common/SVGView.svelte';
-    import { closeModal } from '~/utils/svelte/ui';
+    import { closeModal } from '@shared/utils/svelte/ui';
 
     function getFallbackString(format) {
         switch (format) {

@@ -6,7 +6,7 @@ import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode } from '../response';
 import { AuthType, BufferLike, ErrorCode, Headers, PutFileContentsOptions, WebDAVClientContext } from '../types';
 import { path } from '@nativescript/core';
-import { HTTPError } from '~/utils/error';
+import { HTTPError } from '@shared/utils/error';
 
 export async function putFileContents(context: WebDAVClientContext, filePath: string, data: string | BufferLike | File, options: PutFileContentsOptions = {}): Promise<boolean> {
     DEV_LOG && console.log('putFileContents', filePath, data);

@@ -54,10 +54,10 @@
         USE_SYSTEM_CAMERA
     } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
-    import { Sentry } from '~/utils/sentry';
-    import { share } from '~/utils/share';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { Sentry } from '@shared/utils/sentry';
+    import { share } from '@shared/utils/share';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, hasCamera, windowInset } from '~/variables';

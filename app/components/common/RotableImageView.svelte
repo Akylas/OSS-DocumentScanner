@@ -7,8 +7,8 @@
     import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { getPageColorMatrix } from '~/utils/matrix';
-    import { showError } from '~/utils/showError';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
 
     const dispatch = createEventDispatcher();
     export let zoomable = false;

@@ -6,7 +6,7 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
     import { ocrService } from '~/services/ocr';
 

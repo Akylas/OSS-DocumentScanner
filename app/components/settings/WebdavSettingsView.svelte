@@ -2,7 +2,7 @@
     import { Writable, get } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { WebdavSyncOptions, testWebdavConnection } from '~/services/sync/Webdav';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
 
     import { showPopoverMenu } from '~/utils/ui';
     import { colors } from '~/variables';

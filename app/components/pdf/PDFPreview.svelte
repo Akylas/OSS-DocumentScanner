@@ -19,7 +19,7 @@
     import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { getPageColorMatrix } from '~/utils/matrix';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';

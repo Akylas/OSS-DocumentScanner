@@ -4,7 +4,7 @@
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { OCRDocument } from '~/models/OCRDocument';
     import { shortcutService } from '~/services/shortcuts';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { colors } from '~/variables';
 
     let { colorBackground } = $colors;

@@ -13,8 +13,8 @@
     import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
-    import { showError } from '~/utils/showError';
-    import { closeModal } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';

@@ -20,8 +20,8 @@
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGES_ADDED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED } from '~/utils/constants';
-    import { showError } from '~/utils/showError';
-    import { goBack, navigate } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { goBack, navigate } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         hideLoading,

@@ -24,6 +24,9 @@ import {
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
+import { PermissionError, SilentError } from '@shared/utils/error';
+import { showError } from '@shared/utils/showError';
+import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
 import dayjs from 'dayjs';
 import {
@@ -87,17 +90,12 @@ import {
     USE_SYSTEM_CAMERA,
     getImageExportSettings
 } from '~/utils/constants';
-import { PermissionError, SilentError } from '~/utils/error';
 import { recycleImages } from '~/utils/images';
-import { share } from '~/utils/share';
-import { goBack, showModal } from '~/utils/svelte/ui';
+import { share } from '@shared/utils/share';
 import { showToast } from '~/utils/ui';
-import { colors, fontScale, fonts, screenWidthDips } from '~/variables';
+import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { showError } from '../showError';
-import { navigate } from '../svelte/ui';
 import { doInBatch, saveImage } from '../utils';
-import { createNativeAttributedString } from '@nativescript-community/text';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
