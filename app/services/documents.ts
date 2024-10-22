@@ -1,9 +1,9 @@
 import { ApplicationSettings, EventData, File, Folder, Observable, knownFolders, path } from '@nativescript/core';
+import NSQLDatabase from '@shared/db/NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { EVENT_DOCUMENT_DELETED } from '~/utils/constants';
-import NSQLDatabase from './NSQLDatabase';
 export const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
