@@ -126,12 +126,12 @@
     }
     function updateCurrentItem(item) {
         currentItem = item;
-        currentItemSubtitle = `${currentItem.width} x ${currentItem.height}`;
-        currentSelectedImagePath = currentItem.imagePath;
-        currentSelectedImageRotation = currentItem.rotation || 0;
-        currentItemOCRData = currentItem.ocrData;
-        currentItemQRCodeData = currentItem.qrcode;
-        transforms = currentItem.transforms?.split(TRANSFORMS_SPLIT) || [];
+        currentItemSubtitle = currentItem ? `${currentItem.width} x ${currentItem.height}` : null;
+        currentSelectedImagePath = currentItem?.imagePath;
+        currentSelectedImageRotation = currentItem?.rotation || 0;
+        currentItemOCRData = currentItem?.ocrData;
+        currentItemQRCodeData = currentItem?.qrcode;
+        transforms = currentItem?.transforms?.split(TRANSFORMS_SPLIT) || [];
     }
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
@@ -366,7 +366,7 @@
     }
 
     function isCurrentColorType(i) {
-        return currentItem.colorType === i.colorType;
+        return currentItem?.colorType === i.colorType;
     }
 
     async function applyImageColorMatrix(i) {
