@@ -27,11 +27,11 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=9cbfef&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=0a0b3d&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.19.3"
     "@nativescript-community/fontmin": "npm:0.9.11"
-    "@nativescript-community/set-version": "npm:1.0.4"
+    "@nativescript-community/set-version": "npm:1.0.5"
     "@nativescript/types-android": "npm:8.8.0"
     "@nativescript/types-ios": "npm:8.8.0"
     "@sentry/cli": "npm:2.37.0"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.6.3"
     typescript-eslint: "npm:^8.9.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/91b9e0b511be7949d575f3132ad6b9d2806b76149a7065789b415fb75dd84a5eaa4f18d56d7f6a464030cda134194193b8891afc7c539091eb0e4a4c82a74ed2
+  checksum: 10/8a80a31cbcf58fb9e583942de39e23441e3260995166ad7a3004e31e8b231c61fac5a3fd1fb0edf36637e9153bc53fc95db4c12be2ce4cf6c45015d9b71260d6
   languageName: node
   linkType: hard
 
@@ -1095,9 +1095,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/set-version@npm:1.0.4":
-  version: 1.0.4
-  resolution: "@nativescript-community/set-version@npm:1.0.4"
+"@nativescript-community/set-version@npm:1.0.5":
+  version: 1.0.5
+  resolution: "@nativescript-community/set-version@npm:1.0.5"
   dependencies:
     chalk: "npm:^3.0.0"
     gradle-to-js: "npm:^2.0.1"
@@ -1109,7 +1109,7 @@ __metadata:
     getVersion: lib/get_version.js
     set-version: lib/set_version.js
     setVersion: lib/set_version.js
-  checksum: 10/0a799fca8f5ed8e7fb68f6d7ddf204bcdab024cad26eb549b85ab15466dcc699bfe8ea2e5384b8a458f39e1c583a7e7bb7d91d6ea3f02e7438701ceda4f9a65b
+  checksum: 10/9f8062a8d7f90362ad0252d0e211e866fae9e7e2d076544c083212613a076aa9fa75356dfd0c9b431ae0e6ce6205b66b426b0dbbd07ed45cd7c833c2e0644ea1
   languageName: node
   linkType: hard
 
