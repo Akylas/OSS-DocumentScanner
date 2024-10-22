@@ -48,7 +48,7 @@ app_name = i18nEnJSON['app']['name']
 app_resources_path = ENV["APP_RESOURCES"] || "App_Resources" # based on nativescript.config.js !!!
 app_build_path = ENV["APP_BUILD_PATH"] || "platforms" # based on nativescript.config.js !!!
 metadata_path = ENV["SUPPLY_METADATA_PATH"]  || "metadata"
-metadata_path_realpath = File.join(project_root_path, metadata_path)
+metadata_path_realpath = File.join(project_root_path, 'fastlane', metadata_path)
 
 tag_prefix = ENV["TAG_PREFIX"] || ""
 ignore_app_scope = ENV["IGNORE_APP_SCOPE"]
@@ -199,7 +199,7 @@ lane :build_flavor do |params|
   svelteCheck
 
   build_output = build(flavor: flavor, options: options)
-
+  puts "build_output #{JSON.pretty_generate(build_output)}"
   # copy dist files to dist, already done on iOS
   if (platform == 'android')
     puts "copy dist files to #{dist_path}"
@@ -239,7 +239,7 @@ lane :build_flavor do |params|
       set_github_release(
         repository_name: repository_name,
         api_token: ENV["GH_TOKEN"],
-        name: "#{app_name}(**#{platform}**): v#{version} Build #{versionCode}",
+        name: "#{app_name}(#{platform}): v#{version} Build #{versionCode}",
         tag_name: tag,
         description: changelog,
         upload_assets: Dir.glob(File.join(dist_path, "*.apk"))
@@ -261,18 +261,18 @@ lane :build_flavor do |params|
     #     )
     #   end
       when 'alpha','beta','production'
+        upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
         if (platform == 'ios')
           # we now github create releases on iOS for european users
           set_github_release(
             repository_name: repository_name,
             api_token: ENV["GH_TOKEN"],
-            name: "#{app_name}(**#{platform}**): v#{version} Build #{versionCode}",
+            name: "#{app_name}(#{platform}): v#{version} Build #{versionCode}",
             tag_name: tag,
             description: changelog,
             upload_assets: Dir.glob(File.join(dist_path, "*.ipa"))
           )
         end
-        upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
     end
     if (options[:create_tag] != false)
       git_pull
@@ -371,8 +371,21 @@ platform :ios do
     
   end
   lane :upload_store  do |params| 
+    build_output = params[:build_output]
+    api_key = build_output['api_key']
+    # if (ENV["GITHUB_ACTIONS"] == 'true')
+    #   # get a new key as the build process might be long and the last ke
+    #   # might be expired
+    #   api_key = app_store_connect_api_key(
+    #     key_id: ENV['APPLE_KEY_ID'],
+    #     issuer_id: ENV['APPLE_ISSUER_ID'],
+    #     key_content: ENV['APPLE_KEY_CONTENT']
+    #   )
+    #   puts "upload_store generating api_key #{api_key}"
+    # end
     if (params[:flavor] == "production")
       upload_to_app_store(
+        api_key: api_key,
         ignore_language_directory_validation: true,
         metadata_path:File.join(metadata_path_realpath, "ios"),
         screenshots_path:File.join(metadata_path_realpath, "ios", "screenshots"),
@@ -380,7 +393,7 @@ platform :ios do
         automatic_release: true,
         reject_if_possible: true,
         submit_for_review: false,
-        skip_metadata: true,
+        skip_metadata:  !options[:upload_metadata],
         skip_screenshots: !options[:upload_screenshots],
         overwrite_screenshots: !options[:upload_screenshots],
         release_notes: {
@@ -392,12 +405,11 @@ platform :ios do
         }
       )
     else
-      build_output = params[:build_output]
       upload_to_testflight(
           changelog:params[:changelog],
           distribute_external: true,
           groups: [params[:flavor]],
-          api_key: build_output[:api_key],
+          api_key: api_key,
           # skip_waiting_for_build_processing: true
           notify_external_testers: true
         )
@@ -409,6 +421,7 @@ platform :ios do
       if (ENV["GITHUB_ACTIONS"] == 'true')
         api_key = app_store_connect_api_key(
           key_id: ENV['APPLE_KEY_ID'],
+          duration: 1200,
           issuer_id: ENV['APPLE_ISSUER_ID'],
           key_content: ENV['APPLE_KEY_CONTENT']
         )
@@ -423,6 +436,7 @@ platform :ios do
       if (ENV["GITHUB_ACTIONS"] == 'true')
         api_key = app_store_connect_api_key(
           key_id: ENV['APPLE_KEY_ID'],
+          duration: 1200,
           issuer_id: ENV['APPLE_ISSUER_ID'],
           key_content: ENV['APPLE_KEY_CONTENT']
         )

@@ -1,9 +1,11 @@
 const sveltePreprocess = require('svelte-preprocess');
 const { existsSync } = require('fs');
+const { resolve } = require('path');
 
 let customPreprocess;
-if (existsSync('./svelte.config.custom.js')) {
-    customPreprocess = require('./svelte.config.custom.js');
+const customPath = resolve('./svelte.config.custom.js');
+if (existsSync(customPath)) {
+    customPreprocess = require(customPath);
 }
 // this can be called either through svelte-loader where we want either __ANDROID__ or __IOS__ to be defined but not both
 // or through svelte-check where we want both so everything is checked
