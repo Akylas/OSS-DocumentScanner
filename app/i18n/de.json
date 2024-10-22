@@ -30,7 +30,7 @@
     "always_prompt_crop_edit": "immer zur Bearbeitung des Dokumentenbereiches auffordern",
     "always_prompt_crop_edit_desc": "Stellt sicher, dass der Dokumentenbereich immer nachgefragt wird, wenn Aufnahmen von der Kamera ohne Batch-Modus hinzugefügt werden",
     "app": {
-        "name": "OSS Dokumentenscanner dev"
+        "name": "OSS Dokumentenscanner"
     },
     "apply": "anwenden",
     "ask_everytime": "jedes Mal nachfragen",
