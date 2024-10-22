@@ -3,7 +3,7 @@ import { ImageSource, Utils } from '@nativescript/core';
 export async function loadImage(imagePath, loadOptions: { width?; height?; resizeThreshold?; sourceWidth?; sourceHeight?; jpegQuality? } = {}) {
     loadOptions.resizeThreshold = loadOptions.resizeThreshold || 4500;
     if (__IOS__) {
-        return new ImageSource(ImageUtils.readImageFromFileStringOptions(imagePath, JSON.stringify(loadOptions)));
+        return new ImageSource(ImageUtils.readImageFromFileSync(imagePath, JSON.stringify(loadOptions)));
     } else {
         return new ImageSource(com.akylas.documentscanner.utils.ImageUtil.Companion.readBitmapFromFile(Utils.android.getApplicationContext(), imagePath, JSON.stringify(loadOptions)));
     }

@@ -175,7 +175,7 @@
         }
     }
     async function takePicture(autoScan = false) {
-        if (takingPicture) {
+        if (takingPicture || !cameraOpened) {
             return;
         }
         takingPicture = true;
