@@ -38,6 +38,11 @@ on:
         required: true
         type: boolean
         default: true
+      github:
+        description: "Should we publish on Github?"
+        default: true
+        required: true
+        type: boolean
       sentry:
         description: "Should we use sentry?"
         default: true
@@ -52,6 +57,7 @@ jobs:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
 
@@ -62,6 +68,7 @@ jobs:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
 
@@ -72,6 +79,7 @@ jobs:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
     
@@ -82,5 +90,6 @@ jobs:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit

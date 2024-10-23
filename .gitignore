@@ -78,6 +78,7 @@ build
 /vendor
 .cxx
 /fastlane/report.xml
+*.pem
 
 #alpimaps
 app/**/*.LICENSE.txt
