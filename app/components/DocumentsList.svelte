@@ -859,7 +859,6 @@
                 <canvasview
                     backgroundColor={colorSurfaceContainerHigh}
                     borderRadius={12}
-                    fontSize={14 * $fontScale}
                     height={getItemRowHeight(viewStyle) * $fontScale}
                     margin={8}
                     rippleColor={colorSurface}
@@ -889,7 +888,6 @@
                     borderColor={colorOutline}
                     borderRadius={12}
                     borderWidth={1}
-                    fontSize={14 * $fontScale}
                     height={getFolderRowHeight(viewStyle) * $fontScale}
                     margin="4 8 4 8"
                     rippleColor={colorSurface}
