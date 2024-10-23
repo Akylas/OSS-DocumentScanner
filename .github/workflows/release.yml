@@ -26,7 +26,7 @@ on:
       ios:
         description: 'iOS'
         required: true
-        default: false
+        default: true
         type: boolean
       android:
         description: 'Android'
@@ -37,10 +37,10 @@ on:
         description: "Should we publish?"
         required: true
         type: boolean
-        default: false
+        default: true
       sentry:
         description: "Should we use sentry?"
-        default: false
+        default: true
         required: true
         type: boolean
 
