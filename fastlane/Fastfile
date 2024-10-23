@@ -276,13 +276,17 @@ lane :build_flavor do |params|
         end
     end
     if (options[:create_tag] != false)
-      git_pull
       if !git_tag_exists(tag: tag)
         add_git_tag(tag: tag, force: true)
         push_git_tags(force: true)
       end
-      push_to_git_remote(tags:false)
     end
+    # yarn lock might have change we dont want to commit it
+    reset_git_repo( force: true, files: ["yarn.lock"])
+    # we need to pull to be able to push again
+    git_pull
+    # push any change
+    push_to_git_remote(tags:false)
   end
 end
 
