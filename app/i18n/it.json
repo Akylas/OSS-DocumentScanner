@@ -30,7 +30,7 @@
     "always_prompt_crop_edit": "richiedi sempre la modifica dell'area del documento",
     "always_prompt_crop_edit_desc": "Quando si acquisisce dalla fotocamera senza modalità batch, abilitando questa opzione viene sempre richiesto di confermare/modificare l'area del documento prima di creare il documento",
     "app": {
-        "name": "Sviluppatore OSS Scanner Documenti"
+        "name": "OSS Scanner Documenti"
     },
     "apply": "applica",
     "ask_everytime": "chiedi ogni volta",
