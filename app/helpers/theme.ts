@@ -253,8 +253,11 @@ export function start() {
         // we need to update the theme on every activity start
         // to get dynamic colors
         Application.android.on(Application.android.activityStartedEvent, (event) => {
-            AppUtilsAndroid.applyDynamicColors(event.activity);
-            getRealThemeAndUpdateColors();
+            if (event.activity) {
+                DEV_LOG && console.log('activityStartedEvent', event.activity);
+                AppUtilsAndroid.applyDynamicColors(event.activity);
+                getRealThemeAndUpdateColors();
+            }
         });
     } else {
         // without rootController systemAppearance will be null
