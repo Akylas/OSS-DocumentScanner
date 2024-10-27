@@ -333,7 +333,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const doc = await this.create(cleanUndefined({ ...others, pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined }));
         if (folders) {
             for (let index = 0; index < folders.length; index++) {
-                await doc.setFolder(folders[index], false);
+                await doc.setFolder({ folderId: folders[index], notify: false });
             }
             doc.folders = folders;
         }
@@ -428,8 +428,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         return element;
     }
     async search(args: { from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
-        const result = await super.search({ ...args /* , postfix: sql`d LEFT JOIN PAGE p on p.document_id = d.id` */ });
-
+        const result = await super.search({ ...args });
         // remove all documents with no Page, it is a bug and should never happen
 
         return result.filter((d) => d.pages?.length > 0);
@@ -438,7 +437,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const args = {
             select: new SqlQuery([
                 `d.*,
-            group_concat(f.name || CASE WHEN f.color IS NOT NULL THEN '${FOLDER_COLOR_SEPARATOR}' || f.color ELSE '' END, '${FOLDERS_SEPARATOR}') AS folders`
+            group_concat(f.id, '${FOLDERS_SEPARATOR}') AS folders`
             ]),
             from: sql`Document d`,
             orderBy: new SqlQuery([`d.${order}`]),
@@ -476,12 +475,12 @@ LEFT JOIN
     }
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<any> {
         const { folders, id, pagesOrder, ...others } = attributes;
-        // DEV_LOG && console.log('createModelFromAttributes', id, folders, typeof folders, folders?.split('#$%'));
+        // DEV_LOG && console.log('createModelFromAttributes', id, folders, typeof folders);
         const document = new OCRDocument(id);
         Object.assign(document, {
             id,
             ...others,
-            folders: typeof folders === 'string' ? folders.split('#$%') : folders,
+            folders: (typeof folders === 'string' ? folders.split(FOLDERS_SEPARATOR) : folders)?.map((f) => parseInt(f, 10)),
             pagesOrder: typeof pagesOrder === 'string' && pagesOrder.length ? JSON.parse(pagesOrder) : pagesOrder
         });
 
@@ -514,7 +513,7 @@ export interface DocumentAddedEventData extends EventData {
 export interface DocumentMovedFolderEventData extends EventData {
     object: OCRDocument;
     folder?: DocFolder;
-    oldFolder?: DocFolder;
+    oldFolderId?: number;
 }
 export interface DocumentPagesAddedEventData extends EventData {
     object: OCRDocument;

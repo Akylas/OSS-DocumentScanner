@@ -347,7 +347,7 @@
         if (!item.selected) {
             documents?.some((d, index) => {
                 if (d === item) {
-                    nbSelected++;
+                    nbSelected += d.folder ? d.folder.count : 1;
                     d.selected = true;
                     documents.setItem(index, d);
                     return true;
@@ -355,11 +355,12 @@
             });
         }
     }
+
     function unselectItem(item: Item) {
         if (item.selected) {
             documents?.some((d, index) => {
                 if (d === item) {
-                    nbSelected--;
+                    nbSelected -= d.folder ? d.folder.count : 1;
                     d.selected = false;
                     documents.setItem(index, d);
                     return true;

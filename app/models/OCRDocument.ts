@@ -54,14 +54,14 @@ export class Tag {
 }
 
 export interface IDocFolder {
-    id: string;
+    id: number;
     name: string;
     color?: string;
     size?: number;
     count?: number;
 }
 export class DocFolder {
-    public readonly id!: string;
+    public readonly id!: number;
     public name: string;
     public color?: string;
     size?: number;
@@ -81,7 +81,7 @@ export interface Document {
     modifiedDate: number;
     name?: string;
     tags: string[];
-    folders: string[];
+    folders: number[];
     _synced: number;
     pagesOrder: string[];
     pages?: OCRPage[];
@@ -102,7 +102,7 @@ export class OCRDocument extends Observable implements Document {
     modifiedDate: number;
     name?: string;
     tags: string[];
-    folders: string[];
+    folders: number[];
     _synced: number;
 
     pagesOrder: string[];
@@ -128,7 +128,7 @@ export class OCRDocument extends Observable implements Document {
         const docId = date.valueOf() + '';
         const name = getFormatedDateForFilename(date.valueOf(), ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
         // DEV_LOG && console.log('createDocument', docId);
-        const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.name] } : {}) } as any);
+        const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.id] } : {}) } as any);
         await doc.addPages(pagesData);
         // DEV_LOG && console.log('createDocument pages added');
         // no need to notify on create. Will be done in documentAdded
@@ -462,41 +462,42 @@ export class OCRDocument extends Observable implements Document {
             );
         }
     }
-    async setFolder(folderAndColorName?: string, notify = true) {
-        console.log('setFolder', folderAndColorName, this.folders);
+    async setFolder({ folderId, folderName, notify = true }: { folderId?: number; folderName?: string; notify?: boolean }) {
+        console.log('setFolder', folderId, this.folders);
         const { folderRepository } = documentsService;
         const { db } = documentsService;
-        let oldFolder;
+        let oldFolderId: number;
         if (this.folders?.length) {
-            const [name, color] = this.folders[0].split(FOLDER_COLOR_SEPARATOR);
-            oldFolder = { name, color };
+            // const [name, color] = this.folders[0].split(FOLDER_COLOR_SEPARATOR);
+            // oldFolder = { name, color };
+            oldFolderId = this.folders[0];
         }
-        let folder;
-        const [folderName, folderColor] = (folderAndColorName || '').split(FOLDER_COLOR_SEPARATOR);
-        if (folderName?.length) {
+        let folder: DocFolder;
+        // const [folderName, folderColor] = (folderAndColorName || '').split(FOLDER_COLOR_SEPARATOR);
+        if (folderId || folderName?.length) {
             try {
-                folder = (await folderRepository.search({ where: sql`name=${folderName}` }))[0];
+                folder = (await folderRepository.search({ where: folderId ? sql`id=${folderId}` : sql`name=${folderName}` }))[0];
             } catch (error) {
                 console.error('setFolder', error, error.stack);
             }
             if (!folder) {
-                folder = await folderRepository.create({ id: Date.now() + '', name: folderName, ...(folderColor ? { color: folderColor } : {}) });
+                folder = await folderRepository.create({ id: folderId || Date.now(), name: folderName });
             }
         }
 
-        if (folderName?.length) {
+        if (folder) {
             await db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id} AND folder_id IS NOT ${folder.id}`);
             const relation = await db.query(sql` SELECT * FROM DocumentsFolders WHERE "document_id" = ${this.id} AND "folder_id" = ${folder.id}`);
             if (relation.length === 0) {
                 await db.query(sql` INSERT INTO DocumentsFolders ( document_id, folder_id ) VALUES(${this.id}, ${folder.id})`);
             }
-            this.folders = [folderName];
+            this.folders = [folder.id];
         } else {
             await db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
             delete this.folders;
         }
         if (notify) {
-            documentsService.notify({ eventName: EVENT_DOCUMENT_MOVED_FOLDER, object: this, folder, oldFolder } as DocumentMovedFolderEventData);
+            documentsService.notify({ eventName: EVENT_DOCUMENT_MOVED_FOLDER, object: this, folder, oldFolderId } as DocumentMovedFolderEventData);
         }
     }
 

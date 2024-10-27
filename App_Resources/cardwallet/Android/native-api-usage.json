@@ -12,8 +12,6 @@
         "android.graphics:Bitmap.CompressFormat",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
-        "com.akylas.documentscanner:WorkersContext",
-        "com.akylas.documentscanner:WorkersContext.Companion",
         "com.akylas.documentscanner:Utils",
         "com.akylas.documentscanner:Utils.Companion",
         "androidx.appcompat.app:AppCompatDelegate",

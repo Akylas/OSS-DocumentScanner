@@ -55,7 +55,7 @@
         onAndroidNewItent,
         onBackButton,
         pickFolderColor,
-        promptForFolder,
+        promptForFolderName,
         showImagePopoverMenu,
         showPDFPopoverMenu,
         showPopoverMenu,
@@ -117,7 +117,7 @@
 
     export let folder: DocFolder = null;
     export let title = l('documents');
-    let folders: DocFolder[];
+    let folders: DocFolder[] = [];
 
     $: if (folder) {
         DEV_LOG && console.log('updating folder title', folder);
@@ -155,6 +155,7 @@
     $: if (nbSelected > 0) search.unfocusSearch();
 
     async function refresh(force = true, filter?: string) {
+        DEV_LOG && console.log('refresh', force, filter);
         if (loading || (!force && lastRefreshFilter === filter)) {
             return;
         }
@@ -162,7 +163,7 @@
         nbSelected = 0;
         loading = true;
         try {
-            DEV_LOG && console.log('DocumentsList', 'refresh', filter);
+            DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true });
             DEV_LOG && console.log('r', r.length);
 
@@ -227,16 +228,10 @@
 
     function onDocumentMovedFolder(event: DocumentMovedFolderEventData) {
         // TODO: for now we refresh otherwise the order might be lost
-        DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolder?.id);
-        if (!folder && (!event.folder || !event.oldFolder)) {
-            // if (!event.folder) {
-            //     const index = documents.findIndex(d=>d.doc && d.doc.id === event.object.id)
-            //     if (index === -1) {
-            //         documents.push
-            //     }
-            // }
+        // DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolderId, !!folder, folder?.id === event.oldFolderId, typeof folder?.id, typeof event.oldFolderId);
+        if (!folder && (!event.folder || !event.oldFolderId)) {
             refresh();
-        } else if (folder && (folder.name === event.folder?.name || folder.name === event.oldFolder?.name)) {
+        } else if (!!folder && (folder.id === event.folder?.id || folder.id === event.oldFolderId)) {
             refresh();
         }
     }
@@ -415,7 +410,7 @@
         if (!item.selected) {
             documents?.some((d, index) => {
                 if (d === item) {
-                    nbSelected++;
+                    nbSelected += d.folder ? d.folder.count : 1;
                     d.selected = true;
                     documents.setItem(index, d);
                     return true;
@@ -427,7 +422,7 @@
         if (item.selected) {
             documents?.some((d, index) => {
                 if (d === item) {
-                    nbSelected--;
+                    nbSelected -= d.folder ? d.folder.count : 1;
                     d.selected = false;
                     documents.setItem(index, d);
                     return true;
@@ -761,14 +756,16 @@
                             break;
                         case 'rename':
                             const doc = getSelectedDocuments()[0];
-                            const result = await prompt({
-                                defaultText: doc.name,
-                                title: lc('rename')
-                            });
-                            if (result.result && result.text?.length) {
-                                await doc.save({
-                                    name: result.text
+                            if (doc) {
+                                const result = await prompt({
+                                    defaultText: doc.name,
+                                    title: lc('rename')
                                 });
+                                if (result.result && result.text?.length) {
+                                    await doc.save({
+                                        name: result.text
+                                    });
+                                }
                             }
                             break;
                         case 'share':
@@ -795,15 +792,15 @@
                             // if (selected.length === 1) {
                             //     defaultGroup = selected[0].groups?.[0];
                             // }
-                            const folder = await promptForFolder(
+                            const folderName = await promptForFolderName(
                                 defaultFolder,
                                 Object.values(folders).filter((g) => g.name !== 'none')
                             );
-                            if (typeof folder === 'string') {
+                            if (typeof folderName === 'string') {
                                 // console.log('group2', typeof group, `"${group}"`, selected.length);
                                 for (let index = 0; index < selected.length; index++) {
                                     const doc = selected[index];
-                                    await doc.setFolder(folder === 'none' ? undefined : folder);
+                                    await doc.setFolder({ folderName: folderName === 'none' ? undefined : folderName });
                                 }
                             }
 
