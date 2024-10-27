@@ -219,7 +219,7 @@
                 }
                 case 'move': {
                     if (closestQuadIndex !== -1) {
-                        let canUpdate = true;
+                        const canUpdate = true;
                         const updates = [];
                         for (let index = 0; index < closestCornerQuadIndex.length; index++) {
                             const cornerQuadIndex = closestCornerQuadIndex[index];
@@ -232,20 +232,17 @@
                             const cornerNewPosition = getMatrixMappedPoint(inversedCurrentMatrix, [newX, newY]);
                             // console.log('cornerNewPosition', x, y, quad[closestCornerQuadIndex], newX, newY, cornerNewPosition);
                             // make sure the user doesn't drag the corner outside the image preview container
-                            if (cornerNewPosition[0] >= 0 && cornerNewPosition[0] < actualWidth && cornerNewPosition[1] >= 0 && cornerNewPosition[1] < actualHeight) {
-                                updates.push({
-                                    cornerIndex: cornerQuadIndex,
-                                    mappedPoint: [newX, newY],
-                                    point: cornerNewPosition.map(Math.round)
-                                });
-                                // quad[cornerQuadIndex][0] = newX;
-                                // quad[cornerQuadIndex][1] = newY;
-                                // currentQuads[closestQuadIndex][cornerQuadIndex][0] = Math.round(cornerNewPosition[0]);
-                                // currentQuads[closestQuadIndex][cornerQuadIndex][1] = Math.round(cornerNewPosition[1]);
-                                // quadChanged = true;
-                            } else {
-                                canUpdate = false;
-                            }
+                            // if (cornerNewPosition[0] >= 0 && cornerNewPosition[0] < actualWidth && cornerNewPosition[1] >= 0 && cornerNewPosition[1] < actualHeight) {
+                            cornerNewPosition[0] = Math.max(0, Math.min(actualWidth, cornerNewPosition[0]));
+                            cornerNewPosition[1] = Math.max(0, Math.min(actualHeight, cornerNewPosition[1]));
+                            updates.push({
+                                cornerIndex: cornerQuadIndex,
+                                mappedPoint: [newX, newY],
+                                point: cornerNewPosition.map(Math.round)
+                            });
+                            // } else {
+                            //     canUpdate = false;
+                            // }
                         }
                         if (canUpdate) {
                             const quad = [...mappedQuads[closestQuadIndex]];
