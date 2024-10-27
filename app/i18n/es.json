@@ -30,7 +30,7 @@
     "always_prompt_crop_edit": "solicitar siempre la edición de la región del documento",
     "always_prompt_crop_edit_desc": "Al escanear con la cámara sin el modo por lotes, habilitarlo garantiza que siempre se le solicitará que confirme/edite el área del documento antes de crearlo",
     "app": {
-        "name": "Dev de OSS Document Scanner"
+        "name": "OSS Document Scanner"
     },
     "apply": "aplicar",
     "ask_everytime": "consultar cada vez",
