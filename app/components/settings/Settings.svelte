@@ -64,6 +64,10 @@
     import IconButton from '../common/IconButton.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
+
+    const numberTextFieldProperties = {
+        keyboardType: 'integer'
+    } as TextFieldProperties;
 </script>
 
 <script lang="ts">
@@ -156,7 +160,8 @@
                         title: lc('preview_resize_threshold'),
                         description: lc('preview_resize_threshold_desc'),
                         rightValue: () => ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD),
-                        type: 'prompt'
+                        type: 'prompt',
+                        textFieldProperties: numberTextFieldProperties
                     },
                     {
                         id: 'setting',
@@ -164,7 +169,8 @@
                         title: lc('document_not_detected_margin'),
                         description: lc('document_not_detected_margin_desc'),
                         rightValue: () => ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN),
-                        type: 'prompt'
+                        type: 'prompt',
+                        textFieldProperties: numberTextFieldProperties
                     },
                     {
                         id: 'setting',
@@ -195,7 +201,8 @@
                         title: lc('auto_scan_distance_threshold'),
                         description: lc('auto_scan_distance_threshold_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD),
-                        type: 'prompt'
+                        type: 'prompt',
+                        textFieldProperties: numberTextFieldProperties
                     },
                     {
                         id: 'setting',
@@ -203,7 +210,8 @@
                         title: lc('auto_scan_duration'),
                         description: lc('auto_scan_duration_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION),
-                        type: 'prompt'
+                        type: 'prompt',
+                        textFieldProperties: numberTextFieldProperties
                     },
                     {
                         id: 'setting',
@@ -211,7 +219,8 @@
                         title: lc('auto_scan_delay'),
                         description: lc('auto_scan_delay_desc'),
                         rightValue: () => ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY),
-                        type: 'prompt'
+                        type: 'prompt',
+                        textFieldProperties: numberTextFieldProperties
                     }
                 ];
             case 'images':
@@ -239,8 +248,7 @@
                         title: lc('image_quality'),
                         description: lc('image_quality_desc'),
                         type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS),
-                        currentValue: () => ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS)
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS)
                     }
                 ];
             case 'pdf_import': {
@@ -331,11 +339,8 @@
                             key: 'page_padding',
                             title: lc('page_padding'),
                             type: 'prompt',
-                            textFieldProperties: {
-                                keyboardType: 'integer'
-                            } as TextFieldProperties,
-                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['page_padding'],
-                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['page_padding']
+                            textFieldProperties: numberTextFieldProperties,
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['page_padding']
                         },
                         {
                             type: 'sectionheader',
@@ -349,11 +354,8 @@
                             title: lc('image_size_threshold'),
                             description: lc('image_size_threshold_desc'),
                             type: 'prompt',
-                            textFieldProperties: {
-                                keyboardType: 'integer'
-                            } as TextFieldProperties,
-                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageSizeThreshold'],
-                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageSizeThreshold']
+                            textFieldProperties: numberTextFieldProperties,
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageSizeThreshold']
                         },
                         {
                             id: 'store_setting',
@@ -367,8 +369,7 @@
                             title: lc('image_load_scale'),
                             description: lc('image_load_scale_desc'),
                             type: 'slider',
-                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageLoadScale'],
-                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageLoadScale']
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['imageLoadScale']
                         },
                         {
                             id: 'store_setting',
@@ -382,8 +383,7 @@
                             title: lc('jpeg_quality'),
                             description: lc('pdf_export_jpeg_quality'),
                             type: 'slider',
-                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality'],
-                            currentValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
+                            rightValue: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['jpegQuality']
                         }
                     ] as any);
             case 'operations':
@@ -398,8 +398,7 @@
                         title: lc('transformer_batch_size'),
                         description: lc('transformer_batch_size_desc'),
                         type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE),
-                        currentValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
                     },
                     {
                         id: 'image_processing_settings',
@@ -1095,7 +1094,7 @@
                     } else if (item.type === 'slider') {
                         await showSliderPopover({
                             anchor: event.object,
-                            value: item.currentValue(),
+                            value: (item.currentValue || item.rightValue)?.(),
                             ...item,
                             onChange(value) {
                                 if (item.transformValue) {
@@ -1123,7 +1122,7 @@
                         });
                     } else {
                         let selectedIndex = -1;
-                        const currentValue = item.currentValue?.() ?? item.currentValue;
+                        const currentValue = (item.currentValue || item.rightValue)?.() ?? item.currentValue;
                         const options = item.values.map((k, index) => {
                             const selected = currentValue === k.value;
                             if (selected) {
