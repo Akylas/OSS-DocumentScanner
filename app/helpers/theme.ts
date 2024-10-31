@@ -253,8 +253,7 @@ export function start() {
         // we need to update the theme on every activity start
         // to get dynamic colors
         Application.android.on(Application.android.activityStartedEvent, (event) => {
-            if (event.activity) {
-                DEV_LOG && console.log('activityStartedEvent', event.activity);
+            if (event.activity['isNativeScriptActivity'] === true) {
                 AppUtilsAndroid.applyDynamicColors(event.activity);
                 getRealThemeAndUpdateColors();
             }
