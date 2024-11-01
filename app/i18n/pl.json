@@ -30,7 +30,7 @@
     "always_prompt_crop_edit": "zawsze pytaj o edycję krawędzi dokumentu",
     "always_prompt_crop_edit_desc": "Poza trybem skanowania wielu, włączenie tej funkcji pozwoli Ci na potwierdzenie lub edycję dokumentu przed jego utworzeniem",
     "app": {
-        "name": "OSS Skaner dokumentów"
+        "name": "Skaner dokumentów OSS"
     },
     "apply": "Zatwierdź",
     "ask_everytime": "pytaj za każdym razem",
