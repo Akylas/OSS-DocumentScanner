@@ -283,7 +283,7 @@ lane :build_flavor do |params|
       end
     end
     # yarn lock might have change we dont want to commit it
-    reset_git_repo( force: true, files: ["yarn.lock"])
+    reset_git_repo( force: true, files: ["yarn.lock", "package.json"])
     # we need to pull to be able to push again
     git_pull
     # push any change
@@ -518,7 +518,8 @@ platform :android do
     system 'mkdir', '-p', metadata_dir
     files = []
     metadata_languages.each { |lang| 
-      changelogFolderPath = File.join(metadata_dir, "changelogs", lang)
+      changelogFolderPath = File.join(metadata_dir, lang, "changelogs")
+      puts "changelogFolderPath: #{changelogFolderPath}"
       if (Dir.exist?(changelogFolderPath)) 
         changelogFilePath = File.join(changelogFolderPath, "#{version}.txt")
         writeFileIfNotExist(changelogFilePath, changelog)
