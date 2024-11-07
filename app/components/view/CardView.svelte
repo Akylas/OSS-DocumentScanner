@@ -7,7 +7,7 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
     import { create as createImagePicker } from '@nativescript/imagepicker';
-    import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
+    import { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application';
     import { QRCodeData, detectQRCodeFromFile, generateQRCodeImage } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -69,7 +69,6 @@
         selected: boolean;
         index: number;
     }
-    let VIEW_ID = 0;
 </script>
 
 <script lang="ts">
@@ -82,7 +81,6 @@
     export let transitionOnBack = true;
     let editingTitle = false;
     let topBackgroundColor = document.pages[0].colors?.[1] ?? colorTertiary;
-    let statusBarStyle: any = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
     let qrcodes: QRCodeData;
     // let currentQRCodeImage: ImageSource;
     // let currentQRCode: QRCodeSingleData;
@@ -91,6 +89,12 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
+    let statusBarStyle;
+    $: statusBarStyle = qrcodes.length ? (new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light') : null;
+
+    let orientation = Application.orientation();
+    $: itemWidth = (orientation === 'landscape' ? screenHeightDips : screenWidthDips) - 2 * rowMargin;
+    $: fullItemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
     // let items: ObservableArray<Item> = null;
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
@@ -119,7 +123,6 @@
     //     }
 
     let qrcodeImages: { [k: string]: ImageSource } = {};
-    const qrcodeSVGs: { [k: string]: string } = {};
     function clearQRCodeImages(timeout = 0) {
         const toClear = Object.values(qrcodeImages);
         qrcodeImages = {};
@@ -156,15 +159,6 @@
         currentQRCodeIndex = event.object.selectedIndex;
     }
     updateQRCodes();
-    async function saveDocument() {
-        try {
-            showLoading(l('saving'));
-            await document.save({}, true);
-            hideLoading();
-        } catch (err) {
-            showError(err);
-        }
-    }
     function getSelectedPages() {
         const selected = [];
         items.forEach((d, index) => {
@@ -269,22 +263,9 @@
             nbSelected = 0;
             items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
         }
-        // documents?.forEach((d, index) => {
-        //         d.selected = false;
-        //         documents.setItem(index, d);
-        //     });
-        // refresh();
     }
     let ignoreTap = false;
     function onItemLongPress(item: Item, event?) {
-        // console.log('onItemLongPress', event && event.ios && event.ios.state);
-        // if (event && event.ios && event.ios.state !== 1) {
-        //     return;
-        // }
-        // if (event && event.ios) {
-        //     ignoreTap = true;
-        // }
-        // console.log('onItemLongPress', item, Object.keys(event));
         if (item.selected) {
             unselectItem(item);
         } else {
@@ -315,7 +296,6 @@
                                   }
                               })
                             : undefined,
-                    // transition: { name: 'slideLeft', duration: 300, curve: 'easeOut' },
                     props: {
                         document,
                         startPageIndex: index
@@ -405,7 +385,6 @@
         if ((event.object as OCRDocument).id !== document.id) {
             return;
         }
-        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         document = event.object as OCRDocument;
         try {
             if (items) {
@@ -474,10 +453,14 @@
             });
         }
     }
-
+    function onOrientationChanged(event: OrientationChangedEventData) {
+        orientation = event.newValue;
+        refreshCollectionView();
+        // }, 1000);
+    }
     onMount(() => {
-        DEV_LOG && console.log('CardView', 'onMount', VIEW_ID++);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
+        Application.on('orientationChanged', onOrientationChanged);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -492,8 +475,8 @@
     });
     onDestroy(() => {
         clearQRCodeImages();
-        DEV_LOG && console.log('CardView', 'onDestroy', VIEW_ID++, !!document);
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
+        Application.off('orientationChanged', onOrientationChanged);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
@@ -788,19 +771,19 @@
 </script>
 
 <page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
-    <gridlayout backgroundColor={topBackgroundColor} paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
+    <gridlayout backgroundColor={qrcodes.length ? topBackgroundColor : undefined} paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
         <collectionview
             bind:this={collectionView}
             id="view"
             autoReloadItemOnLayout={true}
-            {colWidth}
-            height={itemHeight}
+            colWidth={qrcodes.length ? '50%' : '100%'}
+            height={qrcodes.length ? itemHeight : '100%'}
             iosOverflowSafeArea={true}
             {items}
-            orientation="horizontal"
+            orientation={qrcodes.length ? 'horizontal' : 'vertical'}
             reorderEnabled={true}
             row={1}
-            rowHeight={itemHeight}
+            rowHeight={qrcodes.length ? itemHeight : fullItemHeight}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:index let:item>
@@ -829,7 +812,7 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" row={2} rows="auto,auto,*">
+        <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" row={2} rows="auto,auto,*" visibility={qrcodes.length ? 'visible' : 'collapsed'}>
             <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} margin={16} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
@@ -876,7 +859,7 @@
             <!-- </stacklayout> -->
         </gridlayout>
         <CActionBar
-            backgroundColor={topBackgroundColor}
+            backgroundColor={qrcodes.length ? topBackgroundColor : undefined}
             buttonsDefaultVisualState={statusBarStyle}
             forceCanGoBack={nbSelected > 0}
             labelsDefaultVisualState={statusBarStyle}

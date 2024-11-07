@@ -1,12 +1,12 @@
 <script context="module" lang="ts">
-    import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+    import { createNativeAttributedString } from '@nativescript-community/text';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { SnapPosition } from '@nativescript-community/ui-collectionview';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import {
         AnimationDefinition,
@@ -18,13 +18,14 @@
         ObservableArray,
         OrientationChangedEventData,
         Page,
-        Screen,
         StackLayout,
         Utils,
         View
     } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import { fade, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -35,44 +36,52 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentUpdatedEventData, FOLDER_COLOR_SEPARATOR, FolderUpdatedEventData, documentsService } from '~/services/documents';
+    import {
+        DocumentAddedEventData,
+        DocumentDeletedEventData,
+        DocumentMovedFolderEventData,
+        DocumentUpdatedEventData,
+        FOLDER_COLOR_SEPARATOR,
+        FolderUpdatedEventData,
+        documentsService
+    } from '~/services/documents';
+    import { shortcutService } from '~/services/shortcuts';
     import { syncService } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
         CARD_RATIO,
         EVENT_DOCUMENT_ADDED,
         EVENT_DOCUMENT_DELETED,
+        EVENT_DOCUMENT_MOVED_FOLDER,
         EVENT_DOCUMENT_PAGE_DELETED,
         EVENT_DOCUMENT_PAGE_UPDATED,
         EVENT_DOCUMENT_UPDATED,
         EVENT_FOLDER_UPDATED,
         EVENT_STATE,
-        EVENT_SYNC_STATE
+        EVENT_SYNC_STATE,
+        SETTINGS_START_ON_CAM
     } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { fade, navigate } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         goToDocumentView,
+        goToFolderView,
         importAndScanImage,
         importImageFromCamera,
         onAndroidNewItent,
         onBackButton,
         pickFolderColor,
+        promptForFolderName,
         showImagePopoverMenu,
         showPDFPopoverMenu,
         showPopoverMenu,
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
-    import { shortcutService } from '~/services/shortcuts';
 
-    const orientation = Application.orientation();
+    const textPaint = new Paint();
     const rowMargin = 8;
-    const itemWidth = (orientation === 'landscape' ? screenHeightDips : screenWidthDips) - 2 * rowMargin;
-    const itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
     interface Item {
         doc?: OCRDocument;
         folder?: DocFolder;
@@ -90,9 +99,32 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
 
+    let orientation = Application.orientation();
+    let itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin;
+    let itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
+
     export let folder: DocFolder = null;
     export let title = l('cards');
     let folders: DocFolder[];
+
+    $: if (folder) {
+        DEV_LOG && console.log('updating folder title', folder);
+
+        title = createNativeAttributedString({
+            spans: [
+                {
+                    fontFamily: $fonts.mdi,
+                    color: folder.color || colorOutline,
+                    verticalAlignment: 'center',
+                    text: 'mdi-folder  '
+                },
+                {
+                    verticalAlignment: 'center',
+                    text: folder.name
+                }
+            ]
+        });
+    }
 
     let syncEnabled = syncService.enabled;
 
@@ -114,20 +146,21 @@
             syncEnabled = syncService.enabled;
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: 'id ASC' });
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
-            // const r = await OCRDocument.find({
-            //     order: {
-            //         id: 'DESC'
-            //     },
-            //     take: 50
-            // });
+
             documents = new ObservableArray(
-                r.map((doc) => ({
-                    doc,
-                    selected: false
-                }))
+                folders
+                    .map((folder) => ({ folder, selected: false }))
+                    .concat(
+                        r.map(
+                            (doc) =>
+                                ({
+                                    doc,
+                                    selected: false
+                                }) as any
+                        )
+                    )
             );
             updateNoDocument();
-            // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
             showError(error);
         } finally {
@@ -154,6 +187,17 @@
             refresh();
         }
     }
+
+    function onDocumentMovedFolder(event: DocumentMovedFolderEventData) {
+        // TODO: for now we refresh otherwise the order might be lost
+        // DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolderId, !!folder, folder?.id === event.oldFolderId, typeof folder?.id, typeof event.oldFolderId);
+        if (!folder && (!event.folder || !event.oldFolderId)) {
+            refresh();
+        } else if (!!folder && (folder.id === event.folder?.id || folder.id === event.oldFolderId)) {
+            refresh();
+        }
+    }
+
     function onDocumentUpdated(event: DocumentUpdatedEventData) {
         let index = -1;
         documents?.some((d, i) => {
@@ -294,6 +338,7 @@
         documentsService.on(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.on(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
         documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
         syncService.on(EVENT_STATE, refreshSimple);
@@ -311,12 +356,14 @@
         documentsService.off(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
+        documentsService.off(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
         documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.off(EVENT_SYNC_STATE, onSyncState);
         syncService.off(EVENT_STATE, refreshSimple);
     });
+    const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
 
-    const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
+    const showActionButton = !startOnCam;
 
     async function onStartCam(inverseUseSystemCamera = false) {
         try {
@@ -531,8 +578,10 @@
             // console.log('onItemTap', event && event.ios && event.ios.state, selectedSessions.length);
             if (nbSelected > 0) {
                 onItemLongPress(item);
-            } else {
+            } else if (item.doc) {
                 await goToDocumentView(item.doc);
+            } else if (item.folder) {
+                await goToFolderView(item.folder);
             }
         } catch (error) {
             showError(error);
@@ -547,14 +596,18 @@
             }
         });
 
-    function getSelectedDocuments() {
+    async function getSelectedDocuments() {
         const selected: OCRDocument[] = [];
-        documents.forEach((d, index) => {
+        for (let index = 0; index < documents.length; index++) {
+            const d = documents.getItem(index);
             if (d.selected) {
-                selected.push(d.doc);
+                if (d.doc) {
+                    selected.push(d.doc);
+                } else if (d.folder) {
+                    selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
+                }
             }
-        });
-        DEV_LOG && console.log('getSelectedDocuments', selected.length);
+        }
         return selected;
     }
     function getSelectedPagesAndPossibleSingleDocument(): [OCRPage[], OCRDocument?] {
@@ -576,7 +629,7 @@
             page: component,
             // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
             props: {
-                images: getSelectedDocuments().reduce((acc, doc) => {
+                images: (await getSelectedDocuments()).reduce((acc, doc) => {
                     doc.pages.forEach((page) =>
                         acc.push({
                             // sharedTransitionTag: `document_${doc.id}_${page.id}`,
@@ -602,7 +655,7 @@
                     cancelButtonText: lc('cancel')
                 });
                 if (result) {
-                    await documentsService.deleteDocuments(getSelectedDocuments());
+                    await documentsService.deleteDocuments(await getSelectedDocuments());
                 }
             } catch (error) {
                 showError(error);
@@ -742,6 +795,7 @@
     async function showOptions(event) {
         const options = new ObservableArray(
             (folder ? [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }] : []).concat(nbSelected === 1 ? [{ id: 'rename', name: lc('rename'), icon: 'mdi-rename' }] : []).concat([
+                { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
                 { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
                 { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
@@ -780,15 +834,34 @@
                         unselectAll();
                         break;
                     case 'ocr':
-                        await detectOCR({ documents: getSelectedDocuments() });
+                        await detectOCR({ documents: await getSelectedDocuments() });
                         unselectAll();
                         break;
                     case 'transform':
-                        await transformPages({ documents: getSelectedDocuments() });
+                        await transformPages({ documents: await getSelectedDocuments() });
                         unselectAll();
                         break;
                     case 'delete':
                         deleteSelectedDocuments();
+                        break;
+                    case 'move_folder':
+                        const selected = await getSelectedDocuments();
+                        let defaultFolder;
+                        // if (selected.length === 1) {
+                        //     defaultGroup = selected[0].groups?.[0];
+                        // }
+                        const folderName = await promptForFolderName(
+                            defaultFolder,
+                            Object.values(folders).filter((g) => g.name !== 'none')
+                        );
+                        if (typeof folderName === 'string') {
+                            // console.log('group2', typeof group, `"${group}"`, selected.length);
+                            for (let index = 0; index < selected.length; index++) {
+                                const doc = selected[index];
+                                await doc.setFolder({ folderName: folderName === 'none' ? undefined : folderName });
+                            }
+                        }
+
                         break;
                 }
             }
@@ -821,15 +894,17 @@
         }
     }
 
-    let currentOrientation = Application.orientation();
     function onOrientationChanged(event: OrientationChangedEventData) {
-        currentOrientation = event.newValue;
+        orientation = event.newValue;
+        itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin;
+        itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
+        DEV_LOG && console.log('onOrientationChanged', itemWidth, itemHeight);
         refreshCollectionView();
         // }, 1000);
     }
 
     function getColWidth(viewStyle) {
-        const width = currentOrientation === 'landscape' ? screenHeightDips : screenWidthDips;
+        const width = orientation === 'landscape' ? screenHeightDips : screenWidthDips;
         switch (viewStyle) {
             case 'columns':
                 return width / 2;
@@ -837,36 +912,59 @@
                 return width;
         }
     }
-    function getRowHeight(viewStyle) {
-        const width = currentOrientation === 'landscape' ? screenHeightDips : screenWidthDips;
+
+    function getRowHeight(viewStyle, item) {
+        const width = orientation === 'landscape' ? screenHeightDips : screenWidthDips;
         switch (viewStyle) {
             case 'full':
+            case 'cardholder':
             case 'list':
                 return itemHeight;
-            case 'cardholder':
-                return 150;
             case 'columns':
                 return (width / 2) * CARD_RATIO;
         }
     }
     function getItemOverlap(viewStyle) {
+        DEV_LOG && console.log('getItemOverlap', viewStyle, itemHeight);
         switch (viewStyle) {
             case 'full':
-                return '-180 0 0 0';
+                return (item, position) => {
+                    if (position === 0 || (orientation === 'landscape' && position === 1) || item.folder || documents.getItem(position - 1).folder) {
+                        return [0, 0, 0, 0];
+                    }
+                    return [-0.71 * itemHeight, 0, 0, 0];
+                };
             case 'cardholder':
-                return '-30 0 0 0';
+                return (item, position) => {
+                    if (position === 0 || item.folder || documents.getItem(position - 1).folder) {
+                        return [0, 0, 0, 0];
+                    }
+                    return [-0.11 * itemHeight, 0, 0, 0];
+                };
             default:
-                return '0 0 0 0';
+                return null;
         }
     }
     function itemTemplateSelector(viewStyle, item?) {
+        if (item?.folder) {
+            return 'folder';
+        }
         switch (viewStyle) {
-            case 'columns':
             case 'list':
-                return 'list';
+            case 'columns':
+                if (orientation === 'landscape') {
+                    return 'columns';
+                }
+                return viewStyle;
             default:
                 return viewStyle;
         }
+    }
+    function itemTemplateSpanSize(viewStyle, item: Item) {
+        if (item.folder || viewStyle === 'columns' || orientation === 'landscape') {
+            return 1;
+        }
+        return 2;
     }
 
     async function onAddButton() {
@@ -941,6 +1039,46 @@
             showError(error);
         }
     }
+
+    function getFolderRowHeight(viewStyle) {
+        return 70;
+    }
+    function onFolderCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
+        const dx = 16;
+        const { folder } = item;
+        textPaint.color = colorOnBackground;
+        const topText = createNativeAttributedString({
+            spans: [
+                {
+                    fontFamily: $fonts.mdi,
+                    fontSize: 20 * $fontScale,
+                    color: !$folderBackgroundColor && folder.color ? folder.color : colorOutline,
+                    lineHeight: 24 * $fontScale,
+                    text: 'mdi-folder '
+                },
+                {
+                    fontSize: 16 * $fontScale,
+                    fontWeight: 'bold',
+                    lineBreak: 'end',
+                    lineHeight: 18 * $fontScale,
+                    text: folder.name
+                },
+                {
+                    fontSize: 14 * $fontScale,
+                    color: colorOutline,
+                    lineHeight: 20 * $fontScale,
+                    text: '\n' + lc('cards_count', item.folder.count)
+                }
+            ]
+        });
+        canvas.save();
+        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+        canvas.translate(dx, 16);
+        staticLayout.draw(canvas);
+        canvas.restore();
+    }
 </script>
 
 <page bind:this={page} id="cardsList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
@@ -949,20 +1087,20 @@
         <collectionView
             bind:this={collectionView}
             id="list"
-            colWidth={getColWidth(viewStyle)}
+            colWidth="50%"
             itemOverlap={getItemOverlap(viewStyle)}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
-            rowHeight={getRowHeight(viewStyle)}
+            spanSize={(item) => itemTemplateSpanSize(viewStyle, item)}
             swipeMenuId="swipeMenu"
             on:swipeMenuClose={(e) => handleTouchAction(e.index, { action: 'up' })}>
             <Template key="cardholder" let:item>
-                <absolutelayout height="150">
+                <absolutelayout height={150}>
                     <swipemenu
                         id="swipeMenu"
-                        height={itemHeight}
+                        height={getRowHeight('cardholder', item)}
                         openAnimationDuration={100}
                         rightSwipeDistance={0}
                         startingSide={item.startingSide}
@@ -999,6 +1137,7 @@
             <Template key="full" let:item>
                 <swipemenu
                     id="swipeMenu"
+                    height={getRowHeight('full', item)}
                     openAnimationDuration={100}
                     rightDrawerMode="under"
                     rightSwipeDistance={0}
@@ -1032,21 +1171,12 @@
                     <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
                     </stacklayout>
-
-                    <!-- <canvaslabel col={1} padding="16 0 0 16">
-                        <cgroup>
-                            <cspan color={colorOnBackground} fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
-                            <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
-                        </cgroup>
-
-                        <cspan color={colorOnSurfaceVariant} fontSize={14} paddingBottom={0} text={getSize(item)} verticalAlignment="bottom" />
-                    </canvaslabel> -->
-                    <!-- <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} /> -->
                 </swipemenu>
             </Template>
             <Template key="list" let:item>
                 <swipemenu
                     id="swipeMenu"
+                    height={getRowHeight('list', item)}
                     openAnimationDuration={100}
                     rightDrawerMode="under"
                     rightSwipeDistance={0}
@@ -1080,17 +1210,64 @@
                     <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
                         <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
                     </stacklayout>
-
-                    <!-- <canvaslabel col={1} padding="16 0 0 16">
-                        <cgroup>
-                            <cspan color={colorOnBackground} fontSize={16} fontWeight="bold" lineBreak="end" lineHeight={18} text={item.doc.name} />
-                            <cspan color={colorOnSurfaceVariant} fontSize={14} lineHeight={26} text={'\n' + dayjs(item.doc.createdDate).format('L LT')} />
-                        </cgroup>
-
-                        <cspan color={colorOnSurfaceVariant} fontSize={14} paddingBottom={0} text={getSize(item)} verticalAlignment="bottom" />
-                    </canvaslabel> -->
-                    <!-- <PageIndicator horizontalAlignment="right" text={item.doc.pages.length} /> -->
                 </swipemenu>
+            </Template>
+            <Template key="columns" let:item>
+                <swipemenu
+                    id="swipeMenu"
+                    height={getRowHeight('columns', item)}
+                    openAnimationDuration={100}
+                    rightDrawerMode="under"
+                    rightSwipeDistance={0}
+                    startingSide={item.startingSide}
+                    translationFunction={fullCardDrawerTranslationFunction}
+                    on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
+                    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
+                    <gridlayout
+                        prop:mainContent
+                        backgroundColor={item.doc.pages[0].colors?.[0]}
+                        borderRadius={12}
+                        elevation={3}
+                        margin={4}
+                        on:tap={() => onItemTap(item)}
+                        on:longPress={(e) => onItemLongPress(item, e)}>
+                        <RotableImageView
+                            id="imageView"
+                            borderRadius={12}
+                            decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
+                            decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
+                            fadeDuration={100}
+                            item={item.doc.pages[0]}
+                            sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
+                            stretch="aspectFill" />
+                        <gridlayout>
+                            <SelectedIndicator selected={item.selected} />
+                            <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
+                        </gridlayout>
+                    </gridlayout>
+
+                    <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
+                        <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
+                    </stacklayout>
+                </swipemenu>
+            </Template>
+            <Template key="folder" let:item>
+                <canvasview
+                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
+                    borderColor={colorOutline}
+                    borderRadius={12}
+                    borderWidth={1}
+                    height={getFolderRowHeight(viewStyle) * $fontScale}
+                    margin="4 8 4 8"
+                    rippleColor={colorSurface}
+                    verticalAlignment="top"
+                    on:tap={() => onItemTap(item)}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
+                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
+                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
+                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
+                </canvasview>
             </Template>
         </collectionView>
         <progress backgroundColor="transparent" busy={true} indeterminate={true} row={1} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
