@@ -1,7 +1,7 @@
 import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 import { deviceHasCamera } from '@nativescript-community/ui-cameraview';
 import { themer } from '@nativescript-community/ui-material-core';
-import { Application, ApplicationSettings, Color, Frame, Page, Screen, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Frame, InitRootViewEventData, Page, Screen, Utils } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 import { get, writable } from 'svelte/store';
 import { getRealTheme, theme } from './helpers/theme';
@@ -85,22 +85,26 @@ if (__ANDROID__) {
         AppUtilsAndroid.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
     });
 }
-const onInitRootView = function () {
+const onInitRootView = function (event: InitRootViewEventData) {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         // setTimeout(() => {
-        const rootView = Application.getRootView();
-        if (rootView) {
-            AppUtilsAndroid.listenForWindowInsets((inset) => {
-                windowInset.set({
-                    top: Utils.layout.toDeviceIndependentPixels(inset[0]),
-                    bottom: Utils.layout.toDeviceIndependentPixels(Math.max(inset[1], inset[4])),
-                    left: Utils.layout.toDeviceIndependentPixels(inset[2]),
-                    right: Utils.layout.toDeviceIndependentPixels(inset[3])
-                });
-            });
+        const rootView = event.rootView || Application.getRootView();
+        if (!rootView) {
+            return;
         }
-        const rootViewStyle = rootView?.style;
+        AppUtilsAndroid.listenForWindowInsets((inset) => {
+            windowInset.set({
+                top: Utils.layout.toDeviceIndependentPixels(inset[0]),
+                bottom: Utils.layout.toDeviceIndependentPixels(Math.max(inset[1], inset[4])),
+                left: Utils.layout.toDeviceIndependentPixels(inset[2]),
+                right: Utils.layout.toDeviceIndependentPixels(inset[3])
+            });
+        });
+        const rootViewStyle = rootView.style;
+        if (!rootViewStyle) {
+            return;
+        }
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
@@ -121,14 +125,14 @@ const onInitRootView = function () {
         // }
         if (nActionBarHeight > 0) {
             actionBarHeight.set(nActionBarHeight);
-            rootViewStyle?.setUnscopedCssVariable('--actionBarHeight', nActionBarHeight + '');
+            rootViewStyle.setUnscopedCssVariable('--actionBarHeight', nActionBarHeight + '');
         } else {
             nActionBarHeight = parseFloat(rootViewStyle.getCssVariable('--actionBarHeight'));
             actionBarHeight.set(nActionBarHeight);
         }
         const nActionBarButtonHeight = nActionBarHeight - 10;
         actionBarButtonHeight.set(nActionBarButtonHeight);
-        rootViewStyle?.setUnscopedCssVariable('--actionBarButtonHeight', nActionBarButtonHeight + '');
+        rootViewStyle.setUnscopedCssVariable('--actionBarButtonHeight', nActionBarButtonHeight + '');
         DEV_LOG && console.log('actionBarHeight', nActionBarHeight);
         // }, 0);
     }
