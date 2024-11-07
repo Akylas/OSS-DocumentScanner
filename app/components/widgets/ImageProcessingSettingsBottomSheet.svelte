@@ -293,7 +293,7 @@
     }
 </script>
 
-<gesturerootview maxHeight={screenHeightDips} padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'} on:closedBottomSheet={onCloseBottomSheet}>
+<gesturerootview padding="10 10 0 10" rows={maxHeight < maxScreenHeight ? 'auto' : '*'} on:closedBottomSheet={onCloseBottomSheet}>
     <scrollview>
         <stacklayout>
             {#if showCameraSettings}
