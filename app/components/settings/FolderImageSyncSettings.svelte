@@ -314,9 +314,9 @@
         return 'default';
     }
 
-    async function changeColor(item) {
+    async function changeColor(item, event) {
         try {
-            const newColor = await pickColor($store.color);
+            const newColor = await pickColor($store.color, { anchor: event.object });
             if (newColor) {
                 $store.color = newColor.hex;
                 updateItem(item, 'type');
@@ -331,7 +331,7 @@
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
-                <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={() => changeColor(item)}>
+                <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(event) => changeColor(item, event)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />
                 </ListItemAutoSize>
             </Template>

@@ -120,7 +120,7 @@ export const onAndroidNewItent = throttle(async function onAndroidNewItent(event
 }, 500);
 
 // TODO: move to a plugin
-export async function pickColor(color: Color | string, options: { alpha?: boolean } = {}) {
+export async function pickColor(color: Color | string, options: { alpha?: boolean; anchor?: View } = {}) {
     return new Promise<Color>((resolve) => {
         const activity = Application.android.startActivity;
         if (!(color instanceof Color)) {

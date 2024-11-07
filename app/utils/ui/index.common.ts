@@ -25,6 +25,7 @@ import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { PermissionError, SilentError } from '@shared/utils/error';
+import { share } from '@shared/utils/share';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
@@ -91,7 +92,6 @@ import {
     getImageExportSettings
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
-import { share } from '@shared/utils/share';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';

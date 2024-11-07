@@ -81,9 +81,9 @@
         }, 10);
     }
 
-    async function changeColor() {
+    async function changeColor(event) {
         try {
-            const newColor = await pickColor($store.color);
+            const newColor = await pickColor($store.color, { anchor: event.object });
             if (newColor) {
                 $store.color = newColor.hex;
             }
