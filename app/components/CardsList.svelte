@@ -640,7 +640,7 @@
         const docs: OCRDocument[] = [];
         let doc;
         documents.forEach((d, index) => {
-            if (d.selected) {
+            if (d.doc && d.selected) {
                 doc = d.doc;
                 docs.push(doc);
                 selected.push(...doc.pages);
