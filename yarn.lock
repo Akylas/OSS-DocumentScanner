@@ -157,9 +157,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript@portal:../NativeScript/dist/packages/core::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@akylas/nativescript@portal:../NativeScript/dist/packages/core::locator=root-workspace-0b6124%40workspace%3A."
+"@akylas/nativescript@npm:8.8.8":
+  version: 8.8.8
+  resolution: "@akylas/nativescript@npm:8.8.8"
   dependencies:
     "@nativescript/hook": "npm:~2.0.0"
     acorn: "npm:^8.7.0"
@@ -168,8 +168,9 @@ __metadata:
     emoji-regex: "npm:^10.3.0"
     reduce-css-calc: "npm:^2.1.8"
     tslib: "npm:^2.6.3"
+  checksum: 10/2f0f1adfb8153b52440fb0fa097f3d5306ec6a33d1e56df151d4b1958bf17f6f9a3fe8c1b7ccda755c423aaf3a12c4d311ca94119dc5762a32abd882406f7a9e
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@akylas/panzoom@npm:4.6.0":
   version: 4.6.0
@@ -1376,17 +1377,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-pager-indicator@npm:14.1.27":
-  version: 14.1.27
-  resolution: "@nativescript-community/ui-pager-indicator@npm:14.1.27"
-  checksum: 10/b3c8449e3369cc0b6770d4a03f86a8f67fcea4d7613ce7715140ebc063b408d4d67a53f6b6cc2a22b5216c091dabebb3f1bfdb884aac0562d62f238fd446983c
+"@nativescript-community/ui-pager-indicator@npm:14.1.28":
+  version: 14.1.28
+  resolution: "@nativescript-community/ui-pager-indicator@npm:14.1.28"
+  checksum: 10/e0b5104ef72d34de34efa9f790038c883d934aad3590b75e02c1e47d234b21ab7bfa5fcad7c859d689048513c0407bbb8614451ced91b48598071adb779be235
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-pager@npm:14.1.27":
-  version: 14.1.27
-  resolution: "@nativescript-community/ui-pager@npm:14.1.27"
-  checksum: 10/918b5e58af03230b976b4addf1192a8626e55b717291a63db6371ba44a08157022eca5bcc206cabde051bce53c334ca8940e48f0a88e3def84f971387b0d74dd
+"@nativescript-community/ui-pager@npm:14.1.28":
+  version: 14.1.28
+  resolution: "@nativescript-community/ui-pager@npm:14.1.28"
+  checksum: 10/ab04fc78c073711440d7ac46d99baee81d71aff6f13ea215373ea54755fcf00f6232553f4c943ed99962845e480162ab8fecfe93cb6e223cdc3498adca497175
   languageName: node
   linkType: hard
 
@@ -10505,7 +10506,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@akylas/kiss-orm": "npm:2.1.11"
-    "@akylas/nativescript": "npm:8.8.7"
+    "@akylas/nativescript": "npm:8.8.8"
     "@akylas/nativescript-android-runtime": "npm:8.8.5"
     "@akylas/nativescript-app-tools": "file:tools"
     "@akylas/nativescript-app-utils": "npm:2.1.4"
@@ -10550,8 +10551,8 @@ __metadata:
     "@nativescript-community/ui-material-tabs": "npm:7.2.67"
     "@nativescript-community/ui-material-textfield": "npm:7.2.67"
     "@nativescript-community/ui-material-textview": "npm:7.2.67"
-    "@nativescript-community/ui-pager": "npm:14.1.27"
-    "@nativescript-community/ui-pager-indicator": "npm:14.1.27"
+    "@nativescript-community/ui-pager": "npm:14.1.28"
+    "@nativescript-community/ui-pager-indicator": "npm:14.1.28"
     "@nativescript-community/ui-popover": "npm:0.1.20"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
     "@nativescript-community/ui-svg": "npm:0.2.7"
