@@ -1,0 +1,13 @@
+Features:
+- folder support. To add documents to folders, select them then choose `move to folder` through the ⁝ menu.
+- new option to allow to start the app in camera mode. The camera becomes the main "page". You can enable it through the "camera" settings
+
+Bug fixes:
+- crash on opening default image settings
+- webdav fix for nginx servers
+- updated camerax lib version
+- allow jpegQuality == 0
+- prevent error in document edit window
+- broken locale
+- ci fix
+- prevent stuttering feeling while dra
