@@ -129,7 +129,7 @@ export class OCRDocument extends Observable implements Document {
         const name = getFormatedDateForFilename(date.valueOf(), ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
         // DEV_LOG && console.log('createDocument', docId);
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.id] } : {}) } as any);
-        await doc.addPages(pagesData);
+        await doc.addPages(pagesData, false);
         // DEV_LOG && console.log('createDocument pages added');
         // no need to notify on create. Will be done in documentAdded
         await doc.save({}, false, false);
@@ -198,7 +198,7 @@ export class OCRDocument extends Observable implements Document {
         documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], object: this } as DocumentPagesAddedEventData);
     }
 
-    async addPages(pagesData?: PageData[]) {
+    async addPages(pagesData?: PageData[], notify = true) {
         const dataFolderPath = documentsService.dataFolder.path;
         DEV_LOG && console.log('addPages', dataFolderPath, JSON.stringify(pagesData));
         if (pagesData) {
@@ -275,7 +275,9 @@ export class OCRDocument extends Observable implements Document {
             if (this.#observables) {
                 this.#observables.push(...pages);
             }
-            documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages, object: this } as DocumentPagesAddedEventData);
+            if (notify) {
+                documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages, object: this } as DocumentPagesAddedEventData);
+            }
         }
     }
 

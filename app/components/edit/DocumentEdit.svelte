@@ -197,11 +197,11 @@
     // }
 
     function getCurrentImageView() {
-        return pager?.nativeView?.getChildView(currentIndex)?.getViewById<Img>('imageView');
+        return pager?.nativeView.getChildView(currentIndex)?.getViewById<Img>('imageView');
     }
 
     function applyRotation(newRotation) {
-        getCurrentImageView().notify({ eventName: 'rotateAnimated', rotation: newRotation });
+        getCurrentImageView()?.notify({ eventName: 'rotateAnimated', rotation: newRotation });
     }
     function getCurrentRotation() {
         const current = items.getItem(currentIndex);

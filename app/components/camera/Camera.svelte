@@ -35,7 +35,7 @@
     import { recycleImages } from '~/utils/images';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
+    import { confirmGoBack, goToDocumentAfterScan, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import { request } from '@nativescript-community/perms';
     import { PermissionError } from '@shared/utils/error';
@@ -199,11 +199,12 @@
             const didAdd = await processAndAddImage(image, autoScan);
             DEV_LOG && console.log('takePicture got image', batchMode, !!image, didAdd, Date.now() - start, 'ms');
             if (didAdd) {
-                nbPages = pagesToAdd.length;
-                const lastPage = pagesToAdd[pagesToAdd.length - 1];
-                DEV_LOG && console.log('setCurrentImage', JSON.stringify(lastPage));
-                setCurrentImage(lastPage.imagePath, lastPage.rotation, true);
-                if (!batchMode) {
+                if (batchMode) {
+                    nbPages = pagesToAdd.length;
+                    const lastPage = pagesToAdd[pagesToAdd.length - 1];
+                    DEV_LOG && console.log('setCurrentImage', JSON.stringify(lastPage));
+                    setCurrentImage(lastPage.imagePath, lastPage.rotation, true);
+                } else {
                     await saveCurrentDocument();
                 }
             }
@@ -276,12 +277,29 @@
         Application.off(Application.backgroundEvent, onBackground);
         Application.off(Application.foregroundEvent, onForeground);
     });
+
+    let isVisible = false;
+    function onNavigatedTo() {
+        isVisible = true;
+        (async () => {
+            try {
+                applyProcessor();
+                await startPreview();
+            } catch (error) {
+                console.error(error, error.stack);
+            }
+            if (torchEnabled) {
+                forceTorchDisabled(false);
+            }
+        })();
+    }
     function onNavigatedFrom() {
+        isVisible = false;
         if (torchEnabled) {
             forceTorchDisabled(true);
         }
         // stopPreview();
-        if (document) {
+        if (!startOnCam && document) {
             // we need to clear the current document which was not saved
             //especially memory images
             document.removeFromDisk();
@@ -290,6 +308,7 @@
     }
     let previewStarted = false;
     async function startPreview() {
+        DEV_LOG && console.log('[Camera]', 'startPreview', !!cameraView);
         if (!previewStarted) {
             const result = await request('camera');
             if (result[0] !== 'authorized') {
@@ -318,22 +337,16 @@
             // }
         }
     }
-    function onNavigatedTo() {
-        (async () => {
-            try {
-                startPreview();
-            } catch (error) {
-                console.error(error, error.stack);
-            }
-        })();
-    }
+
     function onBackground() {
         DEV_LOG && console.log('[Camera]', 'onBackground', !!cameraView);
         stopPreview();
     }
     function onForeground() {
         DEV_LOG && console.log('[Camera]', 'onForeground', !!cameraView);
-        startPreview();
+        if (isVisible) {
+            startPreview();
+        }
     }
     let saveCalled = false;
     async function saveCurrentDocument() {
@@ -347,8 +360,9 @@
             DEV_LOG && console.log('saveCurrentDocument', newDocument, !!theDocument);
             if (!theDocument) {
                 theDocument = document = await OCRDocument.createDocument(pagesToAdd, folder);
+                DEV_LOG && console.log('saveCurrentDocument document created', newDocument, !!theDocument);
                 if (startOnCam) {
-                    await goToDocumentView(theDocument);
+                    await goToDocumentAfterScan(theDocument);
                 } else {
                     // we should already be in edit so closing should go back there
                 }
@@ -361,6 +375,14 @@
                 if (!startOnCam) {
                     DEV_LOG && console.log('closing cameral modal ', !!theDocument);
                     closeModal(theDocument);
+                } else {
+                    // clear
+                    nbPages = 0;
+                    smallImage = null;
+                    smallImageRotation = 0;
+                    pagesToAdd = [];
+                    document = null;
+                    saveCalled = false;
                 }
             }
         } catch (error) {
@@ -389,7 +411,7 @@
             }
         });
 
-    const pagesToAdd: PageData[] = [];
+    let pagesToAdd: PageData[] = [];
 
     async function setCurrentImage(image: string, rotation = 0, needAnimateBack = false) {
         smallImage = image;
@@ -474,8 +496,8 @@
     }
     async function applyProcessor() {
         try {
-            DEV_LOG && console.log('applyProcessor', processor, cropEnabled, cameraView.nativeElement);
-            if (processor || !cropEnabled) {
+            DEV_LOG && console.log('applyProcessor', processor, cropEnabled, cameraView.nativeElement, isVisible);
+            if (processor || !cropEnabled || !isVisible || !cameraView.nativeElement) {
                 return;
             }
             if (!QRCodeOnly) {
@@ -636,21 +658,19 @@
         </absolutelayout>
 
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack}>
-            {#if startOnCam}
-                <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-folder" variant="text" on:tap={() => showDocumentsList()} />
-                <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
-            {/if}
-        </CActionBar>
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack}></CActionBar>
 
-        <stacklayout horizontalAlignment="left" orientation="horizontal" row={2} verticalAlignment="center">
+        <gridlayout columns="auto,auto,auto,auto,*,auto,auto" row={2}>
             <IconButton color="white" text={getFlashIcon(flashMode)} tooltip={lc('flash_mode')} on:tap={() => (flashMode = (flashMode + 1) % 3)} />
-            <IconButton color="white" isSelected={torchEnabled} selectedColor={colorPrimary} text="mdi-flashlight" tooltip={lc('torch')} on:tap={switchTorch} />
-            <IconButton color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
-        </stacklayout>
-        {#if !startOnCam}
-            <IconButton color="white" horizontalAlignment="right" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
-        {/if}
+            <IconButton col={1} color="white" isSelected={torchEnabled} selectedColor={colorPrimary} text="mdi-flashlight" tooltip={lc('torch')} on:tap={switchTorch} />
+            <IconButton col={2} color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
+
+            <IconButton col={3} color="white" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
+            {#if startOnCam}
+                <IconButton col={5} color="white" row={2} text="mdi-folder" on:tap={() => showDocumentsList()} />
+                <IconButton col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
+            {/if}
+        </gridlayout>
 
         <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
             <IconButton

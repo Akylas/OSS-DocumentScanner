@@ -269,7 +269,7 @@
     function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
         // let index = -1;
         const document = event.object as OCRDocument;
-        const index = documents.findIndex((d) => d.doc.id === document.id);
+        const index = documents?.findIndex((d) => d.doc && d.doc.id === document.id);
         DEV_LOG && console.log('CardList onDocumentPageUpdated', index, event.pageIndex, event.imageUpdated);
         if (index >= 0) {
             if (event.pageIndex === 0) {
