@@ -218,6 +218,10 @@
         }
     }
     function onFolderUpdated(event: FolderUpdatedEventData) {
+        DEV_LOG && console.log('onFolderUpdated', event.folder);
+        if (event.folder && folder && event.folder.id === folder?.id) {
+            folder = event.folder;
+        }
         let index = -1;
         documents?.some((d, i) => {
             if (d.folder && d.folder.id === event.folder.id) {
@@ -225,7 +229,6 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onFolderUpdated', event.folder);
         if (index >= 0) {
             const item = documents?.getItem(index);
             if (item) {
@@ -341,7 +344,7 @@
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         documentsService.on(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
-        documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
+        documentsService.on(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
         syncService.on(EVENT_STATE, refreshSimple);
         // refresh();
@@ -950,10 +953,11 @@
         }
     }
     function getItemOverlap(viewStyle) {
-        DEV_LOG && console.log('getItemOverlap', viewStyle, itemHeight);
+        DEV_LOG && console.log('getItemOverlap', viewStyle, itemHeight, orientation);
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
+                    DEV_LOG && console.log('getItemOverlap item', viewStyle, !!item.folder, itemHeight, orientation);
                     if (position === 0 || (orientation === 'landscape' && position === 1) || item.folder || documents.getItem(position - 1).folder) {
                         return [0, 0, 0, 0];
                     }

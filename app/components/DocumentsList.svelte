@@ -5,10 +5,12 @@
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils, View } from '@nativescript/core';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import { fade, navigate } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -42,10 +44,9 @@
         EVENT_DOCUMENT_UPDATED,
         EVENT_FOLDER_UPDATED,
         EVENT_STATE,
-        EVENT_SYNC_STATE
+        EVENT_SYNC_STATE,
+        SETTINGS_START_ON_CAM
     } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { fade, navigate } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         goToDocumentView,
@@ -62,8 +63,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, screenWidthDips, windowInset } from '~/variables';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, windowInset } from '~/variables';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
     import EditNameActionBar from './common/EditNameActionBar.svelte';
 
@@ -253,6 +253,10 @@
         }
     }
     function onFolderUpdated(event: FolderUpdatedEventData) {
+        DEV_LOG && console.log('onFolderUpdated', event.folder);
+        if (event.folder && folder && event.folder.id === folder?.id) {
+            folder = event.folder;
+        }
         let index = -1;
         documents?.some((d, i) => {
             if (d.folder && d.folder.id === event.folder.id) {
@@ -260,7 +264,6 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onFolderUpdated', event.folder);
         if (index >= 0) {
             const item = documents?.getItem(index);
             if (item) {
@@ -378,7 +381,8 @@
         syncService.off(EVENT_STATE, refreshSimple);
     });
 
-    const showActionButton = !ApplicationSettings.getBoolean('startOnCam', START_ON_CAM);
+    const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
+    const showActionButton = !startOnCam;
 
     async function onStartCam(inverseUseSystemCamera = false) {
         try {
@@ -479,7 +483,6 @@
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
             if (nbSelected > 0) {
-                data.cancel = true;
                 unselectAll();
             } else {
                 onGoBack(data);
@@ -652,16 +655,6 @@
         const h = canvas.getHeight();
         const dx = 16;
         const { folder } = item;
-        // textPaint.color = colorOnSurfaceVariant;
-        // canvas.drawText(
-        //     filesize(
-        //         item.doc.pages.reduce((acc, v) => acc + v.size, 0),
-        //         { output: 'string' }
-        //     ),
-        //     dx,
-        //     h - (condensed ? 0 : 16) - 10,
-        //     textPaint
-        // );
         textPaint.color = colorOnBackground;
         const topText = createNativeAttributedString({
             spans: [
@@ -692,12 +685,6 @@
         canvas.translate(dx, 16);
         staticLayout.draw(canvas);
         canvas.restore();
-
-        // drawRoundRect(canvas, lc('documents_count', item.folder.count), w - dx, dx, h - 10);
-
-        // if (item.folder.size) {
-        //     drawRoundRect(canvas, filesize(item.folder.size, { output: 'string' }), w - dx, dx, h - 33 * $fontScale);
-        // }
     }
     function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
@@ -808,6 +795,7 @@
                         case 'move_folder':
                             const selected = await getSelectedDocuments();
                             let defaultFolder;
+                            DEV_LOG && console.log('move_folder', folders);
                             // if (selected.length === 1) {
                             //     defaultGroup = selected[0].groups?.[0];
                             // }

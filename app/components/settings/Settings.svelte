@@ -48,6 +48,7 @@
         SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
         SETTINGS_MAGNIFIER_SENSITIVITY,
+        SETTINGS_START_ON_CAM,
         SETTINGS_SYNC_ON_START,
         SETTINGS_TRANSFORM_BATCH_SIZE,
         TRANSFORM_BATCH_SIZE,
@@ -119,6 +120,13 @@
                         title: lc('use_system_camera'),
                         description: lc('use_system_camera_desc'),
                         value: ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA)
+                    },
+                    {
+                        type: 'switch',
+                        id: SETTINGS_START_ON_CAM,
+                        title: lc('start_app_on_cam'),
+                        description: lc('start_app_on_cam_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM)
                     }
                 ];
             case 'security':

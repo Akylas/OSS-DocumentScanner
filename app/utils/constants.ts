@@ -29,6 +29,7 @@ export const SETTINGS_DEFAULT_CONTRAST = 'defaultContrast';
 export const SETTINGS_MAGNIFIER_SENSITIVITY = 'magnifier_sensitivity';
 export const SETTINGS_SYNC_ON_START = 'sync_on_start';
 export const SETTINGS_DRAW_FOLDERS_BACKGROUND = 'draw_folder_background';
+export const SETTINGS_START_ON_CAM = 'start_on_cam';
 
 export const TRANSFORMS_SPLIT = '|';
 

@@ -29,6 +29,7 @@
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
         SETTINGS_IMAGE_EXPORT_FORMAT,
+        SETTINGS_START_ON_CAM,
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
@@ -36,6 +37,8 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import { confirmGoBack, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
+    import { request } from '@nativescript-community/perms';
+    import { PermissionError } from '@shared/utils/error';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -57,17 +60,14 @@
     });
     $: ({ aspectRatio, pictureSize, stretch, viewsize } = $cameraOptionsStore);
 
-    export let modal = false;
     export let document: OCRDocument = null;
     export let QRCodeOnly = false;
     export let folder: DocFolder = null;
 
     let nbPages = 0;
     let takingPicture = false;
-    // let croppedImage: string | ImageSource = null;
     let smallImage: string = null;
     let smallImageRotation: number = 0;
-    // let croppedImageRotation: number = 0;
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
     const zoom = ApplicationSettings.getNumber('defaultZoom', 1);
@@ -78,11 +78,11 @@
     let editing = false;
     const imageExportSettings = getImageExportSettings();
     const compressQuality = imageExportSettings.imageQuality;
-    const startOnCam = ApplicationSettings.getBoolean('startOnCam', START_ON_CAM) && !modal;
+    const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
 
     async function showDocumentsList() {
-        if (START_ON_CAM) {
+        if (startOnCam) {
             if (CARD_APP) {
                 const CardsList = (await import('~/components/CardsList.svelte')).default;
                 return navigate({ page: CardsList });
@@ -247,18 +247,16 @@
     }
 
     onMount(async () => {
+        // if (!check('camera')) {
+        //     stopPreview();
+        // }
+
         onNavigatedTo();
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
         Application.on(Application.backgroundEvent, onBackground);
         Application.on(Application.foregroundEvent, onForeground);
-
-        if (documentsService.started) {
-            startPreview();
-        } else {
-            documentsService.once('started', startPreview);
-        }
     });
     onDestroy(() => {
         // clearImages();
@@ -290,9 +288,13 @@
             document = null;
         }
     }
-    let previewStarted = true;
-    function startPreview() {
+    let previewStarted = false;
+    async function startPreview() {
         if (!previewStarted) {
+            const result = await request('camera');
+            if (result[0] !== 'authorized') {
+                throw new PermissionError(lc('camera_permission_needed'));
+            }
             previewStarted = true;
             cameraView?.nativeView.startPreview();
             if (autoScanHandler) {
@@ -472,6 +474,7 @@
     }
     async function applyProcessor() {
         try {
+            DEV_LOG && console.log('applyProcessor', processor, cropEnabled, cameraView.nativeElement);
             if (processor || !cropEnabled) {
                 return;
             }
@@ -526,6 +529,12 @@
             DEV_LOG && console.log('applyProcessor', processor, previewResizeThreshold);
             applyAutoScan(autoScan);
             processor.previewResizeThreshold = previewResizeThreshold;
+
+            if (documentsService.started) {
+                await startPreview();
+            } else {
+                documentsService.once('started', startPreview);
+            }
         } catch (error) {
             showError(error);
         }
@@ -627,10 +636,10 @@
         </absolutelayout>
 
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} {onGoBack}>
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack}>
             {#if startOnCam}
-                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-image-plus" on:tap={showDocumentsList} />
-                <IconButton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" on:tap={() => showSettings()} />
+                <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-folder" variant="text" on:tap={() => showDocumentsList()} />
+                <mdbutton class="actionBarButton" defaultVisualState="black" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
             {/if}
         </CActionBar>
 
