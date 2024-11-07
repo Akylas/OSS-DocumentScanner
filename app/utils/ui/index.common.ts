@@ -1511,7 +1511,7 @@ export async function processCameraImage({
                     items
                 }
             });
-            quads = items ? items[0].quads : undefined;
+            quads = items?.[0]?.quads;
             onAfterModalImport?.();
         }
     }
