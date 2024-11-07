@@ -79,6 +79,7 @@
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
+    import EditNameActionBar from './common/EditNameActionBar.svelte';
 
     const textPaint = new Paint();
     const rowMargin = 8;
@@ -133,6 +134,7 @@
     let loading = false;
     let nbSelected = 0;
     let ignoreTap = false;
+    let editingTitle = false;
 
     $: if (nbSelected > 0) search.unfocusSearch();
 
@@ -588,11 +590,21 @@
         }
     }, 500);
 
+    function onGoBack(data) {
+        if (editingTitle) {
+            if (data) {
+                data.cancel = true;
+            }
+            editingTitle = false;
+        }
+    }
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
+            } else {
+                onGoBack(data);
             }
         });
 
@@ -606,6 +618,16 @@
                 } else if (d.folder) {
                     selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
                 }
+            }
+        }
+        return selected;
+    }
+    function getSelectedItems() {
+        const selected: Item[] = [];
+        for (let index = 0; index < documents.length; index++) {
+            const d = documents.getItem(index);
+            if (d.selected) {
+                selected.push(d);
             }
         }
         return selected;
@@ -814,17 +836,20 @@
                         selectAll();
                         break;
                     case 'rename':
-                        const doc = getSelectedDocuments()[0];
+                        const item = getSelectedItems()[0];
                         const result = await prompt({
                             title: lc('rename'),
-                            defaultText: doc.name
+                            defaultText: (item.doc || item.folder).name
                         });
                         if (result.result && result.text?.length) {
-                            await doc.save({
+                            await (item.doc || item.folder).save({
                                 name: result.text
                             });
-                            shortcutService.updateShortcuts(doc);
+                            if (item.doc) {
+                                shortcutService.updateShortcuts(item.doc);
+                            }
                         }
+
                         break;
                     case 'share':
                         showImageExportPopover(event);
@@ -1318,7 +1343,7 @@
                 on:tap={throttle(() => onAddButton(), 500)} />
         {/if}
 
-        <CActionBar {title}>
+        <CActionBar onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}
@@ -1341,6 +1366,9 @@
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             </CActionBar>
+        {/if}
+        {#if editingTitle}
+            <EditNameActionBar {folder} bind:editingTitle />
         {/if}
     </gridlayout>
 </page>

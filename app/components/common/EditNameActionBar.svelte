@@ -2,30 +2,26 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from './CActionBar.svelte';
     import { TextField } from '@nativescript-community/ui-material-textfield';
-    import { OCRDocument } from '~/models/OCRDocument';
+    import { DocFolder, OCRDocument } from '~/models/OCRDocument';
     import { shortcutService } from '~/services/shortcuts';
     import { showError } from '@shared/utils/showError';
     import { colors } from '~/variables';
 
-    let { colorBackground } = $colors;
-    $: ({ colorBackground } = $colors);
-
-    export let document: OCRDocument;
+    export let document: OCRDocument = null;
+    export let folder: DocFolder = null;
     export let editingTitle = false;
     export let labelsDefaultVisualState = null;
     export let buttonsDefaultVisualState = null;
     let editingTitleTextField: NativeViewElementNode<TextField>;
 
-    $: if (!editingTitle) {
-    }
-
     async function saveDocumentTitle(event) {
         try {
+            editingTitleTextField.nativeElement.clearFocus();
             DEV_LOG && console.log('saveDocumentTitle', editingTitleTextField.nativeElement.text);
-            await document.save({
+            await (document || folder).save({
                 name: editingTitleTextField.nativeElement.text
             });
-            if (CARD_APP) {
+            if (CARD_APP && document) {
                 shortcutService.updateShortcuts(document);
             }
             editingTitle = false;
@@ -52,8 +48,9 @@
         col={1}
         defaultVisualState={labelsDefaultVisualState}
         android:padding="4 0 4 0"
-        text={document.name}
+        text={(document || folder).name}
         verticalTextAlignment="center"
+        on:returnPress={saveDocumentTitle}
         on:layoutChanged={onTextFieldFocus} />
     <mdbutton class="actionBarButton" defaultVisualState={buttonsDefaultVisualState} text="mdi-content-save" variant="text" on:tap={saveDocumentTitle} />
 </CActionBar>

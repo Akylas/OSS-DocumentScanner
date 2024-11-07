@@ -65,7 +65,7 @@
     import { colors, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, screenWidthDips, windowInset } from '~/variables';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
-    import { folderBackgroundColor } from '~/variables';
+    import EditNameActionBar from './common/EditNameActionBar.svelte';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -149,9 +149,8 @@
     let loading = false;
     let nbSelected = 0;
     let ignoreTap = false;
-    // let items: ObservableArray<{
-    //     doc: OCRDocument; selected: boolean
-    // }> = null;
+    let editingTitle = false;
+
     $: if (nbSelected > 0) search.unfocusSearch();
 
     async function refresh(force = true, filter?: string) {
@@ -467,11 +466,23 @@
             showError(error);
         }
     }
+
+    function onGoBack(data) {
+        if (editingTitle) {
+            if (data) {
+                data.cancel = true;
+            }
+            editingTitle = false;
+        }
+    }
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
+            data.cancel = true;
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
+            } else {
+                onGoBack(data);
             }
         });
 
@@ -507,6 +518,16 @@
                 } else if (d.folder) {
                     selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
                 }
+            }
+        }
+        return selected;
+    }
+    function getSelectedItems() {
+        const selected: Item[] = [];
+        for (let index = 0; index < documents.length; index++) {
+            const d = documents.getItem(index);
+            if (d.selected) {
+                selected.push(d);
             }
         }
         return selected;
@@ -755,17 +776,15 @@
                             selectAll();
                             break;
                         case 'rename':
-                            const doc = getSelectedDocuments()[0];
-                            if (doc) {
-                                const result = await prompt({
-                                    defaultText: doc.name,
-                                    title: lc('rename')
+                            const item = getSelectedItems()[0];
+                            const result = await prompt({
+                                title: lc('rename'),
+                                defaultText: (item.doc || item.folder).name
+                            });
+                            if (result.result && result.text?.length) {
+                                await (item.doc || item.folder).save({
+                                    name: result.text
                                 });
-                                if (result.result && result.text?.length) {
-                                    await doc.save({
-                                        name: result.text
-                                    });
-                                }
                             }
                             break;
                         case 'share':
@@ -948,7 +967,7 @@
             </stacklayout>
         {/if}
 
-        <CActionBar {title}>
+        <CActionBar onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}
@@ -974,6 +993,9 @@
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             </CActionBar>
+        {/if}
+        {#if editingTitle}
+            <EditNameActionBar {folder} bind:editingTitle />
         {/if}
     </gridlayout>
 </page>
