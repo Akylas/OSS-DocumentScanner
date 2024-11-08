@@ -127,12 +127,10 @@
                 {
                     fontFamily: $fonts.mdi,
                     color: folder.color || colorOutline,
-                    verticalAlignment: 'center',
-                    fontSize: 22,
+                    fontSize: 24,
                     text: 'mdi-folder  '
                 },
                 {
-                    verticalAlignment: 'center',
                     text: folder.name
                 }
             ]
