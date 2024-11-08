@@ -309,7 +309,7 @@ lane :get_changelog  do |params|
   puts "get_changelog "+  platform + " "+  flavor
   puts "tag_prefix "+ tag_prefix
   puts "changelogFormat "+  changelogFormat
-  puts "display_links "+  display_links
+  # puts "display_links "+  display_links
   puts "ignoredScopes "+  ignoredScopes.join(", ")
   isReleasable = analyze_commits(match: "\"#{tag_prefix}#{platform}/#{flavor}*\"", ignore_scopes: ignoredScopes, debug:true)
   logs = conventional_changelog(format: changelogFormat, title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:true ) || ""
