@@ -144,6 +144,27 @@ const onInitRootView = function (event: InitRootViewEventData) {
         const rootViewStyle = rootView?.style;
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
 
+        const safeAreaInsets = UIApplication.sharedApplication.keyWindow.safeAreaInsets;
+        // DEV_LOG && console.log('safeAreaInsets', safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
+        windowInset.set({
+            left: Math.round(safeAreaInsets.left),
+            top: 0,
+            right: Math.round(safeAreaInsets.right),
+            bottom: 0
+        });
+        Application.on('orientationChanged', () => {
+            const safeAreaInsets = UIApplication.sharedApplication.keyWindow.safeAreaInsets;
+            // DEV_LOG && console.log('safeAreaInsets', safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
+            windowInset.set({
+                left: Math.round(safeAreaInsets.left),
+                top: 0,
+                // top: Math.round(safeAreaInsets.top),
+                right: Math.round(safeAreaInsets.right),
+                // bottom: Math.round(safeAreaInsets.bottom)
+                bottom: 0
+            });
+        });
+
         const currentColors = get(colors);
         Object.keys(currentColors).forEach((c) => {
             currentColors[c] = rootViewStyle.getCssVariable('--' + c);

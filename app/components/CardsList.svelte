@@ -93,6 +93,7 @@
 
 <script lang="ts">
     let documents: ObservableArray<Item> = null;
+    let folderItems: ObservableArray<Item> = null;
     let nbDocuments: number = 0;
     let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
@@ -102,7 +103,7 @@
     let search: ActionBarSearch;
 
     let orientation = Application.orientation();
-    let itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin;
+    let itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - 2 * rowMargin - $windowInset.left - $windowInset.right;
     let itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
 
     export let folder: DocFolder = null;
@@ -117,6 +118,7 @@
                 {
                     fontFamily: $fonts.mdi,
                     color: folder.color || colorOutline,
+                    fontSize: 22,
                     verticalAlignment: 'center',
                     text: 'mdi-folder  '
                 },
@@ -150,18 +152,23 @@
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: 'id ASC' });
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
 
+            folderItems = new ObservableArray(
+                folders.map(
+                    (folder) =>
+                        ({
+                            folder,
+                            selected: false
+                        }) as any
+                )
+            );
             documents = new ObservableArray(
-                folders
-                    .map((folder) => ({ folder, selected: false }))
-                    .concat(
-                        r.map(
-                            (doc) =>
-                                ({
-                                    doc,
-                                    selected: false
-                                }) as any
-                        )
-                    )
+                r.map(
+                    (doc) =>
+                        ({
+                            doc,
+                            selected: false
+                        }) as any
+                )
             );
             updateNoDocument();
         } catch (error) {
@@ -224,17 +231,17 @@
             folder = event.folder;
         }
         let index = -1;
-        documents?.some((d, i) => {
+        folderItems?.some((d, i) => {
             if (d.folder && d.folder.id === event.folder.id) {
                 index = i;
                 return true;
             }
         });
         if (index >= 0) {
-            const item = documents?.getItem(index);
+            const item = folderItems?.getItem(index);
             if (item) {
                 item.folder = event.folder;
-                documents.setItem(index, item);
+                folderItems.setItem(index, item);
             }
         }
     }
@@ -250,12 +257,12 @@
         if (!folder && event.folders?.length) {
             for (let i = 0; i < event.folders.length; i++) {
                 const name = event.folders[i].split(FOLDER_COLOR_SEPARATOR)[0];
-                const index = documents.findIndex((item) => item.folder && item.folder.name === name);
+                const index = folderItems.findIndex((item) => item.folder && item.folder.name === name);
                 if (index !== -1) {
-                    const item = documents.getItem(index);
+                    const item = folderItems.getItem(index);
                     const res = await documentsService.folderRepository.findFolder(name);
                     item.folder = res[0];
-                    documents.setItem(index, documents.getItem(index));
+                    folderItems.setItem(index, folderItems.getItem(index));
                 }
             }
         }
@@ -397,27 +404,50 @@
     }
     function selectItem(item: Item) {
         if (!item.selected) {
-            documents?.some((d, index) => {
-                if (d === item) {
-                    nbSelected += d.folder ? d.folder.count : 1;
-                    d.selected = true;
-                    documents.setItem(index, d);
-                    return true;
-                }
-            });
+            if (item.folder) {
+                folderItems?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected += d.folder.count;
+                        d.selected = true;
+                        folderItems.setItem(index, d);
+                        return true;
+                    }
+                });
+            } else {
+                documents?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected += 1;
+                        d.selected = true;
+                        documents.setItem(index, d);
+                        return true;
+                    }
+                });
+            }
         }
     }
 
     function unselectItem(item: Item) {
+        DEV_LOG && console.log('unselectItem', item);
         if (item.selected) {
-            documents?.some((d, index) => {
-                if (d === item) {
-                    nbSelected -= d.folder ? d.folder.count : 1;
-                    d.selected = false;
-                    documents.setItem(index, d);
-                    return true;
-                }
-            });
+            if (item.folder) {
+                folderItems?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected -= d.folder.count;
+                        d.selected = false;
+                        folderItems.setItem(index, d);
+                        return true;
+                    }
+                });
+            } else {
+                documents?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected -= 1;
+                        d.selected = false;
+                        documents.setItem(index, d);
+                        return true;
+                    }
+                });
+            }
         }
     }
     function unselectAll() {
@@ -425,14 +455,29 @@
         if (documents) {
             documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: false })));
         }
-    }
-    function selectAll() {
-        if (documents) {
-            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: true })));
-            nbSelected = documents.length;
+        if (folderItems) {
+            folderItems.splice(0, folderItems.length, ...folderItems.map((i) => ({ ...i, selected: false })));
         }
     }
+    function selectAll() {
+        let newCount = documents.length;
+        if (documents) {
+            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: true })));
+        }
+        if (folderItems) {
+            folderItems.splice(
+                0,
+                folderItems.length,
+                ...folderItems.map((i) => {
+                    newCount += i.folder.count;
+                    return { ...i, selected: false };
+                })
+            );
+        }
+        nbSelected = newCount;
+    }
     function onItemLongPress(item: Item, event?) {
+        DEV_LOG && console.log('onItemLongPress', nbSelected, item);
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
         // if (event && event.ios && event.ios.state !== 1) {
         //     return;
@@ -580,7 +625,7 @@
                 ignoreTap = false;
                 return;
             }
-            // console.log('onItemTap', event && event.ios && event.ios.state, selectedSessions.length);
+            DEV_LOG && console.log('onItemTap', nbSelected, item);
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else if (item.doc) {
@@ -625,7 +670,13 @@
             if (d.selected) {
                 if (d.doc) {
                     selected.push(d.doc);
-                } else if (d.folder) {
+                }
+            }
+        }
+        for (let index = 0; index < folderItems.length; index++) {
+            const d = folderItems.getItem(index);
+            if (d.selected) {
+                if (d.folder) {
                     selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
                 }
             }
@@ -634,6 +685,12 @@
     }
     function getSelectedItems() {
         const selected: Item[] = [];
+        for (let index = 0; index < folderItems.length; index++) {
+            const d = folderItems.getItem(index);
+            if (d.selected) {
+                selected.push(d);
+            }
+        }
         for (let index = 0; index < documents.length; index++) {
             const d = documents.getItem(index);
             if (d.selected) {
@@ -929,12 +986,16 @@
         }
     }
 
+    $: itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - $windowInset.left - $windowInset.right;
+    $: {
+        itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
+        refreshCollectionView();
+    }
+    $: DEV_LOG && console.log('itemWidth', (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin, itemWidth, itemHeight, $windowInset.left, $windowInset.right);
+
     function onOrientationChanged(event: OrientationChangedEventData) {
         orientation = event.newValue;
-        itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin;
-        itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
         DEV_LOG && console.log('onOrientationChanged', itemWidth, itemHeight);
-        refreshCollectionView();
         // }, 1000);
     }
 
@@ -956,21 +1017,21 @@
             case 'list':
                 return itemHeight;
             case 'columns':
-                return (width / 2) * CARD_RATIO;
+                return orientation === 'landscape' ? itemHeight : (width / 2) * CARD_RATIO;
         }
     }
     function getItemOverlap(viewStyle) {
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
-                    if (position === 0 || (orientation === 'landscape' && position === 1) || item.folder || documents.getItem(position - 1).folder) {
+                    if (position === 0 || (orientation === 'landscape' && position === 1)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.71 * itemHeight, 0, 0, 0];
                 };
             case 'cardholder':
                 return (item, position) => {
-                    if (position === 0 || item.folder || documents.getItem(position - 1).folder) {
+                    if (position === 0 || (orientation === 'landscape' && position === 1)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.11 * itemHeight, 0, 0, 0];
@@ -980,9 +1041,6 @@
         }
     }
     function itemTemplateSelector(viewStyle, item?) {
-        if (item?.folder) {
-            return 'folder';
-        }
         switch (viewStyle) {
             case 'list':
             case 'columns':
@@ -995,7 +1053,7 @@
         }
     }
     function itemTemplateSpanSize(viewStyle, item: Item) {
-        if (item.folder || viewStyle === 'columns' || orientation === 'landscape') {
+        if (viewStyle === 'columns' || orientation === 'landscape') {
             return 1;
         }
         return 2;
@@ -1074,13 +1132,10 @@
         }
     }
 
-    function getFolderRowHeight(viewStyle) {
-        return 70;
-    }
     function onFolderCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
-        const dx = 16;
+        const dx = 10;
         const { folder } = item;
         textPaint.color = colorOnBackground;
         const topText = createNativeAttributedString({
@@ -1103,32 +1158,58 @@
                     fontSize: 14 * $fontScale,
                     color: colorOutline,
                     lineHeight: 20 * $fontScale,
-                    text: '\n' + lc('cards_count', item.folder.count)
+                    text: '\n' + lc('documents_count', item.folder.count)
                 }
             ]
         });
         canvas.save();
         const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-        canvas.translate(dx, 16);
+        canvas.translate(dx, h / 2 - staticLayout.getHeight() / 2);
         staticLayout.draw(canvas);
         canvas.restore();
     }
 </script>
 
 <page bind:this={page} id="cardsList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
         <!-- {/if} -->
+        <collectionView
+            bind:this={collectionView}
+            colWidth={150}
+            height={70}
+            items={folderItems}
+            orientation="horizontal"
+            row={1}
+            rowHeight={70}
+            ios:iosOverflowSafeArea={true}
+            visibility={folders?.length ? 'visible' : 'collapsed'}>
+            <Template let:item>
+                <canvasview
+                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
+                    borderColor={colorOutline}
+                    borderRadius={12}
+                    borderWidth={1}
+                    margin="0 8 0 8"
+                    rippleColor={colorSurface}
+                    on:tap={() => onItemTap(item)}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
+                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
+                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
+                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
+                </canvasview>
+            </Template>
+        </collectionView>
         <collectionView
             bind:this={collectionView}
             id="list"
             colWidth="50%"
             itemOverlap={getItemOverlap(viewStyle)}
-            ios:layoutHorizontalAlignment="left"
-            ios:layoutStyle="align"
+            ios:iosOverflowSafeArea={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
-            row={1}
+            row={2}
             spanSize={(item) => itemTemplateSpanSize(viewStyle, item)}
             swipeMenuId="swipeMenu"
             on:swipeMenuClose={(e) => handleTouchAction(e.index, { action: 'up' })}>
@@ -1287,26 +1368,8 @@
                     </stacklayout>
                 </swipemenu>
             </Template>
-            <Template key="folder" let:item>
-                <canvasview
-                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
-                    borderColor={colorOutline}
-                    borderRadius={12}
-                    borderWidth={1}
-                    height={getFolderRowHeight(viewStyle) * $fontScale}
-                    margin="4 8 4 8"
-                    rippleColor={colorSurface}
-                    verticalAlignment="top"
-                    on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
-                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
-                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
-                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
-                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
-                </canvasview>
-            </Template>
         </collectionView>
-        <progress backgroundColor="transparent" busy={true} indeterminate={true} row={1} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
+        <progress backgroundColor="transparent" busy={true} indeterminate={true} row={2} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
             <flexlayout
                 flexDirection="column"
@@ -1314,7 +1377,7 @@
                 marginBottom="30%"
                 paddingLeft={16}
                 paddingRight={16}
-                row={1}
+                row={2}
                 verticalAlignment="center"
                 width="80%"
                 transition:fade={{ duration: 200 }}>
@@ -1348,7 +1411,7 @@
                 horizontalAlignment="right"
                 iosIgnoreSafeArea={true}
                 margin={`16 16 ${Math.min(60, $windowInset.bottom + 16)} 16`}
-                row={1}
+                row={2}
                 text="mdi-plus"
                 verticalAlignment="bottom"
                 on:tap={throttle(() => onAddButton(), 500)} />

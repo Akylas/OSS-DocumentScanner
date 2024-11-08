@@ -1,7 +1,6 @@
 import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
-import installAlignLayout from '@nativescript-community/ui-collectionview-alignedflowlayout';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
@@ -28,7 +27,7 @@ import { prefs } from '~/services/preferences';
 import { securityService } from '~/services/security';
 import { syncService } from '~/services/sync';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
-import { SETTINGS_APP_VERSION, SETTINGS_START_ON_CAM, SETTINGS_SYNC_ON_START } from '~/utils/constants';
+import { SETTINGS_APP_VERSION, SETTINGS_SYNC_ON_START } from '~/utils/constants';
 import { startOnCam } from './variables';
 
 declare module '@nativescript/core/application/application-common' {
@@ -68,7 +67,6 @@ try {
     installBottomSheets();
     installUIMixins();
     overrideSpanAndFormattedString();
-    installAlignLayout();
 
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);

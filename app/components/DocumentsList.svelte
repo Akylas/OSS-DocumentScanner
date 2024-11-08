@@ -17,10 +17,12 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
+    import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
+    import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
@@ -44,8 +46,7 @@
         EVENT_DOCUMENT_UPDATED,
         EVENT_FOLDER_UPDATED,
         EVENT_STATE,
-        EVENT_SYNC_STATE,
-        SETTINGS_START_ON_CAM
+        EVENT_SYNC_STATE
     } from '~/utils/constants';
     import {
         detectOCR,
@@ -64,8 +65,6 @@
         transformPages
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
-    import ActionBarSearch from './widgets/ActionBarSearch.svelte';
-    import EditNameActionBar from './common/EditNameActionBar.svelte';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -107,6 +106,7 @@
     } = $colors);
 
     let documents: ObservableArray<Item> = null;
+    let folderItems: ObservableArray<Item> = null;
     let nbDocuments: number = 0;
     let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
@@ -128,6 +128,7 @@
                     fontFamily: $fonts.mdi,
                     color: folder.color || colorOutline,
                     verticalAlignment: 'center',
+                    fontSize: 22,
                     text: 'mdi-folder  '
                 },
                 {
@@ -167,18 +168,24 @@
             DEV_LOG && console.log('r', r.length);
 
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
+
+            folderItems = new ObservableArray(
+                folders.map(
+                    (folder) =>
+                        ({
+                            folder,
+                            selected: false
+                        }) as any
+                )
+            );
             documents = new ObservableArray(
-                folders
-                    .map((folder) => ({ folder, selected: false }))
-                    .concat(
-                        r.map(
-                            (doc) =>
-                                ({
-                                    doc,
-                                    selected: false
-                                }) as any
-                        )
-                    )
+                r.map(
+                    (doc) =>
+                        ({
+                            doc,
+                            selected: false
+                        }) as any
+                )
             );
             updateNoDocument();
 
@@ -258,17 +265,17 @@
             folder = event.folder;
         }
         let index = -1;
-        documents?.some((d, i) => {
+        folderItems?.some((d, i) => {
             if (d.folder && d.folder.id === event.folder.id) {
                 index = i;
                 return true;
             }
         });
         if (index >= 0) {
-            const item = documents?.getItem(index);
+            const item = folderItems.getItem(index);
             if (item) {
                 item.folder = event.folder;
-                documents.setItem(index, item);
+                folderItems.setItem(index, item);
             }
         }
     }
@@ -284,12 +291,12 @@
         if (!folder && event.folders?.length) {
             for (let i = 0; i < event.folders.length; i++) {
                 const name = event.folders[i].split(FOLDER_COLOR_SEPARATOR)[0];
-                const index = documents.findIndex((item) => item.folder && item.folder.name === name);
+                const index = folderItems.findIndex((item) => item.folder && item.folder.name === name);
                 if (index !== -1) {
-                    const item = documents.getItem(index);
+                    const item = folderItems.getItem(index);
                     const res = await documentsService.folderRepository.findFolder(name);
                     item.folder = res[0];
-                    documents.setItem(index, documents.getItem(index));
+                    folderItems.setItem(index, documents.getItem(index));
                 }
             }
         }
@@ -410,26 +417,50 @@
     }
     function selectItem(item: Item) {
         if (!item.selected) {
-            documents?.some((d, index) => {
-                if (d === item) {
-                    nbSelected += d.folder ? d.folder.count : 1;
-                    d.selected = true;
-                    documents.setItem(index, d);
-                    return true;
-                }
-            });
+            if (item.folder) {
+                folderItems?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected += d.folder.count;
+                        d.selected = true;
+                        folderItems.setItem(index, d);
+                        return true;
+                    }
+                });
+            } else {
+                documents?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected += 1;
+                        d.selected = true;
+                        documents.setItem(index, d);
+                        return true;
+                    }
+                });
+            }
         }
     }
+
     function unselectItem(item: Item) {
+        DEV_LOG && console.log('unselectItem', item);
         if (item.selected) {
-            documents?.some((d, index) => {
-                if (d === item) {
-                    nbSelected -= d.folder ? d.folder.count : 1;
-                    d.selected = false;
-                    documents.setItem(index, d);
-                    return true;
-                }
-            });
+            if (item.folder) {
+                folderItems?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected -= d.folder.count;
+                        d.selected = false;
+                        folderItems.setItem(index, d);
+                        return true;
+                    }
+                });
+            } else {
+                documents?.some((d, index) => {
+                    if (d === item) {
+                        nbSelected -= 1;
+                        d.selected = false;
+                        documents.setItem(index, d);
+                        return true;
+                    }
+                });
+            }
         }
     }
     function unselectAll() {
@@ -437,12 +468,26 @@
         if (documents) {
             documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: false })));
         }
+        if (folderItems) {
+            folderItems.splice(0, folderItems.length, ...folderItems.map((i) => ({ ...i, selected: false })));
+        }
     }
     function selectAll() {
+        let newCount = documents.length;
         if (documents) {
             documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: true })));
-            nbSelected = documents.length;
         }
+        if (folderItems) {
+            folderItems.splice(
+                0,
+                folderItems.length,
+                ...folderItems.map((i) => {
+                    newCount += i.folder.count;
+                    return { ...i, selected: false };
+                })
+            );
+        }
+        nbSelected = newCount;
     }
     function onItemLongPress(item: Item, event?) {
         if (item.selected) {
@@ -524,7 +569,13 @@
             if (d.selected) {
                 if (d.doc) {
                     selected.push(d.doc);
-                } else if (d.folder) {
+                }
+            }
+        }
+        for (let index = 0; index < folderItems.length; index++) {
+            const d = folderItems.getItem(index);
+            if (d.selected) {
+                if (d.folder) {
                     selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
                 }
             }
@@ -533,6 +584,12 @@
     }
     function getSelectedItems() {
         const selected: Item[] = [];
+        for (let index = 0; index < folderItems.length; index++) {
+            const d = folderItems.getItem(index);
+            if (d.selected) {
+                selected.push(d);
+            }
+        }
         for (let index = 0; index < documents.length; index++) {
             const d = documents.getItem(index);
             if (d.selected) {
@@ -659,7 +716,7 @@
     function onFolderCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
-        const dx = 16;
+        const dx = 10;
         const { folder } = item;
         textPaint.color = colorOnBackground;
         const topText = createNativeAttributedString({
@@ -688,7 +745,7 @@
         });
         canvas.save();
         const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-        canvas.translate(dx, 16);
+        canvas.translate(dx, h / 2 - staticLayout.getHeight() / 2);
         staticLayout.draw(canvas);
         canvas.restore();
     }
@@ -829,9 +886,6 @@
         });
     }
     function itemTemplateSelector(item: Item, index, items) {
-        if (item.folder) {
-            return 'folder';
-        }
         return 'default';
     }
     function itemTemplateSpanSize(item: Item, index, items) {
@@ -854,7 +908,34 @@
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
+        <collectionView
+            bind:this={collectionView}
+            colWidth={150}
+            height={70}
+            items={folderItems}
+            orientation="horizontal"
+            row={1}
+            rowHeight={70}
+            ios:iosOverflowSafeArea={true}
+            visibility={folders?.length ? 'visible' : 'collapsed'}>
+            <Template let:item>
+                <canvasview
+                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
+                    borderColor={colorOutline}
+                    borderRadius={12}
+                    borderWidth={1}
+                    margin="0 8 0 8"
+                    rippleColor={colorSurface}
+                    on:tap={() => onItemTap(item)}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
+                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
+                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
+                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
+                </canvasview>
+            </Template>
+        </collectionView>
         <!-- {/if} -->
         <collectionView
             bind:this={collectionView}
@@ -865,7 +946,7 @@
             ios:layoutStyle="align"
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
-            row={1}
+            row={2}
             spanSize={itemTemplateSpanSize}>
             <Template let:item>
                 <canvasview
@@ -894,25 +975,8 @@
                     <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} />
                 </canvasview>
             </Template>
-            <Template key="folder" let:item>
-                <canvasview
-                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
-                    borderColor={colorOutline}
-                    borderRadius={12}
-                    borderWidth={1}
-                    height={getFolderRowHeight(viewStyle) * $fontScale}
-                    margin="4 8 4 8"
-                    rippleColor={colorSurface}
-                    on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
-                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
-                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
-                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
-                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
-                </canvasview>
-            </Template>
         </collectionView>
-        <progress backgroundColor="transparent" busy={true} indeterminate={true} row={1} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
+        <progress backgroundColor="transparent" busy={true} indeterminate={true} row={2} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
             <flexlayout
                 flexDirection="column"
@@ -920,7 +984,7 @@
                 marginBottom="30%"
                 paddingLeft={16}
                 paddingRight={16}
-                row={1}
+                row={2}
                 verticalAlignment="center"
                 width="80%"
                 transition:fade={{ duration: 200 }}>
@@ -947,7 +1011,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={2} verticalAlignment="bottom">
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
