@@ -986,7 +986,7 @@
         itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
         refreshCollectionView();
     }
-    $: DEV_LOG && console.log('itemWidth', (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin, itemWidth, itemHeight, $windowInset.left, $windowInset.right);
+    // $: DEV_LOG && console.log('itemWidth', (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin, itemWidth, itemHeight, $windowInset.left, $windowInset.right);
 
     function onOrientationChanged(event: OrientationChangedEventData) {
         orientation = event.newValue;
