@@ -852,8 +852,10 @@
         <collectionView
             bind:this={collectionView}
             colWidth="50%"
-            iosOverflowSafeArea={true}
+            ios:iosOverflowSafeArea={true}
             {itemTemplateSelector}
+            ios:layoutHorizontalAlignment="left"
+            ios:layoutStyle="align"
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}

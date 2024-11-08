@@ -952,11 +952,9 @@
         }
     }
     function getItemOverlap(viewStyle) {
-        DEV_LOG && console.log('getItemOverlap', viewStyle, itemHeight, orientation);
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
-                    DEV_LOG && console.log('getItemOverlap item', viewStyle, !!item.folder, itemHeight, orientation);
                     if (position === 0 || (orientation === 'landscape' && position === 1) || item.folder || documents.getItem(position - 1).folder) {
                         return [0, 0, 0, 0];
                     }
@@ -1117,6 +1115,8 @@
             id="list"
             colWidth="50%"
             itemOverlap={getItemOverlap(viewStyle)}
+            ios:layoutHorizontalAlignment="left"
+            ios:layoutStyle="align"
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}

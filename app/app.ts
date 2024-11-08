@@ -1,6 +1,7 @@
 import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
+import installAlignLayout from '@nativescript-community/ui-collectionview-alignedflowlayout';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
@@ -67,6 +68,7 @@ try {
     installBottomSheets();
     installUIMixins();
     overrideSpanAndFormattedString();
+    installAlignLayout();
 
     registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
