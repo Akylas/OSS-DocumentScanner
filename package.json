@@ -56,13 +56,13 @@
         "@nativescript-community/sqlite": "3.5.1",
         "@nativescript-community/systemui": "1.1.23",
         "@nativescript-community/text": "1.6.6",
-        "@nativescript-community/ui-cameraview": "0.4.0",
+        "@nativescript-community/ui-cameraview": "0.4.1",
         "@nativescript-community/ui-canvas": "4.6.35",
         "@nativescript-community/ui-canvaslabel": "1.2.38",
         "@nativescript-community/ui-checkbox": "^2.0.12",
-        "@nativescript-community/ui-collectionview": "6.0.0",
-        "@nativescript-community/ui-collectionview-alignedflowlayout": "6.0.0",
-        "@nativescript-community/ui-collectionview-swipemenu": "6.0.0",
+        "@nativescript-community/ui-collectionview": "6.0.1",
+        "@nativescript-community/ui-collectionview-alignedflowlayout": "6.0.1",
+        "@nativescript-community/ui-collectionview-swipemenu": "6.0.1",
         "@nativescript-community/ui-document-picker": "1.1.26",
         "@nativescript-community/ui-image": "4.5.3",
         "@nativescript-community/ui-image-colorfilter": "4.5.3",
@@ -120,5 +120,8 @@
         "./plugin-nativeprocessor",
         "./webpdfviewer"
     ],
-    "packageManager": "yarn@4.3.1"
+    "packageManager": "yarn@4.3.1",
+    "resolutions": {
+        "@nativescript-community/ui-cameraview": "portal:../ui-cameraview/packages/ui-cameraview"
+    }
 }
