@@ -265,7 +265,7 @@ lane :build_flavor do |params|
         upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
         if (platform == 'ios' && options[:github] != false)
           # we now github create releases on iOS for european users
-          changelog = get_changelog(platform:platform, flavor:'github')
+          changelog = get_changelog(platform:platform, flavor:flavor, format:'markdown')
           set_github_release(
             repository_name: repository_name,
             api_token: ENV["GH_TOKEN"],
@@ -300,16 +300,19 @@ end
 lane :get_changelog  do |params| 
   platform = params[:platform]
   flavor = params[:flavor]
+  changelogFormat = params[:format] ||  flavor == 'github' ? 'markdown' : 'plain'
   ignoredScopes = [platform == "ios" ? 'android' : 'ios']
   if (ignore_app_scope)
     ignoredScopes.push(ignore_app_scope)
   end
-  display_links = flavor == 'github'
+  display_links = changelogFormat == 'markdown'
   puts "get_changelog "+  platform + " "+  flavor
   puts "tag_prefix "+ tag_prefix
+  puts "changelogFormat "+  changelogFormat
+  puts "display_links "+  display_links
   puts "ignoredScopes "+  ignoredScopes.join(", ")
   isReleasable = analyze_commits(match: "\"#{tag_prefix}#{platform}/#{flavor}*\"", ignore_scopes: ignoredScopes, debug:true)
-  logs = conventional_changelog(format: flavor == 'github' ? 'markdown' : 'plain', title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:true ) || ""
+  logs = conventional_changelog(format: changelogFormat, title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:true ) || ""
   if (!logs.empty?)
     logs = logs.split(/[\n]/).uniq
     translateLogs = logs.select {|v| v =~ /Translated using Weblate/ }
