@@ -157,9 +157,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript@npm:8.8.8":
-  version: 8.8.8
-  resolution: "@akylas/nativescript@npm:8.8.8"
+"@akylas/nativescript@portal:../NativeScript/dist/packages/core::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@akylas/nativescript@portal:../NativeScript/dist/packages/core::locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@nativescript/hook": "npm:~2.0.0"
     acorn: "npm:^8.7.0"
@@ -168,9 +168,8 @@ __metadata:
     emoji-regex: "npm:^10.3.0"
     reduce-css-calc: "npm:^2.1.8"
     tslib: "npm:^2.6.3"
-  checksum: 2f0f1adfb8153b52440fb0fa097f3d5306ec6a33d1e56df151d4b1958bf17f6f9a3fe8c1b7ccda755c423aaf3a12c4d311ca94119dc5762a32abd882406f7a9e
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@akylas/panzoom@npm:4.6.0":
   version: 4.6.0
@@ -1154,11 +1153,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-cameraview@portal:../ui-cameraview/packages/ui-cameraview::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@nativescript-community/ui-cameraview@portal:../ui-cameraview/packages/ui-cameraview::locator=root-workspace-0b6124%40workspace%3A."
+"@nativescript-community/ui-cameraview@npm:*, @nativescript-community/ui-cameraview@npm:0.4.1":
+  version: 0.4.1
+  resolution: "@nativescript-community/ui-cameraview@npm:0.4.1"
+  checksum: 007637ce260e30ac51818cd9cfc142e5490b84331fde2bb7d581dec333471627632faf2f4ad0671489c9efe92e4f3fdd67146110ef49c0ea54a3dd49842f655d
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nativescript-community/ui-canvas@npm:4.6.35":
   version: 4.6.35

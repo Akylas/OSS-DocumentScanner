@@ -121,6 +121,6 @@
     ],
     "packageManager": "yarn@4.3.1",
     "resolutions": {
-        "@nativescript-community/ui-cameraview": "portal:../ui-cameraview/packages/ui-cameraview"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
     }
 }
