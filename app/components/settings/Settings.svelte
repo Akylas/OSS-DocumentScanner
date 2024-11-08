@@ -8,6 +8,10 @@
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, ObservableArray, Page, ScrollView, StackLayout, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { Sentry } from '@shared/utils/sentry';
+    import { share } from '@shared/utils/share';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -55,10 +59,6 @@
         USE_SYSTEM_CAMERA
     } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
-    import { Sentry } from '@shared/utils/sentry';
-    import { share } from '@shared/utils/share';
-    import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
     import { colors, fonts, hasCamera, windowInset } from '~/variables';
@@ -113,14 +113,19 @@
     function getSubSettings(id: string) {
         switch (id) {
             case 'camera':
-                return [
-                    {
-                        type: 'switch',
-                        id: 'use_system_camera',
-                        title: lc('use_system_camera'),
-                        description: lc('use_system_camera_desc'),
-                        value: ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA)
-                    },
+                return (
+                    __ANDROID__
+                        ? [
+                              {
+                                  type: 'switch',
+                                  id: 'use_system_camera',
+                                  title: lc('use_system_camera'),
+                                  description: lc('use_system_camera_desc'),
+                                  value: ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA)
+                              }
+                          ]
+                        : []
+                ).concat([
                     {
                         type: 'switch',
                         id: SETTINGS_START_ON_CAM,
@@ -128,7 +133,7 @@
                         description: lc('start_app_on_cam_desc'),
                         value: ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM)
                     }
-                ];
+                ]);
             case 'security':
                 return [
                     {
@@ -696,7 +701,7 @@
                         : ([] as any)
                 )
                 .concat(
-                    __ANDROID__ && $hasCamera
+                    $hasCamera
                         ? [
                               {
                                   id: 'sub_settings',
