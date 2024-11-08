@@ -1,0 +1,8 @@
+Features:
+- new option to allow to start the app in camera mode. The camera becomes the main "page". You can enable it through the "camera" settings
+
+Bug fixes:
+- prevent some errors on app start
+- folders can now be renamed either through select=>option menu, or by clicking on the folder's while browsing it.
+- prevent error on camera image processing
+- Translations update
