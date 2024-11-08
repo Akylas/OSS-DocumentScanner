@@ -28,6 +28,7 @@ import { securityService } from '~/services/security';
 import { syncService } from '~/services/sync';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { SETTINGS_APP_VERSION, SETTINGS_START_ON_CAM, SETTINGS_SYNC_ON_START } from '~/utils/constants';
+import { startOnCam } from './variables';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
@@ -229,7 +230,6 @@ try {
         });
     }
     let Comp;
-    const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
     if (startOnCam) {
         Comp = await import('~/components/camera/Camera.svelte');
     } else if (CARD_APP) {

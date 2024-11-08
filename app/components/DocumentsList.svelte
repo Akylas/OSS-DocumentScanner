@@ -63,7 +63,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, windowInset } from '~/variables';
+    import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
     import ActionBarSearch from './widgets/ActionBarSearch.svelte';
     import EditNameActionBar from './common/EditNameActionBar.svelte';
 
@@ -381,7 +381,6 @@
         syncService.off(EVENT_STATE, refreshSimple);
     });
 
-    const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
     const showActionButton = !startOnCam;
 
     async function onStartCam(inverseUseSystemCamera = false) {

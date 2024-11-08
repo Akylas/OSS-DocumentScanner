@@ -6,7 +6,7 @@ import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale
 import { get, writable } from 'svelte/store';
 import { getRealTheme, theme } from './helpers/theme';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
-import { DEFAULT_DRAW_FOLDERS_BACKGROUND, SETTINGS_DRAW_FOLDERS_BACKGROUND } from './utils/constants';
+import { DEFAULT_DRAW_FOLDERS_BACKGROUND, SETTINGS_DRAW_FOLDERS_BACKGROUND, SETTINGS_START_ON_CAM } from './utils/constants';
 import { prefs } from './services/preferences';
 
 export const colors = writable({
@@ -57,6 +57,8 @@ export const actionBarHeight = writable(0);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const screenRatio = screenWidthDips / screenHeightDips;
+
+export const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
 
 export const fontScale = writable(1);
 export const isRTL = writable(false);

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { request } from '@nativescript-community/perms';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -6,6 +7,9 @@
     import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce, wrapNativeException } from '@nativescript/core/utils';
+    import { PermissionError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
@@ -29,16 +33,11 @@
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
         SETTINGS_IMAGE_EXPORT_FORMAT,
-        SETTINGS_START_ON_CAM,
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
-    import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
-    import { confirmGoBack, goToDocumentAfterScan, goToDocumentView, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
-    import { colors, windowInset } from '~/variables';
-    import { request } from '@nativescript-community/perms';
-    import { PermissionError } from '@shared/utils/error';
+    import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
+    import { colors, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary } = $colors);
@@ -78,7 +77,6 @@
     let editing = false;
     const imageExportSettings = getImageExportSettings();
     const compressQuality = imageExportSettings.imageQuality;
-    const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
     $: ApplicationSettings.setBoolean('batchMode', batchMode);
 
     async function showDocumentsList() {
