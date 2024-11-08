@@ -859,19 +859,16 @@
                             const selected = await getSelectedDocuments();
                             let defaultFolder;
                             DEV_LOG && console.log('move_folder', folders);
-                            // if (selected.length === 1) {
-                            //     defaultGroup = selected[0].groups?.[0];
-                            // }
                             const folderName = await promptForFolderName(
                                 defaultFolder,
                                 Object.values(folders).filter((g) => g.name !== 'none')
                             );
                             if (typeof folderName === 'string') {
-                                // console.log('group2', typeof group, `"${group}"`, selected.length);
                                 for (let index = 0; index < selected.length; index++) {
                                     const doc = selected[index];
                                     await doc.setFolder({ folderName: folderName === 'none' ? undefined : folderName });
                                 }
+                                unselectAll();
                             }
 
                             break;
