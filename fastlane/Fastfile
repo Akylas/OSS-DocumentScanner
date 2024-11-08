@@ -44,7 +44,7 @@ project_root_path = Pathname.new("../").realpath.to_s
 sentry_cli_path = File.join(project_root_path, 'node_modules/.bin/sentry-cli')
 
 app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
-app_name = i18nEnJSON['app']['name']
+app_name = i18nEnJSON['$'+app_identifier] ? i18nEnJSON['$'+app_identifier]['app']['name'] : i18nEnJSON['app']['name']
 app_resources_path = ENV["APP_RESOURCES"] || "App_Resources" # based on nativescript.config.js !!!
 app_build_path = ENV["APP_BUILD_PATH"] || "platforms" # based on nativescript.config.js !!!
 metadata_path = ENV["SUPPLY_METADATA_PATH"]  || "metadata"
