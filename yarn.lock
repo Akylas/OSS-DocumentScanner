@@ -1186,15 +1186,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-alignedflowlayout@npm:6.0.1":
-  version: 6.0.1
-  resolution: "@nativescript-community/ui-collectionview-alignedflowlayout@npm:6.0.1"
-  dependencies:
-    "@nativescript-community/ui-collectionview": "npm:^6.0.1"
-  checksum: bafe649075fd54f751dea6ba8d1329bb120eab94fba97f80df228aacb6ff868a041d1f5964f8ec2d2f2d176fec26f8493b633fd033355b179413e4eba1695508
-  languageName: node
-  linkType: hard
-
 "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.1":
   version: 6.0.1
   resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.1"
@@ -10583,7 +10574,6 @@ __metadata:
     "@nativescript-community/ui-canvaslabel": "npm:1.2.38"
     "@nativescript-community/ui-checkbox": "npm:^2.0.12"
     "@nativescript-community/ui-collectionview": "npm:6.0.1"
-    "@nativescript-community/ui-collectionview-alignedflowlayout": "npm:6.0.1"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.1"
     "@nativescript-community/ui-document-picker": "npm:1.1.26"
     "@nativescript-community/ui-image": "npm:4.5.3"
