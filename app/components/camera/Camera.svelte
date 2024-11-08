@@ -306,17 +306,25 @@
     }
     let previewStarted = false;
     async function startPreview() {
-        DEV_LOG && console.log('[Camera]', 'startPreview', !!cameraView);
-        if (!previewStarted) {
-            const result = await request('camera');
-            if (result[0] !== 'authorized') {
-                throw new PermissionError(lc('camera_permission_needed'));
+        try {
+            DEV_LOG && console.log('[Camera]', 'startPreview', !!cameraView);
+            if (!previewStarted) {
+                const result = await request('camera');
+                DEV_LOG && console.log('startPreview', result);
+                if (result[0] !== 'authorized') {
+                    throw new PermissionError(lc('camera_permission_needed'));
+                }
+                previewStarted = true;
+                if (cameraView?.nativeView) {
+                    cameraView.nativeView.readyToStartPreview = true;
+                    cameraView.nativeView.startPreview();
+                }
+                if (autoScanHandler) {
+                    resumeAutoScan();
+                }
             }
-            previewStarted = true;
-            cameraView?.nativeView.startPreview();
-            if (autoScanHandler) {
-                resumeAutoScan();
-            }
+        } catch (error) {
+            showError(error);
         }
     }
     function stopPreview(force = false) {
@@ -640,10 +648,11 @@
                 captureMode={1}
                 enablePinchZoom={true}
                 flashMode={_actualFlashMode}
-                ios:iosCaptureMode="videoPhotoWithoutAudio"
                 height="100%"
                 jpegQuality={compressQuality}
                 {pictureSize}
+                readyToStartPreview={false}
+                ios:iosCaptureMode="videoPhotoWithoutAudio"
                 {stretch}
                 width="100%"
                 {zoom}
