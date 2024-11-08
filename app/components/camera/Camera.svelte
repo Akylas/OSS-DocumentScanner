@@ -281,8 +281,8 @@
         isVisible = true;
         (async () => {
             try {
-                applyProcessor();
                 await startPreview();
+                applyProcessor();
             } catch (error) {
                 console.error(error, error.stack);
             }
@@ -503,7 +503,9 @@
     async function applyProcessor() {
         try {
             DEV_LOG && console.log('applyProcessor', processor, cropEnabled, cameraView.nativeElement, isVisible);
-            if (processor || !cropEnabled || !isVisible || !cameraView.nativeElement) {
+            const nCropView = cropView?.nativeView?.nativeViewProtected;
+            const nCameraView = cameraView?.nativeView;
+            if (processor || !cropEnabled || !isVisible || !nCameraView) {
                 return;
             }
             if (!QRCodeOnly) {
@@ -522,7 +524,6 @@
                     ApplicationSettings.setBoolean('showAutoScanWarning', false);
                 }
             }
-            const nCropView = cropView.nativeView.nativeViewProtected;
             if (__ANDROID__) {
                 const context = Utils.android.getApplicationContext();
                 processor = new com.akylas.documentscanner.CustomImageAnalysisCallback(
@@ -538,7 +539,7 @@
                 );
                 (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).setDetectQRCode(QRCodeOnly);
                 (processor as com.akylas.documentscanner.CustomImageAnalysisCallback).setDetectDocuments(!QRCodeOnly);
-                cameraView.nativeView.processor = processor;
+                nCameraView.processor = processor;
             } else {
                 processor = OpencvDocumentProcessDelegate.alloc().initWithCropViewOnQRCode(
                     nCropView,
@@ -550,7 +551,7 @@
                             : null
                     )
                 );
-                cameraView.nativeView.processor = processor;
+                nCameraView.processor = processor;
                 (processor as OpencvDocumentProcessDelegate).detectQRCode = QRCodeOnly;
                 (processor as OpencvDocumentProcessDelegate).detectDocuments = !QRCodeOnly;
             }
@@ -640,7 +641,7 @@
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
-        <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2}>
+        <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2} on:loaded={applyProcessor}>
             <cameraView
                 bind:this={cameraView}
                 {aspectRatio}
@@ -657,7 +658,6 @@
                 width="100%"
                 {zoom}
                 on:cameraOpen={onCameraOpen}
-                on:loaded={applyProcessor}
                 on:zoom={onZoom}
                 on:tap={focusCamera} />
             <cropview bind:this={cropView} colors={[colorPrimary]} fillAlpha={120} height="100%" isUserInteractionEnabled={false} {stretch} strokeWidth={3} width="100%" />
