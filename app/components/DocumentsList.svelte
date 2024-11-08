@@ -6,11 +6,11 @@
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, Frame, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import { fade, navigate } from '@shared/utils/svelte/ui';
+    import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
@@ -476,6 +476,13 @@
                 data.cancel = true;
             }
             editingTitle = false;
+        }
+    }
+    function actionBarOnGoBack() {
+        if (showSearch) {
+            search.hideSearch();
+        } else if (Frame.topmost().canGoBack()) {
+            goBack();
         }
     }
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
@@ -956,7 +963,7 @@
             </stacklayout>
         {/if}
 
-        <CActionBar onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
+        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}
@@ -965,7 +972,7 @@
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments} />
-            <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearchTF()} />
+            <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
 
             {#if folder}

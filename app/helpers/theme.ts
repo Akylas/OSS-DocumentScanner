@@ -41,10 +41,8 @@ Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanc
             }
             Theme.setMode(Theme.Auto, undefined, realTheme, false);
             updateThemeColors(realTheme);
-            DEV_LOG && console.log('systemAppearanceChangedEvent 1', realTheme);
             //close any popover as they are not updating with theme yet
             closePopover();
-            DEV_LOG && console.log('systemAppearanceChangedEvent 2', realTheme);
             currentRealTheme.set(realTheme);
             DEV_LOG && console.log('systemAppearanceChangedEvent notify', realTheme);
             globalObservable.notify({ eventName: 'theme', data: realTheme });

@@ -14,6 +14,7 @@
         ApplicationSettings,
         Color,
         EventData,
+        Frame,
         NavigatedData,
         ObservableArray,
         OrientationChangedEventData,
@@ -25,7 +26,7 @@
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import { fade, navigate } from '@shared/utils/svelte/ui';
+    import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -598,6 +599,13 @@
                 data.cancel = true;
             }
             editingTitle = false;
+        }
+    }
+    function actionBarOnGoBack() {
+        if (showSearch) {
+            search.hideSearch();
+        } else if (Frame.topmost().canGoBack()) {
+            goBack();
         }
     }
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
@@ -1346,7 +1354,7 @@
                 on:tap={throttle(() => onAddButton(), 500)} />
         {/if}
 
-        <CActionBar onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
+        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}
@@ -1355,7 +1363,7 @@
                 variant="text"
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments} />
-            <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearchTF()} />
+            <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
             {#if folder}
                 <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
