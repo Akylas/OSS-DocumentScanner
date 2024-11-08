@@ -777,13 +777,14 @@
             id="view"
             autoReloadItemOnLayout={true}
             colWidth={qrcodes.length ? '50%' : '100%'}
-            height={qrcodes.length ? itemHeight : '100%'}
+            height={qrcodes.length ? itemHeight : undefined}
             iosOverflowSafeArea={true}
             {items}
             orientation={qrcodes.length ? 'horizontal' : 'vertical'}
             reorderEnabled={true}
             row={1}
             rowHeight={qrcodes.length ? itemHeight : fullItemHeight}
+            rowSpan={qrcodes.length ? 1 : 2}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:index let:item>
@@ -845,19 +846,20 @@
                     <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(() => importDocument(), 500)} /> -->
-            <mdbutton
-                bind:this={fabHolder}
-                id="fab"
-                class="fab"
-                horizontalAlignment="right"
-                iosIgnoreSafeArea={true}
-                margin={`16 16 ${$windowInset.bottom + 16} 16`}
-                rowSpan={3}
-                text="mdi-plus"
-                verticalAlignment="bottom"
-                on:tap={throttle(() => onAddButton(), 500)} />
             <!-- </stacklayout> -->
         </gridlayout>
+
+        <mdbutton
+            bind:this={fabHolder}
+            id="fab"
+            class="fab"
+            horizontalAlignment="right"
+            iosIgnoreSafeArea={true}
+            margin={`16 16 ${$windowInset.bottom + 16} 16`}
+            rowSpan={3}
+            text="mdi-plus"
+            verticalAlignment="bottom"
+            on:tap={throttle(() => onAddButton(), 500)} />
         <CActionBar
             backgroundColor={qrcodes.length ? topBackgroundColor : undefined}
             buttonsDefaultVisualState={statusBarStyle}
