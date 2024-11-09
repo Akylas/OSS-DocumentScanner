@@ -218,7 +218,7 @@
     "move_data": "Daten verschieben?",
     "move_data_desc": "All deine Anwendungsdaten werden verschoben und im Anschluss ein Neustart der App erzwungen",
     "move_folder": "In Ordner verschieben",
-    "move_folder_desc": "",
+    "move_folder_desc": "Verschiebe das ausgewählte Dokument in einen Ordner. Lasse das Feld leer, um es aus allen Ordnern zu entfernen.",
     "moving_files": "Verschiebe Dateien",
     "name": "Name",
     "nb_pages": "%1$s Seiten",
