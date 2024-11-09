@@ -104,7 +104,7 @@
         "@akylas/nativescript-android-runtime": "8.8.5",
         "@akylas/nativescript-ios-runtime": "8.8.2",
         "@akylas/nativescript-webpack": "5.0.22",
-        "@nativescript/core": "8.8.2",
+        "@nativescript/core": "8.8.4",
         "merge-properties-files": "^1.1.6",
         "mini-css-extract-plugin": "^2.9.1",
         "svelte-loader": "3.2.4"

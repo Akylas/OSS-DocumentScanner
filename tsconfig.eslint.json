@@ -1,5 +1,5 @@
 {
     "extends": "./tools/tsconfig.eslint.json",
-    "include": [".*.js", "*.js", "*.mjs", "tools/**/*.mjs", "app/**/*.ts", "app/**/*.svelte", "tools/**/*.ts", "tools/**/*.svelte", "typings/*.d.ts"]
+    "include": [".*.js", "*.js", "*.mjs", "tools/**/*.mjs", "app/**/*.ts", "app/**/*.svelte", "tools/**/*.ts", "tools/**/*.svelte", "typings/*.d.ts", "plugin-nativeprocessor/*.ts", "plugin-nativeprocessor/typings"]
 
 }

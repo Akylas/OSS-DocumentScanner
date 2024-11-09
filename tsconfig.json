@@ -13,5 +13,5 @@
             "plugin-nativeprocessor/*": ["plugin-nativeprocessor/*"]
         }
     },
-    "include": ["app/**/*", "tools/app/**/*", "typings/*.d.ts", "plugin-nativeprocessor", "plugin-nativeprocessor/typings"],
+    "include": ["app/**/*", "tools/app/**/*", "typings/*.d.ts", "plugin-nativeprocessor/*.ts", "plugin-nativeprocessor/typings"],
 }
