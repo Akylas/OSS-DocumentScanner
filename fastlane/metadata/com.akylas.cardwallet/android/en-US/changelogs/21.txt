@@ -1,0 +1,6 @@
+Bug fixes:
+- missing + button for cards without qrcode
+- show camera permission error
+- better layout for folders. Now scrollable horizontal list at the top
+- unselect after move to folder
+- error while going back to camera in some cases
