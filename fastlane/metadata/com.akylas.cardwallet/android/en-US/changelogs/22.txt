@@ -1,0 +1,2 @@
+Bug fixes:
+- qrcodes not showing in latest version
