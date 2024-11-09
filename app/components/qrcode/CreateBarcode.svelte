@@ -2,14 +2,14 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { ObservableArray } from '@nativescript/core';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
-    import { FORMATS, getQRCodeSVG } from '~/services/qrcode';
+    import { FORMATS, qrcodeService } from '~/services/qrcode';
     import { colors, windowInset } from '~/variables';
     import SvgView from '../common/SVGView.svelte';
-    import { closeModal } from '@shared/utils/svelte/ui';
 
     function getFallbackString(format) {
         switch (format) {
@@ -51,7 +51,7 @@
     }
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorOnBackground } = $colors);
+    $: ({ colorOnBackground, colorPrimary } = $colors);
 
     let collectionview: NativeViewElementNode<CollectionView>;
     let textField: NativeViewElementNode<TextField>;
@@ -66,7 +66,7 @@
                 text,
                 async getSVG(item) {
                     try {
-                        const result = await getQRCodeSVG({ ...item, text: text || '' }, 200, 'black', {
+                        const result = await qrcodeService.getQRCodeSVG({ ...item, text: text || '' }, 200, 'black', {
                             fallbackText: getFallbackString(format),
                             fallbackColor: '#aaaaaa'
                         });
@@ -93,15 +93,13 @@
 
     async function selectItem(item) {
         try {
-            if (text){
-                const  result = await getQRCodeSVG({ format: item.format, text }, 200, 'black');
+            if (text) {
+                const result = await qrcodeService.getQRCodeSVG({ format: item.format, text }, 200, 'black');
                 if (result?.length) {
                     closeModal({ format: item.format, text });
                 }
             }
-            
-        } catch (error) {
-        }
+        } catch (error) {}
     }
 </script>
 

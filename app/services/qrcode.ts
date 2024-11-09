@@ -1,10 +1,9 @@
-import { ImageSource, Observable, PageTransition, Screen, SharedTransition } from '@nativescript/core';
-import { QRCodeSingleData, detectQRCode, detectQRCodeFromFile, generateQRCodeImage, generateQRCodeSVG } from 'plugin-nativeprocessor';
+import { Observable, PageTransition, SharedTransition } from '@nativescript/core';
+import { navigate, showModal } from '@shared/utils/svelte/ui';
+import { QRCodeSingleData, detectQRCodeFromFile, getSVGFromQRCode } from 'plugin-nativeprocessor';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
-import { loadImage, recycleImages } from '~/utils/images';
-import { navigate, showModal } from '@shared/utils/svelte/ui';
-import { screenHeightDips, screenWidthDips } from '~/variables';
+import { screenWidthDips } from '~/variables';
 
 const TAG = 'QRCodeService';
 
@@ -30,14 +29,14 @@ export enum FORMATS {
     RMQRCODE = 'rMQRCode'
 }
 
-export async function getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string = '#000000', options?) {
-    return generateQRCodeSVG(qrcode.text, qrcode.format, width, {
-        color,
-        ...(options || {})
-    });
-}
-
 export class QRCodeService extends Observable {
+    async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string = '#000000', options?) {
+        DEV_LOG && console.log('getQRCodeSVG', JSON.stringify(qrcode), width, color, getSVGFromQRCode);
+        return getSVGFromQRCode(qrcode.text, qrcode.format, width, {
+            color,
+            ...(options || {})
+        });
+    }
     async detectQRcode(document: OCRDocument, pageIndex: number) {
         const page = document.pages[pageIndex];
         const qrcode = await detectQRCodeFromFile(page.imagePath, {
@@ -92,7 +91,7 @@ export class QRCodeService extends Observable {
                     labelSharedTransitionTag: 'qrcodelabel' + index,
                     // colorMatrix: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1],
                     margin: '0 10 0 10',
-                    svg: async () => getQRCodeSVG(qrcode, screenWidthDips)
+                    svg: async () => this.getQRCodeSVG(qrcode, screenWidthDips)
                 })),
                 startPageIndex
             }

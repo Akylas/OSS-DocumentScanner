@@ -1,14 +1,19 @@
 <script context="module" lang="ts">
+    import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
-    import { throttle } from '@nativescript/core/utils';
-    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
-    import { create as createImagePicker } from '@nativescript/imagepicker';
     import { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application';
-    import { QRCodeData, detectQRCodeFromFile, generateQRCodeImage } from 'plugin-nativeprocessor';
+    import { throttle } from '@nativescript/core/utils';
+    import { create as createImagePicker } from '@nativescript/imagepicker';
+    import { PermissionError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
+    import { QRCodeData, detectQRCodeFromFile } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -17,9 +22,12 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
-    import { l, lc } from '~/helpers/locale';
-    import { currentRealTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
+    import { lc } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
+    import { qrcodeService } from '~/services/qrcode';
+    import { shortcutService } from '~/services/shortcuts';
     import {
         CARD_RATIO,
         EVENT_DOCUMENT_DELETED,
@@ -27,36 +35,22 @@
         EVENT_DOCUMENT_PAGE_DELETED,
         EVENT_DOCUMENT_PAGE_UPDATED,
         EVENT_DOCUMENT_UPDATED,
-        IMAGE_CONTEXT_OPTIONS,
         QRCODE_RESIZE_THRESHOLD
     } from '~/utils/constants';
-    import { DocumentDeletedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
-    import { getQRCodeSVG, qrcodeService } from '~/services/qrcode';
-    import { showError } from '@shared/utils/showError';
     import { recycleImages } from '~/utils/images';
-    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
-        getColorMatrix,
-        hideLoading,
         importAndScanImage,
         importImageFromCamera,
         onBackButton,
         showImagePopoverMenu,
-        showLoading,
         showPDFPopoverMenu,
         showPopoverMenu,
         showSnack,
         transformPages
     } from '~/utils/ui';
     import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
-    import { getPageColorMatrix } from '~/utils/matrix';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { request } from '@nativescript-community/perms';
-    import { generateQRCodeSVG } from 'plugin-nativeprocessor';
-    import { shortcutService } from '~/services/shortcuts';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import { PermissionError } from '@shared/utils/error';
     const screenWidthPixels = Screen.mainScreen.widthPixels;
     const screenHeightPixels = Screen.mainScreen.heightPixels;
 
@@ -90,7 +84,9 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
     let statusBarStyle;
-    $: statusBarStyle = qrcodes.length ? (new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light') : null;
+    let hasQRCodes = false;
+
+    $: statusBarStyle = qrcodes?.length ? (new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light') : null;
 
     let orientation = Application.orientation();
     $: itemWidth = (orientation === 'landscape' ? screenHeightDips : screenWidthDips) - 2 * rowMargin;
@@ -131,24 +127,37 @@
         }, timeout);
     }
 
-    function updateQRCodes(color = $colors.colorOnBackground) {
-        DEV_LOG &&
-            console.log(
-                'updateQRCodes',
-                color,
-                document.pages.map((p) => p.imagePath)
-            );
-        qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode?.map((qr) => ({ ...qr, color, svg: getQRCodeImage(qr, color) })) || []), []);
+    async function updateQRCodes(color = $colors.colorOnBackground) {
+        const newQrCodes = [];
+        for (let index = 0; index < document.pages.length; index++) {
+            const page = document.pages[index];
+            if (page.qrcode?.length) {
+                for (let j = 0; j < page.qrcode.length; j++) {
+                    const qr = page.qrcode[j];
+                    newQrCodes.push({ ...qr, color, svg: await getQRCodeImage(qr, color) });
+                }
+            }
+        }
+        qrcodes = newQrCodes;
+        hasQRCodes = qrcodes?.length > 0;
+        // qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode?.map((qr) => ({ ...qr, color, svg: await getQRCodeImage(qr, color) })) || []), []);
+        // DEV_LOG &&
+        //     console.log(
+        //         'updateQRCodes',
+        //         color,
+        //         document.pages.map((p) => p.imagePath),
+        //         qrcodes
+        //     );
         //we dont recycle images, it will be done in onDestroy
     }
-
+    updateQRCodes();
     async function getQRCodeImage(qrcode, color) {
         try {
-            // DEV_LOG && console.log('getQRCodeImage', color, qrcode.text, qrcodeSVGs[qrcode.text]);
+            DEV_LOG && console.log('getQRCodeImage', color, qrcode.text);
             // if (qrcodeSVGs[qrcode.text]) {
             //     return qrcodeSVGs[qrcode.text];
             // }
-            return getQRCodeSVG(qrcode, screenWidthDips, color);
+            return qrcodeService.getQRCodeSVG(qrcode, screenWidthDips, color);
             // qrcodeSVGs[qrcode.text] = (await getQRCodeSVG(qrcode, screenWidthDips, color));
             // return qrcodeSVGs[qrcode.text];
         } catch (error) {
@@ -158,7 +167,6 @@
     function onSelectedIndex(event) {
         currentQRCodeIndex = event.object.selectedIndex;
     }
-    updateQRCodes();
     function getSelectedPages() {
         const selected = [];
         items.forEach((d, index) => {
@@ -744,10 +752,10 @@
                         break;
                     }
                 }
-                updateQRCodes();
+                await updateQRCodes();
                 if (found) {
                     setTimeout(() => {
-                        pager?.nativeElement?.scrollToIndexAnimated(qrcodes.length - 1, true);
+                        pager?.nativeElement?.scrollToIndexAnimated(qrcodes?.length - 1, true);
                     }, 10);
                 }
             }
@@ -771,20 +779,20 @@
 </script>
 
 <page bind:this={page} id="cardview" actionBarHidden={true} {statusBarStyle}>
-    <gridlayout backgroundColor={qrcodes.length ? topBackgroundColor : undefined} paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
+    <gridlayout backgroundColor={hasQRCodes ? topBackgroundColor : undefined} paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
         <collectionview
             bind:this={collectionView}
             id="view"
             autoReloadItemOnLayout={true}
-            colWidth={qrcodes.length ? '50%' : '100%'}
-            height={qrcodes.length ? itemHeight : undefined}
+            colWidth={hasQRCodes ? '50%' : '100%'}
+            height={hasQRCodes ? itemHeight : undefined}
             iosOverflowSafeArea={true}
             {items}
-            orientation={qrcodes.length ? 'horizontal' : 'vertical'}
+            orientation={hasQRCodes ? 'horizontal' : 'vertical'}
             reorderEnabled={true}
             row={1}
-            rowHeight={qrcodes.length ? itemHeight : fullItemHeight}
-            rowSpan={qrcodes.length ? 1 : 2}
+            rowHeight={hasQRCodes ? itemHeight : fullItemHeight}
+            rowSpan={hasQRCodes ? 1 : 2}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:index let:item>
@@ -813,7 +821,7 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" row={2} rows="auto,auto,*" visibility={qrcodes.length ? 'visible' : 'collapsed'}>
+        <gridlayout backgroundColor={colorBackground} borderRadius="10 10 0 0" row={2} rows="auto,auto,*" visibility={hasQRCodes ? 'visible' : 'collapsed'}>
             <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} margin={16} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
@@ -831,7 +839,7 @@
                     </gridlayout>
                 </Template>
             </pager>
-            <label text={lc('no_qrcode')} textAlignment="center" verticalTextAlignment="center" visibility={qrcodes.length ? 'hidden' : 'visible'} />
+            <label text={lc('no_qrcode')} textAlignment="center" verticalTextAlignment="center" visibility={hasQRCodes ? 'hidden' : 'visible'} />
             <pagerindicator
                 color={colorSurfaceContainerHigh}
                 horizontalAlignment="center"
@@ -861,7 +869,7 @@
             verticalAlignment="bottom"
             on:tap={throttle(() => onAddButton(), 500)} />
         <CActionBar
-            backgroundColor={qrcodes.length ? topBackgroundColor : undefined}
+            backgroundColor={hasQRCodes ? topBackgroundColor : undefined}
             buttonsDefaultVisualState={statusBarStyle}
             forceCanGoBack={nbSelected > 0}
             labelsDefaultVisualState={statusBarStyle}

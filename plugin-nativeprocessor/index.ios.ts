@@ -181,7 +181,7 @@ export async function generateQRCodeImage(text: string, format: string, width: n
     });
 }
 
-export async function generateQRCodeSVG(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
+export async function getSVGFromQRCode(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
     return new Promise<string>((resolve, reject) => {
         try {
             OpencvDocumentProcessDelegate.generateQRCodeSVGFormatSizeHintOptionsDelegate(

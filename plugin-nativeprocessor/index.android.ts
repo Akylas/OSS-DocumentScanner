@@ -170,7 +170,7 @@ export async function generateQRCodeImage(text: string, format: string, width: n
     );
 }
 
-export async function generateQRCodeSVG(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
+export async function getSVGFromQRCode(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
     return androidFunctionCallbackPromise<any>(
         (callback) => {
             com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSVG(text, format, hintSize, callback, options ? JSON.stringify(options) : '');
