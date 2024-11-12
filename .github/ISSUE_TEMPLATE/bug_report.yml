@@ -3,6 +3,14 @@ description: Create a report to help us improve
 title: "[BUG] "
 labels: ["bug", "triage"]
 body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app is your issue for
+      multiple: true
+      options:
+        - Document Scanner
+        - CardWallet
   - type: markdown
     attributes:
       value: |
