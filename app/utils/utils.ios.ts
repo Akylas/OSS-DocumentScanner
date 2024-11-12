@@ -33,22 +33,16 @@ export function restartApp() {
     throw new Error('not possible on iOS');
 }
 
-export async function copyFolderContent(src: string, dst: string) {
-    throw new Error('not implemented on iOS');
-}
-export async function removeFolderContent(src: string, dst: string) {
-    throw new Error('not implemented on iOS');
-}
 export async function saveImage(
     imageSource: ImageSource,
     {
-        imageFormat,
-        fileName,
-        imageQuality,
         exportDirectory,
-        toGallery = false,
+        fileName,
+        imageFormat,
+        imageQuality,
         overwrite = true,
-        reportName
+        reportName,
+        toGallery = false
     }: { toGallery?: boolean; imageFormat: 'png' | 'jpeg' | 'jpg'; imageQuality; fileName: string; exportDirectory: string; reportName?: boolean; overwrite?: boolean }
 ) {
     let destinationName = fileName;
@@ -74,4 +68,14 @@ export async function saveImage(
             return exportDirectory;
         }
     }
+}
+
+export function checkManagePermission() {
+    return true;
+}
+export async function askForManagePermission() {
+    return true;
+}
+export function hasManagePermission() {
+    return true;
 }

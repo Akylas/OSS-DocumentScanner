@@ -14,7 +14,7 @@ import {
     sql
 } from '~/services/documents';
 import type { MatricesTypes, Matrix } from '~/utils/color_matrix';
-import { doInBatch, getFormatedDateForFilename } from '~/utils/utils.common';
+import { getFormatedDateForFilename } from '~/utils/utils.common';
 import {
     DOCUMENT_NAME_FORMAT,
     EVENT_DOCUMENT_ADDED,
@@ -30,6 +30,7 @@ import {
     getImageExportSettings
 } from '../utils/constants';
 import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
+import { doInBatch } from '@shared/utils/batch';
 
 export interface ImportImageData {
     imagePath?: string;

@@ -1,6 +1,7 @@
 import { request } from '@nativescript-community/perms';
-import { File, Folder, ImageSource, Utils, path } from '@nativescript/core';
+import { AndroidActivityResultEventData, Application, File, Folder, ImageSource, Utils, path } from '@nativescript/core';
 import { ANDROID_CONTENT } from './constants';
+import { SDK_VERSION } from '@nativescript/core/utils';
 
 export * from './utils.common';
 
@@ -29,20 +30,16 @@ export async function copyFolderContent(src: string, dst: string) {
         })
     );
 }
-export async function removeFolderContent(src: string) {
-    const folder = Folder.fromPath(src);
-    return Promise.all((await folder.getEntities()).map((e) => e.remove()));
-}
 export async function saveImage(
     imageSource: ImageSource,
     {
-        imageFormat,
-        fileName,
-        imageQuality,
         exportDirectory,
-        toGallery = false,
+        fileName,
+        imageFormat,
+        imageQuality,
         overwrite = true,
-        reportName
+        reportName,
+        toGallery = false
     }: { toGallery?: boolean; imageFormat: 'png' | 'jpeg' | 'jpg'; imageQuality; fileName: string; exportDirectory: string; reportName?: boolean; overwrite?: boolean }
 ) {
     let destinationName = fileName;
@@ -95,4 +92,58 @@ export async function saveImage(
             }
         }
     }
+}
+
+function _checkManagePermission() {
+    return SDK_VERSION >= 30 && android.os.Environment.isExternalStorageManager();
+}
+
+let _hasManagePermission: boolean = _checkManagePermission();
+export function hasManagePermission() {
+    return !!_hasManagePermission;
+}
+export function checkManagePermission() {
+    if (_hasManagePermission === undefined) {
+        _hasManagePermission = _checkManagePermission();
+    }
+    return _hasManagePermission;
+}
+export async function askForManagePermission() {
+    const activity = Application.android.startActivity;
+
+    //If the draw over permission is not available open the settings screen
+    //to grant the permission.
+    return new Promise<boolean>((resolve, reject) => {
+        const REQUEST_CODE = 6646;
+        const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
+            if (data.requestCode === REQUEST_CODE) {
+                Application.android.off(Application.android.activityResultEvent, onActivityResultHandler);
+                _hasManagePermission = _checkManagePermission();
+                resolve(_hasManagePermission);
+            }
+        };
+        Application.android.on(Application.android.activityResultEvent, onActivityResultHandler);
+        const intent = new android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, android.net.Uri.parse('package:' + __APP_ID__));
+        activity.startActivityForResult(intent, REQUEST_CODE);
+    });
+}
+export async function requestManagePermission() {
+    if (!PLAY_STORE_BUILD && SDK_VERSION >= 30) {
+        if (checkManagePermission()) {
+            return true;
+        }
+        return askForManagePermission();
+    }
+    return true;
+}
+
+export function getRealPath(src: string, force = false) {
+    DEV_LOG && console.log('getRealPath', src, _hasManagePermission, force);
+    if (!force && !_hasManagePermission) {
+        return src;
+    }
+    if (!src.startsWith(ANDROID_CONTENT)) {
+        return src;
+    }
+    return com.nativescript.documentpicker.FilePath.getPathFromString(Utils.android.getApplicationContext(), src);
 }

@@ -58,9 +58,10 @@
         TRANSFORM_BATCH_SIZE,
         USE_SYSTEM_CAMERA
     } from '~/utils/constants';
+    import { copyFolderContent, removeFolderContent } from '~/utils/file';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
-    import { copyFolderContent, removeFolderContent, restartApp } from '~/utils/utils';
+    import { restartApp } from '~/utils/utils';
     import { colors, fonts, hasCamera, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
@@ -606,53 +607,13 @@
                         : ([] as any)
                 )
                 // .concat(
-                //     __ANDROID__
+                //     __ANDROID__ && !PLAY_STORE_BUILD
                 //         ? [
                 //               {
-                //                   key: 'custom_data_location',
+                //                   id: 'data_location',
                 //                   title: lc('data_location'),
                 //                   currentValue: () => documentsService.rootDataFolder,
                 //                   description: () => documentsService.rootDataFolder,
-                //                   onTap: async (data) => {
-                //                       try {
-                //                           const result = await pickFolder({
-                //                               multipleSelection: false,
-                //                               permissions: { write: true, read: true, persistable: true, recursive: true }
-                //                           });
-                //                           if (result.folders.length) {
-                //                               const confirmed = await confirm({
-                //                                   title: lc('move_data'),
-                //                                   message: lc('move_data_desc'),
-                //                                   okButtonText: lc('ok'),
-                //                                   cancelButtonText: lc('cancel')
-                //                               });
-                //                               if (confirmed) {
-                //                                   const srcFolderStr = documentsService.rootDataFolder;
-                //                                   const dstFolderStr = result.folders[0];
-                //                                   DEV_LOG && console.log('confirmed move data to', srcFolderStr, dstFolderStr);
-                //                                   showLoading(lc('moving_files'));
-                //                                   const srcFolder = Folder.fromPath(srcFolderStr);
-                //                                   const dstFolder = Folder.fromPath(dstFolderStr);
-                //                                   const srcDbPath = srcFolder.getFile(DocumentsService.DB_NAME).path;
-                //                                   await File.fromPath(srcDbPath).copy(dstFolder.getFile(DocumentsService.DB_NAME).path);
-                //                                   await copyFolderContent(srcFolder.getFolder('data').path, dstFolder.getFolder('data').path);
-                //                                   ApplicationSettings.setString('root_data_folder', dstFolderStr);
-                //                                   await File.fromPath(srcDbPath).remove();
-                //                                   await removeFolderContent(srcFolder.getFolder('data').path);
-                //                                   await alert({
-                //                                       cancelable: false,
-                //                                       message: lc('restart_app'),
-                //                                       okButtonText: lc('restart')
-                //                                   });
-                //                                   restartApp();
-                //                               }
-                //                           }
-                //                       } catch (error) {
-                //                           showError(error);
-                //                       } finally {
-                //                           hideLoading();
-                //                       }
-                //                   }
                 //               }
                 //           ]
                 //         : ([] as any)
@@ -970,19 +931,6 @@
                         message: GIT_URL
                     });
                     break;
-                // case 'webdav':
-                //     const WebdavConfig = (await import('~/components/webdav/WebdavConfig.svelte')).default;
-                //     const saved = await showBottomSheet({
-                //         parent: this,
-                //         view: WebdavConfig,
-                //         ignoreTopSafeArea: true
-                //     });
-                //     if (saved) {
-                //         const index = items.indexOf(item);
-                //         DEV_LOG && console.log('webdav done', item, index);
-                //         items.setItem(index, item);
-                //     }
-                //     break;
                 case 'review':
                     openLink(STORE_REVIEW_LINK);
                     break;
@@ -1057,6 +1005,59 @@
                     });
                     break;
                 }
+                // case 'data_location': {
+                //     await requestManagePermission();
+                //     const result = await pickFolder({
+                //         permissions: {
+                //             read: true,
+                //             write: true,
+                //             recursive: true,
+                //             persistable: true
+                //         }
+                //     });
+                //     const resultPath = result.folders[0];
+                //     if (resultPath) {
+                //         const dstFolder = getRealPath(resultPath);
+                //         const srcFolder = documentsService.rootDataFolder;
+                //         DEV_LOG &&
+                //             console.log(
+                //                 'move data location',
+                //                 JSON.stringify({
+                //                     srcFolder,
+                //                     resultPath,
+                //                     dstFolder
+                //                 })
+                //             );
+                //         let confirmed = true;
+                //         if (srcFolder !== getRealPath(resultPath, true)) {
+                //             confirmed = await confirm({
+                //                 title: lc('move_data'),
+                //                 message: lc('move_data_desc'),
+                //                 okButtonText: lc('ok'),
+                //                 cancelButtonText: lc('cancel')
+                //             });
+                //         }
+                //         if (confirmed) {
+                //             DEV_LOG && console.log('confirmed move data to', srcFolder, dstFolder);
+                //             showLoading(lc('moving_files'));
+                //             await copyFolderContent(srcFolder, dstFolder);
+                //             await removeFolderContent(srcFolder);
+                //             DEV_LOG && console.log('copyFolderContent done');
+                //         }
+                //         ApplicationSettings.setString('root_data_folder', dstFolder);
+                //         // documentsService.dataFolder = Folder.fromPath(dstFolder);
+                //         await alert({
+                //             cancelable: false,
+                //             message: lc('restart_app'),
+                //             okButtonText: lc('restart')
+                //         });
+                //         restartApp();
+                //         // item.text = dstFolder;
+                //         item.description = dstFolder;
+                //         updateItem(item);
+                //     }
+                //     break;
+                // }
                 case 'store_setting':
                 case 'setting': {
                     if (item.type === 'prompt') {

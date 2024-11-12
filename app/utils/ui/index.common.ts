@@ -95,7 +95,8 @@ import { recycleImages } from '~/utils/images';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { doInBatch, saveImage } from '../utils';
+import { saveImage } from '../utils';
+import { doInBatch } from '@shared/utils/batch';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
