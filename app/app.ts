@@ -131,7 +131,7 @@ try {
                 syncService.syncDocuments();
             }
         } catch (error) {
-            showError(error, { forcedMessage: lc('startup_error') });
+            showError(error, PLAY_STORE_BUILD ? { forcedMessage: lc('startup_error') } : {});
         }
     }
     Application.on(Application.launchEvent, async () => {
