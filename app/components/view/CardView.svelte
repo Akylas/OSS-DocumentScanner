@@ -6,7 +6,7 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, Screen, SharedTransition, StackLayout } from '@nativescript/core';
+    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application';
     import { throttle } from '@nativescript/core/utils';
     import { create as createImagePicker } from '@nativescript/imagepicker';
@@ -38,21 +38,9 @@
         QRCODE_RESIZE_THRESHOLD
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
-    import {
-        detectOCR,
-        importAndScanImage,
-        importImageFromCamera,
-        onBackButton,
-        showImagePopoverMenu,
-        showPDFPopoverMenu,
-        showPopoverMenu,
-        showSnack,
-        transformPages
-    } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
     import { colors, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    const screenWidthPixels = Screen.mainScreen.widthPixels;
-    const screenHeightPixels = Screen.mainScreen.heightPixels;
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
