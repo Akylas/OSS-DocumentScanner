@@ -278,6 +278,7 @@
 
     let isVisible = false;
     function onNavigatedTo() {
+        DEV_LOG && console.log('Camera', 'onNavigatedTo');
         isVisible = true;
         (async () => {
             try {
@@ -292,6 +293,7 @@
         })();
     }
     function onNavigatedFrom() {
+        DEV_LOG && console.log('Camera', 'onNavigatedFrom');
         isVisible = false;
         if (torchEnabled) {
             forceTorchDisabled(true);
@@ -463,11 +465,11 @@
     let processor;
     let autoScanHandler;
     function applyAutoScan(value: boolean) {
-        if (!cropEnabled) {
+        const nCropView = cropView?.nativeView;
+        if (!cropEnabled || !nCropView) {
             return;
         }
         if (value) {
-            const nCropView = cropView.nativeView;
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
@@ -505,7 +507,7 @@
             DEV_LOG && console.log('applyProcessor', processor, cropEnabled, cameraView.nativeElement, isVisible);
             const nCropView = cropView?.nativeView?.nativeViewProtected;
             const nCameraView = cameraView?.nativeView;
-            if (processor || !cropEnabled || !isVisible || !nCameraView) {
+            if (processor || !cropEnabled || !isVisible || !nCameraView || !nCropView) {
                 return;
             }
             if (!QRCodeOnly) {
@@ -637,11 +639,15 @@
             showError(error);
         }
     }
+    function onCameraHolderLoaded() {
+        DEV_LOG && console.log('Camera', 'onCameraHolderLoaded');
+        applyProcessor();
+    }
 </script>
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
-        <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2} on:loaded={applyProcessor}>
+        <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2} on:loaded={onCameraHolderLoaded}>
             <cameraView
                 bind:this={cameraView}
                 {aspectRatio}

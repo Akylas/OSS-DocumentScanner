@@ -199,6 +199,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 new Promise<ImportImageData>(async (resolve, reject) => {
                     try {
                         const start = Date.now();
+                        DEV_LOG && console.log('importFromImage', sourceImagePath);
                         const imageSize = await getImageSize(sourceImagePath);
                         DEV_LOG && console.log('importFromImage', sourceImagePath, JSON.stringify(imageSize), Date.now() - start, 'ms');
 
