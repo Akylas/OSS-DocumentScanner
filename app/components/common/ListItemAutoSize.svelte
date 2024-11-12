@@ -11,8 +11,8 @@
 <script lang="ts">
     const dispatch = createEventDispatcher();
     // technique for only specific properties to get updated on store change
-    let { colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors;
-    $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors);
+    let { colorOnSurface, colorOnSurfaceDisabled, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceDisabled, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;

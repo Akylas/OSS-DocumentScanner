@@ -74,8 +74,8 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    let { colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
     let page: NativeViewElementNode<Page>;
@@ -1326,12 +1326,12 @@
                 <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize fontSize={20} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize fontSize={20} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
@@ -1344,14 +1344,13 @@
                 <ListItemAutoSize
                     columns="auto,*,auto"
                     fontSize={20}
-                    leftIcon={item.icon}
                     mainCol={1}
                     rightValue={item.rightValue}
                     showBottomLine={false}
                     subtitle={getDescription(item)}
                     title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}>
-                    <label col={0} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+                    <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
