@@ -47,14 +47,15 @@
     </style>
 
     <style name="AppTheme.EInk" parent="AppTheme">
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.EinkBottomSheetDialog</item>
 
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowActionBarOverlay">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:navigationBarColor">@color/md_theme_eink_background</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:statusBarColor">@color/md_theme_eink_background</item>
 
         <!-- <item name="android:statusBarColor">@color/md_theme_eink_background</item> -->
         <item name="colorPrimary">@color/md_theme_eink_primary</item>

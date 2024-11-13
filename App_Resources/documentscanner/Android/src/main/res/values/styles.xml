@@ -16,7 +16,13 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/use_light_navigation</item>
      </style> -->
     <!-- theme to use FOR launch screen-->
-    
+    <style name="ThemeOverlay.App.EinkBottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalEInkBottomSheetDialog</item>
+    </style>
+    <style name="ModalEInkBottomSheetDialog" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:elevation">0dp</item>
+        <item name="backgroundTint">@color/md_theme_eink_background</item>
+    </style>
     <!-- <style name="WindowAnimationTransition">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
