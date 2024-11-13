@@ -1037,11 +1037,13 @@
                 return orientation === 'landscape' ? itemHeight : (width / 2) * CARD_RATIO;
         }
     }
-    function getItemOverlap(viewStyle, foldersCount) {
-        const firstIndex = foldersCount ? 1 : 0;
+    function getItemOverlap(viewStyle) {
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
+                    const foldersCount = folderItems?.length;
+                    const firstIndex = foldersCount ? 1 : 0;
+                    DEV_LOG && console.log('getItemOverlap ', item, position, foldersCount);
                     if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
@@ -1049,6 +1051,9 @@
                 };
             case 'cardholder':
                 return (item, position) => {
+                    const foldersCount = folderItems?.length;
+                    const firstIndex = foldersCount ? 1 : 0;
+                    DEV_LOG && console.log('getItemOverlap ', item, position, foldersCount);
                     if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
@@ -1059,7 +1064,7 @@
         }
     }
     function itemTemplateSelector(viewStyle, item?) {
-        if (item.type) {
+        if (item?.type) {
             return item.type;
         }
         switch (viewStyle) {
@@ -1197,7 +1202,7 @@
             bind:this={collectionView}
             id="list"
             colWidth="50%"
-            itemOverlap={getItemOverlap(viewStyle, folderItems?.length)}
+            itemOverlap={getItemOverlap(viewStyle)}
             ios:iosOverflowSafeArea={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
