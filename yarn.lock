@@ -10522,7 +10522,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@akylas/kiss-orm": "npm:2.1.11"
-    "@akylas/nativescript": "npm:8.8.8"
+    "@akylas/nativescript": "npm:8.8.9"
     "@akylas/nativescript-android-runtime": "npm:8.8.5"
     "@akylas/nativescript-app-tools": "file:tools"
     "@akylas/nativescript-app-utils": "npm:2.1.6"
