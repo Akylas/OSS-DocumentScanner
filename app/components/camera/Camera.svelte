@@ -504,9 +504,9 @@
     }
     async function applyProcessor() {
         try {
-            DEV_LOG && console.log('applyProcessor', processor, cropEnabled, cameraView.nativeElement, isVisible);
             const nCropView = cropView?.nativeView?.nativeViewProtected;
             const nCameraView = cameraView?.nativeView;
+            DEV_LOG && console.log('applyProcessor', processor, cropEnabled, nCropView, nCameraView, isVisible);
             if (processor || !cropEnabled || !isVisible || !nCameraView || !nCropView) {
                 return;
             }
