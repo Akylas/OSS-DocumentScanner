@@ -865,7 +865,7 @@ export function getDirectoryName(folderPath: string) {
 export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = VerticalPosition.BELOW) {
     let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
-    DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName);
+    DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName, pages.length);
     function updateDirectoryName() {
         exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
     }
@@ -909,6 +909,7 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
 
         closeOnClose: false,
         onClose: async (item) => {
+            DEV_LOG && console.log('showImagePopoverMenu action', item.id);
             try {
                 switch (item.id) {
                     case 'set_export_directory': {
