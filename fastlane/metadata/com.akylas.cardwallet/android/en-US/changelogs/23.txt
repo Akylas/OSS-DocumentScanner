@@ -1,0 +1,8 @@
+Features:
+- color theme support
+
+Bug fixes:
+- dont reset zoom on image transform change
+- settings icon not updating correctly on dark mode change
+- folders are now scrollable with the document list. Also fixed deleting folders for the main list
+- Translations update
