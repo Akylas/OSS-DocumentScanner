@@ -18,7 +18,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import { getLocaleDisplayName, l, lc, lu, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
-    import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
+    import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { DocumentsService, documentsService } from '~/services/documents';
     import { securityService } from '~/services/security';
     import {
@@ -526,9 +526,14 @@
                     title: lc('language')
                 },
                 {
-                    id: 'dark_mode',
+                    id: 'theme',
                     description: () => getThemeDisplayName(),
                     title: lc('theme.title')
+                },
+                {
+                    id: 'color_theme',
+                    description: () => getColorThemeDisplayName(),
+                    title: lc('color_theme.title')
                 },
                 {
                     type: 'switch',
@@ -923,8 +928,11 @@
                 case 'language':
                     await selectLanguage();
                     break;
-                case 'dark_mode':
+                case 'theme':
                     await selectTheme();
+                    break;
+                case 'color_theme':
+                    await selectColorTheme();
                     break;
                 case 'share':
                     await share({

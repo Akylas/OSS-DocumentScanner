@@ -1,0 +1,41 @@
+@import './app.common';
+
+mdbutton {
+    // material3 basic design
+    shape: round;
+}
+
+htmllabel,
+canvasview,
+label,
+mdtextfield,
+mdtextview,
+checkbox,
+mdbutton {
+    ios-a11y-adjusts-font-size: true;
+}
+
+mdswitch {
+    background-color: var(--colorPrimary);
+}
+
+// mdbutton[variant=flat],mdbutton[variant=contained] {
+//     color: var(--colorOnPrimary);
+// }
+mdcardview {
+    // material3 basic design
+    shape: medium;
+}
+
+.fab {
+    shape: medium;
+    elevation: 2;
+}
+.small-fab {
+    shape: medium;
+    elevation: 2;
+}
+
+mdtextfield[variant=none] {
+    padding:0;
+}

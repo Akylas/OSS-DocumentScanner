@@ -74,6 +74,12 @@
     "choose": "choose",
     "color": "color",
     "color_desc": "improve colors and reduce unwanted color shades",
+    "color_theme": {
+        "default": "default",
+        "dynamic": "dynamic colors",
+        "eink": "eink",
+        "title": "color theme"
+    },
     "columns": "columns",
     "comments": "comments",
     "computing": "computing...",
@@ -298,6 +304,7 @@
     "security": "security",
     "security_settings": "security settings",
     "select_all": "select all",
+    "select_color_theme": "select color theme",
     "select_language": "select language",
     "select_sync_service": "select sync service",
     "select_theme": "select theme",

@@ -7,6 +7,7 @@ export enum PDFImportImages {
     always = 'always'
 }
 
+export const SETTINGS_COLOR_THEME = 'color_theme';
 export const SETTINGS_APP_VERSION = '_app_version';
 export const SETTINGS_FIRST_OPEN = '_first_open';
 export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
@@ -68,6 +69,7 @@ export const DOCUMENT_NAME_FORMAT = 'L LTS';
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
+export const DEFAULT_COLOR_THEME = 'dynamic';
 export const DEFAULT_DRAW_FOLDERS_BACKGROUND = false;
 export const DEFAULT_TRANSFORM = '';
 export const DEFAULT_COLORTYPE = 'normal';

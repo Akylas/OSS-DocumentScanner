@@ -3,11 +3,11 @@ import { deviceHasCamera } from '@nativescript-community/ui-cameraview';
 import { themer } from '@nativescript-community/ui-material-core';
 import { Application, ApplicationSettings, Color, Frame, InitRootViewEventData, Page, Screen, Utils } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
-import { get, writable } from 'svelte/store';
-import { getRealTheme, theme } from './helpers/theme';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
-import { DEFAULT_DRAW_FOLDERS_BACKGROUND, SETTINGS_DRAW_FOLDERS_BACKGROUND, SETTINGS_START_ON_CAM } from './utils/constants';
+import { get, writable } from 'svelte/store';
+import { ColorThemes, getRealTheme, theme, useDynamicColors } from './helpers/theme';
 import { prefs } from './services/preferences';
+import { DEFAULT_COLOR_THEME, DEFAULT_DRAW_FOLDERS_BACKGROUND, SETTINGS_COLOR_THEME, SETTINGS_DRAW_FOLDERS_BACKGROUND, SETTINGS_START_ON_CAM } from './utils/constants';
 
 export const colors = writable({
     colorPrimary: '',
@@ -78,7 +78,8 @@ function updateSystemFontScale(value) {
 
 if (__ANDROID__) {
     Application.android.on(Application.android.activityCreateEvent, (event) => {
-        AppUtilsAndroid.prepareActivity(event.activity);
+        DEV_LOG && console.log('activityCreateEvent', useDynamicColors);
+        AppUtilsAndroid.prepareActivity(event.activity, useDynamicColors);
     });
     Page.on('shownModally', function (event) {
         AppUtilsAndroid.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
@@ -188,8 +189,8 @@ if (__ANDROID__) {
     });
 }
 
-export function updateThemeColors(theme: string) {
-    DEV_LOG && console.log('updateThemeColors', theme);
+export function updateThemeColors(theme: string, colorTheme: ColorThemes = ApplicationSettings.getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes) {
+    DEV_LOG && console.log('updateThemeColors', theme, colorTheme);
     const currentColors = get(colors);
     let rootView = Application.getRootView();
     if (rootView?.parent) {
@@ -217,110 +218,16 @@ export function updateThemeColors(theme: string) {
             }
         });
     } else {
-        if (CARD_APP) {
-            if (theme === 'dark' || theme === 'black') {
-                currentColors.colorPrimary = '#FFB2B9';
-                currentColors.colorOnPrimary = '#67001F';
-                currentColors.colorPrimaryContainer = '#91002F';
-                currentColors.colorOnPrimaryContainer = '#FFDADC';
-                currentColors.colorSecondary = '#E5BDBF';
-                currentColors.colorOnSecondary = '#44292C';
-                currentColors.colorSecondaryContainer = '#5C3F42';
-                currentColors.colorOnSecondaryContainer = '#FFDADC';
-                currentColors.colorTertiary = '#E8C08E';
-                currentColors.colorOnTertiary = '#442B06';
-                currentColors.colorTertiaryContainer = '#5D411B';
-                currentColors.colorOnTertiaryContainer = '#FFDDB6';
-                currentColors.colorBackground = '#201A1A';
-                currentColors.colorOnBackground = '#ECE0E0';
-                currentColors.colorSurface = '#201A1A';
-                currentColors.colorOnSurface = '#ECE0E0';
-                currentColors.colorSurfaceInverse = '#ECE0E0';
-                currentColors.colorOnSurfaceInverse = '#201A1A';
-                currentColors.colorOutline = '#9F8C8D';
-                currentColors.colorSurfaceVariant = '#524344';
-                currentColors.colorOnSurfaceVariant = '#D7C1C2';
-                currentColors.colorSurfaceContainer = '#121411';
-                currentColors.colorError = '#FFB4AB';
-                currentColors.colorOnError = '#690005';
-            } else {
-                currentColors.colorPrimary = '#B61E44';
-                currentColors.colorOnPrimary = '#FFFFFF';
-                currentColors.colorPrimaryContainer = '#FFDADC';
-                currentColors.colorOnPrimaryContainer = '#400010';
-                currentColors.colorSecondary = '#765659';
-                currentColors.colorOnSecondary = '#FFFFFF';
-                currentColors.colorSecondaryContainer = '#FFDADC';
-                currentColors.colorOnSecondaryContainer = '#2C1517';
-                currentColors.colorTertiary = '#775930';
-                currentColors.colorOnTertiary = '#FFFFFF';
-                currentColors.colorTertiaryContainer = '#FFDDB6';
-                currentColors.colorOnTertiaryContainer = '#2A1800';
-                currentColors.colorBackground = '#FFFBFF';
-                currentColors.colorOnBackground = '#201A1A';
-                currentColors.colorSurface = '#FFFBFF';
-                currentColors.colorOnSurface = '#201A1A';
-                currentColors.colorSurfaceInverse = '#201A1A';
-                currentColors.colorOnSurfaceInverse = '#FFFBFF';
-                currentColors.colorOutline = '#857374';
-                currentColors.colorSurfaceVariant = '#F4DDDE';
-                currentColors.colorOnSurfaceVariant = '#524344';
-                currentColors.colorSurfaceContainer = '#DEE5D9';
-                currentColors.colorError = '#BA1A1A';
-                currentColors.colorOnError = '#FFFFFF';
+        const themeColors = require(`~/themes/${__APP_ID__}/${colorTheme}.json`);
+        // TODO: define all color themes for iOS
+        if (theme === 'dark' || theme === 'black') {
+            Object.assign(currentColors, themeColors.dark);
+            if (theme === 'black') {
+                currentColors.colorBackground = '#000000';
+                currentColors.colorSurfaceContainer = '#000000';
             }
         } else {
-            if (theme === 'dark' || theme === 'black') {
-                currentColors.colorPrimary = '#7DDB82';
-                currentColors.colorOnPrimary = '#00390F';
-                currentColors.colorPrimaryContainer = '#00531A';
-                currentColors.colorOnPrimaryContainer = '#98F89C';
-                currentColors.colorSecondary = '#B9CCB4';
-                currentColors.colorOnSecondary = '#243424';
-                currentColors.colorSecondaryContainer = '#3A4B39';
-                currentColors.colorOnSecondaryContainer = '#D5E8D0';
-                currentColors.colorTertiary = '#A1CED5';
-                currentColors.colorOnTertiary = '#00363C';
-                currentColors.colorTertiaryContainer = '#1F4D53';
-                currentColors.colorOnTertiaryContainer = '#BCEBF2';
-                currentColors.colorBackground = '#1A1C19';
-                currentColors.colorOnBackground = '#E2E3DD';
-                currentColors.colorSurface = '#121411';
-                currentColors.colorOnSurface = '#C6C7C1';
-                currentColors.colorSurfaceInverse = '#F9FAF4';
-                currentColors.colorOnSurfaceInverse = '#121411';
-                currentColors.colorOutline = '#8C9388';
-                currentColors.colorSurfaceVariant = '#424940';
-                currentColors.colorOnSurfaceVariant = '#C2C9BD';
-                currentColors.colorSurfaceContainer = '#121411';
-                currentColors.colorError = '#FFB4AB';
-                currentColors.colorOnError = '#690005';
-            } else {
-                currentColors.colorPrimary = '#006E25';
-                currentColors.colorOnPrimary = '#FFFFFF';
-                currentColors.colorPrimaryContainer = '#98F89C';
-                currentColors.colorOnPrimaryContainer = '#002106';
-                currentColors.colorSecondary = '#526350';
-                currentColors.colorOnSecondary = '#FFFFFF';
-                currentColors.colorSecondaryContainer = '#D5E8D0';
-                currentColors.colorOnSecondaryContainer = '#101F10';
-                currentColors.colorTertiary = '#39656B';
-                currentColors.colorOnTertiary = '#FFFFFF';
-                currentColors.colorTertiaryContainer = '#BCEBF2';
-                currentColors.colorOnTertiaryContainer = '#001F23';
-                currentColors.colorBackground = '#FCFDF7';
-                currentColors.colorOnBackground = '#1A1C19';
-                currentColors.colorSurface = '#F9FAF4';
-                currentColors.colorOnSurface = '#1A1C19';
-                currentColors.colorSurfaceInverse = '#121411';
-                currentColors.colorOnSurfaceInverse = '#C6C7C1';
-                currentColors.colorOutline = '#72796F';
-                currentColors.colorSurfaceVariant = '#DEE5D9';
-                currentColors.colorOnSurfaceVariant = '#424940';
-                currentColors.colorSurfaceContainer = '#DEE5D9';
-                currentColors.colorError = '#BA1A1A';
-                currentColors.colorOnError = '#FFFFFF';
-            }
+            Object.assign(currentColors, themeColors.light);
         }
 
         themer.setPrimaryColor(currentColors.colorPrimary);

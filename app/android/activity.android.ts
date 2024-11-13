@@ -1,13 +1,4 @@
-import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
-import { AndroidActivityCallbacks, Application, ApplicationSettings, Frame, Utils, setActivityCallbacks } from '@nativescript/core';
-import { prefs } from '~/services/preferences';
-
-function getThemeColor(context, colorResId) {
-    const ta = context.obtainStyledAttributes([Utils.android.resources.getId(':attr/' + colorResId)]);
-    const color = ta.getColor(0, 0);
-    ta.recycle();
-    return color;
-}
+import { AndroidActivityCallbacks, Application, setActivityCallbacks } from '@nativescript/core';
 
 const TAG = '[MainActivity]';
 @NativeClass()

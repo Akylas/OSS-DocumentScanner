@@ -47,20 +47,9 @@
     font-family: $mdiFontFamily;
 }
 
-// mdprogress {
-//     color: var(--colorPrimary);
-// }
-htmllabel,
-canvasview,
-label,
-mdtextfield,
-mdtextview,
-checkbox,
-mdbutton {
-    ios-a11y-adjusts-font-size: true;
-}
 
-mdtextfield, mdtextview {
+mdtextfield,
+mdtextview {
     stroke-color: var(--colorOutline);
     placeholder-color: var(--colorOutline);
     color: var(--colorOnBackground);
@@ -74,26 +63,11 @@ checkbox {
 }
 
 
-mdbutton[variant=flat],mdbutton[variant=contained] {
+mdbutton[variant=flat],
+mdbutton[variant=contained] {
     background-color: var(--colorPrimary);
     color: var(--colorOnPrimary);
 }
-
-.ns-ios mdbutton {
-    // material3 basic design
-    shape: round;
-}
-
-.ns-ios .fab {
-    shape: medium;
-    elevation: 2;
-}
-.ns-ios .small-fab {
-    shape: medium;
-    elevation: 2;
-}
-
-
 
 label,
 canvaslabel,
@@ -182,12 +156,15 @@ canvaslabel,
 htmllabel,
 mdtextfield,
 .actionBarTitle,
-.actionBarSubtitle{
-    &:black, &:dark {
+.actionBarSubtitle {
+
+    &:black,
+    &:dark {
         color: white;
     }
 
-    &:white, &:light {
+    &:white,
+    &:light {
         color: black;
     }
 }
@@ -205,24 +182,28 @@ mdtextfield,
     color: var(--colorOnBackground);
     ripple-color: var(--colorOnBackground);
 
-    
+
 
     &:onTertiary {
         color: var(--colorOnTertiary);
         ripple-color: var(--colorOnTertiary);
     }
+
     &:disabled {
         color: #999;
         ripple-color: #999;
     }
-    &:black, &:dark {
+
+    &:black,
+    &:dark {
         color: white;
         ripple-color: white;
 
-        
+
     }
 
-    &:white, &:light {
+    &:white,
+    &:light {
         color: black;
         ripple-color: black;
     }
@@ -240,6 +221,15 @@ mdtextfield,
     margin: 16;
     width: 56;
     height: 56;
+
+    .ns-eink & {
+        background-color: var(--colorPrimaryContainer);
+        ripple-color: var(--colorPrimaryContainer);
+        color: var(--colorOnPrimaryContainer);
+        elevation: 0;
+        border-color: black;
+        border-width: 1;
+    }
 }
 
 
@@ -255,6 +245,15 @@ mdtextfield,
     margin: 8;
     width: 40;
     height: 40;
+
+    .ns-eink & {
+        background-color: var(--colorPrimaryContainer);
+        ripple-color: var(--colorPrimaryContainer);
+        color: var(--colorOnPrimaryContainer);
+        elevation: 0;
+        border-color: black;
+        border-width: 1;
+    }
 }
 
 .icon-label {
@@ -267,4 +266,32 @@ mdtextfield,
     text-align: center;
     vertical-text-alignment: center;
     font-size: 24;
+}
+
+
+.card {
+    margin: 8;
+    background-color: var(--colorSurfaceContainerHigh);
+    border-color: var(--colorOutlineVariant);
+    border-radius: 12;
+
+    .ns-eink & {
+        background-color: transparent;
+        border-width: 1;
+    }
+}
+
+.pageIndicator {
+    background-color: var(--colorPrimary);
+    color: var(--colorOnPrimary);
+    font-size: 14;
+    font-weight: bold;
+    text-align: center;
+
+    .ns-eink & {
+        background-color: transparent;
+        color: var(--colorPrimary);
+        border-width: 1;
+        border-color: var(--colorOutlineVariant);
+    }
 }

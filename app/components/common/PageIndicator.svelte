@@ -7,17 +7,13 @@
 </script>
 
 <label
-    backgroundColor={colorPrimary}
+    class="pageIndicator"
     borderRadius={10 * $fontScale}
-    color={colorOnPrimary}
-    fontSize={14}
-    fontWeight="bold"
     height={20 * $fontScale}
     horizontalAlignment="right"
     paddingLeft={defaultPadding * $fontScale}
     paddingRight={defaultPadding * $fontScale}
     {text}
-    textAlignment="center"
     verticalAlignment="bottom"
     verticalTextAlignment="center"
     on:longPress

@@ -138,6 +138,9 @@ module.exports = (env, params = {}) => {
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
+    const isIOS = platform === 'ios';
+    const isAndroid = platform === 'android';
+    const package = require('./package.json');
 
     config.resolve.conditionNames = config.resolve.conditionNames || [];
     config.resolve.conditionNames.push('svelte');
@@ -161,6 +164,9 @@ module.exports = (env, params = {}) => {
     const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
+    const supportedColorThemes = readdirSync(join(projectRoot, appPath, 'themes', appId))
+        .filter((s) => s.endsWith('.json'))
+        .map((s) => s.replace('.json', ''));
     console.log('supportedLocales', supportedLocales);
     config.externals.push('~/licenses.json');
     config.externals.push(function ({ context, request }, cb) {
@@ -172,6 +178,11 @@ module.exports = (env, params = {}) => {
     supportedLocales.forEach((l) => {
         config.externals.push(`~/i18n/${l}.json`);
     });
+    if (isIOS) {
+        supportedColorThemes.forEach((l) => {
+            config.externals.push(`~/themes/${appId}/${l}.json`);
+        });
+    }
 
     // disable resolve of symlinks so that stack dont use real path but node_modules ones
     config.resolve.symlinks = false;
@@ -201,9 +212,6 @@ module.exports = (env, params = {}) => {
         buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
     }
 
-    const package = require('./package.json');
-    const isIOS = platform === 'ios';
-    const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
     const defines = {
         PRODUCTION: !!production,
@@ -223,6 +231,7 @@ module.exports = (env, params = {}) => {
         __APP_BUILD_NUMBER__: `${parseInt(buildNumber, 10)}`,
         CARD_APP: appId === 'com.akylas.cardwallet',
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
+        SUPPORTED_COLOR_THEMES: JSON.stringify(supportedColorThemes),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
         START_ON_CAM: startOnCam,
