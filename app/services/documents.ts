@@ -1,5 +1,6 @@
 import { ApplicationSettings, EventData, File, Folder, Observable, knownFolders, path } from '@nativescript/core';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
+import { doInBatch } from '@shared/utils/batch';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
@@ -107,14 +108,14 @@ LEFT JOIN DocumentsFolders df ON f.id = df.folder_id
 GROUP BY f.id;`
         });
     }
-    findFolder(name: string) {
+    findFolderById(id: number) {
         return this.search({
             select: sql`f.*, 
-COUNT(pf.pack_id) AS count`,
+COUNT(pf.document_id) AS count`,
             from: sql`Folder f`,
-            where: sql`f.name = ${name}`,
+            where: sql`f.id = ${id}`,
             postfix: sql`
-LEFT JOIN PacksFolders pf ON f.id = pf.folder_id`
+LEFT JOIN DocumentsFolders pf ON f.id = pf.folder_id`
         });
     }
 }
@@ -537,7 +538,7 @@ export interface FolderUpdatedEventData extends EventData {
 }
 export interface DocumentDeletedEventData extends EventData {
     documents: OCRDocument[];
-    folders: string[];
+    folders: number[];
 }
 
 export type DocumentEvents = DocumentAddedEventData | DocumentDeletedEventData | DocumentUpdatedEventData | DocumentPagesAddedEventData | DocumentPageDeletedEventData | DocumentPageUpdatedEventData;
@@ -618,11 +619,26 @@ export class DocumentsService extends Observable {
                 'deleteDocuments',
                 documents.map((d) => d.id)
             );
+
+        await doInBatch<OCRDocument, void>(
+            documents,
+            async (d: OCRDocument) => {
+                const id = d.id;
+                DEV_LOG && console.log('deleteDocument', id);
+                await Promise.all(d.pages.map((p) => this.pageRepository.delete(p)));
+                await this.documentRepository.delete(d);
+                await d.removeFromFolder();
+                await d.removeFromDisk();
+                // we notify on each delete so that UI updates fast
+                documentsService.notify({ eventName: EVENT_DOCUMENT_DELETED, documents: [d], folders: d.folders } as DocumentDeletedEventData);
+            },
+            1
+        );
         // await this.documentRepository.delete(model);
-        await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d), d.removeFromFolder()))));
+        // await Promise.all(documents.map((d) => Promise.all(d.pages.map((p) => this.pageRepository.delete(p)).concat(this.documentRepository.delete(d), d.removeFromFolder()))));
         // await OCRDocument.delete(docs.map((d) => d.id));
-        documents.forEach((doc) => doc.removeFromDisk());
-        this.notify({ eventName: EVENT_DOCUMENT_DELETED, documents } as DocumentDeletedEventData);
+        // documents.forEach((doc) => doc.removeFromDisk());
+        // this.notify({ eventName: EVENT_DOCUMENT_DELETED, documents } as DocumentDeletedEventData);
     }
     stop() {
         DEV_LOG && console.log('DocumentsService stop');

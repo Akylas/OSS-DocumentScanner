@@ -85,6 +85,7 @@
     const textPaint = new Paint();
     const rowMargin = 8;
     interface Item {
+        type?: string;
         doc?: OCRDocument;
         folder?: DocFolder;
         selected: boolean;
@@ -98,6 +99,7 @@
     let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
+    let foldersCollectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     let lottieView: NativeViewElementNode<LottieView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
@@ -151,21 +153,26 @@
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
 
             folderItems = new ObservableArray(
-                folders.map(
-                    (folder) =>
-                        ({
-                            folder,
-                            selected: false
-                        }) as any
-                )
+                folders
+                    .filter((f) => f.count > 0)
+                    .map(
+                        (folder) =>
+                            ({
+                                folder,
+                                selected: false
+                            }) as any
+                    )
             );
+
             documents = new ObservableArray(
-                r.map(
-                    (doc) =>
-                        ({
-                            doc,
-                            selected: false
-                        }) as any
+                (folderItems.length ? [{ type: 'folders', selected: false }] : []).concat(
+                    r.map(
+                        (doc) =>
+                            ({
+                                doc,
+                                selected: false
+                            }) as any
+                    )
                 )
             );
             updateNoDocument();
@@ -244,6 +251,12 @@
         }
     }
     async function onDocumentsDeleted(event: DocumentDeletedEventData) {
+        DEV_LOG &&
+            console.log(
+                'onDocumentsDeleted',
+                event.documents.map((d) => d.id),
+                event.folders
+            );
         for (let i = 0; i < event.documents.length; i++) {
             const id = event.documents[i].id;
             const index = documents.findIndex((item) => item.doc && item.doc.id === id);
@@ -254,14 +267,21 @@
         }
         if (!folder && event.folders?.length) {
             for (let i = 0; i < event.folders.length; i++) {
-                const name = event.folders[i].split(FOLDER_COLOR_SEPARATOR)[0];
-                const index = folderItems.findIndex((item) => item.folder && item.folder.name === name);
+                const folderId = event.folders[i];
+                const index = folderItems.findIndex((item) => item.folder && item.folder.id === folderId);
                 if (index !== -1) {
                     const item = folderItems.getItem(index);
-                    const res = await documentsService.folderRepository.findFolder(name);
+                    const res = await documentsService.folderRepository.findFolderById(folderId);
                     item.folder = res[0];
-                    folderItems.setItem(index, folderItems.getItem(index));
+                    if (item.folder.count > 0) {
+                        folderItems.setItem(index, folderItems.getItem(index));
+                    } else {
+                        folderItems.splice(index, 1);
+                    }
                 }
+            }
+            if (folderItems.length === 0) {
+                documents.splice(0, 1);
             }
         }
         updateNoDocument();
@@ -838,6 +858,7 @@
     //     return filesize(item.doc.pages.reduce((acc, v) => acc + v.size, 0));
     // }
     function refreshCollectionView() {
+        foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
@@ -932,7 +953,8 @@
                         unselectAll();
                         break;
                     case 'delete':
-                        deleteSelectedDocuments();
+                        await deleteSelectedDocuments();
+                        unselectAll();
                         break;
                     case 'move_folder':
                         const selected = await getSelectedDocuments();
@@ -1015,18 +1037,19 @@
                 return orientation === 'landscape' ? itemHeight : (width / 2) * CARD_RATIO;
         }
     }
-    function getItemOverlap(viewStyle) {
+    function getItemOverlap(viewStyle, foldersCount) {
+        const firstIndex = foldersCount ? 1 : 0;
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
-                    if (position === 0 || (orientation === 'landscape' && position === 1)) {
+                    if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.71 * itemHeight, 0, 0, 0];
                 };
             case 'cardholder':
                 return (item, position) => {
-                    if (position === 0 || (orientation === 'landscape' && position === 1)) {
+                    if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.11 * itemHeight, 0, 0, 0];
@@ -1036,6 +1059,9 @@
         }
     }
     function itemTemplateSelector(viewStyle, item?) {
+        if (item.type) {
+            return item.type;
+        }
         switch (viewStyle) {
             case 'list':
             case 'columns':
@@ -1048,7 +1074,7 @@
         }
     }
     function itemTemplateSpanSize(viewStyle, item: Item) {
-        if (viewStyle === 'columns' || orientation === 'landscape') {
+        if (item.type !== 'folders' && (viewStyle === 'columns' || orientation === 'landscape')) {
             return 1;
         }
         return 2;
@@ -1167,39 +1193,11 @@
 
 <page bind:this={page} id="cardsList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
-        <!-- {/if} -->
-        <collectionView
-            bind:this={collectionView}
-            colWidth={150}
-            height={70}
-            items={folderItems}
-            orientation="horizontal"
-            row={1}
-            rowHeight={70}
-            ios:iosOverflowSafeArea={true}
-            visibility={folders?.length ? 'visible' : 'collapsed'}>
-            <Template let:item>
-                <canvasview
-                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
-                    borderColor={colorOutline}
-                    borderRadius={12}
-                    borderWidth={1}
-                    margin="0 8 0 8"
-                    rippleColor={colorSurface}
-                    on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
-                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
-                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
-                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
-                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
-                </canvasview>
-            </Template>
-        </collectionView>
         <collectionView
             bind:this={collectionView}
             id="list"
             colWidth="50%"
-            itemOverlap={getItemOverlap(viewStyle)}
+            itemOverlap={getItemOverlap(viewStyle, folderItems?.length)}
             ios:iosOverflowSafeArea={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
@@ -1208,6 +1206,35 @@
             spanSize={(item) => itemTemplateSpanSize(viewStyle, item)}
             swipeMenuId="swipeMenu"
             on:swipeMenuClose={(e) => handleTouchAction(e.index, { action: 'up' })}>
+            <Template key="folders" let:item>
+                <collectionView
+                    bind:this={foldersCollectionView}
+                    colWidth={150}
+                    height={70}
+                    items={folderItems}
+                    orientation="horizontal"
+                    row={1}
+                    rowHeight={70}
+                    ios:iosOverflowSafeArea={true}
+                    visibility={folders?.length ? 'visible' : 'collapsed'}>
+                    <Template let:item>
+                        <canvasview
+                            backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
+                            borderColor={colorOutline}
+                            borderRadius={12}
+                            borderWidth={1}
+                            margin="0 8 0 8"
+                            rippleColor={colorSurface}
+                            on:tap={() => onItemTap(item)}
+                            on:longPress={(e) => onItemLongPress(item, e)}
+                            on:draw={(e) => onFolderCanvasDraw(item, e)}>
+                            <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
+                            <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
+                            <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
+                        </canvasview>
+                    </Template>
+                </collectionView>
+            </Template>
             <Template key="cardholder" let:item>
                 <absolutelayout height={150}>
                     <swipemenu

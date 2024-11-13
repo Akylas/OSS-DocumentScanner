@@ -24,7 +24,7 @@
     import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { getRealTheme, onThemeChanged } from '~/helpers/theme';
+    import { colorTheme, getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import {
         DocumentAddedEventData,
@@ -70,6 +70,7 @@
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
 
     interface Item {
+        type?: string;
         doc?: OCRDocument;
         folder?: DocFolder;
         selected: boolean;
@@ -111,6 +112,7 @@
     let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let foldersCollectionView: NativeViewElementNode<CollectionView>;
     let lottieView: NativeViewElementNode<LottieView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
@@ -168,21 +170,25 @@
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
 
             folderItems = new ObservableArray(
-                folders.map(
-                    (folder) =>
-                        ({
-                            folder,
-                            selected: false
-                        }) as any
-                )
+                folders
+                    .filter((f) => f.count > 0)
+                    .map(
+                        (folder) =>
+                            ({
+                                folder,
+                                selected: false
+                            }) as any
+                    )
             );
             documents = new ObservableArray(
-                r.map(
-                    (doc) =>
-                        ({
-                            doc,
-                            selected: false
-                        }) as any
+                (folderItems.length ? [{ type: 'folders', selected: false }] : []).concat(
+                    r.map(
+                        (doc) =>
+                            ({
+                                doc,
+                                selected: false
+                            }) as any
+                    )
                 )
             );
             updateNoDocument();
@@ -278,6 +284,12 @@
         }
     }
     async function onDocumentsDeleted(event: DocumentDeletedEventData) {
+        DEV_LOG &&
+            console.log(
+                'onDocumentsDeleted',
+                event.documents.map((d) => d.id),
+                event.folders
+            );
         for (let i = 0; i < event.documents.length; i++) {
             const id = event.documents[i].id;
             const index = documents.findIndex((item) => item.doc && item.doc.id === id);
@@ -288,14 +300,21 @@
         }
         if (!folder && event.folders?.length) {
             for (let i = 0; i < event.folders.length; i++) {
-                const name = event.folders[i].split(FOLDER_COLOR_SEPARATOR)[0];
-                const index = folderItems.findIndex((item) => item.folder && item.folder.name === name);
+                const folderId = event.folders[i];
+                const index = folderItems.findIndex((item) => item.folder && item.folder.id === folderId);
                 if (index !== -1) {
                     const item = folderItems.getItem(index);
-                    const res = await documentsService.folderRepository.findFolder(name);
+                    const res = await documentsService.folderRepository.findFolderById(folderId);
                     item.folder = res[0];
-                    folderItems.setItem(index, documents.getItem(index));
+                    if (item.folder.count > 0) {
+                        folderItems.setItem(index, folderItems.getItem(index));
+                    } else {
+                        folderItems.splice(index, 1);
+                    }
                 }
+            }
+            if (folderItems.length === 0) {
+                documents.splice(0, 1);
             }
         }
         updateNoDocument();
@@ -657,6 +676,7 @@
         }
     }
     function refreshCollectionView() {
+        foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }
     onThemeChanged(refreshCollectionView);
@@ -851,7 +871,8 @@
                             unselectAll();
                             break;
                         case 'delete':
-                            deleteSelectedDocuments();
+                            await deleteSelectedDocuments();
+                            unselectAll();
                             break;
                         case 'move_folder':
                             const selected = await getSelectedDocuments();
@@ -881,7 +902,7 @@
         });
     }
     function itemTemplateSelector(item: Item, index, items) {
-        return 'default';
+        return item.type || 'default';
     }
     function itemTemplateSpanSize(item: Item, index, items) {
         if (item.folder) {
@@ -903,35 +924,7 @@
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,*">
-        <collectionView
-            bind:this={collectionView}
-            colWidth={150}
-            height={70}
-            items={folderItems}
-            orientation="horizontal"
-            row={1}
-            rowHeight={70}
-            ios:iosOverflowSafeArea={true}
-            visibility={folders?.length ? 'visible' : 'collapsed'}>
-            <Template let:item>
-                <canvasview
-                    backgroundColor={($folderBackgroundColor && item.folder.color) || colorSurfaceContainerHigh}
-                    borderColor={colorOutline}
-                    borderRadius={12}
-                    borderWidth={1}
-                    margin="0 8 0 8"
-                    rippleColor={colorSurface}
-                    on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
-                    on:draw={(e) => onFolderCanvasDraw(item, e)}>
-                    <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
-                    <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
-                    <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
-                </canvasview>
-            </Template>
-        </collectionView>
-        <!-- {/if} -->
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionView
             bind:this={collectionView}
             colWidth="50%"
@@ -941,15 +934,42 @@
             ios:layoutStyle="align"
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
-            row={2}
+            row={1}
             spanSize={itemTemplateSpanSize}>
+            <Template key="folders" let:item>
+                <collectionView
+                    bind:this={foldersCollectionView}
+                    colWidth={150}
+                    height={70}
+                    items={folderItems}
+                    orientation="horizontal"
+                    row={1}
+                    rowHeight={70}
+                    ios:iosOverflowSafeArea={true}
+                    visibility={folders?.length ? 'visible' : 'collapsed'}>
+                    <Template let:item>
+                        <canvasview
+                            backgroundColor={($folderBackgroundColor && item.folder.color) || colorTheme === 'eink' ? 'transparent' : colorSurfaceContainerHigh}
+                            borderColor={colorOutline}
+                            borderRadius={12}
+                            borderWidth={1}
+                            margin="0 8 0 8"
+                            rippleColor={colorSurface}
+                            on:tap={() => onItemTap(item)}
+                            on:longPress={(e) => onItemLongPress(item, e)}
+                            on:draw={(e) => onFolderCanvasDraw(item, e)}>
+                            <SelectedIndicator horizontalAlignment="right" margin={10} selected={item.selected} verticalAlignment="top" />
+                            <!-- <SyncIndicator synced={item.doc._synced} visible={syncEnabled} /> -->
+                            <!-- <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} /> -->
+                        </canvasview>
+                    </Template>
+                </collectionView>
+            </Template>
             <Template let:item>
                 <canvasview
-                    backgroundColor={colorSurfaceContainerHigh}
-                    borderRadius={12}
+                    class="card"
+                    borderWidth={colorTheme === 'eink' ? 1 : 0}
                     height={getItemRowHeight(viewStyle) * $fontScale}
-                    margin={8}
-                    rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     on:draw={(e) => onCanvasDraw(item, e)}>
@@ -979,7 +999,7 @@
                 marginBottom="30%"
                 paddingLeft={16}
                 paddingRight={16}
-                row={2}
+                row={1}
                 verticalAlignment="center"
                 width="80%"
                 transition:fade={{ duration: 200 }}>
@@ -1006,7 +1026,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={2} verticalAlignment="bottom">
+            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
                 {#if __IOS__}
                     <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
                 {/if}
@@ -1041,10 +1061,8 @@
             {/if}
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
-        <!-- {#if nbSelected > 0} -->
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }}>
-                <!-- <mdbutton class="actionBarButton" text="mdi-share-variant" variant="text" visibility={nbSelected ? 'visible' : 'collapse'} on:tap={showImageExportPopover} /> -->
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             </CActionBar>
