@@ -23,7 +23,6 @@
     import { shortcutService } from '~/services/shortcuts';
     import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
-    import { share } from '@shared/utils/share';
     import { goBack, showModal } from '@shared/utils/svelte/ui';
     import {
         ColorMatricesTypes,
