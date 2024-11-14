@@ -12,7 +12,6 @@ export async function getTransformedImage(page: OCRPage, options: { width?; heig
     if (isNaN(imageSource.width)) {
         throw new Error(lc('error_loading_image', page.imagePath, File.exists(page.imagePath)));
     }
-    // DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), options, loadOptions);
     const colorMatrix = options?.colorMatrix || getPageColorMatrix(page, undefined, options?.brightness, options?.contrast);
     const rotation = options?.rotation || page.rotation;
     if (colorMatrix || rotation || options.width || options.height) {

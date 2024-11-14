@@ -1,4 +1,5 @@
 import { request } from '@nativescript-community/perms';
+import { share } from '@akylas/nativescript-app-utils/share';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -25,7 +26,6 @@ import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { PermissionError, SilentError } from '@shared/utils/error';
-import { share } from '@shared/utils/share';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
@@ -932,15 +932,17 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
                         const images = [];
                         const files = [];
                         try {
-                            for (let index = 0; index < pages.length; index++) {
-                                const page = pages[index];
-                                if (page.colorMatrix || page.rotation !== 0) {
+                            await doInBatch(pages, async (page, index) => {
+                                if (page.colorMatrix || page.rotation !== 0 || page.brightness !== DEFAULT_BRIGHTNESS || page.contrast !== DEFAULT_CONTRAST) {
                                     const imageSource = await getTransformedImage(page);
                                     images.push(imageSource);
                                 } else {
                                     files.push(page.imagePath);
                                 }
-                            }
+                            });
+                            // for (let index = 0; index < pages.length; index++) {
+                            //     const page = pages[index];
+                            // }
                             await share({ images, files });
                         } catch (error) {
                             throw error;
