@@ -1,0 +1,3 @@
+Bug fixes:
+- sharing images was not sharing with brightness/contrast
+- Translations update
