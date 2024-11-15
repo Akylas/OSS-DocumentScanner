@@ -18,9 +18,13 @@
         try {
             editingTitleTextField.nativeElement.clearFocus();
             DEV_LOG && console.log('saveDocumentTitle', editingTitleTextField.nativeElement.text);
-            await (document || folder).save({
-                name: editingTitleTextField.nativeElement.text
-            });
+            await (document || folder).save(
+                {
+                    name: editingTitleTextField.nativeElement.text
+                },
+                true,
+                true
+            );
             if (CARD_APP && document) {
                 shortcutService.updateShortcuts(document);
             }
