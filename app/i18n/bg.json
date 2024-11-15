@@ -74,6 +74,11 @@
     "choose": "избор",
     "color": "цвят",
     "color_desc": "подобрява цветовете и намалява нежеланите цветови нюанси",
+    "color_theme": {
+        "default": "по подразбиране",
+        "dynamic": "динамични цветове",
+        "title": "цветова тема"
+    },
     "columns": "колони",
     "comments": "коментари",
     "computing": "зарежда...",
@@ -300,6 +305,7 @@
     "security": "сигурност",
     "security_settings": "настройки на сигурността",
     "select_all": "избери всички",
+    "select_color_theme": "избери цветова тема",
     "select_language": "избери език",
     "select_sync_service": "избери услуга за синхронизиране",
     "select_theme": "избери тема",
