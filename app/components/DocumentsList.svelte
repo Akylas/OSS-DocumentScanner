@@ -538,6 +538,11 @@
                 data.cancel = true;
             }
             editingTitle = false;
+        } else if (showSearch) {
+            if (data) {
+                data.cancel = true;
+            }
+            search.hideSearch();
         }
     }
     function actionBarOnGoBack() {
@@ -549,8 +554,9 @@
     }
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
-            data.cancel = true;
+            DEV_LOG && console.log('onBackButton');
             if (nbSelected > 0) {
+                data.cancel = true;
                 unselectAll();
             } else {
                 onGoBack(data);

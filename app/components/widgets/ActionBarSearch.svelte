@@ -40,7 +40,7 @@
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-
+        const needsRefresh = filter?.length > 0;
         if (clearQuery) {
             if (filter?.length) {
                 filter = null;
@@ -51,7 +51,9 @@
             searchTF?.nativeView?.clearFocus();
             visible = false;
         }
-        refresh(false, undefined);
+        if (needsRefresh) {
+            refresh(false, undefined);
+        }
     }
     function onTextChanged(text: string) {
         const query = text.toLowerCase();
@@ -86,22 +88,18 @@
     });
 </script>
 
-<!-- <gridlayout backgroundColor={colorBackground} col={1} colSpan={2} visibility={visible ? 'visible' : 'hidden'}> -->
-<textfield
-    bind:this={searchTF}
-    autocapitalizationType="none"
-    backgroundColor={colorBackground}
-    col={1}
-    colSpan={2}
-    hint={lc('search')}
-    paddingRight={45}
-    placeholder={lc('search')}
-    returnKeyType="search"
-    variant="outline"
-    visibility={visible ? 'visible' : 'hidden'}
-    on:returnPress={blurTextField}
-    on:textChange={(e) => onTextChanged(e['value'])} />
-<!-- <mdbutton
+<gridlayout backgroundColor={colorBackground} col={1} colSpan={2} visibility={visible ? 'visible' : 'hidden'}>
+    <textfield
+        bind:this={searchTF}
+        autocapitalizationType="none"
+        hint={lc('search')}
+        paddingRight={45}
+        placeholder={lc('search')}
+        returnKeyType="search"
+        variant="outline"
+        on:returnPress={blurTextField}
+        on:textChange={(e) => onTextChanged(e['value'])} />
+    <!-- <mdbutton
         class="actionBarButton"
         height={40}
         horizontalAlignment="right"
@@ -111,4 +109,4 @@
         visibility={filter?.length > 0 ? 'visible' : 'hidden'}
         width={40}
         on:tap={() => clearSearch()} /> -->
-<!-- </gridlayout> -->
+</gridlayout>
