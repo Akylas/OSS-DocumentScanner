@@ -74,6 +74,12 @@
     "choose": "scegli",
     "color": "colore",
     "color_desc": "migliora i colori e riduci le sfumature indesiderate",
+    "color_theme": {
+        "default": "predefinito",
+        "dynamic": "colori dinamici",
+        "eink": "e-ink",
+        "title": "tema colore"
+    },
     "columns": "colonne",
     "comments": "Commenti",
     "computing": "elaborazione...",
@@ -307,6 +313,7 @@
     "security": "sicurezza",
     "security_settings": "impostazioni di sicurezza",
     "select_all": "seleziona tutto",
+    "select_color_theme": "seleziona tema colore",
     "select_language": "seleziona la lingua",
     "select_sync_service": "seleziona il servizio di sincronizzazione",
     "select_theme": "seleziona il tema",

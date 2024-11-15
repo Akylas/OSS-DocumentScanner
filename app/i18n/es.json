@@ -74,6 +74,10 @@
     "choose": "elegir",
     "color": "color",
     "color_desc": "realza los colores y reduce los matices innecesarios",
+    "color_theme": {
+        "default": "por defecto",
+        "dynamic": "colores dinámicos"
+    },
     "columns": "columnas",
     "comments": "comentarios",
     "computing": "procesando...",
