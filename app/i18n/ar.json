@@ -74,6 +74,11 @@
     "choose": "اختر",
     "color": "اللون",
     "color_desc": "تحسين الألوان وتقليل ظلال الألوان غير المرغوب فيها",
+    "color_theme": {
+        "default": "افتراضي",
+        "dynamic": "الألوان الديناميكية",
+        "title": "سمة اللون"
+    },
     "columns": "أعمدة",
     "comments": "تعليقات",
     "computing": "تتم المعالجة...",
@@ -306,6 +311,7 @@
     "security": "الأمان",
     "security_settings": "إعدادات الأمان",
     "select_all": "تحديد الكل",
+    "select_color_theme": "حدد لون السمة",
     "select_language": "تحديد لغة",
     "select_sync_service": "حدد خدمة المزامنة",
     "select_theme": "تحديد سمة",
