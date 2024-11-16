@@ -72,7 +72,8 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
     let statusBarStyle;
-    let hasQRCodes = false;
+    // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
+    let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
 
     $: statusBarStyle = qrcodes?.length ? (new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light') : null;
 
