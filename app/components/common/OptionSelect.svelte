@@ -40,7 +40,7 @@
     export let iconFontSize = 24;
     export let onlyOneSelected = false;
     export let currentlyCheckedItem = null;
-    export let onCheckBox: (item, value, e) => void = null;
+    export let onCheckBox: (item, value, e) => void = (item, value)=> close(item);
     export let onRightIconTap: (item, e) => void = null;
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
