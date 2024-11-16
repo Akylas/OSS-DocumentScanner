@@ -270,9 +270,9 @@ export default class SyncWorker extends Observable {
 
     queue = new Queue();
     async syncDocumentsQueue({
-        force = false,
         bothWays = false,
         event,
+        force = false,
         type
     }: {
         force?;
@@ -283,9 +283,9 @@ export default class SyncWorker extends Observable {
         return this.queue.add(() => this.syncDocumentsInternal({ force, bothWays, type, event }));
     }
     async syncDocumentsInternal({
-        force = false,
         bothWays = false,
         event,
+        force = false,
         type
     }: {
         force?;
@@ -329,7 +329,7 @@ export default class SyncWorker extends Observable {
         }
     }
 
-    async syncDataDocuments({ force = false, bothWays = false, event }: { force; bothWays; event: DocumentEvents }) {
+    async syncDataDocuments({ bothWays = false, event, force = false }: { force; bothWays; event: DocumentEvents }) {
         if (event?.eventName === EVENT_DOCUMENT_PAGES_ADDED || event?.eventName === EVENT_DOCUMENT_PAGE_UPDATED || event?.eventName === EVENT_DOCUMENT_PAGE_DELETED) {
             // we ignore this event
             // pages will be updated independently
@@ -700,7 +700,7 @@ export default class SyncWorker extends Observable {
             return document.save({ _synced: document._synced | service.syncMask });
         }
     }
-    async syncImageDocuments({ force = false, event }: { force; event: DocumentEvents }) {
+    async syncImageDocuments({ event, force = false }: { force; event: DocumentEvents }) {
         if (event?.eventName === EVENT_DOCUMENT_UPDATED || event?.eventName === EVENT_DOCUMENT_ADDED || event?.eventName === EVENT_DOCUMENT_PAGE_DELETED) {
             // we ignore this event
             // pages will be updated independently
@@ -773,7 +773,7 @@ export default class SyncWorker extends Observable {
         TEST_LOG && console.log('syncImageDocuments done ');
     }
 
-    async syncPDFDocuments({ force = false, event }: { force; event: DocumentEvents }) {
+    async syncPDFDocuments({ event, force = false }: { force; event: DocumentEvents }) {
         // if (event?.eventName === EVENT_DOCUMENT_UPDATED || event?.eventName === EVENT_DOCUMENT_ADDED || event?.eventName === EVENT_DOCUMENT_PAGE_DELETED) {
         //     // we ignore this event
         //     // pages will be updated independently
