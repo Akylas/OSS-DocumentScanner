@@ -787,7 +787,7 @@
                 <gridlayout
                     backgroundColor={item.page.colors?.[0]}
                     borderRadius={12}
-                    elevation={6}
+                    elevation={colorTheme === 'eink' ? 0 : 6}
                     margin={12}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
