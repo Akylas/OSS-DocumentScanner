@@ -3,38 +3,24 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
-    import { LottieView } from '@nativescript-community/ui-lottie';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, Frame, NavigatedData, ObservableArray, Page, StackLayout, Utils } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, Frame, NavigatedData, ObservableArray, Page, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
-    import dayjs from 'dayjs';
-    import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
-    import PageIndicator from '~/components/common/PageIndicator.svelte';
-    import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
-    import SyncIndicator from '~/components/common/SyncIndicator.svelte';
     import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
     import { colorTheme, getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import {
-        DocumentAddedEventData,
-        DocumentDeletedEventData,
-        DocumentMovedFolderEventData,
-        DocumentUpdatedEventData,
-        FOLDER_COLOR_SEPARATOR,
-        FolderUpdatedEventData,
-        documentsService
-    } from '~/services/documents';
+    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentMovedFolderEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -53,7 +39,6 @@
         goToDocumentView,
         goToFolderView,
         importAndScanImage,
-        importImageFromCamera,
         onAndroidNewItent,
         onBackButton,
         pickFolderColor,
@@ -64,12 +49,11 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, folderBackgroundColor, fontScale, fonts, hasCamera, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
+    import { colors, folderBackgroundColor, fontScale, fonts, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
 
     const textPaint = new Paint();
-    const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
 
-    interface Item {
+    export interface Item {
         type?: string;
         doc?: OCRDocument;
         folder?: DocFolder;
@@ -79,51 +63,34 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let {
-        colorError,
-        colorOnBackground,
-        colorOnSurface,
-        colorOnSurfaceVariant,
-        colorOnTertiaryContainer,
-        colorOutline,
-        colorPrimaryContainer,
-        colorSurface,
-        colorSurfaceContainer,
-        colorSurfaceContainerHigh,
-        colorTertiaryContainer
-    } = $colors;
-    $: ({
-        colorError,
-        colorOnBackground,
-        colorOnSurface,
-        colorOnSurfaceVariant,
-        colorOnTertiaryContainer,
-        colorOutline,
-        colorPrimaryContainer,
-        colorSurface,
-        colorSurfaceContainer,
-        colorSurfaceContainerHigh,
-        colorTertiaryContainer
-    } = $colors);
+    let { colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh } = $colors;
+    $: ({ colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh } = $colors);
 
-    let documents: ObservableArray<Item> = null;
-    let folderItems: ObservableArray<Item> = null;
+    let folders: DocFolder[] = [];
+    export let collectionViewOptions = {};
+    export let documents: ObservableArray<Item> = null;
+    export let folderItems: ObservableArray<Item> = null;
     let nbDocuments: number = 0;
     let showNoDocument = false;
     let page: NativeViewElementNode<Page>;
-    let collectionView: NativeViewElementNode<CollectionView>;
+    export let collectionView: NativeViewElementNode<CollectionView>;
     let foldersCollectionView: NativeViewElementNode<CollectionView>;
-    let lottieView: NativeViewElementNode<LottieView>;
+    // let lottieView: NativeViewElementNode<LottieView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
 
     export let folder: DocFolder = null;
-    export let title = l('documents');
-    let folders: DocFolder[] = [];
+    export let title: string;
+    export let itemTemplateSelector = (viewStyle, item?: Item) => item?.type || 'default';
+    export let viewStyles: { [k: string]: { name: string; icon?: string; type?: string; boxType?: string } };
+    export let viewStyleChanged = (oldValue, newValue) => newValue !== oldValue;
+    export let defaultOrder = 'id DESC';
+    export let defaultViewStyle = 'expanded';
+    export const syncEnabled = syncService.enabled;
+    export let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', defaultViewStyle);
 
     $: if (folder) {
         DEV_LOG && console.log('updating folder title', folder);
-
         title = createNativeAttributedString({
             spans: [
                 {
@@ -139,9 +106,6 @@
         });
     }
 
-    let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', 'expanded');
-    $: condensed = viewStyle === 'condensed';
-    const syncEnabled = syncService.enabled;
     let syncRunning = false;
     $: DEV_LOG && console.log('syncEnabled', syncEnabled);
 
@@ -164,7 +128,7 @@
         loading = true;
         try {
             DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter);
-            const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true });
+            const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: defaultOrder });
             DEV_LOG && console.log('r', r.length);
 
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
@@ -192,19 +156,6 @@
                 )
             );
             updateNoDocument();
-
-            // if (DEV_LOG) {
-            //     const component = (await import('~/components/PDFPreview.svelte')).default;
-            //     await showModal({
-            //         page: component,
-            //         animated: true,
-            //         fullscreen: true,
-            //         props: {
-            //             documents: [documents.getItem(0).doc]
-            //         }
-            //     });
-            // }
-            // await Promise.all(r.map((d) => d.pages[0]?.imagePath));
         } catch (error) {
             showError(error);
         } finally {
@@ -321,7 +272,6 @@
     }
     function getImageView(index: number) {
         const view = collectionView?.nativeView?.getViewForItemAtIndex(index);
-        DEV_LOG && console.log('getImageView', index, view);
         return view?.getViewById<Img>('imageView');
     }
 
@@ -366,7 +316,7 @@
     }
 
     onMount(() => {
-        DEV_LOG && console.log('DocumentList', 'onMount', documentsService.id);
+        DEV_LOG && console.log('MainList', 'onMount', documentsService.id);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -385,10 +335,9 @@
         documentsService.on(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
         syncService.on(EVENT_STATE, refreshSimple);
-        // refresh();
     });
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentList', 'onDestroy');
+        DEV_LOG && console.log('MainList', 'onDestroy');
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.off(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -407,15 +356,7 @@
 
     const showActionButton = !startOnCam;
 
-    async function onStartCam(inverseUseSystemCamera = false) {
-        try {
-            await importImageFromCamera({ folder, inverseUseSystemCamera });
-        } catch (error) {
-            showError(error);
-        }
-    }
-
-    async function importDocument(importPDFs = true) {
+    export async function importDocument(importPDFs = true) {
         DEV_LOG && console.log('importDocument', importPDFs);
         try {
             await importAndScanImage({ folder, importPDFs });
@@ -506,20 +447,20 @@
         }
         nbSelected = newCount;
     }
-    function onItemLongPress(item: Item, event?) {
+    export function onItemLongPress(item: Item, event?) {
         if (item.selected) {
             unselectItem(item);
         } else {
             selectItem(item);
         }
     }
-    async function onItemTap(item: Item) {
+    export const onItemTap = throttle(async function (item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
                 return;
             }
-            // console.log('onItemTap', event && event.ios && event.ios.state, selectedSessions.length);
+            DEV_LOG && console.log('onItemTap', nbSelected, item);
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else if (item.doc) {
@@ -530,7 +471,7 @@
         } catch (error) {
             showError(error);
         }
-    }
+    }, 500);
 
     function onGoBack(data) {
         if (editingTitle) {
@@ -657,16 +598,23 @@
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
             await showPopoverMenu({
                 anchor: event.object,
+                options: Object.keys(viewStyles).map((k) => ({
+                    id: k,
+                    ...viewStyles[k],
+                    value: viewStyle === k,
+                    color: viewStyle === k ? colorPrimary : undefined
+                })),
+                vertPos: VerticalPosition.BELOW,
                 onClose: (item) => {
+                    DEV_LOG && console.log('onClose', item);
+                    const changed = viewStyleChanged(item.id, viewStyle);
+
                     viewStyle = item.id;
-                    refresh();
                     ApplicationSettings.setString('documents_list_view_style', viewStyle);
-                },
-                options: [
-                    { id: 'default', name: lc('expanded') },
-                    { id: 'condensed', name: lc('condensed') }
-                ],
-                vertPos: VerticalPosition.BELOW
+                    if (changed) {
+                        collectionView?.nativeView.refresh();
+                    }
+                }
             });
         } catch (error) {
             showError(error);
@@ -681,7 +629,7 @@
             showError(error);
         }
     }
-    function refreshCollectionView() {
+    export function refreshCollectionView() {
         foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }
@@ -700,41 +648,6 @@
                 lottieLightColor = new Color(colorPrimaryContainer).lighten(10);
             }
         }
-    }
-    function getItemImageHeight(viewStyle) {
-        return (condensed ? 44 : 94) * $fontScale;
-    }
-    function getItemRowHeight(viewStyle) {
-        return condensed ? 80 : 150;
-    }
-    function getFolderRowHeight(viewStyle) {
-        return condensed ? 80 : 70;
-    }
-    function getImageMargin(viewStyle) {
-        return 10;
-        // switch (viewStyle) {
-        //     case 'condensed':
-        //         return 10;
-        //     default:
-        //         return 10;
-        // }
-    }
-
-    $: textPaint.color = colorOnBackground || 'black';
-    $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
-
-    function drawRoundRect(canvas: Canvas, text: string, availableWidth, x, y) {
-        canvas.save();
-        textPaint.color = colorOnTertiaryContainer;
-        const staticLayout = new StaticLayout(' ' + text + ' ', textPaint, availableWidth, LayoutAlignment.ALIGN_NORMAL, 1, 0, false);
-        const width = staticLayout.getLineWidth(0);
-        const height = staticLayout.getHeight();
-        canvas.translate(x, y - height);
-        textPaint.setColor(colorTertiaryContainer);
-        canvas.drawRoundRect(-4, -1, width + 4, height + 1, height / 2, height / 2, textPaint);
-        textPaint.color = colorOnTertiaryContainer;
-        staticLayout.draw(canvas);
-        canvas.restore();
     }
 
     function onFolderCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
@@ -762,7 +675,7 @@
                 {
                     fontSize: 14 * $fontScale,
                     color: colorOutline,
-                    lineHeight: (condensed ? 14 : 20) * $fontScale,
+                    lineHeight: 20 * $fontScale,
                     text: '\n' + lc('documents_count', item.folder.count)
                 }
             ]
@@ -772,43 +685,6 @@
         canvas.translate(dx, h / 2 - staticLayout.getHeight() / 2);
         staticLayout.draw(canvas);
         canvas.restore();
-    }
-    function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        const w = canvas.getWidth();
-        const h = canvas.getHeight();
-        const dx = 10 + getItemImageHeight(viewStyle) + 16;
-        textPaint.color = colorOnSurfaceVariant;
-        const { doc } = item;
-        canvas.drawText(
-            filesize(
-                doc.pages.reduce((acc, v) => acc + v.size, 0),
-                { output: 'string' }
-            ),
-            dx,
-            h - (condensed ? 0 : 16) - 10,
-            textPaint
-        );
-        textPaint.color = colorOnBackground;
-        const topText = createNativeAttributedString({
-            spans: [
-                {
-                    fontSize: 16 * $fontScale,
-                    fontWeight: 'bold',
-                    lineBreak: 'end',
-                    lineHeight: 18 * $fontScale,
-                    text: doc.name
-                },
-                {
-                    color: colorOnSurfaceVariant,
-                    fontSize: 14 * $fontScale,
-                    lineHeight: (condensed ? 14 : 20) * $fontScale,
-                    text: '\n' + dayjs(doc.createdDate).format('L LT')
-                }
-            ]
-        });
-        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-        canvas.translate(dx, (condensed ? 0 : 10) + 10);
-        staticLayout.draw(canvas);
     }
 
     // #region Options
@@ -895,7 +771,6 @@
                                 }
                                 unselectAll();
                             }
-
                             break;
                     }
                 } catch (error) {
@@ -906,9 +781,6 @@
 
             vertPos: VerticalPosition.BELOW
         });
-    }
-    function itemTemplateSelector(item: Item, index, items) {
-        return item.type || 'default';
     }
     function itemTemplateSpanSize(item: Item, index, items) {
         if (item.folder) {
@@ -935,13 +807,14 @@
             bind:this={collectionView}
             colWidth="50%"
             ios:iosOverflowSafeArea={true}
-            {itemTemplateSelector}
+            itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             ios:layoutHorizontalAlignment="left"
             ios:layoutStyle="align"
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
-            spanSize={itemTemplateSpanSize}>
+            spanSize={itemTemplateSpanSize}
+            {...collectionViewOptions}>
             <Template key="folders" let:item>
                 <collectionView
                     bind:this={foldersCollectionView}
@@ -971,31 +844,7 @@
                     </Template>
                 </collectionView>
             </Template>
-            <Template let:item>
-                <canvasview
-                    class="card"
-                    borderWidth={colorTheme === 'eink' ? 1 : 0}
-                    height={getItemRowHeight(viewStyle) * $fontScale}
-                    on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
-                    on:draw={(e) => onCanvasDraw(item, e)}>
-                    <RotableImageView
-                        id="imageView"
-                        borderRadius={12}
-                        decodeWidth={IMAGE_DECODE_WIDTH}
-                        horizontalAlignment="left"
-                        item={item.doc.pages[0]}
-                        marginBottom={getImageMargin(viewStyle)}
-                        marginLeft={10}
-                        marginTop={getImageMargin(viewStyle)}
-                        sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0]?.id}`}
-                        stretch="aspectFill"
-                        width={getItemImageHeight(viewStyle)} />
-                    <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
-                    <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
-                    <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} />
-                </canvasview>
-            </Template>
+            <slot></slot>
         </collectionView>
         <progress backgroundColor="transparent" busy={true} indeterminate={true} row={2} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
@@ -1010,7 +859,6 @@
                 width="80%"
                 transition:fade={{ duration: 200 }}>
                 <lottie
-                    bind:this={lottieView}
                     async={true}
                     autoPlay={true}
                     flexShrink={2}
@@ -1032,20 +880,7 @@
             </flexlayout>
         {/if}
         {#if showActionButton}
-            <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
-                {#if __IOS__}
-                    <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
-                {/if}
-                <mdbutton
-                    class={$hasCamera ? 'small-fab' : 'fab'}
-                    horizontalAlignment="center"
-                    text="mdi-file-document-plus-outline"
-                    verticalAlignment="center"
-                    on:tap={throttle(() => importDocument(), 500)} />
-                {#if $hasCamera}
-                    <mdbutton id="fab" class="fab" margin="0 16 0 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
-                {/if}
-            </stacklayout>
+            <slot name="fab" />
         {/if}
 
         <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
@@ -1059,7 +894,6 @@
                 on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
             <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
-
             {#if folder}
                 <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
             {:else}
