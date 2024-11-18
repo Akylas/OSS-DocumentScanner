@@ -76,7 +76,9 @@
     "color_desc": "realza los colores y reduce los matices innecesarios",
     "color_theme": {
         "default": "por defecto",
-        "dynamic": "colores dinámicos"
+        "dynamic": "colores dinámicos",
+        "eink": "tinta electrónica",
+        "title": "Tema de color"
     },
     "columns": "columnas",
     "comments": "comentarios",

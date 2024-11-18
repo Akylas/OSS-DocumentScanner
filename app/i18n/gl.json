@@ -74,6 +74,12 @@
     "choose": "elixe",
     "color": "cor",
     "color_desc": "mellora as cores e reduce as sombras non desexadas",
+    "color_theme": {
+        "default": "predeterminado",
+        "dynamic": "cores dinámicas",
+        "eink": "tinta-e",
+        "title": "cor do decorado"
+    },
     "columns": "columnas",
     "comments": "comentarios",
     "computing": "a calcular...",
@@ -306,6 +312,7 @@
     "security": "seguridade",
     "security_settings": "axustes de seguridade",
     "select_all": "seleccionar todo",
+    "select_color_theme": "elixe a cor",
     "select_language": "elixir idioma",
     "select_sync_service": "elixir servizo de sincronización",
     "select_theme": "elixir decorado",
