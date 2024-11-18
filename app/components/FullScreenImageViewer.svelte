@@ -6,19 +6,20 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import { colorTheme } from '~/helpers/theme';
     import { colors, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorOnBackground } = $colors);
-
+    $: ({ colorOnBackground, colorPrimary } = $colors);
+    const isEInk = colorTheme === 'eink';
     export let useSVG = false;
     export let keepScreenAwake = false;
     export let refreshOnOrientationChange = false;
     export let screenBrightness = -1;
     export let startPageIndex: number = 0;
-    export let backgroundColor = 'black';
-    export let labelColor = 'white';
-    export let statusBarStyle: any = 'dark';
+    export let backgroundColor = isEInk ? 'white' : 'black';
+    export let labelColor = isEInk ? 'black' : 'white';
+    export let statusBarStyle: any = isEInk ? 'light' : 'dark';
     export let actionBarStyle: any = backgroundColor;
     export let images: { image?; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation?; svg? }[];
     let pager: NativeViewElementNode<Pager>;

@@ -77,7 +77,7 @@
     "color_theme": {
         "default": "default",
         "dynamic": "dynamic colors",
-        "eink": "eink",
+        "eink": "e-ink",
         "title": "color theme"
     },
     "columns": "columns",

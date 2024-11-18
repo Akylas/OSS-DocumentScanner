@@ -1,5 +1,5 @@
-import { request } from '@nativescript-community/perms';
 import { share } from '@akylas/nativescript-app-utils/share';
+import { request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -25,6 +25,7 @@ import {
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
+import { doInBatch } from '@shared/utils/batch';
 import { PermissionError, SilentError } from '@shared/utils/error';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
@@ -96,7 +97,6 @@ import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { saveImage } from '../utils';
-import { doInBatch } from '@shared/utils/batch';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -1288,7 +1288,7 @@ export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
 }
 export async function goToFolderView(folder: DocFolder, useTransition = true) {
     if (CARD_APP) {
-        const page = (await import('~/components/CardsList.svelte')).default;
+        const page = (await import('~/components/list/CardsList.svelte')).default;
         return navigate({
             page,
             props: {
@@ -1296,7 +1296,7 @@ export async function goToFolderView(folder: DocFolder, useTransition = true) {
             }
         });
     } else {
-        const page = (await import('~/components/DocumentsList.svelte')).default;
+        const page = (await import('~/components/list/DocumentsList.svelte')).default;
         return navigate({
             page,
             transition: __ANDROID__ && useTransition ? SharedTransition.custom(new PageTransition(300, null, 10)) : null,

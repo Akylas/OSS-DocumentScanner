@@ -1,12 +1,20 @@
 <script lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { AWebView } from '@nativescript-community/ui-webview';
-    import { Page } from '@nativescript/core';
+    import { Color, Page } from '@nativescript/core';
     import { OCRData } from 'plugin-nativeprocessor';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { showError } from '@shared/utils/showError';
     import { copyTextToClipboard } from '~/utils/ui';
+    import { colorTheme } from '~/helpers/theme';
+    import { colors } from '~/variables';
+
+    let { colorBackground, colorOnBackground } = $colors;
+    // technique for only specific properties to get updated on store change
+    $: ({ colorBackground, colorOnBackground } = $colors);
+    const visualState = colorTheme === 'eink' ? colorBackground : 'black';
+    const textColor = colorTheme === 'eink' ? colorOnBackground : 'white';
 
     export let ocrData: OCRData;
     export let imagePath: string;
@@ -191,7 +199,7 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="black" statusBarStyle="dark">
+<page bind:this={page} actionBarHidden={true} backgroundColor={visualState} statusBarStyle={colorTheme === 'eink' ? undefined : 'dark'}>
     <gridlayout rows="auto,*">
         <!-- <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
             <absolutelayout
@@ -224,20 +232,20 @@
         <!-- svelte-ignore missing-declaration -->
         <awebview
             bind:this={webView}
-            backgroundColor="black"
+            backgroundColor={visualState}
             debugMode={!PRODUCTION}
             displayZoomControls={false}
             mediaPlaybackRequiresUserAction={false}
             normalizeUrls={false}
             row={1}
-            src="~/assets/webpdfviewer/index.html"
+            src={`~/assets/webpdfviewer/index.html?textColor=${textColor}`}
             webConsoleEnabled={!PRODUCTION}
             on:loadFinished={onWebViewLoadFinished} />
 
-        <textview backgroundColor="#000000cc" color="white" editable={false} fontSize={16} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={true} title={null}>
-            <mdbutton class="actionBarButton" color="white" text="mdi-content-copy" variant="text" on:tap={copyText} />
-            <mdbutton class="actionBarButton" color="white" text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
+        <textview backgroundColor={new Color(visualState).setAlpha(200).hex} color={textColor} editable={false} fontSize={16} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState={visualState} modalWindow={true} title={null}>
+            <mdbutton class="actionBarButton" color={textColor} text="mdi-content-copy" variant="text" on:tap={copyText} />
+            <mdbutton class="actionBarButton" color={textColor} text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
         </CActionBar>
     </gridlayout>
 </page>

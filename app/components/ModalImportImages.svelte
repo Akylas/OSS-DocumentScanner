@@ -8,13 +8,20 @@
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
     import { ImportImageData } from '~/models/OCRDocument';
-    import { windowInset } from '~/variables';
+    import { colors, windowInset } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
     import { onDestroy, onMount } from 'svelte';
     import { confirmGoBack, onBackButton } from '~/utils/ui';
+    import { colorTheme } from '~/helpers/theme';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
+
+    let { colorBackground, colorOnBackground } = $colors;
+    // technique for only specific properties to get updated on store change
+    $: ({ colorBackground, colorOnBackground } = $colors);
+    const visualState = colorTheme === 'eink' ? colorBackground : 'black';
+    const textColor = colorTheme === 'eink' ? colorOnBackground : 'white';
 
     export let items: ImportImageData[] = [];
     // export let editingImage;
@@ -93,7 +100,7 @@
 </script>
 
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
-    <gridlayout backgroundColor="black" columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout backgroundColor={visualState} columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} id="pager" colSpan={3} disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <CropView {...item} on:undosChanged={onUndosChanged} />
@@ -102,24 +109,24 @@
         <PageIndicator colSpan={3} horizontalAlignment="right" margin="10 10 0 0" row={2} text={`${currentIndex + 1}/${items.length}`} />
         <mdbutton
             class="icon-btn"
-            color="white"
+            color={textColor}
             fontSize={46}
             horizontalAlignment="left"
-            rippleColor="white"
+            rippleColor={textColor}
             row={3}
             text="mdi-chevron-left"
             variant="text"
             verticalAlignment="center"
             visibility={currentIndex > 0 ? 'visible' : 'hidden'}
             on:tap={() => changePage(-1)} />
-        <label col={1} color="white" fontSize={13} row={3} text={lc('crop_edit_doc')} textAlignment="center" textWrap={true} verticalAlignment="center" />
+        <label col={1} color={textColor} fontSize={13} row={3} text={lc('crop_edit_doc')} textAlignment="center" textWrap={true} verticalAlignment="center" />
         <mdbutton
             class="icon-btn"
             col={2}
-            color="white"
+            color={textColor}
             fontSize={46}
             horizontalAlignment="right"
-            rippleColor="white"
+            rippleColor={textColor}
             row={3}
             text="mdi-chevron-right"
             variant="text"
@@ -130,7 +137,7 @@
         <mdbutton
             class="icon-btn"
             colSpan={3}
-            color="white"
+            color={textColor}
             horizontalAlignment="right"
             marginRight={10}
             row={4}
@@ -138,9 +145,9 @@
             variant="text"
             verticalAlignment="center"
             on:tap={resetCrop} />
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" colSpan={3} modalWindow={true} {onGoBack} title={null}>
-            <mdbutton class="actionBarButton" defaultVisualState="black" isEnabled={currentItem?.undos.length > 0} text="mdi-undo" variant="text" on:tap={onUndo} />
-            <mdbutton class="actionBarButton" defaultVisualState="black" isEnabled={currentItem?.redos.length > 0} text="mdi-redo" variant="text" on:tap={onRedo} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState={visualState} colSpan={3} modalWindow={true} {onGoBack} title={null}>
+            <mdbutton class="actionBarButton" defaultVisualState={visualState} isEnabled={currentItem?.undos.length > 0} text="mdi-undo" variant="text" on:tap={onUndo} />
+            <mdbutton class="actionBarButton" defaultVisualState={visualState} isEnabled={currentItem?.redos.length > 0} text="mdi-redo" variant="text" on:tap={onRedo} />
         </CActionBar>
     </gridlayout>
 </page>

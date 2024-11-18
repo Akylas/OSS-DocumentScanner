@@ -23,7 +23,7 @@
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { lc } from '~/helpers/locale';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { colorTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
@@ -62,7 +62,7 @@
     export let document: OCRDocument;
     export let transitionOnBack = true;
     let editingTitle = false;
-    let topBackgroundColor = document.pages[0].colors?.[1] ?? colorTertiary;
+    let topBackgroundColor = colorTheme === 'eink' ? 'white' : (document.pages[0].colors?.[1] ?? colorTertiary);
     let qrcodes: QRCodeData;
     // let currentQRCodeImage: ImageSource;
     // let currentQRCode: QRCodeSingleData;
@@ -72,7 +72,8 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
     let statusBarStyle;
-    let hasQRCodes = false;
+    // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
+    let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
 
     $: statusBarStyle = qrcodes?.length ? (new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light') : null;
 
@@ -787,7 +788,7 @@
                 <gridlayout
                     backgroundColor={item.page.colors?.[0]}
                     borderRadius={12}
-                    elevation={6}
+                    elevation={colorTheme === 'eink' ? 0 : 6}
                     margin={12}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}

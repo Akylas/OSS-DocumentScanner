@@ -233,9 +233,9 @@ try {
     if (startOnCam) {
         Comp = await import('~/components/camera/Camera.svelte');
     } else if (CARD_APP) {
-        Comp = await import('~/components/CardsList.svelte');
+        Comp = await import('~/components/list/CardsList.svelte');
     } else {
-        Comp = await import('~/components/DocumentsList.svelte');
+        Comp = await import('~/components/list/DocumentsList.svelte');
     }
     // svelteNative(Comp.default, {});
     // initializeDom();

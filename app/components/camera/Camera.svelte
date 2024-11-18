@@ -82,10 +82,10 @@
     async function showDocumentsList() {
         if (startOnCam) {
             if (CARD_APP) {
-                const CardsList = (await import('~/components/CardsList.svelte')).default;
+                const CardsList = (await import('~/components/list/CardsList.svelte')).default;
                 return navigate({ page: CardsList });
             } else {
-                const DocumentsList = (await import('~/components/DocumentsList.svelte')).default;
+                const DocumentsList = (await import('~/components/list/DocumentsList.svelte')).default;
                 return navigate({ page: DocumentsList });
             }
         }
