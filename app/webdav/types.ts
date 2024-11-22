@@ -197,7 +197,7 @@ export interface RequestOptionsWithState extends RequestOptions {
     _digest?: DigestContext;
 }
 
-export type ResponseData = string | Buffer | ArrayBuffer | Object | any[];
+export type ResponseData = string | Buffer | ArrayBuffer | object | any[];
 
 export interface ResponseDataDetailed<T> {
     data: T;

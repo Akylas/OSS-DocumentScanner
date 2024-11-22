@@ -7,14 +7,14 @@
     import dayjs from 'dayjs';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { onDestroy, onMount } from 'svelte';
-    import { Application, ObservableArray, OrientationChangedEventData, StackLayout, Utils, View } from '@akylas/nativescript';
+    import { Application, ObservableArray, OrientationChangedEventData, StackLayout, Utils, View } from '@nativescript/core';
     import { filesize } from 'filesize';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import RotableImageView from '../common/RotableImageView.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import PageIndicator from '../common/PageIndicator.svelte';
-    import { throttle } from '@akylas/nativescript/utils';
+    import { throttle } from '@nativescript/core/utils';
     import { importImageFromCamera } from '~/utils/ui';
     import { showError } from '@shared/utils/showError';
     import { DocFolder } from '~/models/OCRDocument';
@@ -219,7 +219,6 @@
                 return (item, position) => {
                     const foldersCount = folderItems?.length;
                     const firstIndex = foldersCount ? 1 : 0;
-                    DEV_LOG && console.log('getItemOverlap ', item, position, foldersCount);
                     if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
@@ -229,7 +228,6 @@
                 return (item, position) => {
                     const foldersCount = folderItems?.length;
                     const firstIndex = foldersCount ? 1 : 0;
-                    DEV_LOG && console.log('getItemOverlap ', item, position, foldersCount);
                     if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }

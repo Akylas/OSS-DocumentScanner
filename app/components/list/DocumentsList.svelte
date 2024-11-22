@@ -6,14 +6,14 @@
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import dayjs from 'dayjs';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { ObservableArray, StackLayout, Utils } from '@akylas/nativescript';
+    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
     import { filesize } from 'filesize';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import RotableImageView from '../common/RotableImageView.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import PageIndicator from '../common/PageIndicator.svelte';
-    import { throttle } from '@akylas/nativescript/utils';
+    import { throttle } from '@nativescript/core/utils';
     import { importImageFromCamera } from '~/utils/ui';
     import { showError } from '@shared/utils/showError';
     import { DocFolder } from '~/models/OCRDocument';

@@ -1,4 +1,4 @@
-import { wrapNativeException } from '@akylas/nativescript/utils';
+import { wrapNativeException } from '@nativescript/core/utils';
 import { File, ImageSource, path } from '@nativescript/core';
 
 export * from './utils.common';
