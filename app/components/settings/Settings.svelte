@@ -30,6 +30,7 @@
         CROP_ENABLED,
         DEFAULT_DRAW_FOLDERS_BACKGROUND,
         DEFAULT_EXPORT_DIRECTORY,
+        DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NAME_FORMAT,
         DOCUMENT_NOT_DETECTED_MARGIN,
@@ -47,6 +48,7 @@
         SETTINGS_DRAW_FOLDERS_BACKGROUND,
         SETTINGS_FILE_NAME_FORMAT,
         SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
+        SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
         SETTINGS_IMAGE_EXPORT_FORMAT,
         SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
@@ -542,6 +544,19 @@
                     value: ApplicationSettings.getBoolean('auto_black', false)
                 }
             ]
+                .concat(
+                    CARD_APP
+                        ? [
+                              {
+                                  type: 'switch',
+                                  id: SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
+                                  title: lc('force_white_background_qrcode'),
+                                  description: lc('force_white_background_qrcode_desc'),
+                                  value: ApplicationSettings.getBoolean(SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE, DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE)
+                              }
+                          ]
+                        : ([] as any)
+                )
                 .concat(
                     __ANDROID__
                         ? [

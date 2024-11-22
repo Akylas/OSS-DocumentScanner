@@ -6,7 +6,20 @@
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, Color, ContentView, EventData, ImageSource, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
+    import {
+        AnimationDefinition,
+        Application,
+        ApplicationSettings,
+        Color,
+        ContentView,
+        EventData,
+        ImageSource,
+        ObservableArray,
+        Page,
+        PageTransition,
+        SharedTransition,
+        StackLayout
+    } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application';
     import { throttle } from '@nativescript/core/utils';
     import { create as createImagePicker } from '@nativescript/imagepicker';
@@ -23,19 +36,21 @@
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { lc } from '~/helpers/locale';
-    import { colorTheme, onThemeChanged } from '~/helpers/theme';
+    import { colorTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
     import {
         CARD_RATIO,
+        DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         EVENT_DOCUMENT_DELETED,
         EVENT_DOCUMENT_PAGES_ADDED,
         EVENT_DOCUMENT_PAGE_DELETED,
         EVENT_DOCUMENT_PAGE_UPDATED,
         EVENT_DOCUMENT_UPDATED,
-        QRCODE_RESIZE_THRESHOLD
+        QRCODE_RESIZE_THRESHOLD,
+        SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
@@ -58,6 +73,8 @@
     // technique for only specific properties to get updated on store change
     let { colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorSurface, colorSurfaceContainerHigh, colorTertiary } = $colors;
     $: ({ colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorSurface, colorSurfaceContainerHigh, colorTertiary } = $colors);
+
+    const forceWhiteBackgroundForQRCode = ApplicationSettings.getBoolean(SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE, DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE);
 
     export let document: OCRDocument;
     export let transitionOnBack = true;
@@ -83,7 +100,7 @@
     // let items: ObservableArray<Item> = null;
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
-        updateQRCodes($colors.colorOnBackground);
+        updateQRCodes();
     });
     // $: {
     const pages = document.getObservablePages();
@@ -115,8 +132,18 @@
             recycleImages(toClear);
         }, timeout);
     }
+    let qrcodeColor;
+    let qrcodeBackgroundColor;
 
-    async function updateQRCodes(color = $colors.colorOnBackground) {
+    function updateQRCodeColors() {
+        qrcodeColor = !isDarkTheme() || !forceWhiteBackgroundForQRCode ? $colors.colorOnBackground : $colors.colorBackground;
+        qrcodeBackgroundColor = !isDarkTheme() || !forceWhiteBackgroundForQRCode ? $colors.colorBackground : $colors.colorOnBackground;
+    }
+
+    async function updateQRCodes() {
+        updateQRCodeColors();
+        DEV_LOG && console.log('updateQRCodes', isDarkTheme(), forceWhiteBackgroundForQRCode, qrcodeColor);
+        const color = qrcodeColor;
         const newQrCodes = [];
         for (let index = 0; index < document.pages.length; index++) {
             const page = document.pages[index];
@@ -814,7 +841,7 @@
             <pager bind:this={pager} id="pager" height={screenHeightDips * 0.4} items={qrcodes} margin={16} selectedIndex={currentQRCodeIndex} on:selectedIndexChange={onSelectedIndex}>
                 <Template let:index let:item>
                     <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
-                        <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
+                        <svgview backgroundColor={qrcodeBackgroundColor} sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
                         <label
                             fontSize={30}
                             fontWeight="bold"

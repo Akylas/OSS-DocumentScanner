@@ -31,6 +31,7 @@ export const SETTINGS_MAGNIFIER_SENSITIVITY = 'magnifier_sensitivity';
 export const SETTINGS_SYNC_ON_START = 'sync_on_start';
 export const SETTINGS_DRAW_FOLDERS_BACKGROUND = 'draw_folder_background';
 export const SETTINGS_START_ON_CAM = 'start_on_cam';
+export const SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE = 'force_white_background_qrcode';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -76,6 +77,7 @@ export const DEFAULT_COLORTYPE = 'normal';
 export const DEFAULT_CONTRAST = 1;
 export const DEFAULT_BRIGHTNESS = 0;
 export const DEFAULT_COLORMATRIX = null;
+export const DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE = false;
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
     color: 'color',
