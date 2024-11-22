@@ -22,6 +22,7 @@
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentAddedEventData, DocumentDeletedEventData, DocumentMovedFolderEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from '~/services/documents';
     import { syncService } from '~/services/sync';
+    import { syncService, syncServicesStore } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
         EVENT_DOCUMENT_ADDED,
@@ -86,9 +87,12 @@
     export let viewStyleChanged = (oldValue, newValue) => newValue !== oldValue;
     export let defaultOrder = 'id DESC';
     export let defaultViewStyle = 'expanded';
-    export const syncEnabled = syncService.enabled;
+    export let syncEnabled = syncService.enabled;
     export let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', defaultViewStyle);
 
+    $: if ($syncServicesStore) {
+        syncEnabled = syncService.enabled;
+    }
     $: if (folder) {
         DEV_LOG && console.log('updating folder title', folder);
         title = createNativeAttributedString({
