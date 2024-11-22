@@ -76,7 +76,9 @@
     "color_desc": "realza los colores y reduce los matices innecesarios",
     "color_theme": {
         "default": "por defecto",
-        "dynamic": "colores dinámicos"
+        "dynamic": "colores dinámicos",
+        "eink": "tinta electrónica",
+        "title": "Tema de color"
     },
     "columns": "columnas",
     "comments": "comentarios",
@@ -310,6 +312,7 @@
     "security": "seguridad",
     "security_settings": "configuraciones de seguridad",
     "select_all": "seleccionar todo",
+    "select_color_theme": "Seleccione el color del tema",
     "select_language": "seleccionar idioma",
     "select_sync_service": "seleccionar servicio de sincronización",
     "select_theme": "seleccionar tema",
