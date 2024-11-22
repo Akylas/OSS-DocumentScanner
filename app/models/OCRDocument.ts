@@ -540,7 +540,7 @@ export class OCRDocument extends Observable implements Document {
             await db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
             delete this.folders;
         }
-        this._synced = 0;
+        this.save({}, true, false);
         if (notify) {
             documentsService.notify({ eventName: EVENT_DOCUMENT_MOVED_FOLDER, doc: this, folder, oldFolderId } as DocumentMovedFolderEventData);
         }
