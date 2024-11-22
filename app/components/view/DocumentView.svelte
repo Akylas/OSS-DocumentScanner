@@ -18,7 +18,14 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
+    import {
+        DocumentDeletedEventData,
+        DocumentPageDeletedEventData,
+        DocumentPageUpdatedEventData,
+        DocumentPagesAddedEventData,
+        DocumentUpdatedEventData,
+        documentsService
+    } from '~/services/documents';
     import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGES_ADDED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
@@ -324,12 +331,12 @@
         return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
     }
 
-    function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
-        if ((event.object as OCRDocument).id !== document.id) {
+    function onPagesAdded(event: DocumentPagesAddedEventData) {
+        if (event.doc.id !== document.id) {
             return;
         }
         DEV_LOG && console.log('onPagesAdded', VIEW_ID);
-        document = event.object as OCRDocument;
+        document = event.doc;
         DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         try {
             if (items) {
@@ -340,11 +347,11 @@
             showError(error, { silent: true });
         }
     }
-    function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        if ((event.object as OCRDocument).id !== document.id) {
+    function onDocumentPageUpdated(event: DocumentPageUpdatedEventData) {
+        if (event.doc.id !== document.id) {
             return;
         }
-        document = event.object as OCRDocument;
+        document = event.doc;
         const index = event.pageIndex;
         const current = items.getItem(index);
         if (current) {
@@ -362,11 +369,11 @@
             items.setItem(index, { ...current, page });
         }
     }
-    function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
-        if ((event.object as OCRDocument).id !== document.id) {
+    function onDocumentPageDeleted(event: DocumentPageDeletedEventData) {
+        if (event.doc.id !== document.id) {
             return;
         }
-        document = event.object as OCRDocument;
+        document = event.doc;
         const index = event.pageIndex;
         items.splice(index, 1);
         for (let i = index; i < items.length; i++) {

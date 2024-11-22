@@ -9,6 +9,7 @@ import { lc } from '@nativescript-community/l';
 import { networkService } from '~/services/api';
 import { WebdavSyncOptions } from '~/services/sync/Webdav';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
+import { DOCUMENT_DATA_FILENAME } from '~/utils/constants';
 
 export interface WebdavDataSyncOptions extends BaseDataSyncServiceOptions, WebdavSyncOptions {}
 
@@ -31,7 +32,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     static start(config?: { id: number; [k: string]: any }) {
         if (config) {
             // const config = JSON.parse(econfigStr);
-            const { remoteURL, headers, authType, ...otherConfig } = config;
+            const { authType, headers, remoteURL, ...otherConfig } = config;
             const service = WebdavDataSyncService.getOrCreateInstance();
             Object.assign(service, config);
             DEV_LOG && console.log('WebdavDataSyncService', 'start', JSON.stringify(config), service.autoSync);
@@ -76,8 +77,12 @@ export class WebdavDataSyncService extends BaseDataSyncService {
             }
         }
     }
-    override async getFileFromRemote(document: OCRDocument, filename: string) {
-        const remoteDocPath = path.join(this.remoteFolder, document.id);
+    override async fileExists(filename: string) {
+        return this.client.exists(path.join(this.remoteFolder, filename));
+    }
+
+    override async getFileFromRemote(filename: string, document?: OCRDocument) {
+        const remoteDocPath = document ? path.join(this.remoteFolder, document.id) : this.remoteFolder;
         const result = await this.client.getFileContents(path.join(remoteDocPath, filename), {
             format: 'text'
         });
@@ -130,18 +135,18 @@ export class WebdavDataSyncService extends BaseDataSyncService {
         TEST_LOG && console.log('addDocumentToWebdav', this.remoteFolder, document.id, document.pages);
         const docFolder = getDocumentsService().dataFolder.getFolder(document.id);
         await this.sendFolderToRemote(docFolder, document.id);
-        await this.client.putFileContents(path.join(this.remoteFolder, document.id, 'data.json'), document.toString());
+        await this.client.putFileContents(path.join(this.remoteFolder, document.id, DOCUMENT_DATA_FILENAME), document.toString());
         // mark the document as synced
         // TEST_LOG && console.log('addDocumentToWebdav done saving synced state', document.id, document.pages);
     }
 
     override async importDocumentFromRemote(data: FileStat) {
         const dataJSON = JSON.parse(
-            await this.client.getFileContents(path.join(data.filename, 'data.json'), {
+            await this.client.getFileContents(path.join(data.filename, DOCUMENT_DATA_FILENAME), {
                 format: 'text'
             })
         ) as OCRDocument & { pages: OCRPage[]; db_version?: number };
-        const { pages, db_version, ...docProps } = dataJSON;
+        const { db_version, folders, pages, ...docProps } = dataJSON;
         if (db_version > DocumentsService.DB_VERSION) {
             throw new Error(lc('document_need_updated_app', docProps.name));
         }
@@ -149,20 +154,27 @@ export class WebdavDataSyncService extends BaseDataSyncService {
         let pageIds = [];
         let docDataFolder: Folder;
         try {
-            TEST_LOG && console.log('importDocumentFromRemote creating document', JSON.stringify(docProps));
+            TEST_LOG && console.log('importDocumentFromRemote creating document', JSON.stringify(docProps), JSON.stringify(folders));
             await getDocumentsService().documentRepository.delete({ id: docId } as any);
-            const doc = await getDocumentsService().documentRepository.createDocument({ ...docProps, _synced: 0 });
+            const doc = await getDocumentsService().documentRepository.createDocument({ ...docProps, folders, _synced: 0 });
             docId = doc.id;
             docDataFolder = getDocumentsService().dataFolder.getFolder(docId);
-            TEST_LOG && console.log('importDocumentFromWebdav', docDataFolder.path, data, JSON.stringify(dataJSON));
             pages.forEach((page) => {
                 const pageDataFolder = docDataFolder.getFolder(page.id);
                 page.sourceImagePath = path.join(pageDataFolder.path, basename(page.sourceImagePath));
                 page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
             });
             pageIds = pages.map((p) => p.id);
-            await this.importFolderFromRemote(data.basename, docDataFolder, ['data.json']);
+            await this.importFolderFromRemote(data.basename, docDataFolder, [DOCUMENT_DATA_FILENAME]);
             await doc.addPages(pages);
+            if (folders) {
+                const actualFolders = await Promise.all(folders.map((folderId) => getDocumentsService().folderRepository.get(folderId)));
+                // in this case we only add folders which actually already exists in db. Means they have to be synced before
+                for (let index = 0; index < actualFolders.length; index++) {
+                    const folder = actualFolders[index];
+                    doc.setFolder({ folderId: folder.id });
+                }
+            }
             return doc;
         } catch (error) {
             console.error('error while adding remote doc, let s remove it', docId, pageIds, error, error.stack);

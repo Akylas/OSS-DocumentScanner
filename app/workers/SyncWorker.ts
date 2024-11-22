@@ -4,7 +4,7 @@ import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescri
 import { time } from '@nativescript/core/profiling';
 import type { Optional } from '@nativescript/core/utils/typescript-utils';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
-import { OCRDocument, OCRPage, setDocumentsService } from '~/models/OCRDocument';
+import { DocFolder, OCRDocument, OCRPage, getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { prefs } from '~/services/preferences';
@@ -20,12 +20,17 @@ import { WebdavImageSyncService } from '~/services/sync/WebdavImageSyncService';
 import { WebdavPDFSyncService } from '~/services/sync/WebdavPDFSyncService';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/services/sync/types';
 import {
+    DOCUMENT_DATA_FILENAME,
     EVENT_DOCUMENT_ADDED,
+    EVENT_DOCUMENT_MOVED_FOLDER,
     EVENT_DOCUMENT_PAGES_ADDED,
     EVENT_DOCUMENT_PAGE_DELETED,
     EVENT_DOCUMENT_PAGE_UPDATED,
     EVENT_DOCUMENT_UPDATED,
+    EVENT_FOLDER_ADDED,
+    EVENT_FOLDER_UPDATED,
     EVENT_SYNC_STATE,
+    FOLDERS_DATA_FILENAME,
     IMG_COMPRESS,
     IMG_FORMAT,
     SETTINGS_SYNC_SERVICES,
@@ -330,12 +335,12 @@ export default class SyncWorker extends Observable {
     }
 
     async syncDataDocuments({ bothWays = false, event, force = false }: { force; bothWays; event: DocumentEvents }) {
-        if (event?.eventName === EVENT_DOCUMENT_PAGES_ADDED || event?.eventName === EVENT_DOCUMENT_PAGE_UPDATED || event?.eventName === EVENT_DOCUMENT_PAGE_DELETED) {
+        if (event && (event.eventName === EVENT_DOCUMENT_PAGES_ADDED || event.eventName === EVENT_DOCUMENT_PAGE_UPDATED || event.eventName === EVENT_DOCUMENT_PAGE_DELETED)) {
             // we ignore this event
             // pages will be updated independently
             return;
         }
-        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({})));
+        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.findDocuments()));
 
         TEST_LOG &&
             console.info(
@@ -352,11 +357,45 @@ export default class SyncWorker extends Observable {
                     if (!service.shouldSync(force)) {
                         return;
                     }
+
                     const deleteKey = getRemoteDeleteDocumentSettingsKey(service);
                     const documentsToDeleteOnRemote: string[] = JSON.parse(ApplicationSettings.getString(deleteKey, '[]'));
                     if (bothWays) {
-                        await service.ensureRemoteFolder();
-                        const remoteDocuments = await service.getRemoteFolderDirectories('');
+                        {
+                            await service.ensureRemoteFolder();
+                            TEST_LOG && console.log('syncing folders both ways');
+                            const remoteFolders = ((await service.fileExists(FOLDERS_DATA_FILENAME)) ? JSON.parse(await service.getFileFromRemote(FOLDERS_DATA_FILENAME)) : []) as DocFolder[];
+                            // we need to send folders not on remote
+                            TEST_LOG && console.log('remoteFolders', JSON.stringify(remoteFolders));
+                            const localFolders = await documentsService.folderRepository.search();
+                            let needsRemoteChange = false;
+
+                            const { toBeAdded: missingLocalFolders, toBeDeleted: missingRemoteFolders, union: toBeSyncFolders } = findArrayDiffs(localFolders, remoteFolders, (a, b) => a.id === b.id);
+                            for (let index = 0; index < missingRemoteFolders.length; index++) {
+                                remoteFolders.push(missingRemoteFolders[index].toJSONObject());
+                                needsRemoteChange = true;
+                            }
+                            for (let index = 0; index < missingLocalFolders.length; index++) {
+                                TEST_LOG && console.log('creating folder from remote', JSON.stringify(missingLocalFolders[index]));
+                                const folder = await getDocumentsService().folderRepository.create(missingLocalFolders[index]);
+                                documentsService.notify({ eventName: EVENT_FOLDER_ADDED, folder });
+                            }
+                            for (let index = 0; index < toBeSyncFolders.length; index++) {
+                                const folderId = toBeSyncFolders[index].id;
+                                const remoteFolder = remoteFolders.find((f) => f.id === folderId);
+                                const localFolder = localFolders.find((f) => f.id === folderId);
+                                if (remoteFolder.modifiedDate > localFolder.modifiedDate) {
+                                    Object.assign(remoteFolder, localFolder.toJSONObject());
+                                    needsRemoteChange = true;
+                                } else if (remoteFolder.modifiedDate < localFolder.modifiedDate) {
+                                    localFolder.save(remoteFolder);
+                                }
+                            }
+                            if (needsRemoteChange) {
+                                await service.putFileContentsFromData(FOLDERS_DATA_FILENAME, JSON.stringify(remoteFolders));
+                            }
+                        }
+                        const remoteDocuments = (await service.getRemoteFolderDirectories('')).filter((s) => s.type === 'directory');
                         TEST_LOG && console.log('remoteDocuments', JSON.stringify(remoteDocuments));
                         const {
                             toBeAdded: missingLocalDocuments,
@@ -404,11 +443,37 @@ export default class SyncWorker extends Observable {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
                         }
                     } else {
+                        if (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED) {
+                            const remoteFolders = ((await service.fileExists(FOLDERS_DATA_FILENAME)) ? JSON.parse(await service.getFileFromRemote(FOLDERS_DATA_FILENAME)) : []) as any[];
+                            // we need to send folders not on remote
+                            const localFolders = await getDocumentsService().folderRepository.search();
+                            let changed = false;
+                            for (let index = 0; index < localFolders.length; index++) {
+                                const folder = localFolders[index];
+                                const remoteIndex = remoteFolders.findIndex((f) => folder.id === f.id);
+                                DEV_LOG && console.log('should update remote folder', folder.id, remoteIndex);
+                                if (remoteIndex >= 0) {
+                                    const remoteFolder = remoteFolders[remoteIndex];
+                                    DEV_LOG && console.log('updating remote folder', folder.id, remoteFolder.modifiedDate, folder.modifiedDate);
+                                    if (remoteFolder.modifiedDate < folder.modifiedDate) {
+                                        Object.assign(remoteFolder, folder.toJSONObject());
+                                        changed = true;
+                                    }
+                                } else {
+                                    DEV_LOG && console.log('creating remote folder', folder.id);
+                                    remoteFolders.push(folder.toString());
+                                    changed = true;
+                                }
+                            }
+                            if (changed) {
+                                await service.putFileContentsFromData(FOLDERS_DATA_FILENAME, JSON.stringify(remoteFolders));
+                            }
+                        }
                         // just test if we have local document marked as needing update
                         const documentsToSync = localDocuments.filter((d) => (d._synced & service.syncMask) === 0).concat(documentsToDeleteOnRemote as any[]);
                         if (documentsToSync.length) {
                             await service.ensureRemoteFolder();
-                            const remoteDocuments = await service.getRemoteFolderDirectories('');
+                            const remoteDocuments = (await service.getRemoteFolderDirectories('')).filter((s) => s.type === 'directory');
                             TEST_LOG && console.log('remoteDocuments', JSON.stringify(remoteDocuments));
                             const {
                                 toBeAdded: missingLocalDocuments,
@@ -459,7 +524,7 @@ export default class SyncWorker extends Observable {
 
     async syncDocumentOnRemote(document: OCRDocument, service: BaseDataSyncService) {
         TEST_LOG && console.log('syncDocumentOnWebdav', document.id);
-        const dataJSON = JSON.parse(await service.getFileFromRemote(document, 'data.json')) as OCRDocument;
+        const dataJSON = JSON.parse(await service.getFileFromRemote(DOCUMENT_DATA_FILENAME, document)) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
         DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
         if (dataJSON.modifiedDate > document.modifiedDate) {
@@ -589,9 +654,9 @@ export default class SyncWorker extends Observable {
             await document.save({ _synced: document._synced | service.syncMask, ...toUpdate });
 
             if (needsRemoteDocUpdate) {
-                await service.putFileContentsFromData(path.join(document.id, 'data.json'), document.toString());
+                await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString());
             }
-        } else if (dataJSON.modifiedDate < document.modifiedDate) {
+        } else if (dataJSON.modifiedDate < document.modifiedDate || (document.folders && !dataJSON.folders)) {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
             const { pages: docPages, ...docProps } = document.toJSONObject ? document.toJSONObject() : document;
             const { pages: remotePages, ...remoteProps } = dataJSON;
@@ -693,7 +758,7 @@ export default class SyncWorker extends Observable {
                     }
                 }
             }
-            await service.putFileContentsFromData(path.join(document.id, 'data.json'), document.toString(), { overwrite: true });
+            await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString(), { overwrite: true });
             return document.save({ _synced: document._synced | service.syncMask });
         } else if ((document._synced & service.syncMask) === 0) {
             // TEST_LOG && console.log('syncDocumentOnWebdav just changing sync state');
@@ -829,7 +894,7 @@ export default class SyncWorker extends Observable {
 const worker = new SyncWorker(context);
 const receivedMessage = worker.receivedMessage.bind(worker);
 context.onmessage = (event) => {
-    DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
+    // DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
     if (typeof event.data.messageData === 'string') {
         try {
             event.data.messageData = JSON.parse(event.data.messageData);

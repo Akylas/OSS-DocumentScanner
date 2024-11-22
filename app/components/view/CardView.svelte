@@ -38,7 +38,14 @@
     import { lc } from '~/helpers/locale';
     import { colorTheme, isDarkTheme, onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentDeletedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
+    import {
+        DocumentDeletedEventData,
+        DocumentPageDeletedEventData,
+        DocumentPageUpdatedEventData,
+        DocumentPagesAddedEventData,
+        DocumentUpdatedEventData,
+        documentsService
+    } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
     import {
@@ -405,11 +412,11 @@
         return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
     }
 
-    function onPagesAdded(event: EventData & { pages: OCRPage[] }) {
-        if ((event.object as OCRDocument).id !== document.id) {
+    function onPagesAdded(event: DocumentPagesAddedEventData) {
+        if (event.doc.id !== document.id) {
             return;
         }
-        document = event.object as OCRDocument;
+        document = event.doc;
         try {
             if (items) {
                 const length = items.length;
@@ -420,11 +427,11 @@
             showError(error, { silent: true });
         }
     }
-    function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        if ((event.object as OCRDocument).id !== document.id) {
+    function onDocumentPageUpdated(event: DocumentPageUpdatedEventData) {
+        if (event.doc.id !== document.id) {
             return;
         }
-        document = event.object as OCRDocument;
+        document = event.doc;
         const index = event.pageIndex;
         const current = items.getItem(index);
         if (current) {
@@ -443,11 +450,11 @@
             }
         }
     }
-    function onDocumentPageDeleted(event: EventData & { pageIndex: number }) {
-        if ((event.object as OCRDocument).id !== document.id) {
+    function onDocumentPageDeleted(event: DocumentPageDeletedEventData) {
+        if (event.doc.id !== document.id) {
             return;
         }
-        document = event.object as OCRDocument;
+        document = event.doc;
         const index = event.pageIndex;
         items.splice(index, 1);
         items.forEach((item, index) => (item.index = index + 1));
@@ -791,6 +798,13 @@
                 }))
             )
         });
+    }
+
+    async function addExtraField() {
+        try {
+        } catch (error) {
+            showError(error);
+        }
     }
 </script>
 

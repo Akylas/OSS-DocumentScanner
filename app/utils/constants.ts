@@ -120,6 +120,10 @@ export const EVENT_DOCUMENT_PAGES_ADDED = 'documentPagesAdded';
 export const EVENT_DOCUMENT_PAGE_DELETED = 'documentPageDeleted';
 export const EVENT_DOCUMENT_PAGE_UPDATED = 'documentPageUpdated';
 export const EVENT_FOLDER_UPDATED = 'folderUpdated';
+export const EVENT_FOLDER_ADDED = 'folderAdded';
 
 export const EVENT_STATE = 'state';
 export const EVENT_SYNC_STATE = 'syncState';
+
+export const FOLDERS_DATA_FILENAME = 'folders.json';
+export const DOCUMENT_DATA_FILENAME = 'data.json';

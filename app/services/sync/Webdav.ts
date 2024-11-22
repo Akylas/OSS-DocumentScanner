@@ -11,7 +11,7 @@ export interface WebdavSyncOptions {
     headers?: Headers;
 }
 
-export async function testWebdavConnection({ remoteURL, username, password, remoteFolder, token, authType = null }): Promise<boolean> {
+export async function testWebdavConnection({ authType = null, password, remoteFolder, remoteURL, token, username }): Promise<boolean> {
     try {
         const context = createContext(remoteURL, { password, username, authType: authType || AuthType.Password, token: token ? { access_token: token, token_type: 'Bearer' } : token });
         DEV_LOG && console.log('testConnection', context);
@@ -23,7 +23,7 @@ export async function testWebdavConnection({ remoteURL, username, password, remo
     }
 }
 
-export function createWebdavConfig({ remoteURL, username, password, remoteFolder, authType = AuthType.Password, token, ...otherProps }: WebdavSyncOptions) {
+export function createWebdavConfig({ authType = AuthType.Password, password, remoteFolder, remoteURL, token, username, ...otherProps }: WebdavSyncOptions) {
     const context = createContext(remoteURL, { username, password, authType, token: token ? { access_token: token, token_type: 'bearer' } : undefined });
     return {
         remoteURL,

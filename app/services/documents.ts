@@ -1,3 +1,5 @@
+import { isObject, isString } from '@nativescript/core/utils';
+import { Optional } from '@nativescript/core/utils/typescript-utils';
 import { ApplicationSettings, EventData, File, Folder, Observable, knownFolders, path } from '@nativescript/core';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
 import { doInBatch } from '@shared/utils/batch';
@@ -86,6 +88,10 @@ export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
             model: DocFolder
         });
     }
+    migrations = {
+        addModifDate: sql`ALTER TABLE Folder ADD COLUMN modifiedDate BIGINT;`,
+        fillNullModifDate: sql`UPDATE Folder SET modifiedDate = (round((julianday('now') - 2440587.5)*86400000)) WHERE modifiedDate IS NULL;`
+    };
 
     async createTables() {
         await this.database.query(sql`
@@ -117,6 +123,12 @@ COUNT(pf.document_id) AS count`,
             postfix: sql`
 LEFT JOIN DocumentsFolders pf ON f.id = pf.folder_id`
         });
+    }
+
+    async createModelFromAttributes(attributes: DocFolder): Promise<any> {
+        const model = new DocFolder();
+        Object.assign(model, attributes);
+        return model;
     }
 }
 export class PageRepository extends BaseRepository<OCRPage, Page> {
@@ -153,8 +165,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
                 ? sql`
         CREATE TABLE IF NOT EXISTS "Page" (
             id TEXT PRIMARY KEY NOT NULL,
-            createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
-            modifiedDate NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+            createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
+            modifiedDate NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
             pageIndex INTEGER,
             colorType TEXT,
             colorMatrix TEXT,
@@ -175,8 +187,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
                 : sql`
         CREATE TABLE IF NOT EXISTS "Page" (
             id TEXT PRIMARY KEY NOT NULL,
-            createdDate BIGINT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
-            modifiedDate NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+            createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
+            modifiedDate NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
             pageIndex INTEGER,
             colorType TEXT,
             colorMatrix TEXT,
@@ -324,14 +336,23 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
 
     migrations = Object.assign({
+        addExtra: sql`ALTER TABLE Document ADD COLUMN extra TEXT`,
         addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`
     });
 
     async createDocument(document: Document) {
-        const { folders, ...others } = document;
-        others.createdDate = others.modifiedDate = Date.now();
-        others._synced = 0;
-        const doc = await this.create(cleanUndefined({ ...others, pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined }));
+        const { extra, folders, ...others } = document;
+        const createdDate = Date.now();
+        const doc = await this.create(
+            cleanUndefined({
+                ...others,
+                extra: isObject(extra) ? JSON.stringify(extra) : extra,
+                _synced: 0,
+                createdDate,
+                modifiedDate: createdDate,
+                pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined
+            })
+        );
         if (folders) {
             for (let index = 0; index < folders.length; index++) {
                 await doc.setFolder({ folderId: folders[index], notify: false });
@@ -434,7 +455,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
         return result.filter((d) => d.pages?.length > 0);
     }
-    async findDocuments({ filter, folder, omitThoseWithFolders = false, order = 'id DESC' }: { filter?: string; folder?: DocFolder; omitThoseWithFolders?: boolean; order?: string }) {
+    async findDocuments({ filter, folder, omitThoseWithFolders = false, order = 'id DESC' }: { filter?: string; folder?: DocFolder; omitThoseWithFolders?: boolean; order?: string } = {}) {
         const args = {
             select: new SqlQuery([
                 `d.*,
@@ -475,13 +496,14 @@ LEFT JOIN
         return this.search(args);
     }
     async createModelFromAttributes(attributes: Required<any> | OCRDocument): Promise<any> {
-        const { folders, id, pagesOrder, ...others } = attributes;
+        const { extra, folders, id, pagesOrder, ...others } = attributes;
         // DEV_LOG && console.log('createModelFromAttributes', id, folders, typeof folders);
         const document = new OCRDocument(id);
         Object.assign(document, {
             id,
             ...others,
             folders: (typeof folders === 'string' ? folders.split(FOLDERS_SEPARATOR) : folders)?.map((f) => parseInt(f, 10)),
+            extra: isString(extra) ? JSON.parse(extra) : extra,
             pagesOrder: typeof pagesOrder === 'string' && pagesOrder.length ? JSON.parse(pagesOrder) : pagesOrder
         });
 
@@ -507,41 +529,53 @@ LEFT JOIN
     }
 }
 
-export interface DocumentAddedEventData extends EventData {
-    doc: OCRDocument;
+export type DocumentEventData = Optional<EventData<Observable>, 'object'>;
+
+export interface DocumentAddedEventData extends DocumentEventData {
+    doc?: OCRDocument;
     folder?: DocFolder;
 }
-export interface DocumentMovedFolderEventData extends EventData {
-    object: OCRDocument;
+export interface DocumentMovedFolderEventData extends DocumentEventData {
+    doc?: OCRDocument;
     folder?: DocFolder;
     oldFolderId?: number;
 }
-export interface DocumentPagesAddedEventData extends EventData {
-    object: OCRDocument;
-    pages: OCRPage[];
+export interface DocumentFolderAddedEventData extends DocumentEventData {
+    folder?: DocFolder;
 }
-export interface DocumentPageDeletedEventData extends EventData {
-    object: OCRDocument;
-    pageIndex: number;
+export interface DocumentPagesAddedEventData extends DocumentEventData {
+    doc?: OCRDocument;
+    pages?: OCRPage[];
 }
-export interface DocumentPageUpdatedEventData extends EventData {
-    object: OCRDocument;
-    pageIndex: number;
-    imageUpdated: boolean;
+export interface DocumentPageDeletedEventData extends DocumentEventData {
+    doc?: OCRDocument;
+    pageIndex?: number;
 }
-export interface DocumentUpdatedEventData extends EventData {
-    doc: OCRDocument;
-    updateModifiedDate: boolean;
+export interface DocumentPageUpdatedEventData extends DocumentEventData {
+    doc?: OCRDocument;
+    pageIndex?: number;
+    imageUpdated?: boolean;
 }
-export interface FolderUpdatedEventData extends EventData {
-    folder: DocFolder;
+export interface DocumentUpdatedEventData extends DocumentEventData {
+    doc?: OCRDocument;
+    updateModifiedDate?: boolean;
 }
-export interface DocumentDeletedEventData extends EventData {
-    documents: OCRDocument[];
-    folders: number[];
+export interface FolderUpdatedEventData extends DocumentEventData {
+    folder?: DocFolder;
+}
+export interface DocumentDeletedEventData extends DocumentEventData {
+    documents?: OCRDocument[];
+    folders?: number[];
 }
 
-export type DocumentEvents = DocumentAddedEventData | DocumentDeletedEventData | DocumentUpdatedEventData | DocumentPagesAddedEventData | DocumentPageDeletedEventData | DocumentPageUpdatedEventData;
+export type DocumentEvents =
+    | DocumentAddedEventData
+    | DocumentDeletedEventData
+    | DocumentUpdatedEventData
+    | DocumentPagesAddedEventData
+    | DocumentPageDeletedEventData
+    | DocumentPageUpdatedEventData
+    | DocumentMovedFolderEventData;
 
 let ID = 0;
 export class DocumentsService extends Observable {

@@ -18,7 +18,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { TRANSFORMS } from '~/utils/localized_constant';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentDeletedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
+    import { DocumentDeletedEventData, DocumentPageUpdatedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
     import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
@@ -492,8 +492,8 @@
         }
     }
 
-    async function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
-        if (event.object !== document) {
+    async function onDocumentPageUpdated(event: DocumentPageUpdatedEventData) {
+        if (event.doc !== document) {
             return;
         }
         const index = event.pageIndex;

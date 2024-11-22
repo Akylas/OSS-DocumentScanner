@@ -188,13 +188,13 @@ export class WebDAVClient {
 export function createContext(remoteURL: string, options: WebDAVClientOptions = {}) {
     const {
         authType: authTypeRaw = null,
-        remoteBasePath: remoteBasePathRaw,
         contactHref = DEFAULT_CONTACT_HREF,
         ha1,
         headers = {},
         httpAgent,
         httpsAgent,
         password,
+        remoteBasePath: remoteBasePathRaw,
         token,
         username
         // withCredentials

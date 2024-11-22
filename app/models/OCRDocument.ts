@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { ColorPaletteData, OCRData, QRCodeData, Quad, Quads, cropDocumentFromFile } from 'plugin-nativeprocessor';
 import {
     DocumentAddedEventData,
+    DocumentFolderAddedEventData,
     DocumentMovedFolderEventData,
     DocumentPageDeletedEventData,
     DocumentPageUpdatedEventData,
@@ -23,6 +24,7 @@ import {
     EVENT_DOCUMENT_PAGE_DELETED,
     EVENT_DOCUMENT_PAGE_UPDATED,
     EVENT_DOCUMENT_UPDATED,
+    EVENT_FOLDER_ADDED,
     EVENT_FOLDER_UPDATED,
     IMG_FORMAT,
     SEPARATOR,
@@ -31,6 +33,7 @@ import {
 } from '../utils/constants';
 import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 import { doInBatch } from '@shared/utils/batch';
+import { isString } from '@nativescript/core/utils';
 
 export interface ImportImageData {
     imagePath?: string;
@@ -58,6 +61,7 @@ export interface IDocFolder {
     id: number;
     name: string;
     color?: string;
+    modifiedDate?: number;
     size?: number;
     count?: number;
 }
@@ -65,14 +69,33 @@ export class DocFolder {
     public readonly id!: number;
     public name: string;
     public color?: string;
+    modifiedDate?: number;
     size?: number;
     count?: number;
     async save(data: Partial<IDocFolder> = {}, notify = true) {
+        if (!data.modifiedDate) {
+            data.modifiedDate = Date.now();
+        }
         await documentsService.folderRepository.update(this, data);
         Object.assign(this, data);
         if (notify) {
-            documentsService.notify({ eventName: EVENT_FOLDER_UPDATED, object: documentsService, folder: this } as FolderUpdatedEventData);
+            documentsService.notify({ eventName: EVENT_FOLDER_UPDATED, folder: this } as FolderUpdatedEventData);
         }
+    }
+
+    static fromJSON(jsonObj: DocFolder) {
+        const folder = new DocFolder();
+        Object.assign(folder, jsonObj);
+        return folder;
+    }
+
+    toString() {
+        const { count, size, ...toStringify } = this;
+        return JSON.stringify(toStringify);
+    }
+
+    toJSONObject() {
+        return JSON.parse(this.toString());
     }
 }
 
@@ -86,6 +109,7 @@ export interface Document {
     _synced: number;
     pagesOrder: string[];
     pages?: OCRPage[];
+    extra?: DocumentExtra;
 }
 
 let documentsService: DocumentsService;
@@ -97,6 +121,15 @@ export function getDocumentsService() {
     return documentsService;
 }
 
+export interface DocumentExtra {
+    [k: string]:
+        | string
+        | {
+              type: string;
+              value: any;
+          };
+}
+
 export class OCRDocument extends Observable implements Document {
     // id: string;
     createdDate: number;
@@ -105,6 +138,8 @@ export class OCRDocument extends Observable implements Document {
     tags: string[];
     folders: number[];
     _synced: number;
+
+    extra?: DocumentExtra;
 
     pagesOrder: string[];
 
@@ -117,10 +152,13 @@ export class OCRDocument extends Observable implements Document {
     }
 
     static fromJSON(jsonObj: Document) {
-        // DEV_LOG && console.log('OCRDocument', 'fromJSON', JSON.stringify(jsonObj));
-        const doc = new OCRDocument(jsonObj.id);
-        jsonObj.pages = jsonObj.pages.map((p) => OCRPage.fromJSON(p));
-        Object.assign(doc, jsonObj);
+        const { extra, id, pages, ...others } = jsonObj;
+        const doc = new OCRDocument(id);
+        Object.assign(doc, {
+            extra: isString(extra) ? JSON.parse(extra as any as string) : extra,
+            pages: pages.map((p) => OCRPage.fromJSON(p)),
+            ...others
+        });
         return doc;
     }
 
@@ -196,7 +234,7 @@ export class OCRDocument extends Observable implements Document {
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
-        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], object: this } as DocumentPagesAddedEventData);
+        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
     }
 
     async addPages(pagesData?: PageData[], notify = true) {
@@ -277,7 +315,7 @@ export class OCRDocument extends Observable implements Document {
                 this.#observables.push(...pages);
             }
             if (notify) {
-                documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages, object: this } as DocumentPagesAddedEventData);
+                documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages, doc: this } as DocumentPagesAddedEventData);
             }
         }
     }
@@ -308,7 +346,7 @@ export class OCRDocument extends Observable implements Document {
             const removedPage = removed[index];
             await docData.getFolder(removedPage.id).remove();
         }
-        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGE_DELETED, object: this as any, pageIndex } as DocumentPageDeletedEventData);
+        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGE_DELETED, doc: this, pageIndex } as DocumentPageDeletedEventData);
         await this.save({}, true, false);
         return this;
     }
@@ -352,7 +390,7 @@ export class OCRDocument extends Observable implements Document {
         return this.save({}, true);
     }
     onPageUpdated(pageIndex: number, page: OCRPage, imageUpdated = false) {
-        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGE_UPDATED, object: this as any, pageIndex, imageUpdated } as DocumentPageUpdatedEventData);
+        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGE_UPDATED, doc: this, pageIndex, imageUpdated } as DocumentPageUpdatedEventData);
     }
     getObservablePages() {
         if (!this.#observables) {
@@ -380,7 +418,7 @@ export class OCRDocument extends Observable implements Document {
         }
         await documentsService.documentRepository.update(this, data, updateModifiedDate);
         if (notify) {
-            documentsService.notify({ eventName: EVENT_DOCUMENT_UPDATED, object: documentsService, doc: this, updateModifiedDate } as DocumentUpdatedEventData);
+            documentsService.notify({ eventName: EVENT_DOCUMENT_UPDATED, doc: this, updateModifiedDate } as DocumentUpdatedEventData);
         }
     }
 
@@ -485,6 +523,9 @@ export class OCRDocument extends Observable implements Document {
             }
             if (!folder) {
                 folder = await folderRepository.create({ id: folderId || Date.now(), name: folderName });
+                if (notify) {
+                    documentsService.notify({ eventName: EVENT_FOLDER_ADDED, folder } as DocumentFolderAddedEventData);
+                }
             }
         }
 
@@ -499,8 +540,9 @@ export class OCRDocument extends Observable implements Document {
             await db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
             delete this.folders;
         }
+        this._synced = 0;
         if (notify) {
-            documentsService.notify({ eventName: EVENT_DOCUMENT_MOVED_FOLDER, object: this, folder, oldFolderId } as DocumentMovedFolderEventData);
+            documentsService.notify({ eventName: EVENT_DOCUMENT_MOVED_FOLDER, doc: this, folder, oldFolderId } as DocumentMovedFolderEventData);
         }
     }
 

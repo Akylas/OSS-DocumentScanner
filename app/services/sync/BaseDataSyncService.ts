@@ -15,7 +15,8 @@ export abstract class BaseDataSyncService extends BaseSyncService {
     abstract importFolderFromRemote(remotePath: string, folder: Folder, ignores?: string[]): Promise<any>;
     abstract addDocumentToRemote(document: OCRDocument): Promise<any>;
     abstract importDocumentFromRemote(data: FileStat): Promise<OCRDocument>;
-    abstract getFileFromRemote(document: OCRDocument, filename: string): Promise<any>;
+    abstract fileExists(filename: string): Promise<boolean>;
+    abstract getFileFromRemote(filename: string, document?: OCRDocument): Promise<any>;
     abstract putFileContents(relativePath: string, localFilePath: string, options?): Promise<any>;
     abstract putFileContentsFromData(relativePath: string, data: string, options?): Promise<any>;
     abstract deleteFile(relativePath: string): Promise<any>;

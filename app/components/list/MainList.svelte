@@ -20,8 +20,15 @@
     import { l, lc } from '~/helpers/locale';
     import { colorTheme, getRealTheme, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentAddedEventData, DocumentDeletedEventData, DocumentMovedFolderEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from '~/services/documents';
-    import { syncService } from '~/services/sync';
+    import {
+        DocumentAddedEventData,
+        DocumentDeletedEventData,
+        DocumentMovedFolderEventData,
+        DocumentPageUpdatedEventData,
+        DocumentUpdatedEventData,
+        FolderUpdatedEventData,
+        documentsService
+    } from '~/services/documents';
     import { syncService, syncServicesStore } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -133,10 +140,9 @@
         try {
             DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: defaultOrder });
-            DEV_LOG && console.log('r', r.length);
 
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
-
+            DEV_LOG && console.log('folders', JSON.stringify(folders));
             folderItems = new ObservableArray(
                 folders
                     .filter((f) => f.count > 0)
@@ -175,6 +181,7 @@
     function onDocumentAdded(event: DocumentAddedEventData) {
         if ((!event.folder && !folder) || folder?.name === event.folder?.name) {
             DEV_LOG && console.log('onDocumentAdded', nbDocuments);
+            // find the first document index to add the new doc just before
             const index = documents?.findIndex((d) => !!d.doc);
             if (index !== -1) {
                 documents?.splice(index, 0, {
@@ -279,9 +286,9 @@
         return view?.getViewById<Img>('imageView');
     }
 
-    function onDocumentPageUpdated(event: EventData & { pageIndex: number; imageUpdated: boolean }) {
+    function onDocumentPageUpdated(event: DocumentPageUpdatedEventData) {
         // let index = -1;
-        const document = event.object as OCRDocument;
+        const document = event.doc;
         const index = documents?.findIndex((d) => d.doc && d.doc.id === document.id);
         if (index >= 0) {
             if (event.pageIndex === 0) {
