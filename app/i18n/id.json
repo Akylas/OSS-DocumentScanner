@@ -25,10 +25,10 @@
     "add_qrcode_camera": "tambahkan kode batang dari hasil jepretan kamera",
     "add_qrcode_file": "tambahkan gambar kode batang dari galeri",
     "add_qrcode_manual": "tambahkan kode batang secara manual",
-    "allow_app_screenshot": "izinkan aplikasi untuk menangkap layar",
+    "allow_app_screenshot": "izinkan agar aplikasi dapat menangkap layar",
     "always": "selalu",
     "always_prompt_crop_edit": "selalu sunting luas dokumen secara manual terlebih dahulu",
-    "always_prompt_crop_edit_desc": "Mengaktifkan pilihan ini memungkinkan Anda untuk menyunting luas dokumen yang dipindai sebelum dokumen terbuat jika foto diambil tanpa mengaktifkan mode serentak",
+    "always_prompt_crop_edit_desc": "Mengaktifkan pilihan ini memungkinkan Anda untuk menyunting luas dokumen yang dipindai sebelum dokumen terbuat jika foto diambil tanpa mengaktifkan mode set",
     "app": {
         "name": "Pemindai Dokumen OSS"
     },
@@ -54,7 +54,7 @@
     "autoscan_settings": "pengaturan pemindaian otomatis",
     "backup_restore": "cadangkan / pulihkan data",
     "barcore_qrcode": "kode batang/kode RS (respons cepat)",
-    "batch_mode": "mode serentak",
+    "batch_mode": "mode set",
     "biometric_auto_lock": "kunci biometrik otomatis",
     "biometric_auto_lock_desc": "kalau diaktifkan, aplikasi akan terkunci setiap kali Anda membuka aplikasi lain",
     "biometric_lock": "Keamanan biometrik",
@@ -196,8 +196,8 @@
     "ios": {
         "info": {
             "plist": {
-                "NSCameraUsageDescription": "Izinkan kamera untuk memindai dokumen Anda",
-                "NSPhotoLibraryUsageDescription": "Izinkan akses galeri untuk memilih dan memindai gambar, lalu buat kartu dari gambar yang dipindai"
+                "NSCameraUsageDescription": "Izinkan agar kamera dapat memindai dokumen Anda",
+                "NSPhotoLibraryUsageDescription": "Izinkan akses galeri untuk memilih, memindai gambar, lalu membuat kartu dari gambar yang dipindai"
             }
         }
     },
@@ -243,7 +243,7 @@
     "ocr_computing": "mendeteksi teks (%1$%%)...",
     "ocr_computing_document": "mendeteksi teks dalam dokumen (%1$%%)",
     "ocr_document": "deteksi teks",
-    "ocr_missing_languages": "Model OCR tidak ditemukan, jadi kami akan mengunduhnya: %1$",
+    "ocr_missing_languages": "Model OCR tidak ditemukan. Model akan diunduh: %1$",
     "off": "mati",
     "ok": "OK",
     "on": "nyala",
@@ -358,8 +358,8 @@
     "transformer_batch_size": "tata kendali sejajar",
     "transformer_batch_size_desc": "jumlah gambar yang ditransformasikan secara sejajar. Semakin besar angka, semakin cepat gambar ditransformasikan. Namun, opsi ini dapat memicu pemogokan aplikasi sebab memori yang dipergunakan lebih banyak",
     "updating_pages": "memperbarui halaman (%1$s%%)",
-    "use_system_camera": "menggunakan kamera sistem",
-    "use_system_camera_desc": "gunakan kamera perangkat alih-alih kamera bawaan aplikasi (menekan tombol secara lama akan mengganti kamera yang dipergunakan). Jika kamera perangkat yang dipilih, beberapa fitur seperti mode serentak atau pemindaian otomatis akan dimatikan",
+    "use_system_camera": "gunakan kamera sistem",
+    "use_system_camera_desc": "gunakan kamera perangkat alih-alih kamera bawaan aplikasi (tahan tombol untuk mengganti kamera yang digunakan). Jika kamera perangkat yang dipilih, beberapa fitur seperti mode set atau pemindaian otomatis akan dimatikan",
     "username": "nama pengguna",
     "version": "versi",
     "webdav_config": "konfigurasi webDAV",
