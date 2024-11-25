@@ -1,6 +1,7 @@
-import { Color, ImageSource } from '@nativescript/core';
+import { Color, File, ImageSource } from '@nativescript/core';
 import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData, Quads } from '.';
 import { CropView } from './CropView';
+import { lc } from '@nativescript-community/l';
 
 @NativeClass
 class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
@@ -242,5 +243,9 @@ export async function importPdfToTempImages(pdfPath: string, options?: Partial<P
 
 export async function getImageSize(imagePath: string) {
     const size = ImageUtils.getImageSize(imagePath);
-    return { width: size.objectForKey('width'), height: size.objectForKey('height'), rotation: size.objectForKey('rotation') };
+    if (size) {
+        return { width: size.objectForKey('width'), height: size.objectForKey('height'), rotation: size.objectForKey('rotation') };
+    } else {
+        throw new Error(lc('error_loading_image', imagePath, File.exists(imagePath)));
+    }
 }
