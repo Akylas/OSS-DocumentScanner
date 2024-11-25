@@ -327,7 +327,7 @@ export default class SyncWorker extends Observable {
                 await this.syncPDFDocuments({ force, event });
             }
         } catch (error) {
-            console.error('error during worker sync', error);
+            console.error('error during worker sync', error, error.stack);
             this.sendError(error);
         } finally {
             console.warn('sync done');
@@ -772,9 +772,9 @@ export default class SyncWorker extends Observable {
             return;
         }
         let localDocuments = event?.['pages']
-            ? [{ document: event.object as OCRDocument, pages: event['pages'] as OCRPage[] }]
+            ? [{ document: event['doc'] as OCRDocument, pages: event['pages'] as OCRPage[] }]
             : event?.['pageIndex'] !== undefined
-              ? [{ document: event.object as OCRDocument, pages: [event.object['pages'][event['pageIndex']]] as OCRPage[] }]
+              ? [{ document: event['doc'] as OCRDocument, pages: [event['doc']['pages'][event['pageIndex']]] as OCRPage[] }]
               : (await documentsService.documentRepository.search({})).map((d) => ({ document: d, pages: d.pages }));
 
         // this should not happened but i got bug reports with null document. cant reproduce
