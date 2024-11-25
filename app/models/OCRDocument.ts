@@ -466,11 +466,11 @@ export class OCRDocument extends Observable implements Document {
     }
     async updatePageTransforms(pageIndex: number, transforms: string, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
-        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, this.pages.length, page?.imagePath, transforms);
         if (!page) {
             return;
         }
         const file = File.fromPath(page.imagePath);
+        DEV_LOG && console.log('updatePageTransforms', this.id, pageIndex, this.pages.length, page?.imagePath, transforms, file.path, file.parent.path);
         const imageExportSettings = getImageExportSettings();
         if (transforms === page.transforms) {
             await this.updatePage(
@@ -489,18 +489,17 @@ export class OCRDocument extends Observable implements Document {
                 compressQuality: imageExportSettings.imageQuality
             });
             const image = images[0];
-
-            await this.updatePage(
-                pageIndex,
-                {
-                    transforms,
-                    width: image.width,
-                    height: image.height,
-                    size: file.size,
-                    ...optionalUpdates
-                },
-                true
-            );
+            if (image) {
+                await this.updatePage(
+                    pageIndex,
+                    {
+                        transforms,
+                        size: file.size,
+                        ...optionalUpdates
+                    },
+                    true
+                );
+            }
         }
     }
     async setFolder({ folderId, folderName, notify = true }: { folderId?: number; folderName?: string; notify?: boolean }) {
