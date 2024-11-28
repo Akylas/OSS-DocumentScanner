@@ -2,7 +2,7 @@
     export let item;
     let svg;
     function getSVG(item) {
-        return item.svg || item.getSVG(item);
+        return item.svg || item.getSVG?.(item);
     }
     $: svg = getSVG(item);
 </script>

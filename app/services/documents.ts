@@ -161,8 +161,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
 
     async createTables() {
         await this.database.query(
-            CARD_APP
-                ? sql`
+            sql`
         CREATE TABLE IF NOT EXISTS "Page" (
             id TEXT PRIMARY KEY NOT NULL,
             createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
@@ -182,30 +181,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             imagePath TEXT,
             document_id TEXT,
             FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        `
-                : sql`
-        CREATE TABLE IF NOT EXISTS "Page" (
-            id TEXT PRIMARY KEY NOT NULL,
-            createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
-            modifiedDate NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
-            pageIndex INTEGER,
-            colorType TEXT,
-            colorMatrix TEXT,
-            transforms TEXT,
-            rotation INTEGER DEFAULT 0,
-            scale INTEGER DEFAULT 1,
-            crop TEXT,
-            ocrData TEXT,
-            width INTEGER NOT NULL,
-            height INTEGER NOT NULL,
-            size INTEGER NOT NULL,
-            sourceImagePath TEXT NOT NULL,
-            imagePath TEXT NOT NULL,
-            document_id TEXT,
-            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
-        );
-        `
+        );`
         );
         return this.applyMigrations();
     }
@@ -215,8 +191,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         return this.create(
             cleanUndefined({
                 ...page,
-                imagePath: page.imagePath.replace(dataFolder, ''),
-                sourceImagePath: page.sourceImagePath.replace(dataFolder, ''),
+                imagePath: page.imagePath?.replace(dataFolder, ''),
+                sourceImagePath: page.sourceImagePath?.replace(dataFolder, ''),
                 createdDate,
                 pageIndex: -1, // we are stuck with this as we cant migrate to remove pageIndex
                 modifiedDate: createdDate,
@@ -270,8 +246,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             ...other,
             // imagePath,
             // sourceImagePath,
-            imagePath: dataFolder.path + imagePath,
-            sourceImagePath: dataFolder.path + sourceImagePath,
+            imagePath: imagePath ? dataFolder.path + imagePath : null,
+            sourceImagePath: sourceImagePath ? dataFolder.path + sourceImagePath : null,
 
             crop: typeof crop === 'string' ? JSON.parse(crop) : crop,
             colorMatrix: typeof colorMatrix === 'string' ? JSON.parse(colorMatrix) : colorMatrix,
@@ -412,7 +388,9 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         Object.keys(data).forEach((k) => {
             const value = data[k];
             toSave[k] = value;
-            if (typeof value === 'object' || Array.isArray(value)) {
+            if (k === 'extra') {
+                toUpdate[k] = JSON.stringify(Object.assign(document.extra || {}, value));
+            } else if (typeof value === 'object' || Array.isArray(value)) {
                 toUpdate[k] = JSON.stringify(value);
             } else {
                 toUpdate[k] = value;

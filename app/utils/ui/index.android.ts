@@ -1,11 +1,12 @@
 import { request } from '@nativescript-community/perms';
-import { AndroidActivityNewIntentEventData, Application, Color, Page, Utils, View } from '@nativescript/core';
+import { AndroidActivityNewIntentEventData, Application, Color, Frame, Page, Utils, View } from '@nativescript/core';
 import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
 import { showError } from '@shared/utils/showError';
 import { throttle } from '@nativescript/core/utils';
 import { securityService } from '~/services/security';
 import { documentsService } from '~/services/documents';
 import { lc } from '@nativescript-community/l';
+import { Dayjs } from 'dayjs';
 
 export * from './index.common';
 
@@ -123,9 +124,7 @@ export const onAndroidNewItent = throttle(async function onAndroidNewItent(event
 export async function pickColor(color: Color | string, options: { alpha?: boolean; anchor?: View } = {}) {
     return new Promise<Color>((resolve) => {
         const activity = Application.android.startActivity;
-        if (!(color instanceof Color)) {
-            color = new Color(color as any);
-        }
+
         const builder = new com.skydoves.colorpickerview.ColorPickerDialog.Builder(activity)
             .setTitle(lc('pick_color'))
             .attachAlphaSlideBar(options.alpha !== false)
@@ -148,8 +147,28 @@ export async function pickColor(color: Color | string, options: { alpha?: boolea
             )
             .setBottomSpace(12); // set a bottom space between the last slidebar and buttons.
 
-        builder.getColorPickerView().setInitialColor(color.android);
+        if (color && !(color instanceof Color)) {
+            color = new Color(color as any);
+        }
+        if (color) {
+            builder.getColorPickerView().setInitialColor((color as Color).android);
+        }
         const popup = builder.create();
         popup.show();
+    });
+}
+
+export async function pickDate(currentDate: Dayjs) {
+    return new Promise<number>((resolve, reject) => {
+        const datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker().setTitleText(lc('pick_date')).setSelection(new java.lang.Long(currentDate.valueOf())).build();
+        datePicker.addOnDismissListener(
+            new android.content.DialogInterface.OnDismissListener({
+                onDismiss: () => {
+                    resolve(datePicker.getSelection().longValue());
+                }
+            })
+        );
+        const parentView = Frame.topmost() || Application.getRootView();
+        datePicker.show(parentView._getRootFragmentManager(), 'datepicker');
     });
 }

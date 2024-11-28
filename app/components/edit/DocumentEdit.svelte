@@ -46,6 +46,7 @@
     $: ({ colorPrimary } = $colors);
 
     export let startPageIndex: number = 0;
+    DEV_LOG && console.log('startPageIndex', startPageIndex);
     export let document: OCRDocument;
     export let transitionOnBack = true;
     let pager: NativeViewElementNode<Pager>;
@@ -74,7 +75,11 @@
 
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu(document.pages, document, event.object);
+            await showPDFPopoverMenu(
+                document.pages.map((page) => ({ page, document })),
+                document,
+                event.object
+            );
         } catch (err) {
             showError(err);
         }
@@ -98,6 +103,7 @@
             const OCRSettingsBottomSheet = (await import('~/components/ocr/OCRSettingsBottomSheet.svelte')).default;
             const shouldStart = await showBottomSheet({
                 parent: page,
+                skipCollapsedState: true,
                 view: OCRSettingsBottomSheet,
                 props: {}
             });
@@ -134,10 +140,11 @@
     }
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
+        DEV_LOG && console.log('onSelectedIndex', currentIndex, items.length, currentSelectedImagePath, currentSelectedImageRotation, currentItemQRCodeData);
+
         updateCurrentItem(items.getItem(currentIndex));
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;
         // $enhanced = transforms.indexOf('enhance') !== -1;
-        DEV_LOG && console.log('onSelectedIndex', currentIndex, currentSelectedImagePath, currentSelectedImageRotation, currentItemQRCodeData);
         refreshCollectionView();
     }
     // function onFirstLayout(item, e) {
@@ -253,7 +260,7 @@
     }
     async function showImageExportPopover(event) {
         try {
-            await showImagePopoverMenu([items.getItem(currentIndex)], event.object, VerticalPosition.ABOVE);
+            await showImagePopoverMenu([{ page: items.getItem(currentIndex), document }], event.object, VerticalPosition.ABOVE);
         } catch (err) {
             showError(err);
         }
@@ -355,8 +362,8 @@
                     await documentsService.deleteDocuments([document]);
                 } else {
                     await document.deletePage(currentIndex);
-                    const newIndex = currentIndex < items.length - 1 ? currentIndex : currentIndex - 1;
-                    pager.nativeView.scrollToIndexAnimated(newIndex, true);
+                    currentIndex = Math.min(currentIndex, items.length - 1);
+                    pager.nativeView.scrollToIndexAnimated(currentIndex, true);
                 }
             }
         } catch (err) {
@@ -647,7 +654,7 @@
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout class="pageContent" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">

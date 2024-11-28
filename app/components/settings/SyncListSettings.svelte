@@ -354,7 +354,7 @@
 </script>
 
 <page id="settingsPage" actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template let:item>
                 <swipemenu

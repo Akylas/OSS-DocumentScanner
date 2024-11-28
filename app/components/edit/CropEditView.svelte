@@ -7,7 +7,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
-    import { colorTheme } from '~/helpers/theme';
+    import { colorTheme, isEInk } from '~/helpers/theme';
     import { ImportImageData } from '~/models/OCRDocument';
     import { colors, windowInset } from '~/variables';
     let { colorBackground, colorOnBackground } = $colors;
@@ -18,8 +18,8 @@
     let pager: NativeViewElementNode<Pager>;
     let cropView: CropView;
 
-    const visualState = colorTheme === 'eink' ? colorBackground : 'black';
-    const textColor = colorTheme === 'eink' ? colorOnBackground : 'white';
+    const visualState = isEInk ? colorBackground : 'black';
+    const textColor = isEInk ? colorOnBackground : 'white';
 
     export let cropItem: ImportImageData;
     export let quad;
@@ -57,7 +57,7 @@
 </script>
 
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
-    <gridlayout backgroundColor={visualState} rows="auto,*,auto,auto" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout class="pageContent" backgroundColor={visualState} rows="auto,*,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <CropView bind:this={cropView} {...cropItem ? cropItem : null} row={1} bind:quadChanged bind:quads on:undosChanged={onUndosChanged} />
         <label color={textColor} fontSize={13} padding={10} row={2} text={lc('crop_edit_doc')} textAlignment="center" textWrap={true} />
         <mdbutton class="fab" elevation={0} horizontalAlignment="center" margin="0" row={3} text="mdi-check" variant="text" on:tap={() => onRecropTapFinish()} />

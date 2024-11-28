@@ -2,7 +2,7 @@
     import { colorTheme } from '~/helpers/theme';
     import MainList, { Item } from './MainList.svelte';
     import { Template } from 'svelte-native/components';
-    import { colors, fontScale, hasCamera, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, hasCamera, isLandscape, orientation, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import dayjs from 'dayjs';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -15,9 +15,9 @@
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import PageIndicator from '../common/PageIndicator.svelte';
     import { throttle } from '@nativescript/core/utils';
-    import { importImageFromCamera } from '~/utils/ui';
+    import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
     import { showError } from '@shared/utils/showError';
-    import { DocFolder } from '~/models/OCRDocument';
+    import { DocFolder, OCRDocument } from '~/models/OCRDocument';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { l, lc } from '@nativescript-community/l';
     import { CARD_RATIO } from '~/utils/constants';
@@ -26,9 +26,12 @@
 
     const textPaint = new Paint();
     const rowMargin = 8;
+    const paint = new Paint();
 </script>
 
 <script lang="ts">
+    import CardListCell from './CardListCell.svelte';
+
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors);
     let fabHolder: NativeViewElementNode<StackLayout>;
@@ -43,29 +46,18 @@
     $: condensed = viewStyle === 'condensed';
 
     const title = l('cards');
-    let orientation = Application.orientation();
-    let itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - 2 * rowMargin - $windowInset.left - $windowInset.right;
+    DEV_LOG && console.log('screenHeightDips', screenHeightDips, screenWidthDips);
+    let itemWidth = ($isLandscape ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - 2 * rowMargin - $windowInset.left - $windowInset.right;
     let itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
 
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
-    function onOrientationChanged(event: OrientationChangedEventData) {
-        orientation = event.newValue;
-        DEV_LOG && console.log('onOrientationChanged', itemWidth, itemHeight);
-        // }, 1000);
-    }
-    $: itemWidth = (orientation === 'landscape' ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - $windowInset.left - $windowInset.right;
+    $: itemWidth = ($isLandscape ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - $windowInset.left - $windowInset.right;
     $: {
         itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
+        DEV_LOG && console.log('refreshing collection view for orientation', orientation);
         refreshCollectionView?.();
     }
-    onMount(() => {
-        Application.on('orientationChanged', onOrientationChanged);
-        // refresh();
-    });
-    onDestroy(() => {
-        Application.off('orientationChanged', onOrientationChanged);
-    });
     function getItemImageHeight(viewStyle) {
         return (condensed ? 44 : 94) * $fontScale;
     }
@@ -152,14 +144,23 @@
                               }
                           ]
                         : []
-                );
+                )
+                .concat([
+                    {
+                        id: 'create',
+                        name: lc('create'),
+                        icon: 'mdi-plus'
+                    }
+                ]);
+            const height = Math.min(rowHeight * options.length, 400);
             const option = await showBottomSheet({
                 parent: this,
                 view: OptionSelect,
                 ignoreTopSafeArea: true,
+                peekHeight: height,
                 props: {
                     rowHeight,
-                    height: Math.min(rowHeight * options.length, 400),
+                    height,
                     options
                 }
             });
@@ -175,6 +176,37 @@
                     case 'import_image':
                         await importDocument(false);
                         break;
+                    case 'create':
+                        const CreateCard = (await import('~/components/widgets/CreateCard.svelte')).default;
+                        const result = await showBottomSheet({
+                            parent: this,
+                            view: CreateCard,
+                            ignoreTopSafeArea: true
+                        });
+                        DEV_LOG && console.log('CreateCard', result);
+                        if (result) {
+                            const document = await OCRDocument.createDocument(
+                                [
+                                    {
+                                        qrcode: result.code?.length
+                                            ? [
+                                                  {
+                                                      text: result.code,
+                                                      format: result.codeFormat
+                                                  }
+                                              ]
+                                            : undefined
+                                    }
+                                ],
+                                folder,
+                                {
+                                    name: result.name,
+                                    ...(result.color ? { extra: { color: result.color } } : {})
+                                }
+                            );
+                            await goToDocumentAfterScan(document, -1, true);
+                        }
+                        break;
                 }
             }
         } catch (error) {
@@ -182,44 +214,13 @@
         }
     }
 
-    function fullCardDrawerTranslationFunction(side, width, value, delta, progress) {
-        const result = {
-            mainContent: {
-                translateX: side === 'right' ? -delta : delta
-            },
-            rightDrawer: {
-                // translateX: width + (side === 'right' ? -delta : delta)
-            },
-            leftDrawer: {
-                // translateX: (side === 'right' ? -delta : delta) - width
-            },
-            backDrop: {
-                translateX: side === 'right' ? -delta : delta.dev,
-                opacity: progress * 0.01
-            }
-        };
-
-        return result;
-    }
-
-    function getRowHeight(viewStyle, item) {
-        const width = orientation === 'landscape' ? screenHeightDips : screenWidthDips;
-        switch (viewStyle) {
-            case 'full':
-            case 'cardholder':
-            case 'list':
-                return itemHeight;
-            case 'columns':
-                return orientation === 'landscape' ? itemHeight : (width / 2) * CARD_RATIO;
-        }
-    }
     function getItemOverlap(viewStyle) {
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
                     const foldersCount = folderItems?.length;
                     const firstIndex = foldersCount ? 1 : 0;
-                    if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
+                    if (position <= firstIndex || ($isLandscape && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.71 * itemHeight, 0, 0, 0];
@@ -228,7 +229,7 @@
                 return (item, position) => {
                     const foldersCount = folderItems?.length;
                     const firstIndex = foldersCount ? 1 : 0;
-                    if (position <= firstIndex || (orientation === 'landscape' && position <= firstIndex + 1)) {
+                    if (position <= firstIndex || ($isLandscape && position <= firstIndex + 1)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.11 * itemHeight, 0, 0, 0];
@@ -244,7 +245,7 @@
         switch (viewStyle) {
             case 'list':
             case 'columns':
-                if (orientation === 'landscape') {
+                if ($isLandscape) {
                     return 'columns';
                 }
                 return viewStyle;
@@ -253,100 +254,10 @@
         }
     }
     function itemTemplateSpanSize(viewStyle, item: Item) {
-        if (item.type !== 'folders' && (viewStyle === 'columns' || orientation === 'landscape')) {
+        if (item.type !== 'folders' && (viewStyle === 'columns' || $isLandscape)) {
             return 1;
         }
         return 2;
-    }
-    function onItemTouch(item: Item, event) {
-        if (__ANDROID__) {
-            // const index = documents.findIndex((d) => d.doc.id === item.doc.id);
-            switch (event.action) {
-                case 'down':
-                    (event.object as View).animate({
-                        duration: 100,
-                        translate: {
-                            x: 0,
-                            y: -40
-                        }
-                    });
-                    break;
-
-                case 'up':
-                case 'cancel':
-                    (event.object as View).animate({
-                        duration: 100,
-                        translate: {
-                            x: 0,
-                            y: 0
-                        }
-                    });
-                    break;
-            }
-        }
-    }
-    async function showImages(item: Item) {
-        const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
-        const doc = item.doc;
-        navigate({
-            page: component,
-            // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
-            props: {
-                images: doc.pages.map((page, index) => ({
-                    sharedTransitionTag: `document_${doc.id}_${page.id}`,
-                    name: page.name || doc.name,
-                    image: page.imagePath,
-                    ...page
-                })),
-                startPageIndex: 0
-            }
-        });
-        collectionView?.nativeElement.closeCurrentMenu();
-    }
-    function animateCards(animOptions, startIndex, endIndex = -1) {
-        let index = startIndex;
-        const startView = collectionView?.nativeElement.getViewForItemAtIndex(startIndex);
-
-        let foundFirst = false;
-        collectionView?.nativeElement.eachChild((child: View) => {
-            if (foundFirst) {
-                if (endIndex === -1 || index <= endIndex) {
-                    child.animate(animOptions);
-                    index++;
-                }
-            } else {
-                if (child === startView) {
-                    foundFirst = true;
-                }
-            }
-            return true;
-        });
-    }
-    function translateCards(startIndex, endIndex = -1) {
-        animateCards(
-            {
-                duration: 100,
-                translate: {
-                    x: 0,
-                    y: 160
-                }
-            },
-            startIndex,
-            endIndex
-        );
-    }
-    function hideCards(startIndex, endIndex = -1) {
-        animateCards(
-            {
-                duration: 100,
-                translate: {
-                    x: 0,
-                    y: 0
-                }
-            },
-            startIndex,
-            endIndex
-        );
     }
     function onFullCardItemTouch(item: Item, event) {
         const index = documents.findIndex((d) => d.doc && d.doc.id === item.doc.id);
@@ -415,158 +326,54 @@
     bind:collectionView>
     <Template key="cardholder" let:item>
         <absolutelayout height={150}>
-            <swipemenu
-                id="swipeMenu"
-                height={getRowHeight('cardholder', item)}
-                openAnimationDuration={100}
-                rightSwipeDistance={0}
-                startingSide={item.startingSide}
-                translationFunction={fullCardDrawerTranslationFunction}
-                width="100%">
-                <gridlayout
-                    prop:mainContent
-                    backgroundColor={item.doc.pages[0].colors?.[0]}
-                    borderRadius={12}
-                    boxShadow="0 0 8 rgba(0, 0, 0, 0.8)"
-                    margin="50 24 0 24"
-                    rippleColor={colorSurface}
-                    on:touch={(e) => onItemTouch(item, e)}
-                    on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}>
-                    <RotableImageView
-                        id="imageView"
-                        borderRadius={12}
-                        decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
-                        fadeDuration={100}
-                        item={item.doc.pages[0]}
-                        sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
-                        stretch="aspectFill" />
-                    <gridlayout borderRadius={12}>
-                        <SelectedIndicator selected={item.selected} />
-                        <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
-                    </gridlayout>
-                </gridlayout>
-                <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
-            </swipemenu>
+            <CardListCell
+                {collectionView}
+                {item}
+                {itemHeight}
+                {itemWidth}
+                layout="cardholder"
+                {onFullCardItemTouch}
+                {syncEnabled}
+                on:tap={() => onItemTap(item)}
+                on:longPress={(e) => onItemLongPress(item, e)} />
             <absolutelayout boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top={150} width="100%" />
         </absolutelayout>
     </Template>
     <Template key="full" let:item>
-        <swipemenu
-            id="swipeMenu"
-            height={getRowHeight('full', item)}
-            openAnimationDuration={100}
-            rightDrawerMode="under"
-            rightSwipeDistance={0}
-            startingSide={item.startingSide}
-            translationFunction={fullCardDrawerTranslationFunction}
-            on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
-            on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
-            <gridlayout
-                prop:mainContent
-                backgroundColor={item.doc.pages[0].colors?.[0]}
-                borderRadius={12}
-                boxShadow="0 0 8 rgba(0, 0, 0, 0.8)"
-                margin="16 16 16 16"
-                on:tap={() => onItemTap(item)}
-                on:longPress={(e) => onItemLongPress(item, e)}>
-                <RotableImageView
-                    id="imageView"
-                    borderRadius={12}
-                    decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
-                    decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
-                    fadeDuration={100}
-                    item={item.doc.pages[0]}
-                    sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
-                    stretch="aspectFill" />
-                <gridlayout borderRadius={12}>
-                    <SelectedIndicator selected={item.selected} />
-                    <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
-                </gridlayout>
-            </gridlayout>
-
-            <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
-                <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-            </stacklayout>
-        </swipemenu>
+        <CardListCell
+            {collectionView}
+            {item}
+            {itemHeight}
+            {itemWidth}
+            layout="full"
+            {onFullCardItemTouch}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
     <Template key="list" let:item>
-        <swipemenu
-            id="swipeMenu"
-            height={getRowHeight('list', item)}
-            openAnimationDuration={100}
-            rightDrawerMode="under"
-            rightSwipeDistance={0}
-            startingSide={item.startingSide}
-            translationFunction={fullCardDrawerTranslationFunction}
-            on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
-            on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
-            <gridlayout
-                prop:mainContent
-                backgroundColor={item.doc.pages[0].colors?.[0]}
-                borderRadius={12}
-                elevation={3}
-                margin={4}
-                on:tap={() => onItemTap(item)}
-                on:longPress={(e) => onItemLongPress(item, e)}>
-                <RotableImageView
-                    id="imageView"
-                    borderRadius={12}
-                    decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
-                    decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
-                    fadeDuration={100}
-                    item={item.doc.pages[0]}
-                    sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
-                    stretch="aspectFill" />
-                <gridlayout>
-                    <SelectedIndicator selected={item.selected} />
-                    <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
-                </gridlayout>
-            </gridlayout>
-
-            <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
-                <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-            </stacklayout>
-        </swipemenu>
+        <CardListCell
+            {collectionView}
+            {item}
+            {itemHeight}
+            {itemWidth}
+            layout="list"
+            {onFullCardItemTouch}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
     <Template key="columns" let:item>
-        <swipemenu
-            id="swipeMenu"
-            height={getRowHeight('columns', item)}
-            openAnimationDuration={100}
-            rightDrawerMode="under"
-            rightSwipeDistance={0}
-            startingSide={item.startingSide}
-            translationFunction={fullCardDrawerTranslationFunction}
-            on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
-            on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
-            <gridlayout
-                prop:mainContent
-                backgroundColor={item.doc.pages[0].colors?.[0]}
-                borderRadius={12}
-                elevation={3}
-                margin={4}
-                on:tap={() => onItemTap(item)}
-                on:longPress={(e) => onItemLongPress(item, e)}>
-                <RotableImageView
-                    id="imageView"
-                    borderRadius={12}
-                    decodeHeight={Utils.layout.toDevicePixels(itemWidth)}
-                    decodeWidth={Utils.layout.toDevicePixels(itemWidth) * CARD_RATIO}
-                    fadeDuration={100}
-                    item={item.doc.pages[0]}
-                    sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0].id}`}
-                    stretch="aspectFill" />
-                <gridlayout>
-                    <SelectedIndicator selected={item.selected} />
-                    <SyncIndicator selected={item.doc._synced === 1} visible={syncEnabled} />
-                </gridlayout>
-            </gridlayout>
-
-            <stacklayout prop:rightDrawer height={100} orientation="horizontal" padding={20} verticalAlignment="top">
-                <mdbutton class="icon-btn" color={colorOnPrimary} elevation={2} text="mdi-fullscreen" verticalAlignment="center" on:tap={() => showImages(item)} />
-            </stacklayout>
-        </swipemenu>
+        <CardListCell
+            {collectionView}
+            {item}
+            {itemHeight}
+            {itemWidth}
+            layout="columns"
+            {onFullCardItemTouch}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
 
     <mdbutton

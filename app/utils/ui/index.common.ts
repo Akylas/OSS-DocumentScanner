@@ -17,6 +17,7 @@ import {
     ImageSource,
     ObservableArray,
     PageTransition,
+    Screen,
     SharedTransition,
     Utils,
     View,
@@ -94,7 +95,7 @@ import {
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
 import { showToast } from '~/utils/ui';
-import { colors, fontScale, screenWidthDips } from '~/variables';
+import { colors, fontScale, screenHeightDips, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { saveImage } from '../utils';
 
@@ -509,6 +510,7 @@ export async function showPopoverMenu<T = any>({
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
+    const maxHeight = Math.min(400, Screen.mainScreen.heightDIPs - 50);
     const result: T = await showPopover({
         backgroundColor: colorSurfaceContainer,
         view: OptionSelect,
@@ -523,7 +525,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
-            height: Math.min(rowHeight * options.length, props?.maxHeight || 400),
+            height: Math.min(rowHeight * options.length, props?.maxHeight || maxHeight),
             width: 200 * get(fontScale),
             options,
             onClose: async (item) => {
@@ -557,7 +559,7 @@ export async function showSettings(props?) {
     });
 }
 
-export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocument, anchor?) {
+export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], document?: OCRDocument, anchor?) {
     let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
@@ -716,9 +718,9 @@ export async function showPDFPopoverMenu(pages: OCRPage[], document?: OCRDocumen
     });
 }
 
-async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery = false) {
-    const sortedPages = pages.sort((a, b) => a.createdDate - b.createdDate);
-    const imagePaths = sortedPages.map((page) => page.imagePath);
+async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], exportDirectory: string, toGallery = false) {
+    const sortedPages = pages.sort((a, b) => a.page.createdDate - b.page.createdDate);
+    const imagePaths = sortedPages.map((page) => page.page.imagePath);
 
     const imageExportSettings = getImageExportSettings();
     const canSetName = !toGallery && imagePaths.length === 1;
@@ -741,7 +743,7 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
         }
         outputImageNames.push(result.text);
     } else {
-        outputImageNames = sortedPages.map((page) => (page.name ? cleanFilename(page.name) : getFormatedDateForFilename(page.createdDate)));
+        outputImageNames = sortedPages.map((page) => getFormatedDateForFilename(page.page.createdDate));
         // find duplicates and rename if any
         let lastName;
         let renameDelta = 1;
@@ -756,13 +758,16 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
             }
         }
     }
-    DEV_LOG && console.log('exporting images', imageExportSettings.imageFormat, imageExportSettings.imageQuality, exportDirectory, outputImageNames);
+    DEV_LOG && console.log('exporting images', imageExportSettings.imageFormat, imageExportSettings.imageQuality, exportDirectory, sortedPages.length, outputImageNames);
     showLoading(l('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
+    if (toGallery) {
+        await request('storage');
+    }
     await doInBatch(
         sortedPages,
-        (page, index) =>
+        (data: { page: OCRPage; document: OCRDocument }, index) =>
             new Promise<void>(async (resolve, reject) => {
                 let imageSource: ImageSource;
                 try {
@@ -772,61 +777,19 @@ async function exportImages(pages: OCRPage[], exportDirectory: string, toGallery
                         destinationName += '.' + imageExportSettings.imageFormat;
                     }
                     // const imageSource = await ImageSource.fromFile(imagePath);
-                    imageSource = await getTransformedImage(page);
-
-                    finalMessagePart = await saveImage(imageSource, {
-                        exportDirectory,
-                        fileName,
-                        toGallery,
-                        ...imageExportSettings,
-                        reportName: canSetName
-                    });
-                    // if (__ANDROID__ && toGallery) {
-                    //     await request('storage');
-                    //     com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(
-                    //         Utils.android.getApplicationContext(),
-                    //         imageSource.android,
-                    //         imageExportSettings.imageFormat,
-                    //         imageExportSettings.imageQuality,
-                    //         fileName
-                    //     );
-                    // } else if (__ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT)) {
-                    //     const context = Utils.android.getApplicationContext();
-                    //     const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
-                    //     let outfile = outdocument.createFile('image/jpeg', destinationName);
-                    //     if (outfile == null) {
-                    //         outfile = outdocument.findFile(destinationName);
-                    //     }
-                    //     if (!outfile) {
-                    //         throw new Error(`error creating file "${destinationName}" in "${exportDirectory}"`);
-                    //     }
-                    //     if (!finalMessagePart) {
-                    //         if (canSetName) {
-                    //             finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outfile.getUri());
-                    //         } else {
-                    //             finalMessagePart = com.nativescript.documentpicker.FilePath.getPath(context, outdocument.getUri());
-                    //         }
-                    //         DEV_LOG && console.log('finalMessagePart', finalMessagePart);
-                    //     }
-                    //     const stream = Utils.android.getApplicationContext().getContentResolver().openOutputStream(outfile.getUri());
-                    //     (imageSource.android as android.graphics.Bitmap).compress(
-                    //         imageExportSettings.imageFormat === 'png' ? android.graphics.Bitmap.CompressFormat.PNG : android.graphics.Bitmap.CompressFormat.JPEG,
-                    //         imageExportSettings.imageQuality,
-                    //         stream
-                    //     );
-                    //     // destinationPaths.push(outfile.getUri().toString());
-                    // } else {
-                    //     const destinationPath = path.join(exportDirectory, destinationName);
-                    //     await imageSource.saveToFileAsync(destinationPath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
-                    //     // destinationPaths.push(destinationPath);
-                    //     if (!finalMessagePart) {
-                    //         if (canSetName) {
-                    //             finalMessagePart = destinationPath;
-                    //         } else {
-                    //             finalMessagePart = exportDirectory;
-                    //         }
-                    //     }
-                    // }
+                    DEV_LOG && console.warn('exporting image', index, data.page.imagePath);
+                    imageSource = await getTransformedImage(data);
+                    DEV_LOG && console.info('exporting image done', index, data.page.imagePath, imageSource);
+                    if (imageSource) {
+                        finalMessagePart = await saveImage(imageSource, {
+                            exportDirectory,
+                            fileName,
+                            toGallery,
+                            ...imageExportSettings,
+                            reportName: canSetName
+                        });
+                    }
+                    DEV_LOG && console.info('exporting image saved', index, data.page.imagePath, imageSource);
                     resolve();
                 } catch (error) {
                     if (/error creating file/.test(error.toString())) {
@@ -862,7 +825,7 @@ export function getDirectoryName(folderPath: string) {
         .pop();
 }
 
-export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = VerticalPosition.BELOW) {
+export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], anchor, vertPos = VerticalPosition.BELOW) {
     let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName, pages.length);
@@ -878,99 +841,119 @@ export async function showImagePopoverMenu(pages: OCRPage[], anchor, vertPos = V
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
         ] as any)
     );
-    return showPopoverMenu({
-        options,
-        anchor,
-        vertPos,
-        props: {
-            width: 250,
-            // rows: 'auto',
-            // rowHeight: null,
-            // height: null,
-            // autoSizeListItem: true,
-            onRightIconTap: (item, event) => {
+    return new Promise<boolean>((resolve, reject) => {
+        showPopoverMenu({
+            options,
+            anchor,
+            vertPos,
+            props: {
+                width: 250,
+                // rows: 'auto',
+                // rowHeight: null,
+                // height: null,
+                // autoSizeListItem: true,
+                onRightIconTap: (item, event) => {
+                    try {
+                        switch (item.id) {
+                            case 'set_export_directory': {
+                                ApplicationSettings.remove('image_export_directory');
+                                exportDirectory = DEFAULT_EXPORT_DIRECTORY;
+                                updateDirectoryName();
+                                const item = options.getItem(0);
+                                item.subtitle = exportDirectoryName;
+                                options.setItem(0, item);
+                                break;
+                            }
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                }
+            },
+
+            closeOnClose: false,
+            onClose: async (item) => {
+                DEV_LOG && console.log('showImagePopoverMenu action', item.id);
                 try {
+                    let didDoSomething = false;
                     switch (item.id) {
                         case 'set_export_directory': {
-                            ApplicationSettings.remove('image_export_directory');
-                            exportDirectory = DEFAULT_EXPORT_DIRECTORY;
-                            updateDirectoryName();
-                            const item = options.getItem(0);
-                            item.subtitle = exportDirectoryName;
-                            options.setItem(0, item);
+                            const result = await pickFolder({
+                                multipleSelection: false,
+                                permissions: { write: true, persistable: true, read: true }
+                            });
+                            if (result.folders.length) {
+                                exportDirectory = result.folders[0];
+                                ApplicationSettings.setString('image_export_directory', exportDirectory);
+                                updateDirectoryName();
+                                const item = options.getItem(0);
+                                item.subtitle = exportDirectoryName;
+                                options.setItem(0, item);
+                                didDoSomething = true;
+                            }
+                            break;
+                        }
+                        case 'share':
+                            await closePopover();
+                            const images = [];
+                            const files = [];
+                            try {
+                                await doInBatch(
+                                    pages,
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const page = p.page;
+                                        if (page.colorMatrix || page.rotation !== 0 || page.brightness !== DEFAULT_BRIGHTNESS || page.contrast !== DEFAULT_CONTRAST) {
+                                            const imageSource = await getTransformedImage({ page });
+                                            if (imageSource) {
+                                                images.push(imageSource);
+                                            }
+                                        } else {
+                                            files.push(page.imagePath);
+                                        }
+                                    }
+                                );
+                                // for (let index = 0; index < pages.length; index++) {
+                                //     const page = pages[index];
+                                // }
+                                await share({ images, files });
+                                didDoSomething = true;
+                            } catch (error) {
+                                throw error;
+                            } finally {
+                                recycleImages(images);
+                            }
+                            break;
+                        case 'export': {
+                            if (!exportDirectory) {
+                                showSnack({ message: lc('please_choose_export_folder') });
+                            } else {
+                                await closePopover();
+                                await exportImages(pages, exportDirectory);
+                            }
+                            didDoSomething = true;
+                            break;
+                        }
+                        case 'save_gallery': {
+                            await closePopover();
+                            await exportImages(pages, exportDirectory, true);
+                            didDoSomething = true;
                             break;
                         }
                     }
+                    resolve(didDoSomething);
                 } catch (error) {
-                    showError(error);
+                    reject(error);
+                } finally {
+                    hideLoading();
                 }
             }
-        },
-
-        closeOnClose: false,
-        onClose: async (item) => {
-            DEV_LOG && console.log('showImagePopoverMenu action', item.id);
-            try {
-                switch (item.id) {
-                    case 'set_export_directory': {
-                        const result = await pickFolder({
-                            multipleSelection: false,
-                            permissions: { write: true, persistable: true, read: true }
-                        });
-                        if (result.folders.length) {
-                            exportDirectory = result.folders[0];
-                            ApplicationSettings.setString('image_export_directory', exportDirectory);
-                            updateDirectoryName();
-                            const item = options.getItem(0);
-                            item.subtitle = exportDirectoryName;
-                            options.setItem(0, item);
-                        }
-                        break;
-                    }
-                    case 'share':
-                        await closePopover();
-                        const images = [];
-                        const files = [];
-                        try {
-                            await doInBatch(pages, async (page, index) => {
-                                if (page.colorMatrix || page.rotation !== 0 || page.brightness !== DEFAULT_BRIGHTNESS || page.contrast !== DEFAULT_CONTRAST) {
-                                    const imageSource = await getTransformedImage(page);
-                                    images.push(imageSource);
-                                } else {
-                                    files.push(page.imagePath);
-                                }
-                            });
-                            // for (let index = 0; index < pages.length; index++) {
-                            //     const page = pages[index];
-                            // }
-                            await share({ images, files });
-                        } catch (error) {
-                            throw error;
-                        } finally {
-                            recycleImages(images);
-                        }
-                        break;
-                    case 'export': {
-                        if (!exportDirectory) {
-                            showSnack({ message: lc('please_choose_export_folder') });
-                        } else {
-                            await closePopover();
-                            await exportImages(pages, exportDirectory);
-                        }
-                        break;
-                    }
-                    case 'save_gallery': {
-                        await closePopover();
-                        await exportImages(pages, exportDirectory, true);
-                        break;
-                    }
-                }
-            } catch (error) {
-                showError(error);
-            } finally {
-                hideLoading();
-            }
-        }
+        });
     });
 }
 
@@ -1099,6 +1082,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
                 },
                 ApplicationSettings.getNumber(SETTINGS_TRANSFORM_BATCH_SIZE, TRANSFORM_BATCH_SIZE)
             );
+            return true;
         }
     } catch (error) {
         throw error;
@@ -1150,6 +1134,7 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
                     pagesDone += 1;
                 })
             );
+            return true;
         }
     } catch (error) {
         throw error;
@@ -1543,6 +1528,13 @@ export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumb
         return goToDocumentView(document, false);
     }
 }
+
+export async function requestCameraPermission() {
+    const result = await request('camera');
+    if (result[0] !== 'authorized') {
+        throw new PermissionError(lc('camera_permission_needed'));
+    }
+}
 export async function importImageFromCamera({
     canGoToView = true,
     document,
@@ -1551,10 +1543,7 @@ export async function importImageFromCamera({
 }: { document?: OCRDocument; canGoToView?: boolean; inverseUseSystemCamera?; folder?: DocFolder } = {}) {
     const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
 
-    const result = await request('camera');
-    if (result[0] !== 'authorized') {
-        throw new PermissionError(lc('camera_permission_needed'));
-    }
+    await requestCameraPermission();
     DEV_LOG && console.log('importImageFromCamera', useSystemCamera, inverseUseSystemCamera);
     if (__ANDROID__ && (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera)) {
         const resultImagePath = await new Promise<string>((resolve, reject) => {
@@ -1702,4 +1691,18 @@ export async function promptForFolderName(defaultGroup: string, groups?: DocFold
         return currentFolderText || 'none';
     }
     return null;
+}
+
+export async function showCustomAlert<T>(component, options, props = {}): Promise<any> {
+    const componentInstanceInfo = resolveComponentElement(component, props);
+    const modalView: View = componentInstanceInfo.element.nativeView;
+    const result = await alert({
+        view: modalView,
+        ...options
+    });
+    try {
+        modalView._tearDownUI();
+        componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
+    } catch (error) {}
+    return result;
 }

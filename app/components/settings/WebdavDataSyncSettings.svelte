@@ -74,7 +74,7 @@
 </script>
 
 <page id="webdavsyncsettings" actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,*">
         <scrollview row={1}>
             <stacklayout android:paddingBottom={$windowInset.bottom}>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={changeColor}>

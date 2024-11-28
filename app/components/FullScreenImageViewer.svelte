@@ -6,12 +6,11 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
-    import { colorTheme } from '~/helpers/theme';
+    import { colorTheme, isEInk } from '~/helpers/theme';
     import { colors, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOnBackground, colorPrimary } = $colors);
-    const isEInk = colorTheme === 'eink';
     export let useSVG = false;
     export let keepScreenAwake = false;
     export let refreshOnOrientationChange = false;
@@ -101,7 +100,7 @@
 </script>
 
 <page id="fullscreenImage" actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" {statusBarStyle}>
-    <gridlayout rows="auto,*" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout class="pageContent" rows="auto,*" android:paddingBottom={$windowInset.bottom}>
         <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
 
         <pager

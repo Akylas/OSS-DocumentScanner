@@ -1,7 +1,7 @@
 import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 import { deviceHasCamera } from '@nativescript-community/ui-cameraview';
 import { themer } from '@nativescript-community/ui-material-core';
-import { Application, ApplicationSettings, Color, Frame, InitRootViewEventData, Page, Screen, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Frame, InitRootViewEventData, OrientationChangedEventData, Page, Screen, Utils } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { get, writable } from 'svelte/store';
@@ -54,15 +54,22 @@ export const fonts = writable({
 export const windowInset = writable({ top: 0, left: 0, right: 0, bottom: 0 });
 export const actionBarButtonHeight = writable(0);
 export const actionBarHeight = writable(0);
-export const screenHeightDips = Screen.mainScreen.heightDIPs;
-export const screenWidthDips = Screen.mainScreen.widthDIPs;
+
+const startOrientation = __ANDROID__ ? Application.android['getOrientationValue'](Utils.android.getApplicationContext().getResources().getConfiguration()) : Application.orientation();
+const startingInLandscape = startOrientation === 'landscape';
+export const screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
+export const screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;
 export const screenRatio = screenWidthDips / screenHeightDips;
+DEV_LOG && console.log('startingInLandscape', startingInLandscape, screenWidthDips, screenHeightDips);
 
 export const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
 
 export const fontScale = writable(1);
 export const isRTL = writable(false);
 export const hasCamera = writable(true);
+
+export const orientation = writable(startOrientation);
+export const isLandscape = writable(startingInLandscape);
 
 export const folderBackgroundColor = writable(DEFAULT_DRAW_FOLDERS_BACKGROUND);
 prefs.on(`key:${SETTINGS_DRAW_FOLDERS_BACKGROUND}`, () => {
@@ -75,6 +82,11 @@ export const onFolderBackgroundColorChanged = createGlobalEventListener(SETTINGS
 function updateSystemFontScale(value) {
     fontScale.set(value);
 }
+Application.on('orientationChanged', (event: OrientationChangedEventData) => {
+    const newOrientation = event.newValue;
+    orientation.set(newOrientation);
+    isLandscape.set(newOrientation === 'landscape');
+});
 
 if (__ANDROID__) {
     Application.android.on(Application.android.activityCreateEvent, (event) => {
@@ -88,6 +100,16 @@ if (__ANDROID__) {
         AppUtilsAndroid.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
     });
 }
+
+function updateRootCss() {
+    let rootView = Application.getRootView();
+    if (rootView?.parent) {
+        rootView = rootView.parent as any;
+    }
+    rootView?._onCssStateChange();
+    const rootModalViews = rootView?._getRootModalViews();
+    rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());
+}
 const onInitRootView = function (event: InitRootViewEventData) {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
@@ -96,18 +118,23 @@ const onInitRootView = function (event: InitRootViewEventData) {
         if (!rootView) {
             return;
         }
-        AppUtilsAndroid.listenForWindowInsets((inset) => {
-            windowInset.set({
-                top: Utils.layout.toDeviceIndependentPixels(inset[0]),
-                bottom: Utils.layout.toDeviceIndependentPixels(Math.max(inset[1], inset[4])),
-                left: Utils.layout.toDeviceIndependentPixels(inset[2]),
-                right: Utils.layout.toDeviceIndependentPixels(inset[3])
-            });
-        });
         const rootViewStyle = rootView.style;
         if (!rootViewStyle) {
             return;
         }
+        AppUtilsAndroid.listenForWindowInsets((inset) => {
+            const newInset = {
+                top: Utils.layout.toDeviceIndependentPixels(inset[0]),
+                bottom: Utils.layout.toDeviceIndependentPixels(Math.max(inset[1], inset[4])),
+                left: Utils.layout.toDeviceIndependentPixels(inset[2]),
+                right: Utils.layout.toDeviceIndependentPixels(inset[3])
+            };
+            windowInset.set(newInset);
+            rootViewStyle.setUnscopedCssVariable('--windowInsetLeft', newInset.left + '');
+            rootViewStyle.setUnscopedCssVariable('--windowInsetRight', newInset.right + '');
+            // DEV_LOG && console.log('rootViewStyle changed windowInset', JSON.stringify(newInset), rootView);
+            updateRootCss();
+        });
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
@@ -190,12 +217,12 @@ if (__ANDROID__) {
 }
 
 export function updateThemeColors(theme: string, colorTheme: ColorThemes = ApplicationSettings.getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes) {
-    DEV_LOG && console.log('updateThemeColors', theme, colorTheme);
     const currentColors = get(colors);
     let rootView = Application.getRootView();
     if (rootView?.parent) {
         rootView = rootView.parent as any;
     }
+    DEV_LOG && console.log('updateThemeColors', theme, colorTheme, rootView);
     const rootViewStyle = rootView?.style;
     if (!rootViewStyle) {
         return;
@@ -219,16 +246,7 @@ export function updateThemeColors(theme: string, colorTheme: ColorThemes = Appli
         });
     } else {
         const themeColors = require(`~/themes/${__APP_ID__}/${colorTheme}.json`);
-        // TODO: define all color themes for iOS
-        if (theme === 'dark' || theme === 'black') {
-            Object.assign(currentColors, themeColors.dark);
-            if (theme === 'black') {
-                currentColors.colorBackground = '#000000';
-                currentColors.colorSurfaceContainer = '#000000';
-            }
-        } else {
-            Object.assign(currentColors, themeColors.light);
-        }
+        Object.assign(currentColors, theme === 'dark' || theme === 'black' ? themeColors.dark : themeColors.light);
 
         themer.setPrimaryColor(currentColors.colorPrimary);
         themer.setOnPrimaryColor(currentColors.colorOnPrimary);
@@ -239,6 +257,7 @@ export function updateThemeColors(theme: string, colorTheme: ColorThemes = Appli
     }
     if (theme === 'black') {
         currentColors.colorBackground = '#000000';
+        currentColors.colorSurfaceContainer = '#000000';
     }
     if (theme === 'dark') {
         currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
@@ -255,7 +274,5 @@ export function updateThemeColors(theme: string, colorTheme: ColorThemes = Appli
     colors.set(currentColors);
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
     // DEV_LOG && console.log('changed colors', theme, rootView, [...rootView?.cssClasses], theme, JSON.stringify(currentColors));
-    rootView?._onCssStateChange();
-    const rootModalViews = rootView?._getRootModalViews();
-    rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());
+    updateRootCss();
 }

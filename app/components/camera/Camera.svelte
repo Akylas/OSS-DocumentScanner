@@ -646,7 +646,7 @@
 </script>
 
 <page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
-    <gridlayout backgroundColor="black" rows="auto,*,auto,auto">
+    <gridlayout class="pageContent" backgroundColor="black" rows="auto,*,auto,auto">
         <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2} on:loaded={onCameraHolderLoaded}>
             <cameraView
                 bind:this={cameraView}

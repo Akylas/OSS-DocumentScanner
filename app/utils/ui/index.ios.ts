@@ -1,5 +1,6 @@
 import { Color, IOSHelper, View } from '@nativescript/core';
 import { showSnack } from './index.common';
+import { Dayjs } from 'dayjs';
 
 export * from './index.common';
 
@@ -89,4 +90,20 @@ export async function pickColor(color: Color | string, { alpha, anchor }: { alph
             reject(err);
         }
     });
+}
+
+export async function pickDate(currentDate: Dayjs) {
+    // TODO: show UIDatePicker in BottomSheet
+    // return new Promise<number>((resolve, reject) => {
+    //     const datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker().setTitleText(lc('pick_date')).setSelection(new java.lang.Long(currentDate.valueOf())).build();
+    //     datePicker.addOnDismissListener(
+    //         new android.content.DialogInterface.OnDismissListener({
+    //             onDismiss: () => {
+    //                 resolve(datePicker.getSelection().longValue());
+    //             }
+    //         })
+    //     );
+    //     const parentView = Frame.topmost() || getRootView();
+    //     datePicker.show(parentView._getRootFragmentManager(), 'datepicker');
+    // });
 }

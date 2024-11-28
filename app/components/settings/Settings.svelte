@@ -965,6 +965,7 @@
                 case 'third_party':
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
+                        skipCollapsedState: true,
                         view: ThirdPartySoftwareBottomSheet
                     });
                     break;
@@ -1319,7 +1320,7 @@
 </script>
 
 <page bind:this={page} id="syncSettingsPage" actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">

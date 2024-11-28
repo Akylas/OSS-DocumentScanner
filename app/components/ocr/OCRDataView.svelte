@@ -7,14 +7,14 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { showError } from '@shared/utils/showError';
     import { copyTextToClipboard } from '~/utils/ui';
-    import { colorTheme } from '~/helpers/theme';
+    import { colorTheme, isEInk } from '~/helpers/theme';
     import { colors } from '~/variables';
 
     let { colorBackground, colorOnBackground } = $colors;
     // technique for only specific properties to get updated on store change
     $: ({ colorBackground, colorOnBackground } = $colors);
-    const visualState = colorTheme === 'eink' ? colorBackground : 'black';
-    const textColor = colorTheme === 'eink' ? colorOnBackground : 'white';
+    const visualState = isEInk ? colorBackground : 'black';
+    const textColor = isEInk ? colorOnBackground : 'white';
 
     export let ocrData: OCRData;
     export let imagePath: string;
@@ -199,8 +199,8 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor={visualState} statusBarStyle={colorTheme === 'eink' ? undefined : 'dark'}>
-    <gridlayout rows="auto,*">
+<page bind:this={page} actionBarHidden={true} backgroundColor={visualState} statusBarStyle={isEInk ? undefined : 'dark'}>
+    <gridlayout class="pageContent" rows="auto,*">
         <!-- <absolutelayout row={1} on:layoutChanged={updateTextOnImageScale} on:pinch={onPinch} on:pan={onPan}>
             <absolutelayout
                 height={imageHeight}

@@ -31,7 +31,7 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
 
     static start(config?: { id: number; [k: string]: any }) {
         if (config) {
-            const { remoteURL, headers, authType, ...otherConfig } = config;
+            const { authType, headers, remoteURL, ...otherConfig } = config;
             const service = WebdavPDFSyncService.getOrCreateInstance();
             Object.assign(service, config);
             DEV_LOG && console.log('WebdavPDFSyncService', 'start', JSON.stringify(config), service.autoSync);
@@ -79,7 +79,7 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
             await generatePDFASync(temp, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
-            await exporter.export({ pages: document.pages, folder: temp, filename, compress: true, options: this.exportOptions });
+            await exporter.export({ pages: document.pages.map((page) => ({ page, document })), folder: temp, filename, compress: true, options: this.exportOptions });
         }
         const destinationPath = path.join(temp, filename);
         DEV_LOG && console.log('destinationPath', destinationPath, File.exists(destinationPath));

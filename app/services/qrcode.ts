@@ -7,6 +7,45 @@ import { screenWidthDips } from '~/variables';
 
 const TAG = 'QRCodeService';
 
+export function getBarcodeFallbackString(format) {
+    switch (format) {
+        case FORMATS.AZTEC:
+            return 'AZTEC';
+        case FORMATS.DATA_MATRIX:
+            return 'DATA_MATRIX';
+        case FORMATS.PDF_417:
+            return 'PDF_417';
+        case FORMATS.QR_CODE:
+            return 'QR_CODE';
+        case FORMATS.CODABAR:
+            return 'C0C';
+        case FORMATS.CODE_39:
+            return 'CODE-39';
+        case FORMATS.CODE_93:
+            return 'CODE-93';
+        case FORMATS.CODE_128:
+            return 'CODE-128';
+        case FORMATS.EAN_8:
+            return '32123456';
+        case FORMATS.EAN_13:
+            return '5901234123457';
+        case FORMATS.ITF:
+            return '1003';
+        case FORMATS.UPC_A:
+            return '123456789012';
+        case FORMATS.UPC_E:
+            return '0123456';
+        // case FORMATS.DXFILMEDGE:
+        //     return '0123456';
+        case FORMATS.DATABAR:
+            return '12345678901231';
+        case FORMATS.DATABAREXPANDED:
+            return '[01]98898765432106[3202]012345[15]991231';
+        default:
+            return format;
+    }
+}
+
 export enum FORMATS {
     QR_CODE = 'QRCode',
     EAN_8 = 'EAN-8',
@@ -31,7 +70,7 @@ export enum FORMATS {
 
 export class QRCodeService extends Observable {
     async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string = '#000000', options?) {
-        DEV_LOG && console.log('getQRCodeSVG', JSON.stringify(qrcode), width, color, getSVGFromQRCode);
+        DEV_LOG && console.log('getQRCodeSVG', JSON.stringify(qrcode), width, color, !!getSVGFromQRCode);
         return getSVGFromQRCode(qrcode.text, qrcode.format, width, {
             color,
             ...(options || {})

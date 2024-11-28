@@ -817,15 +817,21 @@ export default class SyncWorker extends Observable {
                                 DEV_LOG && console.info('syncImageDocuments', 'test', doc.document.id, j, existing?.lastmod, page.modifiedDate);
                                 if (!existing || new Date(existing.lastmod).valueOf() < page.modifiedDate) {
                                     // we need to create the image on remote
-                                    const imageSource = await getTransformedImage(page, {
-                                        colorMatrix: service.colorMatrix,
-                                        brightness: service.brightness,
-                                        contrast: service.contrast
+                                    const imageSource = await getTransformedImage({
+                                        page,
+                                        options: {
+                                            colorMatrix: service.colorMatrix,
+                                            brightness: service.brightness,
+                                            contrast: service.contrast
+                                        },
+                                        document: doc.document
                                     });
-                                    try {
-                                        await service.writeImage(imageSource, name, exportFormat, exportQuality, true);
-                                    } finally {
-                                        recycleImages(imageSource);
+                                    if (imageSource) {
+                                        try {
+                                            await service.writeImage(imageSource, name, exportFormat, exportQuality, true);
+                                        } finally {
+                                            recycleImages(imageSource);
+                                        }
                                     }
                                 }
                             }

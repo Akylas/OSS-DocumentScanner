@@ -22,7 +22,7 @@ export interface PDFExportBaseOptions {
     draw_ocr_overlay: boolean;
 }
 export interface PDFExportOptions {
-    pages: OCRPage[];
+    pages: { page: OCRPage; document: OCRDocument }[];
     document?: OCRDocument;
     folder?: string;
     filename?: string;
@@ -194,7 +194,7 @@ export default class PDFCanvas {
         }
     }
     async drawPages(pdfPageIndex: number, pages: OCRPage[]) {
-        const { imageSizeThreshold, paper_size, dpi, page_padding, orientation, items_per_page } = this.options;
+        const { dpi, imageSizeThreshold, items_per_page, orientation, page_padding, paper_size } = this.options;
         const pagePadding = ptToPixel(page_padding, dpi);
         const canvas = this.canvas;
         const w = canvas.getWidth() - 2;

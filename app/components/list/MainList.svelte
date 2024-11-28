@@ -18,7 +18,7 @@
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { colorTheme, getRealTheme, onThemeChanged } from '~/helpers/theme';
+    import { colorTheme, getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import {
         DocumentAddedEventData,
@@ -66,6 +66,7 @@
         doc?: OCRDocument;
         folder?: DocFolder;
         selected: boolean;
+        startingSide?: string;
     }
 </script>
 
@@ -471,7 +472,6 @@
                 ignoreTap = false;
                 return;
             }
-            DEV_LOG && console.log('onItemTap', nbSelected, item);
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else if (item.doc) {
@@ -526,7 +526,7 @@
                         acc.push({
                             image: page.imagePath,
                             // sharedTransitionTag: `document_${doc.id}_${page.id}`,
-                            name: page.name || doc.name,
+                            name: doc.name,
                             ...page
                         })
                     );
@@ -573,15 +573,15 @@
         }
         return selected;
     }
-    function getSelectedPagesAndPossibleSingleDocument(): [OCRPage[], OCRDocument?] {
-        const selected: OCRPage[] = [];
+    function getSelectedPagesAndPossibleSingleDocument(): [{ page: OCRPage; document: OCRDocument }[], OCRDocument?] {
+        const selected: { page: OCRPage; document: OCRDocument }[] = [];
         const docs: OCRDocument[] = [];
         let doc;
         documents.forEach((d, index) => {
             if (d.doc && d.selected) {
                 doc = d.doc;
                 docs.push(doc);
-                selected.push(...doc.pages);
+                selected.push(...doc.pages.map((page) => ({ page, document: doc })));
             }
         });
         return [selected, docs.length === 1 ? docs[0] : undefined];
@@ -598,6 +598,7 @@
                 if (result) {
                     await documentsService.deleteDocuments(await getSelectedDocuments());
                 }
+                return true;
             } catch (error) {
                 showError(error);
             }
@@ -617,7 +618,6 @@
                 })),
                 vertPos: VerticalPosition.BELOW,
                 onClose: (item) => {
-                    DEV_LOG && console.log('onClose', item);
                     const changed = viewStyleChanged(item.id, viewStyle);
 
                     viewStyle = item.id;
@@ -641,6 +641,7 @@
         }
     }
     export function refreshCollectionView() {
+        DEV_LOG && console.log('refreshCollectionView');
         foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }
@@ -709,13 +710,7 @@
     }
 
     async function showImageExportPopover(event) {
-        try {
-            const data = getSelectedPagesAndPossibleSingleDocument();
-
-            await showImagePopoverMenu(data[0], event.object);
-        } catch (err) {
-            showError(err);
-        }
+        return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object);
     }
     async function showOptions(event) {
         const options = new ObservableArray(
@@ -732,13 +727,14 @@
             anchor: event.object,
             onClose: async (item) => {
                 try {
+                    let result;
                     switch (item.id) {
                         case 'select_all':
                             selectAll();
                             break;
                         case 'rename':
                             const item = getSelectedItems()[0];
-                            const result = await prompt({
+                            result = await prompt({
                                 title: lc('rename'),
                                 defaultText: (item.doc || item.folder).name
                             });
@@ -749,23 +745,32 @@
                             }
                             break;
                         case 'share':
-                            showImageExportPopover(event);
+                            result = await showImageExportPopover(event);
+                            if (result) {
+                                unselectAll();
+                            }
                             break;
                         case 'fullscreen':
                             await fullscreenSelectedDocuments();
                             unselectAll();
                             break;
                         case 'ocr':
-                            await detectOCR({ documents: await getSelectedDocuments() });
-                            unselectAll();
+                            result = await detectOCR({ documents: await getSelectedDocuments() });
+                            if (result) {
+                                unselectAll();
+                            }
                             break;
                         case 'transform':
-                            await transformPages({ documents: await getSelectedDocuments() });
-                            unselectAll();
+                            result = await transformPages({ documents: await getSelectedDocuments() });
+                            if (result) {
+                                unselectAll();
+                            }
                             break;
                         case 'delete':
-                            await deleteSelectedDocuments();
-                            unselectAll();
+                            result = await deleteSelectedDocuments();
+                            if (result) {
+                                unselectAll();
+                            }
                             break;
                         case 'move_folder':
                             const selected = await getSelectedDocuments();
@@ -813,7 +818,7 @@
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,*">
         <collectionView
             bind:this={collectionView}
             colWidth="50%"
@@ -839,7 +844,7 @@
                     visibility={folders?.length ? 'visible' : 'collapsed'}>
                     <Template let:item>
                         <canvasview
-                            backgroundColor={($folderBackgroundColor && item.folder.color) || colorTheme === 'eink' ? 'transparent' : colorSurfaceContainerHigh}
+                            backgroundColor={($folderBackgroundColor && item.folder.color) || isEInk ? 'transparent' : colorSurfaceContainerHigh}
                             borderColor={colorOutline}
                             borderRadius={12}
                             borderWidth={1}

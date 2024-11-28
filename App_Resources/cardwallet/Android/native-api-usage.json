@@ -27,7 +27,9 @@
         "com.skydoves.colorpickerview:ActionMode",
         "com.skydoves.colorpickerview:ColorPickerDialog",
         "com.skydoves.colorpickerview:ColorPickerDialog.Builder",
-        "com.skydoves.colorpickerview:ColorPickerView"
+        "com.skydoves.colorpickerview:ColorPickerView",
+        "com.google.android.material.datepicker:MaterialDatePicker",
+        "com.google.android.material.datepicker:MaterialDatePicker.Builder"
     ],
     "blacklist": [
         "android.widget:DatePicker",

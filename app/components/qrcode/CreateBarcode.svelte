@@ -7,48 +7,9 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
-    import { FORMATS, qrcodeService } from '~/services/qrcode';
+    import { FORMATS, getBarcodeFallbackString, qrcodeService } from '~/services/qrcode';
     import { colors, windowInset } from '~/variables';
     import SvgView from '../common/SVGView.svelte';
-
-    function getFallbackString(format) {
-        switch (format) {
-            case FORMATS.AZTEC:
-                return 'AZTEC';
-            case FORMATS.DATA_MATRIX:
-                return 'DATA_MATRIX';
-            case FORMATS.PDF_417:
-                return 'PDF_417';
-            case FORMATS.QR_CODE:
-                return 'QR_CODE';
-            case FORMATS.CODABAR:
-                return 'C0C';
-            case FORMATS.CODE_39:
-                return 'CODE-39';
-            case FORMATS.CODE_93:
-                return 'CODE-93';
-            case FORMATS.CODE_128:
-                return 'CODE-128';
-            case FORMATS.EAN_8:
-                return '32123456';
-            case FORMATS.EAN_13:
-                return '5901234123457';
-            case FORMATS.ITF:
-                return '1003';
-            case FORMATS.UPC_A:
-                return '123456789012';
-            case FORMATS.UPC_E:
-                return '0123456';
-            // case FORMATS.DXFILMEDGE:
-            //     return '0123456';
-            case FORMATS.DATABAR:
-                return '12345678901231';
-            case FORMATS.DATABAREXPANDED:
-                return '[01]98898765432106[3202]012345[15]991231';
-            default:
-                return format;
-        }
-    }
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOnBackground, colorPrimary } = $colors);
@@ -67,7 +28,7 @@
                 async getSVG(item) {
                     try {
                         const result = await qrcodeService.getQRCodeSVG({ ...item, text: text || '' }, 200, 'black', {
-                            fallbackText: getFallbackString(format),
+                            fallbackText: getBarcodeFallbackString(format),
                             fallbackColor: '#aaaaaa'
                         });
                         return result;
@@ -104,7 +65,7 @@
 </script>
 
 <page id="fullscreenImage" actionBarHidden={true}>
-    <gridlayout rows="auto,auto,*" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout class="pageContent" rows="auto,auto,*" android:paddingBottom={$windowInset.bottom}>
         <textfield bind:this={textField} hint={lc('barcode')} marginBottom={10} returnKeyType="search" row={1} {text} on:textChange={onTextChange} on:loaded={focus} />
         <collectionview bind:this={collectionview} {items} row={2} rowHeight={150}>
             <Template let:item>

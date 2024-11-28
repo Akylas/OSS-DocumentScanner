@@ -30,6 +30,7 @@ let autoDarkToBlack = getBoolean('auto_black', false);
 colorTheme = getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes;
 const ThemeBlack = 'ns-black';
 export let useDynamicColors = colorTheme === 'dynamic';
+export let isEInk = colorTheme === 'eink';
 
 Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanceChangedEventData) => {
     try {
@@ -256,6 +257,7 @@ export function start() {
         const oldColorTheme = colorTheme;
         colorTheme = newColorTheme;
         useDynamicColors = colorTheme === 'dynamic';
+        isEInk = colorTheme === 'eink';
         currentColorTheme.set(colorTheme);
         if (__ANDROID__) {
             if (colorTheme !== DEFAULT_COLOR_THEME) {

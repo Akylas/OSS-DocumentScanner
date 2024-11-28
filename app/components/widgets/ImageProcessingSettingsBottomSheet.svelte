@@ -230,7 +230,6 @@
     const maxScreenHeight = screenHeightDips - $windowInset.top - $windowInset.bottom;
 
     function onCloseBottomSheet() {
-        DEV_LOG && console.log('onCloseBottomSheet');
         ApplicationSettings.setString(SETTINGS_DEFAULT_COLORTYPE, colorType);
         if (contrast !== DEFAULT_BRIGHTNESS) {
             ApplicationSettings.setNumber(SETTINGS_DEFAULT_CONTRAST, contrast);

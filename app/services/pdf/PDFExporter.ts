@@ -8,7 +8,7 @@ import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { PDF_EXT } from '~/utils/constants';
-export async function exportPDFAsync({ pages, document, folder = knownFolders.temp().path, filename, compress }: PDFExportOptions): Promise<string> {
+export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
         filename = getFileNameForDocument(document) + PDF_EXT;
@@ -31,7 +31,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
             ...getPDFDefaultExportOptions(),
             // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
             text_scale: Screen.mainScreen.scale * 1.4,
-            pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) }))
+            pages: pages.map((p) => ({ ...p.page, colorMatrix: getPageColorMatrix(p.page) }))
         });
         const context = Utils.android.getApplicationContext();
         DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);
@@ -132,7 +132,7 @@ export async function exportPDFAsync({ pages, document, folder = knownFolders.te
             });
         }
         // DEV_LOG && console.log('export message sent to worker', { pages, folder, filename, compress });
-        const result = await sendMessageToWorker('export', { pages, folder, filename, compress }, Date.now());
+        const result = await sendMessageToWorker('export', { pages: pages.map((p) => p.page), folder, filename, compress }, Date.now());
         // DEV_LOG && console.log('result', result);
         return result.messageData;
     }

@@ -3,7 +3,7 @@
     import { ImageSource } from '@nativescript/core';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { OCRPage } from '~/models/OCRDocument';
+    import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { getPageColorMatrix } from '~/utils/matrix';

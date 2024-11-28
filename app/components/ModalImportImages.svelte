@@ -12,7 +12,7 @@
     import PageIndicator from './common/PageIndicator.svelte';
     import { onDestroy, onMount } from 'svelte';
     import { confirmGoBack, onBackButton } from '~/utils/ui';
-    import { colorTheme } from '~/helpers/theme';
+    import { colorTheme, isEInk } from '~/helpers/theme';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
@@ -20,8 +20,8 @@
     let { colorBackground, colorOnBackground } = $colors;
     // technique for only specific properties to get updated on store change
     $: ({ colorBackground, colorOnBackground } = $colors);
-    const visualState = colorTheme === 'eink' ? colorBackground : 'black';
-    const textColor = colorTheme === 'eink' ? colorOnBackground : 'white';
+    const visualState = isEInk ? colorBackground : 'black';
+    const textColor = isEInk ? colorOnBackground : 'white';
 
     export let items: ImportImageData[] = [];
     // export let editingImage;
@@ -100,7 +100,7 @@
 </script>
 
 <page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
-    <gridlayout backgroundColor={visualState} columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout class="pageContent" backgroundColor={visualState} columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} id="pager" colSpan={3} disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <CropView {...item} on:undosChanged={onUndosChanged} />

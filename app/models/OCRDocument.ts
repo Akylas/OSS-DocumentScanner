@@ -121,7 +121,14 @@ export function getDocumentsService() {
     return documentsService;
 }
 
+export enum ExtraFieldType {
+    String = 'string',
+    Date = 'date',
+    Number = 'number'
+}
+
 export interface DocumentExtra {
+    color?: string;
     [k: string]:
         | string
         | {
@@ -162,12 +169,12 @@ export class OCRDocument extends Observable implements Document {
         return doc;
     }
 
-    static async createDocument(pagesData?: PageData[], folder?: DocFolder) {
+    static async createDocument(pagesData?: PageData[], folder?: DocFolder, attributes = {}) {
         const date = dayjs();
         const docId = date.valueOf() + '';
         const name = getFormatedDateForFilename(date.valueOf(), ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
         // DEV_LOG && console.log('createDocument', docId);
-        const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.id] } : {}) } as any);
+        const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.id] } : {}), ...attributes } as any);
         await doc.addPages(pagesData, false);
         // DEV_LOG && console.log('createDocument pages added');
         // no need to notify on create. Will be done in documentAdded
@@ -252,21 +259,24 @@ export class OCRDocument extends Observable implements Document {
                 // const page = new OCRPage(pageId, docId);
                 const pageFileData = docData.getFolder(pageId);
                 const attributes = { ...pageData, id: pageId, document_id: docId } as OCRPage;
-                attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + imageExportSettings.imageFormat);
                 DEV_LOG && console.log('add page', pageId, attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
+                let hasImage = false;
                 if (imagePath) {
                     // if the same nothing to do, must be while syncing
                     if (imagePath !== attributes.imagePath) {
                         const file = File.fromPath(imagePath);
                         await file.copy(attributes.imagePath);
                     }
+                    hasImage = true;
                 } else if (image) {
                     const imageSource = new ImageSource(image);
                     await imageSource.saveToFileAsync(attributes.imagePath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
-                } else {
-                    return;
+                    hasImage = true;
                 }
-                attributes.size = File.fromPath(attributes.imagePath).size;
+                if (hasImage) {
+                    attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + imageExportSettings.imageFormat);
+                    attributes.size = File.fromPath(attributes.imagePath).size;
+                }
                 if (sourceImage) {
                     const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + imageExportSettings.imageFormat;
                     // }
@@ -332,6 +342,9 @@ export class OCRDocument extends Observable implements Document {
     }
 
     async deletePage(pageIndex: number) {
+        if (pageIndex < 0 || pageIndex >= this.pages.length) {
+            return;
+        }
         const removed = this.pages.splice(pageIndex, 1);
         DEV_LOG && console.log('delete page', pageIndex);
         if (this.pages.length === 0) {
@@ -351,7 +364,7 @@ export class OCRDocument extends Observable implements Document {
         return this;
     }
 
-    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false) {
+    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true) {
         //compute diff update
         const page = this.pages[pageIndex];
         if (page) {
@@ -362,7 +375,9 @@ export class OCRDocument extends Observable implements Document {
             await documentsService.pageRepository.update(page, data);
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
-            await this.save({}, true, true);
+            if (saveDoc) {
+                await this.save({}, true, true);
+            }
             this.onPageUpdated(pageIndex, page, imageUpdated);
         }
         DEV_LOG && console.log('updatePage done', pageIndex);
@@ -406,6 +421,7 @@ export class OCRDocument extends Observable implements Document {
     }
 
     async save(data: Partial<OCRDocument> = {}, updateModifiedDate = false, notify = true) {
+        DEV_LOG && console.log('OCRDocument', 'save', JSON.stringify(data), updateModifiedDate, notify);
         if (data.pagesOrder) {
             this.pages = this.pages.sort(function (a, b) {
                 return data.pagesOrder.indexOf(a.id) - data.pagesOrder.indexOf(b.id);
@@ -590,7 +606,6 @@ export class OCRPage extends Observable implements Page {
     id: string;
     createdDate: number;
     modifiedDate?: number;
-    name?: string;
     document_id: string;
 
     colorType?: MatricesTypes;

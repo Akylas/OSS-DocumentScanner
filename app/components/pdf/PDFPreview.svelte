@@ -44,7 +44,7 @@
         Object.assign(pdfCanvas.options, newValue);
         ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
     });
-    export let pages: OCRPage[];
+    export let pages: { page: OCRPage; document: OCRDocument }[];
     export let document: OCRDocument = null;
     let pager: NativeViewElementNode<Pager>;
     let drawer: DrawerElement;
@@ -52,7 +52,7 @@
     let currentPagerIndex = 0;
 
     function refresh() {
-        pdfCanvas.updatePages(pages);
+        pdfCanvas.updatePages(pages.map((p) => p.page));
         items = new ObservableArray(pdfCanvas.items);
     }
     function requestPagesRedraw() {
@@ -279,7 +279,7 @@
 <!-- we use a frame to be able to navigate to settings from the modal-->
 <frame id="modal-frame">
     <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all" statusBarColor={colorSurface}>
-        <gridlayout rows="auto,*">
+        <gridlayout class="pageContent" rows="auto,*">
             <drawer bind:this={drawer} row={1}>
                 <gridlayout rows="auto,*,auto" prop:mainContent android:paddingBottom={$windowInset.bottom}>
                     <gridlayout backgroundColor={colorSurface} columns="*,*" padding={5} rows="auto,auto" on:tap={() => drawer?.open()}>

@@ -11,7 +11,7 @@
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { colors } from '~/variables';
     import RotableImageView from './RotableImageView.svelte';
-    import { colorTheme } from '~/helpers/theme';
+    import { colorTheme, isEInk } from '~/helpers/theme';
     const padding = 20;
     const ZOOOM_GLASS_SIZE = 50;
     const ZOOM_IMAGE_MAX_SIZE = Math.max(Screen.mainScreen.widthDIPs, Screen.mainScreen.heightDIPs);
@@ -546,7 +546,7 @@
     }
 </script>
 
-<gridlayout backgroundColor={colorTheme === 'eink' ? 'white' : 'black'} {...$$restProps} id="cropView" on:redo={applyRedo} on:undo={applyUndo}>
+<gridlayout backgroundColor={isEInk ? 'white' : 'black'} {...$$restProps} id="cropView" on:redo={applyRedo} on:undo={applyUndo}>
     <RotableImageView decodeWidth={ZOOM_IMAGE_MAX_SIZE} margin={padding} src={imagePath} stretch="aspectFit" />
     <canvasView bind:this={canvasView} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} />
 </gridlayout>

@@ -7,9 +7,10 @@ import { PDFExportOptions } from './PDFCanvas';
 import { getColorMatrix } from '~/utils/matrix';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
-    async export({ pages, folder = knownFolders.temp().path, filename = Date.now() + PDF_EXT, compress = false }: PDFExportOptions) {
+    async export({ compress = false, filename = Date.now() + PDF_EXT, folder = knownFolders.temp().path, pages }: PDFExportOptions) {
         const start = Date.now();
-        pages.forEach((page) => {
+        pages.forEach((p) => {
+            const page = p.page;
             if (page.colorType && !page.colorMatrix) {
                 page.colorMatrix = getColorMatrix(page.colorType);
             }

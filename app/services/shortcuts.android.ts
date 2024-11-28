@@ -149,10 +149,12 @@ export default class ShortcutsService {
             width = ADAPTIVE_BITMAP_SIZE;
             height = ADAPTIVE_BITMAP_SIZE / ratio;
         }
-        const image = await getTransformedImage(page, { width: ADAPTIVE_BITMAP_SIZE, height: ADAPTIVE_BITMAP_SIZE }, { width, height });
-        this.imagesToRecycle.push(image);
-        const icon = androidx.core.graphics.drawable.IconCompat.createWithAdaptiveBitmap(image.android);
-        return new ShortcutInfoCompat.Builder(context, document.id).setShortLabel(document.name).setLongLabel(document.name).setIntent(intent).setIcon(icon);
+        const image = await getTransformedImage({ page, options: { width: ADAPTIVE_BITMAP_SIZE, height: ADAPTIVE_BITMAP_SIZE }, loadOptions: { width, height }, document });
+        if (image) {
+            this.imagesToRecycle.push(image);
+            const icon = androidx.core.graphics.drawable.IconCompat.createWithAdaptiveBitmap(image.android);
+            return new ShortcutInfoCompat.Builder(context, document.id).setShortLabel(document.name).setLongLabel(document.name).setIntent(intent).setIcon(icon);
+        }
     }
 }
 export const shortcutService = new ShortcutsService();

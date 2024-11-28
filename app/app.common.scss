@@ -3,6 +3,8 @@
 
 .ns-root {
 
+    --windowInsetLeft: 0;
+    --windowInsetRight: 0;
     --fontScale: 1;
     --colorPrimary: #006E25;
     --colorOnPrimary: #ffffff;
@@ -103,11 +105,15 @@ page {
     status-bar-color: transparent;
     status-bar-style: light;
     background-color: var(--colorBackground);
-
     .ns-dark &,
     .ns-black & {
         status-bar-style: dark;
     }
+
+}
+.pageContent {
+    padding-left:var(--windowInsetLeft);
+    padding-right:var(--windowInsetRight);
 }
 
 frame {
@@ -247,11 +253,11 @@ mdtextfield,
     height: 40;
 
     .ns-eink & {
-        background-color: var(--colorPrimaryContainer);
-        ripple-color: var(--colorPrimaryContainer);
+        background-color: white;
+        ripple-color: var(--colorOnPrimaryContainer);
         color: var(--colorOnPrimaryContainer);
         elevation: 0;
-        border-color: black;
+        border-color: var(--colorOutlineVariant);
         border-width: 1;
     }
 }
@@ -272,13 +278,7 @@ mdtextfield,
 .card {
     margin: 8;
     background-color: var(--colorSurfaceContainerHigh);
-    border-color: var(--colorOutlineVariant);
     border-radius: 12;
-
-    .ns-eink & {
-        background-color: transparent;
-        border-width: 1;
-    }
 }
 
 .pageIndicator {
@@ -287,11 +287,23 @@ mdtextfield,
     font-size: 14;
     font-weight: bold;
     text-align: center;
-
     .ns-eink & {
-        background-color: white;
         color: var(--colorPrimary);
-        border-width: 1;
+    }
+}
+.cardItemTemplate {
+    border-radius: 12;
+    ripple-color:var(--colorSurface);
+}
+
+.cardViewHolder {
+    background-color: var(--colorBackground);
+    border-radius: 10 10 0 0;
+}
+.cardViewHolder, .pageIndicator, .card, .cardItemTemplate {
+    .ns-eink & {
         border-color: var(--colorOutlineVariant);
+        background-color: white;
+        border-width: 1;
     }
 }

@@ -100,7 +100,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const pages = nbSelected > 0 ? getSelectedPages() : document.pages;
+            const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
             await showPDFPopoverMenu(pages, document, event.object);
         } catch (err) {
             showError(err);
@@ -191,10 +191,10 @@
     }
 
     function getSelectedPages() {
-        const selected = [];
+        const selected: { page: OCRPage; document: OCRDocument }[] = [];
         items.forEach((d, index) => {
             if (d.selected) {
-                selected.push(d.page);
+                selected.push({ page: d.page, document });
             }
         });
         return selected;
@@ -241,7 +241,6 @@
         }
     }
     async function onItemTap(item: Item) {
-        DEV_LOG && console.log('onItemTap', Date.now());
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -320,6 +319,7 @@
                     }
                     // refreshCollectionView();
                     nbSelected = 0;
+                    return true;
                 }
             } catch (error) {
                 showError(error);
@@ -478,27 +478,42 @@
                 vertPos: VerticalPosition.BELOW,
 
                 onClose: async (item) => {
-                    switch (item.id) {
-                        case 'select_all':
-                            selectAll();
-                            break;
-                        case 'share':
-                            showImageExportPopover(event);
-                            break;
-                        // case 'fullscreen':
-                        // await fullscreenSelectedDocuments();
-                        // break;
-                        case 'ocr':
-                            await detectOCR({ pages: getSelectedPagesWithData() });
-                            unselectAll();
-                            break;
-                        case 'delete':
-                            deleteSelectedPages();
-                            break;
-                        case 'transform':
-                            await transformPages({ pages: getSelectedPagesWithData() });
-                            unselectAll();
-                            break;
+                    try {
+                        let result;
+                        switch (item.id) {
+                            case 'select_all':
+                                selectAll();
+                                break;
+                            case 'share':
+                                result = await showImageExportPopover(event);
+                                if (result) {
+                                    unselectAll();
+                                }
+                                break;
+                            // case 'fullscreen':
+                            // await fullscreenSelectedDocuments();
+                            // break;
+                            case 'ocr':
+                                result = await detectOCR({ pages: getSelectedPagesWithData() });
+                                if (result) {
+                                    unselectAll();
+                                }
+                                break;
+                            case 'delete':
+                                result = await deleteSelectedPages();
+                                if (result) {
+                                    unselectAll();
+                                }
+                                break;
+                            case 'transform':
+                                result = await transformPages({ pages: getSelectedPagesWithData() });
+                                if (result) {
+                                    unselectAll();
+                                }
+                                break;
+                        }
+                    } catch (error) {
+                        showError(error);
                     }
                 }
             });
@@ -542,7 +557,7 @@
 </script>
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,*">
         <collectionview
             bind:this={collectionView}
             id="view"
@@ -609,7 +624,7 @@
             </Template>
         </collectionview>
 
-        <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={$windowInset.bottom + 16} orientation="horizontal" row={1} verticalAlignment="bottom">
+        <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}

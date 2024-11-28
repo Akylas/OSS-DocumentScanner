@@ -319,7 +319,7 @@ export class SyncService extends Observable {
                 const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
                 worker.onmessage = this.onWorkerMessage.bind(this);
             }
-            DEV_LOG && console.log('internalSendMessageToWorker', Date.now());
+            // DEV_LOG && console.log('internalSendMessageToWorker', Date.now());
             this.worker.postMessage(data);
             // it seems that without the timeout consecutive send does not work
             await timeout(150);
@@ -376,7 +376,7 @@ export class SyncService extends Observable {
                 nativeData: keys.map((k) => nativeDataKeysPrefix + k),
                 type
             };
-            DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
+            // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
             this.internalSendMessageToWorker(data);
         }
     }

@@ -76,7 +76,7 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
             return generatePDFASync(this.localFolderPath, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
-            await exporter.export({ pages: document.pages, folder: this.localFolderPath, filename, compress: true, options: this.exportOptions });
+            await exporter.export({ pages: document.pages.map((page) => ({ page, document })), folder: this.localFolderPath, filename, compress: true, options: this.exportOptions });
         }
     }
 }

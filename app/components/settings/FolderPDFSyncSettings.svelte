@@ -303,7 +303,7 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,*">
         <collectionview itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(e) => changeColor(item, e)}>

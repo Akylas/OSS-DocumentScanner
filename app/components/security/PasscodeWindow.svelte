@@ -239,7 +239,7 @@
 
 <page bind:this={page} id="passCodeWindow" actionBarHidden={true}>
     {#if securityService.pincodeEnabled}
-        <gridlayout columns="*,*,*" rows="3*,*,*,*,*" on:layoutChanged={onLayoutChanged}>
+        <gridlayout class="pageContent" columns="*,*,*" rows="3*,*,*,*,*" on:layoutChanged={onLayoutChanged}>
             <gridlayout backgroundColor={colorPrimary} colSpan={3} columns="*,*,*,*" row={0}>
                 {#each { length: 4 } as _, i}
                     <label

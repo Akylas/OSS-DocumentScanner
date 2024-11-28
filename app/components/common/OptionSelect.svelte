@@ -173,7 +173,7 @@
 <gesturerootview columns={containerColumns} rows="auto">
     <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
         {#if showFilter}
-            <gridlayout borderColor={colorOutline} margin="10 10 0 10">
+            <gridlayout margin="10 10 0 10">
                 <textfield
                     autocapitalizationType="none"
                     backgroundColor="transparent"

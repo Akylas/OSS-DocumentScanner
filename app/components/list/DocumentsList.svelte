@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { colorTheme } from '~/helpers/theme';
+    import { colorTheme, isEInk } from '~/helpers/theme';
     import MainList, { Item } from './MainList.svelte';
     import { Template } from 'svelte-native/components';
     import { colors, fontScale, hasCamera, windowInset } from '~/variables';
@@ -120,7 +120,7 @@
     <Template let:item>
         <canvasview
             class="card"
-            borderWidth={colorTheme === 'eink' ? 1 : 0}
+            borderWidth={isEInk ? 1 : 0}
             height={getItemRowHeight(viewStyle) * $fontScale}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)}
