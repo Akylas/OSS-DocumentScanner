@@ -939,7 +939,7 @@
     async function saveEdit() {
         try {
             DEV_LOG && console.log('saveEdit');
-            if (editing === true) {
+            if (editing || editingTitle) {
                 let hasChanged = false;
                 if (qrcodesToRemove.length) {
                     DEV_LOG && console.log('qrcodesToRemove');
@@ -964,6 +964,7 @@
                 }
                 DEV_LOG && console.log('saveEdit', 'qrcodesToRemove done');
                 const { extra, ...updates } = editingUpdates;
+                hasChanged = Object.keys(updates).length > 0;
                 if (extra) {
                     updates['extra'] = document.extra || {};
                     const keys = Object.keys(extra);
@@ -1141,6 +1142,7 @@
                         maxFontSize={20}
                         text={document.name}
                         textAlignment="center"
+                        textWrap={true}
                         verticalTextAlignment="center"
                         visibility={item.page.imagePath ? 'hidden' : 'visible'} />
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
