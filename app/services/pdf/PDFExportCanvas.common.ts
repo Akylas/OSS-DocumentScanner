@@ -1,16 +1,13 @@
 import { lc } from '@nativescript-community/l';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
 import { Color, File, ImageSource, Utils } from '@nativescript/core';
+import { get } from 'svelte/store';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
+import { CARD_RATIO } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { getPageColorMatrix } from '~/utils/matrix';
-import PDFCanvas from './PDFCanvas';
-import { CARD_RATIO } from '~/utils/constants';
-import { createView } from '@shared/utils/ui';
-import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
-import { get } from 'svelte/store';
-import { maxDate } from '@akylas/nativescript/ui/date-picker';
+import PDFCanvas from './PDFCanvas';
 
 const textPaint = new Paint();
 textPaint.setTextSize(40);
@@ -35,23 +32,25 @@ function calculateMaxTextSize({
     maxHeight: number;
 }) {
     if (text == null || paint == null) return 0;
-    const bound = new Rect(0, 0, 0, 0);
+    maxWidth = maxWidth;
+    maxHeight = maxHeight;
     let size = Math.max(startFontSize, minFontSize);
     let oldSize = size;
     paint.setTextSize(size);
-    paint.getTextBounds(text, 0, text.length, bound);
-    DEV_LOG && console.log('calculateMaxTextSize start ', startFontSize, size, bound.width(), bound.height());
-    if (bound.width() > maxWidth && bound.height() > maxHeight) {
-        while (((bound.width() > maxWidth && bound.height() > maxHeight) || size > maxFontSize) && size >= minFontSize) {
+    let staticLayout = new StaticLayout(text, paint, maxWidth);
+    if (staticLayout.getWidth() > maxWidth || staticLayout.getHeight() > maxHeight) {
+        while ((staticLayout.getWidth() > maxWidth || staticLayout.getHeight() > maxHeight || size > maxFontSize) && size >= minFontSize) {
             size -= step;
             paint.setTextSize(size);
+            staticLayout = new StaticLayout(text, paint, maxWidth);
         }
         return size;
     } else {
-        while (size < maxFontSize && bound.width() < maxWidth && bound.height() < maxHeight) {
+        while (size < maxFontSize && (staticLayout.getWidth() < maxWidth || staticLayout.getHeight() < maxHeight)) {
             oldSize = size;
             size += step;
             paint.setTextSize(size);
+            staticLayout = new StaticLayout(text, paint, maxWidth);
         }
         return oldSize;
     }
@@ -106,8 +105,7 @@ export async function getTransformedImage({
         return imageSource;
     } else if (CARD_APP && document) {
         const backgroundColor = new Color(page.colors?.[0] || document.extra?.color || get(colors).colorPrimary);
-        DEV_LOG && console.log('draw image', !!document, typeof document.name, document.name, page);
-        const padding = 16;
+        const padding = 16 * 4;
         const width = 800;
         const height = width * CARD_RATIO;
         const canvas = new Canvas(width, height);
@@ -123,10 +121,9 @@ export async function getTransformedImage({
             maxWidth: width - 2 * padding,
             maxHeight: height - 2 * padding,
             minFontSize: 40,
-            maxFontSize: 100,
-            startFontSize: 80
+            maxFontSize: 200,
+            startFontSize: 150
         });
-        DEV_LOG && console.log('calculateMaxTextSize', fontSize);
         textPaint.setTextSize(fontSize);
         const staticLayout = new StaticLayout(document.name, textPaint, width - 2 * padding, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
         canvas.translate(padding, height / 2 - staticLayout.getHeight() / 2);

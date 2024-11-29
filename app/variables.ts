@@ -55,7 +55,14 @@ export const windowInset = writable({ top: 0, left: 0, right: 0, bottom: 0 });
 export const actionBarButtonHeight = writable(0);
 export const actionBarHeight = writable(0);
 
-const startOrientation = __ANDROID__ ? Application.android['getOrientationValue'](Utils.android.getApplicationContext().getResources().getConfiguration()) : Application.orientation();
+let startOrientation = __ANDROID__ ? Application.android['getOrientationValue'](Utils.android.getApplicationContext().getResources().getConfiguration()) : undefined;
+if (__IOS__) {
+    Application.on(Application.launchEvent, async () => {
+        startOrientation = Application.orientation();
+        orientation.set(startOrientation);
+        isLandscape.set(startOrientation === 'landscape');
+    });
+}
 const startingInLandscape = startOrientation === 'landscape';
 export const screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
 export const screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;

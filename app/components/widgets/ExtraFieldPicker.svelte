@@ -1,15 +1,12 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { DateTimePicker, DateTimePickerStyle } from '@nativescript/datetimepicker';
+    import { SilentError } from '@shared/utils/error';
     import { showError } from '@shared/utils/showError';
-    import { conditionalEvent } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
+    import { formatDate } from '~/helpers/locale';
     import { ExtraFieldType } from '~/models/OCRDocument';
     import { pickDate, showPopoverMenu } from '~/utils/ui';
-    import { colors, fonts } from '~/variables';
-    import { formatDate, lang } from '~/helpers/locale';
-    import { SilentError } from '@shared/utils/error';
-    import { View } from '@nativescript/core';
+    import { colors } from '~/variables';
 </script>
 
 <script lang="ts">
@@ -20,7 +17,7 @@
     export let name = null;
     export let value = null;
     export let type: ExtraFieldType = ExtraFieldType.Date;
-    let currentTime = dayjs(value);
+    let currentTime = value ? dayjs(value) : dayjs();
     let currentValue = value;
     let currentName = name;
     let currentType = type;
@@ -29,15 +26,12 @@
 
     async function selectDate(e) {
         try {
+            DEV_LOG && console.log('selectDate', currentTime);
             if (currentType === ExtraFieldType.Date) {
-                if (__IOS__) {
-                    DateTimePicker.pickDate({ context: (e.object as View)._context, date: currentTime.toDate(), locale: lang });
-                } else {
-                    const dayStart = currentTime.startOf('d');
-                    const date = await pickDate(currentTime);
-                    if (date && dayStart.valueOf() !== date) {
-                        currentTime = dayjs(date);
-                    }
+                const dayStart = currentTime.startOf('d');
+                const date = await pickDate(currentTime);
+                if (date && dayStart.valueOf() !== date) {
+                    currentTime = dayjs(date);
                 }
             }
         } catch (error) {

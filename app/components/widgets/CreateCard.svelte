@@ -1,16 +1,10 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { DateTimePicker, DateTimePickerStyle } from '@nativescript/datetimepicker';
-    import { showError } from '@shared/utils/showError';
-    import { conditionalEvent } from '@shared/utils/svelte/ui';
-    import dayjs from 'dayjs';
-    import { ExtraFieldType } from '~/models/OCRDocument';
-    import { pickColor, pickDate, showPopoverMenu } from '~/utils/ui';
-    import { colors, fonts } from '~/variables';
-    import { formatDate, lang } from '~/helpers/locale';
     import { SilentError } from '@shared/utils/error';
-    import { View } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
     import { FORMATS, getBarcodeFallbackString, qrcodeService } from '~/services/qrcode';
+    import { pickColor, showPopoverMenu } from '~/utils/ui';
+    import { colors } from '~/variables';
     import SvgView from '../common/SVGView.svelte';
 </script>
 
@@ -19,7 +13,7 @@
     $: ({ colorOnBackground, colorOutline, colorPrimary } = $colors);
 
     export let name = null;
-    export let color = null;
+    export let color = colorPrimary;
     let code;
     let codeFormat = FORMATS.QR_CODE;
     let rootView;

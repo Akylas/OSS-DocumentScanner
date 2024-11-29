@@ -263,6 +263,7 @@
             margin={16}
             maxFontSize={40}
             text={item.doc.name}
+            textWrap={true}
             visibility={itemHasImage(item) ? 'hidden' : 'visible'}
             {...getLabelParams(layout, item)} />
         <!-- <gridlayout borderRadius={12}> -->
