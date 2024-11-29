@@ -839,7 +839,6 @@
                     items={folderItems}
                     orientation="horizontal"
                     row={1}
-                    rowHeight={70}
                     ios:iosOverflowSafeArea={true}
                     visibility={folders?.length ? 'visible' : 'collapsed'}>
                     <Template let:item>
@@ -848,7 +847,7 @@
                             borderColor={colorOutline}
                             borderRadius={12}
                             borderWidth={1}
-                            margin="0 8 0 8"
+                            margin="4 8 0 8"
                             rippleColor={colorSurface}
                             on:tap={() => onItemTap(item)}
                             on:longPress={(e) => onItemLongPress(item, e)}
