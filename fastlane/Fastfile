@@ -358,10 +358,10 @@ platform :ios do
       match(
         type:params[:type], 
         clone_branch_directly:true,
-        generate_apple_certs: false,
+        # generate_apple_certs: false,
         # keychain_name: "action_keychain",
         # keychain_password: "githubaction"
-        readonly: true,
+        # readonly: true,
         shallow_clone: true,
         api_key: params[:api_key]
         )
