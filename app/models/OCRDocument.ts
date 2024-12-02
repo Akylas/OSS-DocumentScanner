@@ -261,20 +261,19 @@ export class OCRDocument extends Observable implements Document {
                 const attributes = { ...pageData, id: pageId, document_id: docId } as OCRPage;
                 DEV_LOG && console.log('add page', pageId, attributes.imagePath, imagePath, sourceImagePath, image, JSON.stringify(pageData));
                 let hasImage = false;
-                if (imagePath) {
-                    // if the same nothing to do, must be while syncing
-                    if (imagePath !== attributes.imagePath) {
-                        const file = File.fromPath(imagePath);
-                        await file.copy(attributes.imagePath);
-                    }
+                if (imagePath || image) {
+                    attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + imageExportSettings.imageFormat);
                     hasImage = true;
+                }
+                // if the same nothing to do, must be while syncing
+                if (imagePath && imagePath !== attributes.imagePath) {
+                    const file = File.fromPath(imagePath);
+                    await file.copy(attributes.imagePath);
                 } else if (image) {
                     const imageSource = new ImageSource(image);
                     await imageSource.saveToFileAsync(attributes.imagePath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
-                    hasImage = true;
                 }
                 if (hasImage) {
-                    attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + imageExportSettings.imageFormat);
                     attributes.size = File.fromPath(attributes.imagePath).size;
                 }
                 if (sourceImage) {
