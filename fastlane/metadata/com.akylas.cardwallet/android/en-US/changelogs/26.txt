@@ -1,0 +1,3 @@
+Bug fixes:
+- crash on app start fix
+- Translations update
