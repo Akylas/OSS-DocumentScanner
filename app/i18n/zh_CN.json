@@ -53,6 +53,8 @@
     "autoscan": "自动扫描",
     "autoscan_settings": "自动扫描设置",
     "backup_restore": "备份/恢复",
+    "barcode": "条形码",
+    "barcode_type": "条形码类型",
     "barcore_qrcode": "条码 / 二维码",
     "batch_mode": "批处理模式",
     "biometric_auto_lock": "自动开启生物锁",
@@ -86,6 +88,8 @@
     "confirm_passcode_dont_match": "PIN 码不匹配",
     "contrast": "对比度",
     "copied": "已复制",
+    "create": "创建",
+    "create_barcode": "创建一个条形码",
     "crop_edit_doc": "触摸屏幕并拖动至边角（不要直接点击），这样您就可以看到放大镜。应用将选择最近的边角",
     "crop_enabled": "检测文档边缘并裁剪",
     "current_passcode": "旧PIN码",
@@ -119,6 +123,7 @@
     "downloading": "下载 （%1$s%%）…",
     "draw_ocr_overlay": "绘制 OCR 层",
     "draw_ocr_text": "PDF 中的透明 OCR 文本",
+    "edit": "编辑",
     "email": "电子邮件",
     "enable": "启用",
     "enabled": "已启用",
@@ -191,6 +196,7 @@
     "import_settings_desc": "从过往备份中导入所有设置",
     "imported_nb_pages": "导入%1$s页",
     "internal_storage": "内部存储",
+    "invalid": "",
     "ios": {
         "info": {
             "plist": {
