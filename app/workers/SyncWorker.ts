@@ -1,5 +1,5 @@
 import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
-import { ApplicationSettings, type EventData, File, Observable, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, type EventData, File, Observable, Utils, knownFolders, path } from '@nativescript/core';
 import '@nativescript/core/globals';
 import { time } from '@nativescript/core/profiling';
 import type { Optional } from '@nativescript/core/utils/typescript-utils';
@@ -516,9 +516,20 @@ export default class SyncWorker extends Observable {
                         }
                     }
                     ApplicationSettings.remove(deleteKey);
+                    this.onServiceSyncDone(service);
                 })
         );
         TEST_LOG && console.log('syncDataDocuments done');
+    }
+
+    onServiceSyncDone(service: BaseSyncService) {
+        if (__ANDROID__) {
+            const intent = new android.content.Intent(`${__APP_ID__}.SYNC_FINISHED`);
+            intent.putExtra('service', service.id);
+            intent.putExtra('type', service.type);
+            const context: android.content.Context = Utils.android.getApplicationContext();
+            context.sendBroadcast(intent);
+        }
     }
 
     async syncDocumentOnRemote(document: OCRDocument, service: BaseDataSyncService) {
@@ -838,6 +849,7 @@ export default class SyncWorker extends Observable {
                         }
                     }
                     ApplicationSettings.remove(deleteKey);
+                    this.onServiceSyncDone(service);
                 })
         );
         TEST_LOG && console.log('syncImageDocuments done ');
@@ -897,6 +909,7 @@ export default class SyncWorker extends Observable {
                     }
                     ApplicationSettings.remove(deleteKey);
                     TEST_LOG && console.log('syncPDFDocuments', 'handling service done', service.type, service.id, service.autoSync, force);
+                    this.onServiceSyncDone(service);
                 })
         );
         TEST_LOG && console.log('syncPDFDocuments done ');
