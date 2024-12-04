@@ -1,8 +1,11 @@
+import { setWorkerContextValue } from '@akylas/nativescript-app-utils';
+import { lc } from '@nativescript-community/l';
 import { ApplicationSettings, EventData, Observable } from '@nativescript/core';
 import { time } from '@nativescript/core/profiling';
 import { debounce } from '@nativescript/core/utils';
+import { CustomError } from '@shared/utils/error';
+import { showError } from '@shared/utils/showError';
 import { writable } from 'svelte/store';
-import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import {
     EVENT_DOCUMENT_ADDED,
@@ -17,25 +20,13 @@ import {
     EVENT_SYNC_STATE,
     SETTINGS_SYNC_SERVICES
 } from '~/utils/constants';
-import { CustomError } from '@shared/utils/error';
-import { showError } from '@shared/utils/showError';
-import SyncWorker, { WorkerEventType } from '~/workers/SyncWorker';
-import {
-    DocumentAddedEventData,
-    DocumentDeletedEventData,
-    DocumentEvents,
-    DocumentMovedFolderEventData,
-    DocumentPageUpdatedEventData,
-    DocumentPagesAddedEventData,
-    DocumentUpdatedEventData,
-    FolderUpdatedEventData,
-    documentsService
-} from './documents';
+import { timeout } from '~/utils/ui';
+import Queue from '~/workers/queue';
+import type SyncWorker from '~/workers/SyncWorker';
+import type { WorkerEventType } from '~/workers/SyncWorker';
+import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, DocumentPagesAddedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from './documents';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
-import { lc } from '@nativescript-community/l';
-import Queue from '~/workers/queue';
-import { timeout } from '~/utils/ui';
 
 export const syncServicesStore = writable([]);
 

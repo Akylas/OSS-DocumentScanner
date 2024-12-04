@@ -7,6 +7,9 @@
     import { showError } from '@shared/utils/showError';
     import { colors } from '~/variables';
 
+    let { colorBackground } = $colors;
+    $: ({ colorBackground } = $colors);
+
     export let document: OCRDocument = null;
     export let folder: DocFolder = null;
     export let editingTitle = false;
@@ -58,7 +61,7 @@
     }
 </script>
 
-<CActionBar {buttonsDefaultVisualState} {labelsDefaultVisualState} modalWindow={true} onGoBack={onInnerGoBack} orceCanGoBack={true} title={null} {...$$restProps}>
+<CActionBar backgroundColor={colorBackground} {buttonsDefaultVisualState} {labelsDefaultVisualState} modalWindow={true} onGoBack={onInnerGoBack} orceCanGoBack={true} title={null} {...$$restProps}>
     <textfield
         bind:this={editingTitleTextField}
         slot="center"

@@ -1,22 +1,26 @@
 <script lang="ts">
-    import { View } from '@nativescript/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { View, verticalAlignmentProperty } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { showError } from '@shared/utils/showError';
+    import { OCRLanguages, ocrService } from '~/services/ocr';
     import { colors, fonts } from '~/variables';
-    import { ocrService } from '~/services/ocr';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import Chip from '../widgets/Chip.svelte';
+    import { localizedLanguage } from '~/utils/ui';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary, colorOnSurface, colorOnPrimary, colorOutline, colorSurfaceContainer } = $colors);
+    $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorPrimary, colorSurfaceContainer } = $colors);
 
     let collectionView: NativeViewElementNode<CollectionView>;
     let downloaded = ocrService.downloadedLanguages;
-    let languages = ocrService.languagesArray;
-    let dataType = ocrService.dataType;
+    export let languages = ocrService.languagesArray;
+    export let onlySettings = false;
+    export let dataType: string = ocrService.dataType;
     async function addLanguages(event) {
         try {
             const SearchModal = (await import('~/components/ocr/SelectOCRLanguaguesModal.svelte')).default;
@@ -55,94 +59,112 @@
 
     async function setDataType(value) {
         dataType = value;
-        ocrService.dataType = dataType;
+        ocrService.dataType = dataType as any;
         downloaded = ocrService.downloadedLanguages;
         languages = languages;
     }
 
-    function startOCR() {
-        closeBottomSheet(true);
+    function startOrCloseOCR() {
+        closeBottomSheet(onlySettings ? { languages, dataType } : true);
     }
 </script>
 
 <gesturerootview id="ocrSettingsBottomSheet" rows="auto">
-    <stacklayout padding={16}>
-        <label color={colorPrimary} fontSize={20} fontWeight="bold" marginBottom={16} text={lc('quality')} />
-        <stacklayout orientation="horizontal">
-            {#each qualities as quality}
-                <gridlayout
-                    backgroundColor={dataType === quality ? colorPrimary : undefined}
-                    borderColor={colorOutline}
-                    borderRadius={8}
-                    borderWidth={dataType === quality ? 0 : 1}
-                    columns="auto,auto"
-                    height={32}
-                    margin={4}
-                    paddingLeft={dataType === quality ? 8 : 12}
-                    paddingRight={12}
-                    rippleColor={colorPrimary}
-                    on:tap={() => setDataType(quality)}>
-                    <label
-                        color={dataType === quality ? colorOnPrimary : colorOnSurface}
-                        fontFamily={$fonts.mdi}
-                        fontSize={16}
-                        marginRight={4}
-                        text="mdi-check"
-                        verticalAlignment="middle"
-                        visibility={dataType === quality ? 'visible' : 'collapse'} />
-                    <label
-                        col={1}
-                        color={dataType === quality ? colorOnPrimary : colorOnSurface}
-                        fontSize={14}
-                        fontWeight={dataType === quality ? 'bold' : 'normal'}
-                        text={lc(quality)}
-                        verticalAlignment="middle" />
-                </gridlayout>
-            {/each}
-        </stacklayout>
-        <gridlayout columns="*,auto" marginBottom={16} marginTop={15} rows="auto">
-            <label color={colorPrimary} fontSize={20} fontWeight="bold" text={lc('languages')} verticalAlignment="middle" />
-            <mdbutton class="icon-btn" col={1} padding={0} text="mdi-plus" variant="text" on:tap={addLanguages} />
-        </gridlayout>
-        <wraplayout row={1}>
-            {#each languages as language}
-                <gridlayout
-                    borderColor={colorOutline}
-                    borderRadius={8}
-                    borderWidth={1}
-                    columns="auto,auto,auto"
-                    height={32}
-                    margin={4}
-                    paddingLeft={downloaded.indexOf(language) !== -1 ? 8 : 12}
-                    paddingRight={8}>
-                    <label
-                        color={colorOnSurface}
-                        fontFamily={$fonts.mdi}
-                        fontSize={16}
-                        marginRight={4}
-                        text="mdi-download"
-                        verticalAlignment="middle"
-                        visibility={downloaded.indexOf(language) !== -1 ? 'visible' : 'collapse'} />
+    <stacklayout padding={onlySettings ? 0 : 16}>
+        {#if onlySettings}
+            <ListItemAutoSize title={lc('quality')} titleProps={{ verticalAlignment: 'top' }}>
+                <stacklayout marginTop={50} orientation="horizontal" verticalAlignment="bottom">
+                    {#each qualities as quality}
+                        <gridlayout
+                            backgroundColor={dataType === quality ? colorPrimary : undefined}
+                            borderColor={colorOutline}
+                            borderRadius={8}
+                            borderWidth={dataType === quality ? 0 : 1}
+                            columns="auto,auto"
+                            height={32}
+                            margin={4}
+                            paddingLeft={dataType === quality ? 8 : 12}
+                            paddingRight={12}
+                            rippleColor={colorPrimary}
+                            on:tap={() => setDataType(quality)}>
+                            <label
+                                color={dataType === quality ? colorOnPrimary : colorOnSurface}
+                                fontFamily={$fonts.mdi}
+                                fontSize={16}
+                                marginRight={4}
+                                text="mdi-check"
+                                verticalAlignment="middle"
+                                visibility={dataType === quality ? 'visible' : 'collapse'} />
+                            <label
+                                col={1}
+                                color={dataType === quality ? colorOnPrimary : colorOnSurface}
+                                fontSize={14}
+                                fontWeight={dataType === quality ? 'bold' : 'normal'}
+                                text={lc(quality)}
+                                verticalAlignment="middle" />
+                        </gridlayout>
+                    {/each}
+                </stacklayout>
+            </ListItemAutoSize>
+        {:else}
+            <label class={'sectionBigHeader'} marginBottom={onlySettings ? 0 : 16} text={lc('quality')} />
+            <stacklayout orientation="horizontal">
+                {#each qualities as quality}
+                    <gridlayout
+                        backgroundColor={dataType === quality ? colorPrimary : undefined}
+                        borderColor={colorOutline}
+                        borderRadius={8}
+                        borderWidth={dataType === quality ? 0 : 1}
+                        columns="auto,auto"
+                        height={32}
+                        margin={4}
+                        paddingLeft={dataType === quality ? 8 : 12}
+                        paddingRight={12}
+                        rippleColor={colorPrimary}
+                        on:tap={() => setDataType(quality)}>
+                        <label
+                            color={dataType === quality ? colorOnPrimary : colorOnSurface}
+                            fontFamily={$fonts.mdi}
+                            fontSize={16}
+                            marginRight={4}
+                            text="mdi-check"
+                            verticalAlignment="middle"
+                            visibility={dataType === quality ? 'visible' : 'collapse'} />
+                        <label
+                            col={1}
+                            color={dataType === quality ? colorOnPrimary : colorOnSurface}
+                            fontSize={14}
+                            fontWeight={dataType === quality ? 'bold' : 'normal'}
+                            text={lc(quality)}
+                            verticalAlignment="middle" />
+                    </gridlayout>
+                {/each}
+            </stacklayout>
+        {/if}
+        {#if onlySettings}
+            <ListItemAutoSize paddingRight={0} title={lc('languages')} titleProps={{ verticalAlignment: 'top' }}>
+                <mdbutton class="icon-btn" col={1} marginTop={6} text="mdi-plus" variant="text" verticalAlignment="top" on:tap={addLanguages} />
+                <wraplayout marginTop={50} verticalAlignment="bottom">
+                    {#each languages as language}
+                        <Chip rightIcon={downloaded.indexOf(language) !== -1 ? 'mdi-download' : null} text={localizedLanguage(language, OCRLanguages)} on:tap={() => removeLanguage(language)} />
+                    {/each}
+                </wraplayout>
+            </ListItemAutoSize>
+        {:else}
+            <gridlayout columns="*,auto" marginBottom={16} marginTop={15} rows="auto">
+                <label class={'sectionBigHeader'} text={lc('languages')} verticalAlignment="middle" />
+                <mdbutton class="icon-btn" col={1} padding={0} text="mdi-plus" variant="text" on:tap={addLanguages} />
+            </gridlayout>
 
-                    <label col={1} fontSize={14} paddingBottom={2} text={ocrService.localizedLanguage(language)} verticalAlignment="middle" />
-                    <mdbutton
-                        col={2}
-                        color={colorOnSurface}
-                        fontFamily={$fonts.mdi}
-                        fontSize={16}
-                        marginLeft={4}
-                        padding={0}
-                        text="mdi-close"
-                        variant="text"
-                        verticalAlignment="middle"
-                        width={20}
-                        on:tap={() => removeLanguage(language)} />
-                </gridlayout>
-            {/each}
-        </wraplayout>
+            <wraplayout row={1}>
+                {#each languages as language}
+                    <Chip rightIcon={downloaded.indexOf(language) !== -1 ? 'mdi-download' : null} text={localizedLanguage(language, OCRLanguages)} on:tap={() => removeLanguage(language)} />
+                {/each}
+            </wraplayout>
+        {/if}
         <!-- <gridlayout , backgroundColor="" borderRadius="50%" columns="*,auto">
             <textfield hint={lc('languages')} placeholder={lc('languages')} returnKeyType="search" variant="none" verticalTextAlignment="center" />
         </gridlayout> -->
-        <mdbutton id="start" horizontalAlignment="right" padding="10 16 10 16" row={1} text={lc('start')} on:tap={startOCR} />
+        <mdbutton id="start" horizontalAlignment="right" padding="10 16 10 16" row={1} text={lc('start')} visibility={onlySettings ? 'collapsed' : 'visible'} on:tap={startOrCloseOCR} />
     </stacklayout>
 </gesturerootview>

@@ -68,6 +68,7 @@
     import { share } from '@akylas/nativescript-app-utils/share';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
+    const variant = 'outline';
 
     const numberTextFieldProperties = {
         keyboardType: 'integer'
@@ -983,7 +984,7 @@
                         });
                         const emailTF = createView(TextField, {
                             hint: lc('email'),
-                            variant: 'outline',
+                            variant,
                             autocapitalizationType: 'none',
                             autocorrect: false,
                             keyboardType: 'email',
@@ -991,7 +992,7 @@
                         });
                         const nameTF = createView(TextField, {
                             hint: lc('name'),
-                            variant: 'outline',
+                            variant,
                             returnKeyType: 'next'
                         });
                         stackLayout.addChild(nameTF);
@@ -1350,36 +1351,27 @@
                 <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize fontSize={20} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize fontSize={20} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="rightIcon" let:item>
-                <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <IconButton col={1} text={item.rightBtnIcon} on:tap={(event) => onRightIconTap(item, event)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="leftIcon" let:item>
-                <ListItemAutoSize
-                    columns="auto,*,auto"
-                    fontSize={20}
-                    mainCol={1}
-                    rightValue={item.rightValue}
-                    showBottomLine={false}
-                    subtitle={getDescription(item)}
-                    title={getTitle(item)}
-                    on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize columns="auto,*,auto" mainCol={1} rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
-                <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                </ListItemAutoSize>
+                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
             </Template>
         </collectionview>
         <CActionBar canGoBack title={title || $slc('settings.title')}>

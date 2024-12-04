@@ -39,7 +39,7 @@
     );
     DEV_LOG && console.log('FolderImageSyncSettings', JSON.stringify(data), JSON.stringify(get(store)));
     // let folderPathName = data.folderPathName;
-    const variant = 'filled';
+    const variant = 'outline';
 
     async function save() {
         const result = get(store);
@@ -337,7 +337,7 @@
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
-                    <textfield isUserInteractionEnabled={false} text={item.text} {...item.textFieldProperties} />
+                    <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} />
                     <mdbutton
                         class="icon-btn"
                         color={colorOnSurfaceVariant}

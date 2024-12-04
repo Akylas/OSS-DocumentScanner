@@ -1,19 +1,17 @@
 <script lang="ts">
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { Screen } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { PDFExportBaseOptions } from '~/services/pdf/PDFCanvas';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
-    import { showError } from '@shared/utils/showError';
-    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { showPopoverMenu, showSliderPopover } from '~/utils/ui';
     const dispatch = createEventDispatcher();
 
     export let store: Writable<{ exportOptions: PDFExportBaseOptions }>;
-    export let variant = 'filled';
-    export let textFieldHeight = 'auto';
-    export let textFieldPadding = __ANDROID__ ? '24 16 8 16' : '10 10 0 10';
+    export let variant = 'outline';
 
     const tMargin = '4 10 4 10';
     const tWidth = (Screen.mainScreen.widthDIPs - 41) / 2;
@@ -92,60 +90,35 @@
 <wraplayout>
     <textfield
         editable={false}
-        height={textFieldHeight}
         hint={lc('orientation')}
         margin={tMargin}
-        padding={textFieldPadding}
         text={PDF_OPTIONS['orientation'][$store.exportOptions.orientation].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('orientation', e)} />
     <textfield
         editable={false}
-        height={textFieldHeight}
         hint={lc('paper_size')}
         margin={tMargin}
-        padding={textFieldPadding}
         text={PDF_OPTIONS['paper_size'][$store.exportOptions.paper_size].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('paper_size', e)} />
 
+    <textfield editable={false} hint={lc('color')} margin={tMargin} text={PDF_OPTIONS['color'][$store.exportOptions.color].name} {variant} width={tWidth} on:tap={(e) => selectPDFOption('color', e)} />
     <textfield
         editable={false}
-        height={textFieldHeight}
-        hint={lc('color')}
-        margin={tMargin}
-        padding={textFieldPadding}
-        text={PDF_OPTIONS['color'][$store.exportOptions.color].name}
-        {variant}
-        width={tWidth}
-        on:tap={(e) => selectPDFOption('color', e)} />
-    <textfield
-        editable={false}
-        height={textFieldHeight}
         hint={lc('items_per_page')}
         margin={tMargin}
-        padding={textFieldPadding}
         text={PDF_OPTIONS['items_per_page'][$store.exportOptions.items_per_page].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('items_per_page', e, parseInt)} />
-    <textfield
-        editable={false}
-        height={textFieldHeight}
-        hint={lc('page_padding')}
-        margin={tMargin}
-        padding={textFieldPadding}
-        text={$store.exportOptions.page_padding}
-        {variant}
-        width={tWidth}
-        on:tap={(e) => selectSilderPDFOption('page_padding', e)} />
+    <textfield editable={false} hint={lc('page_padding')} margin={tMargin} text={$store.exportOptions.page_padding} {variant} width={tWidth} on:tap={(e) => selectSilderPDFOption('page_padding', e)} />
     <stacklayout orientation="horizontal" width={tWidth}>
         <checkbox
             id="checkbox"
             checked={$store.exportOptions.draw_ocr_text}
-            height={textFieldHeight}
             margin={tMargin}
             verticalAlignment="center"
             on:checkedChange={(e) => updatePDFOption('draw_ocr_text', e.value)}

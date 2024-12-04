@@ -17,7 +17,7 @@
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;
     // export let iconFontSize: number = 24;
-    export let fontSize: number = 17;
+    export let fontSize: number = 20;
     export let fontWeight: any = 'normal';
     export let subtitleFontSize: number = 14;
     export let title: string = null;
@@ -27,6 +27,7 @@
     export let subtitle: string = null;
     // export let leftIcon: string = null;
     export let rightValue: string | Function = null;
+    export let titleProps = {};
     // const leftColumn = iconFontSize * 1.4 * $fontScale;
     export let columns: string = '*,auto';
     // export let leftIconFonFamily: string = $fonts.mdi;
@@ -94,16 +95,7 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapse'}
         width={iconFontSize * 2} /> -->
-    <label
-        col={mainCol}
-        disableCss={true}
-        lineBreak="end"
-        paddingBottom={addedPadding}
-        paddingTop={addedPadding}
-        textWrap={true}
-        verticalAlignment="center"
-        verticalTextAlignment="center"
-        {...$$restProps.titleProps || {}}>
+    <label col={mainCol} disableCss={true} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" {...titleProps}>
         <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>

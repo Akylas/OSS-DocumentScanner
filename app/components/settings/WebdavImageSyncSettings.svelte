@@ -22,7 +22,7 @@
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import WebdavSettingsView from './WebdavSettingsView.svelte';
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutline, colorPrimary, colorOnSurfaceVariant } = $colors);
+    $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
     const imageExportSettings = getImageExportSettings();
     const pdfExportSettings = getPDFDefaultExportOptions();
@@ -44,7 +44,7 @@
     );
     DEV_LOG && console.log('FolderImageSyncSettings', JSON.stringify(data), JSON.stringify(get(store)));
     // let folderPathName = data.folderPathName;
-    const variant = 'filled';
+    const variant = 'outline';
 
     let webdavView: WebdavSettingsView;
 
@@ -326,7 +326,7 @@
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
-                    <textfield text={item.text} {...item.textFieldProperties} />
+                    <textfield text={item.text} {variant} {...item.textFieldProperties} />
                     <mdbutton
                         class="icon-btn"
                         color={colorOnSurfaceVariant}

@@ -10,10 +10,10 @@
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 
+    const variant = 'outline';
     export let store: Writable<WebdavSyncOptions>;
     let testing = false;
     let testConnectionSuccess = 0;
-    const variant = 'filled';
     function focusTextfield(id: string) {}
 
     async function selectAuthentication(event) {
@@ -63,7 +63,7 @@
     }
 
     export async function validateSave() {
-        if (testConnectionSuccess === 0 && !$store.headers.Authorization) {
+        if ($store.remoteURL && testConnectionSuccess === 0 && !$store.headers?.Authorization) {
             await testConnection();
         }
         if ($store.remoteURL && $store.remoteFolder && (testConnectionSuccess > 0 || $store.headers.Authorization)) {
@@ -93,6 +93,7 @@
             margin="4 8 4 8"
             text={$store.authType || AuthType.Password}
             textTransform="uppercase"
+            {variant}
             width={130}
             on:tap={(e) => selectAuthentication(e)} />
         <textfield
@@ -131,8 +132,8 @@
         returnKeyType="next"
         row={2}
         secure={true}
-        text={$store.password}
         {variant}
+        text={$store.password}
         on:returnPress={() => focusTextfield('remote_folder')}
         on:textChange={(e) => ($store.password = e['value'])} />
     <gridlayout columns="*" margin={5} row={3} rows="auto">

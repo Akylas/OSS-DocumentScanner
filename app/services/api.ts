@@ -2,9 +2,7 @@ import * as https from '@nativescript-community/https';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { wrapNativeException } from '@nativescript/core/utils';
-import { wrapNativeHttpException } from '@shared/utils/error';
-import { HTTPError, NoNetworkError, TimeoutError } from '@shared/utils/error';
+import { HTTPError, NoNetworkError, wrapNativeHttpException } from '@shared/utils/error';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
 export type { Headers } from '@nativescript-community/https';

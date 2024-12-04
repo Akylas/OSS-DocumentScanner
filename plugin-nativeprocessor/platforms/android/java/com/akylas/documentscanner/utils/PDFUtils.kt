@@ -61,14 +61,32 @@ import kotlin.math.min
 
 
 class PDFUtils {
-    
-    class PDFPrintDocumentAdapter(private val context: Context, private val pdfFilePath: String, private val documentName: String) : PrintDocumentAdapter() {
 
-        override fun onLayout(oldAttributes: PrintAttributes, newAttributes: PrintAttributes, cancellationSignal: CancellationSignal, callback: LayoutResultCallback, extras: Bundle) {
-            callback.onLayoutFinished(PrintDocumentInfo.Builder(documentName).setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build(), true)
+    class PDFPrintDocumentAdapter(
+        private val context: Context,
+        private val pdfFilePath: String,
+        private val documentName: String
+    ) : PrintDocumentAdapter() {
+
+        override fun onLayout(
+            oldAttributes: PrintAttributes,
+            newAttributes: PrintAttributes,
+            cancellationSignal: CancellationSignal,
+            callback: LayoutResultCallback,
+            extras: Bundle
+        ) {
+            callback.onLayoutFinished(
+                PrintDocumentInfo.Builder(documentName)
+                    .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build(), true
+            )
         }
-    
-        override fun onWrite(pages: Array<out PageRange>, destination: ParcelFileDescriptor, cancellationSignal: CancellationSignal, callback: WriteResultCallback) {
+
+        override fun onWrite(
+            pages: Array<out PageRange>,
+            destination: ParcelFileDescriptor,
+            cancellationSignal: CancellationSignal,
+            callback: WriteResultCallback
+        ) {
             try {
                 var inputStream = if (pdfFilePath.startsWith("content://")) {
                     val uri = Uri.parse(pdfFilePath)
@@ -89,27 +107,33 @@ class PDFUtils {
             }
         }
     }
+
     class PDFLoadImageOptions {
 
         var imageSizeThreshold: Int = 0
         var imageScale: Double = 1.0
         var quality: Int = 100
     }
+
     companion object {
-        const val BLACK_WHITE_COLOR_MATRIX = "[0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0,0,0,1,0]"
+        const val BLACK_WHITE_COLOR_MATRIX =
+            "[0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0,0,0,1,0]"
 
 
-        
         @Throws(IOException::class)
         fun printPDF(context: Context, filePath: String, name: String) {
             val printAdapter = PDFUtils.PDFPrintDocumentAdapter(context, filePath, name)
             val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
             printManager.print(name, printAdapter, null)
         }
-        
+
         @Throws(IOException::class)
         fun compressPDF(src: String?, dest: String?, compressionLevel: Int, jpgQuality: Int) {
-            val writer = PdfWriter(dest, WriterProperties().setCompressionLevel(compressionLevel).setFullCompressionMode(true))
+            val writer = PdfWriter(
+                dest,
+                WriterProperties().setCompressionLevel(compressionLevel)
+                    .setFullCompressionMode(true)
+            )
             val pdfDoc = PdfDocument(PdfReader(src), writer)
 
             // Iterate over all pages to get all images.
@@ -140,6 +164,7 @@ class PDFUtils {
             }
             pdfDoc.close()
         }
+
         /**
          * Calculate an inSampleSize for use in a [BitmapFactory.Options] object when decoding
          * bitmaps using the decode* methods from [BitmapFactory]. This implementation calculates
@@ -194,6 +219,7 @@ class PDFUtils {
             return inSampleSize
             // END_INCLUDE (calculate_sample_size)
         }
+
         private fun loadImage(
             src: String,
             imageWidth: Double,
@@ -204,8 +230,8 @@ class PDFUtils {
             colorMatrix: String?,
             options: PDFLoadImageOptions
         ): Image? {
-            var reqWidth  = width
-            var reqHeight  = height
+            var reqWidth = width
+            var reqHeight = height
             if (options.imageSizeThreshold != 0) {
                 val minSize = max(reqWidth, reqHeight)
                 if (minSize > options.imageSizeThreshold) {
@@ -223,13 +249,18 @@ class PDFUtils {
             finalBitmapOptions.inMutable = hasColorMatrix
             if (imageWidth != reqWidth || imageHeight != reqHeight) {
                 finalBitmapOptions.inSampleSize =
-                    calculateInSampleSize(imageWidth.toInt(), imageHeight.toInt(), reqWidth.toInt(), reqHeight.toInt())
+                    calculateInSampleSize(
+                        imageWidth.toInt(),
+                        imageHeight.toInt(),
+                        reqWidth.toInt(),
+                        reqHeight.toInt()
+                    )
             }
             finalBitmapOptions.inMutable = colorMatrix != null
             val bmp = BitmapFactory.decodeFile(src, finalBitmapOptions) ?: return null
             if (hasColorMatrix) {
                 val jsonArray = JSONArray(colorMatrix)
-                val floatArray = Array(jsonArray.length()) {jsonArray.getDouble(it).toFloat()}
+                val floatArray = Array(jsonArray.length()) { jsonArray.getDouble(it).toFloat() }
                 val canvas = android.graphics.Canvas(bmp)
                 val paint = Paint()
                 paint.setColorFilter(ColorMatrixColorFilter(floatArray.toFloatArray()))
@@ -247,7 +278,16 @@ class PDFUtils {
             return Image(imageData).setRotationAngle(-rotation * PI / 180.0)
         }
 
-        private fun drawOCRData(pdfDoc:PdfDocument, page: JSONObject, posX:Float, posY:Float, imageScale: Float, toDrawHeight: Float, textScale: Float, debug: Boolean) {
+        private fun drawOCRData(
+            pdfDoc: PdfDocument,
+            page: JSONObject,
+            posX: Float,
+            posY: Float,
+            imageScale: Float,
+            toDrawHeight: Float,
+            textScale: Float,
+            debug: Boolean
+        ) {
             val ocrData = page.optJSONObject("ocrData")
             if (ocrData != null) {
 //                val canvas =  PdfCanvas(pdfDoc.lastPage).setExtGState(PdfExtGState().setFillOpacity(if (debug) 1.0F else 0.01F)).setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.INVISIBLE)
@@ -265,7 +305,8 @@ class PDFUtils {
                     var box = block.getJSONObject("box")
                     val width = box.getDouble("width").toFloat()
                     val height = box.getDouble("height").toFloat()
-                    val rect = Rectangle(posX + box.getDouble("x").toFloat() * imageScale,
+                    val rect = Rectangle(
+                        posX + box.getDouble("x").toFloat() * imageScale,
                         posY + (imageHeight - height - box.getDouble("y").toFloat()) * imageScale,
                         width * imageScale,
                         height * imageScale
@@ -273,17 +314,28 @@ class PDFUtils {
 //                    canvas.rectangle(rect)
 //                        .stroke();
 
-                    Canvas(pdfDoc.lastPage, rect).setTextRenderingMode(if (debug) PdfCanvasConstants.TextRenderingMode.FILL else PdfCanvasConstants.TextRenderingMode.INVISIBLE).setFontColor(if (debug) ColorConstants.RED else ColorConstants.WHITE)
+                    Canvas(
+                        pdfDoc.lastPage,
+                        rect
+                    ).setTextRenderingMode(if (debug) PdfCanvasConstants.TextRenderingMode.FILL else PdfCanvasConstants.TextRenderingMode.INVISIBLE)
+                        .setFontColor(if (debug) ColorConstants.RED else ColorConstants.WHITE)
                         .setTextAlignment(TextAlignment.LEFT)
                         .setFixedPosition(posX, posY, width * imageScale)
-                        .setFontSize(block.optDouble("fontSize", 16.0).toFloat() * textScale * imageScale)
+                        .setFontSize(
+                            block.optDouble("fontSize", 16.0).toFloat() * textScale * imageScale
+                        )
                         .add(Paragraph(block.getString("text")))
                         .close()
                 }
             }
         }
 
-        fun generatePDF(context: Context, destFolder: String, fileName: String,  options: String): String {
+        fun generatePDF(
+            context: Context,
+            destFolder: String,
+            fileName: String,
+            options: String
+        ): String? {
             val destinationFilePath = "$destFolder/$fileName"
             var generateFilePath = destinationFilePath
             var needsCopy = false
@@ -324,27 +376,51 @@ class PDFUtils {
 //                "a4" -> if (isLandscape) PageSize.A4.rotate() else PageSize.A4
 //            }
 
-            val writer = PdfWriter(generateFilePath, WriterProperties().setCompressionLevel(compressionLevel).setFullCompressionMode(true).setPdfVersion(
-                PdfVersion.PDF_1_4
-            ))
+            val writer = PdfWriter(
+                generateFilePath,
+                WriterProperties().setCompressionLevel(compressionLevel)
+                    .setFullCompressionMode(true).setPdfVersion(
+                    PdfVersion.PDF_1_4
+                )
+            )
             val pdfDoc = PdfDocument(writer)
             var document: Document? = null
             if (paperSize == "full") {
                 itemsPerPage = 1
                 for (i in 0..<pagesCount) {
                     val page = pages.getJSONObject(i)
+                    val imageSrc = page.getString("imagePath")
+                    if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
+                        continue
+                    }
+                    Log.d("JS", "imageSrc " + imageSrc + " " + options)
                     val imageRotation = page.optInt("rotation", 0)
-                    val imageSrc= page.getString("imagePath")
                     val imageWidth = page.getDouble("width")
                     val imageHeight = page.getDouble("height")
-                    val colorMatrix = if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString("colorMatrix", null)
-                    val image = loadImage(imageSrc, imageWidth, imageHeight, imageWidth, imageHeight, imageRotation, colorMatrix, loadImageOptions)?: continue
+                    val colorMatrix =
+                        if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString(
+                            "colorMatrix",
+                            null
+                        )
+                    val image = loadImage(
+                        imageSrc,
+                        imageWidth,
+                        imageHeight,
+                        imageWidth,
+                        imageHeight,
+                        imageRotation,
+                        colorMatrix,
+                        loadImageOptions
+                    ) ?: continue
                     var imageRatio = image.imageHeight / imageHeight
 
-                    val pageSize = if (imageRotation % 180 !== 0) PageSize(image.imageHeight, image.imageWidth) else PageSize(image.imageWidth, image.imageHeight)
+                    val pageSize = if (imageRotation % 180 !== 0) PageSize(
+                        image.imageHeight,
+                        image.imageWidth
+                    ) else PageSize(image.imageWidth, image.imageHeight)
                     if (document == null) {
                         document = Document(pdfDoc, pageSize)
-                        val font =  PdfFontFactory.createRegisteredFont("helvetica")
+                        val font = PdfFontFactory.createRegisteredFont("helvetica")
                         document.setFont(font)
                         document.setMargins(0F, 0F, 0F, 0F)
                     } else {
@@ -353,7 +429,16 @@ class PDFUtils {
                     }
                     document.add(image)
                     if (drawOcrText) {
-                        drawOCRData(pdfDoc, page,  0F, 0F, imageRatio.toFloat(), imageHeight.toFloat(), textScale, debug)
+                        drawOCRData(
+                            pdfDoc,
+                            page,
+                            0F,
+                            0F,
+                            imageRatio.toFloat(),
+                            imageHeight.toFloat(),
+                            textScale,
+                            debug
+                        )
                     }
                 }
             } else {
@@ -371,7 +456,8 @@ class PDFUtils {
                 items.forEachIndexed { idx, pageItems ->
                     val nbItems = pageItems.size
                     var columns = if (itemsPerPage > 2) 2 else 1
-                    var rows = if (itemsPerPage > 2) ceil(itemsPerPage / 2F).toInt() else itemsPerPage
+                    var rows =
+                        if (itemsPerPage > 2) ceil(itemsPerPage / 2F).toInt() else itemsPerPage
                     if (orientation == "landscape") {
                         val temp = columns
                         columns = rows
@@ -388,7 +474,7 @@ class PDFUtils {
                     var toDrawHeight: Double
                     if (idx == 0) {
                         document = Document(pdfDoc, pageSize)
-                        val font =  PdfFontFactory.createRegisteredFont("helvetica")
+                        val font = PdfFontFactory.createRegisteredFont("helvetica")
                         document!!.setFont(font)
                         document!!.setMargins(pagePadding, pagePadding, pagePadding, pagePadding)
                         pdfDoc.addNewPage(pageSize)
@@ -398,7 +484,7 @@ class PDFUtils {
                     }
                     for (i in rows - 1 downTo 0) {
 //                        for (i in 0..<rows) {
-                            for (j in 0..<columns) {
+                        for (j in 0..<columns) {
                             val pageIndex = i * shared + j
                             if (pageIndex >= nbItems) {
 
@@ -409,9 +495,16 @@ class PDFUtils {
                             val imageRotation = page.optInt("rotation", 0)
 
                             val imageSrc = page.getString("imagePath")
+                            if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
+                                continue
+                            }
                             val imageWidth = page.getDouble("width")
                             val imageHeight = page.getDouble("height")
-                            val colorMatrix = if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString("colorMatrix", null)
+                            val colorMatrix =
+                                if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString(
+                                    "colorMatrix",
+                                    null
+                                )
 
 //
 //                            if (imageRotation % 180 !== 0) {
@@ -419,7 +512,8 @@ class PDFUtils {
 //                                imageWidth = imageHeight
 //                                imageHeight = temp
 //                            }
-                            val pageRatio = if (imageRotation % 180 !== 0) imageHeight/ imageWidth else imageWidth / imageHeight
+                            val pageRatio =
+                                if (imageRotation % 180 !== 0) imageHeight / imageWidth else imageWidth / imageHeight
                             var itemAvailableWidth = widthPerColumn - 2 * pagePadding
                             val itemAvailableHeight = heightPerRow - 2 * pagePadding
                             if (last && columns * rows > nbItems) {
@@ -433,8 +527,8 @@ class PDFUtils {
                                 toDrawHeight = itemAvailableHeight.toDouble()
                                 toDrawWidth = itemAvailableHeight * pageRatio
                             }
-                            var reqWidth = toDrawWidth*imageScale
-                            var reqHeight = toDrawHeight*imageScale
+                            var reqWidth = toDrawWidth * imageScale
+                            var reqHeight = toDrawHeight * imageScale
                             var imageRatio = toDrawHeight / imageHeight
                             if (imageRotation % 180 !== 0) {
                                 val temp = reqWidth
@@ -443,7 +537,16 @@ class PDFUtils {
                                 imageRatio = toDrawHeight / imageWidth
                             }
                             val image =
-                                loadImage(imageSrc, imageWidth, imageHeight, reqWidth, reqHeight, imageRotation, colorMatrix, loadImageOptions)?.scaleAbsolute(
+                                loadImage(
+                                    imageSrc,
+                                    imageWidth,
+                                    imageHeight,
+                                    reqWidth,
+                                    reqHeight,
+                                    imageRotation,
+                                    colorMatrix,
+                                    loadImageOptions
+                                )?.scaleAbsolute(
                                     (reqWidth / imageScale).toFloat(),
                                     (reqHeight / imageScale).toFloat()
                                 )
@@ -457,10 +560,12 @@ class PDFUtils {
                                 posY += toDrawHeight.toFloat()
                             }
                             image.setFixedPosition(posX, posY)
-                                document!!.add(image)
+                            document!!.add(image)
                             if (drawOcrText) {
-                                drawOCRData(pdfDoc, page, posX, posY,
-                                    imageRatio.toFloat(), toDrawHeight.toFloat(), textScale, debug)
+                                drawOCRData(
+                                    pdfDoc, page, posX, posY,
+                                    imageRatio.toFloat(), toDrawHeight.toFloat(), textScale, debug
+                                )
                             }
 
                             // for those same size!
@@ -474,18 +579,30 @@ class PDFUtils {
                     // }
                 }
             }
+            if (document == null) {
+                return null
+            }
             document!!.close()
             if (needsCopy) {
                 val outDocument =
-                    androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(destFolder))
+                    androidx.documentfile.provider.DocumentFile.fromTreeUri(
+                        context,
+                        android.net.Uri.parse(destFolder)
+                    )
                         ?: throw Exception("could not create access folder $destFolder")
 
 
                 var outfile: androidx.documentfile.provider.DocumentFile
                 if (overwrite) {
-                    outfile = outDocument.findFile(fileName) ?: outDocument.createFile("application/pdf", fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+                    outfile = outDocument.findFile(fileName) ?: outDocument.createFile(
+                        "application/pdf",
+                        fileName
+                    ) ?: throw Exception("could not create file $fileName in $destFolder")
                 } else {
-                    outfile = outDocument.createFile("application/pdf", fileName) ?: outDocument.findFile(fileName) ?: throw Exception("could not create file $fileName in $destFolder")
+                    outfile =
+                        outDocument.createFile("application/pdf", fileName) ?: outDocument.findFile(
+                            fileName
+                        ) ?: throw Exception("could not create file $fileName in $destFolder")
                 }
                 val os = context.contentResolver.openOutputStream(outfile.uri)
                     ?: throw Exception("could not open file ${outfile.uri} for writing")
@@ -498,16 +615,24 @@ class PDFUtils {
             }
             return destinationFilePath
         }
-        fun generatePDFASync(context: Context, destFolder: String, fileName: String,  options: String, callback: FunctionCallback) {
+
+        fun generatePDFASync(
+            context: Context,
+            destFolder: String,
+            fileName: String,
+            options: String,
+            callback: FunctionCallback
+        ) {
             thread(start = true) {
                 try {
-                    var result = generatePDF(context, destFolder, fileName,  options)
+                    var result = generatePDF(context, destFolder, fileName, options)
                     callback.onResult(null, result)
                 } catch (e: Exception) {
                     callback.onResult(e, null)
                 }
             }
         }
+
         @JvmOverloads
         fun importPdfToTempImages(
             context: Context,
@@ -532,22 +657,29 @@ class PDFUtils {
                             var jsOptions = JSONObject(options)
                             compressFormat = jsOptions.optString("compressFormat", compressFormat)
                             compressQuality = jsOptions.optInt("compressQuality", compressQuality)
-                            importPDFImages = jsOptions.optBoolean("importPDFImages", importPDFImages)
+                            importPDFImages =
+                                jsOptions.optBoolean("importPDFImages", importPDFImages)
                             scale = jsOptions.optDouble("scale", scale)
                         } catch (ignored: JSONException) {
                         }
                     }
                     if (importPDFImages) {
                         inputStream = context.contentResolver.openInputStream(uri)
-                        val pdfDoc =  PdfDocument( PdfReader(inputStream))
+                        val pdfDoc = PdfDocument(PdfReader(inputStream))
                         for (i in 1..pdfDoc.getNumberOfPages()) {
-                            PdfCanvasProcessor(object: IEventListener {
+                            PdfCanvasProcessor(object : IEventListener {
                                 override fun eventOccurred(data: IEventData?, type: EventType?) {
                                     if (data is ImageRenderInfo) {
                                         try {
-                                            val bitmap = BitmapFactory.decodeByteArray(data.image.imageBytes, 0, data.image.imageBytes.size)
-                                            val temp = File.createTempFile("${pdfFileName}_$i",
-                                                ".$compressFormat", context.cacheDir)
+                                            val bitmap = BitmapFactory.decodeByteArray(
+                                                data.image.imageBytes,
+                                                0,
+                                                data.image.imageBytes.size
+                                            )
+                                            val temp = File.createTempFile(
+                                                "${pdfFileName}_$i",
+                                                ".$compressFormat", context.cacheDir
+                                            )
                                             FileOutputStream(temp).use { out ->
                                                 bitmap.compress(
                                                     ImageUtil.getTargetFormat(compressFormat),
@@ -563,7 +695,7 @@ class PDFUtils {
                                 }
 
                                 override fun getSupportedEvents(): MutableSet<EventType> {
-                                    return mutableSetOf(EventType.RENDER_IMAGE);                               }
+                                    return mutableSetOf(EventType.RENDER_IMAGE); }
                             }).processPageContent(pdfDoc.getPage(i));
                         }
                     } else {
@@ -589,8 +721,10 @@ class PDFUtils {
                                     PdfRenderer.Page.RENDER_MODE_FOR_PRINT
                                 )
                                 page.close()
-                                val temp = File.createTempFile("${pdfFileName}_$i",
-                                    ".$compressFormat", context.cacheDir)
+                                val temp = File.createTempFile(
+                                    "${pdfFileName}_$i",
+                                    ".$compressFormat", context.cacheDir
+                                )
                                 FileOutputStream(temp).use { out ->
                                     renderedPage.compress(
                                         ImageUtil.getTargetFormat(compressFormat),

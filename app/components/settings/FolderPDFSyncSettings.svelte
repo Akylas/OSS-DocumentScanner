@@ -14,11 +14,13 @@
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { checkOrDownloadOCRLanguages, createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
+    import { ocrService } from '~/services/ocr';
+    import OcrSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
     // technique for only specific properties to get updated on store change
     $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
@@ -30,6 +32,9 @@
                 exportOptions: pdfExportSettings,
                 autoSync: false,
                 enabled: true,
+                OCREnabled: false,
+                OCRDataType: 'best',
+                OCRLanguages: [],
                 fileNameFormat: ApplicationSettings.getString(SETTINGS_FILE_NAME_FORMAT, FILENAME_DATE_FORMAT),
                 useDocumentName: ApplicationSettings.getBoolean(SETTINGS_FILE_NAME_USE_DOCUMENT_NAME, FILENAME_USE_DOCUMENT_NAME),
                 color: SERVICES_SYNC_COLOR['folder_pdf'] as string | Color
@@ -39,11 +44,19 @@
     );
     DEV_LOG && console.log('FolderImageSyncSettings', JSON.stringify(data), JSON.stringify(get(store)));
     // let folderPathName = data.folderPathName;
-    const variant = 'filled';
+    const variant = 'outline';
 
     async function save() {
         const result = get(store);
+        DEV_LOG && console.log('save', JSON.stringify(result));
         if (result.localFolderPath) {
+            if (result.OCREnabled && result.OCRLanguages.length) {
+                await checkOrDownloadOCRLanguages({
+                    dataType: result.OCRDataType,
+                    languages: result.OCRLanguages,
+                    shouldConfirm: false
+                });
+            }
             closeModal(result);
         } else {
             showError(lc('missing_export_folder'), { showAsSnack: true });
@@ -119,7 +132,24 @@
             type: 'prompt'
         },
         {
+            type: 'sectionheader',
+            title: lc('pdf_settings')
+        },
+        {
             type: 'pdfoptions'
+        },
+        {
+            type: 'sectionheader',
+            title: lc('ocr_settings')
+        },
+        {
+            type: 'switch',
+            id: 'OCREnabled',
+            title: lc('ocr_enabled'),
+            value: $store.OCREnabled
+        },
+        {
+            type: 'ocroptions'
         }
     ]);
 
@@ -312,7 +342,7 @@
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)} prop:rightDrawer>
-                    <textfield isUserInteractionEnabled={false} text={item.text} {...item.textFieldProperties} />
+                    <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} />
                     <mdbutton
                         class="icon-btn"
                         color={colorOnSurfaceVariant}
@@ -325,7 +355,7 @@
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
                 </ListItemAutoSize>
             </Template>
@@ -333,8 +363,13 @@
                 <PdfSyncSettingsView {store} on:uppdate={() => updateItem({ type: 'pdfoptions' }, 'type')} />
             </Template>
             <Template let:item>
-                <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                </ListItemAutoSize>
+                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
+            </Template>
+            <Template key="sectionheader" let:item>
+                <label class="sectionHeader" text={item.title} />
+            </Template>
+            <Template key="ocroptions">
+                <OcrSettingsBottomSheet onlySettings={true} bind:dataType={$store.OCRDataType} bind:languages={$store.OCRLanguages} />
             </Template>
         </collectionview>
         <CActionBar canGoBack modalWindow={true} title={lc('pdf_sync_settings')}>

@@ -8,6 +8,8 @@ import { OCRDocument } from '~/models/OCRDocument';
 import { documentsService } from '~/services/documents';
 import { recycleImages } from '~/utils/images';
 import { getTransformedImage } from './pdf/PDFExportCanvas.common';
+import { colors } from '~/variables';
+import { get } from 'svelte/store';
 
 // chance of being shown.
 const MAX_SHORTCUTS = 3;
@@ -149,7 +151,13 @@ export default class ShortcutsService {
             width = ADAPTIVE_BITMAP_SIZE;
             height = ADAPTIVE_BITMAP_SIZE / ratio;
         }
-        const image = await getTransformedImage({ page, options: { width: ADAPTIVE_BITMAP_SIZE, height: ADAPTIVE_BITMAP_SIZE }, loadOptions: { width, height }, document });
+        const image = await getTransformedImage({
+            page,
+            options: { width: ADAPTIVE_BITMAP_SIZE, height: ADAPTIVE_BITMAP_SIZE },
+            loadOptions: { width, height },
+            document,
+            defaultBackgroundColor: get(colors).colorPrimary
+        });
         if (image) {
             this.imagesToRecycle.push(image);
             const icon = androidx.core.graphics.drawable.IconCompat.createWithAdaptiveBitmap(image.android);

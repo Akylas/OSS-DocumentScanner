@@ -1,12 +1,10 @@
 import { lc } from '@nativescript-community/l';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
 import { Color, File, ImageSource, Utils } from '@nativescript/core';
-import { get } from 'svelte/store';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { CARD_RATIO } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { getPageColorMatrix } from '~/utils/matrix';
-import { colors } from '~/variables';
 import PDFCanvas from './PDFCanvas';
 
 const textPaint = new Paint();
@@ -57,6 +55,7 @@ function calculateMaxTextSize({
 }
 
 export async function getTransformedImage({
+    defaultBackgroundColor,
     document,
     loadOptions = {},
     options = {},
@@ -66,6 +65,7 @@ export async function getTransformedImage({
     options?: { width?; height?; scale?; colorMatrix?; rotation?; brightness?; contrast? };
     loadOptions?;
     document?: OCRDocument;
+    defaultBackgroundColor?: string;
 }) {
     DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
     if (page.imagePath) {
@@ -104,7 +104,7 @@ export async function getTransformedImage({
         }
         return imageSource;
     } else if (CARD_APP && document) {
-        const backgroundColor = new Color(page.colors?.[0] || document.extra?.color || get(colors).colorPrimary);
+        const backgroundColor = new Color(page.colors?.[0] || document.extra?.color || defaultBackgroundColor);
         const padding = 16 * 4;
         const width = 800;
         const height = width * CARD_RATIO;

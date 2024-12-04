@@ -50,9 +50,9 @@ import { get } from 'svelte/store';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
-import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, l, lc } from '~/helpers/locale';
+import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { DocFolder, ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import { ocrService } from '~/services/ocr';
+import { OCRLanguages, ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
@@ -778,7 +778,7 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
                     }
                     // const imageSource = await ImageSource.fromFile(imagePath);
                     DEV_LOG && console.warn('exporting image', index, data.page.imagePath);
-                    imageSource = await getTransformedImage(data);
+                    imageSource = await getTransformedImage({ ...data, defaultBackgroundColor: get(colors).colorPrimary });
                     DEV_LOG && console.info('exporting image done', index, data.page.imagePath, imageSource);
                     if (imageSource) {
                         finalMessagePart = await saveImage(imageSource, {
@@ -909,7 +909,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                     ) => {
                                         const page = p.page;
                                         if (page.colorMatrix || page.rotation !== 0 || page.brightness !== DEFAULT_BRIGHTNESS || page.contrast !== DEFAULT_CONTRAST) {
-                                            const imageSource = await getTransformedImage({ page });
+                                            const imageSource = await getTransformedImage({ page, defaultBackgroundColor: get(colors).colorPrimary });
                                             if (imageSource) {
                                                 images.push(imageSource);
                                             }
@@ -1021,14 +1021,67 @@ export async function hideSnackMessage() {
     }
 }
 
+export function localizedLanguage(key: string, languages: { [k: string]: string }) {
+    const result = getLocaleDisplayName(key, true);
+    return result?.length && result !== key ? result : languages[key];
+}
+
+export function checkOrDownloadOCRLanguages({
+    dataType = ocrService.dataType,
+    hideLoading: hideLoadingDialog = true,
+    languages = ocrService.languagesArray,
+    shouldConfirm = true,
+    showAsSnackMessage = false
+}: {
+    dataType?: string;
+    languages?: string[];
+    hideLoading?: boolean;
+    shouldConfirm?: boolean;
+    showAsSnackMessage?: boolean;
+}) {
+    return ocrService.checkOrDownload({
+        dataType,
+        languages: languages.join('+'),
+        onProgress: async (progress) => {
+            if (progress === 100) {
+                if (hideLoadingDialog) {
+                    if (showAsSnackMessage) {
+                        await hideSnackMessage();
+                    } else {
+                        await hideLoading();
+                    }
+                }
+            } else {
+                if (showAsSnackMessage) {
+                    showSnackMessage({ text: l('downloading', progress), progress });
+                } else {
+                    showLoading({ text: l('downloading', progress), progress });
+                }
+            }
+        },
+        confirmDownload: (toDownload) =>
+            shouldConfirm
+                ? confirm({
+                      message: lc('ocr_missing_languages', toDownload.map((l) => localizedLanguage(l, OCRLanguages)).join(',')),
+                      okButtonText: lc('download'),
+                      cancelButtonText: lc('cancel')
+                  })
+                : Promise.resolve(true)
+    });
+}
+
 export async function detectOCROnPage(document: OCRDocument, index: number) {
     try {
-        if (!(await ocrService.checkOrDownload(ocrService.dataType, ocrService.languages, false))) {
+        if (!(await checkOrDownloadOCRLanguages({}))) {
             return;
         }
         showLoading({ text: l('ocr_computing', 0), progress: 0 });
-        const ocrData = await ocrService.ocrPage(document, index, (progress: number) => {
-            updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
+        const ocrData = await ocrService.ocrPage({
+            document,
+            pageIndex: index,
+            onProgress: (progress: number) => {
+                updateLoadingProgress({ progress, text: l('ocr_computing', progress) });
+            }
         });
         return ocrData;
     } catch (err) {
@@ -1099,7 +1152,7 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
             props: {}
         });
         if (shouldStart) {
-            if (!(await ocrService.checkOrDownload(ocrService.dataType, ocrService.languages, false, true))) {
+            if (!(await checkOrDownloadOCRLanguages({ showAsSnackMessage: true }))) {
                 return;
             }
 
@@ -1122,13 +1175,17 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
                 pages.map(async (p, index) => {
                     const pageId = p.page.id;
                     runnningOcr[pageId] = 0;
-                    await ocrService.ocrPage(p.document, p.pageIndex, (progress: number) => {
-                        runnningOcr[pageId] = progress;
-                        const totalProgress = Math.round((100 / totalPages) * pagesDone + Object.values(runnningOcr).reduce((a, b) => a + b) / totalPages);
-                        updateSnackMessage({
-                            text: lc('ocr_computing_document', totalProgress),
-                            progress: totalProgress
-                        });
+                    await ocrService.ocrPage({
+                        document: p.document,
+                        pageIndex: p.pageIndex,
+                        onProgress: (progress: number) => {
+                            runnningOcr[pageId] = progress;
+                            const totalProgress = Math.round((100 / totalPages) * pagesDone + Object.values(runnningOcr).reduce((a, b) => a + b) / totalPages);
+                            updateSnackMessage({
+                                text: lc('ocr_computing_document', totalProgress),
+                                progress: totalProgress
+                            });
+                        }
                     });
                     delete runnningOcr[pageId];
                     pagesDone += 1;

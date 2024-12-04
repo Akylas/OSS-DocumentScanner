@@ -1,7 +1,9 @@
+import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 import { ApplicationSettings, File, ImageSource, Observable, ObservableArray, path } from '@nativescript/core';
-import dayjs from 'dayjs';
-import { ColorPaletteData, OCRData, QRCodeData, Quad, Quads, cropDocumentFromFile } from 'plugin-nativeprocessor';
-import {
+import { isString } from '@nativescript/core/utils';
+import { doInBatch } from '@shared/utils/batch';
+import { ColorPaletteData, OCRData, QRCodeData, Quad, Quads, cropDocumentFromFile, ocrDocumentFromFile } from 'plugin-nativeprocessor';
+import type {
     DocumentAddedEventData,
     DocumentFolderAddedEventData,
     DocumentMovedFolderEventData,
@@ -10,9 +12,7 @@ import {
     DocumentPagesAddedEventData,
     DocumentUpdatedEventData,
     DocumentsService,
-    FOLDER_COLOR_SEPARATOR,
-    FolderUpdatedEventData,
-    sql
+    FolderUpdatedEventData
 } from '~/services/documents';
 import type { MatricesTypes, Matrix } from '~/utils/color_matrix';
 import { getFormatedDateForFilename } from '~/utils/utils.common';
@@ -31,9 +31,10 @@ import {
     SETTINGS_DOCUMENT_NAME_FORMAT,
     getImageExportSettings
 } from '../utils/constants';
-import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
-import { doInBatch } from '@shared/utils/batch';
-import { isString } from '@nativescript/core/utils';
+
+export const sql = SqlQuery.createFromTemplateString;
+
+export const DB_VERSION = 2;
 
 export interface ImportImageData {
     imagePath?: string;
@@ -170,9 +171,9 @@ export class OCRDocument extends Observable implements Document {
     }
 
     static async createDocument(pagesData?: PageData[], folder?: DocFolder, attributes = {}) {
-        const date = dayjs();
-        const docId = date.valueOf() + '';
-        const name = getFormatedDateForFilename(date.valueOf(), ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
+        const date = Date.now();
+        const docId = date + '';
+        const name = getFormatedDateForFilename(date, ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
         // DEV_LOG && console.log('createDocument', docId);
         const doc = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.id] } : {}), ...attributes } as any);
         await doc.addPages(pagesData, false);
@@ -277,7 +278,16 @@ export class OCRDocument extends Observable implements Document {
                     attributes.size = File.fromPath(attributes.imagePath).size;
                 }
                 if (sourceImage) {
-                    const baseName = dayjs().format('yyyyMMddHHmmss') + '.' + imageExportSettings.imageFormat;
+                    const now = new Date();
+                    const baseName =
+                        now.getFullYear().toFixed() +
+                        now.getMonth().toFixed().padStart(2, '0') +
+                        now.getDate().toFixed().padStart(2, '0') +
+                        now.getHours().toFixed().padStart(2, '0') +
+                        now.getMinutes().toFixed().padStart(2, '0') +
+                        now.getSeconds().toFixed().padStart(2, '0') +
+                        '.' +
+                        imageExportSettings.imageFormat;
                     // }
                     const actualSourceImagePath = path.join(pageFileData.path, baseName);
 
@@ -363,6 +373,34 @@ export class OCRDocument extends Observable implements Document {
         return this;
     }
 
+    async ocrPage({ dataPath, language, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string }) {
+        const page = this.pages[pageIndex];
+        if (!page.imagePath) {
+            return;
+        }
+
+        DEV_LOG && console.log('ocrPage', this.id, pageIndex, dataPath, language);
+        const ocrData = await ocrDocumentFromFile(
+            page.imagePath,
+            {
+                dataPath,
+                language,
+                rotation: page.rotation,
+                // oem: 0,
+                detectContours: 0,
+                trim: false
+            },
+            onProgress
+        );
+        DEV_LOG && console.log('ocrPage done', this.id, pageIndex, JSON.stringify(ocrData));
+        if (ocrData?.blocks?.length) {
+            await this.updatePage(pageIndex, {
+                ocrData
+            });
+            return ocrData;
+        }
+    }
+
     async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true) {
         //compute diff update
         const page = this.pages[pageIndex];
@@ -438,7 +476,7 @@ export class OCRDocument extends Observable implements Document {
     }
 
     toString() {
-        return JSON.stringify({ db_version: DocumentsService.DB_VERSION, ...this }, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
+        return JSON.stringify({ db_version: DB_VERSION, ...this }, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
     }
 
     toJSONObject() {

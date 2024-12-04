@@ -1,5 +1,5 @@
 import { File, Folder, path } from '@nativescript/core';
-import { type OCRDocument, type OCRPage, getDocumentsService } from '~/models/OCRDocument';
+import { DB_VERSION, type OCRDocument, type OCRPage, getDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
@@ -147,7 +147,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
             })
         ) as OCRDocument & { pages: OCRPage[]; db_version?: number };
         const { db_version, folders, pages, ...docProps } = dataJSON;
-        if (db_version > DocumentsService.DB_VERSION) {
+        if (db_version > DB_VERSION) {
             throw new Error(lc('document_need_updated_app', docProps.name));
         }
         let docId = docProps.id;

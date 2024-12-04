@@ -17,7 +17,7 @@ import { showError } from '@shared/utils/showError';
 import { CropView } from 'plugin-nativeprocessor/CropView';
 import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '~/NestedScrollView';
-import { lc } from '~/helpers/locale';
+import { getCurrentISO3Language, lc } from '~/helpers/locale';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { setDocumentsService } from '~/models/OCRDocument';
 import { networkService } from '~/services/api';
@@ -123,7 +123,7 @@ try {
             Application.servicesStarted = false;
             DEV_LOG && console.log('start');
             setDocumentsService(documentsService);
-            await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(), documentsService.start()]);
+            await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(getCurrentISO3Language()), documentsService.start()]);
             Application.servicesStarted = true;
             DEV_LOG && console.log('servicesStarted');
             Application.notify({ eventName: 'servicesStarted' });

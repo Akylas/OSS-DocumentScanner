@@ -7,9 +7,10 @@
     import { colors, fonts } from '~/variables';
     // import SearchCollectionView from './SearchCollectionView.svelte';
     import { Template } from 'svelte-native/components';
-    import { ocrService } from '~/services/ocr';
+    import { OCRLanguages, ocrService } from '~/services/ocr';
     import { showError } from '@shared/utils/showError';
     import MiniSearch from '@shared/utils/minisearch';
+    import { localizedLanguage } from '~/utils/ui';
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 
@@ -28,7 +29,7 @@
 
     const fullItems = ocrService.availableLanguages.map((l) => ({
         id: l,
-        name: ocrService.localizedLanguage(l),
+        name: localizedLanguage(l, OCRLanguages),
         available: selectedLanguages.indexOf(l) !== -1,
         downloaded: downloaded.indexOf(l) !== -1
     }));

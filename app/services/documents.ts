@@ -558,7 +558,6 @@ export type DocumentEvents =
 let ID = 0;
 export class DocumentsService extends Observable {
     static DB_NAME = 'db.sqlite';
-    static DB_VERSION = 2;
     rootDataFolder: string;
     dataFolder: Folder;
     id: number;

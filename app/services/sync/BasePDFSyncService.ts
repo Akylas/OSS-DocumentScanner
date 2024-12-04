@@ -15,6 +15,10 @@ export abstract class BasePDFSyncService extends BaseSyncService {
     exportOptions?: PDFExportBaseOptions;
     useDocumentName?: boolean;
 
+    OCREnabled: boolean;
+    OCRDataType: string;
+    OCRLanguages: string[];
+
     abstract ensureRemoteFolder(): Promise<void>;
     abstract getRemoteFolderFiles(folderStr: string): Promise<FileStat[]>;
     // abstract updatePage(document: OCRDocument, page: OCRPage, pageIndex: number): Promise<any>;

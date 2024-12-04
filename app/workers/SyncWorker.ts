@@ -1,6 +1,6 @@
-import { ApplicationSettings, type EventData, File, Observable, path } from '@nativescript/core';
-import '@nativescript/core/globals';
 import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
+import { ApplicationSettings, type EventData, File, Observable, knownFolders, path } from '@nativescript/core';
+import '@nativescript/core/globals';
 import { time } from '@nativescript/core/profiling';
 import type { Optional } from '@nativescript/core/utils/typescript-utils';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
@@ -22,7 +22,6 @@ import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/serv
 import {
     DOCUMENT_DATA_FILENAME,
     EVENT_DOCUMENT_ADDED,
-    EVENT_DOCUMENT_MOVED_FOLDER,
     EVENT_DOCUMENT_PAGES_ADDED,
     EVENT_DOCUMENT_PAGE_DELETED,
     EVENT_DOCUMENT_PAGE_UPDATED,
@@ -878,8 +877,15 @@ export default class SyncWorker extends Observable {
                         DEV_LOG && console.log('ensureRemoteFolder done');
                         const remoteFiles = await service.getRemoteFolderFiles('');
                         DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
-                        for (let index = 0; index < localDocuments.length; index++) {
-                            const doc = localDocuments[index];
+                        const baseOCRDataPath = ApplicationSettings.getString('tesseract_datapath_base', path.join(knownFolders.documents().path, 'tesseract'));
+                        for (let index = 0; index < documentsToSync.length; index++) {
+                            const doc = documentsToSync[index];
+                            //see if we need to OCR
+                            if (service.OCREnabled && service.OCRLanguages.length) {
+                                const OCRDataPath = path.join(baseOCRDataPath, service.OCRDataType);
+                                await Promise.all(doc.pages.map(async (p, index) => doc.ocrPage({ pageIndex: index, language: service.OCRLanguages.join('+'), dataPath: OCRDataPath })));
+                            }
+
                             const name = service.getPDFName(doc);
                             const existing = remoteFiles.find((r) => r.basename === name);
                             DEV_LOG && console.info('syncPDFDocuments', 'test', doc.id, existing?.lastmod, doc.modifiedDate);
