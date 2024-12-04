@@ -393,7 +393,6 @@ class PDFUtils {
                     if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
                         continue
                     }
-                    Log.d("JS", "imageSrc " + imageSrc + " " + options)
                     val imageRotation = page.optInt("rotation", 0)
                     val imageWidth = page.getDouble("width")
                     val imageHeight = page.getDouble("height")
