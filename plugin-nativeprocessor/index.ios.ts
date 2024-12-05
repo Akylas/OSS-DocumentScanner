@@ -1,7 +1,7 @@
-import { Color, File, ImageSource } from '@nativescript/core';
-import { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, QRCodeData, Quads } from '.';
-import { CropView } from './CropView';
 import { lc } from '@nativescript-community/l';
+import { File, ImageSource } from '@nativescript/core';
+import type { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, Quads } from '.';
+import { CropView } from './CropView';
 
 @NativeClass
 class CompletionDelegateImpl extends NSObject implements CompletionDelegate {

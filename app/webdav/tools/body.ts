@@ -1,9 +1,8 @@
 import { isArrayBuffer } from '../compat/arrayBuffer';
 import { isBuffer } from '../compat/buffer';
-import { Headers, RequestDataPayload } from '../types';
+import type { Headers, RequestDataPayload } from '../types';
 
 export function requestDataToFetchBody(data: RequestDataPayload): [any, Headers] {
-
     if (typeof data === 'string') {
         return [data, {}];
     } else if (isBuffer(data)) {

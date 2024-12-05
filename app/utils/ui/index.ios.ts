@@ -1,9 +1,9 @@
-import { Color, IOSHelper, View } from '@nativescript/core';
-import { showSnack } from './index.common';
-import { Dayjs } from 'dayjs';
 import { lc } from '@nativescript-community/l';
+import { Color, IOSHelper, View } from '@nativescript/core';
 import { DateTimePicker } from '@nativescript/datetimepicker';
+import { Dayjs } from 'dayjs';
 import { lang } from '~/helpers/locale';
+import { showSnack } from './index.common';
 
 export * from './index.common';
 
