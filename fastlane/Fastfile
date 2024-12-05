@@ -361,7 +361,7 @@ platform :ios do
         # generate_apple_certs: false,
         # keychain_name: "action_keychain",
         # keychain_password: "githubaction"
-        # readonly: true,
+        readonly: false,
         shallow_clone: true,
         api_key: params[:api_key]
         )
