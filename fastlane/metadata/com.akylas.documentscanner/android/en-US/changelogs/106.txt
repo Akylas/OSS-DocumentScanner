@@ -1,0 +1,11 @@
+Features:
+- option to force QRCodes on white background (better for some readers)
+- you can now add extra fields to your cards. You can also create a card from a name/barcode (without scanning an image).
+- you can now have PDF sync run OCR before creating the PDF
+
+Bug fixes:
+- regression fix where the back button would work on the main screen
+- ensure a change of name is synced with remote (webdav,...)
+- update sync state when sync service added
+- folders are now synced with webdav
+- potential e
