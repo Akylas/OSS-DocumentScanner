@@ -1,0 +1,7 @@
+Features:
+- you can now have PDF sync run OCR before creating the PDF
+
+Bug fixes:
+- regression fix preventing correctly scanning documens
+- send `com.akylas.documentscanner.SYNC_FINISHED` or `com.akylas.cardwallet.SYNC_FINISHED` when the sync is finished.
+- Translations update
