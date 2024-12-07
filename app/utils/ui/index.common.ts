@@ -963,6 +963,7 @@ export interface ShowSnackMessageOptions {
     translateY?: number;
 }
 let snackMessage: ComponentInstanceInfo<GridLayout, BottomSnack__SvelteComponent_>;
+let snackMessageVisible = false;
 function getSnackMessage(props?) {
     if (!snackMessage) {
         snackMessage = resolveComponentElement(BottomSnack, props || {}) as ComponentInstanceInfo<GridLayout, BottomSnack__SvelteComponent_>;
@@ -990,6 +991,7 @@ export async function showSnackMessage(props: ShowSnackMessageOptions) {
     if (snackMessage) {
         updateSnackMessage(props);
     } else {
+        snackMessageVisible = true;
         const snackMessage = getSnackMessage(props);
         const animationArgs = [
             {
@@ -1004,7 +1006,8 @@ export async function showSnackMessage(props: ShowSnackMessageOptions) {
     }
 }
 export async function hideSnackMessage() {
-    if (snackMessage) {
+    if (snackMessage && snackMessageVisible) {
+        snackMessageVisible = false;
         const animationArgs: AnimationDefinition[] = [
             {
                 target: snackMessage.element.nativeView,
@@ -1014,10 +1017,12 @@ export async function hideSnackMessage() {
         ];
         Application.notify({ eventName: 'snackMessageAnimation', animationArgs });
         await new Animation(animationArgs).play();
-        (Application.getRootView() as GridLayout).removeChild(snackMessage.element.nativeView);
-        snackMessage.element.nativeElement._tearDownUI();
-        snackMessage.viewInstance?.$destroy();
-        snackMessage = null;
+        if (snackMessage) {
+            (Application.getRootView() as GridLayout).removeChild(snackMessage.element.nativeView);
+            snackMessage.element.nativeElement._tearDownUI();
+            snackMessage.viewInstance?.$destroy();
+            snackMessage = null;
+        }
     }
 }
 
