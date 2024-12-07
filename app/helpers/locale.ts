@@ -99,11 +99,19 @@ function getActualLanguage(language: string) {
     if (language === 'auto') {
         if (__ANDROID__) {
             // N Device.language reads app config which thus does return locale app language and not device language
-            language = java.util.Locale.getDefault().getLanguage();
+            language = java.util.Locale.getDefault().toLanguageTag();
         } else {
             language = Device.language;
         }
     }
+
+    if (supportedLanguages.indexOf(language) === -1) {
+        language = language.split('-')[0].toLowerCase();
+        if (supportedLanguages.indexOf(language) === -1) {
+            language = 'en';
+        }
+    }
+
     switch (language) {
         case 'cs':
             language = 'cz';
@@ -114,13 +122,6 @@ function getActualLanguage(language: string) {
         case 'lv':
             language = 'la';
             break;
-    }
-
-    if (supportedLanguages.indexOf(language) === -1) {
-        language = language.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(language) === -1) {
-            language = 'en';
-        }
     }
     return language;
 }
