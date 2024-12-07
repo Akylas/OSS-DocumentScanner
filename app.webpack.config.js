@@ -12,6 +12,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./tools/scripts/IgnoreNotFoundExportPlugin');
 const Fontmin = require('@nativescript-community/fontmin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+const WaitPlugin = require('./tools/scripts/WaitPlugin');
 
 const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'a11y-autofocus', 'illegal-attribute-character']);
 
@@ -638,5 +639,9 @@ module.exports = (env, params = {}) => {
         })
     ];
     // return config;
+
+    if (env.adhoc || env.adhoc_sentry) {
+        config.plugins.push(new WaitPlugin(join(projectRoot, appPath, 'assets', 'webpdfviewer', 'index.html'), 100, 60000));
+    }
     return [require('./webpdfviewer/webpack.config.js')(env), config];
 };
