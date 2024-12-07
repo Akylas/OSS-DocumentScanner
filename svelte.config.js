@@ -28,6 +28,7 @@ module.exports = {
             ].concat(customPreprocess?.replace || []),
             typescript: {
                 compilerOptions: {
+                    verbatimModuleSyntax: true,
                     target: 'es2020'
                 }
             }
