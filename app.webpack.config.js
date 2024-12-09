@@ -233,7 +233,7 @@ module.exports = (env, params = {}) => {
         CARD_APP: appId === 'com.akylas.cardwallet',
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         SUPPORTED_COLOR_THEMES: JSON.stringify(supportedColorThemes),
-        DEFAULT_LOCALE: `"${locale}"`,
+        FALLBACK_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
         START_ON_CAM: startOnCam,
         SENTRY_ENABLED: !!sentry,

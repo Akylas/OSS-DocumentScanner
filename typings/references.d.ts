@@ -31,7 +31,7 @@ declare const SENTRY_ENABLED: boolean;
 declare const SENTRY_DSN: string;
 declare const SENTRY_PREFIX: string;
 declare const SUPPORTED_LOCALES: string[];
-declare const DEFAULT_LOCALE: string;
+declare const FALLBACK_LOCALE: string;
 declare const DEFAULT_THEME: string;
 declare const GIT_URL: string;
 declare const STORE_LINK: string;

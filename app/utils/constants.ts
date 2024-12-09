@@ -7,6 +7,7 @@ export enum PDFImportImages {
     always = 'always'
 }
 
+export const SETTINGS_LANGUAGE = 'language';
 export const SETTINGS_COLOR_THEME = 'color_theme';
 export const SETTINGS_APP_VERSION = '_app_version';
 export const SETTINGS_FIRST_OPEN = '_first_open';
@@ -47,6 +48,8 @@ export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
 
 export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 130;
 export const FAB_BUTTON_OFFSET = 72;
+
+export const DEFAULT_LOCALE = 'auto';
 
 export const AUTO_SYNC = true;
 export const DEFAULT__BATCH_CHUNK_SIZE = 10;
