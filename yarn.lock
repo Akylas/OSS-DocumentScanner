@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=962e8f&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=775e40&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.28.0"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -42,6 +42,7 @@ __metadata:
     "@types/webpack-bundle-analyzer": "npm:^4.7.0"
     "@typescript-eslint/parser": "npm:8.17.0"
     babel-loader: "npm:^9.2.1"
+    before-build-webpack: "npm:^0.2.15"
     copy-webpack-plugin: "npm:12.0.2"
     cross-var: "npm:^1.1.0"
     css-loader: "npm:^7.1.2"
@@ -81,7 +82,7 @@ __metadata:
     typescript: "npm:5.7.2"
     typescript-eslint: "npm:^8.17.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/c027f221a1c7dac0996b620035b755f6b3c9725ce9479a88823185263cce9a560ed0a78e668169ca4fbe83a1651f48ceeaf5c0481738ffb2b5b1d86d0e0284b9
+  checksum: 10/d5eab3cf4d7878af303036b784aae20582d88ea1ce5db10d04235f34ef58000dbb527c70a490ace272edfcba74a6ed35e74afe0e4f6ece692942fe243a722c1f
   languageName: node
   linkType: hard
 
@@ -3974,6 +3975,13 @@ __metadata:
   version: 0.6.1
   resolution: "batch@npm:0.6.1"
   checksum: 10/61f9934c7378a51dce61b915586191078ef7f1c3eca707fdd58b96ff2ff56d9e0af2bdab66b1462301a73c73374239e6542d9821c0af787f3209a23365d07e7f
+  languageName: node
+  linkType: hard
+
+"before-build-webpack@npm:^0.2.15":
+  version: 0.2.15
+  resolution: "before-build-webpack@npm:0.2.15"
+  checksum: 10/6dc899a93bff0e1e9dcc079108af90a19bdecc12fe33a75d2da71f146cbccd0e335fd5adc466574c56b2113bb6379b5eda29deb4588b88cce061e8be0f72af2d
   languageName: node
   linkType: hard
 
