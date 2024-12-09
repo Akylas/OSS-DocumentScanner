@@ -450,7 +450,8 @@ LEFT JOIN
     Folder f ON df.folder_id = f.id`;
         if (filter?.length || folder) {
             if (filter?.length) {
-                const where = `p.name LIKE '%${filter}%' OR d.name LIKE '%${filter}%' OR p.ocrData LIKE '%${filter}%'`;
+                const realFilter = filter.replace(/[(\[\]%_)]/, '\\$1');
+                const where = `p.name LIKE '%${realFilter}%' OR d.name LIKE '%${realFilter}%' OR p.ocrData LIKE '%${realFilter}%'`;
                 if (folder) {
                     args.postfix = sql` LEFT JOIN Page p ON p.document_id = d.id `;
                     args.where = new SqlQuery([`df.folder_id = ${folder.id} AND (${where})`]);
