@@ -389,8 +389,8 @@ class PDFUtils {
                 itemsPerPage = 1
                 for (i in 0..<pagesCount) {
                     val page = pages.getJSONObject(i)
-                    val imageSrc = page.getString("imagePath")
-                    if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
+                    val imageSrc = page.optString("imagePath")
+                    if (imageSrc.isNullOrEmpty() || imageSrc == "null") {
                         continue
                     }
                     val imageRotation = page.optInt("rotation", 0)
@@ -493,7 +493,7 @@ class PDFUtils {
                             val page = pageItems[pageIndex]
                             val imageRotation = page.optInt("rotation", 0)
 
-                            val imageSrc = page.getString("imagePath")
+                            val imageSrc = page.optString("imagePath")
                             if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
                                 continue
                             }
