@@ -207,6 +207,9 @@ export default class PDFCanvas {
         if (paper_size === 'full') {
             // we only support 1 item per page for this
             const page = pages[0];
+            if (!page.imagePath) {
+                return false;
+            }
             let imageWidth = page.width;
             let imageHeight = page.height;
             if (page.rotation % 180 !== 0) {
@@ -260,6 +263,7 @@ export default class PDFCanvas {
             // canvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
             await this.drawImageOnCanvas(canvas, page, imageWidth, imageHeight);
         } else {
+            let hasPages = false;
             let dx = 0;
             let dy = 0;
             canvas.translate(dx, dy);
@@ -316,6 +320,10 @@ export default class PDFCanvas {
                     const last = pageIndex === items_per_page - 1;
 
                     const page = pages[pageIndex];
+                    if (!page.imagePath) {
+                        continue;
+                    }
+                    hasPages = true;
                     let imageWidth = page.width;
                     let imageHeight = page.height;
                     if (page.rotation % 180 !== 0) {
@@ -354,7 +362,7 @@ export default class PDFCanvas {
                 ddy += heightPerRow;
                 ddx = 0;
             }
-            // }
+            return hasPages;
         }
     }
 }
