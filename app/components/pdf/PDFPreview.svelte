@@ -23,6 +23,7 @@
     import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
+    import { SilentError } from '@shared/utils/error';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -108,7 +109,11 @@
             showLoading(l('exporting'));
             const filePath = await exportPDFAsync({ pages, document });
             hideLoading();
-            openFile(filePath);
+            if (filePath) {
+                openFile(filePath);
+            } else {
+                throw new SilentError(lc('no_pages_in_pdf'));
+            }
         } catch (error) {
             showError(error);
         }

@@ -410,7 +410,7 @@
     }
 
     function unselectItem(item: Item) {
-        DEV_LOG && console.log('unselectItem', item);
+        // DEV_LOG && console.log('unselectItem', item);
         if (item.selected) {
             if (item.folder) {
                 folderItems?.some((d, index) => {

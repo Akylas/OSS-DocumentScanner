@@ -132,7 +132,7 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             });
         }
         // DEV_LOG && console.log('export message sent to worker', { pages, folder, filename, compress });
-        const result = await sendMessageToWorker('export', { pages: pages.map((p) => p.page), folder, filename, compress }, Date.now());
+        const result = await sendMessageToWorker('export', { pages: pages.map((p) => ({ page: p.page })), folder, filename, compress }, Date.now());
         // DEV_LOG && console.log('result', result);
         return result.messageData;
     }

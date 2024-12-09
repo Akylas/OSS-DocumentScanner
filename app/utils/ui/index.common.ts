@@ -50,7 +50,7 @@ import { get } from 'svelte/store';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
-import { cleanFilename, getFileNameForDocument, getFormatedDateForFilename, getLocaleDisplayName, l, lc } from '~/helpers/locale';
+import { getFileNameForDocument, getFormatedDateForFilename, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { DocFolder, ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { OCRLanguages, ocrService } from '~/services/ocr';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
@@ -95,7 +95,7 @@ import {
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
 import { showToast } from '~/utils/ui';
-import { colors, fontScale, screenHeightDips, screenWidthDips } from '~/variables';
+import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { saveImage } from '../utils';
 
@@ -651,7 +651,11 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('opening pdf', filePath);
-                        openFile(filePath);
+                        if (filePath) {
+                            openFile(filePath);
+                        } else {
+                            throw new SilentError(lc('no_pages_in_pdf'));
+                        }
                         break;
                     }
                     case 'share': {

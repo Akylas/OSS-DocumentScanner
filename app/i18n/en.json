@@ -246,6 +246,7 @@
     "no_document_found": "no document found",
     "no_document_yet": "add a document using the camera or import one from an image",
     "no_network": "no network",
+    "no_pages_in_pdf": "there was no pages to export in the PDF",
     "no_qrcode": "no QRCode found",
     "no_qrcode_found": "no QRCode found",
     "no_space_left": "your device seems to be running out of free storage",
