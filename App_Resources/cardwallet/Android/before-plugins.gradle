@@ -1,6 +1,6 @@
 ext {
-    compileSdk = 34
-    targetSdk = 34
+    compileSdk = 35
+    targetSdk = 35
     kotlinVersion = "2.0.0"
     androidBuildToolsVersion = "8.3.2"
     buildToolsVersion = "34.0.0"
