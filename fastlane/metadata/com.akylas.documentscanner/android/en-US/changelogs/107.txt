@@ -1,0 +1,5 @@
+Bug fixes:
+- prevent error while exporting card with no "image"
+- error while search for special characters like []%_
+- opening PDF fix
+- Translations update
