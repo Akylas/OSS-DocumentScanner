@@ -5,7 +5,7 @@
         "prepare": "ts-patch install -s",
         "prepare.ios": "PLAY_STORE_BUILD=1 ns prepare ios --release --env.adhoc",
         "prepare.ios.sentry": "NS_SENTRY=1 PLAY_STORE_BUILD=1 ns prepare ios --release --env.adhoc_sentry",
-        "run.ios.production": "PLAY_STORE_BUILD=1 ns run ios --release --env.production --env.adhoc",
+        "run.ios.production": "NS_LOGGING=1 PLAY_STORE_BUILD=1 ns run ios --release --env.production --env.adhoc",
         "run.ios.production.sentry": "NS_SENTRY=1 PLAY_STORE_BUILD=1 ns run ios --release --env.production --env.adhoc_sentry",
         "sentry-set-commits": "sentry-cli releases set-commits --auto --ignore-missing",
         "run.android.production": "NS_LOGGING=1 cross-var ns run android --release --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.adhoc --env.sentry=0 --env.sourceMap=0 --env.noconsole=0 --env.devlog",

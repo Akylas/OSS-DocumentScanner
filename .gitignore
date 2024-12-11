@@ -92,6 +92,10 @@ dev_assets/styles/base/fonts/osm.ttf
 dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf
 dev_assets/styles/**/*.xml
 dev_assets/styles/test*
+/css2xml_*
+/dev_assets/styles/inner/fonts/osm.ttf
+/dev_assets/styles/osm/fonts/osm.ttf
+/dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf
 
 #documents
 opencv/**/*

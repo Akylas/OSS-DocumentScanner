@@ -208,6 +208,7 @@ lane :build_flavor do |params|
       FileUtils.mkdir dist_path
     end
     FileUtils.cp_r(Dir.glob(File.join(project_root_path, app_build_path, "android/app/build/outputs/apk/release/*.apk")),dist_path )
+    FileUtils.cp_r(Dir.glob(File.join(project_root_path, app_build_path, "android/app/build/outputs/bundle/release/*.aab")),dist_path )
   end
 
   if (ENV["GITHUB_ACTIONS"] != 'true')
@@ -285,6 +286,7 @@ lane :build_flavor do |params|
     # yarn lock might have change we dont want to commit it
     reset_git_repo( force: true, files: ["yarn.lock", "package.json"])
     # we need to pull to be able to push again
+    Actions.sh("git fetch --tags -f")
     git_pull
     # push any change
     push_to_git_remote(tags:false)
