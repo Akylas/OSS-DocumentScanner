@@ -554,16 +554,17 @@ module.exports = (env, params = {}) => {
 
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
+            console.warn('UPLOADING SOURCE MAPS TO SENTRY')
             config.devtool = false;
             config.devtool = 'source-map';
-            // config.plugins.push(
-            //     new webpack.SourceMapDevToolPlugin({
-            //         // moduleFilenameTemplate:  'webpack://[namespace]/[resource-path]?[loaders]',
-            //         append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
-            //         filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
-            //     })
-            // );
-            console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
+            config.plugins.push(
+                new webpack.SourceMapDevToolPlugin({
+                    // moduleFilenameTemplate:  'webpack://[namespace]/[resource-path]?[loaders]',
+                    append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
+                    filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
+                })
+            );
+            // console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
             config.plugins.push(
                 sentryWebpackPlugin({
                     telemetry: false,
@@ -587,7 +588,7 @@ module.exports = (env, params = {}) => {
                         // assets: './**/*.nonexistent'
                         rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
                         ignore: ['tns-java-classes', 'hot-update'],
-                        assets: [dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map']
+                        assets: [join(dist, '**/*.js'), join(dist, process.env.SOURCEMAP_REL_DIR, '*.map')]
                     }
                 })
             );
