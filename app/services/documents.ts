@@ -427,7 +427,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const element = await this.get(itemId);
         return element;
     }
-    async search(args: { from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
+    async search(args: { from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery } = {}) {
         const result = await super.search({ ...args });
         // remove all documents with no Page, it is a bug and should never happen
 

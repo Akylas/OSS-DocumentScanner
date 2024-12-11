@@ -118,6 +118,7 @@ export class SyncService extends Observable {
         }
     }
     sendImageEvent(event: DocumentPagesAddedEventData) {
+        DEV_LOG && console.log('Sync', 'sendImageEvent');
         // only used for image sync
         this.syncDocumentsInternal({ event, type: SyncType.IMAGE, fromEvent: event.eventName });
     }
