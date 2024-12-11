@@ -92,5 +92,6 @@
     "copied": "kopiatua",
     "create": "sortu",
     "create_barcode": "sortu barra-kode bat",
-    "crop_edit_doc": "lupa ikusteko ukitu pantaila txoko batetik gertu baina ez izkinan bertan. Aplikazioak gertuen dagoen izkina hautatuko du"
+    "crop_edit_doc": "lupa ikusteko ukitu pantaila txoko batetik gertu baina ez izkinan bertan. Aplikazioak gertuen dagoen izkina hautatuko du",
+    "crop_enabled": "detektatu dokumentuen ertzak eta moztu"
 }
