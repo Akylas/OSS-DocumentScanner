@@ -442,7 +442,7 @@ export default class SyncWorker extends Observable {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
                         }
                     } else {
-                        if (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED) {
+                        if (event && (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED)) {
                             const remoteFolders = ((await service.fileExists(FOLDERS_DATA_FILENAME)) ? JSON.parse(await service.getFileFromRemote(FOLDERS_DATA_FILENAME)) : []) as any[];
                             // we need to send folders not on remote
                             const localFolders = await getDocumentsService().folderRepository.search();
@@ -785,7 +785,7 @@ export default class SyncWorker extends Observable {
             ? [{ document: event['doc'] as OCRDocument, pages: event['pages'] as OCRPage[] }]
             : event?.['pageIndex'] !== undefined
               ? [{ document: event['doc'] as OCRDocument, pages: [event['doc']['pages'][event['pageIndex']]] as OCRPage[] }]
-              : (await documentsService.documentRepository.search({})).map((d) => ({ document: d, pages: d.pages }));
+              : (await documentsService.documentRepository.search()).map((d) => ({ document: d, pages: d.pages }));
 
         // this should not happened but i got bug reports with null document. cant reproduce
         localDocuments = localDocuments.filter((d) => !!d.document);
@@ -861,7 +861,7 @@ export default class SyncWorker extends Observable {
         //     // pages will be updated independently
         //     return;
         // }
-        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search({})));
+        const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search()));
         TEST_LOG &&
             console.log(
                 'Sync',
