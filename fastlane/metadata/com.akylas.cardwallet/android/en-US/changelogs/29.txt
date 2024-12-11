@@ -1,0 +1,3 @@
+Bug fixes:
+- error while syncing data
+- Translations update
