@@ -248,6 +248,7 @@
     "no_document_found": "nenhum documento encontrado",
     "no_document_yet": "adicione um documento utilizando a câmera ou importe de uma imagem",
     "no_network": "sem rede",
+    "no_pages_in_pdf": "não havia páginas para exportar no PDF",
     "no_qrcode": "nenhum QR Code foi encontrado",
     "no_qrcode_found": "nenhum QR Code foi encontrado",
     "no_space_left": "seu dispositivo parece estar ficando sem espaço de armazenamento livre",
