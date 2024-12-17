@@ -658,7 +658,8 @@ export class DocumentsService extends Observable {
             return;
         }
         this.started = false;
-        this.db && this.db.disconnect();
+        this.db?.disconnect();
+        this.db = null;
     }
 
     async saveDocument(doc: OCRDocument) {
