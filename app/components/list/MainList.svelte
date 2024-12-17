@@ -258,7 +258,9 @@
             const index = documents.findIndex((item) => item.doc && item.doc.id === id);
             if (index !== -1) {
                 documents.splice(index, 1);
-                nbSelected -= 1;
+                if (nbSelected > 0) {
+                    nbSelected = Math.max(nbSelected - 1, 0);
+                }
             }
         }
         if (!folder && event.folders?.length) {
