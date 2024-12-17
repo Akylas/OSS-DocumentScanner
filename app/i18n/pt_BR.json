@@ -14,7 +14,7 @@
     },
     "$com.akylas.documentscanner": {
         "app": {
-            "name": "Digitalizador de Documentos OSS"
+            "name": "Digitalizador OSS"
         }
     },
     "a3": "A3",
@@ -32,7 +32,7 @@
     "always_prompt_crop_edit": "sempre solicitar a edição da área do documento",
     "always_prompt_crop_edit_desc": "Ao capturar da câmera sem o modo em lote, ativar isso garante que você sempre será solicitado a confirmar/editar a região do documento antes de criar o documento",
     "app": {
-        "name": "Digitalizador de Documentos OSS"
+        "name": "Digitalizador OSS"
     },
     "apply": "aplicar",
     "ask_everytime": "sempre perguntar",
