@@ -112,9 +112,9 @@ function getActualLanguage(language: string) {
     }
 
     switch (language) {
-        case 'cs':
-            language = 'cz';
-            break;
+        // case 'cs':
+        //     language = 'cz';
+        //     break;
         case 'jp':
             language = 'ja';
             break;
