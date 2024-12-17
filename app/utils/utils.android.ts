@@ -46,12 +46,9 @@ export async function saveImage(
     if (!destinationName.endsWith(imageFormat)) {
         destinationName += '.' + imageFormat;
     }
-    DEV_LOG && console.info('saveImage', imageSource, toGallery,destinationName);
+    DEV_LOG && console.info('saveImage', imageSource, toGallery, destinationName);
     if (toGallery) {
-        DEV_LOG && console.info('gallery1', destinationName);
-        DEV_LOG && console.info('gallery2', destinationName);
         com.akylas.documentscanner.utils.ImageUtil.Companion.saveBitmapToGallery(Utils.android.getApplicationContext(), imageSource.android, imageFormat, imageQuality, fileName);
-        DEV_LOG && console.info('gallery3', destinationName);
     } else if (exportDirectory.startsWith(ANDROID_CONTENT)) {
         const context = Utils.android.getApplicationContext();
         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(exportDirectory));
