@@ -1,0 +1,7 @@
+Bug fixes:
+- capitalize titles
+- selection not working after deleting some documents
+- error while syncing PDF
+- error on exporting PDF
+- error fix on save image to gallery or show images fullscreen
+- Translations update
