@@ -68,18 +68,22 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
             filename += PDF_EXT;
         }
         const temp = knownFolders.temp().path;
+        const pages = document.pages;
+        if (!pages || pages.length === 0) {
+            return;
+        }
         if (__ANDROID__) {
             const options = JSON.stringify({
                 overwrite: true,
                 // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
                 text_scale: Screen.mainScreen.scale * 1.4,
-                pages: document.pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
+                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
                 ...this.exportOptions
             });
             await generatePDFASync(temp, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
-            await exporter.export({ pages: document.pages.map((page) => ({ page, document })), folder: temp, filename, compress: true, options: this.exportOptions });
+            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: temp, filename, compress: true, options: this.exportOptions });
         }
         const destinationPath = path.join(temp, filename);
         DEV_LOG && console.log('destinationPath', destinationPath, File.exists(destinationPath));
