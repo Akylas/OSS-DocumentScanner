@@ -27,7 +27,7 @@
 <script lang="ts">
     let { colorOnBackground, colorOnSurfaceVariant } = $colors;
     $: ({ colorOnBackground, colorOnSurfaceVariant } = $colors);
-    export let title = l('documents');
+    export let title = lc('documents');
     export let folder: DocFolder;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let collectionView: NativeViewElementNode<CollectionView>;

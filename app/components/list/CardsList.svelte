@@ -45,7 +45,7 @@
     let refreshCollectionView: () => void;
     $: condensed = viewStyle === 'condensed';
 
-    const title = l('cards');
+    const title = lc('cards');
     DEV_LOG && console.log('screenHeightDips', screenHeightDips, screenWidthDips);
     let itemWidth = ($isLandscape ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - 2 * rowMargin - $windowInset.left - $windowInset.right;
     let itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
