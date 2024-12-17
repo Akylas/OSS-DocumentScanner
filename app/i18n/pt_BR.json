@@ -14,7 +14,7 @@
     },
     "$com.akylas.documentscanner": {
         "app": {
-            "name": "Digitalizador de Documentos OSS"
+            "name": "Digitalizador OSS"
         }
     },
     "a3": "A3",
@@ -32,7 +32,7 @@
     "always_prompt_crop_edit": "sempre solicitar a edição da área do documento",
     "always_prompt_crop_edit_desc": "Ao capturar da câmera sem o modo em lote, ativar isso garante que você sempre será solicitado a confirmar/editar a região do documento antes de criar o documento",
     "app": {
-        "name": "Digitalizador de Documentos OSS"
+        "name": "Digitalizador OSS"
     },
     "apply": "aplicar",
     "ask_everytime": "sempre perguntar",
@@ -248,6 +248,7 @@
     "no_document_found": "nenhum documento encontrado",
     "no_document_yet": "adicione um documento utilizando a câmera ou importe de uma imagem",
     "no_network": "sem rede",
+    "no_pages_in_pdf": "não havia páginas para exportar no PDF",
     "no_qrcode": "nenhum QR Code foi encontrado",
     "no_qrcode_found": "nenhum QR Code foi encontrado",
     "no_space_left": "seu dispositivo parece estar ficando sem espaço de armazenamento livre",

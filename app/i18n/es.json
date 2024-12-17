@@ -254,6 +254,7 @@
     "no_document_found": "ningún documento encontrado",
     "no_document_yet": "añada un documento utilizando la cámara o importar uno desde una imagen",
     "no_network": "sin conexión a la red",
+    "no_pages_in_pdf": "Sin páginas para exportar en pdf",
     "no_qrcode": "Sin código QR",
     "no_qrcode_found": "no se ha encontrado el código QR",
     "no_space_left": "Parece que tu dispositivo se ha quedado sin espacio",
