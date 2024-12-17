@@ -684,6 +684,9 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                                 const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                                 hideLoading();
                                 DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
+                                if (!filePath) {
+                                    return;
+                                }
                                 let filename;
                                 if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
                                     filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();

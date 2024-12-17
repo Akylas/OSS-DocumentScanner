@@ -89,6 +89,9 @@
                 );
                 const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
                 hideLoading();
+                if (!filePath) {
+                    return;
+                }
                 let filename;
                 if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
                     filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
