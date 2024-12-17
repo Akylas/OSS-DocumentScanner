@@ -726,8 +726,8 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
 }
 
 async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], exportDirectory: string, toGallery = false) {
-    const sortedPages = pages.sort((a, b) => a.page.createdDate - b.page.createdDate);
-    const imagePaths = sortedPages.map((page) => page.page.imagePath);
+    const sortedPages = pages.filter((p) => p.page).sort((a, b) => a.page.createdDate - b.page.createdDate);
+    const imagePaths = sortedPages.map((p) => p.page.imagePath);
 
     const imageExportSettings = getImageExportSettings();
     const canSetName = !toGallery && imagePaths.length === 1;

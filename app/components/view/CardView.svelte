@@ -253,10 +253,10 @@
         currentQRCodeIndex = event.object.selectedIndex;
     }
     function getSelectedPages() {
-        const selected = [];
+        const selected: { page: OCRPage; document: OCRDocument }[] = [];
         items.forEach((d, index) => {
             if (d.selected) {
-                selected.push(d.page);
+                selected.push({ page: d.page, document });
             }
         });
         return selected;
@@ -272,7 +272,7 @@
     }
     async function showPDFPopover(event) {
         try {
-            const pages = nbSelected > 0 ? getSelectedPages() : document.pages;
+            const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
             await showPDFPopoverMenu(pages, document, event.object);
         } catch (err) {
             showError(err);
@@ -421,12 +421,14 @@
             page: component,
             // transition: __ANDROID__ ? SharedTransition.custom(new PageTransition(300, undefined, 10), {}) : undefined,
             props: {
-                images: getSelectedPages().map((page) => ({
-                    // sharedTransitionTag: `document_${doc.id}_${page.id}`,
-                    name: page.name || document.name,
-                    image: page.imagePath,
-                    ...page
-                })),
+                images: getSelectedPages()
+                    .filter((p) => p.page.imagePath)
+                    .map((p) => ({
+                        // sharedTransitionTag: `document_${doc.id}_${page.id}`,
+                        name: document.name,
+                        image: p.page.imagePath,
+                        ...p
+                    })),
                 startPageIndex: 0
             }
         });
