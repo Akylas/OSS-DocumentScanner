@@ -386,7 +386,8 @@ export class SyncService extends Observable {
         event?: DocumentEvents;
     } = {}) {
         try {
-            if (!this.enabled) {
+            const db = documentsService.db?.db?.db;
+            if (!this.enabled || !db) {
                 return;
             }
             // send syncState event right now for the UI to be updated as soon as possible
