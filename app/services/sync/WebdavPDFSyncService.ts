@@ -64,14 +64,15 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
         return this.client.deleteFile(path.join(this.remoteFolder, relativePath));
     }
     override async writePDF(document: OCRDocument, filename: string) {
-        if (!filename.endsWith(PDF_EXT)) {
-            filename += PDF_EXT;
-        }
-        const temp = knownFolders.temp().path;
         const pages = document.pages;
         if (!pages || pages.length === 0) {
             return;
         }
+        if (!filename.endsWith(PDF_EXT)) {
+            filename += PDF_EXT;
+        }
+        const temp = knownFolders.temp().path;
+
         if (__ANDROID__) {
             const options = JSON.stringify({
                 overwrite: true,

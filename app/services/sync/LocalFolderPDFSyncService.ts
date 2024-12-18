@@ -62,6 +62,10 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
         return File.fromPath(path.join(this.localFolderPath, relativePath)).remove();
     }
     override async writePDF(document: OCRDocument, filename: string) {
+        const pages = document.pages;
+        if (!pages || pages.length === 0) {
+            return;
+        }
         if (!filename.endsWith(PDF_EXT)) {
             filename += PDF_EXT;
         }
@@ -70,13 +74,13 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
                 overwrite: true,
                 // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
                 text_scale: Screen.mainScreen.scale * 1.4,
-                pages: document.pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
+                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
                 ...this.exportOptions
             });
             return generatePDFASync(this.localFolderPath, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
-            await exporter.export({ pages: document.pages.map((page) => ({ page, document })), folder: this.localFolderPath, filename, compress: true, options: this.exportOptions });
+            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: this.localFolderPath, filename, compress: true, options: this.exportOptions });
         }
     }
 }
