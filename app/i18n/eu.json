@@ -30,7 +30,7 @@
     "allow_app_screenshot": "baimendu aplikazioaren pantaila-argazkia",
     "always": "beti",
     "always_prompt_crop_edit": "eskatu beti dokumentuaren eskualdea editatzeko",
-    "always_prompt_crop_edit_desc": "Batch modurik gabe kamerarekin eskaneatzean, hau gaituz gero, ziurtatzen du dokumentuaren eskualdea berresteko/editatzeko eskatuko zaizula beti dokumentua sortu aurretik",
+    "always_prompt_crop_edit_desc": "Multzoka gabe kamerarekin eskaneatzean, hau gaituz gero, ziurtatzen du dokumentuaren eskualdea berresteko/editatzeko eskatuko zaizula beti dokumentua sortu aurretik",
     "app": {
         "name": "OSS Document Scanner"
     },
@@ -58,7 +58,7 @@
     "barcode": "barra-kodea",
     "barcode_type": "barra-kode mota",
     "barcore_qrcode": "barra-kodea / QR kodea",
-    "batch_mode": "batch modua",
+    "batch_mode": "multzoka",
     "biometric_auto_lock": "blokeo biometriko automatikoa",
     "biometric_auto_lock_desc": "gaituta badago, aplikazioa atzeko planora doan bakoitzean blokeatuko da",
     "biometric_lock": "Segurtasun biometrikoa",
@@ -376,7 +376,7 @@
     "type": "mota",
     "updating_pages": "orriak eguneratzen (%%1$s%)",
     "use_system_camera": "erabili sistemaren kamera",
-    "use_system_camera_desc": "erabili sistemaren kamera aplikazioaren ikuspegiaren ordez (luze sakatzeak alderantzizko portaera ekartzen du). Gaituta dagoenean, loteka edo eskaneatze automatikoa bezalako eginbide batzuk desgaitu egingo dira",
+    "use_system_camera_desc": "erabili sistemaren kamera aplikazioaren ikuspegiaren ordez (luze sakatzeak alderantzizko portaera ekartzen du). Gaituta dagoenean, multzoka edo eskaneatze automatikoa bezalako eginbide batzuk desgaitu egingo dira",
     "username": "erabiltzaile-izena",
     "value": "balioa",
     "version": "bertsioa",
