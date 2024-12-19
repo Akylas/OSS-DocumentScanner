@@ -178,7 +178,7 @@ export default class SyncWorker extends Observable {
     async stop(error?, id?) {
         // const result = await super.stop(error, id);
         // ensure everything is done first
-        // DEV_LOG && console.log('terminate worker');
+        DEV_LOG && console.log('terminate worker');
         this.context.close();
         // return result;
     }

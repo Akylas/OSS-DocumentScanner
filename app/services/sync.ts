@@ -195,11 +195,14 @@ export class SyncService extends Observable {
             documentsService.on(EVENT_DOCUMENT_MOVED_FOLDER, this.sendDataEvent, this);
             documentsService.on(EVENT_FOLDER_UPDATED, this.sendDataEvent, this);
             documentsService.on(EVENT_FOLDER_ADDED, this.sendDataEvent, this);
+            this.on(EVENT_SYNC_STATE, this.onSyncState, this);
+
             DEV_LOG && console.log('SyncService', 'start');
         }
     }
     async stop() {
         DEV_LOG && console.log('Sync', 'stop');
+        this.off(EVENT_SYNC_STATE, this.onSyncState, this);
         documentsService.off(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);
         documentsService.off(EVENT_DOCUMENT_UPDATED, this.onDocumentUpdated, this);
         documentsService.off(EVENT_DOCUMENT_DELETED, this.onDocumentDeleted, this);
@@ -212,7 +215,10 @@ export class SyncService extends Observable {
             // if sync is running wait for it to be finished
             await new Promise((resolve) => this.once(EVENT_SYNC_STATE, resolve));
         }
+        this.worker?.stop();
+        this.worker = null;
     }
+
     onServiceChanged(force = false) {
         const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
         this.services = services;
@@ -220,6 +226,9 @@ export class SyncService extends Observable {
     }
 
     syncRunning = false;
+    onSyncState(event: EventData & { state: 'running' | 'finished' }) {
+        this.syncRunning = event.state === 'running';
+    }
 
     syncDocuments = debounce(
         async ({
