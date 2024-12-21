@@ -1,13 +1,13 @@
 {
     "$com.akylas.cardwallet": {
         "app": {
-            "name": "OSS kortti lompakko"
+            "name": "OSS-lompakko"
         },
         "ios": {
             "info": {
                 "plist": {
-                    "NSCameraUsageDescription": "Salli pääsy kameraan, jotta voit skannata kortteja kameralla",
-                    "NSPhotoLibraryUsageDescription": "Salli pääsy kuviin korttien skannaamiseksi kirjastostasi"
+                    "NSCameraUsageDescription": "Salli kameran käyttöoikeus, skannataksesi kortteja kameralla",
+                    "NSPhotoLibraryUsageDescription": "Salli kuvien käyttöoikeus korttien skannaamiseksi kirjastostasi"
                 }
             }
         }
