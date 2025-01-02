@@ -38,6 +38,11 @@ on:
         required: true
         type: boolean
         default: true
+      fakepublish:
+        description: "build publish even if not publishing?"
+        required: false
+        type: boolean
+        default: false
       github:
         description: "Should we publish on Github?"
         default: true
@@ -48,6 +53,11 @@ on:
         default: true
         required: true
         type: boolean
+      sentry_fdroid:
+        description: "Should we use sentry with fdroid build?"
+        default: false
+        required: true
+        type: boolean
 
 jobs:
   release-documentscanner-android:
@@ -56,8 +66,10 @@ jobs:
     with:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
+      fakepublish: ${{ github.event.inputs.fakepublish }}
       publish: ${{ github.event.inputs.publish }}
       github: ${{ github.event.inputs.github }}
+      sentry_fdroid: ${{ github.event.inputs.sentry_fdroid }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
 
@@ -68,6 +80,8 @@ jobs:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      fakepublish: ${{ github.event.inputs.fakepublish }}
+      sentry_fdroid: ${{ github.event.inputs.sentry_fdroid }}
       github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
@@ -79,6 +93,7 @@ jobs:
       flavor: documentscanner
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      fakepublish: ${{ github.event.inputs.fakepublish }}
       github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
@@ -90,6 +105,7 @@ jobs:
       flavor: cardwallet
       release_type: ${{ github.event.inputs.release_type }}
       publish: ${{ github.event.inputs.publish }}
+      fakepublish: ${{ github.event.inputs.fakepublish }}
       github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
