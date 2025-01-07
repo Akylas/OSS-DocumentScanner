@@ -14,7 +14,8 @@
     import { actionBarButtonHeight, colors } from '~/variables';
     import ListItemAutoSize from './ListItemAutoSize.svelte';
     export interface OptionType {
-        name: string;
+        name?: string;
+        title?: string;
         isPick?: boolean;
         boxType?: string;
         type?: string;
@@ -40,7 +41,7 @@
     export let iconFontSize = 24;
     export let onlyOneSelected = false;
     export let currentlyCheckedItem = null;
-    export let onCheckBox: (item, value, e) => void = (item, value)=> close(item);
+    export let onCheckBox: (item, value, e) => void = (item, value) => close(item);
     export let onRightIconTap: (item, e) => void = null;
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
@@ -213,7 +214,7 @@
                     mainCol={1}
                     showBottomLine={showBorders}
                     subtitle={item.subtitle}
-                    title={item.name}
+                    title={item.name || item.title}
                     on:tap={(event) => onTap(item, event)}>
                     <checkbox
                         id="checkbox"
@@ -237,7 +238,7 @@
                     leftIcon={item.icon}
                     showBottomLine={showBorders}
                     subtitle={item.subtitle}
-                    title={item.name}
+                    title={item.name || item.title}
                     on:tap={(event) => onTap(item, event)}>
                     <mdbutton class="icon-btn" col={1} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
                 </svelte:component>
@@ -254,7 +255,7 @@
                     leftIcon={item.icon}
                     showBottomLine={showBorders}
                     subtitle={item.subtitle}
-                    title={item.name}
+                    title={item.name || item.title}
                     on:tap={(event) => onTap(item, event)}>
                     <image col={1} height={45} src={item.image} />
                 </svelte:component>
@@ -271,7 +272,7 @@
                     rightIcon={item.rightIcon}
                     showBottomLine={showBorders}
                     subtitle={item.subtitle}
-                    title={item.name}
+                    title={item.name || item.title}
                     on:rightTap={(event) => onRightTap(item, event)}
                     on:tap={(event) => onTap(item, event)}>
                 </svelte:component>
