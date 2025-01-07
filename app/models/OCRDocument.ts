@@ -519,7 +519,7 @@ export class OCRDocument extends Observable implements Document {
     }
     async updatePageTransforms(pageIndex: number, transforms: string, optionalUpdates = {}) {
         const page = this.pages[pageIndex];
-        if (!page) {
+        if (!page || !page.imagePath) {
             return;
         }
         const file = File.fromPath(page.imagePath);
