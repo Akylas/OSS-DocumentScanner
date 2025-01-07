@@ -200,19 +200,19 @@
     "import_settings": "import settings",
     "import_settings_desc": "import all settings from a previous backup",
     "imported_nb_pages": "imported %1$s pages",
-    "internal_storage": "internal storage",
-    "inapp":{
-        "smalltip": "a coffee",
-        "smalltip_desc": "everything helps to work at night!",
-        "mediumtip": "a big coffee",
-        "mediumtip_desc": "my eyes are open!",
-        "largetip": "a beer",
-        "largetip_desc": "chill out and go back to work!",
+    "inapp": {
+        "bigtip": "a very nice donation",
+        "bigtip_desc": "new features are coming!",
         "largertip": "a pint",
         "largertip_desc": "ideas are going to flow!",
-        "bigtip": "a very nice donation",
-        "bigtip_desc": "new features are coming!"
+        "largetip": "a beer",
+        "largetip_desc": "chill out and go back to work!",
+        "mediumtip": "a big coffee",
+        "mediumtip_desc": "my eyes are open!",
+        "smalltip": "a coffee",
+        "smalltip_desc": "everything helps to work at night!"
     },
+    "internal_storage": "internal storage",
     "invalid": "invalid",
     "ios": {
         "info": {
@@ -351,6 +351,10 @@
     "share_images": "share images",
     "show_fullscreen_images": "fullscreen",
     "show_love": "If you like the project please share some love or even contribute",
+    "sort": {
+        "ascending": "ascending",
+        "descending": "descending"
+    },
     "source_code": "source code",
     "start": "start",
     "start_app_on_cam": "start application on camera",
@@ -392,6 +396,7 @@
     "username": "username",
     "value": "value",
     "version": "version",
+    "view_style": "view style",
     "webdav_config": "webdav configuration",
     "webdav_server": "WebDAV server",
     "webdav_sync": "webdav documents sync",
