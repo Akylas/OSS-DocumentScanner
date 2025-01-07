@@ -101,7 +101,7 @@
 </script>
 
 <MainList
-    defaultViewStyle="expanded"
+    defaultViewStyle="default"
     {title}
     viewStyles={{
         default: { name: lc('expanded'), boxType: 'circle', type: 'checkbox' },
