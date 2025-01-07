@@ -201,6 +201,18 @@
     "import_settings_desc": "import all settings from a previous backup",
     "imported_nb_pages": "imported %1$s pages",
     "internal_storage": "internal storage",
+    "inapp":{
+        "smalltip": "a coffee",
+        "smalltip_desc": "everything helps to work at night!",
+        "mediumtip": "a big coffee",
+        "mediumtip_desc": "my eyes are open!",
+        "largetip": "a beer",
+        "largetip_desc": "chill out and go back to work!",
+        "largertip": "a pint",
+        "largertip_desc": "ideas are going to flow!",
+        "bigtip": "a very nice donation",
+        "bigtip_desc": "new features are coming!"
+    },
     "invalid": "invalid",
     "ios": {
         "info": {

@@ -66,6 +66,7 @@
     import { colors, fonts, hasCamera, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
+    import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
     const variant = 'outline';
@@ -84,6 +85,8 @@
     let page: NativeViewElementNode<Page>;
 
     let items: ObservableArray<any>;
+
+    const inAppAvailable = PLAY_STORE_BUILD && inappItems?.length > 0;
 
     export let title = null;
     export let actionBarButtons = [
@@ -517,7 +520,7 @@
             [
                 {
                     type: 'header',
-                    title: __IOS__ ? lc('show_love') : lc('donate')
+                    title: __IOS__ && !inAppAvailable ? lc('show_love') : lc('donate')
                 },
                 {
                     type: 'sectionheader',
@@ -959,9 +962,24 @@
                     openLink(STORE_REVIEW_LINK);
                     break;
                 case 'sponsor':
-                    // Apple wants us to use in-app purchase for donations => taking 30% ...
-                    // so lets just open github and ask for love...
-                    openLink(__IOS__ ? GIT_URL : SPONSOR_URL);
+                    switch (item.type) {
+                        case 'librepay':
+                            openLink('https://liberapay.com/farfromrefuge');
+                            break;
+                        case 'patreon':
+                            openLink('https://patreon.com/farfromrefuge');
+                            break;
+
+                        default:
+                            if (inAppAvailable) {
+                                presentInAppSponsorBottomsheet();
+                            } else {
+                                // Apple wants us to use in-app purchase for donations => taking 30% ...
+                                // so lets just open github and ask for love...
+                                openLink(__IOS__ ? GIT_URL : SPONSOR_URL);
+                            }
+                            break;
+                    }
                     break;
                 case 'third_party':
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;

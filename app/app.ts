@@ -109,6 +109,11 @@ try {
     DrawerElement.register();
     startSentry();
     initialize({ isDownsampleEnabled: true });
+
+    if (PLAY_STORE_BUILD) {
+        import('@shared/utils/inapp-purchase').then((r) => r.init());
+    }
+
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Accessibility);
