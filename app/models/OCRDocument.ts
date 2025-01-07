@@ -91,12 +91,13 @@ export class DocFolder {
     }
 
     toString() {
-        const { count, size, ...toStringify } = this;
-        return JSON.stringify(toStringify);
+        return JSON.stringify(this.toJSON());
     }
 
-    toJSONObject() {
-        return JSON.parse(this.toString());
+    toJSON() {
+        const { count, size, ...toStringify } = this;
+        return toStringify as IDocFolder;
+        // return JSON.parse(this.toString());
     }
 }
 
@@ -111,6 +112,7 @@ export interface Document {
     pagesOrder: string[];
     pages?: OCRPage[];
     extra?: DocumentExtra;
+    db_version?: number;
 }
 
 let documentsService: DocumentsService;
@@ -476,11 +478,21 @@ export class OCRDocument extends Observable implements Document {
     }
 
     toString() {
-        return JSON.stringify({ db_version: DB_VERSION, ...this }, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
+        return JSON.stringify(this.toJSON());
     }
 
-    toJSONObject() {
-        return JSON.parse(this.toString());
+    toJSON() {
+        const keys = Object.keys(this);
+        return keys.reduce(
+            (acc, key) => {
+                if (key === '_synced' || !key.startsWith('_')) {
+                    acc[key] = this[key];
+                }
+                return acc;
+            },
+            { db_version: DB_VERSION } as Document
+        );
+        // return JSON.parse(this.toString());
     }
 
     async updatePageCrop(pageIndex: number, quad: Quad) {
@@ -680,11 +692,18 @@ export class OCRPage extends Observable implements Page {
         this.document_id = docId;
     }
     toString() {
-        return JSON.stringify(this, (key, value) => (key !== '_synced' && key.startsWith('_') ? undefined : value));
+        return JSON.stringify(this.toJSON());
     }
 
-    toJSONObject() {
-        return JSON.parse(this.toString());
+    toJSON() {
+        const keys = Object.keys(this);
+        return keys.reduce((acc, key) => {
+            if (key === '_synced' || !key.startsWith('_')) {
+                acc[key] = this[key];
+            }
+            return acc;
+        }, {});
+        // return JSON.parse(this.toString());
     }
     static fromJSON(jsonObj: Page) {
         const page = new OCRPage(jsonObj.id, jsonObj.document_id);

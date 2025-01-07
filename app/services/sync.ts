@@ -112,7 +112,7 @@ export class SyncService extends Observable {
     }
     onDocumentUpdated(event: DocumentUpdatedEventData) {
         // only used for data sync
-        DEV_LOG && console.log('SYNC', 'onDocumentUpdated', event.updateModifiedDate);
+        DEV_LOG && console.log('SYNC', 'onDocumentUpdated', event.updateModifiedDate, new Error().stack);
         if (event.updateModifiedDate !== false) {
             this.syncDocumentsInternal({ event, type: SyncType.DATA | SyncType.PDF, fromEvent: event.eventName });
         }
@@ -401,15 +401,15 @@ export class SyncService extends Observable {
             }
             // send syncState event right now for the UI to be updated as soon as possible
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
-            // DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent);
             let eventData;
             if (event) {
                 const { object, ...otherProps } = event;
-                if (object?.['toJSONObject']) {
-                    eventData = { ...otherProps, object: event.object['toJSONObject']?.() };
-                } else {
+                // if (object?.['toJSONObject']) {
+                //     eventData = { ...otherProps, object: event.object['toJSONObject']?.() };
+                // } else {
                     eventData = otherProps;
-                }
+                // }
+                DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent, Object.keys(otherProps));
             }
             await this.sendMessageToWorker(
                 'sync',
