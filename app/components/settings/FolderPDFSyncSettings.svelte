@@ -3,7 +3,7 @@
     import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
+    import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { get, writable } from 'svelte/store';
@@ -94,7 +94,7 @@
                 autocorrect: false,
                 editable: false,
                 hint: lc('folder_sync_desc'),
-                paddingRight: 100,
+                paddingRight: 60,
                 placeholder: lc('folder'),
                 returnKeyType: 'done',
                 variant
@@ -330,6 +330,10 @@
             showError(error);
         }
     }
+
+    function onTextChange(e) {
+        (e.object as TextField).setSelection(e.object.text.length);
+    }
 </script>
 
 <page actionBarHidden={true}>
@@ -342,7 +346,7 @@
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)} prop:rightDrawer>
-                    <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} />
+                    <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} on:loaded={onTextChange} />
                     <mdbutton
                         class="icon-btn"
                         color={colorOnSurfaceVariant}
