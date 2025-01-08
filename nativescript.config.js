@@ -6,7 +6,7 @@ const playstoreBuild = !!process.env['PLAY_STORE_BUILD'];
 const id = process.env['APP_ID'];
 const CARD_APP = id === 'com.akylas.cardwallet';
 module.exports = {
-    ignoredNativeDependencies: [].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']).concat(playstoreBuild ? [] : ['@akyas/nativescript-inapp-purchase']),
+    ignoredNativeDependencies: [].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']).concat(playstoreBuild ? [] : ['@akylas/nativescript-inapp-purchase']),
     id: id || 'com.akylas.documentscanner',
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources/documentscanner',
     buildPath: process.env['APP_BUILD_PATH'] || 'build/documentscanner',
