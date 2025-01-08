@@ -13,8 +13,8 @@
     export let formatter = null;
 
     function onValueChange(event) {
+        value = event.value;
         if (onChange) {
-            value = event.value;
             onChange(event.value);
         }
     }
