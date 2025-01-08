@@ -8,7 +8,7 @@ import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { PDF_EXT } from '~/utils/constants';
-export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, pages }: PDFExportOptions): Promise<string> {
+export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, options: baseOptions, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
         filename = getFileNameForDocument(document) + PDF_EXT;
@@ -31,7 +31,8 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             ...getPDFDefaultExportOptions(),
             // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
             text_scale: Screen.mainScreen.scale * 1.4,
-            pages: pages.map((p) => ({ ...p.page, colorMatrix: getPageColorMatrix(p.page) }))
+            pages: pages.map((p) => ({ ...p.page, colorMatrix: getPageColorMatrix(p.page) })),
+            ...(baseOptions ? baseOptions : {})
         });
         const context = Utils.android.getApplicationContext();
         DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);

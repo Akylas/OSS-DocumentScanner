@@ -19,11 +19,13 @@ import {
     PageTransition,
     Screen,
     SharedTransition,
+    StackLayout,
     Utils,
     View,
     knownFolders
 } from '@nativescript/core';
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
+import { Slider } from '@nativescript-community/ui-material-slider';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { doInBatch } from '@shared/utils/batch';
@@ -48,6 +50,7 @@ import type { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
+import type SettingsSlider__SvelteComponent_ from '@shared/components/SettingsSlider.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { getFileNameForDocument, getFormatedDateForFilename, getLocaleDisplayName, l, lc } from '~/helpers/locale';
@@ -98,6 +101,7 @@ import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { saveImage } from '../utils';
+import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -672,33 +676,72 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                             showSnack({ message: lc('please_choose_export_folder') });
                         } else {
                             await closePopover();
-                            const result = await prompt({
-                                okButtonText: lc('ok'),
-                                cancelButtonText: lc('cancel'),
-                                defaultText: getFileNameForDocument(document) + PDF_EXT,
-                                hintText: lc('pdf_filename')
-                            });
-                            if (result?.result && result?.text?.length) {
-                                showLoading(l('exporting'));
-                                DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                                const filePath = await exportPDFAsync({ pages, document, folder: exportDirectory, filename: result.text });
-                                hideLoading();
-                                DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
-                                if (!filePath) {
-                                    return;
+                            const component = (await import('@shared/components/SettingsSlider.svelte')).default;
+                            let componentInstanceInfo: ComponentInstanceInfo<GridLayout, SettingsSlider__SvelteComponent_>;
+                            try {
+                                componentInstanceInfo = resolveComponentElement(component, {
+                                    title: lc('jpeg_quality'),
+                                    padding: 16,
+                                    min: 0,
+                                    max: 100,
+                                    step: 1,
+                                    value: getPDFDefaultExportOptions().jpegQuality
+                                }) as ComponentInstanceInfo<GridLayout, SettingsSlider__SvelteComponent_>;
+                                const result = await prompt({
+                                    okButtonText: lc('ok'),
+                                    cancelButtonText: lc('cancel'),
+                                    defaultText: getFileNameForDocument(document) + PDF_EXT,
+                                    hintText: lc('pdf_filename'),
+                                    view: componentInstanceInfo.element.nativeView
+                                });
+                                DEV_LOG && console.log(componentInstanceInfo.viewInstance.value);
+                                if (result?.result && result?.text?.length) {
+                                    const jpegQuality = componentInstanceInfo.viewInstance.value;
+                                    showLoading(l('exporting'));
+                                    DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
+                                    const filePath = await exportPDFAsync({
+                                        pages,
+                                        document,
+                                        folder: exportDirectory,
+                                        filename: result.text,
+                                        options: {
+                                            jpegQuality
+                                        }
+                                    });
+                                    hideLoading();
+                                    DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
+                                    if (!filePath) {
+                                        return;
+                                    }
+                                    let filename;
+                                    if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                                        filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
+                                    } else {
+                                        filename = filePath.split(SEPARATOR).pop();
+                                    }
+                                    const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
+                                    if (onSnack?.reason === 'action') {
+                                        DEV_LOG && console.log('openFile', filePath);
+                                        openFile(filePath);
+                                    }
                                 }
-                                let filename;
-                                if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
-                                    filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
-                                } else {
-                                    filename = filePath.split(SEPARATOR).pop();
-                                }
-                                const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
-                                if (onSnack?.reason === 'action') {
-                                    DEV_LOG && console.log('openFile', filePath);
-                                    openFile(filePath);
-                                }
+                            } catch (err) {
+                                throw err;
+                            } finally {
+                                componentInstanceInfo.element.nativeElement._tearDownUI();
+                                componentInstanceInfo.viewInstance.$destroy();
+                                componentInstanceInfo = null;
                             }
+                            const view = createView(StackLayout, {
+                                orientation: 'vertical',
+                                padding: 16
+                            });
+                            const slider = createView(Slider, {
+                                value: getPDFDefaultExportOptions().jpegQuality,
+                                minValue: 0,
+                                maxValue: 100
+                            });
+                            view.addChild(slider);
                         }
                         break;
                     }
