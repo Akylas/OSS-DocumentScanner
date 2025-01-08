@@ -34,7 +34,7 @@ on:
         default: true
         type: boolean
       publish:
-        description: "Should we publish?"
+        description: "Should we publish on the Playstore?"
         required: true
         type: boolean
         default: true
