@@ -202,6 +202,18 @@
     "import_settings": "внасяне на настройки",
     "import_settings_desc": "внасяне на всички настройки от предишен архив",
     "imported_nb_pages": "внесени %1$s страници",
+    "inapp": {
+        "bigtip": "много хубаво дарение",
+        "bigtip_desc": "идват нови функции!",
+        "largertip": "една чаша",
+        "largertip_desc": "идеите ще потекат!",
+        "largetip": "една бира",
+        "largetip_desc": "отпуснете се и се върнете на работа!",
+        "mediumtip": "едно голямо кафе",
+        "mediumtip_desc": "очите ми са отворени!",
+        "smalltip": "едно кафе",
+        "smalltip_desc": "всичко помага за работа през нощта!"
+    },
     "internal_storage": "вътрешна памет",
     "invalid": "невалиден",
     "ios": {
@@ -341,6 +353,10 @@
     "share_images": "сподели изображения",
     "show_fullscreen_images": "цял екран",
     "show_love": "Ако харесвате проекта, моля, споделете малко любов или дори допринесете",
+    "sort": {
+        "ascending": "възходящо",
+        "descending": "низходящо"
+    },
     "source_code": "изходен код",
     "start": "начало",
     "start_app_on_cam": "стартирай приложението от камерата",
@@ -382,6 +398,7 @@
     "username": "потребителско име",
     "value": "стойност",
     "version": "версия",
+    "view_style": "стил на изглед",
     "webdav_config": "webdav настройки",
     "webdav_server": "WebDAV сървър",
     "webdav_sync": "webdav синхронизиране на документи",
