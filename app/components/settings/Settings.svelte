@@ -1343,7 +1343,7 @@
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">
-                    {#if __ANDROID__}
+                    {#if __ANDROID__ || inAppAvailable}
                         <stacklayout
                             backgroundColor="#ea4bae"
                             borderRadius={10}

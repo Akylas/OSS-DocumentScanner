@@ -270,6 +270,7 @@
                     {iconFontSize}
                     leftIcon={item.icon}
                     rightIcon={item.rightIcon}
+                    rightValue={item.rightValue}
                     showBottomLine={showBorders}
                     subtitle={item.subtitle}
                     title={item.name || item.title}

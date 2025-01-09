@@ -37,7 +37,7 @@
     function draw(event: { canvas: Canvas; object: CanvasView }) {
         const canvas = event.canvas;
         const h = canvas.getHeight();
-        const w = canvas.getHeight();
+        const w = canvas.getWidth();
 
         if (showBottomLine) {
             event.canvas.drawLine(20, h - 1, w, h - 1, linePaint);
