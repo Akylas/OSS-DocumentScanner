@@ -59,6 +59,13 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                         uris.push(imageUri.toString());
                     }
                     break;
+                case 'android.intent.action.VIEW':
+                    const uri = intent.getData();
+                    DEV_LOG && console.log('uris', uri);
+                    if (uri) {
+                        uris.push(uri.toString());
+                    }
+                    break;
                 case 'android.intent.action.SEND_MULTIPLE':
                     const imageUris = intent.getParcelableArrayListExtra('android.intent.extra.STREAM') as java.util.ArrayList<android.net.Uri>;
                     if (imageUris) {
