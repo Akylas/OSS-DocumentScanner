@@ -202,6 +202,18 @@
     "import_settings": "importar configurações",
     "import_settings_desc": "importar todas as configurações de um backup anterior",
     "imported_nb_pages": "%1$s páginas importadas",
+    "inapp": {
+        "bigtip": "uma doação muito boa",
+        "bigtip_desc": "novos recursos estão chegando!",
+        "largertip": "um pint",
+        "largertip_desc": "as ideias vão fluir!",
+        "largetip": "uma cerveja",
+        "largetip_desc": "relaxr e voltar ao trabalho!",
+        "mediumtip": "um café grande",
+        "mediumtip_desc": "meus olhos estão abertos!",
+        "smalltip": "um café",
+        "smalltip_desc": "tudo ajuda a trabalhar à noite!"
+    },
     "internal_storage": "armazenamento interno",
     "invalid": "inválido",
     "ios": {
@@ -341,6 +353,10 @@
     "share_images": "compartilhar imagens",
     "show_fullscreen_images": "tela cheia",
     "show_love": "Se você gosta do projeto, compartilhe um pouco de amor ou contribua",
+    "sort": {
+        "ascending": "crescente",
+        "descending": "decrescente"
+    },
     "source_code": "código fonte",
     "start": "iniciar",
     "start_app_on_cam": "iniciar aplicativo na câmera",
@@ -382,6 +398,7 @@
     "username": "nome de usuário",
     "value": "valor",
     "version": "versão",
+    "view_style": "estilo de visualização",
     "webdav_config": "configuração do webdav",
     "webdav_server": "servidor WebDAV",
     "webdav_sync": "sincronização de documentos por webdav",
