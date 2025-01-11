@@ -168,6 +168,7 @@
     "folders": "文件夹",
     "folders_settings_desc": "文件夹相关设置",
     "force_white_background_qrcode": "强制白色背景的二维码",
+    "force_white_background_qrcode_desc": "一些读者在白色背景下无法阅读黑色二维码",
     "format": "格式",
     "french": "法语",
     "full": "完整",
@@ -219,7 +220,7 @@
         "smalltip_desc": "一切都有助于夜间工作！"
     },
     "internal_storage": "内部存储",
-    "invalid": "",
+    "invalid": "无效的",
     "ios": {
         "info": {
             "plist": {
@@ -257,6 +258,7 @@
     "name": "姓名",
     "nb_pages": "%1$s 页",
     "need_fill_fields": "您需要填写所有必填的字段",
+    "need_fill_name_color": "你需要设置一个名称和颜色",
     "new_passcode": "新密码",
     "no_card_found": "未找到文档",
     "no_card_yet": "使用相机拍摄卡片、或从图片导入",
