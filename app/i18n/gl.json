@@ -208,6 +208,18 @@
     "import_settings": "importar axustes",
     "import_settings_desc": "importar todos os axustes desde un ficheiro de exportación",
     "imported_nb_pages": "%1$s páxinas importadas",
+    "inapp": {
+        "bigtip": "unha fermosa doazón",
+        "bigtip_desc": "vai haber novidades!",
+        "largertip": "un grolo",
+        "largertip_desc": "con novas ideas!",
+        "largetip": "unha cervexiña",
+        "largetip_desc": "relaxarse e volver ao choio!",
+        "mediumtip": "un café grande",
+        "mediumtip_desc": "alucino!",
+        "smalltip": "un café",
+        "smalltip_desc": "todo axuda para traballar pola noite!"
+    },
     "internal_storage": "almacenaxe interna",
     "invalid": "non válido",
     "ios": {
@@ -347,6 +359,10 @@
     "share_images": "compartir imaxes",
     "show_fullscreen_images": "pantalla completa",
     "show_love": "se desfrutas desta app comparte o teu agradecemento ou colabora",
+    "sort": {
+        "ascending": "ascendente",
+        "descending": "descendente"
+    },
     "source_code": "código fonte",
     "start": "iniciar",
     "start_app_on_cam": "iniciar app abrindo a cámara",
@@ -388,6 +404,7 @@
     "username": "identificador",
     "value": "valor",
     "version": "versión",
+    "view_style": "ver estilo",
     "webdav_config": "configuración WebDAV",
     "webdav_server": "Servidor WebDAV",
     "webdav_sync": "Sincr webdav de documentos",
