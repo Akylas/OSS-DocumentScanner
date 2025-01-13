@@ -373,6 +373,8 @@
     "sync_settings_desc": "synchronization settings",
     "system": "system",
     "test": "test",
+    "thank_you": "thank you !",
+    "thank_you_subtitle": "your donation will help the project grow and give me time to implement more features",
     "theme": {
         "auto": "auto",
         "black": "black",

@@ -364,6 +364,7 @@ module.exports = (env, params = {}) => {
         { context, from: '**/*.jpg', noErrorOnMissing: true, globOptions },
         { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
         { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
+        { context: 'tools', from: 'assets/**/*', noErrorOnMissing: true, globOptions },
         {
             context,
             from: 'i18n/**/*',
