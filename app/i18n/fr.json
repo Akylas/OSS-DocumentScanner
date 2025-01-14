@@ -208,6 +208,18 @@
     "import_settings": "importer les paramètres",
     "import_settings_desc": "importer tous les paramètres d'une sauvegarde précédente",
     "imported_nb_pages": "%1$s pages importées",
+    "inapp": {
+        "bigtip": "un très beau don",
+        "bigtip_desc": "de nouvelles fonctionnalités arrivent !",
+        "largertip": "une pinte",
+        "largertip_desc": "les idées vont fuser !",
+        "largetip": "une bière",
+        "largetip_desc": "se détendre et se remettre au travail !",
+        "mediumtip": "un grand café",
+        "mediumtip_desc": "mes yeux sont ouverts !",
+        "smalltip": "un café",
+        "smalltip_desc": "tout aide à travailler la nuit !"
+    },
     "internal_storage": "stockage interne",
     "invalid": "non valide",
     "ios": {
@@ -347,6 +359,10 @@
     "share_images": "partager les images",
     "show_fullscreen_images": "plein écran",
     "show_love": "Si vous aimez le projet, n'hésitez pas à le faire connaître ou à y contribuer",
+    "sort": {
+        "ascending": "croissant",
+        "descending": "décroissant"
+    },
     "source_code": "code source",
     "start": "Commencez",
     "start_app_on_cam": "démarrer l'application sur l'appareil photo",
@@ -365,6 +381,8 @@
     "sync_settings_desc": "paramètres de synchronisation",
     "system": "système",
     "test": "essai",
+    "thank_you": "merci !",
+    "thank_you_subtitle": "votre don aidera le projet à grandir et me donnera le temps d'implémenter plus de fonctionnalités",
     "theme": {
         "auto": "Auto",
         "black": "Noir",
@@ -388,6 +406,7 @@
     "username": "nom d'utilisateur",
     "value": "valeur",
     "version": "version",
+    "view_style": "style de vue",
     "webdav_config": "configuration webdav",
     "webdav_server": "serveur WebDAV",
     "webdav_sync": "synchronisation webdav des documents",
