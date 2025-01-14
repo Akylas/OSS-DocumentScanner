@@ -154,7 +154,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     fontWeight: 'normal',
                     selectedIndex: 0,
                     options,
-                    onCheckBox:()=>{} // we dont want to close on checkbox which is the default
+                    onCheckBox: () => {} // we dont want to close on checkbox which is the default
                 },
                 {
                     title: lc('import_pdf_images'),
