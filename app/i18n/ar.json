@@ -208,6 +208,18 @@
     "import_settings": "استيراد الإعدادات",
     "import_settings_desc": "استيراد كل الإعدادات من نسخة احتياطية سابقة",
     "imported_nb_pages": "تم استيراد %1$s صفحة",
+    "inapp": {
+        "bigtip": "تبرُع جميل جدًا",
+        "bigtip_desc": "ميزات جديدة قادمة!",
+        "largertip": "نصف لتر",
+        "largertip_desc": "الأفكار سوف تتدفق!",
+        "largetip": "منعش",
+        "largetip_desc": "استرخي و عد إلى العمل!",
+        "mediumtip": "قهوة كبيرة",
+        "mediumtip_desc": "عيني مفتوحتان!",
+        "smalltip": "قهوة",
+        "smalltip_desc": "كل شيء يساعد على العمل في الليل!"
+    },
     "internal_storage": "الذاكرة الداخلية",
     "invalid": "غير صالح",
     "ios": {
@@ -347,6 +359,10 @@
     "share_images": "مشاركة الصور",
     "show_fullscreen_images": "ملء الشاشة",
     "show_love": "إذا كنت تحب المشروع، يرجى مشاركة بعض الحب أو حتى المساهمة",
+    "sort": {
+        "ascending": "تصاعدي",
+        "descending": "تنازلي"
+    },
     "source_code": "الكود المصدري",
     "start": "البدء",
     "start_app_on_cam": "بدء التطبيق على الكاميرا",
@@ -388,6 +404,7 @@
     "username": "اسم المستخدم",
     "value": "قيمة",
     "version": "النسخة",
+    "view_style": "أسلوب العرض",
     "webdav_auto_sync": "المزامنة التلقائية مع WebDAV عند التشغيل وتوثيق التغييرات",
     "webdav_config": "إعدادات webdav",
     "webdav_server": "خادم WebDAV",
