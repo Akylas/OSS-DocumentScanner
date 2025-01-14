@@ -99,7 +99,7 @@
     }
 </script>
 
-<page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle="dark">
+<page bind:this={page} id="modalImport" actionBarHidden={true} statusBarStyle={isEInk ? 'light' : 'dark'}>
     <gridlayout class="pageContent" backgroundColor={visualState} columns="auto,*,auto" rows="auto,*,auto,auto,auto" android:paddingBottom={$windowInset.bottom}>
         <pager bind:this={pager} id="pager" colSpan={3} disableSwipe={true} {items} row={1} selectedIndex={currentIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
