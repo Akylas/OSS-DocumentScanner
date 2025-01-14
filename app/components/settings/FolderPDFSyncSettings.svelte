@@ -332,7 +332,9 @@
     }
 
     function onTextChange(e) {
-        (e.object as TextField).setSelection(e.object.text.length);
+        if (e.object.text) {
+            (e.object as TextField).setSelection(e.object.text.length);
+        }
     }
 </script>
 
