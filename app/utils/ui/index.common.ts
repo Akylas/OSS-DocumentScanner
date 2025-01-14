@@ -153,7 +153,8 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     onlyOneSelected: true,
                     fontWeight: 'normal',
                     selectedIndex: 0,
-                    options
+                    options,
+                    onCheckBox:()=>{} // we dont want to close on checkbox which is the default
                 },
                 {
                     title: lc('import_pdf_images'),
@@ -171,7 +172,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 //we forced close current loading dialog,let s show it again after
                 await showLoading(l('computing'));
             }
-            DEV_LOG && console.log('showPromptOptionSelect', result);
+            DEV_LOG && console.log('showPromptOptionSelect done', result);
         }
         const imageExportSettings = getImageExportSettings();
 

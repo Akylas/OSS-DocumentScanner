@@ -119,12 +119,10 @@
                     ignoreNextOnCheckBoxChange = false;
                     return;
                 }
-                DEV_LOG && console.log('onlyOneSelected', oldSelected);
                 item.value = true;
                 currentlyCheckedItem = item;
                 if (oldSelected) {
                     const index = options.indexOf(oldSelected);
-                    DEV_LOG && console.log('onlyOneSelected1', index);
                     if (index >= 0) {
                         oldSelected.value = false;
                         options.setItem(index, oldSelected);
