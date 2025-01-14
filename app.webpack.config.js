@@ -244,11 +244,7 @@ module.exports = (env, params = {}) => {
         SUPPORT_URL: `"${package.bugs.url}"`,
         PLAY_STORE_BUILD: playStoreBuild,
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
-        STORE_REVIEW_LINK: `"${
-            isIOS
-                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
-                : `market://details?id=${appId}`
-        }"`,
+        STORE_REVIEW_LINK: `"${isIOS ? `https://itunes.apple.com/app/id${APP_STORE_ID}?action=write-review` : `market://details?id=${appId}`}"`,
         SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
         DEV_LOG: !!devlog,
         TEST_LOG: !!devlog || !!testlog
@@ -368,6 +364,7 @@ module.exports = (env, params = {}) => {
         { context, from: '**/*.jpg', noErrorOnMissing: true, globOptions },
         { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
         { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
+        { context: 'tools', from: 'assets/**/*', noErrorOnMissing: true, globOptions },
         {
             context,
             from: 'i18n/**/*',
