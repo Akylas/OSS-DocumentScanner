@@ -1,0 +1,36 @@
+{
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "Pòrtacartas OSS"
+        }
+    },
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "Numerizador de documents OSS"
+        }
+    },
+    "a3": "A3",
+    "a4": "A4",
+    "about": "a prepaus",
+    "add": "apondre",
+    "add_extra_field": "apondre camp suplementari",
+    "add_from_camera": "apondre dempuèi la camèra",
+    "add_manual_card": "apondre una carta manualament",
+    "add_qrcode_camera": "apondre un còdi de barras dempuèi la camèra",
+    "always": "totjorn",
+    "app": {
+        "name": "Numerizador de documents OSS"
+    },
+    "apply": "aplicar",
+    "ask_everytime": "demandar cada còp",
+    "aspect_fill": "emplenatge",
+    "aspect_fit": "adaptacion",
+    "aspect_ratio": "racio nautor/largor",
+    "authenticate_security": "autentificacion per accedir a l'aplicacion",
+    "authentication": "autentificacion",
+    "auto": "auto",
+    "auto_scan_delay": "relambi de numerizacion auto",
+    "auto_scan_distance_threshold": "sulhet de distància",
+    "backup_restore": "salvagarda / restauracion",
+    "barcode": "còdi de barras"
+}

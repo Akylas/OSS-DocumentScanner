@@ -341,6 +341,10 @@
     "share_images": "Bilder teilen",
     "show_fullscreen_images": "Vollbild",
     "show_love": "Wenn Ihnen das Projekt gefällt, teilen Sie es bitte mit anderen oder leisten Sie selbst einen Beitrag",
+    "sort": {
+        "ascending": "aufsteigend",
+        "descending": "absteigend"
+    },
     "source_code": "Quellcode",
     "start": "Start",
     "start_app_on_cam": "Anwendung im Kameramodus starten",
