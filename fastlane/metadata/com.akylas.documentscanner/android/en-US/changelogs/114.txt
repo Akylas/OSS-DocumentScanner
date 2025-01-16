@@ -1,0 +1,4 @@
+Bug fixes:
+- support opening PDF/Images with "Open With"
+- rollback on wrong feature
+- Translations update
