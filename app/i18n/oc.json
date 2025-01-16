@@ -32,5 +32,25 @@
     "auto_scan_delay": "relambi de numerizacion auto",
     "auto_scan_distance_threshold": "sulhet de distància",
     "backup_restore": "salvagarda / restauracion",
-    "barcode": "còdi de barras"
+    "barcode": "còdi de barras",
+    "save": "salvar",
+    "save_gallery": "salvar l'imatge dins la galariá",
+    "saving": "enregistrament",
+    "scan": "numerizar",
+    "sdcard": "Carta SD",
+    "search": "cercar",
+    "security": "seguretat",
+    "security_settings": "paramètres de seguretat",
+    "select_all": "tot seleccionar",
+    "select_color_theme": "seleccionar lo tèma de color",
+    "select_language": "seleccionar la lenga",
+    "select_sync_service": "seleccionar lo servici de sincronizacion",
+    "select_theme": "seleccionar un tèma",
+    "selected": "%1$s seleccionats",
+    "send": "enviar",
+    "settings": {
+        "title": "paramètres"
+    },
+    "share": "partejar",
+    "share_images": "partejar los imatges"
 }
