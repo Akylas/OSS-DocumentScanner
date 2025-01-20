@@ -88,8 +88,11 @@
 
     const inAppAvailable = PLAY_STORE_BUILD && inappItems?.length > 0;
 
+    const dataSettingsAvailable = __ANDROID__ && android.os.Environment.getExternalStorageState() === 'mounted';
+
     export let title = null;
     export let actionBarButtons = [
+        { icon: 'mdi-message-alert', id: 'feedback' },
         { icon: 'mdi-share-variant', id: 'share' },
         { icon: 'mdi-github', id: 'github' }
     ];
@@ -142,23 +145,40 @@
                     }
                 ]);
             case 'security':
-                return [
-                    {
-                        type: 'switch',
-                        id: 'biometric_lock',
-                        title: lc('biometric_lock'),
-                        description: lc('biometric_lock_desc'),
-                        value: securityService.biometricEnabled
-                    },
-                    {
-                        type: 'switch',
-                        id: 'biometric_auto_lock',
-                        title: lc('biometric_auto_lock'),
-                        description: lc('biometric_auto_lock_desc'),
-                        enabled: securityService.biometricEnabled,
-                        value: securityService.biometricEnabled && securityService.autoLockEnabled
-                    }
-                ];
+                return []
+                    .concat(
+                        __ANDROID__
+                            ? [
+                                  {
+                                      type: 'switch',
+                                      key: 'allow_screenshot',
+                                      title: lc('allow_app_screenshot'),
+                                      value: ApplicationSettings.getBoolean('allow_screenshot', true)
+                                  }
+                              ]
+                            : ([] as any)
+                    )
+                    .concat(
+                        securityService.biometricsAvailable
+                            ? [
+                                  {
+                                      type: 'switch',
+                                      id: 'biometric_lock',
+                                      title: lc('biometric_lock'),
+                                      description: lc('biometric_lock_desc'),
+                                      value: securityService.biometricEnabled
+                                  },
+                                  {
+                                      type: 'switch',
+                                      id: 'biometric_auto_lock',
+                                      title: lc('biometric_auto_lock'),
+                                      description: lc('biometric_auto_lock_desc'),
+                                      enabled: securityService.biometricEnabled,
+                                      value: securityService.biometricEnabled && securityService.autoLockEnabled
+                                  }
+                              ]
+                            : []
+                    );
             case 'document_detection':
                 return [
                     {
@@ -510,45 +530,81 @@
                         type: 'prompt'
                     }
                 ];
-            default:
-                break;
-        }
-    }
-    function refresh() {
-        const newItems: any[] =
-            options ||
-            [
-                {
-                    type: 'header',
-                    title: lc('donate')
-                },
-                {
-                    type: 'sectionheader',
-                    title: lc('general')
-                },
-                {
-                    id: 'language',
-                    description: () => getLocaleDisplayName(),
-                    title: lc('language')
-                },
-                {
-                    id: 'theme',
-                    description: () => getThemeDisplayName(),
-                    title: lc('theme.title')
-                },
-                {
-                    id: 'color_theme',
-                    description: () => getColorThemeDisplayName(),
-                    title: lc('color_theme.title')
-                },
-                {
-                    type: 'switch',
-                    id: 'auto_black',
-                    title: lc('auto_black'),
-                    value: ApplicationSettings.getBoolean('auto_black', false)
-                }
-            ]
-                .concat(
+            case 'data':
+                return dataSettingsAvailable
+                    ? [
+                          {
+                              id: 'setting',
+                              key: 'storage_location',
+                              title: lc('storage_location'),
+                              currentValue: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal'),
+                              description: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? lc('sdcard') : lc('internal_storage')),
+                              values: [
+                                  { value: 'internal', title: lc('internal_storage') },
+                                  { value: 'sdcard', title: lc('sdcard') }
+                              ],
+                              onResult: async (data) => {
+                                  try {
+                                      const current = documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal';
+                                      if (current !== data) {
+                                          const confirmed = await confirm({
+                                              title: lc('move_data'),
+                                              message: lc('move_data_desc'),
+                                              okButtonText: lc('ok'),
+                                              cancelButtonText: lc('cancel')
+                                          });
+                                          if (confirmed) {
+                                              const srcFolder = documentsService.rootDataFolder;
+                                              let dstFolder: string;
+                                              if (data === 'sdcard') {
+                                                  dstFolder = knownFolders.externalDocuments().path;
+                                              } else {
+                                                  dstFolder = knownFolders.documents().path;
+                                              }
+                                              DEV_LOG && console.log('confirmed move data to', srcFolder, dstFolder);
+                                              showLoading(lc('moving_files'));
+                                              const srcDbPath = path.join(srcFolder, DocumentsService.DB_NAME);
+                                              await File.fromPath(srcDbPath).copy(path.join(dstFolder, DocumentsService.DB_NAME));
+                                              await copyFolderContent(path.join(srcFolder, 'data'), path.join(dstFolder, 'data'));
+                                              ApplicationSettings.setString('root_data_folder', dstFolder);
+                                              await File.fromPath(srcDbPath).remove();
+                                              await removeFolderContent(path.join(srcFolder, 'data'));
+                                              await alert({
+                                                  cancelable: false,
+                                                  message: lc('restart_app'),
+                                                  okButtonText: lc('restart')
+                                              });
+                                              restartApp();
+                                          }
+                                      }
+                                  } catch (error) {
+                                      showError(error);
+                                  } finally {
+                                      hideLoading();
+                                  }
+                              }
+                          }
+                      ]
+                    : ([] as any);
+            case 'appearance':
+                return [
+                    {
+                        id: 'theme',
+                        description: () => getThemeDisplayName(),
+                        title: lc('theme.title')
+                    },
+                    {
+                        id: 'color_theme',
+                        description: () => getColorThemeDisplayName(),
+                        title: lc('color_theme.title')
+                    },
+                    {
+                        type: 'switch',
+                        id: 'auto_black',
+                        title: lc('auto_black'),
+                        value: ApplicationSettings.getBoolean('auto_black', false)
+                    }
+                ].concat(
                     CARD_APP
                         ? [
                               {
@@ -560,120 +616,41 @@
                               }
                           ]
                         : ([] as any)
-                )
-                .concat(
-                    __ANDROID__
-                        ? [
-                              {
-                                  type: 'switch',
-                                  key: 'allow_screenshot',
-                                  title: lc('allow_app_screenshot'),
-                                  value: ApplicationSettings.getBoolean('allow_screenshot', true)
-                              }
-                          ]
-                        : ([] as any)
-                )
-                .concat(
-                    __ANDROID__ && android.os.Environment.getExternalStorageState() === 'mounted'
-                        ? [
-                              {
-                                  id: 'setting',
-                                  key: 'storage_location',
-                                  title: lc('storage_location'),
-                                  currentValue: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal'),
-                                  description: () => (documentsService.rootDataFolder === knownFolders.externalDocuments().path ? lc('sdcard') : lc('internal_storage')),
-                                  values: [
-                                      { value: 'internal', title: lc('internal_storage') },
-                                      { value: 'sdcard', title: lc('sdcard') }
-                                  ],
-                                  onResult: async (data) => {
-                                      try {
-                                          const current = documentsService.rootDataFolder === knownFolders.externalDocuments().path ? 'sdcard' : 'internal';
-                                          if (current !== data) {
-                                              const confirmed = await confirm({
-                                                  title: lc('move_data'),
-                                                  message: lc('move_data_desc'),
-                                                  okButtonText: lc('ok'),
-                                                  cancelButtonText: lc('cancel')
-                                              });
-                                              if (confirmed) {
-                                                  const srcFolder = documentsService.rootDataFolder;
-                                                  let dstFolder: string;
-                                                  if (data === 'sdcard') {
-                                                      dstFolder = knownFolders.externalDocuments().path;
-                                                  } else {
-                                                      dstFolder = knownFolders.documents().path;
-                                                  }
-                                                  DEV_LOG && console.log('confirmed move data to', srcFolder, dstFolder);
-                                                  showLoading(lc('moving_files'));
-                                                  const srcDbPath = path.join(srcFolder, DocumentsService.DB_NAME);
-                                                  await File.fromPath(srcDbPath).copy(path.join(dstFolder, DocumentsService.DB_NAME));
-                                                  await copyFolderContent(path.join(srcFolder, 'data'), path.join(dstFolder, 'data'));
-                                                  ApplicationSettings.setString('root_data_folder', dstFolder);
-                                                  await File.fromPath(srcDbPath).remove();
-                                                  await removeFolderContent(path.join(srcFolder, 'data'));
-                                                  await alert({
-                                                      cancelable: false,
-                                                      message: lc('restart_app'),
-                                                      okButtonText: lc('restart')
-                                                  });
-                                                  restartApp();
-                                              }
-                                          }
-                                      } catch (error) {
-                                          showError(error);
-                                      } finally {
-                                          hideLoading();
-                                      }
-                                  }
-                              }
-                          ]
-                        : ([] as any)
-                )
-                // .concat(
-                //     __ANDROID__ && !PLAY_STORE_BUILD
-                //         ? [
-                //               {
-                //                   id: 'data_location',
-                //                   title: lc('data_location'),
-                //                   currentValue: () => documentsService.rootDataFolder,
-                //                   description: () => documentsService.rootDataFolder,
-                //               }
-                //           ]
-                //         : ([] as any)
-                // )
-                .concat([
+                );
+            default:
+                break;
+        }
+    }
+    function refresh() {
+        const newItems: any[] =
+            options ||
+            (
+                [
                     {
-                        id: 'third_party',
-                        // rightBtnIcon: 'mdi-chevron-right',
-                        title: lc('third_parties'),
-                        description: lc('list_used_third_parties')
+                        type: 'header',
+                        title: lc('donate')
                     },
                     {
-                        id: 'feedback',
-                        icon: 'mdi-bullhorn',
-                        title: lc('send_feedback')
+                        type: 'sectionheader',
+                        title: lc('general')
+                    },
+                    {
+                        id: 'language',
+                        icon: 'mdi-translate',
+                        description: () => getLocaleDisplayName(),
+                        title: lc('language')
+                    },
+                    {
+                        id: 'sub_settings',
+                        options: () => getSubSettings('appearance'),
+                        icon: 'mdi-cards-outline',
+                        description: () => lc('appearance_settings'),
+                        title: lc('appearance')
                     }
-                ] as any)
+                ] as any
+            )
                 .concat(
-                    PLAY_STORE_BUILD
-                        ? [
-                              //   {
-                              //       id: 'share',
-                              //       rightBtnIcon: 'mdi-chevron-right',
-                              //       title: lc('share_application')
-                              //   },
-                              {
-                                  type: 'rightIcon',
-                                  id: 'review',
-                                  rightBtnIcon: 'mdi-chevron-right',
-                                  title: lc('review_application')
-                              }
-                          ]
-                        : ([] as any)
-                )
-                .concat(
-                    securityService.biometricsAvailable
+                    __ANDROID__ || securityService.biometricsAvailable
                         ? [
                               {
                                   id: 'sub_settings',
@@ -683,8 +660,22 @@
                                   options: () => getSubSettings('security')
                               }
                           ]
-                        : ([] as any)
+                        : []
                 )
+                .concat(
+                    dataSettingsAvailable
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-database-outline',
+                                  title: lc('data'),
+                                  description: lc('data_settings'),
+                                  options: () => getSubSettings('data')
+                              }
+                          ]
+                        : []
+                )
+
                 .concat(
                     $hasCamera
                         ? [
@@ -696,7 +687,7 @@
                                   options: () => getSubSettings('camera')
                               }
                           ]
-                        : ([] as any)
+                        : []
                 )
                 .concat([
                     {
@@ -706,7 +697,7 @@
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
                     }
-                ] as any)
+                ])
                 .concat(
                     $hasCamera
                         ? [
@@ -718,7 +709,7 @@
                                   options: () => getSubSettings('autoscan')
                               }
                           ]
-                        : ([] as any)
+                        : []
                 )
                 .concat([
                     {
@@ -769,7 +760,34 @@
                         title: lc('sync'),
                         description: lc('sync_settings_desc'),
                         options: () => getSubSettings('sync')
-                    },
+                    }
+                ])
+                .concat([
+                    {
+                        id: 'third_party',
+                        // rightBtnIcon: 'mdi-chevron-right',
+                        title: lc('third_parties'),
+                        description: lc('list_used_third_parties')
+                    }
+                ])
+                .concat(
+                    PLAY_STORE_BUILD
+                        ? [
+                              //   {
+                              //       id: 'share',
+                              //       rightBtnIcon: 'mdi-chevron-right',
+                              //       title: lc('share_application')
+                              //   },
+                              {
+                                  type: 'rightIcon',
+                                  id: 'review',
+                                  rightBtnIcon: 'mdi-chevron-right',
+                                  title: lc('review_application')
+                              }
+                          ]
+                        : []
+                )
+                .concat([
                     {
                         type: 'sectionheader',
                         title: lc('backup_restore')
@@ -786,7 +804,7 @@
                         description: lc('import_settings_desc')
                         // rightBtnIcon: 'mdi-chevron-right'
                     }
-                ] as any);
+                ]);
 
         items = new ObservableArray(newItems);
     }
@@ -1367,7 +1385,14 @@
                                 src="~/assets/images/librepay.png"
                                 verticalAlignment="center"
                                 on:tap={(event) => onTap({ id: 'sponsor', type: 'librepay' }, event)} />
-                            <image borderRadius={6} col={2} height={40} rippleColor="#f96754" src="~/assets/images/patreon.png" on:tap={(event) => onTap({ id: 'sponsor', type: 'patreon' }, event)} />
+                            <image
+                                borderRadius={6}
+                                col={2}
+                                height={40}
+                                rippleColor="#f96754"
+                                src="~/assets/images/patreon.png"
+                                verticalAlignment="center"
+                                on:tap={(event) => onTap({ id: 'sponsor', type: 'patreon' }, event)} />
                         {/if}
                     </gridlayout>
 

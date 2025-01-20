@@ -34,6 +34,8 @@
     "app": {
         "name": "OSS Document Scanner"
     },
+    "appearance": "Appearance",
+    "appearance_settings": "theme and other appearance settings",
     "apply": "apply",
     "ask_everytime": "ask everytime",
     "aspect_fill": "aspect fill",
@@ -103,7 +105,9 @@
     "crop_enabled": "detect document edges and crop",
     "current_passcode": "Old PIN",
     "dark": "dark",
+    "data": "data",
     "data_location": "data location",
+    "data_settings": "storage and data settings",
     "data_sync": "app data sync",
     "data_sync_desc": "sync app data so that you can use the app on multiple devices",
     "default_value": "default",
