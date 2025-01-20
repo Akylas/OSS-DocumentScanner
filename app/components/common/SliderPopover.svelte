@@ -1,8 +1,9 @@
 <script context="module" lang="ts">
-    import PopoverBackgroundView from '~/components/common/PopoverBackgroundView.svelte';
 </script>
 
 <script lang="ts">
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
+
     export let icon: string = null;
     export let title: string = null;
     export let min = 0;

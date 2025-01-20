@@ -1,32 +1,24 @@
 <script context="module" lang="ts">
-    import { colorTheme } from '~/helpers/theme';
-    import MainList, { Item } from './MainList.svelte';
-    import { Template } from 'svelte-native/components';
-    import { colors, fontScale, hasCamera, isLandscape, orientation, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
-    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import dayjs from 'dayjs';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { onDestroy, onMount } from 'svelte';
-    import { Application, ObservableArray, OrientationChangedEventData, StackLayout, Utils, View } from '@nativescript/core';
-    import { filesize } from 'filesize';
+    import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import RotableImageView from '../common/RotableImageView.svelte';
-    import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    import SyncIndicator from '../common/SyncIndicator.svelte';
-    import PageIndicator from '../common/PageIndicator.svelte';
-    import { throttle } from '@nativescript/core/utils';
-    import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
-    import { showError } from '@shared/utils/showError';
-    import { DocFolder, OCRDocument } from '~/models/OCRDocument';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { l, lc } from '@nativescript-community/l';
-    import { CARD_RATIO } from '~/utils/constants';
+    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { navigate } from '@shared/utils/svelte/ui';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { ObservableArray, StackLayout } from '@nativescript/core';
+    import { throttle } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import dayjs from 'dayjs';
+    import { filesize } from 'filesize';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { DocFolder, OCRDocument } from '~/models/OCRDocument';
+    import { CARD_RATIO } from '~/utils/constants';
+    import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
+    import { colors, fontScale, hasCamera, isLandscape, orientation, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import MainList, { Item } from './MainList.svelte';
 
     const textPaint = new Paint();
     const rowMargin = 8;
-    const paint = new Paint();
 </script>
 
 <script lang="ts">
@@ -303,8 +295,6 @@
         itemOverlap: getItemOverlap(viewStyle),
         'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' })
     }}
-    defaultOrder="id ASC"
-    defaultViewStyle="full"
     {itemTemplateSelector}
     {title}
     viewStyleChanged={(oldValue, newValue) => itemTemplateSelector(oldValue !== itemTemplateSelector(newValue))}

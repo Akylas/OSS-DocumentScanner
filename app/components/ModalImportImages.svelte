@@ -61,7 +61,7 @@
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
         currentItem = items[currentIndex];
-        DEV_LOG && console.log('onSelectedIndex', currentIndex, items.length);
+        // DEV_LOG && console.log('onSelectedIndex', currentIndex, items.length);
     }
     function changePage(delta) {
         currentIndex += delta;

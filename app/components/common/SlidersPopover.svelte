@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import PopoverBackgroundView from '~/components/common/PopoverBackgroundView.svelte';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     import IconButton from './IconButton.svelte';
     import { colors } from '~/variables';
 </script>
@@ -31,7 +31,7 @@
                 <label class="icon-label" marginTop={0} text={item.icon} />
             {/if}
             {#if item.title}
-                <label col={1} text={item.title} marginTop={4} verticalTextAlignment="center" />
+                <label col={1} marginTop={4} text={item.title} verticalTextAlignment="center" />
             {/if}
             <!-- <label row={1} text={(item.formatter?.(item.min) || item.min) + ''} textAlignment="center" verticalTextAlignment="center" /> -->
             <label col={2} row={1} text={(item.formatter?.(item.value) || item.value) + ''} textAlignment="center" verticalTextAlignment="center" />

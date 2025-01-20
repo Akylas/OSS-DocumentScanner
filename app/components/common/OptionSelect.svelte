@@ -14,6 +14,7 @@
     import { actionBarButtonHeight, colors } from '~/variables';
     import ListItemAutoSize from './ListItemAutoSize.svelte';
     export interface OptionType {
+        group?: string;
         name?: string;
         title?: string;
         isPick?: boolean;
@@ -39,13 +40,11 @@
     export let height: number | string = null;
     export let fontSize = 16;
     export let iconFontSize = 24;
-    export let onlyOneSelected = false;
-    export let currentlyCheckedItem = null;
     export let onCheckBox: (item, value, e) => void = (item, value) => close(item);
     export let onRightIconTap: (item, e) => void = null;
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
-
+    DEV_LOG && console.log('options', options);
     // technique for only specific properties to get updated on store change
     $: ({ colorOutline } = $colors);
 
@@ -104,31 +103,37 @@
         }
     }
     let ignoreNextOnCheckBoxChange = false;
-    function onCheckedChanged(item, event) {
-        // DEV_LOG && console.log('onCheckedChanged', event.value, ignoreNextOnCheckBoxChange);
+    function onCheckedChanged(item: OptionType, event) {
+        DEV_LOG && console.log('onCheckedChanged', event.value, ignoreNextOnCheckBoxChange, item);
         clearCheckboxTimer();
         if (ignoreNextOnCheckBoxChange) {
             ignoreNextOnCheckBoxChange = false;
             return;
         }
         ignoreNextOnCheckBoxChange = true;
-        if (onlyOneSelected && options instanceof ObservableArray) {
+        if (item.group && options instanceof ObservableArray) {
             if (event.value) {
-                const oldSelected = currentlyCheckedItem;
-                if (oldSelected === item) {
-                    ignoreNextOnCheckBoxChange = false;
-                    return;
-                }
-                item.value = true;
-                currentlyCheckedItem = item;
-                if (oldSelected) {
-                    const index = options.indexOf(oldSelected);
-                    if (index >= 0) {
-                        oldSelected.value = false;
-                        options.setItem(index, oldSelected);
+                // const oldSelected = currentlyCheckedItem;
+                // if (oldSelected === item) {
+                //     ignoreNextOnCheckBoxChange = false;
+                //     return;
+                // }
+                options.forEach((opt, index) => {
+                    if (item !== opt && opt.group === item.group && opt.value === true) {
+                        opt.value = false;
+                        options.setItem(index, opt);
                     }
-                }
-                options.setItem(options.indexOf(currentlyCheckedItem), currentlyCheckedItem);
+                });
+                item.value = true;
+                // currentlyCheckedItem = item;
+                // if (oldSelected) {
+                //     const index = options.indexOf(oldSelected);
+                //     if (index >= 0) {
+                //         oldSelected.value = false;
+                //         options.setItem(index, oldSelected);
+                //     }
+                // }
+                options.setItem(options.indexOf(item), item);
             } else {
                 // we dont allow to have none selected
                 ignoreNextOnCheckBoxChange = false;
@@ -158,9 +163,9 @@
     }
     function onDataPopulated(event) {
         if (selectedIndex !== undefined) {
-            if (onlyOneSelected) {
-                currentlyCheckedItem = options instanceof ObservableArray ? options.getItem(selectedIndex) : options[selectedIndex];
-            }
+            // if (onlyOneSelectedCheckbox) {
+            //     currentlyCheckedItem = options instanceof ObservableArray ? options.getItem(selectedIndex) : options[selectedIndex];
+            // }
             if (selectedIndex > 0) {
                 event.object.scrollToIndex(selectedIndex, false);
             }
@@ -203,7 +208,7 @@
                 <svelte:component
                     this={component}
                     {borderRadius}
-                    color={item.color}
+                    color={typeof item.color === 'function' ? item.color(item) : item.color}
                     columns="auto,*,auto"
                     {fontSize}
                     fontWeight={item.fontWeight || fontWeight}
@@ -223,6 +228,9 @@
                         verticalAlignment="center"
                         on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>
+            </Template>
+            <Template key="header" let:item>
+                <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="righticon" let:item>
                 <svelte:component

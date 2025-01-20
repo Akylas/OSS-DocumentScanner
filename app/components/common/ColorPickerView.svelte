@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
     const AVAILABLE_COLORS = ['#ff5800', '#ffbf00', '#37e7b7', '#00df89', '#7ecbff', '#f4f7fa', '#a7b5c2', '#ff0034', '#ff789e', '#b700ee'];
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     import { colors, fonts } from '~/variables';
 
     const BUTTON_WIDTH = 40;
@@ -18,7 +19,7 @@
     }
 </script>
 
-<gesturerootview columns="auto" rows="auto">
+<PopoverBackgroundView columns="auto" rows="auto">
     <wraplayout width={actualWidth} {...$$restProps}>
         {#each AVAILABLE_COLORS as color}
             <gridlayout
@@ -40,4 +41,4 @@
             </gridlayout>
         {/each}
     </wraplayout>
-</gesturerootview>
+</PopoverBackgroundView>

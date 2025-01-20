@@ -7,7 +7,7 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, Frame, NavigatedData, ObservableArray, Page, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
-    import { throttle } from '@nativescript/core/utils';
+    import { debounce, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
@@ -29,6 +29,7 @@
         FolderUpdatedEventData,
         documentsService
     } from '~/services/documents';
+    import { prefs } from '~/services/preferences';
     import { syncService, syncServicesStore } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -65,7 +66,7 @@
         showSettings,
         transformPages
     } from '~/utils/ui';
-    import { colors, folderBackgroundColor, fontScale, fonts, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
+    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
 
     const textPaint = new Paint();
 
@@ -100,11 +101,14 @@
     export let title: string;
     export let itemTemplateSelector = (viewStyle, item?: Item) => item?.type || 'default';
     export let viewStyles: { [k: string]: { name: string; icon?: string; type?: string; boxType?: string } };
+    export let sortKeys: { [k: string]: { name: string; icon?: string; type?: string; key?: string } } = {
+        name: { name: lc('name') },
+        createdDate: { name: lc('date') }
+    };
     export let viewStyleChanged = (oldValue, newValue) => newValue !== oldValue;
-    export let defaultOrder = 'id DESC';
-    export let defaultViewStyle = 'expanded';
+    export let sortOrder = ApplicationSettings.getString(SETTINGS_SORT_ORDER, DEFAULT_SORT_ORDER);
     export let syncEnabled = syncService.enabled;
-    export let viewStyle: string = ApplicationSettings.getString('documents_list_view_style', defaultViewStyle);
+    export let viewStyle: string = ApplicationSettings.getString(SETTINGS_VIEW_STYLE, DEFAULT_VIEW_STYLE);
 
     $: if ($syncServicesStore) {
         syncEnabled = syncService.enabled;
@@ -159,8 +163,8 @@
         nbSelected = 0;
         loading = true;
         try {
-            DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter);
-            const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: defaultOrder });
+            DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
+            const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
             folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
             DEV_LOG && console.log('folders', JSON.stringify(folders));
@@ -194,6 +198,7 @@
         }
     }
     const refreshSimple = () => refresh();
+    const refreshThrottle = debounce(refresh, 300);
 
     function updateNoDocument() {
         nbDocuments = documents?.length ?? 0;
@@ -627,25 +632,61 @@
         }
     }
 
-    async function selectViewStyle(event) {
+    async function showViewOptions(event) {
         try {
+            const options = new ObservableArray(
+                ([{ type: 'header', title: lc('view_style') }] as any)
+                    .concat(
+                        Object.keys(viewStyles).map((k) => ({
+                            id: k,
+                            ...viewStyles[k],
+                            boxType: 'circle',
+                            type: 'checkbox',
+                            value: viewStyle === k,
+                            group: 'viewStyle',
+                            color: (item) => (item.value ? colorPrimary : undefined)
+                        }))
+                    )
+                    .concat([{ type: 'header', title: lc('sort') }])
+                    .concat(
+                        Object.keys(sortKeys).map((k) => ({
+                            id: k,
+                            ...sortKeys[k],
+                            boxType: 'circle',
+                            type: 'checkbox',
+                            value: sortOrder.includes(k),
+                            group: 'sort'
+                            // color: (item) => (!!item.value ? colorPrimary : undefined)
+                        }))
+                    )
+                    .concat([{ type: 'checkbox', title: lc('ascending'), id: 'ascending' }])
+            );
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
             await showPopoverMenu({
                 anchor: event.object,
-                options: Object.keys(viewStyles).map((k) => ({
-                    id: k,
-                    ...viewStyles[k],
-                    value: viewStyle === k,
-                    color: viewStyle === k ? colorPrimary : undefined
-                })),
+                options,
                 vertPos: VerticalPosition.BELOW,
-                onClose: (item) => {
-                    const changed = viewStyleChanged(item.id, viewStyle);
+                props: {
+                    autoSizeListItem: true,
+                    onCheckBox: (item, value) => {
+                        if (item.group === 'viewStyle') {
+                            const changed = viewStyleChanged(item.id, viewStyle);
 
-                    viewStyle = item.id;
-                    ApplicationSettings.setString('documents_list_view_style', viewStyle);
-                    if (changed) {
-                        collectionView?.nativeView.refresh();
+                            viewStyle = item.id;
+                            ApplicationSettings.setString(SETTINGS_VIEW_STYLE, viewStyle);
+                            if (changed) {
+                                collectionView?.nativeView.refresh();
+                            }
+                        } else if (item.group === 'sort') {
+                            const currentAscending = sortOrder.indexOf('ASC') !== -1;
+                            sortOrder = `${item.id} ${currentAscending ? 'ASC' : 'DESC'}`;
+                            ApplicationSettings.setString(SETTINGS_SORT_ORDER, sortOrder);
+                            refreshThrottle();
+                        } else if (item.id === 'ascending') {
+                            sortOrder = `${sortOrder.split(' ')[0]} ${value ? 'ASC' : 'DESC'}`;
+                            ApplicationSettings.setString(SETTINGS_SORT_ORDER, sortOrder);
+                            refreshThrottle();
+                        }
                     }
                 }
             });
@@ -653,6 +694,7 @@
             showError(error);
         }
     }
+
     async function syncDocuments() {
         try {
             if (syncEnabled) {
@@ -824,7 +866,7 @@
         if (item.folder) {
             return 1;
         }
-        return 2;
+        return 1;
     }
 
     async function setFolderColor(event) {
@@ -930,7 +972,7 @@
                 visibility={syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
-            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={selectViewStyle} />
+            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={showViewOptions} />
             {#if folder}
                 <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
             {:else}

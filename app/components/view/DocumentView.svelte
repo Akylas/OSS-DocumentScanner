@@ -3,7 +3,7 @@
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AnimationDefinition, Application, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
+    import { AnimationDefinition, Application, ApplicationSettings, ContentView, EventData, ObservableArray, Page, PageTransition, SharedTransition, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { throttle } from '@nativescript/core/utils';
     import { filesize } from 'filesize';
@@ -26,7 +26,17 @@
         DocumentUpdatedEventData,
         documentsService
     } from '~/services/documents';
-    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGES_ADDED, EVENT_DOCUMENT_PAGE_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED } from '~/utils/constants';
+    import {
+        DEFAULT_NB_COLUMNS_VIEW,
+        DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE,
+        EVENT_DOCUMENT_DELETED,
+        EVENT_DOCUMENT_PAGES_ADDED,
+        EVENT_DOCUMENT_PAGE_DELETED,
+        EVENT_DOCUMENT_PAGE_UPDATED,
+        EVENT_DOCUMENT_UPDATED,
+        SETTINGS_NB_COLUMNS_VIEW,
+        SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE
+    } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import {
@@ -41,10 +51,10 @@
         showPopoverMenu,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
+    import { prefs } from '~/services/preferences';
     const rowMargin = 8;
-    const itemHeight = screenWidthDips / 2 - rowMargin * 2 + 140;
     interface Item {
         page: OCRPage;
         selected: boolean;
@@ -66,7 +76,21 @@
     let nbSelected = 0;
     let editingTitle = false;
     let ignoreTap = false;
-    // let items: ObservableArray<Item> = null;
+
+    let nbColumns = updateColumns($isLandscape);
+
+    function updateColumns(isLandscape) {
+        DEV_LOG && console.log('updateColumns', isLandscape);
+        return isLandscape
+            ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE, DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE)
+            : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_VIEW, DEFAULT_NB_COLUMNS_VIEW);
+    }
+    $: nbColumns = updateColumns($isLandscape);
+    $: colWidth = 100 / nbColumns + '%';
+    $: itemHeight = ($isLandscape ? screenHeightDips : screenWidthDips) / nbColumns - rowMargin * nbColumns + 140;
+
+    prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW}`, () => (nbColumns = updateColumns($isLandscape)));
+    prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE}`, () => (nbColumns = updateColumns($isLandscape)));
 
     // $: {
     const pages = document.getObservablePages();
@@ -562,7 +586,7 @@
             bind:this={collectionView}
             id="view"
             autoReloadItemOnLayout={true}
-            colWidth="50%"
+            {colWidth}
             iosOverflowSafeArea={true}
             {items}
             paddingBottom={88}

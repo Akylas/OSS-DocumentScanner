@@ -11,6 +11,7 @@
     import { showError } from '@shared/utils/showError';
     import MiniSearch from '@shared/utils/minisearch';
     import { localizedLanguage } from '~/utils/ui';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     // technique for only specific properties to get updated on store change
     $: ({ colorPrimary, colorSurfaceContainer } = $colors);
 
@@ -19,8 +20,6 @@
     // let currentSearchText: string;
     export let width = 300;
     export let height = 50;
-    export let elevation = 2;
-    export let margin = 0;
     export let query: string = null;
 
     export let selectedLanguages = [];
@@ -113,30 +112,26 @@
     }
 </script>
 
-<!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
-<!-- <gesturerootview columns="auto" rows="auto"> -->
-<gesturerootview id="setectOCRLanguage" columns="auto" rows="auto">
-    <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} margin={margin || elevation + 2} rows="auto,340" {width}>
-        <textfield
-            bind:this={textField}
-            floating="false"
-            {height}
-            hint={lc('search')}
-            returnKeyType="search"
-            row={0}
-            text={query}
-            on:unloaded={blurTextField}
-            on:textChange={onTextChange}
-            on:loaded={focus} />
-        <collectionview {items} row={1} rowHeight={56}>
-            <Template let:item>
-                <gridlayout columns="auto,*,auto" padding={16} rippleColor={colorPrimary} on:tap={() => close(item)}>
-                    <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapse'} />
-                    <label col={1} fontSize={17} text={item.name} verticalTextAlignment="middle" />
-                    <label col={2} fontFamily={$fonts.mdi} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapse'} />
-                </gridlayout>
-            </Template>
-        </collectionview>
-    </gridlayout>
-</gesturerootview>
-<!-- </page> -->
+<PopoverBackgroundView rows="auto,340" {width}>
+    <textfield
+        bind:this={textField}
+        floating="false"
+        {height}
+        hint={lc('search')}
+        returnKeyType="search"
+        row={0}
+        text={query}
+        variant="outline"
+        on:unloaded={blurTextField}
+        on:textChange={onTextChange}
+        on:loaded={focus} />
+    <collectionview {items} row={1} rowHeight={56}>
+        <Template let:item>
+            <gridlayout columns="auto,*,auto" padding={16} rippleColor={colorPrimary} on:tap={() => close(item)}>
+                <label fontFamily={$fonts.mdi} fontSize={30} paddingRight={10} text="mdi-check" verticalAlignment="middle" visibility={item.available ? 'visible' : 'collapse'} />
+                <label col={1} fontSize={17} text={item.name} verticalTextAlignment="middle" />
+                <label col={2} fontFamily={$fonts.mdi} fontSize={30} paddingLeft={10} text="mdi-download" verticalAlignment="middle" visibility={item.downloaded ? 'visible' : 'collapse'} />
+            </gridlayout>
+        </Template>
+    </collectionview>
+</PopoverBackgroundView>

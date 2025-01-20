@@ -140,7 +140,7 @@
     }
     function onSelectedIndex(event) {
         currentIndex = event.object.selectedIndex;
-        DEV_LOG && console.log('onSelectedIndex', currentIndex, items.length, currentSelectedImagePath, currentSelectedImageRotation, currentItemQRCodeData);
+        // DEV_LOG && console.log('onSelectedIndex', currentIndex, items.length, currentSelectedImagePath, currentSelectedImageRotation, currentItemQRCodeData);
 
         updateCurrentItem(items.getItem(currentIndex));
         // $whitepaper = transforms.indexOf('whitepaper') !== -1;

@@ -102,6 +102,7 @@ import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { saveImage } from '../utils';
 import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
+import { OptionType } from '~/components/common/OptionSelect.svelte';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -142,15 +143,15 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
             const options = new ObservableArray([
-                { name: lc('pdf_one_image_per_page'), data: PDFImportImages.never, type: 'checkbox', boxType: 'circle', value: true },
-                { name: lc('pdf_one_image_per_pdf_image'), data: PDFImportImages.always, type: 'checkbox', boxType: 'circle', value: false }
+                { group: 'pdf', name: lc('pdf_one_image_per_page'), data: PDFImportImages.never, type: 'checkbox', boxType: 'circle', value: true },
+                { group: 'pdf', name: lc('pdf_one_image_per_pdf_image'), data: PDFImportImages.always, type: 'checkbox', boxType: 'circle', value: false }
             ]);
             // const component = (await import('~/components/common/OptionSelect.svelte')).default;
             const result = await showConfirmOptionSelect<PDFImportImages>(
                 {
                     height: Math.min(options.length * 100, 400),
                     autoSizeListItem: true,
-                    onlyOneSelected: true,
+                    onlyOneSelectedCheckbox: true,
                     fontWeight: 'normal',
                     selectedIndex: 0,
                     options,
@@ -493,7 +494,7 @@ export async function showConfirmOptionSelect<T>(props?: ComponentProps<OptionSe
             cancelButtonText: lc('cancel'),
             ...(options ? options : {})
         });
-        return { confirmed: result, data: componentInstanceInfo.viewInstance.currentlyCheckedItem.data as T };
+        return { confirmed: result, data: componentInstanceInfo.viewInstance.options.find((opt: T) => opt['value'] === true).data as T };
     } catch (err) {
         throw err;
     } finally {

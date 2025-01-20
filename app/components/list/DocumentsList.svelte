@@ -101,11 +101,10 @@
 </script>
 
 <MainList
-    defaultViewStyle="default"
     {title}
     viewStyles={{
-        default: { name: lc('expanded'), boxType: 'circle', type: 'checkbox' },
-        condensed: { name: lc('condensed'), boxType: 'circle', type: 'checkbox' }
+        default: { name: lc('expanded') },
+        condensed: { name: lc('condensed') }
     }}
     bind:viewStyle
     bind:onItemTap
