@@ -4,7 +4,8 @@
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ObservableArray, StackLayout } from '@nativescript/core';
+    import { onDestroy, onMount } from 'svelte';
+    import { ApplicationSettings, ObservableArray, StackLayout } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
@@ -12,7 +13,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { DocFolder, OCRDocument } from '~/models/OCRDocument';
-    import { CARD_RATIO } from '~/utils/constants';
+    import { CARD_RATIO, DEFAULT_NB_COLUMNS, DEFAULT_NB_COLUMNS_LANDSCAPE, SETTINGS_NB_COLUMNS, SETTINGS_NB_COLUMNS_LANDSCAPE } from '~/utils/constants';
     import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
     import { colors, fontScale, hasCamera, isLandscape, orientation, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import MainList, { Item } from './MainList.svelte';
@@ -29,12 +30,14 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     let viewStyle: string;
+    let nbColumns: number;
     let syncEnabled: boolean;
     export let folder: DocFolder;
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
     let refreshCollectionView: () => void;
+
     $: condensed = viewStyle === 'condensed';
 
     const title = lc('cards');
@@ -249,7 +252,7 @@
         if (item.type !== 'folders' && (viewStyle === 'columns' || $isLandscape)) {
             return 1;
         }
-        return 2;
+        return 1;
     }
     function onFullCardItemTouch(item: Item, event) {
         const index = documents.findIndex((d) => d.doc && d.doc.id === item.doc.id);
@@ -286,17 +289,28 @@
         //         break;
         // }
     }
+    function updateColumns(isLandscape) {
+        nbColumns = isLandscape
+            ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE)
+            : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, viewStyle === 'columns' ? 2 : DEFAULT_NB_COLUMNS);
+        DEV_LOG && console.log('updateColumns cards list', isLandscape, viewStyle, nbColumns);
+    }
+    onMount(() => {
+        DEV_LOG && console.log('CardsList', 'onMount', viewStyle);
+        updateColumns($isLandscape);
+    });
 </script>
 
 <MainList
     collectionViewOptions={{
-        spanSize: (item) => itemTemplateSpanSize(viewStyle, item),
+        // spanSize: (item) => itemTemplateSpanSize(viewStyle, item),
         swipeMenuId: 'swipeMenu',
         itemOverlap: getItemOverlap(viewStyle),
         'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' })
     }}
     {itemTemplateSelector}
     {title}
+    {updateColumns}
     viewStyleChanged={(oldValue, newValue) => itemTemplateSelector(oldValue !== itemTemplateSelector(newValue))}
     viewStyles={{
         cardholder: { name: lc('cardholder'), icon: 'mdi-view-agenda' },
@@ -304,6 +318,7 @@
         columns: { name: lc('columns'), icon: 'mdi-view-grid' },
         list: { name: lc('list'), icon: 'mdi-view-day' }
     }}
+    bind:nbColumns
     bind:viewStyle
     bind:onItemTap
     bind:onItemLongPress

@@ -90,6 +90,7 @@
     export let folderItems: ObservableArray<Item> = null;
     let nbDocuments: number = 0;
     let showNoDocument = false;
+    let mounted = false;
     let page: NativeViewElementNode<Page>;
     export let collectionView: NativeViewElementNode<CollectionView>;
     let foldersCollectionView: NativeViewElementNode<CollectionView>;
@@ -139,18 +140,18 @@
     let nbSelected = 0;
     let ignoreTap = false;
     let editingTitle = false;
-
-    let nbColumns = updateColumns($isLandscape);
-
-    function updateColumns(isLandscape) {
-        DEV_LOG && console.log('updateColumns', isLandscape);
-        return isLandscape ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE) : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS);
-    }
-    $: nbColumns = updateColumns($isLandscape);
+    export let nbColumns = 1;
+    export let updateColumns = function (isLandscape) {
+        nbColumns = isLandscape ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE) : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS);
+        DEV_LOG && console.log('updateColumns', isLandscape, nbColumns);
+    };
+    $: if (mounted) updateColumns($isLandscape);
     $: colWidth = 100 / nbColumns + '%';
+    // $: DEV_LOG && console.log('nbColumns', nbColumns);
+    // $: DEV_LOG && console.log('colWidth', colWidth);
 
-    prefs.on(`key:${SETTINGS_NB_COLUMNS}`, () => (nbColumns = updateColumns($isLandscape)));
-    prefs.on(`key:${SETTINGS_NB_COLUMNS_LANDSCAPE}`, () => (nbColumns = updateColumns($isLandscape)));
+    prefs.on(`key:${SETTINGS_NB_COLUMNS}`, () => updateColumns($isLandscape));
+    prefs.on(`key:${SETTINGS_NB_COLUMNS_LANDSCAPE}`, () => updateColumns($isLandscape));
 
     $: if (nbSelected > 0) search.unfocusSearch();
 
@@ -355,7 +356,9 @@
     }
 
     onMount(() => {
-        DEV_LOG && console.log('MainList', 'onMount', documentsService.id);
+        mounted = true;
+        DEV_LOG && console.log('MainList', 'onMount', documentsService.id, viewStyle);
+        updateColumns($isLandscape);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -674,6 +677,7 @@
 
                             viewStyle = item.id;
                             ApplicationSettings.setString(SETTINGS_VIEW_STYLE, viewStyle);
+                            updateColumns($isLandscape);
                             if (changed) {
                                 collectionView?.nativeView.refresh();
                             }
@@ -893,7 +897,6 @@
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
-            spanSize={itemTemplateSpanSize}
             {...collectionViewOptions}>
             <Template key="folders" let:item>
                 <collectionView
