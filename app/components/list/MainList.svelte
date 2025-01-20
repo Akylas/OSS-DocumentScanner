@@ -32,6 +32,10 @@
     import { syncService, syncServicesStore } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
+        DEFAULT_NB_COLUMNS,
+        DEFAULT_NB_COLUMNS_LANDSCAPE,
+        DEFAULT_SORT_ORDER,
+        DEFAULT_VIEW_STYLE,
         EVENT_DOCUMENT_ADDED,
         EVENT_DOCUMENT_DELETED,
         EVENT_DOCUMENT_MOVED_FOLDER,
@@ -40,7 +44,11 @@
         EVENT_DOCUMENT_UPDATED,
         EVENT_FOLDER_UPDATED,
         EVENT_STATE,
-        EVENT_SYNC_STATE
+        EVENT_SYNC_STATE,
+        SETTINGS_NB_COLUMNS,
+        SETTINGS_NB_COLUMNS_LANDSCAPE,
+        SETTINGS_SORT_ORDER,
+        SETTINGS_VIEW_STYLE
     } from '~/utils/constants';
     import {
         detectOCR,
@@ -127,6 +135,18 @@
     let nbSelected = 0;
     let ignoreTap = false;
     let editingTitle = false;
+
+    let nbColumns = updateColumns($isLandscape);
+
+    function updateColumns(isLandscape) {
+        DEV_LOG && console.log('updateColumns', isLandscape);
+        return isLandscape ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE) : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS);
+    }
+    $: nbColumns = updateColumns($isLandscape);
+    $: colWidth = 100 / nbColumns + '%';
+
+    prefs.on(`key:${SETTINGS_NB_COLUMNS}`, () => (nbColumns = updateColumns($isLandscape)));
+    prefs.on(`key:${SETTINGS_NB_COLUMNS_LANDSCAPE}`, () => (nbColumns = updateColumns($isLandscape)));
 
     $: if (nbSelected > 0) search.unfocusSearch();
 
@@ -823,7 +843,7 @@
     <gridlayout class="pageContent" rows="auto,*">
         <collectionView
             bind:this={collectionView}
-            colWidth="50%"
+            {colWidth}
             ios:iosOverflowSafeArea={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             ios:layoutHorizontalAlignment="left"

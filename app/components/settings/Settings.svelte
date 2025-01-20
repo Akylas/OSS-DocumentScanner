@@ -31,6 +31,10 @@
         DEFAULT_DRAW_FOLDERS_BACKGROUND,
         DEFAULT_EXPORT_DIRECTORY,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
+        DEFAULT_NB_COLUMNS,
+        DEFAULT_NB_COLUMNS_LANDSCAPE,
+        DEFAULT_NB_COLUMNS_VIEW,
+        DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE,
         DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NAME_FORMAT,
         DOCUMENT_NOT_DETECTED_MARGIN,
@@ -53,6 +57,10 @@
         SETTINGS_IMAGE_EXPORT_QUALITY,
         SETTINGS_IMPORT_PDF_IMAGES,
         SETTINGS_MAGNIFIER_SENSITIVITY,
+        SETTINGS_NB_COLUMNS,
+        SETTINGS_NB_COLUMNS_LANDSCAPE,
+        SETTINGS_NB_COLUMNS_VIEW,
+        SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE,
         SETTINGS_START_ON_CAM,
         SETTINGS_SYNC_ON_START,
         SETTINGS_TRANSFORM_BATCH_SIZE,
@@ -603,20 +611,75 @@
                         id: 'auto_black',
                         title: lc('auto_black'),
                         value: ApplicationSettings.getBoolean('auto_black', false)
+                    },
+                    {
+                        id: 'setting',
+                        key: SETTINGS_NB_COLUMNS,
+                        min: 1,
+                        max: 7,
+                        step: 1,
+                        formatter: (value) => value.toFixed(),
+                        title: lc('nb_columns'),
+                        description: lc('nb_columns_desc'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS)
+                    },
+                    {
+                        id: 'setting',
+                        key: SETTINGS_NB_COLUMNS_LANDSCAPE,
+                        min: 1,
+                        max: 7,
+                        step: 1,
+                        formatter: (value) => value.toFixed(),
+                        title: lc('nb_columns_landscape'),
+                        description: lc('nb_columns_landscape_desc'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE)
                     }
-                ].concat(
-                    CARD_APP
-                        ? [
-                              {
-                                  type: 'switch',
-                                  id: SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
-                                  title: lc('force_white_background_qrcode'),
-                                  description: lc('force_white_background_qrcode_desc'),
-                                  value: ApplicationSettings.getBoolean(SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE, DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE)
-                              }
-                          ]
-                        : ([] as any)
-                );
+                ]
+                    .concat(
+                        CARD_APP
+                            ? []
+                            : [
+                                  {
+                                      id: 'setting',
+                                      key: SETTINGS_NB_COLUMNS_VIEW,
+                                      min: 1,
+                                      max: 7,
+                                      step: 1,
+                                      formatter: (value) => value.toFixed(),
+                                      title: lc('nb_columns_view'),
+                                      description: lc('nb_columns_view_desc'),
+                                      type: 'slider',
+                                      rightValue: () => ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_VIEW, DEFAULT_NB_COLUMNS_VIEW)
+                                  },
+                                  {
+                                      id: 'setting',
+                                      key: SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE,
+                                      min: 1,
+                                      max: 7,
+                                      step: 1,
+                                      formatter: (value) => value.toFixed(),
+                                      title: lc('nb_columns_view_landscape'),
+                                      description: lc('nb_columns_view_landscape_desc'),
+                                      type: 'slider',
+                                      rightValue: () => ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE, DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE)
+                                  }
+                              ]
+                    )
+                    .concat(
+                        CARD_APP
+                            ? [
+                                  {
+                                      type: 'switch',
+                                      id: SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
+                                      title: lc('force_white_background_qrcode'),
+                                      description: lc('force_white_background_qrcode_desc'),
+                                      value: ApplicationSettings.getBoolean(SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE, DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE)
+                                  }
+                              ]
+                            : ([] as any)
+                    );
             default:
                 break;
         }
