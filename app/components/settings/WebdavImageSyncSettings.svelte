@@ -5,7 +5,7 @@
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
+    import { ApplicationSettings, Color, ObservableArray, Page, Utils, View } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
@@ -16,14 +16,16 @@
     import { ALERT_OPTION_MAX_HEIGHT, ANDROID_CONTENT, FILENAME_DATE_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import WebdavSettingsView from './WebdavSettingsView.svelte';
     // technique for only specific properties to get updated on store change
+    let { colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors;
     $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
+    let page: NativeViewElementNode<Page>;
     const imageExportSettings = getImageExportSettings();
     const pdfExportSettings = getPDFDefaultExportOptions();
     export let data: WebdavImageSyncServiceOptions = null;
@@ -52,6 +54,11 @@
         if (await webdavView?.validateSave()) {
             const result = get(store);
             closeModal(result);
+        } else {
+            showSnack({
+                message: lc('need_fill_fields'),
+                view: page.nativeView
+            });
         }
     }
     // function updateDirectoryName(folderPath: string) {
@@ -76,6 +83,10 @@
             id: 'enabled',
             title: lc('enabled'),
             value: $store.enabled
+        },
+        {
+            type: 'header',
+            title: lc('webdav_config')
         },
         {
             type: 'webdav'
@@ -313,13 +324,16 @@
     // });
 </script>
 
-<page actionBarHidden={true}>
+<page bind:this={page} actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(e) => changeColor(item, e)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />
                 </ListItemAutoSize>
+            </Template>
+            <Template key="header" let:item>
+                <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="webdav" let:item>
                 <WebdavSettingsView bind:this={webdavView} {store} />
