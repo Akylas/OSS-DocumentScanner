@@ -54,29 +54,31 @@ export const fonts = writable({
 export const windowInset = writable({ top: 0, left: 0, right: 0, bottom: 0 });
 export const actionBarButtonHeight = writable(0);
 export const actionBarHeight = writable(0);
+let startOrientation;
 
-let startOrientation = __ANDROID__ ? Application.android['getOrientationValue'](Utils.android.getApplicationContext().getResources().getConfiguration()) : undefined;
-if (__IOS__) {
-    Application.on(Application.launchEvent, async () => {
-        startOrientation = Application.orientation();
-        orientation.set(startOrientation);
-        isLandscape.set(startOrientation === 'landscape');
-    });
+let startingInLandscape;
+export let screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
+export let screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;
+export let screenRatio = screenWidthDips / screenHeightDips;
+
+function updateStartOrientation() {
+    startOrientation = Application.orientation();
+    startingInLandscape = startOrientation === 'landscape';
+    orientation.set(startOrientation);
+    isLandscape.set(startingInLandscape);
+    screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
+    screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;
+    screenRatio = screenWidthDips / screenHeightDips;
 }
-const startingInLandscape = startOrientation === 'landscape';
-export const screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
-export const screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;
-export const screenRatio = screenWidthDips / screenHeightDips;
-DEV_LOG && console.log('startingInLandscape', startingInLandscape, screenWidthDips, screenHeightDips);
-
+Application.on(Application.launchEvent, updateStartOrientation);
 export const startOnCam = ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM);
 
 export const fontScale = writable(1);
 export const isRTL = writable(false);
 export const hasCamera = writable(true);
 
-export const orientation = writable(startOrientation);
-export const isLandscape = writable(startingInLandscape);
+export const orientation = writable('portrait');
+export const isLandscape = writable(false);
 
 export const folderBackgroundColor = writable(DEFAULT_DRAW_FOLDERS_BACKGROUND);
 prefs.on(`key:${SETTINGS_DRAW_FOLDERS_BACKGROUND}`, () => {
