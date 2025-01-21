@@ -710,7 +710,6 @@
         }
     }
     export const refreshCollectionView = debounce(() => {
-        DEV_LOG && console.log('refreshCollectionView');
         foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }, 10);

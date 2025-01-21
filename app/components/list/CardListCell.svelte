@@ -21,6 +21,8 @@
 
     export let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     export let itemWidth: number;
+    export let itemHeight: number;
+    export let height: number;
     export let nbColumns: Writable<number>;
     export let item: Item;
     export let syncEnabled: boolean;
@@ -109,7 +111,6 @@
     }
 
     function getItemHolderParams(layout, item: Item, nbColumns) {
-        DEV_LOG && console.log('getItemHolderParams', nbColumns);
         const page = item.doc.pages[0];
         const color = isEInk ? null : new Color(page.colors?.[0] || item.doc.extra?.color || colorOnPrimary);
         const result = {
@@ -118,13 +119,13 @@
         switch (layout) {
             case 'cardholder':
                 Object.assign(result, {
-                    boxShadow: colorTheme === null ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
-                    margin: `${50 / nbColumns} ${24 / nbColumns} 0 ${24 / nbColumns}`
+                    // boxShadow: isEInk ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
+                    margin: 16 / nbColumns
                 });
                 break;
             case 'full':
                 Object.assign(result, {
-                    boxShadow: colorTheme === null ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
+                    // boxShadow: isEInk ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
                     margin: 16 / nbColumns
                 });
                 break;
@@ -138,7 +139,7 @@
         }
         return result;
     }
-    function getLabelParams(layout, item: Item) {
+    function getLabelParams(layout, item: Item, height, itemHeight) {
         const page = item.doc.pages[0];
         if (page.imagePath) {
             return {};
@@ -150,7 +151,8 @@
         switch (layout) {
             case 'cardholder':
                 Object.assign(result, {
-                    verticalTextAlignment: 'top',
+                    verticalTextAlignment: 'bottom',
+                    marginBottom: height - itemHeight - 10,
                     maxLines: 2
                 });
                 break;
@@ -234,26 +236,29 @@
 
 <swipemenu
     id="swipeMenu"
+    {height}
     openAnimationDuration={100}
     rightSwipeDistance={0}
     startingSide={item.startingSide}
     translationFunction={fullCardDrawerTranslationFunction}
     width="100%"
+    {...$$restProps}
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
-    <gridlayout class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
+    <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         <RotableImageView {...getItemRotableImageParams(item)} />
         <label
             autoFontSize={true}
             fontSize={40}
             fontWeight="bold"
             lineBreak="end"
-            margin={16 / $nbColumns}
             maxFontSize={40}
+            minFontSize={20}
+            padding={16}
             text={item.doc.name}
             textWrap={true}
             visibility={itemHasImage(item) ? 'hidden' : 'visible'}
-            {...getLabelParams(layout, item)} />
+            {...getLabelParams(layout, item, height, itemHeight)} />
         <!-- <gridlayout borderRadius={12}> -->
         <SelectedIndicator selected={item.selected} />
         <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />

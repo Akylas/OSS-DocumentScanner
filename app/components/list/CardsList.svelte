@@ -49,7 +49,7 @@
     let documents: ObservableArray<Item>;
     $: itemWidth = (($isLandscape ? screenHeightDips : screenWidthDips) - $windowInset.left - $windowInset.right) / $nbColumns - 2 * rowMargin;
     $: {
-        $itemHeight = viewStyle === 'cardholder' ? itemWidth * CARD_RATIO * ($isLandscape ? 1.4 : 0.6) : itemWidth * CARD_RATIO + 2 * rowMargin;
+        $itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
         refreshCollectionView?.();
     }
     function getItemImageHeight(viewStyle) {
@@ -58,52 +58,54 @@
 
     $: textPaint.color = colorOnBackground || 'black';
     $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
+    $: itemRowHeight = getItemRowHeight(viewStyle, $itemHeight, $nbColumns, $isLandscape);
+    $: DEV_LOG && console.log('itemRowHeight');
 
-    function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        const w = canvas.getWidth();
-        const h = canvas.getHeight();
-        const dx = 10 + getItemImageHeight(viewStyle) + 16;
-        textPaint.color = colorOnSurfaceVariant;
-        const { doc } = item;
-        canvas.drawText(
-            filesize(
-                doc.pages.reduce((acc, v) => acc + v.size, 0),
-                { output: 'string' }
-            ),
-            dx,
-            h - (condensed ? 0 : 16) - 10,
-            textPaint
-        );
-        textPaint.color = colorOnBackground;
-        const topText = createNativeAttributedString({
-            spans: [
-                {
-                    fontSize: 16 * $fontScale,
-                    fontWeight: 'bold',
-                    lineBreak: 'end',
-                    lineHeight: 18 * $fontScale,
-                    text: doc.name
-                },
-                {
-                    color: colorOnSurfaceVariant,
-                    fontSize: 14 * $fontScale,
-                    lineHeight: (condensed ? 14 : 20) * $fontScale,
-                    text: '\n' + dayjs(doc.createdDate).format('L LT')
-                }
-            ]
-        });
-        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-        canvas.translate(dx, (condensed ? 0 : 10) + 10);
-        staticLayout.draw(canvas);
-    }
+    // function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+    //     const w = canvas.getWidth();
+    //     const h = canvas.getHeight();
+    //     const dx = 10 + getItemImageHeight(viewStyle) + 16;
+    //     textPaint.color = colorOnSurfaceVariant;
+    //     const { doc } = item;
+    //     canvas.drawText(
+    //         filesize(
+    //             doc.pages.reduce((acc, v) => acc + v.size, 0),
+    //             { output: 'string' }
+    //         ),
+    //         dx,
+    //         h - (condensed ? 0 : 16) - 10,
+    //         textPaint
+    //     );
+    //     textPaint.color = colorOnBackground;
+    //     const topText = createNativeAttributedString({
+    //         spans: [
+    //             {
+    //                 fontSize: 16 * $fontScale,
+    //                 fontWeight: 'bold',
+    //                 lineBreak: 'end',
+    //                 lineHeight: 18 * $fontScale,
+    //                 text: doc.name
+    //             },
+    //             {
+    //                 color: colorOnSurfaceVariant,
+    //                 fontSize: 14 * $fontScale,
+    //                 lineHeight: (condensed ? 14 : 20) * $fontScale,
+    //                 text: '\n' + dayjs(doc.createdDate).format('L LT')
+    //             }
+    //         ]
+    //     });
+    //     const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+    //     canvas.translate(dx, (condensed ? 0 : 10) + 10);
+    //     staticLayout.draw(canvas);
+    // }
 
-    async function onStartCam(inverseUseSystemCamera = false) {
-        try {
-            await importImageFromCamera({ folder, inverseUseSystemCamera });
-        } catch (error) {
-            showError(error);
-        }
-    }
+    // async function onStartCam(inverseUseSystemCamera = false) {
+    //     try {
+    //         await importImageFromCamera({ folder, inverseUseSystemCamera });
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
 
     async function onAddButton() {
         DEV_LOG && console.log('onAddButton');
@@ -212,22 +214,26 @@
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
-                    if (position === 0 || position < $nbColumns) {
+                    if (position < $nbColumns + (folderItems.length ? 1 : 0)) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.71 * itemHeight, 0, 0, 0];
                 };
-            case 'cardholder':
-                return (item, position) => [-0.11 * itemHeight, 0, 0, 0];
+            // case 'cardholder':
+            //     return (item, position) => {
+            //         if (position < $nbColumns + (folderItems.length ? 1 : 0)) {
+            //             return [0, 0, 0, 0];
+            //         }
+            //         return [-0.11 * itemHeight, 0, 0, 0];
+            //     };
             default:
                 return null;
         }
     }
-    function getItemRowHeight(viewStyle, itemHeight, nbColumns) {
-        DEV_LOG && console.log('getItemRowHeight', viewStyle, itemHeight, nbColumns);
+    function getItemRowHeight(viewStyle, itemHeight, nbColumns, isLandscape) {
         switch (viewStyle) {
             case 'cardholder':
-                return itemHeight / nbColumns;
+                return itemHeight * (isLandscape ? 0.6 : 0.4);
             default:
                 return itemHeight;
         }
@@ -246,12 +252,6 @@
             default:
                 return viewStyle;
         }
-    }
-    function itemTemplateSpanSize(viewStyle, item: Item) {
-        if (item.type !== 'folders' && (viewStyle === 'columns' || $isLandscape)) {
-            return 1;
-        }
-        return 1;
     }
     function onFullCardItemTouch(item: Item, event) {
         const index = documents.findIndex((d) => d.doc && d.doc.id === item.doc.id);
@@ -292,7 +292,6 @@
         $nbColumns = isLandscape
             ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE)
             : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, viewStyle === 'columns' ? 2 : DEFAULT_NB_COLUMNS);
-        DEV_LOG && console.log('updateColumns1 cards list', isLandscape, viewStyle, nbColumns);
         if (orientationChanged) {
             refreshCollectionView?.();
         }
@@ -308,8 +307,7 @@
         // spanSize: (item) => itemTemplateSpanSize(viewStyle, item),
         swipeMenuId: 'swipeMenu',
         itemOverlap: getItemOverlap(viewStyle, $itemHeight),
-        'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' }),
-        rowHeight: getItemRowHeight(viewStyle, $itemHeight, $nbColumns)
+        'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' })
     }}
     {itemTemplateSelector}
     {title}
@@ -333,10 +331,12 @@
     bind:folderItems
     bind:collectionView>
     <Template key="cardholder" let:item>
-        <absolutelayout height="100%">
+        <absolutelayout height={itemRowHeight}>
             <CardListCell
                 {collectionView}
+                height={$itemHeight}
                 {item}
+                itemHeight={itemRowHeight}
                 {itemWidth}
                 layout="cardholder"
                 {nbColumns}
@@ -344,19 +344,43 @@
                 {syncEnabled}
                 on:tap={() => onItemTap(item)}
                 on:longPress={(e) => onItemLongPress(item, e)} />
-            <absolutelayout boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top="100%" width="100%" />
+            <absolutelayout backgroundColor="white" borderRadius={1} boxShadow="0 0 8 rgba(1, 0, 0, 1)" height={3} top={itemRowHeight} width="100%" />
         </absolutelayout>
     </Template>
     <Template key="full" let:item>
-        <CardListCell {collectionView} {item} {itemWidth} layout="full" {nbColumns} {onFullCardItemTouch} {syncEnabled} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)} />
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="full"
+            {nbColumns}
+            {onFullCardItemTouch}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
     <Template key="list" let:item>
-        <CardListCell {collectionView} {item} {itemWidth} layout="list" {nbColumns} {onFullCardItemTouch} {syncEnabled} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)} />
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="list"
+            {nbColumns}
+            {onFullCardItemTouch}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
     <Template key="columns" let:item>
         <CardListCell
             {collectionView}
+            height={itemRowHeight}
             {item}
+            itemHeight={itemRowHeight}
             {itemWidth}
             layout="columns"
             {nbColumns}
