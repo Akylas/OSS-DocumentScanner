@@ -867,13 +867,6 @@
             vertPos: VerticalPosition.BELOW
         });
     }
-    function itemTemplateSpanSize(item: Item, index, items) {
-        if (item.folder) {
-            return 1;
-        }
-        return 1;
-    }
-
     async function setFolderColor(event) {
         try {
             const color: string = await pickFolderColor(folder, event);
@@ -884,6 +877,12 @@
             showError(error);
         }
     }
+    function itemTemplateSpanSize(item: Item) {
+        if (item.type === 'folders') {
+            return $nbColumns;
+        }
+        return 1;
+    }
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
@@ -891,13 +890,14 @@
         <collectionView
             bind:this={collectionView}
             {colWidth}
-            ios:iosOverflowSafeArea={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
-            ios:layoutHorizontalAlignment="left"
-            ios:layoutStyle="align"
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
+            spanSize={itemTemplateSpanSize}
+            ios:iosOverflowSafeArea={true}
+            ios:layoutHorizontalAlignment="left"
+            ios:layoutStyle="align"
             {...collectionViewOptions}>
             <Template key="folders" let:item>
                 <collectionView
