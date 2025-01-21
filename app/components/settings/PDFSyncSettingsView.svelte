@@ -8,15 +8,15 @@
     import { PDFExportBaseOptions } from '~/services/pdf/PDFCanvas';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { showPopoverMenu, showSliderPopover } from '~/utils/ui';
+    import { screenWidthDips } from '~/variables';
     const dispatch = createEventDispatcher();
 
     export let store: Writable<{ exportOptions: PDFExportBaseOptions }>;
     export let variant = 'outline';
 
-    const tMargin = '4 10 4 10';
-    const tWidth = (Screen.mainScreen.widthDIPs - 41) / 2;
+    const tWidth = (screenWidthDips - 29) / 2;
 
-    async function selectPDFOption(option: string, event, valueTransformer?, fullRefresh = true) {
+    async function selectPDFOption(option: keyof PDFExportBaseOptions, event, valueTransformer?, fullRefresh = true) {
         try {
             // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             const options = Object.keys(PDF_OPTIONS[option]).map((k) => ({ ...PDF_OPTIONS[option][k], id: k }));
@@ -87,11 +87,11 @@
     }
 </script>
 
-<wraplayout>
+<wraplayout margin="5 10 5 10">
     <textfield
         editable={false}
         hint={lc('orientation')}
-        margin={tMargin}
+        margin={'0 4 5 0'}
         text={PDF_OPTIONS['orientation'][$store.exportOptions.orientation].name}
         {variant}
         width={tWidth}
@@ -99,30 +99,38 @@
     <textfield
         editable={false}
         hint={lc('paper_size')}
-        margin={tMargin}
+        margin={'0 0 5 4'}
         text={PDF_OPTIONS['paper_size'][$store.exportOptions.paper_size].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('paper_size', e)} />
 
-    <textfield editable={false} hint={lc('color')} margin={tMargin} text={PDF_OPTIONS['color'][$store.exportOptions.color].name} {variant} width={tWidth} on:tap={(e) => selectPDFOption('color', e)} />
+    <textfield
+        editable={false}
+        hint={lc('color')}
+        margin={'5 4 5 0'}
+        text={PDF_OPTIONS['color'][$store.exportOptions.color].name}
+        {variant}
+        width={tWidth}
+        on:tap={(e) => selectPDFOption('color', e)} />
     <textfield
         editable={false}
         hint={lc('items_per_page')}
-        margin={tMargin}
+        margin={'5 0 5 4'}
         text={PDF_OPTIONS['items_per_page'][$store.exportOptions.items_per_page].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('items_per_page', e, parseInt)} />
-    <textfield editable={false} hint={lc('page_padding')} margin={tMargin} text={$store.exportOptions.page_padding} {variant} width={tWidth} on:tap={(e) => selectSilderPDFOption('page_padding', e)} />
-    <stacklayout orientation="horizontal" width={tWidth}>
-        <checkbox
-            id="checkbox"
-            checked={$store.exportOptions.draw_ocr_text}
-            margin={tMargin}
-            verticalAlignment="center"
-            on:checkedChange={(e) => updatePDFOption('draw_ocr_text', e.value)}
-            ios:margin={14} />
+    <textfield
+        editable={false}
+        hint={lc('page_padding')}
+        margin={'5 4 5 0'}
+        text={$store.exportOptions.page_padding}
+        {variant}
+        width={tWidth}
+        on:tap={(e) => selectSilderPDFOption('page_padding', e)} />
+    <stacklayout margin={'5 0 5 4'} orientation="horizontal" width={tWidth}>
+        <checkbox id="checkbox" checked={$store.exportOptions.draw_ocr_text} verticalAlignment="center" on:checkedChange={(e) => updatePDFOption('draw_ocr_text', e.value)} ios:margin={14} />
         <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} verticalAlignment="center" on:tap={(e) => onCheckBox(e, 'draw_ocr_text')} />
     </stacklayout>
 </wraplayout>

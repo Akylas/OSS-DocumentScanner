@@ -1,36 +1,34 @@
 <script lang="ts">
-    import { l, lc, slc } from '~/helpers/locale';
-    import { WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sync/WebdavDataSyncService';
     import { showError } from '@shared/utils/showError';
+    import { l, lc } from '~/helpers/locale';
 
-    import { checkOrDownloadOCRLanguages, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showPopoverMenu, showSliderPopover, showSnack, showSnackMessage } from '~/utils/ui';
-    import { colors, windowInset } from '~/variables';
-    import { AuthType } from '~/webdav';
-    import CActionBar from '../common/CActionBar.svelte';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { Label } from '@nativescript-community/ui-label';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, Page, View } from '@nativescript/core';
+    import { closeModal } from '@shared/utils/svelte/ui';
+    import { createView } from '@shared/utils/ui';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
-    import WebdavSettingsView from './WebdavSettingsView.svelte';
-    import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
-    import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
-    import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
-    import { closeModal } from '@shared/utils/svelte/ui';
+    import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
+    import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+    import { checkOrDownloadOCRLanguages, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover, showSnack } from '~/utils/ui';
+    import { colors, windowInset } from '~/variables';
+    import CActionBar from '../common/CActionBar.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import OcrSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
-    import { ocrService } from '~/services/ocr';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { Template } from 'svelte-native/components';
-    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { createView } from '@shared/utils/ui';
-    import { Label } from '@nativescript-community/ui-label';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
+    import WebdavSettingsView from './WebdavSettingsView.svelte';
     // technique for only specific properties to get updated on store change
     let { colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors;
     $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
+    const tMargin = '4 10 4 10';
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -339,7 +337,7 @@
                 <OcrSettingsBottomSheet onlySettings={true} bind:dataType={$store.OCRDataType} bind:languages={$store.OCRLanguages} />
             </Template>
             <Template key="textfield" let:item>
-                <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
+                <gridlayout columns="*" margin={tMargin} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
                     <textfield text={item.text} {variant} {...item.textFieldProperties} />
                     <mdbutton
                         class="icon-btn"

@@ -7,6 +7,7 @@
     import { showPopoverMenu } from '~/utils/ui';
     import { colors } from '~/variables';
     import { AuthType } from '~/webdav';
+    import RemoteFolderTextField from '../common/RemoteFolderTextField.svelte';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 
@@ -74,12 +75,12 @@
     }
 </script>
 
-<stacklayout>
+<stacklayout padding={'4 10 4 10'}>
     <textfield
         autocapitalizationType="none"
         hint={lc('server_address')}
         keyboardType="url"
-        margin={5}
+        margin="5 0 5 0"
         placeholder={lc('server_address') + ' https://...'}
         returnKeyType="next"
         text={$store.remoteURL}
@@ -90,7 +91,7 @@
         <textfield
             editable={false}
             hint={lc('authentication')}
-            margin="4 8 4 8"
+            margin="5 4 5 0"
             text={$store.authType || AuthType.Password}
             textTransform="uppercase"
             {variant}
@@ -102,7 +103,7 @@
             col={1}
             editable={$store.authType === AuthType.Token}
             hint={lc('token')}
-            margin={5}
+            margin="5 0 5 4"
             placeholder={lc('token')}
             returnKeyType="next"
             text={$store.token}
@@ -114,7 +115,7 @@
         autocapitalizationType="none"
         autocorrect={false}
         hint={lc('username')}
-        margin={5}
+        margin="5 0 5 0"
         placeholder={lc('username')}
         returnKeyType="next"
         row={1}
@@ -126,30 +127,17 @@
         autocapitalizationType="none"
         autocorrect={false}
         hint={lc('password_not_saved')}
-        margin={5}
+        margin="5 0 5 0"
         placeholder={lc('password')}
         placeholderColor="gray"
         returnKeyType="next"
         row={2}
         secure={true}
-        {variant}
         text={$store.password}
+        {variant}
         on:returnPress={() => focusTextfield('remote_folder')}
         on:textChange={(e) => ($store.password = e['value'])} />
-    <gridlayout columns="*" margin={5} row={3} rows="auto">
-        <textfield
-            autocapitalizationType="none"
-            autocorrect={false}
-            hint={lc('remote_folder_desc')}
-            paddingRight={100}
-            placeholder={lc('remote_folder')}
-            returnKeyType="done"
-            text={$store.remoteFolder}
-            {variant}
-            on:returnPress={testConnection}
-            on:textChange={(e) => ($store.remoteFolder = e['value'])} />
-        <mdbutton class="icon-btn" color={colorOnSurfaceVariant} horizontalAlignment="right" text="mdi-folder-open" variant="text" verticalAlignment="middle" />
-    </gridlayout>
+    <RemoteFolderTextField columns="*" row={3} text={$store.remoteFolder} on:returnPress={testConnection} on:textChange={(e) => ($store.remoteFolder = e['value'])} />
     <gridlayout columns="*,*" row={4} rows="auto">
         <!-- <mdbutton text={lc('save')} verticalAlignment="middle" on:tap={save} /> -->
         <gridlayout col={1} columns="auto" horizontalAlignment="right" rows="auto" verticalAlignment="middle">

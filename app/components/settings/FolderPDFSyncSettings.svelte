@@ -1,10 +1,11 @@
 <script lang="ts">
     import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
@@ -12,18 +13,17 @@
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { closeModal } from '@shared/utils/svelte/ui';
     import { checkOrDownloadOCRLanguages, createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
+    import FolderTextView from '../common/FolderTextView.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
-    import { ocrService } from '~/services/ocr';
     import OcrSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
+    import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
     // technique for only specific properties to get updated on store change
     $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
+    const tMargin = '4 10 4 10';
     const pdfExportSettings = getPDFDefaultExportOptions();
     export let data: LocalFolderPDFSyncServiceOptions = {} as any;
     const store = writable(
@@ -62,16 +62,6 @@
             showError(lc('missing_export_folder'), { showAsSnack: true });
         }
     }
-    async function selectFolder(item) {
-        const result = await pickFolder({
-            multipleSelection: false,
-            permissions: { write: true, persistable: true, read: true }
-        });
-        if (result.folders.length) {
-            item.text = $store.localFolderPath = result.folders[0];
-            updateItem(item);
-        }
-    }
 
     const items = new ObservableArray([
         {
@@ -83,23 +73,7 @@
             title: lc('enabled'),
             value: $store.enabled
         },
-        {
-            key: 'folder',
-            type: 'textfield',
-            onTap: selectFolder,
-            text: $store.localFolderPath,
-            icon: 'mdi-folder-open',
-            textFieldProperties: {
-                autocapitalizationType: 'none',
-                autocorrect: false,
-                editable: false,
-                hint: lc('folder_sync_desc'),
-                paddingRight: 60,
-                placeholder: lc('folder'),
-                returnKeyType: 'done',
-                variant
-            } as TextFieldProperties
-        },
+        { type: 'selectFolder', text: $store.localFolderPath },
         {
             type: 'switch',
             id: 'autoSync',
@@ -336,6 +310,10 @@
             (e.object as TextField).setSelection(e.object.text.length);
         }
     }
+    async function onFolderSelect(item, event) {
+        item.text = $store.localFolderPath = event.text;
+        updateItem(item);
+    }
 </script>
 
 <page actionBarHidden={true}>
@@ -347,7 +325,7 @@
                 </ListItemAutoSize>
             </Template>
             <Template key="textfield" let:item>
-                <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)} prop:rightDrawer>
+                <gridlayout columns="*" margin={tMargin} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)} prop:rightDrawer>
                     <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} on:loaded={onTextChange} />
                     <mdbutton
                         class="icon-btn"
@@ -368,8 +346,11 @@
             <Template key="pdfoptions" let:item>
                 <PdfSyncSettingsView {store} on:uppdate={() => updateItem({ type: 'pdfoptions' }, 'type')} />
             </Template>
+            <Template key="selectFolder" let:item>
+                <FolderTextView text={item.text} on:folder={(e) => onFolderSelect(item, e)} />
+            </Template>
             <Template let:item>
-                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
+                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)} />
             </Template>
             <Template key="sectionheader" let:item>
                 <label class="sectionHeader" text={item.title} />

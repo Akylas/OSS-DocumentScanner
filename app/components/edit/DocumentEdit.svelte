@@ -244,7 +244,7 @@
                 anchor: event.object,
                 props: {
                     rowHeight: 70,
-                    width: Screen.mainScreen.widthDIPs - 50,
+                    width: screenWidthDips - 50,
                     onCheckBox(item, value, e) {
                         if (updatingTransform) {
                             e.object.checked = !value;

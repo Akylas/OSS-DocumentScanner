@@ -1,7 +1,6 @@
 <script lang="ts">
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
@@ -19,6 +18,7 @@
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import FolderTextView from '../common/FolderTextView.svelte';
     // technique for only specific properties to get updated on store change
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSecondary } = $colors);
 
@@ -49,28 +49,6 @@
             showError(lc('missing_export_folder'), { showAsSnack: true });
         }
     }
-    // function updateDirectoryName(folderPath: string) {
-    //     let exportDirectoryName = folderPath;
-    //     if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
-    //         const context = Utils.android.getApplicationContext();
-    //         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
-    //         exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
-    //     }
-    //     return exportDirectoryName
-    //         ?.split(SEPARATOR)
-    //         .filter((s) => s.length)
-    //         .pop();
-    // }
-    async function selectFolder(item) {
-        const result = await pickFolder({
-            multipleSelection: false,
-            permissions: { write: true, persistable: true, read: true }
-        });
-        if (result.folders.length) {
-            item.text = $store.localFolderPath = result.folders[0];
-            updateItem(item);
-        }
-    }
 
     const items = new ObservableArray([
         {
@@ -82,23 +60,7 @@
             title: lc('enabled'),
             value: $store.enabled
         },
-        {
-            key: 'folder',
-            type: 'textfield',
-            onTap: selectFolder,
-            text: $store.localFolderPath,
-            icon: 'mdi-folder-open',
-            textFieldProperties: {
-                autocapitalizationType: 'none',
-                autocorrect: false,
-                editable: false,
-                hint: lc('folder_sync_desc'),
-                paddingRight: 60,
-                placeholder: lc('folder'),
-                returnKeyType: 'done',
-                variant
-            } as TextFieldProperties
-        },
+        { type: 'selectFolder', text: $store.localFolderPath },
         {
             type: 'switch',
             id: 'autoSync',
@@ -330,6 +292,11 @@
             (e.object as TextField).setSelection(e.object.text.length);
         }
     }
+
+    async function onFolderSelect(item, event) {
+        item.text = $store.localFolderPath = event.text;
+        updateItem(item);
+    }
 </script>
 
 <page actionBarHidden={true}>
@@ -362,6 +329,9 @@
             <Template let:item>
                 <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                 </ListItemAutoSize>
+            </Template>
+            <Template key="selectFolder" let:item>
+                <FolderTextView text={item.text} on:folder={(e) => onFolderSelect(item, e)} />
             </Template>
         </collectionview>
         <CActionBar canGoBack modalWindow={true} title={lc('image_sync_settings')}>
