@@ -13,12 +13,13 @@
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
     import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
-    import { colorTheme, getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
+    import { getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import {
         DocumentAddedEventData,
@@ -140,13 +141,13 @@
     let nbSelected = 0;
     let ignoreTap = false;
     let editingTitle = false;
-    export let nbColumns = 1;
-    export let updateColumns = function (isLandscape) {
-        nbColumns = isLandscape ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE) : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS);
+    export let nbColumns = writable(1);
+    export let updateColumns = function (isLandscape, orientationChanged: boolean = false) {
+        $nbColumns = isLandscape ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE) : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS);
         DEV_LOG && console.log('updateColumns', isLandscape, nbColumns);
     };
-    $: if (mounted) updateColumns($isLandscape);
-    $: colWidth = 100 / nbColumns + '%';
+    $: if (mounted) updateColumns($isLandscape, true);
+    $: colWidth = 100 / $nbColumns + '%';
     // $: DEV_LOG && console.log('nbColumns', nbColumns);
     // $: DEV_LOG && console.log('colWidth', colWidth);
 
@@ -708,11 +709,11 @@
             showError(error);
         }
     }
-    export function refreshCollectionView() {
+    export const refreshCollectionView = debounce(() => {
         DEV_LOG && console.log('refreshCollectionView');
         foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
-    }
+    }, 10);
     onThemeChanged(refreshCollectionView);
     onFolderBackgroundColorChanged(refreshCollectionView);
 

@@ -1,17 +1,17 @@
 <script context="module" lang="ts">
-    import { Color, CoreTypes, Utils, View, verticalAlignmentProperty } from '@akylas/nativescript';
+    import { Color, Utils, View } from '@akylas/nativescript';
 
-    import { Item } from './MainList.svelte';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { colors, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { Writable } from 'svelte/store';
+    import { colorTheme, isEInk } from '~/helpers/theme';
     import { CARD_RATIO } from '~/utils/constants';
+    import { colors, isLandscape, screenHeightDips, screenWidthDips } from '~/variables';
     import RotableImageView from '../common/RotableImageView.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
-    import { navigate } from '@shared/utils/svelte/ui';
-    import { textAlignmentConverter, verticalTextAlignmentConverter } from '@nativescript-community/text';
-    import { colorTheme, isEInk } from '~/helpers/theme';
+    import { Item } from './MainList.svelte';
     const rowMargin = 8;
 </script>
 
@@ -21,7 +21,7 @@
 
     export let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     export let itemWidth: number;
-    export let itemHeight: number;
+    export let nbColumns: Writable<number>;
     export let item: Item;
     export let syncEnabled: boolean;
     export let onFullCardItemTouch;
@@ -72,18 +72,6 @@
             endIndex
         );
     }
-
-    function getRowHeight(viewStyle, item) {
-        const width = $isLandscape ? screenHeightDips : screenWidthDips;
-        switch (viewStyle) {
-            case 'full':
-            case 'cardholder':
-            case 'list':
-                return itemHeight;
-            case 'columns':
-                return $isLandscape ? itemHeight : (width / 2) * CARD_RATIO;
-        }
-    }
     function fullCardDrawerTranslationFunction(side, width, value, delta, progress) {
         const result = {
             mainContent: {
@@ -120,7 +108,8 @@
         };
     }
 
-    function getItemHolderParams(layout, item: Item) {
+    function getItemHolderParams(layout, item: Item, nbColumns) {
+        DEV_LOG && console.log('getItemHolderParams', nbColumns);
         const page = item.doc.pages[0];
         const color = isEInk ? null : new Color(page.colors?.[0] || item.doc.extra?.color || colorOnPrimary);
         const result = {
@@ -129,14 +118,14 @@
         switch (layout) {
             case 'cardholder':
                 Object.assign(result, {
-                    boxShadow: colorTheme === null ? 0 : '0 0 8 rgba(0, 0, 0, 0.8)',
-                    margin: '50 24 0 24'
+                    boxShadow: colorTheme === null ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
+                    margin: `${50 / nbColumns} ${24 / nbColumns} 0 ${24 / nbColumns}`
                 });
                 break;
             case 'full':
                 Object.assign(result, {
-                    boxShadow: colorTheme === null ? 0 : '0 0 8 rgba(0, 0, 0, 0.8)',
-                    margin: '16 16 16 16'
+                    boxShadow: colorTheme === null ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
+                    margin: 16 / nbColumns
                 });
                 break;
             case 'columns':
@@ -245,7 +234,6 @@
 
 <swipemenu
     id="swipeMenu"
-    height={getRowHeight(layout, item)}
     openAnimationDuration={100}
     rightSwipeDistance={0}
     startingSide={item.startingSide}
@@ -253,14 +241,14 @@
     width="100%"
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
-    <gridlayout class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item)} on:touch={(e) => onItemTouch(item, e)} on:tap on:longPress>
+    <gridlayout class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         <RotableImageView {...getItemRotableImageParams(item)} />
         <label
             autoFontSize={true}
             fontSize={40}
             fontWeight="bold"
             lineBreak="end"
-            margin={16}
+            margin={16 / $nbColumns}
             maxFontSize={40}
             text={item.doc.name}
             textWrap={true}

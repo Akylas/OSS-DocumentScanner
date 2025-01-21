@@ -4,18 +4,18 @@
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { onDestroy, onMount } from 'svelte';
     import { ApplicationSettings, ObservableArray, StackLayout } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
+    import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Writable, writable } from 'svelte/store';
     import { DocFolder, OCRDocument } from '~/models/OCRDocument';
     import { CARD_RATIO, DEFAULT_NB_COLUMNS, DEFAULT_NB_COLUMNS_LANDSCAPE, SETTINGS_NB_COLUMNS, SETTINGS_NB_COLUMNS_LANDSCAPE } from '~/utils/constants';
     import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, isLandscape, orientation, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import MainList, { Item } from './MainList.svelte';
 
     const textPaint = new Paint();
@@ -23,6 +23,7 @@
 </script>
 
 <script lang="ts">
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import CardListCell from './CardListCell.svelte';
 
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
@@ -30,7 +31,7 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
     let viewStyle: string;
-    let nbColumns: number;
+    let nbColumns: Writable<number>;
     let syncEnabled: boolean;
     export let folder: DocFolder;
     let onItemLongPress: (item: Item, event?) => Promise<void>;
@@ -41,16 +42,14 @@
     $: condensed = viewStyle === 'condensed';
 
     const title = lc('cards');
-    DEV_LOG && console.log('screenHeightDips', screenHeightDips, screenWidthDips);
-    let itemWidth = ($isLandscape ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - 2 * rowMargin - $windowInset.left - $windowInset.right;
-    let itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
+    let itemWidth = (($isLandscape ? screenHeightDips : screenWidthDips) - $windowInset.left - $windowInset.right) / $nbColumns - 2 * rowMargin;
+    const itemHeight = writable(itemWidth * CARD_RATIO + 2 * rowMargin);
 
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
-    $: itemWidth = ($isLandscape ? screenHeightDips / 2 : screenWidthDips) - 2 * rowMargin - $windowInset.left - $windowInset.right;
+    $: itemWidth = (($isLandscape ? screenHeightDips : screenWidthDips) - $windowInset.left - $windowInset.right) / $nbColumns - 2 * rowMargin;
     $: {
-        itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
-        DEV_LOG && console.log('refreshing collection view for orientation', orientation);
+        $itemHeight = viewStyle === 'cardholder' ? itemWidth * CARD_RATIO * ($isLandscape ? 1.4 : 0.6) : itemWidth * CARD_RATIO + 2 * rowMargin;
         refreshCollectionView?.();
     }
     function getItemImageHeight(viewStyle) {
@@ -208,29 +207,29 @@
             showError(error);
         }
     }
-
-    function getItemOverlap(viewStyle) {
+    function getItemOverlap(viewStyle, itemHeight) {
+        // DEV_LOG && console.log('getItemOverlap', viewStyle, itemHeight);
         switch (viewStyle) {
             case 'full':
                 return (item, position) => {
-                    const foldersCount = folderItems?.length;
-                    const firstIndex = foldersCount ? 1 : 0;
-                    if (position <= firstIndex || ($isLandscape && position <= firstIndex + 1)) {
+                    if (position === 0 || position < $nbColumns) {
                         return [0, 0, 0, 0];
                     }
                     return [-0.71 * itemHeight, 0, 0, 0];
                 };
             case 'cardholder':
-                return (item, position) => {
-                    const foldersCount = folderItems?.length;
-                    const firstIndex = foldersCount ? 1 : 0;
-                    if (position <= firstIndex || ($isLandscape && position <= firstIndex + 1)) {
-                        return [0, 0, 0, 0];
-                    }
-                    return [-0.11 * itemHeight, 0, 0, 0];
-                };
+                return (item, position) => [-0.11 * itemHeight, 0, 0, 0];
             default:
                 return null;
+        }
+    }
+    function getItemRowHeight(viewStyle, itemHeight, nbColumns) {
+        DEV_LOG && console.log('getItemRowHeight', viewStyle, itemHeight, nbColumns);
+        switch (viewStyle) {
+            case 'cardholder':
+                return itemHeight / nbColumns;
+            default:
+                return itemHeight;
         }
     }
     function itemTemplateSelector(viewStyle, item?) {
@@ -289,11 +288,14 @@
         //         break;
         // }
     }
-    function updateColumns(isLandscape) {
-        nbColumns = isLandscape
+    function updateColumns(isLandscape, orientationChanged: boolean = false) {
+        $nbColumns = isLandscape
             ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE)
             : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, viewStyle === 'columns' ? 2 : DEFAULT_NB_COLUMNS);
-        DEV_LOG && console.log('updateColumns cards list', isLandscape, viewStyle, nbColumns);
+        DEV_LOG && console.log('updateColumns1 cards list', isLandscape, viewStyle, nbColumns);
+        if (orientationChanged) {
+            refreshCollectionView?.();
+        }
     }
     onMount(() => {
         DEV_LOG && console.log('CardsList', 'onMount', viewStyle);
@@ -305,8 +307,9 @@
     collectionViewOptions={{
         // spanSize: (item) => itemTemplateSpanSize(viewStyle, item),
         swipeMenuId: 'swipeMenu',
-        itemOverlap: getItemOverlap(viewStyle),
-        'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' })
+        itemOverlap: getItemOverlap(viewStyle, $itemHeight),
+        'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' }),
+        rowHeight: getItemRowHeight(viewStyle, $itemHeight, $nbColumns)
     }}
     {itemTemplateSelector}
     {title}
@@ -330,51 +333,33 @@
     bind:folderItems
     bind:collectionView>
     <Template key="cardholder" let:item>
-        <absolutelayout height={150}>
+        <absolutelayout height="100%">
             <CardListCell
                 {collectionView}
                 {item}
-                {itemHeight}
                 {itemWidth}
                 layout="cardholder"
+                {nbColumns}
                 {onFullCardItemTouch}
                 {syncEnabled}
                 on:tap={() => onItemTap(item)}
                 on:longPress={(e) => onItemLongPress(item, e)} />
-            <absolutelayout boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top={150} width="100%" />
+            <absolutelayout boxShadow="0 -1 8 rgba(0, 0, 0, 0.8)" height={3} top="100%" width="100%" />
         </absolutelayout>
     </Template>
     <Template key="full" let:item>
-        <CardListCell
-            {collectionView}
-            {item}
-            {itemHeight}
-            {itemWidth}
-            layout="full"
-            {onFullCardItemTouch}
-            {syncEnabled}
-            on:tap={() => onItemTap(item)}
-            on:longPress={(e) => onItemLongPress(item, e)} />
+        <CardListCell {collectionView} {item} {itemWidth} layout="full" {nbColumns} {onFullCardItemTouch} {syncEnabled} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
     <Template key="list" let:item>
-        <CardListCell
-            {collectionView}
-            {item}
-            {itemHeight}
-            {itemWidth}
-            layout="list"
-            {onFullCardItemTouch}
-            {syncEnabled}
-            on:tap={() => onItemTap(item)}
-            on:longPress={(e) => onItemLongPress(item, e)} />
+        <CardListCell {collectionView} {item} {itemWidth} layout="list" {nbColumns} {onFullCardItemTouch} {syncEnabled} on:tap={() => onItemTap(item)} on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
     <Template key="columns" let:item>
         <CardListCell
             {collectionView}
             {item}
-            {itemHeight}
             {itemWidth}
             layout="columns"
+            {nbColumns}
             {onFullCardItemTouch}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
