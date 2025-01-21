@@ -469,8 +469,8 @@ export default class SyncWorker extends Observable {
                             }
                         }
                         // just test if we have local document marked as needing update
-                        const documentsToSync = localDocuments.filter((d) => (d._synced & service.syncMask) === 0).concat(documentsToDeleteOnRemote as any[]);
-                        if (documentsToSync.length) {
+                        const documentsToSyncLength = localDocuments.filter((d) => (d._synced & service.syncMask) === 0).concat(documentsToDeleteOnRemote as any[]).length;
+                        if (documentsToSyncLength) {
                             await service.ensureRemoteFolder();
                             const remoteDocuments = (await service.getRemoteFolderDirectories('')).filter((s) => s.type === 'directory');
                             DEV_LOG && console.log('remoteDocuments', JSON.stringify(remoteDocuments));
@@ -809,10 +809,9 @@ export default class SyncWorker extends Observable {
                     const exportFormat = service.imageFormat || defaultExportSettings.imageFormat;
                     const exportQuality = service.imageQuality || defaultExportSettings.imageQuality;
                     const deleteKey = getRemoteDeleteDocumentSettingsKey(service);
-                    const documentsToDeleteOnRemote: string[] = JSON.parse(ApplicationSettings.getString(deleteKey, '[]'));
 
                     // just test if we have local document marked as needing update
-                    const documentsToSync = localDocuments.filter((d) => force || (d.document._synced & service.syncMask) === 0).concat(documentsToDeleteOnRemote as any[]);
+                    const documentsToSync = localDocuments.filter((d) => force || (d.document._synced & service.syncMask) === 0);
                     // DEV_LOG && console.log('syncImageDocuments', 'documentsToSync', documentsToSync.length);
                     if (documentsToSync.length) {
                         await service.ensureRemoteFolder();
@@ -879,10 +878,8 @@ export default class SyncWorker extends Observable {
                         return;
                     }
                     const deleteKey = getRemoteDeleteDocumentSettingsKey(service);
-                    const documentsToDeleteOnRemote: string[] = JSON.parse(ApplicationSettings.getString(deleteKey, '[]'));
-
                     // just test if we have local document marked as needing update
-                    const documentsToSync = localDocuments.filter((d) => force || (d._synced & service.syncMask) === 0).concat(documentsToDeleteOnRemote as any[]);
+                    const documentsToSync = localDocuments.filter((d) => force || (d._synced & service.syncMask) === 0);
                     // DEV_LOG && console.log('syncImageDocuments', 'documentsToSync', documentsToSync.length);
                     if (documentsToSync.length) {
                         await service.ensureRemoteFolder();
