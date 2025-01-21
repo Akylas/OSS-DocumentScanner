@@ -50,7 +50,7 @@ import type { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
-import type SettingsSlider__SvelteComponent_ from '@shared/components/SettingsSlider.svelte';
+import type ExportPDFAlertOptions__SvelteComponent_ from '~/components/common/ExportPDFAlertOptions.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { getFileNameForDocument, getFormatedDateForFilename, getLocaleDisplayName, l, lc } from '~/helpers/locale';
@@ -678,53 +678,55 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                             showSnack({ message: lc('please_choose_export_folder') });
                         } else {
                             await closePopover();
-                            const component = (await import('@shared/components/SettingsSlider.svelte')).default;
-                            let componentInstanceInfo: ComponentInstanceInfo<GridLayout, SettingsSlider__SvelteComponent_>;
+                            const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
+                            let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
                             try {
+                                const defaultOptions = getPDFDefaultExportOptions()
+                                DEV_LOG && console.log('defaultOptions', JSON.stringify(defaultOptions));
                                 componentInstanceInfo = resolveComponentElement(component, {
-                                    title: lc('jpeg_quality'),
-                                    padding: 16,
-                                    min: 0,
-                                    max: 100,
-                                    step: 1,
-                                    value: getPDFDefaultExportOptions().jpegQuality
-                                }) as ComponentInstanceInfo<GridLayout, SettingsSlider__SvelteComponent_>;
-                                const result = await prompt({
+                                    filename: getFileNameForDocument(document) + PDF_EXT,
+                                    jpegQuality: defaultOptions.jpegQuality,
+                                    password: defaultOptions.password,
+                                    folder: exportDirectory
+                                }) as ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
+                                const result = await confirm({
                                     okButtonText: lc('ok'),
                                     cancelButtonText: lc('cancel'),
-                                    defaultText: getFileNameForDocument(document) + PDF_EXT,
-                                    hintText: lc('pdf_filename'),
                                     view: componentInstanceInfo.element.nativeView
                                 });
-                                DEV_LOG && console.log(componentInstanceInfo.viewInstance.value);
-                                if (result?.result && result?.text?.length) {
-                                    const jpegQuality = componentInstanceInfo.viewInstance.value;
-                                    showLoading(l('exporting'));
-                                    DEV_LOG && console.log('exportPDF', exportDirectory, result.text);
-                                    const filePath = await exportPDFAsync({
-                                        pages,
-                                        document,
-                                        folder: exportDirectory,
-                                        filename: result.text,
-                                        options: {
-                                            jpegQuality
+                                if (result) {
+                                    let filename = componentInstanceInfo.viewInstance.filename;
+                                    if (filename.length) {
+                                        const password = componentInstanceInfo.viewInstance.password;
+                                        const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
+                                        const folder = componentInstanceInfo.viewInstance.folder;
+                                        showLoading(l('exporting'));
+                                        DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
+                                        const filePath = await exportPDFAsync({
+                                            pages,
+                                            document,
+                                            folder,
+                                            filename,
+                                            options: {
+                                                jpegQuality,
+                                                password
+                                            }
+                                        });
+                                        hideLoading();
+                                        DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
+                                        if (!filePath) {
+                                            return;
                                         }
-                                    });
-                                    hideLoading();
-                                    DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
-                                    if (!filePath) {
-                                        return;
-                                    }
-                                    let filename;
-                                    if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
-                                        filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
-                                    } else {
-                                        filename = filePath.split(SEPARATOR).pop();
-                                    }
-                                    const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
-                                    if (onSnack?.reason === 'action') {
-                                        DEV_LOG && console.log('openFile', filePath);
-                                        openFile(filePath);
+                                        if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                                            filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
+                                        } else {
+                                            filename = filePath.split(SEPARATOR).pop();
+                                        }
+                                        const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
+                                        if (onSnack?.reason === 'action') {
+                                            DEV_LOG && console.log('openFile', filePath);
+                                            openFile(filePath);
+                                        }
                                     }
                                 }
                             } catch (err) {

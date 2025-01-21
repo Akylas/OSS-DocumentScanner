@@ -24,6 +24,7 @@ import com.itextpdf.kernel.colors.ColorConstants
 import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.geom.PageSize
 import com.itextpdf.kernel.geom.Rectangle
+import com.itextpdf.kernel.pdf.EncryptionConstants
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfName
 import com.itextpdf.kernel.pdf.PdfReader
@@ -375,14 +376,14 @@ class PDFUtils {
 //                "a3" -> if (isLandscape) PageSize.A3.rotate() else PageSize.A3
 //                "a4" -> if (isLandscape) PageSize.A4.rotate() else PageSize.A4
 //            }
-
-            val writer = PdfWriter(
-                generateFilePath,
-                WriterProperties().setCompressionLevel(compressionLevel)
-                    .setFullCompressionMode(true).setPdfVersion(
-                    PdfVersion.PDF_1_4
-                )
+            val props = WriterProperties().setCompressionLevel(compressionLevel)
+                .setFullCompressionMode(true).setPdfVersion(
+                PdfVersion.PDF_1_4
             )
+            if (jsonOps.has("password")) {
+                props.setStandardEncryption(jsonOps.getString("password").toByteArray(), null, EncryptionConstants.ALLOW_PRINTING, EncryptionConstants.ENCRYPTION_AES_256 or EncryptionConstants.DO_NOT_ENCRYPT_METADATA);
+            } 
+            val writer = PdfWriter(generateFilePath, props)
             val pdfDoc = PdfDocument(writer)
             var document: Document? = null
             if (paperSize == "full") {

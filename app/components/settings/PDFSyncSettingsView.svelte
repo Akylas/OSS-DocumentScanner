@@ -32,22 +32,23 @@
         }
     }
 
-    function updatePDFOption(option: string, value, fullRefresh = false) {
+    type PickOfType<T, P> = { [K in keyof T as P extends T[K] ? K : never]: T[K] & P };
+
+    function setProperty<T, P>(obj: T | PickOfType<T, P>, key: keyof typeof obj, value: (typeof obj)[typeof key]) {
+        obj[key] = value;
+    }
+
+    function updatePDFOption(option: keyof PDFExportBaseOptions, value: any, fullRefresh = false) {
         try {
             clearCheckboxTimer();
-            // DEV_LOG && console.log('updateOption', option, value, fullRefresh);
+            //@ts-ignore
             $store.exportOptions[option] = value;
-            // if (fullRefresh) {
-            //     refresh();
-            // } else {
-            //     requestPagesRedraw();
-            // }
             dispatch('update');
         } catch (error) {
             showError(error);
         }
     }
-    async function selectSilderPDFOption(option: string, event, fullRefresh = false) {
+    async function selectSilderPDFOption(option: keyof PDFExportBaseOptions, event, fullRefresh = false) {
         try {
             await showSliderPopover({
                 debounceDuration: 0,
@@ -133,4 +134,17 @@
         <checkbox id="checkbox" checked={$store.exportOptions.draw_ocr_text} verticalAlignment="center" on:checkedChange={(e) => updatePDFOption('draw_ocr_text', e.value)} ios:margin={14} />
         <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} verticalAlignment="center" on:tap={(e) => onCheckBox(e, 'draw_ocr_text')} />
     </stacklayout>
+    <textfield
+        autocapitalizationType="none"
+        autocorrect={false}
+        hint={lc('optional_pdf_password')}
+        margin={'5 0 5 0'}
+        placeholder={lc('password')}
+        placeholderColor="gray"
+        returnKeyType="done"
+        secure={true}
+        text={$store.exportOptions.password}
+        {variant}
+        width={tWidth * 2 + 20}
+        on:textChange={(e) => updatePDFOption('password', e['value'])} />
 </wraplayout>

@@ -20,6 +20,7 @@ export interface PDFExportBaseOptions {
     dpi: number;
     draw_ocr_text: boolean;
     draw_ocr_overlay: boolean;
+    password?: string;
 }
 export interface PDFExportOptions {
     pages: { page: OCRPage; document: OCRDocument }[];

@@ -331,7 +331,7 @@
             }
             case 'pdf_export':
                 return (
-                    __ANDROID__
+                    (__ANDROID__
                         ? [
                               {
                                   type: 'rightIcon',
@@ -364,8 +364,23 @@
                                   title: lc('page_layout')
                               }
                           ]
-                        : []
+                        : []) as any[]
                 )
+                    .concat([
+                        {
+                            id: 'store_setting',
+                            storeKey: 'default_export_options',
+                            storeDefault: DEFAULT_PDF_OPTIONS_STRING,
+                            key: 'password',
+                            valueType: 'string',
+                            title: lc('optional_pdf_password'),
+                            type: 'prompt',
+                            default: () => getStoreSetting('default_export_options', DEFAULT_PDF_OPTIONS_STRING)['password'],
+                            textFieldProperties: {
+                                secure: true
+                            }
+                        }
+                    ])
                     .concat(
                         Object.keys(PDF_OPTIONS).map((option) => ({
                             id: 'store_setting',
@@ -1185,6 +1200,7 @@
                 case 'store_setting':
                 case 'setting': {
                     if (item.type === 'prompt') {
+                        const defaultValue = typeof item.rightValue === 'function' ? item.rightValue() : typeof item.default === 'function' ? item.default() : item.default;
                         const result = await prompt({
                             title: getTitle(item),
                             message: item.useHTML ? item.description : item.full_description || item.description,
@@ -1192,7 +1208,7 @@
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
                             textFieldProperties: item.textFieldProperties,
-                            defaultText: (typeof item.rightValue === 'function' ? item.rightValue() : item.default) + '',
+                            defaultText: (defaultValue ?? '') + '',
                             view: item.useHTML
                                 ? createView(
                                       Label,

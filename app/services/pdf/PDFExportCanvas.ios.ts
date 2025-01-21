@@ -14,7 +14,12 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         this.updatePages(pages.map((p) => p.page));
         const pdfData = NSMutableData.alloc().init();
         this.canvas = new Canvas();
-        UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, null);
+        let documentInfo = null;
+        if (options.password) {
+            documentInfo = {};
+            documentInfo[kCGPDFContextUserPassword] = options.password;
+        }
+        UIGraphicsBeginPDFContextToData(pdfData, CGRectZero, documentInfo);
 
         const items = this.items;
         let hasPages = false;
