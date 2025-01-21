@@ -112,7 +112,7 @@ export class SyncService extends Observable {
     }
     onDocumentUpdated(event: DocumentUpdatedEventData) {
         // only used for data sync
-        DEV_LOG && console.log('SYNC', 'onDocumentUpdated', event.updateModifiedDate, new Error().stack);
+        DEV_LOG && console.log('SYNC', 'onDocumentUpdated', event.updateModifiedDate);
         if (event.updateModifiedDate !== false) {
             this.syncDocumentsInternal({ event, type: SyncType.DATA | SyncType.PDF, fromEvent: event.eventName });
         }
@@ -407,7 +407,7 @@ export class SyncService extends Observable {
                 // if (object?.['toJSONObject']) {
                 //     eventData = { ...otherProps, object: event.object['toJSONObject']?.() };
                 // } else {
-                    eventData = otherProps;
+                eventData = otherProps;
                 // }
                 DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent, Object.keys(otherProps));
             }
