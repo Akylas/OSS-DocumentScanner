@@ -1437,19 +1437,14 @@ export async function pickFolderColor(folder, event) {
 
 export async function addCurrentImageToDocument({
     autoRotate,
-    colorMatrix,
-    colorType,
     fileName,
     imageHeight,
     imageRotation,
     imageWidth,
     pagesToAdd,
     quads,
-    sourceImagePath,
-    transforms = []
+    sourceImagePath
 }: {
-    colorType?;
-    colorMatrix?;
     pagesToAdd;
     sourceImagePath;
     imageWidth;
@@ -1464,7 +1459,17 @@ export async function addCurrentImageToDocument({
         return;
     }
     const start = Date.now();
-    const strTransforms = transforms?.join(TRANSFORMS_SPLIT) ?? '';
+    const colorType = ApplicationSettings.getString(SETTINGS_DEFAULT_COLORTYPE, DEFAULT_COLORTYPE) as MatricesTypes;
+    const contrast = ApplicationSettings.getNumber(SETTINGS_DEFAULT_CONTRAST, DEFAULT_CONTRAST);
+    const brightness = ApplicationSettings.getNumber(SETTINGS_DEFAULT_BRIGHTNESS, DEFAULT_BRIGHTNESS);
+    let colorMatrix: Matrix;
+    try {
+        colorMatrix = JSON.parse(ApplicationSettings.getString(SETTINGS_DEFAULT_COLORMATRIX, DEFAULT_COLORMATRIX));
+    } catch (error) {
+        colorMatrix = null;
+        ApplicationSettings.remove(SETTINGS_DEFAULT_COLORMATRIX);
+    }
+    const transforms = ApplicationSettings.getString(SETTINGS_DEFAULT_TRANSFORM, '');
     DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
     const images: CropResult[] = [];
     const compressFormat = ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
@@ -1472,7 +1477,7 @@ export async function addCurrentImageToDocument({
     if (quads) {
         images.push(
             ...(await cropDocumentFromFile(sourceImagePath, quads, {
-                transforms: strTransforms,
+                transforms,
                 saveInFolder: knownFolders.temp().path,
                 fileName,
                 autoRotate,
@@ -1523,9 +1528,11 @@ export async function addCurrentImageToDocument({
                     [imageWidth - 0, imageHeight - 0],
                     [0, imageHeight - 0]
                 ],
-                colorType,
+                transforms,
                 colorMatrix,
-                transforms: strTransforms,
+                colorType,
+                contrast,
+                brightness,
                 sourceImagePath,
                 sourceImageWidth: imageWidth,
                 sourceImageHeight: imageHeight,
@@ -1561,9 +1568,9 @@ export async function processCameraImage({
     const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
     const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
-    const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
-    const colorMatrix = JSON.parse(ApplicationSettings.getString('defaultColorMatrix', null));
-    const transforms = ApplicationSettings.getString('defaultTransforms', '').split(TRANSFORMS_SPLIT);
+    // const colorType = ApplicationSettings.getString('defaultColorType', 'normal');
+    // const transforms = ApplicationSettings.getString(SETTINGS_DEFAULT_TRANSFORM, DEFAULT_TRANSFORM);
+
     const alwaysPromptForCrop = ApplicationSettings.getBoolean(SETTINGS_ALWAYS_PROMPT_CROP_EDIT, ALWAYS_PROMPT_CROP_EDIT);
     let quads: Quads;
     const imageSize = await getImageSize(imagePath);
@@ -1620,7 +1627,7 @@ export async function processCameraImage({
         }
     }
     if (!cropEnabled || quads?.length) {
-        await addCurrentImageToDocument({ sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads, colorType, colorMatrix, pagesToAdd, transforms });
+        await addCurrentImageToDocument({ sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads, pagesToAdd });
         return true;
     }
     showSnack({ message: lc('no_document_found') });
