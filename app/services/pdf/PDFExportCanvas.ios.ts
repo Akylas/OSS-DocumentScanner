@@ -62,7 +62,7 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
             UIGraphicsBeginPDFPageWithInfo(pageRect, null);
             const context = UIGraphicsGetCurrentContext();
             this.canvas.setContext(context, pageWidth, pageHeight);
-            hasPages = hasPages || (await this.drawPages(index, items[index].pages));
+            hasPages = (await this.drawPages(index, items[index].pages)) || hasPages;
         }
         UIGraphicsEndPDFContext();
         if (!hasPages) {
