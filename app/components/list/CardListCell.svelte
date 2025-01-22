@@ -119,13 +119,13 @@
         switch (layout) {
             case 'cardholder':
                 Object.assign(result, {
-                    // boxShadow: isEInk ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
+                    boxShadow: isEInk ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
                     margin: 16 / nbColumns
                 });
                 break;
             case 'full':
                 Object.assign(result, {
-                    // boxShadow: isEInk ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
+                    boxShadow: isEInk ? 0 : `0 0 ${8 / nbColumns} rgba(0, 0, 0, 0.8)`,
                     margin: 16 / nbColumns
                 });
                 break;
@@ -153,26 +153,31 @@
                 Object.assign(result, {
                     verticalTextAlignment: 'bottom',
                     marginBottom: height - itemHeight - 10,
+                    maxFontSize: 40,
                     maxLines: 2
                 });
                 break;
             case 'full':
                 Object.assign(result, {
                     verticalTextAlignment: 'top',
+                    maxFontSize: 40,
                     maxLines: 2
                 });
                 break;
             case 'columns':
                 Object.assign(result, {
-                    maxFontSize: $isLandscape ? 30 : 20,
                     verticalTextAlignment: 'center',
-                    textAlignment: 'center'
+                    textAlignment: 'center',
+                    maxFontSize: 35,
+                    maxLines: 3
                 });
                 break;
             case 'list':
                 Object.assign(result, {
                     verticalTextAlignment: 'center',
-                    textAlignment: 'center'
+                    maxFontSize: 40,
+                    textAlignment: 'center',
+                    maxLines: 3
                 });
                 break;
         }
@@ -249,14 +254,15 @@
         <RotableImageView {...getItemRotableImageParams(item)} />
         <label
             autoFontSize={true}
-            fontSize={40}
+            autoFontSizeStep={10}
+            fontSize={30}
             fontWeight="bold"
             lineBreak="end"
-            maxFontSize={40}
+            maxFontSize={35}
             minFontSize={20}
             padding={16}
             text={item.doc.name}
-            textWrap={true}
+            textWrap={false}
             visibility={itemHasImage(item) ? 'hidden' : 'visible'}
             {...getLabelParams(layout, item, height, itemHeight)} />
         <!-- <gridlayout borderRadius={12}> -->

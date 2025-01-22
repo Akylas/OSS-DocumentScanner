@@ -344,7 +344,7 @@
                 {syncEnabled}
                 on:tap={() => onItemTap(item)}
                 on:longPress={(e) => onItemLongPress(item, e)} />
-            <absolutelayout backgroundColor="white" borderRadius={1} boxShadow="0 0 8 rgba(1, 0, 0, 1)" height={3} top={itemRowHeight} width="100%" />
+            <absolutelayout boxShadow="0 0 8 rgba(1, 0, 0, 1)" height={3} top={itemRowHeight} width="100%" />
         </absolutelayout>
     </Template>
     <Template key="full" let:item>
