@@ -39,7 +39,7 @@
         showSlidersPopover,
         showSnack
     } from '~/utils/ui';
-    import { colors, windowInset } from '~/variables';
+    import { colors, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
 
     // technique for only specific properties to get updated on store change
