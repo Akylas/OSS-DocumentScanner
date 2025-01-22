@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/farfromrefug/fastlane-plugin-semantic_release
-  revision: fd1c485c2d1160115a22d092e2da0cf53eed3ede
+  revision: ed161b02d56355ce39e2465a2cfa9e9b664c3b52
   specs:
     fastlane-plugin-semantic_release (1.0.0)
 
