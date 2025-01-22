@@ -73,23 +73,23 @@ export interface SyncEnabledEventData extends EventData {
 
 const SYNC_DELAY = 1000;
 
-function debounceSync(fn, delay = 300, { ignoreFirstTrail = false, leading = false, trailing = true } = {}) {
-    let timer;
-    return (event) => {
-        let noTrail = false;
-        if (timer === undefined && leading) {
-            noTrail = ignoreFirstTrail === true;
-            fn.call(this, event);
-        }
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            if (trailing !== false && !noTrail) {
-                syncService.syncDocuments({ force: true });
-            }
-            timer = undefined;
-        }, delay);
-    };
-}
+// function debounceSync(fn, delay = 300, { ignoreFirstTrail = false, leading = false, trailing = true } = {}) {
+//     let timer;
+//     return (event) => {
+//         let noTrail = false;
+//         if (timer === undefined && leading) {
+//             noTrail = ignoreFirstTrail === true;
+//             fn.call(this, event);
+//         }
+//         clearTimeout(timer);
+//         timer = setTimeout(() => {
+//             if (trailing !== false && !noTrail) {
+//                 syncService.syncDocuments({ force: true });
+//             }
+//             timer = undefined;
+//         }, delay);
+//     };
+// }
 
 export class SyncService extends Observable {
     services: any[] = [];
@@ -234,13 +234,15 @@ export class SyncService extends Observable {
         async ({
             bothWays = false,
             force = true,
-            type = SyncType.ALL
+            type = SyncType.ALL,
+            withFolders = false
         }: {
+            withFolders?;
             force?;
             bothWays?;
             type?: number;
         } = {}) => {
-            this.syncDocumentsInternal({ force, bothWays, type });
+            this.syncDocumentsInternal({ force, bothWays, type, withFolders });
         },
         SYNC_DELAY
     );
@@ -381,19 +383,16 @@ export class SyncService extends Observable {
             this.internalSendMessageToWorker(data);
         }
     }
-    async syncDocumentsInternal({
-        bothWays = false,
-        event,
-        force = false,
-        fromEvent,
-        type
-    }: {
-        force?;
-        bothWays?;
-        type?: number;
-        fromEvent?: string;
-        event?: DocumentEvents;
-    } = {}) {
+    async syncDocumentsInternal(
+        data: {
+            withFolders?;
+            force?;
+            bothWays?;
+            type?: number;
+            fromEvent?: string;
+            event?: DocumentEvents;
+        } = {}
+    ) {
         try {
             const db = documentsService.db?.db?.db;
             if (!this.enabled || !db) {
@@ -402,21 +401,19 @@ export class SyncService extends Observable {
             // send syncState event right now for the UI to be updated as soon as possible
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
             let eventData;
-            if (event) {
-                const { object, ...otherProps } = event;
+            if (data.event) {
+                const { object, ...otherProps } = data.event;
                 // if (object?.['toJSONObject']) {
                 //     eventData = { ...otherProps, object: event.object['toJSONObject']?.() };
                 // } else {
                 eventData = otherProps;
                 // }
-                DEV_LOG && console.warn('syncDocumentsInternal', type, fromEvent, Object.keys(otherProps));
+                DEV_LOG && console.warn('syncDocumentsInternal', data.type, data.fromEvent, Object.keys(otherProps));
             }
             await this.sendMessageToWorker(
                 'sync',
                 {
-                    force,
-                    bothWays,
-                    type,
+                    ...data,
                     event: eventData
                 },
                 undefined,

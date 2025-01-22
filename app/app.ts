@@ -133,7 +133,7 @@ try {
             DEV_LOG && console.log('servicesStarted');
             Application.notify({ eventName: 'servicesStarted' });
             if (ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)) {
-                syncService.syncDocuments();
+                syncService.syncDocuments({ withFolders: true });
             }
         } catch (error) {
             showError(error, PLAY_STORE_BUILD ? { forcedMessage: lc('startup_error') } : {});

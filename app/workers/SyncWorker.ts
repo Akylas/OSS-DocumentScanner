@@ -273,25 +273,25 @@ export default class SyncWorker extends Observable {
     }
 
     queue = new Queue();
-    async syncDocumentsQueue({
-        bothWays = false,
-        event,
-        force = false,
-        type
-    }: {
-        force?;
-        bothWays?;
-        type?: number;
-        event?: DocumentEvents;
-    } = {}) {
-        return this.queue.add(() => this.syncDocumentsInternal({ force, bothWays, type, event }));
+    async syncDocumentsQueue(
+        data: {
+            withFolders?;
+            force?;
+            bothWays?;
+            type?: number;
+            event?: DocumentEvents;
+        } = {}
+    ) {
+        return this.queue.add(() => this.syncDocumentsInternal(data));
     }
     async syncDocumentsInternal({
         bothWays = false,
         event,
         force = false,
-        type
+        type,
+        withFolders = false
     }: {
+        withFolders?;
         force?;
         bothWays?;
         type?: number;
@@ -317,7 +317,7 @@ export default class SyncWorker extends Observable {
             }
             // this.syncRunning = true;
             if (type === 0 || (type & SyncType.DATA) !== 0) {
-                await this.syncDataDocuments({ force, bothWays, event });
+                await this.syncDataDocuments({ force, bothWays, withFolders, event });
             }
             if (type === 0 || (type & SyncType.IMAGE) !== 0) {
                 await this.syncImageDocuments({ force, event });
@@ -333,7 +333,7 @@ export default class SyncWorker extends Observable {
         }
     }
 
-    async syncDataDocuments({ bothWays = false, event, force = false }: { force; bothWays; event: DocumentEvents }) {
+    async syncDataDocuments({ bothWays = false, event, force = false, withFolders = false }: { withFolders?; force; bothWays; event: DocumentEvents }) {
         if (event && (event.eventName === EVENT_DOCUMENT_PAGES_ADDED || event.eventName === EVENT_DOCUMENT_PAGE_UPDATED || event.eventName === EVENT_DOCUMENT_PAGE_DELETED)) {
             // we ignore this event
             // pages will be updated independently
@@ -361,6 +361,7 @@ export default class SyncWorker extends Observable {
                     const documentsToDeleteOnRemote: string[] = JSON.parse(ApplicationSettings.getString(deleteKey, '[]'));
                     if (bothWays) {
                         {
+                            // first we sync folders
                             await service.ensureRemoteFolder();
                             DEV_LOG && console.log('syncing folders both ways');
                             const remoteFolders = ((await service.fileExists(FOLDERS_DATA_FILENAME)) ? JSON.parse(await service.getFileFromRemote(FOLDERS_DATA_FILENAME)) : []) as DocFolder[];
@@ -442,7 +443,7 @@ export default class SyncWorker extends Observable {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
                         }
                     } else {
-                        if (event && (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED)) {
+                        if (withFolders || (event && (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED))) {
                             const remoteFolders = ((await service.fileExists(FOLDERS_DATA_FILENAME)) ? JSON.parse(await service.getFileFromRemote(FOLDERS_DATA_FILENAME)) : []) as any[];
                             // we need to send folders not on remote
                             const localFolders = await getDocumentsService().folderRepository.search();
