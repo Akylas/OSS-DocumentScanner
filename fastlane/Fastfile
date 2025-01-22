@@ -177,13 +177,17 @@ lane :build_flavor do |params|
   # and so to map errors correctly we use different dist for ios and android
   sentryDist =  versionCode + '.' + platform # optional distribution of the release usually the buildnumber
 
-  repository_name = fastlaneOptions['github_repository_name'] || packageJSON['repository'].match(/([^\/]+\/[^\/]+)(\.git)?$/)[1]
+  repository_url = ( fastlaneOptions['github_repository_name'] || packageJSON['repository'] || ENV['REPOSITORY']).match(/(.*?)(\.git)?$/)[1]
+  repository_name = repository_url.match(/([^\/]+\/[^\/]+)(\.git)?$/)[1]
+  commit_url = repository_url + "/commit"
   sentry_version = "#{app_identifier}@#{version}+#{versionCode}"
   dist_path = File.expand_path(File.join(project_root_path, 'dist'))
   puts "working directory:"  + Dir.getwd
   puts "dist_path:"  + dist_path
   puts "platform:"  + platform
   puts "repository_name:"  + repository_name
+  puts "repository_url:"  + repository_url
+  puts "commit_url:"  + commit_url
   puts "flavor:"  + flavor
   puts "version:"  + version
   puts "versionCode:"  + versionCode
@@ -230,7 +234,7 @@ lane :build_flavor do |params|
 
   if (options[:publish] != false)
     tag = "#{tag_prefix}#{platform}/#{flavor}/#{version}/#{versionCode}";
-    changelog = get_changelog(platform:platform, flavor:flavor)
+    changelog = get_changelog(platform:platform, flavor:flavor, commit_url:commit_url)
     if (flavor != 'github' && platform == 'android')
       write_changelog(version:versionCode, changelog: flavor != 'github' ? changelog : get_changelog(platform:platform, flavor:'store'));
     end
@@ -302,19 +306,20 @@ end
 lane :get_changelog  do |params| 
   platform = params[:platform]
   flavor = params[:flavor]
+  commit_url = params[:commit_url]
   changelogFormat = params[:format] ||  flavor == 'github' ? 'markdown' : 'plain'
   ignoredScopes = [platform == "ios" ? 'android' : 'ios']
   if (ignore_app_scope)
     ignoredScopes.push(ignore_app_scope)
   end
   display_links = changelogFormat == 'markdown'
-  puts "get_changelog "+  platform + " "+  flavor
+  puts "get_changelog "+  platform + " "+ flavor + " " + commit_url
   puts "tag_prefix "+ tag_prefix
   puts "changelogFormat "+  changelogFormat
   # puts "display_links "+  display_links
   puts "ignoredScopes "+  ignoredScopes.join(", ")
-  isReleasable = analyze_commits(match: "\"#{tag_prefix}#{platform}/#{flavor}*\"", ignore_scopes: ignoredScopes, debug:true)
-  logs = conventional_changelog(format: changelogFormat, title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:true ) || ""
+  isReleasable = analyze_commits(match: "\"#{tag_prefix}#{platform}/#{flavor}*\"", ignore_scopes: ignoredScopes, debug:false)
+  logs = conventional_changelog(format: changelogFormat, title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:false, commit_url:commit_url ) || ""
   if (!logs.empty?)
     logs = logs.split(/[\n]/).uniq
     translateLogs = logs.select {|v| v =~ /Translated using Weblate/ }
