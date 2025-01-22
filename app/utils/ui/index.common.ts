@@ -102,7 +102,6 @@ import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { saveImage } from '../utils';
 import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
-import { OptionType } from '~/components/common/OptionSelect.svelte';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
