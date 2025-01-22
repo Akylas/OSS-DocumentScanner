@@ -270,7 +270,7 @@ lane :build_flavor do |params|
         upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
         if (platform == 'ios' && options[:github] != false)
           # we now github create releases on iOS for european users
-          changelog = get_changelog(platform:platform, flavor:flavor, format:'markdown')
+          changelog = get_changelog(platform:platform, flavor:flavor, format:'github')
           set_github_release(
             repository_name: repository_name,
             api_token: ENV["GH_TOKEN"],
@@ -307,12 +307,12 @@ lane :get_changelog  do |params|
   platform = params[:platform]
   flavor = params[:flavor]
   commit_url = params[:commit_url]
-  changelogFormat = params[:format] ||  flavor == 'github' ? 'markdown' : 'plain'
+  changelogFormat = params[:format] ||  flavor == 'github' ? 'github' : 'plain'
   ignoredScopes = [platform == "ios" ? 'android' : 'ios']
   if (ignore_app_scope)
     ignoredScopes.push(ignore_app_scope)
   end
-  display_links = changelogFormat == 'markdown'
+  display_links = changelogFormat != 'plain'
   puts "get_changelog "+  platform + " "+ flavor + " " + commit_url
   puts "tag_prefix "+ tag_prefix
   puts "changelogFormat "+  changelogFormat
