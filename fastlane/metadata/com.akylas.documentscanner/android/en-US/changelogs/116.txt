@@ -1,0 +1,11 @@
+Features:
+- allow to choose sort order (through the layout/view button)
+- you can now set a password to PDFs: either in settings, sync settings or in the export dialog
+- basic support for multi level folders. You need use something like `home` then `home/room`
+
+Bug fixes:
+- fix webdav settings
+- new settings design for better readability
+- new appearance options to choose number of columns in views
+- another sync error fix while syncing PDF/Image
+- scanning documents from camera (not import from
