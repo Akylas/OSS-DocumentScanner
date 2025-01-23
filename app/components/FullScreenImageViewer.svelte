@@ -8,6 +8,7 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { colorTheme, isEInk } from '~/helpers/theme';
     import { colors, windowInset } from '~/variables';
+    import PageIndicator from './common/PageIndicator.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOnBackground, colorPrimary } = $colors);
@@ -151,6 +152,7 @@
                 </gridlayout>
             </Template>
         </pager>
+        <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentIndex + 1}/${images.length}`} verticalAlignment="bottom" />
 
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState={actionBarStyle} titleProps={{ autoFontSize: true, padding: 0 }} />
     </gridlayout>
