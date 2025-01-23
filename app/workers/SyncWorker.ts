@@ -299,7 +299,7 @@ export default class SyncWorker extends Observable {
     } = {}) {
         try {
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
-            DEV_LOG && console.warn('syncDocuments', bothWays, event?.eventName, type, Object.keys(event));
+            DEV_LOG && console.warn('syncDocuments', bothWays, event?.eventName, type);
 
             if (event) {
                 if (event['doc']) {
