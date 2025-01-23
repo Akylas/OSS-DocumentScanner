@@ -7,6 +7,7 @@ import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { EVENT_DOCUMENT_DELETED } from '~/utils/constants';
+import { groupByArray } from '@shared/utils';
 export const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
@@ -104,14 +105,37 @@ export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
         return this.applyMigrations();
     }
 
-    findFolders() {
-        return this.search({
+    async findFolders(rootFolder?: DocFolder) {
+        const folders = await this.search({
             select: sql`f.*, 
 COUNT(df.document_id) AS count`,
             from: sql`Folder f`,
-            postfix: sql`
-LEFT JOIN DocumentsFolders df ON f.id = df.folder_id
-GROUP BY f.id;`
+            postfix: new SqlQuery([
+                `
+                LEFT JOIN DocumentsFolders df ON f.id = df.folder_id`,
+                rootFolder
+                    ? `
+                WHERE f.name LIKE "${rootFolder.name}/%"`
+                    : ``,
+                `
+                GROUP BY f.id;`
+            ])
+        });
+        const grouped = groupByArray(folders, (folder) => [folder.name.split('/')[0]]);
+        DEV_LOG && console.log('grouped', grouped);
+        return Object.keys(grouped).map((k) => {
+            const array = grouped[k].sort((a, b) => a.name.length - b.name.length);
+            const toReturn = array[0];
+            let count = 0;
+            let size = 0;
+            for (let index = 0; index < array.length; index++) {
+                const f = array[index];
+                count += f.count;
+                size += f.size;
+            }
+            toReturn.count = count;
+            toReturn.size = size;
+            return toReturn;
         });
     }
     findFolderById(id: number) {

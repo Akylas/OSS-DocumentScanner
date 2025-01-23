@@ -168,7 +168,7 @@
             DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
-            folders = filter?.length || folder ? [] : await documentsService.folderRepository.findFolders();
+            folders = filter?.length ? [] : await documentsService.folderRepository.findFolders(folder);
             DEV_LOG && console.log('folders', JSON.stringify(folders));
             folderItems = new ObservableArray(
                 folders
