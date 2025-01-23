@@ -4,7 +4,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
@@ -39,18 +39,21 @@
         showSlidersPopover,
         showSnack
     } from '~/utils/ui';
-    import { colors, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
+    import PageIndicator from '../common/PageIndicator.svelte';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import IconButton from '../common/IconButton.svelte';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorOutline, colorPrimary, colorSurfaceContainer } = $colors);
 
     export let startPageIndex: number = 0;
     DEV_LOG && console.log('startPageIndex', startPageIndex);
     export let document: OCRDocument;
     export let transitionOnBack = true;
     let pager: NativeViewElementNode<Pager>;
-    let collectionView: NativeViewElementNode<CollectionView>;
+    let enhanceFiltersCollectionView: CollectionView;
     let page: NativeViewElementNode<Page>;
 
     const items: ObservableArray<OCRPage> = document.getObservablePages();
@@ -227,40 +230,81 @@
             showError(error);
         }
     }
-    async function showEnhancements(event) {
-        try {
-            // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
 
-            function getData(transformId) {
-                const value = transforms.indexOf(transformId) !== -1;
-                return { type: 'checkbox', id: transformId, value, data: value };
-            }
-            await showPopoverMenu({
-                options: TRANSFORMS.map((i) => ({
-                    ...getData(i.id),
-                    ...i
-                })),
-                vertPos: VerticalPosition.ABOVE,
-                anchor: event.object,
-                props: {
-                    rowHeight: 70,
-                    width: screenWidthDips - 50,
-                    onCheckBox(item, value, e) {
-                        if (updatingTransform) {
-                            e.object.checked = !value;
-                            return;
-                        }
-                        updateTransform(value, null, item.id);
+    async function showEnhancements(event) {
+        const OptionSelect = (await import('~/components/edit/EnhancementsPopover.svelte')).default;
+        const result = await showPopover({
+            backgroundColor: colorSurfaceContainer,
+            view: OptionSelect,
+            anchor: event.object,
+            horizPos: HorizontalPosition.ALIGN_LEFT,
+            vertPos: VerticalPosition.ABOVE,
+            props: {
+                transforms,
+                applyImageColorMatrix,
+                setColorMatrixLevels,
+                item: currentItem,
+                imageRotation: currentSelectedImageRotation,
+                imagePath: currentSelectedImagePath,
+                borderRadius: 10,
+                autoSizeListItem: true,
+                elevation: __ANDROID__ ? 3 : 0,
+                margin: 4,
+                fontWeight: 500,
+                backgroundColor: colorSurfaceContainer,
+                containerColumns: 'auto',
+                width: screenWidthDips - 50,
+                onLoaded(view) {
+                    enhanceFiltersCollectionView = view;
+                },
+                onClose() {
+                    enhanceFiltersCollectionView = null;
+                },
+                onCheckBox(item, value, e) {
+                    if (updatingTransform) {
+                        e.object.checked = !value;
+                        return;
                     }
+                    updateTransform(value, null, item.id);
                 }
-            });
-        } catch (error) {
-            showError(error);
-        }
+            }
+        });
+        return result;
     }
+    // async function showEnhancements(event) {
+    //     try {
+    //         // const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+
+    //         function getData(transformId) {
+    //             const value = transforms.indexOf(transformId) !== -1;
+    //             return { type: 'checkbox', id: transformId, value, data: value };
+    //         }
+    //         await showPopoverMenu({
+    //             options: TRANSFORMS.map((i) => ({
+    //                 ...getData(i.id),
+    //                 ...i
+    //             })),
+    //             vertPos: VerticalPosition.ABOVE,
+    //             anchor: event.object,
+    //             props: {
+    //                 rowHeight: 70,
+    //                 width: screenWidthDips - 50,
+    //                 onCheckBox(item, value, e) {
+    //                     if (updatingTransform) {
+    //                         e.object.checked = !value;
+    //                         return;
+    //                     }
+    //                     updateTransform(value, null, item.id);
+    //                 }
+    //             }
+    //         });
+    //     } catch (error) {
+    //         showError(error);
+    //     }
+    // }
     async function showImageExportPopover(event) {
         try {
-            await showImagePopoverMenu([{ page: items.getItem(currentIndex), document }], event.object, VerticalPosition.ABOVE);
+            await showImagePopoverMenu([{ page: items.getItem(currentIndex), document }], event.object);
         } catch (err) {
             showError(err);
         }
@@ -380,7 +424,7 @@
             const current = items.getItem(currentIndex);
             current.colorMatrix = null;
             current.colorType = i.colorType;
-            collectionView.nativeView.refreshVisibleItems();
+            enhanceFiltersCollectionView?.refreshVisibleItems();
             ignoreNextCollectionViewRefresh = true;
             DEV_LOG && console.log('applyImageColorMatrix', i.colorType);
             await document.updatePage(currentIndex, {
@@ -461,7 +505,7 @@
 
     async function updateImageUris() {
         await getCurrentImageView()?.updateImageUri();
-        collectionView?.nativeView.eachChildAsync((c: View) => {
+        enhanceFiltersCollectionView?.eachChildAsync((c: View) => {
             c.getViewById<Img>('imageView')?.updateImageUri();
         });
         // refreshCollectionView();
@@ -557,7 +601,7 @@
     });
 
     function refreshCollectionView() {
-        collectionView?.nativeView?.refreshVisibleItems();
+        enhanceFiltersCollectionView?.refreshVisibleItems();
     }
 
     let cropItem: ImportImageData = {};
@@ -662,34 +706,18 @@
                 </gridlayout>
             </Template>
         </pager>
-        <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
-        <mdbutton class="icon-btn" horizontalAlignment="right" row={2} text="mdi-share-variant" variant="text" verticalAlignment="bottom" on:tap={showImageExportPopover} />
-        <mdbutton
-            class="icon-btn"
-            horizontalAlignment="right"
-            marginRight={40}
-            row={2}
-            text="mdi-format-textbox"
-            variant="text"
-            verticalAlignment="bottom"
-            visibility={currentItemOCRData ? 'visible' : 'hidden'}
-            on:tap={showCurrentOCRData}
-            on:longPress={copyText} />
-        {#if CARD_APP}
-            <mdbutton
-                class="icon-btn"
-                horizontalAlignment="right"
-                marginRight={80}
-                row={2}
-                text="mdi-qrcode"
-                variant="text"
-                verticalAlignment="bottom"
-                visibility={currentItemQRCodeData?.length ? 'visible' : 'hidden'}
-                on:tap={showCurrentQRCodeData}
-                on:longPress={copyQRCodeText} />
-        {/if}
+        <PageIndicator horizontalAlignment="right" margin={10} row={2} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
 
-        <stacklayout orientation="horizontal" row={3}>
+        <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
+        <stacklayout backgroundColor="#00000055" borderRadius={10} horizontalAlignment="right" marginRight={5} row={1} verticalAlignment="center">
+            <IconButton color="white" text="mdi-share-variant" tooltip={lc('share')} on:tap={showImageExportPopover} />
+            <IconButton color="white" isVisible={!!currentItemOCRData} onLongPress={copyText} text="mdi-format-textbox" on:tap={showCurrentOCRData} />
+            {#if CARD_APP}
+                <IconButton color="white" isVisible={currentItemQRCodeData?.length > 0} onLongPress={copyQRCodeText} text="mdi-qrcode" on:tap={showCurrentQRCodeData} />
+            {/if}
+        </stacklayout>
+
+        <stacklayout borderTopColor={colorOutline} borderTopWidth={1} orientation="horizontal" row={4}>
             <mdbutton class="icon-btn" text="mdi-crop" variant="text" on:tap={() => cropEdit()} />
             <mdbutton class="icon-btn" text="mdi-rotate-left" variant="text" on:tap={() => rotateImageLeft()} />
             <mdbutton class="icon-btn" text="mdi-rotate-right" variant="text" on:tap={() => rotateImageRight()} />
@@ -700,7 +728,7 @@
             {/if}
             <mdbutton class="actionBarButton" text="mdi-text-recognition" variant="text" on:tap={showOCRSettings} />
         </stacklayout>
-        <collectionview bind:this={collectionView} id="filters" colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
+        <!-- <collectionview bind:this={collectionView} id="filters" colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4}>
             <Template let:item>
                 <gridlayout id={item.text} padding={2} on:tap={() => applyImageColorMatrix(item)} on:longPress={(event) => setColorMatrixLevels(item, event)}>
                     <image
@@ -726,7 +754,7 @@
                         verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
-        </collectionview>
+        </collectionview> -->
         <CActionBar {onGoBack} onTitleTap={() => (editingTitle = true)} title={document.name} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-delete" variant="text" on:tap={deleteCurrentPage} />
