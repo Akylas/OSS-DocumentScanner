@@ -1,0 +1,5 @@
+Features:
+- new Image/PDF sync option to use document folder as file subfolder structure
+
+Bug fixes:
+- trying to fix edge case where sync would not start
