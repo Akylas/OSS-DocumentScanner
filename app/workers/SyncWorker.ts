@@ -826,6 +826,7 @@ export default class SyncWorker extends Observable {
                                 const existing = remoteFiles.find((r) => r.basename === name);
                                 DEV_LOG && console.info('syncImageDocuments', 'test', doc.document.id, j, existing?.lastmod, page.modifiedDate);
                                 if (!existing || new Date(existing.lastmod).valueOf() < page.modifiedDate) {
+                                    const document = doc.document;
                                     // we need to create the image on remote
                                     const imageSource = await getTransformedImage({
                                         page,
@@ -834,11 +835,18 @@ export default class SyncWorker extends Observable {
                                             brightness: service.brightness,
                                             contrast: service.contrast
                                         },
-                                        document: doc.document
+                                        document
                                     });
                                     if (imageSource) {
                                         try {
-                                            await service.writeImage(imageSource, name, exportFormat, exportQuality, true);
+                                            await service.writeImage(
+                                                imageSource,
+                                                name,
+                                                exportFormat,
+                                                exportQuality,
+                                                true,
+                                                service.useFoldersStructure && document.folders?.length ? await documentsService.folderRepository.findFolderById(document.folders[0]) : null
+                                            );
                                         } finally {
                                             recycleImages(imageSource);
                                         }
@@ -856,11 +864,6 @@ export default class SyncWorker extends Observable {
     }
 
     async syncPDFDocuments({ event, force = false }: { force; event: DocumentEvents }) {
-        // if (event?.eventName === EVENT_DOCUMENT_UPDATED || event?.eventName === EVENT_DOCUMENT_ADDED || event?.eventName === EVENT_DOCUMENT_PAGE_DELETED) {
-        //     // we ignore this event
-        //     // pages will be updated independently
-        //     return;
-        // }
         const localDocuments = event?.['doc'] ? [event['doc'] as OCRDocument] : ((event?.['documents'] as OCRDocument[]) ?? (await documentsService.documentRepository.search()));
         DEV_LOG &&
             console.log(
@@ -878,7 +881,6 @@ export default class SyncWorker extends Observable {
                     if (!service.shouldSync(force, event)) {
                         return;
                     }
-                    const deleteKey = getRemoteDeleteDocumentSettingsKey(service);
                     // just test if we have local document marked as needing update
                     const documentsToSync = localDocuments.filter((d) => force || (d._synced & service.syncMask) === 0);
                     // DEV_LOG && console.log('syncImageDocuments', 'documentsToSync', documentsToSync.length);
@@ -900,12 +902,11 @@ export default class SyncWorker extends Observable {
                             const existing = remoteFiles.find((r) => r.basename === name);
                             DEV_LOG && console.info('syncPDFDocuments', 'test', doc.id, existing?.lastmod, doc.modifiedDate);
                             if (!existing || new Date(existing.lastmod).valueOf() < doc.modifiedDate) {
-                                await service.writePDF(doc, name);
+                                await service.writePDF(doc, name, service.useFoldersStructure && doc.folders?.length ? await documentsService.folderRepository.findFolderById(doc.folders[0]) : null);
                             }
                             await doc.save({ _synced: doc._synced | service.syncMask });
                         }
                     }
-                    ApplicationSettings.remove(deleteKey);
                     DEV_LOG && console.log('syncPDFDocuments', 'handling service done', service.type, service.id, service.autoSync, force);
                     this.onServiceSyncDone(service);
                 })

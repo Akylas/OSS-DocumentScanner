@@ -1,7 +1,7 @@
 import { File, Folder, Screen, path } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
-import { OCRDocument } from '~/models/OCRDocument';
+import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { FileStat } from '~/webdav';
@@ -32,9 +32,9 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
         }
     }
     override stop() {}
-    override async ensureRemoteFolder() {
-        if (!Folder.exists(this.localFolderPath)) {
-            Folder.fromPath(this.localFolderPath);
+    override async ensureRemoteFolder(folderPath = this.localFolderPath) {
+        if (!Folder.exists(folderPath)) {
+            Folder.fromPath(folderPath);
         }
     }
     override async getRemoteFolderFiles(folderStr: string) {
@@ -52,17 +52,9 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
                     }) as FileStat
             );
     }
-    override async putFileContents(relativePath: string, localFilePath: string, options?) {
-        return File.fromPath(localFilePath).copy(path.join(this.localFolderPath, relativePath));
-    }
-    override putFileContentsFromData(relativePath: string, data: string, options?) {
-        return File.fromPath(path.join(this.localFolderPath, relativePath)).writeText(data);
-    }
-    override async deleteFile(relativePath: string) {
-        return File.fromPath(path.join(this.localFolderPath, relativePath)).remove();
-    }
-    override async writePDF(document: OCRDocument, filename: string) {
+    override async writePDF(document: OCRDocument, filename: string, docFolder?: DocFolder) {
         const pages = document.pages;
+        DEV_LOG && console.log('LocalFolderPDFSyncService', 'writePDF', document.id, pages.length);
         if (!pages || pages.length === 0) {
             return;
         }
@@ -77,7 +69,16 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
                 pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
                 ...this.exportOptions
             });
-            return generatePDFASync(this.localFolderPath, filename, options, wrapNativeException);
+            let destinationPath = this.localFolderPath;
+            if (docFolder) {
+                const subFolders = docFolder.name.split('/');
+                let folder = Folder.fromPath(destinationPath);
+                for (let i = 0; i < subFolders.length; i++) {
+                    folder = folder.getFolder(subFolders[i]);
+                }
+                destinationPath = folder.path;
+            }
+            return generatePDFASync(destinationPath, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
             await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: this.localFolderPath, filename, compress: true, options: this.exportOptions });

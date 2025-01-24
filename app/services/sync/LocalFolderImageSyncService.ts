@@ -4,6 +4,7 @@ import { FileStat } from '~/webdav';
 import { DocumentEvents } from '../documents';
 import { BaseImageSyncService, BaseImageSyncServiceOptions } from './BaseImageSyncService';
 import { SERVICES_SYNC_MASK } from './types';
+import type { DocFolder } from '~/models/OCRDocument';
 
 export interface LocalFolderImageSyncServiceOptions extends BaseImageSyncServiceOptions {
     localFolderPath: string;
@@ -47,18 +48,18 @@ export class LocalFolderImageSyncService extends BaseImageSyncService {
                     }) as FileStat
             );
     }
-    override async putFileContents(relativePath: string, localFilePath: string, options?) {
-        return File.fromPath(localFilePath).copy(path.join(this.localFolderPath, relativePath));
-    }
-    override putFileContentsFromData(relativePath: string, data: string, options?) {
-        return File.fromPath(path.join(this.localFolderPath, relativePath)).writeText(data);
-    }
-    override async deleteFile(relativePath: string) {
-        return File.fromPath(path.join(this.localFolderPath, relativePath)).remove();
-    }
-    override async writeImage(imageSource: ImageSource, fileName: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean) {
+    override async writeImage(imageSource: ImageSource, fileName: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean, docFolder?: DocFolder) {
+        let exportDirectory = this.localFolderPath;
+        if (docFolder) {
+            const subFolders = docFolder.name.split('/');
+            let folder = Folder.fromPath(exportDirectory);
+            for (let i = 0; i < subFolders.length; i++) {
+                folder = folder.getFolder(subFolders[i]);
+            }
+            exportDirectory = folder.path;
+        }
         await saveImage(imageSource, {
-            exportDirectory: this.localFolderPath,
+            exportDirectory,
             fileName,
             imageFormat,
             imageQuality,

@@ -4,7 +4,6 @@ import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
 import { basename } from '~/webdav/tools/path';
-// import { timeout } from '~/utils/ui';
 import { lc } from '@nativescript-community/l';
 import { networkService } from '~/services/api';
 import { WebdavSyncOptions } from '~/services/sync/Webdav';

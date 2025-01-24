@@ -218,7 +218,7 @@ export async function getFileName(src: string) {
 export function generatePDFASync(destFolder: string, fileName: string, options: string, errorHandler) {
     return androidFunctionCallbackPromise<string>(
         (callback) => {
-            DEV_LOG && console.log('generatePDFASync', fileName, options);
+            DEV_LOG && console.log('generatePDFASync', destFolder, fileName, options);
             com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(Utils.android.getApplicationContext(), destFolder, fileName, options, callback);
         },
         (r) => r,

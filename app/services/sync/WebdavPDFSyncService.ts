@@ -1,7 +1,7 @@
 import { File, Screen, knownFolders, path } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
-import { OCRDocument } from '~/models/OCRDocument';
+import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
@@ -44,32 +44,22 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
         }
     }
     override stop() {}
-    override async ensureRemoteFolder() {
-        DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
-        if (!(await this.client.exists(this.remoteFolder))) {
-            return this.client.createDirectory(this.remoteFolder, { recursive: true });
+    override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
+        if (!(await this.client.exists(remoteFolder))) {
+            return this.client.createDirectory(remoteFolder, { recursive: true });
         }
     }
 
     override async getRemoteFolderFiles(relativePath: string) {
         return this.client.getDirectoryContents(path.join(this.remoteFolder, relativePath), { includeSelf: false, details: false }) as Promise<FileStat[]>;
     }
-    override async putFileContents(relativePath: string, localFilePath: string, options?) {
-        return this.client.putFileContents(path.join(this.remoteFolder, relativePath), File.fromPath(localFilePath), options);
-    }
-    override putFileContentsFromData(relativePath: string, data: string, options?) {
-        return this.client.putFileContents(path.join(this.remoteFolder, relativePath), data, options);
-    }
-    override async deleteFile(relativePath: string) {
-        return this.client.deleteFile(path.join(this.remoteFolder, relativePath));
-    }
-    override async writePDF(document: OCRDocument, filename: string) {
+    override async writePDF(document: OCRDocument, fileName: string, docFolder?: DocFolder) {
         const pages = document.pages;
         if (!pages || pages.length === 0) {
             return;
         }
-        if (!filename.endsWith(PDF_EXT)) {
-            filename += PDF_EXT;
+        if (!fileName.endsWith(PDF_EXT)) {
+            fileName += PDF_EXT;
         }
         const temp = knownFolders.temp().path;
 
@@ -81,13 +71,17 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
                 pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
                 ...this.exportOptions
             });
-            await generatePDFASync(temp, filename, options, wrapNativeException);
+            await generatePDFASync(temp, fileName, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
-            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: temp, filename, compress: true, options: this.exportOptions });
+            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: temp, filename: fileName, compress: true, options: this.exportOptions });
         }
-        const destinationPath = path.join(temp, filename);
-        DEV_LOG && console.log('destinationPath', destinationPath, File.exists(destinationPath));
-        return this.putFileContents(filename, destinationPath);
+        const localFilePath = path.join(temp, fileName);
+        let destinationPath = this.remoteFolder;
+        if (docFolder) {
+            destinationPath = path.join(destinationPath, docFolder.name);
+            await this.ensureRemoteFolder(destinationPath)
+        }
+        return this.client.putFileContents(path.join(destinationPath, fileName), File.fromPath(localFilePath));
     }
 }

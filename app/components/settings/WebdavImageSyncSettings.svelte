@@ -37,6 +37,7 @@
                 exportOptions: pdfExportSettings,
                 ...imageExportSettings,
                 autoSync: false,
+                useFoldersStructure: false,
                 enabled: true,
                 fileNameFormat: ApplicationSettings.getString(SETTINGS_FILE_NAME_FORMAT, FILENAME_DATE_FORMAT),
                 color: SERVICES_SYNC_COLOR['folder_image'] as string | Color
@@ -115,6 +116,13 @@
             } as TextFieldProperties,
             rightValue: () => $store.fileNameFormat,
             type: 'prompt'
+        },
+        {
+            type: 'switch',
+            id: 'useFoldersStructure',
+            title: lc('use_folder_structure'),
+            description: lc('use_folder_structure_desc'),
+            value: $store.useFoldersStructure
         },
         {
             id: 'setting',

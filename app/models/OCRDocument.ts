@@ -573,8 +573,6 @@ export class OCRDocument extends Observable implements Document {
         const { db } = documentsService;
         let oldFolderId: number;
         if (this.folders?.length) {
-            // const [name, color] = this.folders[0].split(FOLDER_COLOR_SEPARATOR);
-            // oldFolder = { name, color };
             oldFolderId = this.folders[0];
         }
         let folder: DocFolder;

@@ -407,6 +407,8 @@
     "transformer_batch_size_desc": "number of images to transform in parallel. More is faster but could crash the app because of memory usage",
     "type": "type",
     "updating_pages": "updating pages (%1$s%%)",
+    "use_folder_structure": "use document folder as subfolder",
+    "use_folder_structure_desc": "if enabled the file will be created in sub folders respecting the document folder",
     "use_system_camera": "use system camera",
     "use_system_camera_desc": "use system camera instead of app view (long press would use the inversed behavior). When enabled some features like batch or auto-scan will be disabled",
     "username": "username",

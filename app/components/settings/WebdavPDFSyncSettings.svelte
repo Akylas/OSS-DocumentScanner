@@ -41,6 +41,7 @@
                 autoSync: false,
                 enabled: true,
                 OCREnabled: false,
+                useFoldersStructure: false,
                 OCRDataType: 'best',
                 OCRLanguages: [],
                 fileNameFormat: ApplicationSettings.getString(SETTINGS_FILE_NAME_FORMAT, FILENAME_DATE_FORMAT),
@@ -115,6 +116,13 @@
             } as TextFieldProperties,
             rightValue: () => $store.fileNameFormat,
             type: 'prompt'
+        },
+        {
+            type: 'switch',
+            id: 'useFoldersStructure',
+            title: lc('use_folder_structure'),
+            description: lc('use_folder_structure_desc'),
+            value: $store.useFoldersStructure
         },
         {
             type: 'header',

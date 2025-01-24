@@ -54,7 +54,6 @@ export function encodePath(filePath: string): string {
 }
 
 export function getAllDirectories(directory: string): string[] {
-    DEV_LOG && console.log('getAllDirectories', directory);
     if (!directory || directory === SEPARATOR) return [];
     let currentPath = directory;
     const output: string[] = [];

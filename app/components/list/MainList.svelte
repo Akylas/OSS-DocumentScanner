@@ -296,8 +296,7 @@
                 const index = folderItems.findIndex((item) => item.folder && item.folder.id === folderId);
                 if (index !== -1) {
                     const item = folderItems.getItem(index);
-                    const res = await documentsService.folderRepository.findFolderById(folderId);
-                    item.folder = res[0];
+                    item.folder = await documentsService.folderRepository.findFolderById(folderId);
                     if (item.folder.count > 0) {
                         folderItems.setItem(index, folderItems.getItem(index));
                     } else {

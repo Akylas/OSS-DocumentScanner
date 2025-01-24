@@ -1,4 +1,4 @@
-import { type BaseSyncService } from './BaseSyncService';
+import { type BaseSyncService } from '~/services/sync/BaseSyncService';
 
 export type SYNC_TYPES = 'webdav_data' | 'folder_image' | 'folder_pdf' | 'webdav_image' | 'webdav_pdf';
 export const SERVICES_SYNC_MASK: { [key in SYNC_TYPES]: number } = {

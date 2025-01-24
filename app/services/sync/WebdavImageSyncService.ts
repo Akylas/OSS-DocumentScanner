@@ -6,6 +6,7 @@ import { DocumentEvents } from '../documents';
 import { BaseImageSyncService, BaseImageSyncServiceOptions } from './BaseImageSyncService';
 import { WebdavSyncOptions } from './Webdav';
 import { SERVICES_SYNC_MASK } from './types';
+import type { DocFolder } from '~/models/OCRDocument';
 
 export interface WebdavImageSyncServiceOptions extends BaseImageSyncServiceOptions, WebdavSyncOptions {}
 
@@ -26,7 +27,7 @@ export class WebdavImageSyncService extends BaseImageSyncService {
 
     static start(config?: { id: number; [k: string]: any }) {
         if (config) {
-            const { remoteURL, headers, authType, ...otherConfig } = config;
+            const { authType, headers, remoteURL, ...otherConfig } = config;
             const service = WebdavImageSyncService.getOrCreateInstance();
             Object.assign(service, config);
             DEV_LOG && console.log('WebdavImageSyncService', 'start', JSON.stringify(config), service.autoSync);
@@ -39,24 +40,15 @@ export class WebdavImageSyncService extends BaseImageSyncService {
         }
     }
     override stop() {}
-    override async ensureRemoteFolder() {
-        if (!(await this.client.exists(this.remoteFolder))) {
-            return this.client.createDirectory(this.remoteFolder, { recursive: true });
+    override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
+        if (!(await this.client.exists(remoteFolder))) {
+            return this.client.createDirectory(remoteFolder, { recursive: true });
         }
     }
     override async getRemoteFolderFiles(relativePath: string) {
         return this.client.getDirectoryContents(path.join(this.remoteFolder, relativePath), { includeSelf: false, details: false }) as Promise<FileStat[]>;
     }
-    override async putFileContents(relativePath: string, localFilePath: string, options?) {
-        return this.client.putFileContents(path.join(this.remoteFolder, relativePath), File.fromPath(localFilePath), options);
-    }
-    override putFileContentsFromData(relativePath: string, data: string, options?) {
-        return this.client.putFileContents(path.join(this.remoteFolder, relativePath), data, options);
-    }
-    override async deleteFile(relativePath: string) {
-        return this.client.deleteFile(path.join(this.remoteFolder, relativePath));
-    }
-    override async writeImage(imageSource: ImageSource, fileName: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean) {
+    override async writeImage(imageSource: ImageSource, fileName: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean, docFolder?: DocFolder) {
         const temp = knownFolders.temp().path;
         await saveImage(imageSource, {
             exportDirectory: temp,
@@ -65,6 +57,12 @@ export class WebdavImageSyncService extends BaseImageSyncService {
             imageQuality,
             overwrite
         });
-        return this.putFileContents(fileName, path.join(temp, fileName));
+        const localFilePath = path.join(temp, fileName);
+        let destinationPath = this.remoteFolder;
+        if (docFolder) {
+            destinationPath = path.join(destinationPath, docFolder.name);
+            await this.ensureRemoteFolder(destinationPath);
+        }
+        return this.client.putFileContents(path.join(destinationPath, fileName), File.fromPath(localFilePath));
     }
 }

@@ -138,15 +138,17 @@ COUNT(df.document_id) AS count`,
             return toReturn;
         });
     }
-    findFolderById(id: number) {
-        return this.search({
-            select: sql`f.*, 
+    async findFolderById(id: number) {
+        return (
+            await this.search({
+                select: sql`f.*, 
 COUNT(pf.document_id) AS count`,
-            from: sql`Folder f`,
-            where: sql`f.id = ${id}`,
-            postfix: sql`
+                from: sql`Folder f`,
+                where: sql`f.id = ${id}`,
+                postfix: sql`
 LEFT JOIN DocumentsFolders pf ON f.id = pf.folder_id`
-        });
+            })
+        )[0];
     }
 
     async createModelFromAttributes(attributes: DocFolder): Promise<any> {

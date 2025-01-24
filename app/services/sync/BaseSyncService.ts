@@ -1,5 +1,5 @@
 import { Color, Observable } from '@nativescript/core';
-import { DocumentEvents } from '../documents';
+import { DocumentEvents } from '~/services/documents';
 
 export interface BaseSyncServiceOptions {
     autoSync?: boolean;
