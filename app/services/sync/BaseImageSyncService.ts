@@ -15,7 +15,7 @@ export interface BaseImageSyncServiceOptions extends BaseSyncServiceOptions {
     brightness?: number;
     contrast?: number;
     rotation?: number;
-    useFoldersStructure: boolean;
+    useFoldersStructure?: boolean;
 }
 
 export abstract class BaseImageSyncService extends BaseSyncService {

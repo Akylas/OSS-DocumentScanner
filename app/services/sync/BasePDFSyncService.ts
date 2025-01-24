@@ -8,11 +8,11 @@ import { getFileNameForDocument } from '~/utils/utils.common';
 export interface BasePDFSyncServiceOptions extends BaseSyncServiceOptions {
     fileNameFormat?: string;
     exportOptions?: PDFExportBaseOptions;
-    OCREnabled: boolean;
-    OCRDataType: string;
-    OCRLanguages: string[];
+    OCREnabled?: boolean;
+    OCRDataType?: string;
+    OCRLanguages?: string[];
 
-    useFoldersStructure: boolean;
+    useFoldersStructure?: boolean;
 }
 
 export abstract class BasePDFSyncService extends BaseSyncService {
