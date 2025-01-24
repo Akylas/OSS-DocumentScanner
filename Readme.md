@@ -111,6 +111,17 @@ This project is optimized to be built with [Akylas Fork](https://github.com/Akyl
 Another change is that this project uses new features of the Nativescript [cli](https://github.com/farfromrefug/nativescript-cli) which were not released yet.
 So for now you need to clone [it](https://github.com/farfromrefug/nativescript-cli), build with `npm run setup` then use it with `PATH_TO_CLI_FOLDER/bin/ns`
 
+### dotenv
+
+The app uses `.env` file to set up needed environment variables. `.env` is not commited as it contains sensitive data
+Simply create a `.env` file with:
+```
+source .env.ci
+```
+
+Then "source" the file in the terminal so that variable are exported and available to nativescript cli.
+I use dotenv plugin for zsh which automatically loads the `.env` file
+
 ### 3rd parties
 
 This app also uses opencv and tesseract. I did not include the libraries in git because there are huge and would make the github repo too big.
