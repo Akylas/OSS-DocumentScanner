@@ -223,6 +223,7 @@ export class SyncService extends Observable {
         const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
         this.services = services;
         syncServicesStore.set(services);
+        DEV_LOG && console.log('onServiceChanged', this.services.length);
     }
 
     syncRunning = false;
@@ -322,10 +323,10 @@ export class SyncService extends Observable {
                 const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
                 worker.onmessage = this.onWorkerMessage.bind(this);
             }
-            // DEV_LOG && console.log('internalSendMessageToWorker', Date.now());
             this.worker.postMessage(data);
             // it seems that without the timeout consecutive send does not work
-            await timeout(150);
+            // we needed to bump that timeout to ensure it works  :s
+            await timeout(250);
         });
     }
     async sendMessageToWorker<T = any>(type: string, messageData?, id?: number, error?, isResponse = false, timeout = 0, nativeData?): Promise<T> {
