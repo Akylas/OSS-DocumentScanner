@@ -80,7 +80,7 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
         let destinationPath = this.remoteFolder;
         if (docFolder) {
             destinationPath = path.join(destinationPath, docFolder.name);
-            await this.ensureRemoteFolder(destinationPath)
+            await this.ensureRemoteFolder(destinationPath);
         }
         return this.client.putFileContents(path.join(destinationPath, fileName), File.fromPath(localFilePath));
     }
