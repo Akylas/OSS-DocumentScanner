@@ -409,6 +409,8 @@
     "transformer_batch_size_desc": "número de imagens para transformar em paralelo. Mais é mais rápido, mas pode travar o aplicativo devido ao uso de memória",
     "type": "tipo",
     "updating_pages": "atualizando páginas (%1$s%%)",
+    "use_folder_structure": "usar a pasta de documentos como subpasta",
+    "use_folder_structure_desc": "se ativado, o arquivo será criado em subpastas, respeitando a pasta de documentos",
     "use_system_camera": "usar câmera do sistema",
     "use_system_camera_desc": "use a câmera do sistema em vez da visualização do aplicativo (um toque longo usaria o comportamento inverso). Quando ativado, alguns recursos como lote ou verificação automática serão desativados",
     "username": "nome de usuário",
