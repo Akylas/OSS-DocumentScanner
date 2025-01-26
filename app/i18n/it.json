@@ -416,6 +416,8 @@
     "transformer_batch_size_desc": "numero di immagini da trasformare contemporaneamente. Più alto è il valore, più veloce è il processo, ma potrebbe causare il crash dell'app a causa dell'utilizzo di memoria",
     "type": "tipo",
     "updating_pages": "aggiornamento pagine (%1$s%%)",
+    "use_folder_structure": "usa la cartella documenti come sottocartella",
+    "use_folder_structure_desc": "se abilitato il file verrà creato nelle sottocartelle della cartella radice documenti",
     "use_system_camera": "usa la fotocamera di sistema",
     "use_system_camera_desc": "usa la fotocamera di sistema invece della visualizzazione interna all'app (una pressione prolungata attiva il comportamento inverso). Se abilitate, alcune funzionalità come la scansione batch o automatica verranno disabilitate",
     "username": "nome utente",
