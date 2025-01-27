@@ -1,6 +1,6 @@
+import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import '@nativescript/core/globals';
 import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
-import BaseWorker from './BaseWorker';
 
 // try {
 //     const test = require('~/services/pdf/PDFExportCanvas');
@@ -13,20 +13,17 @@ const TAG = '[PDFExportWorker]';
 
 DEV_LOG && console.log(TAG);
 class PDFExportWorker extends BaseWorker {
-    receivedMessage(event: { data }) {
-        const handled = super.receivedMessage(event);
-        if (!handled) {
-            const data = event.data;
-            switch (data.type) {
-                case 'export':
-                    worker.export(data.id, data.type, data.messageData);
-                    break;
-            }
+    rece;
+    receivedMessage(event: WorkerEvent) {
+        const data = event.data;
+        switch (data.type) {
+            case 'export':
+                worker.export(data.id, data.type, data.messageData);
+                break;
         }
-        return true;
     }
 
-    async export(id, type, { pages, folder, filename, compress }) {
+    async export(id, type, { compress, filename, folder, pages }) {
         try {
             DEV_LOG && console.log(TAG, 'export', id, type, pages.length, folder, filename, compress, JSON.stringify(pages));
             const exporter = new PDFExportCanvas();
@@ -40,17 +37,3 @@ class PDFExportWorker extends BaseWorker {
 }
 
 const worker = new PDFExportWorker(context);
-const receivedMessage = worker.receivedMessage.bind(worker);
-context.onmessage = (event) => {
-    if (typeof event.data.messageData === 'string') {
-        try {
-            event.data.messageData = JSON.parse(event.data.messageData);
-        } catch (error) {}
-    }
-    if (typeof event.data.error === 'string') {
-        try {
-            event.data.error = JSON.parse(event.data.error);
-        } catch (error) {}
-    }
-    receivedMessage(event);
-};

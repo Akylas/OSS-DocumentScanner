@@ -38,6 +38,7 @@
         "@akylas/kiss-orm": "2.1.11",
         "@akylas/nativescript": "8.8.10",
         "@akylas/nativescript-app-tools": "file:tools",
+        "@akylas/nativescript-app-utils": "2.2.2",
         "@akylas/nativescript-app-utils": "2.2.1",
         "@akylas/nativescript-inapp-purchase": "^0.0.3",
         "@akylas/nativescript-inappbrowser": "3.1.8",
