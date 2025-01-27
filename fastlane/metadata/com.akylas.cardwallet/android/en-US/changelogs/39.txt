@@ -1,0 +1,3 @@
+Bug fixes:
+- ensure sync always works/starts correctly
+- Translations update
