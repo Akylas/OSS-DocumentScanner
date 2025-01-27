@@ -4,10 +4,10 @@ import { generatePDFASync } from 'plugin-nativeprocessor';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
 import { CustomError, PermissionError, SilentError } from '@shared/utils/error';
 import { getPageColorMatrix } from '~/utils/matrix';
-import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { PDF_EXT } from '~/utils/constants';
+import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import { requestStoragePermission } from '~/utils/utils.common';
 export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, options: baseOptions, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
@@ -65,20 +65,6 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             if (id && messagePromises.hasOwnProperty(id)) {
                 messagePromises[id].forEach(function (executor) {
                     executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
-                    // if (isError) {
-                    // executor.reject(createErrorFromMessage(message));
-                    // } else {
-                    const id = data.id;
-                    // if (data.nativeDataKeys?.length > 0) {
-                    //     const nativeDatas: { [k: string]: any } = {};
-                    //     if (__ANDROID__) {
-                    //         data.nativeDataKeys.forEach((k) => {
-                    //             nativeDatas[k] = com.akylas.documentscanner.WorkersContext.getValue(`${id}_${k}`);
-                    //             com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, null);
-                    //         });
-                    //         data.nativeDatas = nativeDatas;
-                    //     }
-                    // }
                     if (data.error) {
                         executor.reject(new CustomError(JSON.parse(data.error)));
                     } else {
@@ -108,14 +94,6 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
                     messagePromises[id].push({ reject, resolve, timeoutTimer });
                 }
 
-                // const result = worker.processImage(image, { width, height, rotation });
-                // handleContours(result.contours, rotation, width, height);
-                // const keys = Object.keys(nativeData);
-                // if (__ANDROID__) {
-                //     keys.forEach((k) => {
-                //         com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, nativeData[k]._native || nativeData[k]);
-                //     });
-                // }
                 const data = {
                     error: error !== undefined ? JSON.stringify({ message: error.toString(), stack: error.stack }) : undefined,
                     id,
