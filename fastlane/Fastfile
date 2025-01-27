@@ -322,7 +322,7 @@ lane :get_changelog  do |params|
   logs = conventional_changelog(format: changelogFormat, title: "#{platform.capitalize} Beta", display_title:false, display_links:display_links, display_scopes:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: ignoredScopes, debug:false, commit_url:commit_url ) || ""
   if (!logs.empty?)
     logs = logs.split(/[\n]/).uniq
-    translateLogs = logs.select {|v| v =~ /Translated using Weblate/ }
+    translateLogs = logs.select {|v| v =~ /Translated .* using Weblate/ }
     logs = (logs - translateLogs).map {|l| 
       if (!display_links)
         # remove github issues
@@ -335,7 +335,15 @@ lane :get_changelog  do |params|
       l
     }
     if (!translateLogs.empty?)
-      logs.push("- Translations update")
+      contributors = Array.new
+      translateLogs.each { |l|
+          contributors.concat(l.to_enum(:scan,/@[a-zA-Z0-9-_]+/).map {$&})
+      }
+      if (display_links) 
+        logs.push("- Translations update by " +  contributors.join(", "))
+      else
+        logs.push("- Translations update")
+      end
     end
     logs = logs.join("\n")
     puts logs
