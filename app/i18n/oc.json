@@ -23,6 +23,8 @@
     "app": {
         "name": "Numerizador de documents OSS"
     },
+    "appearance": "Aparéncia",
+    "appearance_settings": "tèma e d’autres reglatges d’aparéncia",
     "apply": "aplicar",
     "ask_everytime": "demandar cada còp",
     "aspect_fill": "emplenatge",
