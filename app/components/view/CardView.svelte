@@ -1,5 +1,4 @@
 <script context="module" lang="ts">
-    import { request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img, getImagePipeline } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -23,9 +22,9 @@
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application';
     import { throttle } from '@nativescript/core/utils';
     import { create as createImagePicker } from '@nativescript/imagepicker';
-    import { PermissionError } from '@shared/utils/error';
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
+    import dayjs from 'dayjs';
     import { QRCodeData, QRCodeSingleData, detectQRCodeFromFile } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -49,7 +48,6 @@
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
     import {
-        BOTTOM_BUTTON_OFFSET,
         CARD_RATIO,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         EVENT_DOCUMENT_DELETED,
@@ -62,24 +60,12 @@
         SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
-    import {
-        detectOCR,
-        importAndScanImage,
-        importImageFromCamera,
-        onBackButton,
-        pickColor,
-        requestCameraPermission,
-        showImagePopoverMenu,
-        showPDFPopoverMenu,
-        showPopoverMenu,
-        showSnack,
-        transformPages
-    } from '~/utils/ui';
+    import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
     import { colors, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import IconButton from '../common/IconButton.svelte';
-    import dayjs from 'dayjs';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import { requestCameraPermission } from '~/utils/utils.common';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right

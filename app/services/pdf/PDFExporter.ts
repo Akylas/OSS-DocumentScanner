@@ -8,19 +8,14 @@ import type { WorkerEventType } from '~/workers/BaseWorker';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { PDF_EXT } from '~/utils/constants';
+import { requestStoragePermission } from '~/utils/utils.common';
 export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, options: baseOptions, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
         filename = getFileNameForDocument(document) + PDF_EXT;
     }
     if (__ANDROID__) {
-        if (SDK_VERSION <= 29) {
-            const result = await request('storage');
-            DEV_LOG && console.log('exportPDFAsync', 'perm result', result);
-            if (!isPermResultAuthorized(result)) {
-                throw new PermissionError(lc('storage_permission_needed'));
-            }
-        }
+        await requestStoragePermission();
         // return new Promise((resolve, reject) => {
         // pages.forEach((page) => {
         //     if (page.colorType && !page.colorMatrix) {

@@ -23,6 +23,7 @@
     import { showModal } from '@shared/utils/svelte/ui';
     import { getDirectoryName, hideLoading, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
+    import { requestStoragePermission } from '~/utils/utils.common';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
 </script>
 
@@ -236,12 +237,7 @@
                             }
                             case 'folder_image': {
                                 if (__ANDROID__) {
-                                    if (SDK_VERSION <= 29) {
-                                        const result = await request('storage');
-                                        if (!isPermResultAuthorized(result)) {
-                                            throw new PermissionError(lc('storage_permission_needed'));
-                                        }
-                                    }
+                                    await requestStoragePermission();
                                 }
                                 const page = (await import('~/components/settings/FolderImageSyncSettings.svelte')).default;
                                 const result = await showModal({
@@ -257,12 +253,7 @@
 
                             case 'folder_pdf': {
                                 if (__ANDROID__) {
-                                    if (SDK_VERSION <= 29) {
-                                        const result = await request('storage');
-                                        if (!isPermResultAuthorized(result)) {
-                                            throw new PermissionError(lc('storage_permission_needed'));
-                                        }
-                                    }
+                                    await requestStoragePermission();
                                 }
                                 const page = (await import('~/components/settings/FolderPDFSyncSettings.svelte')).default;
                                 const result = await showModal({

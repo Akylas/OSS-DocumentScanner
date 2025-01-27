@@ -1,12 +1,12 @@
-import { request } from '@nativescript-community/perms';
-import { AndroidActivityNewIntentEventData, Application, Color, Frame, Page, Utils, View } from '@nativescript/core';
-import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
-import { showError } from '@shared/utils/showError';
-import { throttle } from '@nativescript/core/utils';
-import { securityService } from '~/services/security';
-import { documentsService } from '~/services/documents';
 import { lc } from '@nativescript-community/l';
+import { AndroidActivityNewIntentEventData, Application, Color, Frame, Page, Utils, View } from '@nativescript/core';
+import { throttle } from '@nativescript/core/utils';
+import { showError } from '@shared/utils/showError';
 import { Dayjs } from 'dayjs';
+import { documentsService } from '~/services/documents';
+import { securityService } from '~/services/security';
+import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
+import { requestStoragePermission } from '../utils.common';
 
 export * from './index.common';
 
@@ -99,7 +99,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
             if (__ANDROID__ && uris.length) {
                 const needsStoragePermission = uris.find((d) => d.startsWith('file://'));
                 if (needsStoragePermission) {
-                    await request('storage');
+                    await requestStoragePermission();
                     uris = uris.map((u) => {
                         if (u.startsWith('file://')) {
                             const newUri = androidx.core.content.FileProvider.getUriForFile(

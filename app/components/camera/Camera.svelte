@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { request } from '@nativescript-community/perms';
+    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -37,6 +37,7 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
+    import { requestCameraPermission } from '~/utils/utils.common';
     import { colors, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -311,11 +312,7 @@
         try {
             DEV_LOG && console.log('[Camera]', 'startPreview', !!cameraView);
             if (!previewStarted) {
-                const result = await request('camera');
-                DEV_LOG && console.log('startPreview', result);
-                if (result[0] !== 'authorized') {
-                    throw new PermissionError(lc('camera_permission_needed'));
-                }
+                await requestCameraPermission();
                 previewStarted = true;
                 if (cameraView?.nativeView) {
                     cameraView.nativeView.readyToStartPreview = true;

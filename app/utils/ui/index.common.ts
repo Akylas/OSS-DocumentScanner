@@ -4,6 +4,7 @@ import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+import { Slider } from '@nativescript-community/ui-material-slider';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
@@ -25,11 +26,10 @@ import {
     knownFolders
 } from '@nativescript/core';
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
-import { Slider } from '@nativescript-community/ui-material-slider';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { doInBatch } from '@shared/utils/batch';
-import { PermissionError, SilentError } from '@shared/utils/error';
+import { SilentError } from '@shared/utils/error';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
@@ -49,13 +49,14 @@ import {
 import type { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
-import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type ExportPDFAlertOptions__SvelteComponent_ from '~/components/common/ExportPDFAlertOptions.svelte';
+import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import type BottomSnack__SvelteComponent_ from '~/components/widgets/BottomSnack.svelte';
 import BottomSnack from '~/components/widgets/BottomSnack.svelte';
 import { getFileNameForDocument, getFormatedDateForFilename, getLocaleDisplayName, l, lc } from '~/helpers/locale';
 import { DocFolder, ImportImageData, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
 import { OCRLanguages, ocrService } from '~/services/ocr';
+import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
 import { exportPDFAsync } from '~/services/pdf/PDFExporter';
 import { securityService } from '~/services/security';
@@ -100,8 +101,7 @@ import { recycleImages } from '~/utils/images';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { saveImage } from '../utils';
-import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
+import { requestCameraPermission, requestStoragePermission, saveImage } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -680,7 +680,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                             const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
                             let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
                             try {
-                                const defaultOptions = getPDFDefaultExportOptions()
+                                const defaultOptions = getPDFDefaultExportOptions();
                                 DEV_LOG && console.log('defaultOptions', JSON.stringify(defaultOptions));
                                 componentInstanceInfo = resolveComponentElement(component, {
                                     filename: getFileNameForDocument(document) + PDF_EXT,
@@ -816,7 +816,7 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
     // const destinationPaths = [];
     let finalMessagePart;
     if (toGallery) {
-        await request('storage');
+        await requestStoragePermission();
     }
     await doInBatch(
         sortedPages,
@@ -1651,12 +1651,6 @@ export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumb
     }
 }
 
-export async function requestCameraPermission() {
-    const result = await request('camera');
-    if (result[0] !== 'authorized') {
-        throw new PermissionError(lc('camera_permission_needed'));
-    }
-}
 export async function importImageFromCamera({
     canGoToView = true,
     document,

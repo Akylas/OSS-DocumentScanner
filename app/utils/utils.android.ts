@@ -1,7 +1,6 @@
-import { request } from '@nativescript-community/perms';
 import { AndroidActivityResultEventData, Application, File, Folder, ImageSource, Utils, path } from '@nativescript/core';
-import { ANDROID_CONTENT } from './constants';
 import { SDK_VERSION } from '@nativescript/core/utils';
+import { ANDROID_CONTENT } from './constants';
 
 export * from './utils.common';
 

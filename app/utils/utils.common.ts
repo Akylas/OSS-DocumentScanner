@@ -1,7 +1,11 @@
+import { lc } from '@nativescript-community/l';
+import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { ApplicationSettings } from '@nativescript/core';
+import { SDK_VERSION } from '@nativescript/core/utils';
+import { PermissionError } from '@shared/utils/error';
 import dayjs from 'dayjs';
 import { OCRDocument } from '~/models/OCRDocument';
-import { DEFAULT__BATCH_CHUNK_SIZE, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
+import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
 export { restartApp } from '@akylas/nativescript-app-utils';
 
 // type Many<T> = T | T[];
@@ -50,4 +54,20 @@ export function getFileNameForDocument(
 
 export function getRealPath(src: string) {
     return src;
+}
+
+export async function requestCameraPermission() {
+    const result = await request('camera');
+    if (isPermResultAuthorized(result)) {
+        throw new PermissionError(lc('camera_permission_needed'));
+    }
+}
+
+export async function requestStoragePermission() {
+    if (SDK_VERSION <= 29) {
+        const result = await request('storage');
+        if (isPermResultAuthorized(result)) {
+            throw new PermissionError(lc('storage_permission_needed'));
+        }
+    }
 }
