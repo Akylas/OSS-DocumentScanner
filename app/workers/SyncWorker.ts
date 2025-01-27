@@ -1,8 +1,6 @@
-import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
-import { ApplicationSettings, type EventData, File, Observable, Utils, knownFolders, path } from '@nativescript/core';
+import { BaseWorker } from '@akylas/nativescript-app-utils/worker/BaseWorker';
+import { ApplicationSettings, File, Utils, knownFolders, path } from '@nativescript/core';
 import '@nativescript/core/globals';
-import { time } from '@nativescript/core/profiling';
-import type { Optional } from '@nativescript/core/utils/typescript-utils';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { DocFolder, OCRDocument, OCRPage, getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
@@ -37,7 +35,7 @@ import {
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
 import { basename } from '~/utils/path';
-import Queue from './queue';
+import Queue from '@akylas/nativescript-app-utils/worker/queue';
 
 const context: Worker = self as any;
 
@@ -49,7 +47,7 @@ export interface WorkerPostOptions {
 export interface WorkerEvent {
     data: { messageData?: any; error?: Error; nativeData?: { [k: string]: any }; type: string; id?: number };
 }
-export type WorkerEventType = 'event' | 'error' | 'terminate';
+export type WorkerEventType = 'event' | 'error' | 'started' | 'terminate';
 
 let documentsService: DocumentsService;
 
@@ -62,7 +60,6 @@ export const SERVICES_TYPE_MAP: { [key in SYNC_TYPES]: typeof BaseSyncService } 
 };
 
 const TAG = '[SyncWorker]';
-export type WorkerPostEvent = { type: string; error?; id?: number; nativeData?: string[]; messageData?: string } & WorkerPostOptions;
 const OLD_SETTINGS_KEY = 'webdav_config';
 DEV_LOG && console.log(TAG, 'main');
 
@@ -90,122 +87,18 @@ function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) =>
     };
 }
 
-export default class SyncWorker extends Observable {
+export default class SyncWorker extends BaseWorker {
     constructor(protected context) {
         DEV_LOG && console.log(TAG, 'constructor');
 
-        super();
+        super(context);
 
         this.queue.on('done', () => {
             DEV_LOG && console.log('queue empty!');
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'finished' } as SyncStateEventData);
-            (global as any).postMessage({
-                type: 'terminate'
-            });
             // ensure we unregister preferences or it will crash once the worker is closed
             prefs.destroy();
-            this.context.close();
-        });
-    }
-
-    onmessage: Function;
-    postMessage: (event: WorkerPostEvent) => void; //official worker method
-
-    receivedMessageBase(event: WorkerEvent) {
-        const data = event.data;
-        const id = data.id;
-        // DEV_LOG && console.log(TAG, 'receivedMessage', data.type, id, id && this.messagePromises.hasOwnProperty(id), Object.keys(this.messagePromises), data);
-        if (data.type === 'terminate') {
-            this.context.close();
-            return true;
-        }
-
-        if (id && this.messagePromises.hasOwnProperty(id)) {
-            this.messagePromises[id].forEach(function (executor) {
-                executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
-                const messageData = data.messageData;
-                if (!!messageData?.error) {
-                    executor.reject(messageData.error);
-                } else {
-                    executor.resolve(messageData);
-                }
-            });
-            delete this.messagePromises[id];
-            return true;
-        }
-    }
-
-    messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
-    postPromiseMessage<T = any>(type: string, messageData, id = 0, timeout = 0, nativeData?): Promise<T> {
-        return new Promise((resolve, reject) => {
-            id = id || time();
-            // DEV_LOG && console.warn(TAG, 'postPromiseMessage', type, id, timeout, messageData);
-            if (id || timeout) {
-                this.messagePromises[id] = this.messagePromises[id] || [];
-                let timeoutTimer;
-                if (timeout > 0) {
-                    timeoutTimer = setTimeout(() => {
-                        // we need to try catch because the simple fact of creating a new Error actually throws.
-                        // so we will get an uncaughtException
-                        try {
-                            reject(new Error('timeout'));
-                        } catch {}
-                        delete this.messagePromises[id];
-                    }, timeout);
-                }
-                this.messagePromises[id].push({ reject, resolve, timeoutTimer });
-            }
-
-            // const result = worker.processImage(image, { width, height, rotation });
-            // handleContours(result.contours, rotation, width, height);
-            // const keys = Object.keys(nativeData);
-            // if (__ANDROID__) {
-            //     keys.forEach((k) => {
-            //         com.akylas.documentscanner.WorkersContext.setValue(`${id}_${k}`, nativeData[k]._native || nativeData[k]);
-            //     });
-            // }
-            const mData = {
-                id,
-                // nativeDataKeys: keys,
-                messageData: JSON.stringify(messageData),
-                type
-            };
-            // DEV_LOG && console.log(TAG, 'postMessage', mData, this.messagePromises[id]);
-            (global as any).postMessage(mData);
-        });
-    }
-
-    async stop(error?, id?) {
-        // const result = await super.stop(error, id);
-        // ensure everything is done first
-        DEV_LOG && console.log('terminate worker');
-        this.context.close();
-        // return result;
-    }
-
-    notify<T extends Optional<EventData & { error?: Error }, 'object'>>(data: T): void {
-        // DEV_LOG && console.log(TAG, 'notify', data.eventName);
-        //we are a fake observable
-        if (data.error) {
-            // Error is not really serializable so we need custom handling
-            const { nativeException, ...error } = data.error as any;
-            data.error = { message: data.error.toString(), stack: data.error.stack, ...data.error };
-        }
-        (global as any).postMessage({
-            messageData: JSON.stringify(data),
-            type: 'event'
-        });
-    }
-
-    async notifyAndAwait<T = any>(eventName, data) {
-        return this.postPromiseMessage<T>('event', { data, eventName });
-    }
-
-    async sendError(error) {
-        const { nativeException, ...realError } = error;
-        (global as any).postMessage({
-            messageData: JSON.stringify({ error: { message: error.toString(), stack: error.stack, ...error } }),
-            type: 'error'
+            this.stop();
         });
     }
 
@@ -246,21 +139,16 @@ export default class SyncWorker extends Observable {
     }
 
     async receivedMessage(event: WorkerEvent) {
-        const handled = this.receivedMessageBase(event);
-        // DEV_LOG && console.log(TAG, 'receivedMessage', handled, event.data.type);
-        if (!handled) {
-            const data = event.data;
-            switch (data.type) {
-                case 'sync':
-                    await worker.handleStart(event);
-                    this.syncDocumentsQueue(event.data.messageData);
-                    break;
-                case 'stop':
-                    worker.stop(data.messageData?.error, data.id);
-                    break;
-            }
+        const data = event.data;
+        switch (data.type) {
+            case 'sync':
+                await worker.handleStart(event);
+                this.syncDocumentsQueue(event.data.messageData);
+                break;
+            case 'stop':
+                worker.stop(data.messageData?.error, data.id);
+                break;
         }
-        return true;
     }
 
     get enabled() {
@@ -916,26 +804,3 @@ export default class SyncWorker extends Observable {
 }
 
 const worker = new SyncWorker(context);
-const receivedMessage = worker.receivedMessage.bind(worker);
-context.onmessage = (event) => {
-    // DEV_LOG && console.log(TAG, 'onmessage', Date.now(), event);
-    if (typeof event.data.messageData === 'string') {
-        try {
-            event.data.messageData = JSON.parse(event.data.messageData);
-        } catch (error) {}
-    }
-    if (Array.isArray(event.data.nativeData)) {
-        event.data.nativeData = (event.data.nativeData as string[]).reduce((acc, key) => {
-            const actualKey = key.split('$$$')[1];
-            acc[actualKey] = getWorkerContextValue(key);
-            setWorkerContextValue(key, null);
-            return acc;
-        }, {});
-    }
-    if (typeof event.data.error === 'string') {
-        try {
-            event.data.error = JSON.parse(event.data.error);
-        } catch (error) {}
-    }
-    receivedMessage(event);
-};

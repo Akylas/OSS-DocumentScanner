@@ -1,7 +1,6 @@
-import { setWorkerContextValue } from '@akylas/nativescript-app-utils';
+import BaseWorkerHandler from '@akylas/nativescript-app-utils/worker/BaseWorkerHandler';
 import { lc } from '@nativescript-community/l';
-import { ApplicationSettings, EventData, Observable } from '@nativescript/core';
-import { time } from '@nativescript/core/profiling';
+import { ApplicationSettings, EventData } from '@nativescript/core';
 import { debounce } from '@nativescript/core/utils';
 import { CustomError } from '@shared/utils/error';
 import { showError } from '@shared/utils/showError';
@@ -20,10 +19,7 @@ import {
     EVENT_SYNC_STATE,
     SETTINGS_SYNC_SERVICES
 } from '~/utils/constants';
-import { timeout } from '~/utils/ui';
-import Queue from '~/workers/queue';
 import type SyncWorker from '~/workers/SyncWorker';
-import type { WorkerEventType } from '~/workers/SyncWorker';
 import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, DocumentPagesAddedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from './documents';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
@@ -91,7 +87,41 @@ const SYNC_DELAY = 1000;
 //     };
 // }
 
-export class SyncService extends Observable {
+export class SyncService extends BaseWorkerHandler<SyncWorker> {
+    constructor() {
+        super(() => new Worker('~/workers/SyncWorkerBootstrap'));
+    }
+    handleError(error: any) {
+        showError(error);
+    }
+    handleWorkerError(error: any) {
+        showError(CustomError.fromObject(error));
+    }
+    async onWorkerEvent(eventData) {
+        // DEV_LOG && console.log('onWorkerEvent', eventData);
+
+        // DEV_LOG && console.info('worker event', documentsService.id, eventData.eventName, eventData.target, !!eventData.object, Object.keys(eventData));
+        if (eventData.target === 'documentsService') {
+            if (eventData.doc) {
+                eventData.doc = OCRDocument.fromJSON(eventData.doc);
+            }
+            if (eventData.documents) {
+                eventData.documents = eventData.documents.map((d) => OCRDocument.fromJSON(d));
+            }
+            if (eventData.pages) {
+                eventData.pages = eventData.pages.map((d) => OCRPage.fromJSON(d));
+            }
+            if (eventData.object?.id === eventData.doc?.id) {
+                eventData.object = eventData.doc;
+            } else {
+                delete eventData.object;
+            }
+            // DEV_LOG && console.info('worker notifying event', documentsService.id, eventData.eventName, documentsService.notify);
+            documentsService.notify({ ...eventData, object: eventData.object || documentsService });
+        } else {
+            this.notify({ ...eventData });
+        }
+    }
     services: any[] = [];
     onDocumentAdded(event: DocumentAddedEventData) {
         DEV_LOG && console.log('SYNC', 'onDocumentAdded');
@@ -247,143 +277,7 @@ export class SyncService extends Observable {
         },
         SYNC_DELAY
     );
-    worker: SyncWorker;
-    messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
 
-    async onWorkerMessage(event: {
-        data: {
-            id?: number;
-            type: WorkerEventType;
-            messageData?: string;
-            nativeDatas?: { [k: string]: any };
-        };
-    }) {
-        // DEV_LOG && console.log('onWorkerMessage', event);
-        const data = event.data;
-        const id = data.id;
-        try {
-            let messageData = data.messageData;
-            if (typeof messageData === 'string') {
-                try {
-                    messageData = JSON.parse(messageData);
-                } catch (error) {}
-            }
-            // DEV_LOG && console.error(TAG, 'onWorkerMessage', id, data.type, id && this.messagePromises.hasOwnProperty(id), Object.keys(this.messagePromises), messageData);
-            if (id && this.messagePromises.hasOwnProperty(id)) {
-                this.messagePromises[id].forEach(function (executor) {
-                    executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
-                    executor.resolve(messageData);
-                });
-                delete this.messagePromises[id];
-            }
-            const eventData = messageData as any;
-            switch (data.type) {
-                case 'event':
-                    // DEV_LOG && console.info('worker event', documentsService.id, eventData.eventName, eventData.target, !!eventData.object, Object.keys(eventData));
-                    if (eventData.target === 'documentsService') {
-                        if (eventData.doc) {
-                            eventData.doc = OCRDocument.fromJSON(eventData.doc);
-                        }
-                        if (eventData.documents) {
-                            eventData.documents = eventData.documents.map((d) => OCRDocument.fromJSON(d));
-                        }
-                        if (eventData.pages) {
-                            eventData.pages = eventData.pages.map((d) => OCRPage.fromJSON(d));
-                        }
-                        if (eventData.object?.id === eventData.doc?.id) {
-                            eventData.object = eventData.doc;
-                        } else {
-                            delete eventData.object;
-                        }
-                        // DEV_LOG && console.info('worker notifying event', documentsService.id, eventData.eventName, documentsService.notify);
-                        documentsService.notify({ ...eventData, object: eventData.object || documentsService });
-                    } else {
-                        this.notify({ ...eventData });
-                    }
-                    break;
-
-                case 'error':
-                    showError(CustomError.fromObject(eventData.error));
-                    break;
-
-                case 'terminate':
-                    DEV_LOG && console.info('worker stopped');
-                    this.worker = null;
-                    break;
-            }
-        } catch (error) {
-            console.error(error, error.stack);
-            showError(error);
-        }
-    }
-    queue = new Queue();
-    async internalSendMessageToWorker(data) {
-        this.queue.add(async () => {
-            if (!this.worker) {
-                const worker = (this.worker = new Worker('~/workers/SyncWorkerBootstrap') as any);
-                worker.onmessage = this.onWorkerMessage.bind(this);
-            }
-            this.worker.postMessage(data);
-            // it seems that without the timeout consecutive send does not work
-            // we needed to bump that timeout to ensure it works  :s
-            await timeout(250);
-        });
-    }
-    async sendMessageToWorker<T = any>(type: string, messageData?, id?: number, error?, isResponse = false, timeout = 0, nativeData?): Promise<T> {
-        // DEV_LOG && console.info('Sync', 'sendMessageToWorker', type, id, timeout, isResponse, !isResponse && (id || timeout), messageData, nativeData, this.worker);
-        if (!isResponse && (id || timeout)) {
-            return new Promise((resolve, reject) => {
-                // const id = Date.now().valueOf();
-                id = id || time();
-                this.messagePromises[id] = this.messagePromises[id] || [];
-                let timeoutTimer;
-                if (timeout > 0) {
-                    timeoutTimer = setTimeout(() => {
-                        // we need to try catch because the simple fact of creating a new Error actually throws.
-                        // so we will get an uncaughtException
-                        try {
-                            reject(new Error('timeout'));
-                        } catch {}
-                        delete this.messagePromises[id];
-                    }, timeout);
-                }
-                this.messagePromises[id].push({ reject, resolve, timeoutTimer });
-                const keys = Object.keys(nativeData);
-                const nativeDataKeysPrefix = Date.now() + '$$$';
-                keys.forEach((k) => {
-                    setWorkerContextValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
-                });
-                const data = {
-                    error: !!error ? JSON.stringify(error.toJSON() ? error.toJSON() : { message: error.toString(), ...error }) : undefined,
-                    id,
-                    nativeDataKeysPrefix,
-                    messageData: !!messageData ? JSON.stringify(messageData) : undefined,
-                    nativeData: keys.map((k) => nativeDataKeysPrefix + k),
-                    type
-                };
-                // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
-
-                this.internalSendMessageToWorker(data);
-            });
-        } else {
-            // DEV_LOG && console.info('Sync', 'postMessage', 'test');
-            const keys = Object.keys(nativeData);
-            const nativeDataKeysPrefix = Date.now() + '$$$';
-            keys.forEach((k) => {
-                setWorkerContextValue(nativeDataKeysPrefix + k, nativeData[k]._native || nativeData[k]);
-            });
-            const data = {
-                error: !!error ? JSON.stringify({ message: error.toString(), ...error }) : undefined,
-                id,
-                nativeDataKeysPrefix,
-                messageData: !!messageData ? JSON.stringify(messageData) : undefined,
-                nativeData: keys.map((k) => nativeDataKeysPrefix + k),
-                type
-            };
-            // DEV_LOG && console.info('Sync', 'postMessage', JSON.stringify(data));
-            this.internalSendMessageToWorker(data);
-        }
-    }
     async syncDocumentsInternal(
         data: {
             withFolders?;
