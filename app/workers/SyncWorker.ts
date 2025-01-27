@@ -1,4 +1,5 @@
-import { BaseWorker } from '@akylas/nativescript-app-utils/worker/BaseWorker';
+import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
+import Queue from '@akylas/nativescript-app-utils/worker/queue';
 import { ApplicationSettings, File, Utils, knownFolders, path } from '@nativescript/core';
 import '@nativescript/core/globals';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
@@ -35,19 +36,8 @@ import {
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
 import { basename } from '~/utils/path';
-import Queue from '@akylas/nativescript-app-utils/worker/queue';
 
 const context: Worker = self as any;
-
-export interface WorkerPostOptions {
-    id?: number;
-    messageData?: string;
-}
-
-export interface WorkerEvent {
-    data: { messageData?: any; error?: Error; nativeData?: { [k: string]: any }; type: string; id?: number };
-}
-export type WorkerEventType = 'event' | 'error' | 'started' | 'terminate';
 
 let documentsService: DocumentsService;
 
