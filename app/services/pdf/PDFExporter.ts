@@ -1,14 +1,13 @@
+import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import { Screen, Utils, knownFolders } from '@nativescript/core';
-import { SDK_VERSION, wrapNativeException } from '@nativescript/core/utils';
+import { wrapNativeException } from '@nativescript/core/utils';
+import { CustomError, SilentError } from '@shared/utils/error';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
-import { CustomError, PermissionError, SilentError } from '@shared/utils/error';
-import { getPageColorMatrix } from '~/utils/matrix';
-import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
-import { isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { PDF_EXT } from '~/utils/constants';
-import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
+import { getPageColorMatrix } from '~/utils/matrix';
 import { requestStoragePermission } from '~/utils/utils.common';
+import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, options: baseOptions, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {

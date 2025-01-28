@@ -58,7 +58,7 @@ export function getRealPath(src: string) {
 
 export async function requestCameraPermission() {
     const result = await request('camera');
-    if (isPermResultAuthorized(result)) {
+    if (!isPermResultAuthorized(result)) {
         throw new PermissionError(lc('camera_permission_needed'));
     }
 }
@@ -66,7 +66,7 @@ export async function requestCameraPermission() {
 export async function requestStoragePermission() {
     if (SDK_VERSION <= 29) {
         const result = await request('storage');
-        if (isPermResultAuthorized(result)) {
+        if (!isPermResultAuthorized(result)) {
             throw new PermissionError(lc('storage_permission_needed'));
         }
     }

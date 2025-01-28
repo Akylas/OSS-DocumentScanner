@@ -1,8 +1,8 @@
 <script context="module" lang="ts">
-    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ObservableArray } from '@nativescript/core';
-    import { SDK_VERSION } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import { showModal } from '@shared/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
@@ -18,12 +18,9 @@
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { PermissionError } from '@shared/utils/error';
-    import { showError } from '@shared/utils/showError';
-    import { showModal } from '@shared/utils/svelte/ui';
     import { getDirectoryName, hideLoading, showAlertOptionSelect } from '~/utils/ui';
-    import { colors, windowInset } from '~/variables';
     import { requestStoragePermission } from '~/utils/utils.common';
+    import { colors, windowInset } from '~/variables';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
 </script>
 

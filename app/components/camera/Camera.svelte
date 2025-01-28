@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -7,7 +6,6 @@
     import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce, wrapNativeException } from '@nativescript/core/utils';
-    import { PermissionError } from '@shared/utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
