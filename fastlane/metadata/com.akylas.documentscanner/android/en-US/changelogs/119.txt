@@ -1,0 +1,3 @@
+Bug fixes:
+- regression fix for permissions not being given
+- Translations update
