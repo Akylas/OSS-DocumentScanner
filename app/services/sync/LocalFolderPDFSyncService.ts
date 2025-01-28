@@ -61,6 +61,15 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
         if (!filename.endsWith(PDF_EXT)) {
             filename += PDF_EXT;
         }
+        let destinationPath = this.localFolderPath;
+        if (docFolder) {
+            const subFolders = docFolder.name.split('/');
+            let folder = Folder.fromPath(destinationPath, true);
+            for (let i = 0; i < subFolders.length; i++) {
+                folder = folder.getFolder(subFolders[i], true);
+            }
+            destinationPath = folder.path;
+        }
         if (__ANDROID__) {
             const options = JSON.stringify({
                 overwrite: true,
@@ -69,19 +78,11 @@ export class LocalFolderPDFSyncService extends BasePDFSyncService {
                 pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
                 ...this.exportOptions
             });
-            let destinationPath = this.localFolderPath;
-            if (docFolder) {
-                const subFolders = docFolder.name.split('/');
-                let folder = Folder.fromPath(destinationPath);
-                for (let i = 0; i < subFolders.length; i++) {
-                    folder = folder.getFolder(subFolders[i]);
-                }
-                destinationPath = folder.path;
-            }
+
             return generatePDFASync(destinationPath, filename, options, wrapNativeException);
         } else {
             const exporter = new PDFExportCanvas();
-            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: this.localFolderPath, filename, compress: true, options: this.exportOptions });
+            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: destinationPath, filename, compress: true, options: this.exportOptions });
         }
     }
 }

@@ -49,17 +49,17 @@ export class LocalFolderImageSyncService extends BaseImageSyncService {
             );
     }
     override async writeImage(imageSource: ImageSource, fileName: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean, docFolder?: DocFolder) {
-        let exportDirectory = this.localFolderPath;
+        let destinationPath = this.localFolderPath;
         if (docFolder) {
             const subFolders = docFolder.name.split('/');
-            let folder = Folder.fromPath(exportDirectory);
+            let folder = Folder.fromPath(destinationPath, true);
             for (let i = 0; i < subFolders.length; i++) {
-                folder = folder.getFolder(subFolders[i]);
+                folder = folder.getFolder(subFolders[i], true);
             }
-            exportDirectory = folder.path;
+            destinationPath = folder.path;
         }
         await saveImage(imageSource, {
-            exportDirectory,
+            exportDirectory: destinationPath,
             fileName,
             imageFormat,
             imageQuality,
