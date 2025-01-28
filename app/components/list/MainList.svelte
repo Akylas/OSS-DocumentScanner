@@ -733,14 +733,14 @@
         const w = canvas.getWidth();
         const h = canvas.getHeight();
         const dx = 10;
-        const { folder } = item;
+        const { folder: itemFolder } = item;
         textPaint.color = colorOnBackground;
         const topText = createNativeAttributedString({
             spans: [
                 {
                     fontFamily: $fonts.mdi,
                     fontSize: 20 * $fontScale,
-                    color: !$folderBackgroundColor && folder.color ? folder.color : colorOutline,
+                    color: !$folderBackgroundColor && itemFolder.color ? itemFolder.color : colorOutline,
                     lineHeight: 24 * $fontScale,
                     text: 'mdi-folder '
                 },
@@ -749,13 +749,13 @@
                     fontWeight: 'bold',
                     lineBreak: 'end',
                     lineHeight: 18 * $fontScale,
-                    text: folder.name
+                    text: folder ? itemFolder.name.replace(folder.name + '/', '') : itemFolder.name
                 },
                 {
                     fontSize: 14 * $fontScale,
                     color: colorOutline,
                     lineHeight: 20 * $fontScale,
-                    text: '\n' + lc('documents_count', item.folder.count)
+                    text: '\n' + lc('documents_count', itemFolder.count)
                 }
             ]
         });
