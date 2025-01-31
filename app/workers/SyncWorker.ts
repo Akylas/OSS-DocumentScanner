@@ -1,3 +1,4 @@
+import '@nativescript/core/globals';
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import Queue from '@akylas/nativescript-app-utils/worker/queue';
 import { ApplicationSettings, File, Utils, knownFolders, path } from '@nativescript/core';

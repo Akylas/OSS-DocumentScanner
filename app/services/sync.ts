@@ -89,7 +89,7 @@ const SYNC_DELAY = 1000;
 
 export class SyncService extends BaseWorkerHandler<SyncWorker> {
     constructor() {
-        super(() => new Worker('~/workers/SyncWorkerBootstrap'));
+        super(() => new Worker('~/workers/SyncWorker'));
     }
     handleError(error: any) {
         showError(error);
