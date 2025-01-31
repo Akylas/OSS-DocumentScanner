@@ -71,13 +71,12 @@ export class TagRepository extends BaseRepository<Tag, Tag> {
     }
 
     async createTables() {
-        await this.database.query(sql`
+        return this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Tag" (
             id BIGINT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL
         );
         `);
-        return this.applyMigrations();
     }
 }
 export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
@@ -95,14 +94,13 @@ export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
     };
 
     async createTables() {
-        await this.database.query(sql`
+        return this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Folder" (
             id BIGINT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL,
             color TEXT
         );
         `);
-        return this.applyMigrations();
     }
 
     async findFolders(rootFolder?: DocFolder) {
@@ -186,7 +184,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     );
 
     async createTables() {
-        await this.database.query(
+        return this.database.query(
             sql`
         CREATE TABLE IF NOT EXISTS "Page" (
             id TEXT PRIMARY KEY NOT NULL,
@@ -209,7 +207,6 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE ON UPDATE CASCADE
         );`
         );
-        return this.applyMigrations();
     }
 
     async createPage(page: OCRPage, dataFolder: string) {
@@ -305,7 +302,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     }
 
     async createTables() {
-        await Promise.all([
+        return Promise.all([
             this.database.query(sql`
             CREATE TABLE IF NOT EXISTS "Document" (
                 id TEXT PRIMARY KEY NOT NULL,
@@ -334,13 +331,12 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         );
     `)
         ]);
-        return this.applyMigrations();
     }
 
-    migrations = Object.assign({
+    migrations = {
         addExtra: sql`ALTER TABLE Document ADD COLUMN extra TEXT`,
         addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`
-    });
+    };
 
     async createDocument(document: Document) {
         const { extra, folders, ...others } = document;
@@ -647,6 +643,17 @@ export class DocumentsService extends Observable {
         await this.pageRepository.createTables();
         await this.tagRepository.createTables();
         await this.folderRepository.createTables();
+        if (!db) {
+            await this.documentRepository.createTables();
+            await this.pageRepository.createTables();
+            await this.tagRepository.createTables();
+            await this.folderRepository.createTables();
+            try {
+                await this.db.migrate(Object.assign({}, this.documentRepository.migrations, this.pageRepository.migrations, this.tagRepository.migrations, this.folderRepository.migrations));
+            } catch (error) {
+                console.error('error applying migrations', error.stack);
+            }
+        }
 
         this.notify({ eventName: 'started' });
         this.started = true;

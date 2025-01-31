@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=a71c57&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=8769e9&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.28.0"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -82,16 +82,16 @@ __metadata:
     typescript: "npm:5.7.2"
     typescript-eslint: "npm:^8.17.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/cb938a80aff8dd030759a699d10ab62cba0762dcd1047b019b2d28f9be921639c3571ffd7c17b1acad6c8c00eceb5e0274a583dd525994a4f5b41d5cf64f27bb
+  checksum: 10/210f51d8444f500a1bcc57920fc57f3c65352ff1bbeef3d610d618ba22128737164d05996d3dd861dcda43abe2ba6dd0225d76330411fb027ab3bd45dd3fcdef
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-app-utils@npm:2.2.2":
-  version: 2.2.2
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.2"
+"@akylas/nativescript-app-utils@npm:2.2.3":
+  version: 2.2.3
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.3"
   dependencies:
     "@nativescript-community/ui-share-file": "npm:1.3.3"
-  checksum: 10/ec33cf584870186eac970b3e5a21d2d6bd97fa0563a0de9e4c2569d4931674ef42cc4e204e13e4a2cdf99febb4f17939de7425dcc274bc9060aef280f5c2d69d
+  checksum: 10/03a172cbd9455452e8cc533ef275551686100e910e2e45bc7c41c2e2718a1cd5eec7d5aa5b0c4a1aa0f68dad57edf5be1bd1f4dcb6865780e7095e4174743c74
   languageName: node
   linkType: hard
 
@@ -10389,7 +10389,7 @@ __metadata:
     "@akylas/nativescript": "npm:8.8.10"
     "@akylas/nativescript-android-runtime": "npm:8.8.5"
     "@akylas/nativescript-app-tools": "file:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.2"
+    "@akylas/nativescript-app-utils": "npm:2.2.3"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:8.8.2"
