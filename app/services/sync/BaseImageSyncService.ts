@@ -3,7 +3,7 @@ import type { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { MatricesTypes, Matrix } from '~/utils/color_matrix';
 import { FileStat } from '~/webdav';
 import { BaseSyncService, BaseSyncServiceOptions } from './BaseSyncService';
-import { getFormatedDateForFilename } from '~/utils/utils.common';
+import { getFileNameForDocument, getFormatedDateForFilename } from '~/utils/utils.common';
 
 export interface BaseImageSyncServiceOptions extends BaseSyncServiceOptions {
     fileNameFormat?: string;
@@ -40,7 +40,8 @@ export abstract class BaseImageSyncService extends BaseSyncService {
     abstract writeImage(imageSource: ImageSource, name: string, imageFormat: 'png' | 'jpeg' | 'jpg', imageQuality: number, overwrite: boolean, docFolder?: DocFolder): Promise<any>;
 
     getImageName(document: OCRDocument, page: OCRPage, pageIndex: number, exportFormat: string) {
-        let destinationName = getFormatedDateForFilename(page.createdDate, this.fileNameFormat);
+        let destinationName = getFileNameForDocument(document) + '_' + (pageIndex + 1);
+        // let destinationName = getFormatedDateForFilename(page.createdDate, this.fileNameFormat);
         if (!destinationName.endsWith(exportFormat)) {
             destinationName += '.' + exportFormat;
         }
