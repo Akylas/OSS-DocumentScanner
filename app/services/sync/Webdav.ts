@@ -14,7 +14,6 @@ export interface WebdavSyncOptions {
 export async function testWebdavConnection({ authType = null, password, remoteFolder, remoteURL, token, username }): Promise<boolean> {
     try {
         const context = createContext(remoteURL, { password, username, authType: authType || AuthType.Password, token: token ? { access_token: token, token_type: 'Bearer' } : token });
-        DEV_LOG && console.log('testConnection', context);
         await exists(context, '', { cachePolicy: 'noCache' });
         return true;
     } catch (error) {
@@ -28,12 +27,11 @@ export function createWebdavConfig({ authType = AuthType.Password, password, rem
     return {
         remoteURL,
         username,
-        headers: context.headers,
         remoteFolder,
-        ha1: context.ha1 || context.digest?.ha1,
         authType,
-        // password: authType === AuthType.Password ? password : undefined,
         token,
-        ...otherProps
+        ...otherProps,
+        headers: context.headers,
+        ha1: context.ha1 || context.digest?.ha1
     };
 }
