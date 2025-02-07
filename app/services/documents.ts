@@ -6,7 +6,7 @@ import { doInBatch } from '@shared/utils/batch';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
-import { EVENT_DOCUMENT_DELETED } from '~/utils/constants';
+import { EVENT_DOCUMENT_DELETED, SETTINGS_ROOT_DATA_FOLDER } from '~/utils/constants';
 import { groupByArray } from '@shared/utils';
 export const sql = SqlQuery.createFromTemplateString;
 
@@ -128,7 +128,7 @@ COUNT(df.document_id) AS count`,
         return Object.keys(grouped)
             .map((k) => {
                 const array = grouped[k].sort((a, b) => a.name.length - b.name.length || a.count - b.count);
-                const startIndex = array.findIndex((f) => f.name.replace(new RegExp(`^${rootFolder?.name || '' }/`), '').indexOf('/') !== -1);
+                const startIndex = array.findIndex((f) => f.name.replace(new RegExp(`^${rootFolder?.name || ''}/`), '').indexOf('/') !== -1);
                 const toReturn = startIndex !== -1 ? array.slice(0, startIndex) : array;
 
                 if (startIndex !== -1 && toReturn.length) {
@@ -613,14 +613,14 @@ export class DocumentsService extends Observable {
         }
         let rootDataFolder;
         if (__ANDROID__) {
-            rootDataFolder = ApplicationSettings.getString('root_data_folder');
+            rootDataFolder = ApplicationSettings.getString(SETTINGS_ROOT_DATA_FOLDER);
             if (rootDataFolder && !Folder.exists(rootDataFolder)) {
                 rootDataFolder = null;
-                ApplicationSettings.remove('root_data_folder');
+                ApplicationSettings.remove(SETTINGS_ROOT_DATA_FOLDER);
             }
             if (!rootDataFolder) {
                 rootDataFolder = knownFolders.externalDocuments().path;
-                ApplicationSettings.setString('root_data_folder', rootDataFolder);
+                ApplicationSettings.setString(SETTINGS_ROOT_DATA_FOLDER, rootDataFolder);
             }
         } else {
             // on iOS we cant store any knownFolders cause their path can change upon app upgrade

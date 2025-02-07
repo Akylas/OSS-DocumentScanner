@@ -61,6 +61,7 @@
         SETTINGS_NB_COLUMNS_LANDSCAPE,
         SETTINGS_NB_COLUMNS_VIEW,
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE,
+        SETTINGS_ROOT_DATA_FOLDER,
         SETTINGS_START_ON_CAM,
         SETTINGS_SYNC_ON_START,
         SETTINGS_TRANSFORM_BATCH_SIZE,
@@ -589,7 +590,7 @@
                                               const srcDbPath = path.join(srcFolder, DocumentsService.DB_NAME);
                                               await File.fromPath(srcDbPath).copy(path.join(dstFolder, DocumentsService.DB_NAME));
                                               await copyFolderContent(path.join(srcFolder, 'data'), path.join(dstFolder, 'data'));
-                                              ApplicationSettings.setString('root_data_folder', dstFolder);
+                                              ApplicationSettings.setString(SETTINGS_ROOT_DATA_FOLDER, dstFolder);
                                               await File.fromPath(srcDbPath).remove();
                                               await removeFolderContent(path.join(srcFolder, 'data'));
                                               await alert({
@@ -1183,7 +1184,7 @@
                 //             await removeFolderContent(srcFolder);
                 //             DEV_LOG && console.log('copyFolderContent done');
                 //         }
-                //         ApplicationSettings.setString('root_data_folder', dstFolder);
+                //         ApplicationSettings.setString(SETTINGS_ROOT_DATA_FOLDER, dstFolder);
                 //         // documentsService.dataFolder = Folder.fromPath(dstFolder);
                 //         await alert({
                 //             cancelable: false,

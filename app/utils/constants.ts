@@ -39,6 +39,7 @@ export const SETTINGS_NB_COLUMNS_VIEW = 'nb_columns_view';
 export const SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE = 'nb_columns_view_landscape';
 export const SETTINGS_SORT_ORDER = 'sort_order';
 export const SETTINGS_VIEW_STYLE = 'documents_list_view_style';
+export const SETTINGS_ROOT_DATA_FOLDER = 'root_data_folder';
 
 export const TRANSFORMS_SPLIT = '|';
 
