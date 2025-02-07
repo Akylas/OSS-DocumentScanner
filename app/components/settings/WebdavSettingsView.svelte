@@ -49,7 +49,6 @@
     async function testConnection() {
         try {
             const data = get(store);
-            DEV_LOG && console.log('testConnection', data);
             if (data.authType === AuthType.Password && !data.password?.length) {
                 throw new Error(lc('missing_webdav_password'));
             }
