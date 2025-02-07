@@ -313,10 +313,10 @@ export default class SyncWorker extends BaseWorker {
                             doc.save({ _synced: doc._synced | service.syncMask }, false);
                         }
                         for (let index = 0; index < missingLocalDocuments.length; index++) {
-                            const doc = await service.importDocumentFromRemote(missingLocalDocuments[index]);
+                            const { doc, folder } = await service.importDocumentFromRemote(missingLocalDocuments[index]);
                             await doc.save({ _synced: doc._synced | service.syncMask }, true, false);
                             DEV_LOG && console.log('importFolderFromWebdav done');
-                            documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc });
+                            documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc, folder });
                         }
                         for (let index = 0; index < toBeSyncDocuments.length; index++) {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
@@ -413,14 +413,13 @@ export default class SyncWorker extends BaseWorker {
     }
 
     async syncDocumentOnRemote(document: OCRDocument, service: BaseDataSyncService) {
-        DEV_LOG && console.log('syncDocumentOnWebdav', document.id);
         const dataJSON = JSON.parse(await service.getFileFromRemote(DOCUMENT_DATA_FILENAME, document)) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
-        DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
+        DEV_LOG && console.info('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
         if (dataJSON.modifiedDate > document.modifiedDate) {
             let needsRemoteDocUpdate = false;
-            const { pages: docPages, ...docProps } = document.toJSON();
-            const { pages: remotePages, ...remoteProps } = dataJSON;
+            const { folders: localFolders, pages: docPages, ...docProps } = document.toJSON();
+            const { folders: remoteFolders, pages: remotePages, ...remoteProps } = dataJSON;
             const toUpdate = {};
             Object.keys(remoteProps).forEach((k) => {
                 if (k.startsWith('_')) {
@@ -433,7 +432,7 @@ export default class SyncWorker extends BaseWorker {
             const { toBeAdded: missingLocalPages, toBeDeleted: removedRemotePages, union: toBeSyncPages } = findArrayDiffs(docPages, remotePages, (a, b) => a.id === b.id);
 
             DEV_LOG &&
-                console.log(
+                console.warn(
                     'document need to be synced FROM webdav!',
                     toUpdate,
                     missingLocalPages,
@@ -539,9 +538,22 @@ export default class SyncWorker extends BaseWorker {
                     needsRemoteDocUpdate = true;
                 }
             }
-            DEV_LOG && console.log('update document', needsRemoteDocUpdate, toUpdate);
+            DEV_LOG && console.info('update document', needsRemoteDocUpdate, toUpdate, localFolders, remoteFolders);
             // mark the document as synced
             await document.save({ _synced: document._synced | service.syncMask, ...toUpdate });
+
+            const { toBeAdded: missingLocalFolders, toBeDeleted: missingRemoteFolders, union: toBeSyncFolders } = findArrayDiffs(localFolders || [], remoteFolders || [], (a, b) => a === b);
+            DEV_LOG && console.info('update document folders', document.id, document.name, document.folders, missingLocalFolders, missingRemoteFolders);
+            for (let index = 0; index < missingRemoteFolders.length; index++) {
+                DEV_LOG && console.info('doc missingRemoteFolders', document.id, missingRemoteFolders[index]);
+                document.removeFromFolder(missingRemoteFolders[index]);
+            }
+            for (let index = 0; index < missingLocalFolders.length; index++) {
+                const folderId = missingLocalFolders[index];
+                const folder = await documentsService.folderRepository.findFolderById(folderId);
+                document.setFolder({ folderId });
+                DEV_LOG && console.info('doc missingLocalFolders', document.id, folderId, folder, document.folders);
+            }
 
             if (needsRemoteDocUpdate) {
                 await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString());

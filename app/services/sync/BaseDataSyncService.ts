@@ -1,5 +1,5 @@
 import { Folder } from '@nativescript/core';
-import { OCRDocument } from '~/models/OCRDocument';
+import { DocFolder, OCRDocument } from '~/models/OCRDocument';
 import { FileStat } from '~/webdav';
 import { BaseSyncService, BaseSyncServiceOptions } from './BaseSyncService';
 
@@ -14,7 +14,7 @@ export abstract class BaseDataSyncService extends BaseSyncService {
     abstract removeDocumentFromRemote(remotePath: string): Promise<any>;
     abstract importFolderFromRemote(remotePath: string, folder: Folder, ignores?: string[]): Promise<any>;
     abstract addDocumentToRemote(document: OCRDocument): Promise<any>;
-    abstract importDocumentFromRemote(data: FileStat): Promise<OCRDocument>;
+    abstract importDocumentFromRemote(data: FileStat): Promise<{ doc: OCRDocument; folder: DocFolder }>;
     abstract fileExists(filename: string): Promise<boolean>;
     abstract getFileFromRemote(filename: string, document?: OCRDocument): Promise<any>;
     abstract putFileContents(relativePath: string, localFilePath: string, options?): Promise<any>;

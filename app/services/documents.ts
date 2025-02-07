@@ -119,22 +119,33 @@ COUNT(df.document_id) AS count`,
                 GROUP BY f.id;`
             ])
         });
+
+        // there we group folders but first component like test/test
+        // but the issue is that we might have mulitple folders with the same name.
+        // in this case we need to return them all or some docs might appear like "lost"
         const grouped = groupByArray(folders, (folder) => [folder.name.split('/')[0]]);
-        DEV_LOG && console.log('grouped', grouped);
-        return Object.keys(grouped).map((k) => {
-            const array = grouped[k].sort((a, b) => a.name.length - b.name.length);
-            const toReturn = array[0];
-            let count = 0;
-            let size = 0;
-            for (let index = 0; index < array.length; index++) {
-                const f = array[index];
-                count += f.count;
-                size += f.size;
-            }
-            toReturn.count = count;
-            toReturn.size = size;
-            return toReturn;
-        });
+        // DEV_LOG && console.log('grouped', JSON.stringify(grouped));
+        return Object.keys(grouped)
+            .map((k) => {
+                const array = grouped[k].sort((a, b) => a.name.length - b.name.length || a.count - b.count);
+                const startIndex = array.findIndex((f) => f.name.replace(new RegExp(`^${rootFolder?.name || '' }/`), '').indexOf('/') !== -1);
+                const toReturn = startIndex !== -1 ? array.slice(0, startIndex) : array;
+
+                if (startIndex !== -1 && toReturn.length) {
+                    const first = toReturn[0];
+                    let count = first.count;
+                    let size = first.size;
+                    for (let index = startIndex; index < array.length; index++) {
+                        const f = array[index];
+                        count += f.count;
+                        size += f.size;
+                    }
+                    first.count = count;
+                    first.size = size;
+                }
+                return toReturn;
+            })
+            .flat();
     }
     async findFolderById(id: number) {
         return (
@@ -530,7 +541,7 @@ LEFT JOIN
     }
 }
 
-export type DocumentEventData = Optional<EventData<Observable>, 'object'>;
+export type DocumentEventData = Optional<EventData<Observable>, 'object'> & { fromWorker?: true };
 
 export interface DocumentAddedEventData extends DocumentEventData {
     doc?: OCRDocument;

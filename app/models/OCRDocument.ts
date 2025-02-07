@@ -568,7 +568,7 @@ export class OCRDocument extends Observable implements Document {
         }
     }
     async setFolder({ folderId, folderName, notify = true }: { folderId?: number; folderName?: string; notify?: boolean }) {
-        console.log('setFolder', folderId, this.folders);
+        DEV_LOG && console.log('setFolder', folderId, this.folders);
         const { folderRepository } = documentsService;
         const { db } = documentsService;
         let oldFolderId: number;
@@ -608,8 +608,12 @@ export class OCRDocument extends Observable implements Document {
         }
     }
 
-    async removeFromFolder() {
-        await documentsService.db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
+    async removeFromFolder(folderId?: number) {
+        if (folderId) {
+            await documentsService.db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id} AND folder_id=${folderId}`);
+        } else {
+            await documentsService.db.query(sql` DELETE FROM DocumentsFolders where document_id=${this.id}`);
+        }
     }
 }
 

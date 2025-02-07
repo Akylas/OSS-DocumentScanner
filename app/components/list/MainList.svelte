@@ -24,6 +24,7 @@
     import {
         DocumentAddedEventData,
         DocumentDeletedEventData,
+        DocumentFolderAddedEventData,
         DocumentMovedFolderEventData,
         DocumentPageUpdatedEventData,
         DocumentUpdatedEventData,
@@ -44,6 +45,7 @@
         EVENT_DOCUMENT_PAGE_DELETED,
         EVENT_DOCUMENT_PAGE_UPDATED,
         EVENT_DOCUMENT_UPDATED,
+        EVENT_FOLDER_ADDED,
         EVENT_FOLDER_UPDATED,
         EVENT_STATE,
         EVENT_SYNC_STATE,
@@ -65,7 +67,9 @@
         showPDFPopoverMenu,
         showPopoverMenu,
         showSettings,
-        transformPages
+        transformPages,
+        tryCatch,
+        tryCatchFunction
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
 
@@ -168,19 +172,7 @@
             DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
-            folders = filter?.length ? [] : await documentsService.folderRepository.findFolders(folder);
-            DEV_LOG && console.log('folders', JSON.stringify(folders));
-            folderItems = new ObservableArray(
-                folders
-                    .filter((f) => f.count > 0)
-                    .map(
-                        (folder) =>
-                            ({
-                                folder,
-                                selected: false
-                            }) as any
-                    )
-            );
+            await refreshFolders(filter);
             documents = new ObservableArray(
                 (folderItems.length ? [{ type: 'folders', selected: false }] : []).concat(
                     r.map(
@@ -199,6 +191,39 @@
             loading = false;
         }
     }
+
+    const refreshFolders = tryCatchFunction(async (filter: string = lastRefreshFilter) => {
+        try {
+            folders = filter?.length ? [] : await documentsService.folderRepository.findFolders(folder);
+            DEV_LOG && console.log('folders', JSON.stringify(folders));
+            folderItems = new ObservableArray(
+                folders
+                    .filter((f) => f.count > 0)
+                    .map(
+                        (folder) =>
+                            ({
+                                folder,
+                                selected: false
+                            }) as any
+                    )
+            );
+            if (documents) {
+                if (folderItems.length) {
+                    if (documents.getItem(0)?.type !== 'folders') {
+                        documents.splice(0, 0, { type: 'folders', selected: false });
+                    } else {
+                        documents.splice(0, 1, { type: 'folders', selected: false });
+                    }
+                } else {
+                    if (documents.getItem(0)?.type === 'folders') {
+                        documents.splice(0, 1);
+                    }
+                }
+            }
+        } catch (error) {
+            showError(error);
+        }
+    });
     const refreshSimple = () => refresh();
     const refreshThrottle = debounce(refresh, 300);
 
@@ -207,6 +232,7 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
+        DEV_LOG && console.log('onDocumentAdded', event.doc.id, event.doc.folders, event.folder);
         if ((!event.folder && !folder) || folder?.name === event.folder?.name) {
             DEV_LOG && console.log('onDocumentAdded', nbDocuments);
             // find the first document index to add the new doc just before
@@ -222,7 +248,7 @@
             }
             updateNoDocument();
         } else if (!folder && event.folder) {
-            refresh();
+            refreshFolders();
         }
     }
 
@@ -238,40 +264,34 @@
 
     function onDocumentUpdated(event: DocumentUpdatedEventData) {
         let index = -1;
+        const doc = event.doc;
         documents?.some((d, i) => {
-            if (d.doc && d.doc.id === event.doc.id) {
+            if (d.doc && d.doc.id === doc.id) {
                 index = i;
                 return true;
             }
         });
-        DEV_LOG && console.log('onDocumentUpdated', event.doc._synced, event.doc.id, index, event.doc.pages.length);
+        DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
         if (index >= 0) {
-            const item = documents?.getItem(index);
-            if (item) {
-                item.doc = event.doc;
-                documents.setItem(index, item);
+            if (folder && doc.folders.indexOf(folder.id) === -1) {
+                documents.splice(index, 1);
+            } else {
+                const item = documents?.getItem(index);
+                if (item) {
+                    item.doc = event.doc;
+                    documents.setItem(index, item);
+                }
             }
+            refreshFolders();
         }
+    }
+    function onFolderAdded(event: DocumentFolderAddedEventData) {
+        DEV_LOG && console.log('onFolderAdded', event.folder);
+        refreshFolders();
     }
     function onFolderUpdated(event: FolderUpdatedEventData) {
         DEV_LOG && console.log('onFolderUpdated', event.folder);
-        if (event.folder && folder && event.folder.id === folder?.id) {
-            folder = event.folder;
-        }
-        let index = -1;
-        folderItems?.some((d, i) => {
-            if (d.folder && d.folder.id === event.folder.id) {
-                index = i;
-                return true;
-            }
-        });
-        if (index >= 0) {
-            const item = folderItems.getItem(index);
-            if (item) {
-                item.folder = event.folder;
-                folderItems.setItem(index, item);
-            }
-        }
+        refreshFolders();
     }
     async function onDocumentsDeleted(event: DocumentDeletedEventData) {
         DEV_LOG &&
@@ -290,24 +310,7 @@
                 }
             }
         }
-        if (!folder && event.folders?.length) {
-            for (let i = 0; i < event.folders.length; i++) {
-                const folderId = event.folders[i];
-                const index = folderItems.findIndex((item) => item.folder && item.folder.id === folderId);
-                if (index !== -1) {
-                    const item = folderItems.getItem(index);
-                    item.folder = await documentsService.folderRepository.findFolderById(folderId);
-                    if (item.folder.count > 0) {
-                        folderItems.setItem(index, folderItems.getItem(index));
-                    } else {
-                        folderItems.splice(index, 1);
-                    }
-                }
-            }
-            if (folderItems.length === 0) {
-                documents.splice(0, 1);
-            }
-        }
+        refreshFolders();
         updateNoDocument();
     }
     function getImageView(index: number) {
@@ -374,6 +377,7 @@
         documentsService.on(EVENT_DOCUMENT_UPDATED, onDocumentUpdated);
         documentsService.on(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         documentsService.on(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
+        documentsService.on(EVENT_FOLDER_ADDED, onFolderAdded);
         documentsService.on(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.on(EVENT_SYNC_STATE, onSyncState);
         syncService.on(EVENT_STATE, refreshSimple);
@@ -391,6 +395,7 @@
         documentsService.off(EVENT_DOCUMENT_ADDED, onDocumentAdded);
         documentsService.off(EVENT_DOCUMENT_DELETED, onDocumentsDeleted);
         documentsService.off(EVENT_DOCUMENT_MOVED_FOLDER, onDocumentMovedFolder);
+        documentsService.off(EVENT_FOLDER_ADDED, onFolderAdded);
         documentsService.off(EVENT_FOLDER_UPDATED, onFolderUpdated);
         syncService.off(EVENT_SYNC_STATE, onSyncState);
         syncService.off(EVENT_STATE, refreshSimple);
@@ -964,20 +969,20 @@
             <slot name="fab" />
         {/if}
 
-        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
+        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title} titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}
                 isEnabled={!syncRunning}
                 text="mdi-autorenew"
                 variant="text"
-                visibility={syncEnabled ? 'visible' : 'collapse'}
+                visibility={!folder && syncEnabled ? 'visible' : 'collapse'}
                 on:tap={syncDocuments} />
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
-            <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={showViewOptions} />
             {#if folder}
                 <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
             {:else}
+                <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={showViewOptions} />
                 <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
             {/if}
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />

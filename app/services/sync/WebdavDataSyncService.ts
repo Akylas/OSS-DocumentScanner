@@ -1,5 +1,5 @@
 import { File, Folder, path } from '@nativescript/core';
-import { DB_VERSION, type OCRDocument, type OCRPage, getDocumentsService } from '~/models/OCRDocument';
+import { DB_VERSION, DocFolder, type OCRDocument, type OCRPage, getDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
@@ -166,15 +166,17 @@ export class WebdavDataSyncService extends BaseDataSyncService {
             pageIds = pages.map((p) => p.id);
             await this.importFolderFromRemote(data.basename, docDataFolder, [DOCUMENT_DATA_FILENAME]);
             await doc.addPages(pages);
+
+            let folder: DocFolder;
             if (folders) {
                 const actualFolders = await Promise.all(folders.map((folderId) => getDocumentsService().folderRepository.get(folderId)));
                 // in this case we only add folders which actually already exists in db. Means they have to be synced before
                 for (let index = 0; index < actualFolders.length; index++) {
-                    const folder = actualFolders[index];
+                    folder = actualFolders[index];
                     doc.setFolder({ folderId: folder.id });
                 }
             }
-            return doc;
+            return { doc, folder };
         } catch (error) {
             console.error('error while adding remote doc, let s remove it', docId, pageIds, error, error.stack);
             // there was an error while creating the doc. remove it so that we can try again later
