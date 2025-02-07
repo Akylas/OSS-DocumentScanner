@@ -117,15 +117,19 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
                 delete eventData.object;
             }
             // DEV_LOG && console.info('worker notifying event', documentsService.id, eventData.eventName, documentsService.notify);
-            documentsService.notify({ ...eventData, object: eventData.object || documentsService });
+            documentsService.notify({ ...eventData, object: eventData.object || documentsService, fromWorker: true });
         } else {
             this.notify({ ...eventData });
         }
     }
     services: any[] = [];
     onDocumentAdded(event: DocumentAddedEventData) {
-        DEV_LOG && console.log('SYNC', 'onDocumentAdded');
-        this.syncDocumentsInternal({ event, type: SyncType.DATA | SyncType.PDF, fromEvent: event.eventName });
+        DEV_LOG && console.log('SYNC', 'onDocumentAdded', event.fromWorker);
+        let type = SyncType.PDF;
+        if (event.fromWorker !== true) {
+            type |= SyncType.DATA;
+        }
+        this.syncDocumentsInternal({ event, type, fromEvent: event.eventName });
     }
     onDocumentDeleted(event: DocumentDeletedEventData) {
         DEV_LOG && console.log('SYNC', 'onDocumentDeleted');
@@ -144,7 +148,11 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         // only used for data sync
         DEV_LOG && console.log('SYNC', 'onDocumentUpdated', event.updateModifiedDate);
         if (event.updateModifiedDate !== false) {
-            this.syncDocumentsInternal({ event, type: SyncType.DATA | SyncType.PDF, fromEvent: event.eventName });
+            let type = SyncType.PDF;
+            if (event.fromWorker !== true) {
+                type |= SyncType.DATA;
+            }
+            this.syncDocumentsInternal({ event, type, fromEvent: event.eventName });
         }
     }
     sendImageEvent(event: DocumentPagesAddedEventData) {
@@ -153,7 +161,9 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         this.syncDocumentsInternal({ event, type: SyncType.IMAGE, fromEvent: event.eventName });
     }
     sendDataEvent(event: FolderUpdatedEventData) {
-        this.syncDocumentsInternal({ event, type: SyncType.DATA, fromEvent: event.eventName });
+        if (event.fromWorker !== true) {
+            this.syncDocumentsInternal({ event, type: SyncType.DATA, fromEvent: event.eventName });
+        }
     }
     get enabled() {
         return this.services?.length > 0;
