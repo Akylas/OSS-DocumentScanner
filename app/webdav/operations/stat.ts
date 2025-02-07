@@ -1,5 +1,5 @@
 import { parseStat, parseXML } from '../tools/dav';
-import { encodePath } from '../tools/path';
+import { encodePath, join } from '../tools/path';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode, processResponsePayload } from '../response';
 import { FileStat, ResponseDataDetailed, StatOptions, WebDAVClientContext } from '../types';
@@ -9,7 +9,7 @@ export async function getStat(context: WebDAVClientContext, filename: string, op
     const { details: isDetailed = false } = options;
     const requestOptions = prepareRequestOptions(
         {
-            url: path.join(context.remoteURL, encodePath(filename)),
+            url: join(context.remoteURL, encodePath(filename)),
             method: 'PROPFIND' as any,
             headers: {
                 Accept: 'text/plain,application/xml',
@@ -19,7 +19,7 @@ export async function getStat(context: WebDAVClientContext, filename: string, op
         context,
         options
     );
-    DEV_LOG && console.log('getStat');
+    DEV_LOG && console.log('getStat', context.remoteURL, join(context.remoteURL, encodePath(filename)), filename, encodePath(filename), requestOptions.url);
     const response = await request(requestOptions);
     DEV_LOG && console.log('getStat got response');
     await handleResponseCode(context, response, requestOptions);

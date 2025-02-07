@@ -1,5 +1,5 @@
 import nestedProp from 'nested-property';
-import { encodePath } from '../tools/path';
+import { encodePath, join } from '../tools/path';
 import { generateLockXML, parseGenericResponse } from '../tools/xml';
 import { prepareRequestOptions, request } from '../request';
 import { createErrorFromResponse, handleResponseCode } from '../response';
@@ -19,7 +19,7 @@ export async function lock(context: WebDAVClientContext, pathStr: string, option
     }
     const requestOptions = prepareRequestOptions(
         {
-            url: path.join(context.remoteURL, encodePath(pathStr)),
+            url: join(context.remoteURL, encodePath(pathStr)),
             method: 'LOCK' as any,
             headers,
             data: generateLockXML(context.contactHref)
@@ -34,7 +34,7 @@ export async function lock(context: WebDAVClientContext, pathStr: string, option
     const token = nestedProp.get(lockPayload, 'prop.lockdiscovery.activelock.locktoken.href');
     const serverTimeout = nestedProp.get(lockPayload, 'prop.lockdiscovery.activelock.timeout');
     if (!token) {
-        const err = createErrorFromResponse(response, requestOptions, 'No lock token received: ');
+        const err = await createErrorFromResponse(response, requestOptions, 'No lock token received: ');
         throw err;
     }
     return {
@@ -46,7 +46,7 @@ export async function lock(context: WebDAVClientContext, pathStr: string, option
 export async function unlock(context: WebDAVClientContext, pathStr: string, token: string, options: WebDAVMethodOptions = {}): Promise<void> {
     const requestOptions = prepareRequestOptions(
         {
-            url: path.join(context.remoteURL, encodePath(pathStr)),
+            url: join(context.remoteURL, encodePath(pathStr)),
             method: 'UNLOCK' as any,
             headers: {
                 'Lock-Token': token
@@ -58,7 +58,7 @@ export async function unlock(context: WebDAVClientContext, pathStr: string, toke
     const response = await request(requestOptions);
     await handleResponseCode(context, response, requestOptions);
     if (response.statusCode !== 204 && response.statusCode !== 200) {
-        const err = createErrorFromResponse(response, requestOptions);
+        const err = await createErrorFromResponse(response, requestOptions);
         throw err;
     }
 }

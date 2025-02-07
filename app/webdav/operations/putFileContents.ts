@@ -1,12 +1,11 @@
 import { File } from '@nativescript/core';
-import { fromBase64 } from '../tools/encode';
-import { encodePath } from '../tools/path';
-import { calculateDataLength } from '../tools/size';
+import { HTTPError } from '@shared/utils/error';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode } from '../response';
-import { AuthType, BufferLike, ErrorCode, Headers, PutFileContentsOptions, WebDAVClientContext } from '../types';
-import { path } from '@nativescript/core';
-import { HTTPError } from '@shared/utils/error';
+import { fromBase64 } from '../tools/encode';
+import { encodePath, join } from '../tools/path';
+import { calculateDataLength } from '../tools/size';
+import { AuthType, BufferLike, Headers, PutFileContentsOptions, WebDAVClientContext } from '../types';
 
 export async function putFileContents(context: WebDAVClientContext, filePath: string, data: string | BufferLike | File, options: PutFileContentsOptions = {}): Promise<boolean> {
     DEV_LOG && console.log('putFileContents', filePath, data);
@@ -29,7 +28,7 @@ export async function putFileContents(context: WebDAVClientContext, filePath: st
     }
     const requestOptions = prepareRequestOptions(
         {
-            url: filePath.startsWith('http') ? filePath : path.join(context.remoteURL, encodePath(filePath)),
+            url: filePath.startsWith('http') ? filePath : join(context.remoteURL, encodePath(filePath)),
             method: 'PUT',
             headers,
             data
@@ -52,7 +51,7 @@ export async function putFileContents(context: WebDAVClientContext, filePath: st
 }
 
 export function getFileUploadLink(context: WebDAVClientContext, filePath: string): string {
-    let url: string = `${path.join(context.remoteURL, encodePath(filePath))}?Content-Type=application/octet-stream`;
+    let url: string = `${join(context.remoteURL, encodePath(filePath))}?Content-Type=application/octet-stream`;
     const protocol = /^https:/i.test(url) ? 'https' : 'http';
     switch (context.authType) {
         case AuthType.None:

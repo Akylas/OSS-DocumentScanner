@@ -5,12 +5,13 @@ import { parseXML } from '../tools/dav';
 import { parseQuota } from '../tools/quota';
 import { DiskQuota, GetQuotaOptions, ResponseDataDetailed, WebDAVClientContext } from '../types';
 import { path } from '@nativescript/core';
+import { join } from '../tools/path';
 
 export async function getQuota(context: WebDAVClientContext, options: GetQuotaOptions = {}): Promise<DiskQuota | null | ResponseDataDetailed<DiskQuota | null>> {
     const pathStr = options.path || SEPARATOR;
     const requestOptions = prepareRequestOptions(
         {
-            url: path.join(context.remoteURL, pathStr),
+            url: join(context.remoteURL, pathStr),
             method: 'PROPFIND' as any,
             headers: {
                 Accept: 'text/plain,application/xml',

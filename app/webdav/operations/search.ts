@@ -1,5 +1,5 @@
 import { parseSearch, parseXML } from '../tools/dav';
-import { encodePath } from '../tools/path';
+import { encodePath, join } from '../tools/path';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode, processResponsePayload } from '../response';
 import { ResponseDataDetailed, SearchOptions, SearchResult, WebDAVClientContext } from '../types';
@@ -9,7 +9,7 @@ export async function getSearch(context: WebDAVClientContext, searchArbiter: str
     const { details: isDetailed = false } = options;
     const requestOptions = prepareRequestOptions(
         {
-            url: path.join(context.remoteURL, encodePath(searchArbiter)),
+            url: join(context.remoteURL, encodePath(searchArbiter)),
             method: 'SEARCH' as any,
             headers: {
                 Accept: 'text/plain,application/xml',
