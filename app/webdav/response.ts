@@ -4,7 +4,7 @@ import { Response, ResponseDataDetailed, WebDAVClientContext } from './types';
 
 export async function createErrorFromResponse(response: Response, requestParams, prefix: string = '') {
     const result = await parseRawXML(await response.content.toStringAsync());
-    // console.log('createErrorFromResponse', response.statusCode, await response.content.toStringAsync(), JSON.stringify(result));
+    DEV_LOG && console.log('createErrorFromResponse', response.statusCode, result);
 
     return new HTTPError({
         statusCode: response.statusCode,
