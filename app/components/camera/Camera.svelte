@@ -468,7 +468,7 @@
             const newAutoScanHandler = createAutoScanHandler(nCropView, (result) => {
                 DEV_LOG && console.log('onAutoScan', result);
                 // TODO: safeguard though should never happen
-                if (!saveCalled && cameraOpened && previewStarted && cameraView?.nativeView && autoScanHandler.enabled) {
+                if (!saveCalled && cameraOpened && previewStarted && cameraView?.nativeView && autoScanHandler && autoScanHandler.enabled) {
                     takePicture(true);
                 }
             });
