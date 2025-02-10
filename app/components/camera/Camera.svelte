@@ -316,9 +316,7 @@
                     cameraView.nativeView.readyToStartPreview = true;
                     cameraView.nativeView.startPreview();
                 }
-                if (autoScanHandler) {
-                    resumeAutoScan();
-                }
+                resumeAutoScan();
             }
         } catch (error) {
             showError(error);
@@ -331,9 +329,7 @@
             // if (takingPicture) {
             //     return;
             // }
-            if (autoScanHandler) {
-                pauseAutoScan();
-            }
+            pauseAutoScan();
             // // cameraView?.nativeView.stopPreview();
             // if (cropView?.nativeView) {
             //     cropView.nativeView.quads = null;
