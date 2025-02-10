@@ -95,7 +95,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         showError(error);
     }
     handleWorkerError(error: any) {
-        showError(CustomError.fromObject(error));
+        showError(CustomError.fromObject({ ...error, sentryReportTranslatedName: true }));
     }
     async onWorkerEvent(eventData) {
         // DEV_LOG && console.log('onWorkerEvent', eventData);
