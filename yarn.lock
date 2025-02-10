@@ -86,12 +86,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-app-utils@npm:2.2.3":
-  version: 2.2.3
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.3"
+"@akylas/nativescript-app-utils@npm:2.2.6":
+  version: 2.2.6
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.6"
   dependencies:
     "@nativescript-community/ui-share-file": "npm:1.3.3"
-  checksum: 10/03a172cbd9455452e8cc533ef275551686100e910e2e45bc7c41c2e2718a1cd5eec7d5aa5b0c4a1aa0f68dad57edf5be1bd1f4dcb6865780e7095e4174743c74
+  checksum: 10/e715e9b9eb642e1991d0882859f463111c13e1b0b4e82fe4f1f613c4d4e2b0a364029b0917c2b8ba0dcc77be136f9d660d723c41410a05254dee0639e1a19f59
   languageName: node
   linkType: hard
 
@@ -10389,7 +10389,7 @@ __metadata:
     "@akylas/nativescript": "npm:8.8.10"
     "@akylas/nativescript-android-runtime": "npm:8.8.5"
     "@akylas/nativescript-app-tools": "file:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.3"
+    "@akylas/nativescript-app-utils": "npm:2.2.6"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:8.8.2"
