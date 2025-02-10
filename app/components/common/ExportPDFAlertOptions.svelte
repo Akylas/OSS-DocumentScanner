@@ -12,36 +12,39 @@
     export let password;
     export let filename;
 
+    $: DEV_LOG && console.log('jpegQuality', jpegQuality);
+
     function onFolderSelect(e) {
         folder = e.text;
     }
 </script>
 
-<gridlayout padding={10} rows="auto,auto,auto,auto">
-    <FolderTextView text={folder} on:folder={onFolderSelect} />
-    <textfield
-        autocapitalizationType="none"
-        autocorrect={false}
-        hint={lc('pdf_filename')}
-        margin="5 0 5 0"
-        placeholder={lc('filename')}
-        returnKeyType="next"
-        row={1}
-        text={filename}
-        variant="outline"
-        on:textChange={(e) => (filename = e['value'])} />
-    <SettingsSlider max={100} min={0} onChange={(e) => (jpegQuality = e.value)} row={2} step={1} title={lc('jpeg_quality')} value={jpegQuality} />
-    <textfield
-        autocapitalizationType="none"
-        autocorrect={false}
-        hint={lc('optional_pdf_password')}
-        margin="5 0 5 0"
-        placeholder={lc('password')}
-        placeholderColor="gray"
-        returnKeyType="done"
-        row={3}
-        secure={true}
-        text={password}
-        variant="outline"
-        on:textChange={(e) => (password = e['value'])} />
-</gridlayout>
+<gesturerootview padding="10 0 10 0" rows="auto">
+    <stacklayout>
+        <label class={'sectionBigHeader'} margin={10} text={lc('export_settings')} />
+        <FolderTextView text={folder} on:folder={onFolderSelect} />
+        <textfield
+            autocapitalizationType="none"
+            autocorrect={false}
+            hint={lc('pdf_filename')}
+            margin="5 10 5 10"
+            placeholder={lc('filename')}
+            returnKeyType="next"
+            text={filename}
+            variant="outline"
+            on:textChange={(e) => (filename = e['value'])} />
+        <SettingsSlider margin="5 10 5 10" max={100} min={0} onChange={(value) => (jpegQuality = value)} step={1} title={lc('jpeg_quality')} value={jpegQuality} />
+        <textfield
+            autocapitalizationType="none"
+            autocorrect={false}
+            hint={lc('optional_pdf_password')}
+            margin="5 10 5 10"
+            placeholder={lc('password')}
+            placeholderColor="gray"
+            returnKeyType="done"
+            secure={true}
+            text={password}
+            variant="outline"
+            on:textChange={(e) => (password = e['value'])} />
+    </stacklayout>
+</gesturerootview>

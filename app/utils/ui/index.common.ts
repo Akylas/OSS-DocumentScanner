@@ -393,7 +393,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
     }
 }
 export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
-    await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {}});
+    await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {} });
     // let selection: { files: string[]; ios?; android? };
     // let editingImage: ImageSource;
     try {
@@ -673,78 +673,70 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                         break;
                     }
                     case 'export': {
-                        if (!exportDirectory) {
-                            showSnack({ message: lc('please_choose_export_folder') });
-                        } else {
-                            await closePopover();
-                            const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
-                            let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
-                            try {
-                                const defaultOptions = getPDFDefaultExportOptions();
-                                DEV_LOG && console.log('defaultOptions', JSON.stringify(defaultOptions));
-                                componentInstanceInfo = resolveComponentElement(component, {
-                                    filename: getFileNameForDocument(document) + PDF_EXT,
-                                    jpegQuality: defaultOptions.jpegQuality,
-                                    password: defaultOptions.password,
-                                    folder: exportDirectory
-                                }) as ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
-                                const result = await confirm({
-                                    okButtonText: lc('ok'),
-                                    cancelButtonText: lc('cancel'),
-                                    view: componentInstanceInfo.element.nativeView
-                                });
-                                if (result) {
-                                    let filename = componentInstanceInfo.viewInstance.filename;
-                                    if (filename.length) {
-                                        const password = componentInstanceInfo.viewInstance.password;
-                                        const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
-                                        const folder = componentInstanceInfo.viewInstance.folder;
-                                        showLoading(l('exporting'));
-                                        DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
-                                        const filePath = await exportPDFAsync({
-                                            pages,
-                                            document,
-                                            folder,
-                                            filename,
-                                            options: {
-                                                jpegQuality,
-                                                password
-                                            }
-                                        });
-                                        hideLoading();
-                                        if (!filePath) {
-                                            return;
+                        // if (!exportDirectory) {
+                        //     showSnack({ message: lc('please_choose_export_folder') });
+                        // } else {
+                        await closePopover();
+                        const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
+                        let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
+                        try {
+                            const defaultOptions = getPDFDefaultExportOptions();
+                            DEV_LOG && console.log('defaultOptions', JSON.stringify(defaultOptions));
+                            componentInstanceInfo = resolveComponentElement(component, {
+                                filename: getFileNameForDocument(document) + PDF_EXT,
+                                jpegQuality: defaultOptions.jpegQuality,
+                                password: defaultOptions.password,
+                                folder: exportDirectory
+                            }) as ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
+                            const result = await confirm({
+                                okButtonText: lc('ok'),
+                                cancelButtonText: lc('cancel'),
+                                view: componentInstanceInfo.element.nativeView
+                            });
+                            if (result) {
+                                let filename = componentInstanceInfo.viewInstance.filename;
+                                if (filename.length) {
+                                    const password = componentInstanceInfo.viewInstance.password;
+                                    const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
+                                    const folder = componentInstanceInfo.viewInstance.folder;
+                                    if (!folder) {
+                                        return showSnack({ message: lc('please_choose_export_folder') });
+                                    }
+                                    showLoading(l('exporting'));
+                                    DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
+                                    const filePath = await exportPDFAsync({
+                                        pages,
+                                        document,
+                                        folder,
+                                        filename,
+                                        options: {
+                                            jpegQuality,
+                                            password
                                         }
-                                        DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
-                                        if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
-                                            filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
-                                        } else {
-                                            filename = filePath.split(SEPARATOR).pop();
-                                        }
-                                        const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
-                                        if (onSnack?.reason === 'action') {
-                                            DEV_LOG && console.log('openFile', filePath);
-                                            openFile(filePath);
-                                        }
+                                    });
+                                    hideLoading();
+                                    if (!filePath) {
+                                        return;
+                                    }
+                                    DEV_LOG && console.log('exportPDF done', filePath, File.exists(filePath));
+                                    if (__ANDROID__ && filePath.startsWith(ANDROID_CONTENT)) {
+                                        filename = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), android.net.Uri.parse(filePath))?.split(SEPARATOR).pop();
+                                    } else {
+                                        filename = filePath.split(SEPARATOR).pop();
+                                    }
+                                    const onSnack = await showSnack({ message: lc('pdf_saved', filename || filePath), actionText: lc('open') });
+                                    if (onSnack?.reason === 'action') {
+                                        DEV_LOG && console.log('openFile', filePath);
+                                        openFile(filePath);
                                     }
                                 }
-                            } catch (err) {
-                                throw err;
-                            } finally {
-                                componentInstanceInfo.element.nativeElement._tearDownUI();
-                                componentInstanceInfo.viewInstance.$destroy();
-                                componentInstanceInfo = null;
                             }
-                            const view = createView(StackLayout, {
-                                orientation: 'vertical',
-                                padding: 16
-                            });
-                            const slider = createView(Slider, {
-                                value: getPDFDefaultExportOptions().jpegQuality,
-                                minValue: 0,
-                                maxValue: 100
-                            });
-                            view.addChild(slider);
+                        } catch (err) {
+                            throw err;
+                        } finally {
+                            componentInstanceInfo.element.nativeElement._tearDownUI();
+                            componentInstanceInfo.viewInstance.$destroy();
+                            componentInstanceInfo = null;
                         }
                         break;
                     }
