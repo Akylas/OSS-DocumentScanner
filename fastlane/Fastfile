@@ -291,7 +291,7 @@ lane :build_flavor do |params|
     reset_git_repo( force: true, files: ["yarn.lock", "package.json"])
     # we need to pull to be able to push again
     Actions.sh("git fetch --tags -f")
-    git_pull
+    Actions.sh("git pull")
     # push any change
     push_to_git_remote(tags:false)
   end
