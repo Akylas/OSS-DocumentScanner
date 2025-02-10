@@ -5,65 +5,15 @@ import { mergeHeaders } from './tools/headers';
 import { merge } from './tools/merge';
 import { RequestOptions, RequestOptionsWithState, WebDAVClientContext, WebDAVMethodOptions } from './types';
 
-// function getFetchOptions(requestOptions: RequestOptions): HttpsRequestOptions {
-//     let headers: Headers = {};
-//     // Handle standard options
-//     const opts: HttpsRequestOptions = {
-//         method: requestOptions.method
-//     } as any;
-//     if (requestOptions.headers) {
-//         headers = mergeHeaders(headers, requestOptions.headers);
-//     }
-//     if (typeof requestOptions.data !== 'undefined') {
-//         const [body, newHeaders] = requestDataToFetchBody(requestOptions.data);
-//         opts.body = body;
-//         headers = mergeHeaders(headers, newHeaders);
-//     }
-//     // if (requestOptions.signal) {
-//     //     opts.signal = requestOptions.signal;
-//     // }
-//     // if (requestOptions.withCredentials) {
-//     //     (opts as RequestInit).credentials = 'include';
-//     // }
-//     // Check for node-specific options
-//     // if (!isWeb()) {
-//     //     if (requestOptions.httpAgent || requestOptions.httpsAgent) {
-//     //         (opts as RequestInitNF).agent = (parsedURL: URL) => {
-//     //             if (parsedURL.protocol === 'http:') {
-//     //                 return requestOptions.httpAgent || new HTTPAgent();
-//     //             }
-//     //             return requestOptions.httpsAgent || new HTTPSAgent();
-//     //         };
-//     //     }
-//     // }
-//     // Attach headers
-//     opts.headers = headers;
-//     return opts;
-// }
-
 export function prepareRequestOptions(requestOptions: RequestOptions | RequestOptionsWithState, context: WebDAVClientContext, userOptions: WebDAVMethodOptions): RequestOptionsWithState {
     // const finalOptions = cloneShallow(requestOptions) as RequestOptionsWithState;
     const finalOptions = { ...requestOptions, ...(userOptions || {}) } as RequestOptionsWithState;
     finalOptions.headers = mergeHeaders(context.headers, finalOptions.headers || {}, userOptions.headers || {});
     finalOptions.responseOnMainThread = false;
-    // if (typeof userOptions.data !== 'undefined') {
-    //     finalOptions.data = userOptions.data;
-    // }
-    // if (userOptions.signal) {
-    //     finalOptions.signal = userOptions.signal;
-    // }
-    // if (context.httpAgent) {
-    //     finalOptions.httpAgent = context.httpAgent;
-    // }
-    // if (context.httpsAgent) {
-    //     finalOptions.httpsAgent = context.httpsAgent;
-    // }
+
     if (context.digest) {
         finalOptions._digest = context.digest;
     }
-    // if (typeof context.withCredentials === 'boolean') {
-    //     finalOptions.withCredentials = context.withCredentials;
-    // }
     return finalOptions;
 }
 
@@ -74,6 +24,7 @@ async function _request<T = any>(requestOptions: RequestOptionsWithState) {
         DEV_LOG && console.log('webdavRequest response', response.statusCode, requestOptions.url);
         return response;
     } catch (error) {
+        DEV_LOG && console.error('webdavRequest error', error, error.stack);
         throw wrapNativeHttpException(error, requestOptions);
     }
 }
