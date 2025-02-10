@@ -45,10 +45,12 @@ export async function saveImage(
         toGallery = false
     }: { toGallery?: boolean; imageFormat: 'png' | 'jpeg' | 'jpg'; imageQuality; fileName: string; exportDirectory: string; reportName?: boolean; overwrite?: boolean }
 ) {
+    DEV_LOG && console.log('saveImage', exportDirectory, fileName, imageFormat, imageQuality, overwrite, reportName, toGallery);
     let destinationName = fileName;
     if (!destinationName.endsWith(imageFormat)) {
         destinationName += '.' + imageFormat;
     }
+
     const destinationPath = path.join(exportDirectory, destinationName);
     if (overwrite && File.exists(destinationPath)) {
         await File.fromPath(destinationPath).remove();
