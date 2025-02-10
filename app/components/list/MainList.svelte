@@ -765,7 +765,7 @@
             ]
         });
         canvas.save();
-        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+        const staticLayout = new StaticLayout(topText, textPaint, Math.max(0, w - dx), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
         canvas.translate(dx, h / 2 - staticLayout.getHeight() / 2);
         staticLayout.draw(canvas);
         canvas.restore();

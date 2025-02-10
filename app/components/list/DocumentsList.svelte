@@ -86,7 +86,7 @@
                 }
             ]
         });
-        const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+        const staticLayout = new StaticLayout(topText, textPaint, Math.max(0, w - dx), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
         canvas.translate(dx, (condensed ? 0 : 10) + 10);
         staticLayout.draw(canvas);
     }
