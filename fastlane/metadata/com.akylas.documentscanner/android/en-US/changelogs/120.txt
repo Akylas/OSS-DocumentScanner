@@ -1,0 +1,10 @@
+Bug fixes:
+- removed unused permissions
+- when showing folders inside another folder, dont show parent name
+- "use doc folder as subfolder" fix for local folder sync
+- synced images are now named `documentName_$imageIndex` to preserve doc order
+- webdav settings change not persisting (like changing password or username)
+- multiple fixes around folder syncing and sub folders
+- prevent error while syncing document with many pages
+- prevent error while disable camera auto scan
+- fixed and improved 
