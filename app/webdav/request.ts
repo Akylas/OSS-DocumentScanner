@@ -2,11 +2,9 @@ import { HttpsResponse, HttpsResponseLegacy, request } from '@nativescript-commu
 import { wrapNativeHttpException } from '~/services/api';
 import { generateDigestAuthHeader, parseDigestAuth } from './auth/digest';
 import { mergeHeaders } from './tools/headers';
-import { merge } from './tools/merge';
 import { RequestOptions, RequestOptionsWithState, WebDAVClientContext, WebDAVMethodOptions } from './types';
 
 export function prepareRequestOptions(requestOptions: RequestOptions | RequestOptionsWithState, context: WebDAVClientContext, userOptions: WebDAVMethodOptions): RequestOptionsWithState {
-    // const finalOptions = cloneShallow(requestOptions) as RequestOptionsWithState;
     const finalOptions = { ...requestOptions, ...(userOptions || {}) } as RequestOptionsWithState;
     finalOptions.headers = mergeHeaders(context.headers, finalOptions.headers || {}, userOptions.headers || {});
     finalOptions.responseOnMainThread = false;
@@ -38,22 +36,16 @@ async function webdavRequest<T>(requestOptions: RequestOptionsWithState): Promis
     delete requestOptions._digest;
     // If client is already using digest authentication, include the digest authorization header
     if (_digest.hasDigestAuth) {
-        requestOptions = merge(requestOptions, {
-            headers: {
-                Authorization: generateDigestAuthHeader(requestOptions, _digest)
-            }
-        });
+        requestOptions.headers = requestOptions.headers || {};
+        requestOptions.headers.Authorization = generateDigestAuthHeader(requestOptions, _digest);
     }
     // Perform digest request + check
     const response = await _request(requestOptions);
     if (response.statusCode === 401) {
         _digest.hasDigestAuth = parseDigestAuth(response, _digest);
         if (_digest.hasDigestAuth) {
-            requestOptions = merge(requestOptions, {
-                headers: {
-                    Authorization: generateDigestAuthHeader(requestOptions, _digest)
-                }
-            });
+            requestOptions.headers = requestOptions.headers || {};
+            requestOptions.headers.Authorization = generateDigestAuthHeader(requestOptions, _digest);
             const response2 = await _request(requestOptions);
             if (response2.statusCode === 401) {
                 _digest.hasDigestAuth = false;
