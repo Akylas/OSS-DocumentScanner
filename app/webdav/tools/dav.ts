@@ -27,7 +27,7 @@ function getParser(): XMLParser {
     });
 }
 
-function getPropertyOfType(obj: Object, prop: string, type: PropertyType = PropertyType.Original): any {
+function getPropertyOfType(obj: object, prop: string, type: PropertyType = PropertyType.Original): any {
     const val = nestedProp.get(obj, prop);
     if (type === 'array' && Array.isArray(val) === false) {
         return [val];
@@ -59,6 +59,7 @@ function normaliseResult(result: DAVResultRaw): DAVResult {
         };
     }
     if (!multistatus) {
+        DEV_LOG && console.error('normaliseResult failed', JSON.stringify(result));
         throw new Error('Invalid response: No root multistatus found');
     }
     const output: any = {
@@ -97,7 +98,7 @@ export function parseRawXML(xml: string): Promise<any> {
 
 export function prepareFileFromProps(props: DAVResultResponseProps, rawFilename: string, isDetailed: boolean = false): FileStat {
     // Last modified time, raw size, item type and mime
-    const { getlastmodified: lastMod = null, getcontentlength: rawSize = '0', resourcetype: resourceType = null, getcontenttype: mimeType = null, getetag: etag = null } = props;
+    const { getcontentlength: rawSize = '0', getcontenttype: mimeType = null, getetag: etag = null, getlastmodified: lastMod = null, resourcetype: resourceType = null } = props;
     const type = resourceType && typeof resourceType === 'object' && typeof resourceType.collection !== 'undefined' ? 'directory' : 'file';
     const filename = decodeHTMLEntities(rawFilename);
     const stat: FileStat = {
