@@ -80,7 +80,6 @@
     let nbColumns = updateColumns($isLandscape);
 
     function updateColumns(isLandscape) {
-        DEV_LOG && console.log('updateColumns', isLandscape);
         return isLandscape
             ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE, DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE)
             : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_VIEW, DEFAULT_NB_COLUMNS_VIEW);

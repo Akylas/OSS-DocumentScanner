@@ -148,7 +148,6 @@
     export let nbColumns = writable(1);
     export let updateColumns = function (isLandscape, orientationChanged: boolean = false) {
         $nbColumns = isLandscape ? ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS_LANDSCAPE, DEFAULT_NB_COLUMNS_LANDSCAPE) : ApplicationSettings.getNumber(SETTINGS_NB_COLUMNS, DEFAULT_NB_COLUMNS);
-        DEV_LOG && console.log('updateColumns', isLandscape, nbColumns);
     };
     $: if (mounted) updateColumns($isLandscape, true);
     $: colWidth = 100 / $nbColumns + '%';
