@@ -340,7 +340,7 @@ lane :get_changelog  do |params|
           contributors.concat(l.to_enum(:scan,/@[a-zA-Z0-9-_]+/).map {$&})
       }
       if (display_links) 
-        logs.push("- Translations update by " +  contributors.join(", "))
+        logs.push("- Translations update by " +  contributors.uniq.join(", "))
       else
         logs.push("- Translations update")
       end
