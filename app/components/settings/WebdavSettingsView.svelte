@@ -8,6 +8,7 @@
     import { colors } from '~/variables';
     import { AuthType } from '~/webdav';
     import RemoteFolderTextField from '../common/RemoteFolderTextField.svelte';
+    import { SilentError } from '@shared/utils/error';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 
@@ -50,7 +51,7 @@
         try {
             const data = get(store);
             if (data.authType === AuthType.Password && !data.password?.length) {
-                throw new Error(lc('missing_webdav_password'));
+                throw new SilentError(lc('missing_webdav_password'));
             }
             testing = true;
             const result = await testWebdavConnection(data as any);

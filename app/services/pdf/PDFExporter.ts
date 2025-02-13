@@ -1,7 +1,7 @@
 import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import { Screen, Utils, knownFolders } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
-import { CustomError, SilentError } from '@shared/utils/error';
+import { CustomError, SilentError, TimeoutError } from '@shared/utils/error';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import { getFileNameForDocument, lc } from '~/helpers/locale';
 import { PDF_EXT } from '~/utils/constants';
@@ -85,7 +85,7 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
                             // we need to try catch because the simple fact of creating a new Error actually throws.
                             // so we will get an uncaughtException
                             try {
-                                reject(new Error('timeout'));
+                                reject(new TimeoutError());
                             } catch {}
                             delete messagePromises[id];
                         }, timeout);

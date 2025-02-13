@@ -9,6 +9,7 @@ import { networkService } from '~/services/api';
 import { WebdavSyncOptions } from '~/services/sync/Webdav';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { DOCUMENT_DATA_FILENAME } from '~/utils/constants';
+import { SilentError } from '@shared/utils/error';
 
 export interface WebdavDataSyncOptions extends BaseDataSyncServiceOptions, WebdavSyncOptions {}
 
@@ -147,7 +148,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
         ) as OCRDocument & { pages: OCRPage[]; db_version?: number };
         const { db_version, folders, pages, ...docProps } = dataJSON;
         if (db_version > DB_VERSION) {
-            throw new Error(lc('document_need_updated_app', docProps.name));
+            throw new SilentError(lc('document_need_updated_app', docProps.name));
         }
         let docId = docProps.id;
         let pageIds = [];
