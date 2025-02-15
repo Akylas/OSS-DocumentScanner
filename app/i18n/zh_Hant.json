@@ -261,7 +261,7 @@
     "nb_columns_view": "文件檢視列數",
     "nb_columns_view_desc": "文件檢視中的列數 (適用於平板電腦，在手機上可能會看起來不對)",
     "nb_columns_view_landscape": "文件檢視的橫向列數",
-    "nb_columns_view_landscape_desc": "橫向檢視時文件檢視的列數",
+    "nb_columns_view_landscape_desc": "橫向顯示時文件視圖中的欄位數量",
     "nb_pages": "%1$s 頁",
     "need_fill_fields": "您需要填寫所有必要的欄位",
     "need_fill_name_color": "您需要設定一個名稱和顏色",
