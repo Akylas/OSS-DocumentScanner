@@ -1,0 +1,6 @@
+Bug fixes:
+- regression fix which prevent sync to start
+- sync data dont fail if syncing remote folder contains a folder not part of the sync data
+- prevent errors while syncing data
+- fully transparent navigation bar
+- Translations update
