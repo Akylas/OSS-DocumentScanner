@@ -112,9 +112,9 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     }
     override async importFolderFromRemote(remoteRelativePath: string, folder: Folder, ignores?: string[]) {
         if (!folder?.path) {
-            throw new Error('importFolderFromWebdav missing folder');
+            throw new Error('importFolderFromRemote missing folder');
         }
-        DEV_LOG && console.log('importFolderFromWebdav', remoteRelativePath, folder.path, ignores);
+        DEV_LOG && console.log('importFolderFromRemote', remoteRelativePath, folder.path, ignores);
         const remoteDocuments = await this.getRemoteFolderDirectories(remoteRelativePath);
         for (let index = 0; index < remoteDocuments.length; index++) {
             const remoteDocument = remoteDocuments[index];
@@ -141,11 +141,17 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     }
 
     override async importDocumentFromRemote(data: FileStat) {
-        const dataJSON = JSON.parse(
-            await this.client.getFileContents(path.join(data.filename, DOCUMENT_DATA_FILENAME), {
+        let remoteData: string;
+        try {
+            remoteData = await this.client.getFileContents(path.join(data.filename, DOCUMENT_DATA_FILENAME), {
                 format: 'text'
-            })
-        ) as OCRDocument & { pages: OCRPage[]; db_version?: number };
+            });
+        } catch (error) {
+            // it seems there is data.json in that folder. Let's ignore
+            return;
+        }
+
+        const dataJSON: OCRDocument & { pages: OCRPage[]; db_version?: number } = JSON.parse(remoteData);
         const { db_version, folders, pages, ...docProps } = dataJSON;
         if (db_version > DB_VERSION) {
             throw new SilentError(lc('document_need_updated_app', docProps.name));

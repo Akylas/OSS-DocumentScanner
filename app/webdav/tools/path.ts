@@ -76,17 +76,21 @@ export function normalisePath(normalisedPath: string): string {
     return normalisedPath;
 }
 
-export function join(...args) {
+export function join(...args: string[]) {
     let joined;
     for (let i = 0; i < args?.length || 0; ++i) {
         const arg = args[i];
         if (arg.length > 0) {
+            const joinLast = joined ? joined[joined.length - 1] : undefined;
+            const argFirst = arg[0];
             if (joined === undefined) {
                 joined = arg;
-            } else if (joined[joined.length - 1] !== SEPARATOR && arg[0] !== SEPARATOR) {
+            } else if (joinLast !== SEPARATOR && argFirst !== SEPARATOR) {
                 joined += SEPARATOR + arg;
-            } else {
+            } else if (joinLast !== SEPARATOR || argFirst !== SEPARATOR) {
                 joined += arg;
+            } else {
+                joined += arg.slice(1);
             }
         }
     }

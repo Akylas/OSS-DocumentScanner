@@ -205,7 +205,7 @@ export default class SyncWorker extends BaseWorker {
                 await this.syncPDFDocuments({ force, event });
             }
         } catch (error) {
-            console.error('error during worker sync', error, error.stack);
+            // console.error('error during worker sync', error, error.stack);
             this.sendError(error);
         } finally {
             console.warn('sync done');
@@ -313,10 +313,13 @@ export default class SyncWorker extends BaseWorker {
                             doc.save({ _synced: doc._synced | service.syncMask }, false);
                         }
                         for (let index = 0; index < missingLocalDocuments.length; index++) {
-                            const { doc, folder } = await service.importDocumentFromRemote(missingLocalDocuments[index]);
-                            await doc.save({ _synced: doc._synced | service.syncMask }, true, false);
-                            DEV_LOG && console.log('importFolderFromWebdav done');
-                            documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc, folder });
+                            const data = await service.importDocumentFromRemote(missingLocalDocuments[index]);
+                            if (data) {
+                                const { doc, folder } = data;
+                                await doc.save({ _synced: doc._synced | service.syncMask }, true, false);
+                                DEV_LOG && console.log('importFolderFromWebdav done');
+                                documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc, folder });
+                            }
                         }
                         for (let index = 0; index < toBeSyncDocuments.length; index++) {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
