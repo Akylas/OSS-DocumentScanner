@@ -8,7 +8,6 @@ import { calculateDataLength } from '../tools/size';
 import { AuthType, BufferLike, Headers, PutFileContentsOptions, WebDAVClientContext } from '../types';
 
 export async function putFileContents(context: WebDAVClientContext, filePath: string, data: string | BufferLike | File, options: PutFileContentsOptions = {}): Promise<boolean> {
-    DEV_LOG && console.log('putFileContents', filePath, data);
     const { contentLength = true, overwrite = true } = options;
     const headers: Headers = {
         'Content-Type': 'application/octet-stream'

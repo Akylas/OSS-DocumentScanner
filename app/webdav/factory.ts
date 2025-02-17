@@ -81,7 +81,6 @@ function getDirectoryFiles(result: DAVResult, serverRemoteBasePath: string, requ
     if (includeSelf) {
         return nodes;
     }
-
     // Else, filter out the item pointing to the current directory (not needed)
     return nodes.filter((item) => item.basename && (item.type === 'file' || item.filename !== requestedRemotePath));
 }
@@ -101,7 +100,6 @@ export class WebDAVClient {
         // if (!_remotePath.endsWith(SEPARATOR)) {
         //     _remotePath += SEPARATOR;
         // }
-        DEV_LOG && console.log('getDirectoryContent', _remotePath);
         const requestOptions = prepareRequestOptions(
             {
                 url: _remotePath,
@@ -115,7 +113,6 @@ export class WebDAVClient {
             options
         );
         const response = await request(requestOptions);
-        DEV_LOG && console.log('getDirectoryContent done', _remotePath);
         await handleResponseCode(context, response, requestOptions);
         const responseData = await response.content.toStringAsync();
         if (!responseData) {
@@ -124,6 +121,7 @@ export class WebDAVClient {
         const davResp = await parseXML(responseData);
         const remoteBasePath = context.remoteBasePath;
         const files = getDirectoryFiles(davResp, remoteBasePath, _remotePath, options.details, options.includeSelf);
+
         // if (options.glob) {
         //     files = processGlobFilter(files, options.glob);
         // }

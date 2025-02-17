@@ -3,9 +3,9 @@ import { parseRawXML } from './tools/dav';
 import { Response, ResponseDataDetailed, WebDAVClientContext } from './types';
 
 export async function createErrorFromResponse(response: Response, requestParams, prefix: string = '') {
-    const result = await parseRawXML(await response.content.toStringAsync());
-    DEV_LOG && console.log('createErrorFromResponse', response.statusCode, result);
-
+    const serverResponse = await response.content.toStringAsync();
+    DEV_LOG && console.log('createErrorFromResponse', requestParams.url, response.statusCode, serverResponse.replace(/[\s\t\n]+/g, ''));
+    const result = await parseRawXML(serverResponse);
     return new HTTPError({
         statusCode: response.statusCode,
         message: prefix + result.error?.message,
@@ -15,7 +15,7 @@ export async function createErrorFromResponse(response: Response, requestParams,
 
 export async function handleResponseCode(context: WebDAVClientContext, response: Response, requestOptions) {
     const { statusCode } = response;
-    DEV_LOG && console.log('handleResponseCode', response.statusCode, response.headers);
+    // DEV_LOG && console.log('handleResponseCode', response.statusCode, JSON.stringify(response.headers));
     // if (statusCode === 401 && context.digest) return response;
     if (statusCode >= 400) {
         const err = await createErrorFromResponse(response, requestOptions);

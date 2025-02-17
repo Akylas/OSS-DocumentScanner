@@ -19,7 +19,7 @@ async function _request<T = any>(requestOptions: RequestOptionsWithState) {
     DEV_LOG && console.log('webdav request', JSON.stringify(requestOptions));
     try {
         const response = await request<T>({ ...requestOptions, body: requestOptions.data as any });
-        DEV_LOG && console.log('webdavRequest response', response.statusCode, requestOptions.url);
+        // DEV_LOG && console.log('webdavRequest response', response.statusCode, requestOptions.url);
         return response;
     } catch (error) {
         DEV_LOG && console.error('webdavRequest error', error, error.stack);
