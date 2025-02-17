@@ -371,32 +371,32 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         return doc;
     }
 
-    async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
-        const tags = await this.tagsRepository.search({
-            where: sql`
-            "id" IN (
-                SELECT "tag_id"
-                FROM "DocumentsTags"
-                WHERE "document_id" = ${document.id}
-            )
-        `
-        });
-        document.tags = tags.map((g) => g.id);
-        return document;
-    }
-    async loadFoldersRelationship(document: OCRDocument): Promise<OCRDocument> {
-        const folders = await this.foldersRepository.search({
-            where: sql`
-            "id" IN (
-                SELECT "folder_id"
-                FROM "DocumentsFolders"
-                WHERE "document_id" = ${document.id}
-            )
-        `
-        });
-        document.folders = folders.map((g) => g.id);
-        return document;
-    }
+    // async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
+    //     const tags = await this.tagsRepository.search({
+    //         where: sql`
+    //         "id" IN (
+    //             SELECT "tag_id"
+    //             FROM "DocumentsTags"
+    //             WHERE "document_id" = ${document.id}
+    //         )
+    //     `
+    //     });
+    //     document.tags = tags.map((g) => g.id);
+    //     return document;
+    // }
+    // async loadFoldersRelationship(document: OCRDocument): Promise<OCRDocument> {
+    //     const folders = await this.foldersRepository.search({
+    //         where: sql`
+    //         "id" IN (
+    //             SELECT "folder_id"
+    //             FROM "DocumentsFolders"
+    //             WHERE "document_id" = ${document.id}
+    //         )
+    //     `
+    //     });
+    //     document.folders = folders.map((g) => g.id);
+    //     return document;
+    // }
 
     async update(document: OCRDocument, data?: Partial<OCRDocument>, updateModifiedDate = true) {
         // DEV_LOG && console.log('doc update', data);
