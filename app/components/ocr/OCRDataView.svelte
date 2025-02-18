@@ -242,7 +242,15 @@
             webConsoleEnabled={!PRODUCTION}
             on:loadFinished={onWebViewLoadFinished} />
 
-        <textview backgroundColor={new Color(visualState).setAlpha(200).hex} color={textColor} editable={false} fontSize={16} row={1} {text} visibility={showTextView ? 'visible' : 'hidden'} variant="none"/>
+        <textview
+            backgroundColor={new Color(visualState).setAlpha(200).hex}
+            color={textColor}
+            editable={false}
+            fontSize={16}
+            row={1}
+            {text}
+            variant="none"
+            visibility={showTextView ? 'visible' : 'hidden'} />
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState={visualState} modalWindow={true} title={null}>
             <mdbutton class="actionBarButton" color={textColor} text="mdi-content-copy" variant="text" on:tap={copyText} />
             <mdbutton class="actionBarButton" color={textColor} text="mdi-image-text" variant="text" on:tap={toggleShowTextView} />
