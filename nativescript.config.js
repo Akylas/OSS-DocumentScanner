@@ -30,7 +30,7 @@ module.exports = {
                 aarSuffix: CARD_APP ? '-cardwallet' : '-documentscanner'
             }
         },
-        runtimePackageName: '@akylas/nativescript-android-runtime',
+        // runtimePackageName: '@akylas/nativescript-android-runtime',
         gradleVersion: '8.10.2',
         markingMode: 'none',
         codeCache: true,
