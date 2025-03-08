@@ -76,7 +76,7 @@
     "capturing": "çekiliyor",
     "cardholder": "kart sahibi",
     "cards": "kartlar",
-    "cards_count": "Böyle bir şey türkçe de yok(There is no such thing in Turkish)",
+    "cards_count": "%1$s kart",
     "choose": "seç",
     "color": "renk",
     "color_desc": "renkleri iyileştir ve istenmeyen renk tonlarını azalt",
@@ -175,15 +175,15 @@
     "force_white_background_qrcode": "Beyaz arka planı zorunlu kıl (QR Kod)",
     "force_white_background_qrcode_desc": "Bazı okuyucular beyaz arka plandaki siyah QR Kodları okuyamaz",
     "format": "biçim",
-    "french": "fransızca",
+    "french": "Fransızca",
     "full": "tam",
     "general": "genel",
     "get_app_source_code": "uygulamanın kaynak kodunu al",
     "here": "Burada",
     "image": "görüntü",
-    "image_filename": "dışa aktarılacak resim dosyasının adı",
+    "image_filename": "dışa aktarılacak görüntü dosyasının adı",
     "image_format": "görüntü biçimi",
-    "image_format_desc": "uygulamada kullanılacak görüntü formatı biçimi (PNG, JPEG). PNG daha iyi kalite ancak daha büyük boyut anlamına gelir",
+    "image_format_desc": "uygulamada kullanılacak görüntü biçimi (PNG, JPEG). PNG daha iyi kalite ancak daha büyük boyut anlamına gelir",
     "image_import": "içeri görüntü aktar",
     "image_load_scale": "görüntü ölçeği",
     "image_load_scale_desc": "PDF dosyasına eklenen görüntüye uygulanan ölçek",
@@ -225,11 +225,11 @@
         "info": {
             "plist": {
                 "NSCameraUsageDescription": "Kamerayı kullanarak belgeleri tarayabilmeniz için kameraya erişime izin verin",
-                "NSPhotoLibraryUsageDescription": "Kitaplığınızdan bir resim seçebilmeniz, uygulama ile tarayabilmeniz ve bundan bir kart oluşturabilmeniz için resimlere erişime izin verin"
+                "NSPhotoLibraryUsageDescription": "Kitaplığınızdan bir görüntü seçebilmeniz, uygulama ile tarayabilmeniz ve bundan bir kart oluşturabilmeniz için görüntülere erişim izni verin"
             }
         }
     },
-    "italian": "italyanca",
+    "italian": "İtalyanca",
     "items_per_page": "yaprak başına sayfa",
     "jpeg_quality": "JPEG kalitesi",
     "just_once": "Sadece bu defa",
@@ -255,7 +255,7 @@
     "move_folder": "klasöre taşı",
     "move_folder_desc": "Seçilen belgeyi bir klasöre taşıyın. Herhangi bir klasörden kaldırmak için alanı boş bırakın",
     "moving_files": "dosyalar taşınıyor",
-    "name": "isim",
+    "name": "ad",
     "nb_columns": "Sütunlar",
     "nb_columns_desc": "Belge listelerindeki sütun sayısı (tabletler için tasarlanmıştır, telefonlarda yanlış görünebilir)",
     "nb_columns_landscape": "Yatay modda sütunlar",
@@ -358,7 +358,7 @@
     "send": "Göndermek",
     "send_feedback": "geribildirim yolla",
     "server_address": "sunucu adresi",
-    "set_filename_format_settings": "dosya adı formatını ayarlardan ayarlayabilirsiniz",
+    "set_filename_format_settings": "dosya adı biçimini ayarlardan ayarlayabilirsiniz",
     "settings": {
         "title": "ayarlar"
     },
