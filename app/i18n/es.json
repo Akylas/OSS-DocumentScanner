@@ -34,6 +34,8 @@
     "app": {
         "name": "OSS Document Scanner"
     },
+    "appearance": "Apariencia",
+    "appearance_settings": "tema y otros ajustes de apariencia",
     "apply": "aplicar",
     "ask_everytime": "consultar cada vez",
     "aspect_fill": "rellenar al tamaño",
@@ -68,7 +70,7 @@
     "camera": "cámara",
     "camera_permission_needed": "se necesita permiso para hacer fotos",
     "camera_preview_stretch": "previsualizar bosquejo",
-    "camera_settings": "ajuste de cámara",
+    "camera_settings": "ajustes de cámara",
     "camera_view_size": "ver tamaño",
     "cancel": "cancelar",
     "capturing": "capturando",
@@ -104,6 +106,7 @@
     "current_passcode": "PIN viejo",
     "dark": "oscuro",
     "data_location": "ubicación de los datos",
+    "data_settings": "ajustes de almacenamiento y datos",
     "data_sync": "sincronización de datos de la aplicación",
     "data_sync_desc": "Sincroniza los datos de la aplicación para que puedas usarla en varios dispositivos",
     "default_value": "por defecto",
@@ -208,6 +211,11 @@
     "import_settings": "importar ajustes",
     "import_settings_desc": "importa todos los ajustes de una copia de seguridad anterior",
     "imported_nb_pages": "%1$s páginas importadas",
+    "inapp": {
+        "largetip": "una cerveza",
+        "mediumtip": "un café grande",
+        "smalltip": "un café"
+    },
     "internal_storage": "memoria interna",
     "invalid": "incorrecto",
     "ios": {
@@ -273,6 +281,7 @@
     "open": "abrir",
     "operations": "operaciones",
     "operations_settings_desc": "Ajustes para operaciones relacionadas con imágenes",
+    "optional_pdf_password": "contraseña de PDF (opcional)",
     "orientation": "orientación",
     "page": "página",
     "page_layout": "diseño de la página",
@@ -328,7 +337,7 @@
     "sdcard": "Tarjeta SD",
     "search": "buscar",
     "security": "seguridad",
-    "security_settings": "configuraciones de seguridad",
+    "security_settings": "ajustes de seguridad",
     "select_all": "seleccionar todo",
     "select_color_theme": "Seleccione el color del tema",
     "select_language": "seleccionar idioma",
@@ -347,6 +356,10 @@
     "share_images": "compartir imágenes",
     "show_fullscreen_images": "a pantalla completa",
     "show_love": "Si te gusta el proyecto, por favor, comparte un poco de amor o incluso contribuye",
+    "sort": {
+        "ascending": "ascendente",
+        "descending": "descendente"
+    },
     "source_code": "código fuente",
     "start": "iniciar",
     "start_app_on_cam": "Iniciar aplicación en la cámara",
@@ -365,6 +378,7 @@
     "sync_settings_desc": "ajustes de sincronización",
     "system": "sistema",
     "test": "probar",
+    "thank_you": "¡ Gracias !",
     "theme": {
         "auto": "auto",
         "black": "negro",
