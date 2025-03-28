@@ -1,4 +1,14 @@
 {
+    "$com.akylas.cardwallet": {
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Permiteți accesul la camera video pentru a o putea folosi la scanarea cardurilor",
+                    "NSPhotoLibraryUsageDescription": "Permiteți accesul la imagini pentru a vă scana cardurile de pe dispozitiv"
+                }
+            }
+        }
+    },
     "$com.akylas.documentscanner": {
         "app": {
             "name": "OSS Scanare Documente"
@@ -7,6 +17,10 @@
     "a3": "a3",
     "a4": "a4",
     "about": "despre",
+    "add": "adăugați",
+    "add_extra_field": "adăugați un câmp suplimentar",
+    "add_from_camera": "adăugați cu ajutorul camerei foto",
+    "add_manual_card": "adăugați cardul manual",
     "allow_app_screenshot": "permite capturi de ecran",
     "aspect_fill": "umplerea aspectului",
     "aspect_fit": "aspect de potrivire",
