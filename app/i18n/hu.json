@@ -1,1 +1,39 @@
-{}
+{
+    "$com.akylas.cardwallet": {
+        "app": {
+            "name": "OSS kártyatárca"
+        },
+        "ios": {
+            "info": {
+                "plist": {
+                    "NSCameraUsageDescription": "Engedélyezze a hozzáférést a kamerához, hogy a kártyákat a kamerával olvassa be",
+                    "NSPhotoLibraryUsageDescription": "Engedélyezze a képekhez való hozzáférést a könyvtárból származó kártyák beolvasásához"
+                }
+            }
+        }
+    },
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "OSS dokumentumszkenner"
+        }
+    },
+    "about": "Névjegy",
+    "add": "Hozzáadás",
+    "add_extra_field": "További mező hozzáadása",
+    "add_from_camera": "Hozzáadás a kamerából",
+    "add_manual_card": "Kártya hozzáadása kézileg",
+    "always": "Mindig",
+    "app": {
+        "name": "OSS dokumentumszkenner"
+    },
+    "appearance": "Megjelenés",
+    "appearance_settings": "Téma és más megjelenési beállítások",
+    "apply": "Alkalmaz",
+    "aspect_ratio": "Képarány",
+    "authenticate_security": "Hitelesítsen az alkalmazás eléréséhez",
+    "authentication": "Hitelesítés",
+    "auto": "Automatikus",
+    "auto_black": "Valódi fekete használata az automatikus sötét témát",
+    "auto_scan": "Dokumentumok automatikus felfedezése és hozzáadása",
+    "auto_scan_delay": "Automatikus leolvasás késleltetése"
+}
