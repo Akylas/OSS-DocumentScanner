@@ -17,12 +17,19 @@
             "name": "OSS dokumentumszkenner"
         }
     },
+    "a3": "A3",
+    "a4": "A4",
     "about": "Névjegy",
     "add": "Hozzáadás",
     "add_extra_field": "További mező hozzáadása",
     "add_from_camera": "Hozzáadás a kamerából",
     "add_manual_card": "Kártya hozzáadása kézileg",
+    "add_qrcode_camera": "Vonalkód hozzáadása a kamerával",
+    "add_qrcode_file": "Vonalkód hozzáadása egy képből",
+    "add_qrcode_manual": "Vonalkód hozzáadása kézileg",
+    "allow_app_screenshot": "Képernyőkép készítésének engedélyezése",
     "always": "Mindig",
+    "always_prompt_crop_edit": "Rákérdezés a dokumentumrégió szerkesztésére",
     "app": {
         "name": "OSS dokumentumszkenner"
     },
