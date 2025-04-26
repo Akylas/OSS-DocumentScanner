@@ -66,11 +66,6 @@ Open Source app to scan your documents.
 You can,
 - [Create an issue here](https://github.com/Akylas/OSS-DocumentScanner/issues)
 
-## Contributors
-
-Thanks to our contributors:
-* [Enrico Dell'Oste](https://www.smartpixel.it/)
-
 ## Languages: [<img align="right" src="https://hosted.weblate.org/widgets/oss-document-scanner/-/287x66-white.png" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
 
 [<img src="https://hosted.weblate.org/widgets/oss-document-scanner/-/multi-auto.svg" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/oss-document-scanner/)
