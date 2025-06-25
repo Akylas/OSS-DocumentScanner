@@ -1,7 +1,7 @@
 {
     "$com.akylas.cardwallet": {
         "app": {
-            "name": "OSS Card Wallet"
+            "name": "Carteira OSS"
         },
         "ios": {
             "info": {
@@ -30,7 +30,7 @@
     "allow_app_screenshot": "Permitir captura de ecrã",
     "always": "Sempre",
     "always_prompt_crop_edit": "Perguntar sempre qual a região a editar",
-    "always_prompt_crop_edit_desc": "Ao capturar da câmara sem ser em modo de lote, se ativar esta opção será sempre solicitada a confirmação/edição da região do documento antes de guardar.",
+    "always_prompt_crop_edit_desc": "Ao capturar da câmera sem o modo de lote, ativar essa opção garante que você sempre seja solicitado a confirmar/editar a região do documento antes de criar o documento.",
     "app": {
         "name": "OSS Document Scanner"
     },
@@ -49,10 +49,10 @@
     "auto_scan_delay": "Atraso de digitalização",
     "auto_scan_delay_desc": "Atraso antes de iniciar a digitalização automática de um documento encontrado",
     "auto_scan_distance_threshold": "Limite de distância",
-    "auto_scan_distance_threshold_desc": "Ao mover a câmara, a digitalização automática precisa determinar se ainda estamos a ver o mesmo documento. Este é o limite de distância.",
+    "auto_scan_distance_threshold_desc": "Quando a câmera se move, a varredura automática precisa determinar se ainda estamos vendo o mesmo documento. Esse é o limite de distância.",
     "auto_scan_duration": "Duração da digitalização automática",
     "auto_scan_duration_desc": "Duração, em milissegundos, antes que o documento seja adicionado",
-    "auto_scan_first_use": "Uma nova função de digitalização automática está ativada omissão e os documentos serão digitalizados automaticamente. Devido à natureza da função, ser-lhe-á solicitados os limites do documento.\nDeseja manter a opção ativada? (Pode alterar o estado de ativação nas definições ou com um toque longo no botão de captura)",
+    "auto_scan_first_use": "Um novo recurso de digitalização automática está ativado por padrão. Ele fará a digitalização automática de documentos. Devido à natureza do recurso, você não será solicitado a modificar os cantos dos documentos.\nDeseja manter a digitalização automática ativada? (você pode alterá-la nas configurações ou pressionando longamente o botão de captura)",
     "auto_sync": "Sincronização automática",
     "autoscan": "Digitalização automática",
     "autoscan_settings": "Definições de digitalização automática",
@@ -303,7 +303,7 @@
     "password": "Palavra-passe",
     "password_not_saved": "A palavra-passe não é guardada",
     "pdf_export": "Exportação de PDF",
-    "pdf_export_jpeg_quality": "Nível de compressão JPG para exportações de PDF. Pode usar 0 para não comprimir.",
+    "pdf_export_jpeg_quality": "Nível de compactação de JPG para o PDF exportado. Você pode colocar 0 para desativar a compactação JPG",
     "pdf_export_settings": "Definições de exportação PDF",
     "pdf_filename": "Nome de ficheiro para o PDF exportado",
     "pdf_import": "Importação de PDF",
