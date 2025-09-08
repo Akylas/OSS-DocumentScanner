@@ -12,10 +12,21 @@
             moduleUrl: 'https://github.com/opencv/opencv'
         },
         {
-            moduleName: 'tesseract 5.3.3',
+            moduleName: 'tesseract 5.5.1',
             moduleUrl: 'https://github.com/tesseract-ocr/tesseract'
         },
-
+        {
+            moduleName: 'Leptonica 1.85.0',
+            moduleUrl: 'https://github.com/DanBloomberg/leptonica'
+        },
+        {
+            moduleName: 'libjpeg v9f',
+            moduleUrl: 'http://libjpeg.sourceforge.net'
+        },
+        {
+            moduleName: 'libpng 1.6.48',
+            moduleUrl: 'http://www.libpng.org/pub/png/libpng.html'
+        },
         {
             moduleName: 'Material Design Icons',
             moduleUrl: 'https://pictogrammers.com/library/mdi/'

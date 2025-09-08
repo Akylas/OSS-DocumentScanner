@@ -60,12 +60,13 @@ target_link_libraries(${TARGET} log jnigraphics z)
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
-if(${ANDROID_ABI} STREQUAL x86_64)
-    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc)
-elseif(${ANDROID_ABI} STREQUAL x86)
-    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc ippiw ippicv)
+if(${ANDROID_ABI} STREQUAL "arm64-v8a")
+    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core kleidicv kleidicv_hal kleidicv_thread)
+# if(${ANDROID_ABI} STREQUAL x86_64)
+#     target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core)
+# elseif(${ANDROID_ABI} STREQUAL x86)
 else()
-    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core cpufeatures libprotobuf ade tbb ittnotify libjpeg-turbo libwebp libpng libtiff libopenjp2 IlmImf quirc tegra_hal)
+    target_link_libraries(${TARGET} opencv_photo opencv_imgproc opencv_core)
 endif()
 
 target_link_libraries(${TARGET} tesseract leptonica pngx jpeg -fopenmp -static-openmp)
