@@ -22,6 +22,7 @@
     const textColor = isEInk ? colorOnBackground : 'white';
 
     export let cropItem: ImportImageData;
+    $: DEV_LOG && console.log('cropItem', cropItem);
     export let quad;
     export let quadChanged = false;
     let quads;

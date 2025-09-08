@@ -227,7 +227,6 @@ async function internalSelectLanguage() {
 export async function selectLanguage() {
     try {
         const result = await internalSelectLanguage();
-        DEV_LOG && console.log('selectLanguage', result);
         if (result?.data) {
             ApplicationSettings.setString(SETTINGS_LANGUAGE, result.data);
         }
