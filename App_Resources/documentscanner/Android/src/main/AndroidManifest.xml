@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:installLocation="auto">
+    <uses-sdk tools:overrideLibrary="androidx.camera.extensions,androidx.camera.video,androidx.camera.lifecycle,androidx.camera.camera2,androidx.camera.core,androidx.camera.view,androidx.camera.featurecombinationquery"/>
     <supports-screens android:smallScreens="true" android:normalScreens="true"
         android:largeScreens="true" android:xlargeScreens="true" />
     <uses-feature
