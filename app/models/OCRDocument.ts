@@ -299,9 +299,11 @@ export class OCRDocument extends Observable implements Document {
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
                         .replace(/%252F/g, SEPARATOR) // for Android content:// paths
+                        .replace(/%2F/g, SEPARATOR) // for Android SAF paths
                         .split(SEPARATOR)
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
+                    DEV_LOG && console.log('baseName', baseName);
                     if (!baseName.endsWith(imageExportSettings.imageFormat)) {
                         baseName += '.' + imageExportSettings.imageFormat;
                     }
