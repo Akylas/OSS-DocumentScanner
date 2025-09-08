@@ -8,7 +8,7 @@ export async function createErrorFromResponse(response: Response, requestParams,
     const result = await parseRawXML(serverResponse);
     return new HTTPError({
         statusCode: response.statusCode,
-        message: prefix + result.error?.message,
+        message: prefix + result.error?.message || serverResponse,
         requestParams
     });
 }
