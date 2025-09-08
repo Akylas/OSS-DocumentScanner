@@ -89,6 +89,7 @@ prefs.on(`key:${SETTINGS_DRAW_FOLDERS_BACKGROUND}`, () => {
 export const onFolderBackgroundColorChanged = createGlobalEventListener(SETTINGS_DRAW_FOLDERS_BACKGROUND);
 
 function updateSystemFontScale(value) {
+    DEV_LOG && console.log('updating font scale svelte store', value, get(fontScale));
     fontScale.set(value);
 }
 Application.on('orientationChanged', (event: OrientationChangedEventData) => {
@@ -155,8 +156,6 @@ const onInitRootView = function (event: InitRootViewEventData) {
         updateSystemFontScale(resources.getConfiguration().fontScale);
         isRTL.set(resources.getConfiguration().getLayoutDirection() === 1);
 
-        // ActionBar
-        // resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
         let nActionBarHeight = Utils.layout.toDeviceIndependentPixels(AppUtilsAndroid.getDimensionFromInt(context, 16843499 /* actionBarSize */));
         // let nActionBarHeight = 0;
         // if (resourceId > 0) {
@@ -172,7 +171,6 @@ const onInitRootView = function (event: InitRootViewEventData) {
         const nActionBarButtonHeight = nActionBarHeight - 10;
         actionBarButtonHeight.set(nActionBarButtonHeight);
         rootViewStyle.setUnscopedCssVariable('--actionBarButtonHeight', nActionBarButtonHeight + '');
-        DEV_LOG && console.log('actionBarHeight', nActionBarHeight);
         // }, 0);
     }
 
@@ -210,10 +208,10 @@ const onInitRootView = function (event: InitRootViewEventData) {
         });
         colors.set(currentColors);
         updateSystemFontScale(getCurrentFontScale());
-        Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
     }
+        Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
     updateThemeColors(getRealTheme(theme));
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
     Application.off(Application.initRootViewEvent, onInitRootView);

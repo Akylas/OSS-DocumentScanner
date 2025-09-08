@@ -51,7 +51,6 @@
     }
 
     $: textPaint.color = colorOnBackground || 'black';
-    $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
 
     function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
@@ -59,6 +58,7 @@
         const dx = 10 + getItemImageHeight(viewStyle) + 16;
         textPaint.color = colorOnSurfaceVariant;
         const { doc } = item;
+        textPaint.textSize = condensed ? 11 : 14 * $fontScale;
         canvas.drawText(
             filesize(
                 doc.pages.reduce((acc, v) => acc + v.size, 0),
@@ -81,7 +81,7 @@
                 {
                     color: colorOnSurfaceVariant,
                     fontSize: 14 * $fontScale,
-                    lineHeight: (condensed ? 14 : 20) * $fontScale,
+                    lineHeight: condensed ? 14 : 20 * $fontScale,
                     text: '\n' + dayjs(doc.createdDate).format('L LT')
                 }
             ]
