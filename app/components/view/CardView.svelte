@@ -1242,7 +1242,7 @@
             <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="bottom" on:tap={startEdit} />
             <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="bottom" on:tap={throttle(() => showImages(), 500)} />
 
-            <mdbutton bind:this={fabHolder} id="fab" class="fab" margin="8 16 0 8" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} />
+            <mdbutton bind:this={fabHolder} id="fab" class="fab" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} />
         </stacklayout>
         <CActionBar
             backgroundColor={topBackgroundColor}

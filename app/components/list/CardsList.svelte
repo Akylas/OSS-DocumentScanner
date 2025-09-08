@@ -394,7 +394,7 @@
         bind:this={fabHolder}
         slot="fab"
         horizontalAlignment="right"
-        marginBottom={Math.min(60, $windowInset.bottom + 16)}
+        marginBottom={Math.min(60, $windowInset.bottom)}
         orientation="horizontal"
         row={2}
         verticalAlignment="bottom"

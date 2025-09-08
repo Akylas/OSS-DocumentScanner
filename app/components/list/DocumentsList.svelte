@@ -142,7 +142,7 @@
         </canvasview>
     </Template>
 
-    <stacklayout bind:this={fabHolder} slot="fab" horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
+    <stacklayout bind:this={fabHolder} slot="fab" horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1} verticalAlignment="bottom">
         {#if __IOS__}
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
         {/if}
