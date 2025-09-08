@@ -272,7 +272,7 @@
         });
         DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
         if (index >= 0) {
-            if (folder && doc.folders.indexOf(folder.id) === -1) {
+            if (folder && doc.folders?.indexOf(folder.id) === -1) {
                 documents.splice(index, 1);
             } else {
                 const item = documents?.getItem(index);
@@ -500,7 +500,7 @@
             selectItem(item);
         }
     }
-    export const onItemTap = throttle(async function (item: Item) {
+    export const onItemTapFast = async function (item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -516,7 +516,16 @@
         } catch (error) {
             showError(error);
         }
-    }, 500);
+    };
+    export const onItemTapThrottled = throttle(onItemTapFast, 500);
+
+    export const onItemTap = async function (item: Item) {
+        DEV_LOG && console.log('onItemTap');
+        if (nbSelected > 0) {
+            return onItemTapFast(item);
+        }
+        return onItemTapThrottled(item);
+    };
 
     function onGoBack(data) {
         if (editingTitle) {
@@ -745,14 +754,14 @@
                     fontFamily: $fonts.mdi,
                     fontSize: 20 * $fontScale,
                     color: !$folderBackgroundColor && itemFolder.color ? itemFolder.color : colorOutline,
-                    lineHeight: 24 * $fontScale,
+                    lineHeight: 20 * $fontScale,
                     text: 'mdi-folder '
                 },
                 {
                     fontSize: 16 * $fontScale,
                     fontWeight: 'bold',
                     lineBreak: 'end',
-                    lineHeight: 18 * $fontScale,
+                    lineHeight: 16 * $fontScale,
                     text: folder ? itemFolder.name.replace(folder.name + '/', '') : itemFolder.name
                 },
                 {

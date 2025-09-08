@@ -153,7 +153,7 @@
             verticalAlignment="center"
             on:tap={throttle(() => importDocument(), 500)} />
         {#if $hasCamera}
-            <mdbutton id="fab" class="fab" margin="0 16 0 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
+            <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
         {/if}
     </stacklayout>
 </MainList>

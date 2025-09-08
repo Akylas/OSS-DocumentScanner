@@ -390,16 +390,15 @@
             on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
 
-    <mdbutton
+    <stacklayout
         bind:this={fabHolder}
-        id="fab"
         slot="fab"
-        class="fab"
         horizontalAlignment="right"
-        iosIgnoreSafeArea={true}
-        margin={`16 16 ${Math.min(60, $windowInset.bottom + 16)} 16`}
+        marginBottom={Math.min(60, $windowInset.bottom + 16)}
+        orientation="horizontal"
         row={2}
-        text="mdi-plus"
         verticalAlignment="bottom"
-        on:tap={throttle(() => onAddButton(), 500)} />
+        ios:iosIgnoreSafeArea={true}>
+        <mdbutton bind:this={fabHolder} class="fab" text="mdi-plus" on:tap={throttle(() => onAddButton(), 500)} />
+    </stacklayout>
 </MainList>
