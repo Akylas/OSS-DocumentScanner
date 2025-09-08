@@ -51,7 +51,7 @@
         showPopoverMenu,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import { prefs } from '~/services/preferences';
     const rowMargin = 8;
@@ -237,15 +237,9 @@
         collectionView?.nativeElement.startDragging(index, event.getActivePointers()[0]);
     }
     function onItemLongPress(item: Item, event?) {
-        // console.log('onItemLongPress', event && event.ios && event.ios.state);
-        // if (event && event.ios && event.ios.state !== 1) {
-        //     return;
-        // }
-        // if (event && event.ios) {
-        //     ignoreTap = true;
-        // }
-        // console.log('onItemLongPress', item, Object.keys(event));
-        if (item.selected) {
+        if (inEditMode) {
+            startDragging(item, event);
+        } else if (item.selected) {
             unselectItem(item);
         } else {
             selectItem(item);
@@ -263,7 +257,18 @@
             startDragging(item, event);
         }
     }
-    async function onItemTap(item: Item) {
+    async function onTouch(item: Item, event?) {
+        if (!inEditMode) {
+            return;
+        }
+        switch (event.action) {
+            case 'down': {
+                startDragging(item, event);
+                break;
+            }
+        }
+    }
+    async function onItemTap(item: Item, event?) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -313,7 +318,9 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (nbSelected > 0) {
+            if (inEditMode) {
+                switchEditMode();
+            } else if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
@@ -544,6 +551,7 @@
             const options = new ObservableArray([
                 { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
                 { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -572,10 +580,19 @@
                         case 'delete':
                             await deleteDoc();
                             break;
+                        case 'reorder':
+                            unselectAll();
+                            switchEditMode();
+                            break;
                     }
                 }
             });
         }
+    }
+    let inEditMode = false;
+    function switchEditMode() {
+        inEditMode = !inEditMode;
+        collectionView?.nativeElement?.refreshVisibleItems();
     }
 </script>
 
@@ -623,7 +640,8 @@
                     padding={10}
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
-                    on:tap={() => onItemTap(item)}
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:touch={(e) => onTouch(item, e)}
                     android:on:pan={(e) => onPan(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
@@ -636,8 +654,13 @@
                         sharedTransitionTag={`document_${document.id}_${item.page.id}`}
                         stretch="aspectFit"
                         verticalAlignment="center" />
-                    <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} height="100%" padding="10 0 0 0" row={1}>
-                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`} textAlignment="left" verticalAlignment="bottom" />
+                    <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} padding="10 0 0 0" row={1}>
+                        <cspan fontFamily={$fonts.mdi} fontSize={24} text={'mdi-reorder-horizontal'} visibility={inEditMode ? 'visible' : 'hidden'} />
+                        <cspan
+                            paddingLeft={inEditMode ? 30 : 0}
+                            text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`}
+                            textAlignment="left"
+                            verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
@@ -656,12 +679,11 @@
                 <mdbutton class="fab" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
             {/if}
         </stacklayout>
-
         <CActionBar
-            forceCanGoBack={nbSelected > 0}
-            onGoBack={nbSelected ? unselectAll : null}
+            forceCanGoBack={inEditMode || nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : inEditMode ? switchEditMode : null}
             onTitleTap={() => (editingTitle = true)}
-            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />

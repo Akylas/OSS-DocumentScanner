@@ -1310,23 +1310,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.4":
-  version: 6.0.4
-  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.4"
+"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.5":
+  version: 6.0.5
+  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.5"
   dependencies:
     "@nativescript-community/class-mixins": "npm:^1.0.0"
-    "@nativescript-community/ui-collectionview": "npm:^6.0.4"
+    "@nativescript-community/ui-collectionview": "npm:^6.0.5"
     "@nativescript-community/ui-drawer": "npm:^0.1.27"
-  checksum: 10/5009de860dd169b2e0323c74b6a710cdbbea5f8760b4e263421cdc50839b363be4c9678de2778a521141b45aa4eac3ccc5a24c69a2ba3bd90ff89bbd23268e7d
+  checksum: 10/b0e8a143f271b2c94ee014e3fe9e8af493caeaa35c9d2b97981542e01739fbd39b801c886a4ffb52e1c69d196a0ce8a3fbab90e8247b1dc0abb64e1d18ffd808
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview@npm:6.0.4, @nativescript-community/ui-collectionview@npm:^6.0.4":
-  version: 6.0.4
-  resolution: "@nativescript-community/ui-collectionview@npm:6.0.4"
+"@nativescript-community/ui-collectionview@npm:6.0.5, @nativescript-community/ui-collectionview@npm:^6.0.5":
+  version: 6.0.5
+  resolution: "@nativescript-community/ui-collectionview@npm:6.0.5"
   dependencies:
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/1d2bf0b9df13832dc3246c7185bf4b994497dde2086d6eb5555810404e199452cdd1dbe4e943b256cb2831b944c8525914370cf172483f69d1e2f8219fb5519f
+  checksum: 10/2a7f207f15de021c848748250078b3ab6328c8201f1fb3253689cb81588c909941b573611add3f9d19795ef97ff4fba9973d716966c1309c6c9f3d11f5fda87e
   languageName: node
   linkType: hard
 
@@ -10556,8 +10556,8 @@ __metadata:
     "@nativescript-community/ui-canvas": "npm:4.6.42"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.45"
     "@nativescript-community/ui-checkbox": "npm:^2.0.12"
-    "@nativescript-community/ui-collectionview": "npm:6.0.4"
-    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.4"
+    "@nativescript-community/ui-collectionview": "npm:6.0.5"
+    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.5"
     "@nativescript-community/ui-document-picker": "npm:1.1.26"
     "@nativescript-community/ui-image": "npm:4.5.5"
     "@nativescript-community/ui-image-colorfilter": "npm:4.5.5"
