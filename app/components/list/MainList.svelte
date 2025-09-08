@@ -968,7 +968,7 @@
             <slot name="fab" />
         {/if}
 
-        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title} titleProps={{ autoFontSize: true, padding: 0 }}>
+        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}
