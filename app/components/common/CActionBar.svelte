@@ -61,9 +61,6 @@
         visibility={!!title ? 'visible' : 'hidden'}
         {...$$restProps?.titleProps}
         use:conditionalEvent={{ condition: !!onTitleTap, event: 'tap', callback: onTitleTap }} />
-    <!-- {#if showLogo && !title}
-        <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="middle" marginLeft="6" />
-    {/if} -->
     <stacklayout col={0} orientation="horizontal">
         <slot name="left" />
         <mdbutton class={'actionBarButton ' + clazz} defaultVisualState={buttonsDefaultVisualState} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />

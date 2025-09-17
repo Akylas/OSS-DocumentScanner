@@ -105,8 +105,7 @@ export const DEFAULT_PDF_OPTIONS = {
     dpi: 96,
     imageSizeThreshold: 1500,
     imageLoadScale: 2,
-    draw_ocr_text: true,
-    draw_ocr_overlay: false
+    draw_ocr_text: true
 };
 export const IMAGE_CONTEXT_OPTIONS = {
     originalQueryCacheType: 0,

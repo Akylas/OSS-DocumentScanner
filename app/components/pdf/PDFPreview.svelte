@@ -38,8 +38,8 @@
 
     const pdfCanvas = new PDFCanvas();
     const optionsStore = writable(pdfCanvas.options);
-    let { color, draw_ocr_overlay, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
-    $: ({ color, draw_ocr_overlay, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
+    let { color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
+    $: ({ color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
     optionsStore.subscribe((newValue) => {
         DEV_LOG && console.log('saving options', newValue);
         Object.assign(pdfCanvas.options, newValue);
@@ -330,7 +330,6 @@
                             </Template>
                         {/each}
                     </pager>
-                    <!-- <checkbox checked={draw_ocr_overlay} margin={14} row={1} text={lc('draw_ocr_overlay')} verticalAlignment="top" on:checkedChange={(e) => updateOption('draw_ocr_overlay', e.value)} /> -->
                     <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
                     <gridlayout columns="*,*" row={2}>
                         <mdbutton text={lc('export')} on:tap={exportPDF} />
