@@ -253,7 +253,6 @@ export class OCRDocument extends Observable implements Document {
         if (pagesData) {
             const docId = this.id;
             const docData = this.folderPath;
-            const { length } = pagesData;
             const pageStartId = Date.now();
             const imageExportSettings = getImageExportSettings();
             const pages = await doInBatch(pagesData, async (data, index) => {
@@ -316,23 +315,21 @@ export class OCRDocument extends Observable implements Document {
                     }
                 }
                 if (id) {
-                    try {
-                        const page = await documentsService.pageRepository.get(id);
-                        if (page) {
-                            const { id, ...toUpdate } = attributes;
-                            return documentsService.pageRepository.update(page, toUpdate);
-                        }
-                    } catch (error) {}
+                    const page = await documentsService.pageRepository.get(id);
+                    if (page) {
+                        const { id, ...toUpdate } = attributes;
+                        return documentsService.pageRepository.update(page, toUpdate);
+                    }
                 }
                 return documentsService.pageRepository.createPage(attributes, dataFolderPath);
             });
             // for (let index = 0; index < length; index++) {}
-            // DEV_LOG && console.log('addPages done', JSON.stringify(pages));
             if (this.pages) {
                 this.pages.push(...pages);
             } else {
                 this.pages = pages;
             }
+            DEV_LOG && console.log('addPages done', this.pages.length);
             // this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
