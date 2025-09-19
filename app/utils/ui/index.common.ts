@@ -572,8 +572,24 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
     }
     updateDirectoryName();
 
+    async function pickExportFolder() {
+        const result = await pickFolder({
+            multipleSelection: false,
+            permissions: { write: true, persistable: true, read: true },
+            forceSAF: true
+        });
+        if (result.folders.length) {
+            exportDirectory = result.folders[0];
+            DEV_LOG && console.log('set_export_directory', exportDirectory);
+            ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+            updateDirectoryName();
+            return true;
+        }
+        return false;
+    }
+
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName }] : [])
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore'  }] : [])
             .concat([
                 { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
                 { id: 'open', name: lc('open'), icon: 'mdi-eye' },
@@ -620,21 +636,12 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     case 'settings': {
                         closePopover();
                         showSettings({
-                            subSettingsOptions: 'pdf'
+                            subSettingsOptions: 'pdf_export'
                         });
                         break;
                     }
                     case 'set_export_directory': {
-                        const result = await pickFolder({
-                            multipleSelection: false,
-                            permissions: { write: true, persistable: true, read: true },
-                            forceSAF: true
-                        });
-                        if (result.folders.length) {
-                            exportDirectory = result.folders[0];
-                            DEV_LOG && console.log('set_export_directory', exportDirectory);
-                            ApplicationSettings.setString('pdf_export_directory', exportDirectory);
-                            updateDirectoryName();
+                        if (await pickExportFolder()) {
                             const item = options.getItem(0);
                             item.subtitle = exportDirectoryName;
                             options.setItem(0, item);
@@ -673,9 +680,15 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                         break;
                     }
                     case 'export': {
-                        // if (!exportDirectory) {
-                        //     showSnack({ message: lc('please_choose_export_folder') });
-                        // } else {
+                        if (!exportDirectory) {
+                            if (await pickExportFolder()) {
+                                const item = options.getItem(0);
+                                item.subtitle = exportDirectoryName;
+                                options.setItem(0, item);
+                            } else {
+                                showSnack({ message: lc('please_choose_export_folder') });
+                            }
+                        }
                         await closePopover();
                         const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
                         let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
@@ -699,9 +712,6 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                                     const password = componentInstanceInfo.viewInstance.password;
                                     const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
                                     const folder = componentInstanceInfo.viewInstance.folder;
-                                    if (!folder) {
-                                        return showSnack({ message: lc('please_choose_export_folder') });
-                                    }
                                     showLoading(l('exporting'));
                                     DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
                                     const filePath = await exportPDFAsync({
@@ -878,9 +888,23 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
         exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
     }
     updateDirectoryName();
+    async function pickExportFolder() {
+        const result = await pickFolder({
+            multipleSelection: false,
+            permissions: { write: true, persistable: true, read: true },
+            forceSAF: true
+        });
+        if (result.folders.length) {
+            exportDirectory = result.folders[0];
+            ApplicationSettings.setString('image_export_directory', exportDirectory);
+            updateDirectoryName();
+            return true;
+        }
+        return false;
+    }
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName }] : []).concat([
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore'  }] : []).concat([
             { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
             { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
@@ -923,14 +947,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                     let didDoSomething = false;
                     switch (item.id) {
                         case 'set_export_directory': {
-                            const result = await pickFolder({
-                                multipleSelection: false,
-                                permissions: { write: true, persistable: true, read: true }
-                            });
-                            if (result.folders.length) {
-                                exportDirectory = result.folders[0];
-                                ApplicationSettings.setString('image_export_directory', exportDirectory);
-                                updateDirectoryName();
+                            if (await pickExportFolder()) {
                                 const item = options.getItem(0);
                                 item.subtitle = exportDirectoryName;
                                 options.setItem(0, item);
@@ -976,11 +993,16 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                             break;
                         case 'export': {
                             if (!exportDirectory) {
-                                showSnack({ message: lc('please_choose_export_folder') });
-                            } else {
-                                await closePopover();
-                                await exportImages(pages, exportDirectory);
+                                if (await pickExportFolder()) {
+                                    const item = options.getItem(0);
+                                    item.subtitle = exportDirectoryName;
+                                    options.setItem(0, item);
+                                } else {
+                                    showSnack({ message: lc('please_choose_export_folder') });
+                                }
                             }
+                            await closePopover();
+                            await exportImages(pages, exportDirectory);
                             didDoSomething = true;
                             break;
                         }
