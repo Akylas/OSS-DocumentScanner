@@ -26,7 +26,8 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
             text_scale: Screen.mainScreen.scale * 1.4,
             pages: pages.map((p) => ({ ...p.page, colorMatrix: getPageColorMatrix(p.page) })),
-            ...(baseOptions ? baseOptions : {})
+            ...(baseOptions ? baseOptions : {}),
+            debug: false
         });
         const context = Utils.android.getApplicationContext();
         DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);

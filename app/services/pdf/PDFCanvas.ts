@@ -19,7 +19,6 @@ export interface PDFExportBaseOptions {
     items_per_page: number;
     dpi: number;
     draw_ocr_text: boolean;
-    draw_ocr_overlay: boolean;
     password?: string;
 }
 export interface PDFExportOptions {

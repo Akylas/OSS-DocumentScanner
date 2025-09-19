@@ -85,7 +85,6 @@ export default class SyncWorker extends BaseWorker {
         super(context);
 
         this.queue.on('done', () => {
-            DEV_LOG && console.log('queue empty!');
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'finished' } as SyncStateEventData);
             // ensure we unregister preferences or it will crash once the worker is closed
             prefs.destroy();
