@@ -589,7 +589,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
     }
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore'  }] : [])
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : [])
             .concat([
                 { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
                 { id: 'open', name: lc('open'), icon: 'mdi-eye' },
@@ -904,7 +904,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
     }
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore'  }] : []).concat([
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
             { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
             { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
