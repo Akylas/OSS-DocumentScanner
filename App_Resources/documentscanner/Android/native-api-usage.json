@@ -4,6 +4,7 @@
         "android.hardware.camera2:CameraManager",
         "android.graphics:Insets",
         "android.graphics:Bitmap.CompressFormat",
+        "android.view:OrientationEventListener",
         "com.google.android.material.color:DynamicColors",
         "androidx.core.splashscreen:SplashScreen",
         "androidx.appcompat.app:AppCompatDelegate",

@@ -78,6 +78,8 @@ export const isRTL = writable(false);
 export const hasCamera = writable(true);
 
 export const orientation = writable('portrait');
+export const orientationDegrees = writable(0);
+export const shouldListenForSensorOrientation = writable(false);
 export const isLandscape = writable(false);
 
 export const folderBackgroundColor = writable(DEFAULT_DRAW_FOLDERS_BACKGROUND);
@@ -94,14 +96,58 @@ function updateSystemFontScale(value) {
 }
 Application.on('orientationChanged', (event: OrientationChangedEventData) => {
     const newOrientation = event.newValue;
+    DEV_LOG && console.log('orientationChanged', event.newValue, event.degrees);
     orientation.set(newOrientation);
+    orientationDegrees.set(event.degrees ?? 0);
     isLandscape.set(newOrientation === 'landscape');
 });
 
 if (__ANDROID__) {
+    @NativeClass
+    class MyOrientationEventListener extends android.view.OrientationEventListener {
+        constructor(context) {
+            super(context);
+
+            return global.__native(this);
+        }
+        public onOrientationChanged(orientation: number): void {
+            if (orientation === -1) {
+                orientationDegrees.set(0);
+            }
+            // Roughly determine landscape/portrait
+            if (orientation >= 60 && orientation <= 120) {
+                orientationDegrees.set(90);
+            } else if (orientation >= 120 && orientation <= 240) {
+                orientationDegrees.set(180);
+            } else if (orientation >= 240 && orientation <= 300) {
+                orientationDegrees.set(270);
+            } else {
+                orientationDegrees.set(0);
+            }
+        }
+    }
+    const orientationListener = new MyOrientationEventListener(Utils.android.getApplicationContext());
+    // @Override
+    // public void onOrientationChanged(int orientation) {
+
+    shouldListenForSensorOrientation.subscribe((enabled) => {
+        if (enabled) {
+            orientationListener.enable();
+        }
+    });
     Application.android.on(Application.android.activityCreateEvent, (event) => {
         DEV_LOG && console.log('activityCreateEvent', useDynamicColors);
         AppUtilsAndroid.prepareActivity(event.activity, useDynamicColors);
+    });
+    Application.android.on(Application.android.activityResumedEvent, (event) => {
+        DEV_LOG && console.log('activityResumedEvent', useDynamicColors);
+        if (get(shouldListenForSensorOrientation)) {
+            orientationListener.enable();
+        }
+    });
+    Application.android.on(Application.android.activityPausedEvent, (event) => {
+        DEV_LOG && console.log('activityPausedEvent', useDynamicColors);
+        orientationListener.disable();
     });
     Page.on('shownModally', function (event) {
         AppUtilsAndroid.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
@@ -211,7 +257,7 @@ const onInitRootView = function (event: InitRootViewEventData) {
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
     }
-        Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
+    Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
     updateThemeColors(getRealTheme(theme));
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
     Application.off(Application.initRootViewEvent, onInitRootView);

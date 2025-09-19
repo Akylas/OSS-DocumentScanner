@@ -3,9 +3,10 @@
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
+    import { Slider } from '@nativescript-community/ui-material-slider/slider';
+    import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, View, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
-    import { debounce, wrapNativeException } from '@nativescript/core/utils';
+    import { debounce, throttle, wrapNativeException } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
@@ -36,16 +37,17 @@
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { requestCameraPermission } from '~/utils/utils.common';
-    import { colors, startOnCam, windowInset } from '~/variables';
+    import { colors, orientation, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorBackground, colorOnBackground, colorOutlineVariant, colorPrimary } = $colors);
 
     let page: NativeViewElementNode<Page>;
     let cameraView: NativeViewElementNode<CameraView>;
     let focusRing: NativeViewElementNode<AbsoluteLayout>;
     let takPictureBtnCanvas: NativeViewElementNode<CanvasView>;
     let cropView: NativeViewElementNode<CropView>;
+    let zoomSlider: NativeViewElementNode<Slider>;
 
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
         JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
@@ -68,7 +70,7 @@
     let smallImageRotation: number = 0;
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
-    const zoom = ApplicationSettings.getNumber('defaultZoom', 1);
+    let zoom = ApplicationSettings.getNumber('defaultZoom', 1);
     let _actualFlashMode = flashMode;
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
@@ -245,6 +247,7 @@
     }
 
     onMount(async () => {
+        $shouldListenForSensorOrientation = true;
         // if (!check('camera')) {
         //     stopPreview();
         // }
@@ -257,6 +260,7 @@
         Application.on(Application.foregroundEvent, onForeground);
     });
     onDestroy(() => {
+        $shouldListenForSensorOrientation = false;
         // clearImages();
         document = null;
         nbPages = 0;
@@ -449,8 +453,27 @@
         }
     }
     const onZoom = debounce(function onZoom(event) {
-        ApplicationSettings.setNumber('defaultZoom', event.zoom);
+        zoom = event.zoom;
+        ApplicationSettings.setNumber('defaultZoom', zoom);
+        updateFloatZoom(zoom);
     }, 500);
+    const setZoomThrottled = throttle(function (value) {
+        zoom = value;
+        ApplicationSettings.setNumber('defaultZoom', zoom);
+    }, 500);
+    let zoomPercentDelta = 0;
+    let floatZoom = zoom;
+
+    function updateFloatZoom(value) {
+        floatZoom = value;
+        const zoomPercent = (floatZoom - minZoom) / (maxZoom - minZoom);
+        const parentWidth = Utils.layout.toDeviceIndependentPixels(zoomSlider.nativeView.getMeasuredWidth()) - 40;
+        zoomPercentDelta = parentWidth * zoomPercent;
+    }
+    function onZoomValue(e) {
+        updateFloatZoom(e.value);
+        setZoomThrottled(floatZoom);
+    }
 
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
     let processor;
@@ -611,10 +634,15 @@
             canvas.drawCircle(w / 2, h / 2, radius, borderPaint);
         }
     }
+
+    const maxZoom = 1;
+    const minZoom = 1;
     let cameraOpened = false;
     function onCameraOpen({ object }: { object: CameraView }) {
         try {
-            DEV_LOG && console.log('onCameraOpen');
+            // minZoom = cameraView.nativeView.minZoom;
+            // maxZoom = cameraView.nativeView.maxZoom;
+            DEV_LOG && console.log('onCameraOpen', minZoom, maxZoom);
             if (__ANDROID__) {
                 const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
                 if (currentResolution) {
@@ -636,7 +664,7 @@
     }
 </script>
 
-<page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
+<page bind:this={page} id="camera" actionBarHidden={true} screenOrientation="portrait" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout class="pageContent" backgroundColor="black" rows="auto,*,auto,auto">
         <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2} on:loaded={onCameraHolderLoaded}>
             <cameraView
@@ -665,19 +693,60 @@
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack}></CActionBar>
 
         <gridlayout columns="auto,auto,auto,auto,*,auto,auto" row={2}>
-            <IconButton color="white" text={getFlashIcon(flashMode)} tooltip={lc('flash_mode')} on:tap={() => (flashMode = (flashMode + 1) % 3)} />
-            <IconButton col={1} color="white" isSelected={torchEnabled} selectedColor={colorPrimary} text="mdi-flashlight" tooltip={lc('torch')} on:tap={switchTorch} />
-            <IconButton col={2} color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
+            <IconButton
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
+                color="white"
+                text={getFlashIcon(flashMode)}
+                tooltip={lc('flash_mode')}
+                on:tap={() => (flashMode = (flashMode + 1) % 3)} />
+            <IconButton
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
+                col={1}
+                color="white"
+                isSelected={torchEnabled}
+                selectedColor={colorPrimary}
+                text="mdi-flashlight"
+                tooltip={lc('torch')}
+                on:tap={switchTorch} />
+            <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={2} color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
 
-            <IconButton col={3} color="white" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
+            <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={3} color="white" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
             {#if startOnCam}
-                <IconButton col={5} color="white" row={2} text="mdi-folder" on:tap={() => showDocumentsList()} />
-                <IconButton col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
+                <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={5} color="white" row={2} text="mdi-folder" on:tap={() => showDocumentsList()} />
+                <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
             {/if}
         </gridlayout>
+        <gridlayout marginBottom={5} row={1} verticalAlignment="bottom" visibility={(maxZoom !== 1 || minZoom !== 1) && maxZoom !== minZoom ? 'visible' : 'hidden'} width="70%">
+            <slider
+                bind:this={zoomSlider}
+                backgroundColor={colorBackground}
+                maxValue={maxZoom}
+                minValue={minZoom}
+                thumbColor="transparent"
+                value={zoom}
+                on:valueChange={onZoomValue}
+                on:layoutChanged={(e) => updateFloatZoom(zoom)} />
+            <label
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
+                backgroundColor={colorBackground}
+                borderColor={colorOutlineVariant}
+                borderRadius={20}
+                borderWidth={1}
+                color={colorOnBackground}
+                fontSize={13}
+                height={40}
+                horizontalAlignment="left"
+                isUserInteractionEnabled={false}
+                marginLeft={zoomPercentDelta}
+                text={Math.round(floatZoom * 10) / 10 + 'x'}
+                textAlignment="center"
+                verticalTextAlignment="center"
+                width={40} />
+        </gridlayout>
 
-        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={10} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
             <IconButton
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
                 colSpan={2}
                 color="white"
                 horizontalAlignment="left"
@@ -692,6 +761,7 @@
                 on:tap={() => (batchMode = !batchMode)} />
 
             <image
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
                 borderColor="white"
                 col={3}
                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
@@ -703,13 +773,21 @@
                 stretch="aspectFit"
                 verticalAlignment="center"
                 width={60} />
-            <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
+            <gridlayout
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
+                col={2}
+                height={70}
+                horizontalAlignment="center"
+                opacity={takingPicture ? 0.6 : 1}
+                verticalAlignment="center"
+                width={70}>
                 <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
                 <gridlayout backgroundColor={colorPrimary} borderRadius={27} height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} isUserInteractionEnabled={false} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 
             <IconButton
+                style={`transform: rotate(${-$orientationDegrees}, 0)`}
                 col={4}
                 color="white"
                 horizontalAlignment="right"
