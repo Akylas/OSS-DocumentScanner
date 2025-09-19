@@ -35,7 +35,7 @@
     },
     "dependencies": {
         "@akylas/kiss-orm": "2.1.11",
-        "@akylas/nativescript": "8.9.6",
+        "@akylas/nativescript": "8.9.9",
         "@akylas/nativescript-app-tools": "file:tools",
         "@akylas/nativescript-app-utils": "2.2.7",
         "@akylas/nativescript-inapp-purchase": "0.0.4",
@@ -56,7 +56,7 @@
         "@nativescript-community/sqlite": "3.5.1",
         "@nativescript-community/systemui": "1.1.23",
         "@nativescript-community/text": "1.6.8",
-        "@nativescript-community/ui-cameraview": "0.4.2",
+        "@nativescript-community/ui-cameraview": "0.5.0",
         "@nativescript-community/ui-canvas": "4.6.42",
         "@nativescript-community/ui-canvaslabel": "1.2.45",
         "@nativescript-community/ui-checkbox": "^2.0.12",
@@ -121,8 +121,7 @@
         "./webpdfviewer"
     ],
     "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript-community/ui-cameraview": "portal:/home/mguillon/dev/nativescript/ui-cameraview/packages/ui-cameraview"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
     },
     "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b"
 }

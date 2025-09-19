@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=b7a813&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=2f4435&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/691496a9c1806f8473ef7eed3692b989f5cc50d3e522924ef061c3d56efe65166d98e6ff37b9c1d772cb6a16a898195a9b4fc458b04ca61640c154c3264210ce
+  checksum: 10/f8b1fdf948463fc0011a0913b1bf9c6a55393bdd0225ab09c341d9f124516a0d43bb4cbcb9266aab3a17cac7c3ae095e7b899b3f5c17e0cf2847af184b5e8726
   languageName: node
   linkType: hard
 
@@ -1116,11 +1116,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-cameraview@portal:/home/mguillon/dev/nativescript/ui-cameraview/packages/ui-cameraview::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@nativescript-community/ui-cameraview@portal:/home/mguillon/dev/nativescript/ui-cameraview/packages/ui-cameraview::locator=root-workspace-0b6124%40workspace%3A."
+"@nativescript-community/ui-cameraview@npm:*, @nativescript-community/ui-cameraview@npm:0.5.0":
+  version: 0.5.0
+  resolution: "@nativescript-community/ui-cameraview@npm:0.5.0"
+  checksum: 10/54028cec1dec6a9a38f8576c66ae58b7fe778f7dd7312a5755768fc42686e6e08853312d412985467a64608b9e295c367851109af7a55fbe7e0ed4de8c261e1f
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nativescript-community/ui-canvas@npm:4.6.42":
   version: 4.6.42
@@ -9986,7 +9987,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@akylas/kiss-orm": "npm:2.1.11"
-    "@akylas/nativescript": "npm:8.9.6"
+    "@akylas/nativescript": "npm:8.9.9"
     "@akylas/nativescript-android-runtime": "npm:8.9.1"
     "@akylas/nativescript-app-tools": "file:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.7"
@@ -10010,7 +10011,7 @@ __metadata:
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/systemui": "npm:1.1.23"
     "@nativescript-community/text": "npm:1.6.8"
-    "@nativescript-community/ui-cameraview": "npm:0.4.2"
+    "@nativescript-community/ui-cameraview": "npm:0.5.0"
     "@nativescript-community/ui-canvas": "npm:4.6.42"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.45"
     "@nativescript-community/ui-checkbox": "npm:^2.0.12"
