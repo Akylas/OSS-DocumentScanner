@@ -115,18 +115,14 @@ module.exports = (env, params = {}) => {
         inlineSourceMap, // --env.inlineSourceMap
         sentry = false, // --env.sentry
         uploadSentry = false,
-        verbose, // --env.verbose
         uglify, // --env.uglify
         noconsole, // --env.noconsole
         devlog, // --env.devlog
-        testlog, // --env.testlog
-        fakeall, // --env.fakeall
         profile, // --env.profile
         report,
         fork = true, // --env.fakeall
         accessibility = true, // --env.accessibility
         playStoreBuild = true, // --env.playStoreBuild
-        adhoc, // --env.adhoc
         timeline, // --env.timeline
         locale = 'en', // --env.locale
         theme = 'auto', // --env.theme
@@ -204,7 +200,8 @@ module.exports = (env, params = {}) => {
     if (platform === 'android') {
         const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
         const gradleData = readFileSync(gradlePath, 'utf8');
-        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+(?:-(?:[a-z]|[A-Z])+)?)"/)[1];
+        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+(?:-(?:[a-zA-Z0-9])+)?)"/)[1];
+        console.log('appVersion', appVersion);
         buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
     } else if (platform === 'ios') {
         const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
@@ -248,8 +245,7 @@ module.exports = (env, params = {}) => {
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${isIOS ? `https://itunes.apple.com/app/id${APP_STORE_ID}?action=write-review` : `market://details?id=${appId}`}"`,
         SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
-        DEV_LOG: !!devlog,
-        TEST_LOG: !!devlog || !!testlog
+        DEV_LOG: !!devlog
     };
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 

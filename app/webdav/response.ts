@@ -1,6 +1,7 @@
 import { HTTPError } from '@shared/utils/error';
 import { parseRawXML } from './tools/dav';
 import { Response, ResponseDataDetailed, WebDAVClientContext } from './types';
+import { lc } from '@nativescript-community/l';
 
 export async function createErrorFromResponse(response: Response, requestParams, prefix: string = '') {
     const serverResponse = await response.content.toStringAsync();
@@ -8,6 +9,7 @@ export async function createErrorFromResponse(response: Response, requestParams,
     const result = await parseRawXML(serverResponse);
     return new HTTPError({
         statusCode: response.statusCode,
+        title: lc('webdav_error'),
         message: prefix + result.error?.message || serverResponse,
         requestParams
     });
