@@ -58,6 +58,11 @@ on:
         default: false
         required: true
         type: boolean
+      logging:
+        description: "Should we force logging enabled"
+        default: false
+        required: true
+        type: boolean
 
 jobs:
   release-documentscanner-android:
@@ -84,6 +89,7 @@ jobs:
       sentry_fdroid: ${{ github.event.inputs.sentry_fdroid }}
       github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
+      logging: ${{ github.event.inputs.logging }}
     secrets: inherit
 
   release-documentscanner-ios:
