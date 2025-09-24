@@ -2,6 +2,10 @@
     .label {
         -webkit-user-select: text;
         user-select: text;
+        color: white;
+        font-family: -apple-system, system-ui, Roboto, 'Segoe UI', Helvetica, Arial, sans-serif;
+        background-color: #00000088;
+        position: absolute;
     }
 </style>
 
@@ -143,15 +147,7 @@
         <img bind:this={img} style:position="absolute" style:transform={rotation !== 0 ? `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)` : null} alt="test" src={imgPath} />
         {#if ocrData}
             {#each ocrData.blocks as block}
-                <div
-                    style:color="white"
-                    style:background-color="#00000088"
-                    style:position="absolute"
-                    style:font-size={block.fontSize * 2.75 + 'pt'}
-                    style:left={block.box.x + 'px'}
-                    style:top={block.box.y + 'px'}
-                    style:width={block.box.width + 'px'}
-                    class="label">
+                <div style:font-size={block.fontSize * 2.75 + 'pt'} style:left={block.box.x + 'px'} style:top={block.box.y + 'px'} style:width={block.box.width + 'px'} class="label">
                     {block.text}
                 </div>
             {/each}
