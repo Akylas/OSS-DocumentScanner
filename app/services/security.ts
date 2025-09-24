@@ -193,7 +193,7 @@ export default class SecurityService extends Observable {
             const result = await this.showPasscodeWindow({ allowClose: false, storePassword: this.storedPassword, ...options });
             const validated = result && (result.validated === true || result.passcode === this.storedPassword);
             if (!validated && result?.passcode) {
-                setTimeout(() => showSnack({ message: l('wrong_passcode'), view: Application.getRootView() }), 300);
+                setTimeout(() => showSnack({ message: l('wrong_passcode') }), 300);
             }
             if (validated) {
                 // ensure validating is set before notify
