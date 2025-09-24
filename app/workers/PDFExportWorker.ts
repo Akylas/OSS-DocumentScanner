@@ -1,12 +1,6 @@
-import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import '@nativescript/core/globals';
+import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
-
-// try {
-//     const test = require('~/services/pdf/PDFExportCanvas');
-// } catch (error) {
-//     console.error(error, error.stack);
-// }
 
 const context: Worker = self as any;
 const TAG = '[PDFExportWorker]';
