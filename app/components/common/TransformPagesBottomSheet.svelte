@@ -181,7 +181,7 @@
         <stacklayout>
             <label class="sectionBigHeader" text={lc('transformations')} />
             <stacklayout>
-                {#each TRANSFORMS as item}
+                {#each TRANSFORMS as item (item.id)}
                     <ListItem columns="*,auto" height={70} subtitle={item.subtitle} title={item.name} on:tap={(e) => onTransformTap(item, e)}>
                         <checkbox
                             id="checkbox"

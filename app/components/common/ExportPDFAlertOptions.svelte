@@ -22,7 +22,7 @@
 <gesturerootview padding="10 0 10 0">
     <scrollview>
         <stacklayout>
-            <label class={'sectionBigHeader'} margin={10} text={lc('export_settings')} />
+            <label class="sectionBigHeader" margin={10} text={lc('export_settings')} />
             <FolderTextView text={folder} on:folder={onFolderSelect} />
             <textfield
                 autocapitalizationType="none"

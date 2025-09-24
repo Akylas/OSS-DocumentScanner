@@ -1486,8 +1486,8 @@
                 <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
+                <ListItemAutoSize ios:backgroundColor={colorPrimary} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="top" on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
@@ -1510,7 +1510,7 @@
             </Template>
         </collectionview>
         <CActionBar canGoBack title={title || $slc('settings.title')}>
-            {#each actionBarButtons as button}
+            {#each actionBarButtons as button (button.id)}
                 <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
             {/each}
         </CActionBar>

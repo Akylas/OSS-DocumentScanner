@@ -298,7 +298,7 @@
             {#if showCameraSettings}
                 <label class="sectionHeader" text={lc('camera_settings')} />
                 <wraplayout padding="10 0 10 0">
-                    {#each OPTIONS as item}
+                    {#each OPTIONS as item (item.id)}
                         <textfield
                             editable={false}
                             hint={item.title}
@@ -312,7 +312,7 @@
             {/if}
             <label class="sectionHeader" text={lc('transformations')} />
             <stacklayout>
-                {#each TRANSFORMS as item}
+                {#each TRANSFORMS as item (item.id)}
                     <ListItem columns="*,auto" height={70} subtitle={item.subtitle} title={item.name} on:tap={(e) => onTransformTap(item, e)}>
                         <checkbox
                             id="checkbox"

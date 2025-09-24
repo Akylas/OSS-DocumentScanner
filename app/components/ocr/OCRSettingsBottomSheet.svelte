@@ -74,7 +74,7 @@
         {#if onlySettings}
             <ListItemAutoSize title={lc('quality')} titleProps={{ verticalAlignment: 'top' }}>
                 <stacklayout marginTop={50} orientation="horizontal" verticalAlignment="bottom">
-                    {#each qualities as quality}
+                    {#each qualities as quality (quality)}
                         <gridlayout
                             backgroundColor={dataType === quality ? colorPrimary : undefined}
                             borderColor={colorOutline}
@@ -107,9 +107,9 @@
                 </stacklayout>
             </ListItemAutoSize>
         {:else}
-            <label class={'sectionBigHeader'} marginBottom={onlySettings ? 0 : 16} text={lc('quality')} />
+            <label class="sectionBigHeader" marginBottom={onlySettings ? 0 : 16} text={lc('quality')} />
             <stacklayout orientation="horizontal">
-                {#each qualities as quality}
+                {#each qualities as quality (quality)}
                     <gridlayout
                         backgroundColor={dataType === quality ? colorPrimary : undefined}
                         borderColor={colorOutline}
@@ -145,19 +145,19 @@
             <ListItemAutoSize paddingRight={0} title={lc('languages')} titleProps={{ verticalAlignment: 'top' }}>
                 <mdbutton class="icon-btn" col={1} marginTop={6} text="mdi-plus" variant="text" verticalAlignment="top" on:tap={addLanguages} />
                 <wraplayout marginTop={50} verticalAlignment="bottom">
-                    {#each languages as language}
+                    {#each languages as language (language)}
                         <Chip rightIcon={downloaded.indexOf(language) !== -1 ? 'mdi-download' : null} text={localizedLanguage(language, OCRLanguages)} on:tap={() => removeLanguage(language)} />
                     {/each}
                 </wraplayout>
             </ListItemAutoSize>
         {:else}
             <gridlayout columns="*,auto" marginBottom={16} marginTop={15} rows="auto">
-                <label class={'sectionBigHeader'} text={lc('languages')} verticalAlignment="middle" />
+                <label class="sectionBigHeader" text={lc('languages')} verticalAlignment="middle" />
                 <mdbutton class="icon-btn" col={1} padding={0} text="mdi-plus" variant="text" on:tap={addLanguages} />
             </gridlayout>
 
             <wraplayout row={1}>
-                {#each languages as language}
+                {#each languages as language (language)}
                     <Chip rightIcon={downloaded.indexOf(language) !== -1 ? 'mdi-download' : null} text={localizedLanguage(language, OCRLanguages)} on:tap={() => removeLanguage(language)} />
                 {/each}
             </wraplayout>

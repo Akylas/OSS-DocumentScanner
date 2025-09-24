@@ -184,7 +184,7 @@
 
     const tMargin = '4 10 4 10';
     const tPadding = __ANDROID__ ? '10 20 10 20' : '0 10 0 10';
-    const tWidth = (screenWidthDips- 41) / 2;
+    const tWidth = (screenWidthDips - 41) / 2;
     const tHeight = 'auto';
 
     function getPageImageOptions(templatePagesCount: number, item: PDFCanvasItem, pageIndex: number, index?: number) {
@@ -313,11 +313,11 @@
                         row={1}
                         selectedIndex={currentPagerIndex}
                         on:selectedIndexChange={onPageIndexChanged}>
-                        {#each { length: 6 } as _, i}
+                        {#each { length: 6 } as _, i (i)}
                             <Template key={`${i + 1}`} let:index let:item>
                                 <gridlayout padding={PAGER_PAGE_PADDING - 10}>
                                     <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)} margin={10}>
-                                        {#each { length: i + 1 } as _, j}
+                                        {#each { length: i + 1 } as _, j (j)}
                                             <image
                                                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
                                                 {...getPageImageOptions(i + 1, item, j, index)}

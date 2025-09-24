@@ -13,7 +13,6 @@
     const dispatch = createEventDispatcher();
 
     async function selectFolder() {
-        DEV_LOG && console.log('selectFolder');
         const result = await pickFolder({
             multipleSelection: false,
             permissions: { write: true, persistable: true, read: true }
