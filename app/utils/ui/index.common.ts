@@ -988,6 +988,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 await share({ images, files });
                                 didDoSomething = true;
                             } catch (error) {
+                                DEV_LOG && console.log('error while sharing images', error);
                                 throw error;
                             } finally {
                                 recycleImages(images);
