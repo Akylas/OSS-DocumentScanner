@@ -155,6 +155,43 @@ if (__ANDROID__) {
     Frame.on('shownModally', function (event) {
         AppUtilsAndroid.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
     });
+} else {
+    @NativeClass
+    class OrientationNotificationObserver extends NSObject {
+        public handleDeviceOrientationChange(): void {
+            const orientation = UIDevice.currentDevice.orientation;
+            switch (orientation) {
+                case UIDeviceOrientation.PortraitUpsideDown:
+                    orientationDegrees.set(180);
+                    break;
+                case UIDeviceOrientation.LandscapeLeft:
+                    orientationDegrees.set(270);
+                    break;
+                case UIDeviceOrientation.LandscapeRight:
+                    orientationDegrees.set(90);
+                    break;
+                case UIDeviceOrientation.Portrait:
+                    orientationDegrees.set(0);
+                    break;
+            }
+        }
+
+        public static ObjCExposedMethods = {
+            handleDeviceOrientationChange: { returns: interop.types.void, params: [] }
+        };
+    }
+    const orientationObserver = OrientationNotificationObserver.new();
+
+    shouldListenForSensorOrientation.subscribe((enabled) => {
+        if (enabled) {
+            NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(orientationObserver, 'handleDeviceOrientationChange', UIDeviceOrientationDidChangeNotification, null);
+
+            UIDevice.currentDevice.beginGeneratingDeviceOrientationNotifications();
+        } else {
+            UIDevice.currentDevice.endGeneratingDeviceOrientationNotifications();
+            NSNotificationCenter.defaultCenter.removeObserverNameObject(orientationObserver, 'handleDeviceOrientationChange', UIDeviceOrientationDidChangeNotification);
+        }
+    });
 }
 
 function updateRootCss() {
