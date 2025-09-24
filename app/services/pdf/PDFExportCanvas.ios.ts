@@ -77,9 +77,19 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         if (!filename.endsWith(PDF_EXT)) {
             filename += PDF_EXT;
         }
-        const pdfFile = Folder.fromPath(folder).getFile(filename);
+        const Nfolder = Folder.fromPath(folder);
+        let nURL: NSURL;
+
+        // on IOS we need to use startAccessingSecurityScopedResource if we write in non local app sandbox paths (like NSDocumentsDirectory, NSCachesDirectory)
+        if (__IOS__) {
+            nURL = NSURL.fileURLWithPathIsDirectory(Nfolder.path, true);
+            nURL.startAccessingSecurityScopedResource();
+        }
+        const pdfFile = Nfolder.getFile(filename, false);
         await pdfFile.write(pdfData);
-        DEV_LOG && console.log('export PDF done', filename, Date.now() - start, 'ms');
+
+        nURL?.stopAccessingSecurityScopedResource();
+        DEV_LOG && console.log('export PDF done', filename, nURL, Date.now() - start, 'ms');
         return pdfFile.path;
     }
 }
