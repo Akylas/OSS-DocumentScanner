@@ -11,7 +11,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, ApplicationSettings, Frame, NavigatedData, Page } from '@nativescript/core';
+import { Application, ApplicationSettings, Frame, NavigatedData, Page, Trace } from '@nativescript/core';
 import { startSentry } from '@shared/utils/sentry';
 import { showError } from '@shared/utils/showError';
 import { CropView } from 'plugin-nativeprocessor/CropView';
@@ -116,7 +116,7 @@ try {
 
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
-    // Trace.addCategories(Trace.categories.Accessibility);
+    // Trace.addCategories(Trace.categories.Layout);
     // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
