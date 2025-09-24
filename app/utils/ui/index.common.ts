@@ -563,7 +563,15 @@ export async function showSettings(props?) {
 }
 
 export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], document?: OCRDocument, anchor?) {
-    let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
+    let exportDirectory: string;
+    // if (__IOS__) {
+    //     const bookmark = NSUserDefaults.standardUserDefaults.objectForKey('pdf_export_directory');
+    //     const stale = new interop.Reference(false);
+    //     const resolvedURL = NSURL.URLByResolvingBookmarkDataOptionsRelativeToURLBookmarkDataIsStaleError(bookmark, NSURLBookmarkResolutionOptions.WithSecurityScope, null, stale);
+    //     exportDirectory =
+    // } else {
+    exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
+    // }
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
         exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
@@ -579,7 +587,17 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
         if (result.folders.length) {
             exportDirectory = result.folders[0];
             DEV_LOG && console.log('set_export_directory', exportDirectory);
-            ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+            // ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+            if (__IOS__) {
+                const bookmark = NSURL.fileURLWithPathIsDirectory(result.folders[0], true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
+                    NSURLBookmarkCreationOptions.WithSecurityScope,
+                    null,
+                    null
+                );
+                NSUserDefaults.standardUserDefaults.setObjectForKey(bookmark, 'pdf_export_directory');
+            } else {
+                ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+            }
             updateDirectoryName();
             return true;
         }
@@ -898,7 +916,16 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
         });
         if (result.folders.length) {
             exportDirectory = result.folders[0];
-            ApplicationSettings.setString('image_export_directory', exportDirectory);
+            if (__IOS__) {
+                const bookmark = NSURL.fileURLWithPathIsDirectory(result.folders[0], true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
+                    NSURLBookmarkCreationOptions.WithSecurityScope,
+                    null,
+                    null
+                );
+                NSUserDefaults.standardUserDefaults.setObjectForKey(bookmark, 'image_export_directory');
+            } else {
+                ApplicationSettings.setString('image_export_directory', exportDirectory);
+            }
             updateDirectoryName();
             return true;
         }
