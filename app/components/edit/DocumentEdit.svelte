@@ -609,6 +609,9 @@
         //TODO: recrop into modal window
         try {
             const item = items.getItem(currentIndex);
+            if (!item) {
+                return;
+            }
             if (!item.sourceImageWidth) {
                 const size = await getImageSize(item.sourceImagePath);
                 item.sourceImageWidth = size.width;
