@@ -161,7 +161,7 @@
 
     async function refresh(force = true, filter?: string) {
         DEV_LOG && console.log('refresh', force, filter);
-        if (loading || (!force && lastRefreshFilter === filter)) {
+        if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
             return;
         }
         lastRefreshFilter = filter;
@@ -194,7 +194,7 @@
     const refreshFolders = tryCatchFunction(async (filter: string = lastRefreshFilter) => {
         try {
             folders = filter?.length ? [] : await documentsService.folderRepository.findFolders(folder);
-            DEV_LOG && console.log('folders', JSON.stringify(folders));
+            // DEV_LOG && console.log('folders', JSON.stringify(folders));
             folderItems = new ObservableArray(
                 folders
                     .filter((f) => f.count > 0)
@@ -582,6 +582,9 @@
 
     async function getSelectedDocuments() {
         const selected: OCRDocument[] = [];
+        if (!documentsService.started) {
+            return selected;
+        }
         for (let index = 0; index < documents.length; index++) {
             const d = documents.getItem(index);
             if (d.selected) {

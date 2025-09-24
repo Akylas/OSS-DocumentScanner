@@ -176,6 +176,9 @@ export default class SyncWorker extends BaseWorker {
         event?: DocumentEvents;
     } = {}) {
         try {
+            if (!documentsService.started) {
+                return;
+            }
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
             DEV_LOG && console.warn('syncDocuments', bothWays, event?.eventName, type);
 
