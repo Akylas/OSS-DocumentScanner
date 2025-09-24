@@ -1,5 +1,6 @@
 import { wrapNativeException } from '@nativescript/core/utils';
 import { File, ImageSource, path } from '@nativescript/core';
+import { lc } from '@nativescript-community/l';
 
 export * from './utils.common';
 
@@ -22,7 +23,15 @@ class SaveAlbumCompletion extends NSObject {
 
     'didFinishSavingWithError:contextInfo:'(image: UIImage, error: NSError, contextInfo) {
         if (error) {
-            this.reject(wrapNativeException(error));
+            DEV_LOG && console.log('didFinishSavingWithError', error.localizedDescription, error.localizedFailureReason, error.underlyingErrors);
+            if (error.underlyingErrors?.count) {
+                error = error.underlyingErrors.objectAtIndex(0);
+            }
+            const nerror = wrapNativeException<Error>(error);
+            if (/PHPhotosErrorDomain error 3311/.test(nerror.message)) {
+                nerror.message = lc('media_library_permission_needed');
+            }
+            this.reject(nerror);
         } else {
             this.resolve();
         }

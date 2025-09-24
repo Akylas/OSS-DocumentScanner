@@ -4,7 +4,6 @@ import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-import { Slider } from '@nativescript-community/ui-material-slider';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
@@ -20,7 +19,6 @@ import {
     PageTransition,
     Screen,
     SharedTransition,
-    StackLayout,
     Utils,
     View,
     knownFolders
@@ -101,7 +99,7 @@ import { recycleImages } from '~/utils/images';
 import { showToast } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { requestCameraPermission, requestStoragePermission, saveImage } from '../utils';
+import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -818,7 +816,11 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
     // const destinationPaths = [];
     let finalMessagePart;
     if (toGallery) {
-        await requestStoragePermission();
+        if (__ANDROID__) {
+            await requestStoragePermission();
+        } else if (__IOS__) {
+            await requestPhotoPermission();
+        }
     }
     await doInBatch(
         sortedPages,
