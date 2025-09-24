@@ -272,7 +272,7 @@
         });
         DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
         if (index >= 0) {
-            if (folder && doc.folders?.indexOf(folder.id) === -1) {
+            if (folder && doc.folders && doc.folders.indexOf(folder.id) === -1) {
                 documents.splice(index, 1);
             } else {
                 const item = documents?.getItem(index);
