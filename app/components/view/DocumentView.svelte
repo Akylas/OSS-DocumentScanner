@@ -655,7 +655,7 @@
                         stretch="aspectFit"
                         verticalAlignment="center" />
                     <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} padding="10 0 0 0" row={1}>
-                        <cspan fontFamily={$fonts.mdi} fontSize={24} text={'mdi-reorder-horizontal'} visibility={inEditMode ? 'visible' : 'hidden'} />
+                        <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-reorder-horizontal" visibility={inEditMode ? 'visible' : 'hidden'} />
                         <cspan
                             paddingLeft={inEditMode ? 30 : 0}
                             text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`}
