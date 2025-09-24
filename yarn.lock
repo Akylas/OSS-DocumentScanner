@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=2f4435&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=f9f758&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/f8b1fdf948463fc0011a0913b1bf9c6a55393bdd0225ab09c341d9f124516a0d43bb4cbcb9266aab3a17cac7c3ae095e7b899b3f5c17e0cf2847af184b5e8726
+  checksum: 10/ab1f2b14d73776ff2d98c89a7980e54c07aebbb5785b1ddd7c87c369888214af6824a253f6a8e7ecd6f8fb4a03fc8436faf6b8bfc4a56cb0f9787905ef7550ee
   languageName: node
   linkType: hard
 
@@ -1102,10 +1102,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/systemui@npm:1.1.23":
-  version: 1.1.23
-  resolution: "@nativescript-community/systemui@npm:1.1.23"
-  checksum: 10/e2da894bf2912a06f2874bbf799b7f39a46bc5828704c9de937781225c8137d48fe1f4b7bf17084471af9544e34132e0288eec737800371385e6c45d76e54044
+"@nativescript-community/systemui@npm:1.1.24":
+  version: 1.1.24
+  resolution: "@nativescript-community/systemui@npm:1.1.24"
+  checksum: 10/79b8ca034f5859ad2d2473f77e87ca1933b184eb5bb5a9757be9d4c0cc63ff584ec1401c0fb81ac3b232d0ccfb4d255b60f585cc4c831df7c1a43fccae0b59ab
   languageName: node
   linkType: hard
 
@@ -1116,12 +1116,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-cameraview@npm:*, @nativescript-community/ui-cameraview@npm:0.5.0":
-  version: 0.5.0
-  resolution: "@nativescript-community/ui-cameraview@npm:0.5.0"
-  checksum: 10/54028cec1dec6a9a38f8576c66ae58b7fe778f7dd7312a5755768fc42686e6e08853312d412985467a64608b9e295c367851109af7a55fbe7e0ed4de8c261e1f
+"@nativescript-community/ui-cameraview@portal:../ui-cameraview/packages/ui-cameraview::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@nativescript-community/ui-cameraview@portal:../ui-cameraview/packages/ui-cameraview::locator=root-workspace-0b6124%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@nativescript-community/ui-canvas@npm:4.6.42":
   version: 4.6.42
@@ -10009,9 +10008,9 @@ __metadata:
     "@nativescript-community/preferences": "npm:1.3.2"
     "@nativescript-community/sentry": "npm:4.6.42"
     "@nativescript-community/sqlite": "npm:3.5.1"
-    "@nativescript-community/systemui": "npm:1.1.23"
+    "@nativescript-community/systemui": "npm:1.1.24"
     "@nativescript-community/text": "npm:1.6.8"
-    "@nativescript-community/ui-cameraview": "npm:0.5.0"
+    "@nativescript-community/ui-cameraview": "npm:0.5.2"
     "@nativescript-community/ui-canvas": "npm:4.6.42"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.45"
     "@nativescript-community/ui-checkbox": "npm:^2.0.12"

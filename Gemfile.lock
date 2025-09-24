@@ -47,6 +47,7 @@ GEM
     babosa (1.0.4)
     base64 (0.2.0)
     bcrypt_pbkdf (1.1.1)
+    bcrypt_pbkdf (1.1.1-x86_64-darwin)
     bigdecimal (3.1.8)
     claide (1.1.0)
     cocoapods (1.15.2)
@@ -309,6 +310,7 @@ GEM
       xcpretty (~> 0.2, >= 0.0.7)
 
 PLATFORMS
+  x86_64-darwin-24
   x86_64-linux
 
 DEPENDENCIES
