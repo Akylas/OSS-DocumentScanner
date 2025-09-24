@@ -36,7 +36,7 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
-    import { requestCameraPermission } from '~/utils/utils.common';
+    import { requestCameraPermission } from '~/utils/utils';
     import { colors, orientation, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
@@ -70,7 +70,7 @@
     let smallImageRotation: number = 0;
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
-    let zoom = ApplicationSettings.getNumber('defaultZoom', 1);
+    let zoom = 1;
     let _actualFlashMode = flashMode;
     let torchEnabled = false;
     let batchMode = ApplicationSettings.getBoolean('batchMode', false);
@@ -452,15 +452,23 @@
             showError(error);
         }
     }
-    const onZoom = debounce(function onZoom(event) {
-        zoom = event.zoom;
-        ApplicationSettings.setNumber('defaultZoom', zoom);
-        updateFloatZoom(zoom);
-    }, 500);
-    const setZoomThrottled = throttle(function (value) {
-        zoom = value;
-        ApplicationSettings.setNumber('defaultZoom', zoom);
-    }, 500);
+    const onZoom = debounce(
+        function onZoom(event) {
+            zoom = event.zoom;
+            ApplicationSettings.setNumber('defaultZoom', zoom);
+            updateFloatZoom(zoom);
+        },
+        500,
+        { leading: true }
+    );
+    const setZoomThrottled = debounce(
+        function (value) {
+            zoom = value;
+            ApplicationSettings.setNumber('defaultZoom', zoom);
+        },
+        500,
+        { leading: true }
+    );
     let zoomPercentDelta = 0;
     let floatZoom = zoom;
 
@@ -635,14 +643,15 @@
         }
     }
 
-    const maxZoom = 1;
-    const minZoom = 1;
+    let maxZoom = 1;
+    let minZoom = 1;
     let cameraOpened = false;
     function onCameraOpen({ object }: { object: CameraView }) {
         try {
-            // minZoom = cameraView.nativeView.minZoom;
-            // maxZoom = cameraView.nativeView.maxZoom;
-            DEV_LOG && console.log('onCameraOpen', minZoom, maxZoom);
+            zoom = ApplicationSettings.getNumber('defaultZoom', cameraView.nativeView.neutralZoom);
+            minZoom = cameraView.nativeView.minZoom;
+            maxZoom = Math.min(cameraView.nativeView.maxZoom, 16);
+            DEV_LOG && console.log('onCameraOpen', minZoom, maxZoom, zoom);
             if (__ANDROID__) {
                 const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
                 if (currentResolution) {
@@ -678,7 +687,7 @@
                 jpegQuality={compressQuality}
                 {pictureSize}
                 readyToStartPreview={false}
-                ios:iosCaptureMode="videoPhotoWithoutAudio"
+                ios:iosCaptureMode="photo"
                 {stretch}
                 width="100%"
                 {zoom}
@@ -716,7 +725,13 @@
                 <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
             {/if}
         </gridlayout>
-        <gridlayout marginBottom={5} row={1} verticalAlignment="bottom" visibility={(maxZoom !== 1 || minZoom !== 1) && maxZoom !== minZoom ? 'visible' : 'hidden'} width="70%">
+        <gridlayout
+            marginBottom={5}
+            row={1}
+            verticalAlignment="bottom"
+            visibility={(maxZoom !== 1 || minZoom !== 1) && maxZoom !== minZoom ? 'visible' : 'collapsed'}
+            width="70%"
+            horizontalAlignment="center">
             <slider
                 bind:this={zoomSlider}
                 backgroundColor={colorBackground}
