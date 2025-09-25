@@ -269,6 +269,11 @@ export default class PDFCanvas {
             canvas.translate(dx, dy);
             let pageRatio = 1;
             switch (paper_size) {
+                case 'letter':
+                    pageRatio = 612 / 792;
+                    break;
+                case 'a5':
+                case 'a3':
                 case 'a4':
                 default:
                     pageRatio = 595 / 842;

@@ -14,7 +14,8 @@ export const PDF_OPTIONS = {
     paper_size: {
         full: { name: lc('full') },
         a4: { name: lc('a4') },
-        a3: { name: lc('a3') }
+        a3: { name: lc('a3') },
+        letter: { name: lc('letter') }
     },
     color: {
         color: { name: lc('color') },
