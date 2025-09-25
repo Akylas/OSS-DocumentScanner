@@ -100,7 +100,7 @@
                       currentResolution: cameraView.nativeView.getCurrentResolutionInfo()
                   }
                 : {};
-            DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
+            // DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
             const view = (await import('~/components/widgets/ImageProcessingSettingsBottomSheet.svelte')).default;
             await showBottomSheet({
                 parent: page,
