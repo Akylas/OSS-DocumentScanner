@@ -245,7 +245,7 @@
     "ocr_computing": "mendeteksi teks (%1$%%)...",
     "ocr_computing_document": "mendeteksi teks dalam dokumen (%1$%%)",
     "ocr_document": "deteksi teks",
-    "ocr_missing_languages": "Model OCR tidak ditemukan. Model akan diunduh: %1$",
+    "ocr_missing_languages_download": "Model OCR tidak ditemukan. Model akan diunduh: %1$",
     "off": "mati",
     "ok": "OK",
     "on": "nyala",

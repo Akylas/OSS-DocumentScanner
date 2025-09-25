@@ -628,6 +628,7 @@ class PDFUtils {
                     list.add(pages.getJSONObject(i))
                 }
                 val pageSize = when (paperSize) {
+                    "letter" -> if (isLandscape) PageSize.LETTER.rotate() else PageSize.LETTER
                     "a5" -> if (isLandscape) PageSize.A5.rotate() else PageSize.A5
                     "a3" -> if (isLandscape) PageSize.A3.rotate() else PageSize.A3
                     else -> if (isLandscape) PageSize.A4.rotate() else PageSize.A4

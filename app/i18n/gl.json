@@ -290,7 +290,7 @@
     "ocr_document": "detectar texto",
     "ocr_enabled": "OCR Activado",
     "ocr_enabled_desc": "O OCR activarase para todo cambio de documento usando os idiomas aquí indicados",
-    "ocr_missing_languages": "Faltan modelos OCR, vanse descargar: %1$s",
+    "ocr_missing_languages_download": "Faltan modelos OCR, vanse descargar: %1$s",
     "ocr_settings": "Axustes OCR",
     "off": "apagado",
     "ok": "OK",

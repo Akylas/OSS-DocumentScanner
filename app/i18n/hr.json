@@ -186,7 +186,7 @@
     "ocr_computing": "otkrivam tekst (%1$s%%)...",
     "ocr_computing_document": "otkrivam tekst u dokumentu/ima (%1$s%%)",
     "ocr_document": "otkrij tekst",
-    "ocr_missing_languages": "OCR modeli nisu instalirani, biti će preuzeti s interneta: %1$s",
+    "ocr_missing_languages_download": "OCR modeli nisu instalirani, biti će preuzeti s interneta: %1$s",
     "off": "isključeno",
     "ok": "OK",
     "on": "uključeno",

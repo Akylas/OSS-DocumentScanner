@@ -282,7 +282,7 @@
     "ocr_document": "偵測文字",
     "ocr_enabled": "啟用 OCR",
     "ocr_enabled_desc": "使用您在此處選擇的語言，每次文件變更時都將觸發OCR（圖片轉文字）",
-    "ocr_missing_languages": "OCR 模型遺失，將會下載：%1$s",
+    "ocr_missing_languages_download": "OCR 模型遺失，將會下載：%1$s",
     "ocr_settings": "OCR 設定",
     "off": "關閉",
     "ok": "好的",

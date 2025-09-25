@@ -284,7 +284,7 @@
     "ocr_document": "metni algıla",
     "ocr_enabled": "OCR Etkin",
     "ocr_enabled_desc": "Burada seçtiğiniz dilleri kullanarak, her belge değişiminde OCR tetiklenecektir",
-    "ocr_missing_languages": "OCR modelleri eksik, indirilecekler: %1$s",
+    "ocr_missing_languages_download": "OCR modelleri eksik, indirilecekler: %1$s",
     "ocr_settings": "OCR ayarları",
     "off": "kapalı",
     "ok": "tamam",

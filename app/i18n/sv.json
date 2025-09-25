@@ -169,7 +169,7 @@
     "ocr_computing": "identifierar text (%1$s%%)....",
     "ocr_computing_document": "söker text i dokument (%1$s%%)",
     "ocr_document": "söker text",
-    "ocr_missing_languages": "OCR-modeller saknas, de kommer att laddas ner: %1$s",
+    "ocr_missing_languages_download": "OCR-modeller saknas, de kommer att laddas ner: %1$s",
     "off": "av",
     "ok": "OK",
     "on": "på",

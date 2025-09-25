@@ -1164,7 +1164,7 @@ export function checkOrDownloadOCRLanguages({
         confirmDownload: (toDownload) =>
             shouldConfirm
                 ? confirm({
-                      message: lc('ocr_missing_languages', toDownload.map((l) => localizedLanguage(l, OCRLanguages)).join(',')),
+                      message: lc('ocr_missing_languages_download', toDownload.map((l) => localizedLanguage(l, OCRLanguages)).join(',')),
                       okButtonText: lc('download'),
                       cancelButtonText: lc('cancel')
                   })
@@ -1530,7 +1530,6 @@ export async function addCurrentImageToDocument({
                 compressQuality
             }))
         );
-        // we generate
     } else {
         images.push({ imagePath: sourceImagePath, width: imageWidth, height: imageHeight });
     }
@@ -1600,11 +1599,13 @@ export async function processCameraImage({
     imagePath,
     onAfterModalImport,
     onBeforeModalImport,
+    onlyForOCR = false,
     pagesToAdd
 }: {
     imagePath: string;
     fileName?: string;
     autoScan?: boolean;
+    onlyForOCR?: boolean;
     onBeforeModalImport?: Function;
     onAfterModalImport?: Function;
     pagesToAdd;
@@ -1670,6 +1671,10 @@ export async function processCameraImage({
             quads = items?.[0]?.quads;
             onAfterModalImport?.();
         }
+    }
+
+    if (onlyForOCR) {
+        return { sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads };
     }
     if (!cropEnabled || quads?.length) {
         await addCurrentImageToDocument({ sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads, pagesToAdd });
@@ -1784,6 +1789,100 @@ export async function importImageFromCamera({
     });
     if (document) {
         return goToDocumentAfterScan(document, oldPagesNumber);
+    }
+}
+
+export async function getOCRFromCamera({ inverseUseSystemCamera = false }: { inverseUseSystemCamera? } = {}) {
+    const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
+    let result: {
+        autoRotate?;
+        fileName?;
+        quads?;
+        sourceImagePath;
+    };
+    await requestCameraPermission();
+    DEV_LOG && console.log('getOCRFromCamera', useSystemCamera, inverseUseSystemCamera);
+    if (__ANDROID__ && (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera)) {
+        const resultImagePath = await new Promise<string>((resolve, reject) => {
+            const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+            let tempPictureUri;
+            const context = Utils.android.getApplicationContext();
+            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + SEPARATOR + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
+            const nativeFile = new java.io.File(picturePath);
+
+            if (SDK_VERSION >= 21) {
+                tempPictureUri = androidx.core.content.FileProvider.getUriForFile(context, __APP_ID__ + '.provider', nativeFile);
+            } else {
+                tempPictureUri = android.net.Uri.fromFile(nativeFile);
+            }
+
+            takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, tempPictureUri);
+            takePictureIntent.putExtra('android.intent.extras.CAMERA_FACING', 0);
+            let resolved = false;
+            // if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
+            const REQUEST_IMAGE_CAPTURE = 3453;
+            function onActivityResult(args) {
+                const { requestCode } = args;
+                const { resultCode } = args;
+
+                if (requestCode === REQUEST_IMAGE_CAPTURE) {
+                    Application.android.off(Application.android.activityResultEvent, onActivityResult);
+                    if (resultCode === android.app.Activity.RESULT_OK) {
+                        DEV_LOG && console.log('startActivityForResult got image', picturePath);
+                        if (!resolved) {
+                            resolved = true;
+                            resolve(picturePath);
+                        } else {
+                            DEV_LOG && console.warn('startActivityForResult got another image!', picturePath);
+                        }
+                    } else if (resultCode === android.app.Activity.RESULT_CANCELED) {
+                        // User cancelled the image capture
+                        reject();
+                    }
+                }
+            }
+            Application.android.on(Application.android.activityResultEvent, onActivityResult);
+            // on android a background event will trigger while picking a file
+            securityService.ignoreNextValidation();
+            DEV_LOG && console.log('startActivityForResult REQUEST_IMAGE_CAPTURE');
+            Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            // } else {
+            //     reject(new Error('camera_intent_not_supported'));
+            // }
+        });
+        if (resultImagePath) {
+            result = { sourceImagePath: resultImagePath };
+        }
+    } else {
+        const Camera = (await import('~/components/camera/Camera.svelte')).default;
+        result = await showModal({
+            page: Camera,
+            fullscreen: true,
+            props: {
+                onlyForOCR: true
+            }
+        });
+    }
+    if (result) {
+        const imageExportSettings = getImageExportSettings();
+        DEV_LOG && console.log('camera for ocr', JSON.stringify(result));
+        const imagePath = result.quads
+            ? (
+                  await cropDocumentFromFile(result.sourceImagePath, result.quads, {
+                      saveInFolder: knownFolders.temp().path,
+                      fileName: result.fileName,
+                      autoRotate: result.autoRotate,
+                      compressFormat: imageExportSettings.imageFormat,
+                      compressQuality: imageExportSettings.imageQuality
+                  })
+              )[0].imagePath
+            : result.sourceImagePath;
+        DEV_LOG && console.log('camera for ocr imagePath', imagePath);
+
+        return ocrService.ocrImage({
+            imagePath
+        });
     }
 }
 

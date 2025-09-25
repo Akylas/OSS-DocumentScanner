@@ -290,7 +290,7 @@
     "ocr_document": "كشف النص",
     "ocr_enabled": "OCR مُفعّل",
     "ocr_enabled_desc": "سيتم تشغيل OCR عند كل تغيير في المستند باستخدام اللغات التي تحددها هنا",
-    "ocr_missing_languages": "نماذج OCR مفقودة، سيتم تنزيلها: %1$s",
+    "ocr_missing_languages_download": "نماذج OCR مفقودة، سيتم تنزيلها: %1$s",
     "ocr_settings": "إعدادات OCR",
     "off": "إيقاف",
     "ok": "حسنَا",

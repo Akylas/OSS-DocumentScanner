@@ -4,9 +4,9 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Slider } from '@nativescript-community/ui-material-slider/slider';
-    import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, View, knownFolders, path } from '@nativescript/core';
+    import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
-    import { debounce, throttle, wrapNativeException } from '@nativescript/core/utils';
+    import { debounce, wrapNativeException } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
@@ -26,18 +26,20 @@
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
+        DEFAULT_FONT_CAM_MIRRORED,
         IMAGE_CONTEXT_OPTIONS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
+        SETTINGS_FONT_CAM_MIRRORED,
         SETTINGS_IMAGE_EXPORT_FORMAT,
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
     import { requestCameraPermission } from '~/utils/utils';
-    import { colors, orientation, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
+    import { colors, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorBackground, colorOnBackground, colorOutlineVariant, colorPrimary } = $colors);
@@ -54,6 +56,7 @@
     );
     $: DEV_LOG && console.log('cameraOptions', JSON.stringify($cameraOptionsStore));
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
+    const frontMirrored = ApplicationSettings.getBoolean(SETTINGS_FONT_CAM_MIRRORED, DEFAULT_FONT_CAM_MIRRORED);
 
     cameraOptionsStore.subscribe((newValue) => {
         ApplicationSettings.setString(SETTINGS_CAMERA_SETTINGS, JSON.stringify(newValue));
@@ -62,6 +65,7 @@
 
     export let document: OCRDocument = null;
     export let QRCodeOnly = false;
+    export let onlyForOCR = false;
     export let folder: DocFolder = null;
 
     let nbPages = 0;
@@ -73,7 +77,7 @@
     let zoom = 1;
     let _actualFlashMode = flashMode;
     let torchEnabled = false;
-    let batchMode = ApplicationSettings.getBoolean('batchMode', false);
+    let batchMode = !onlyForOCR && ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
     let editing = false;
     const imageExportSettings = getImageExportSettings();
@@ -118,7 +122,7 @@
         }
     }
 
-    async function processAndAddImage(image: string | UIImage, autoScan = false) {
+    async function processAndAddImage(image: string | UIImage, autoScan = false, onlyForOCR = false) {
         let imageSource: ImageSource;
         try {
             showLoading(l('computing'));
@@ -136,6 +140,7 @@
             }
 
             return await processCameraImage({
+                onlyForOCR,
                 imagePath: tempImagePath,
                 fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_FORMAT}`,
                 autoScan,
@@ -195,9 +200,12 @@
                 maxWidth: 4500,
                 maxHeight: 4500
             });
-            const didAdd = await processAndAddImage(image, autoScan);
-            DEV_LOG && console.log('takePicture got image', batchMode, !!image, didAdd, Date.now() - start, 'ms');
+            const didAdd = await processAndAddImage(image, autoScan, onlyForOCR);
+            DEV_LOG && console.log('takePicture got image', batchMode, !!image, !!didAdd, Date.now() - start, 'ms');
             if (didAdd) {
+                if (onlyForOCR) {
+                    return closeModal(didAdd);
+                }
                 if (batchMode) {
                     nbPages = pagesToAdd.length;
                     const lastPage = pagesToAdd[pagesToAdd.length - 1];
@@ -683,6 +691,7 @@
                 captureMode={1}
                 enablePinchZoom={true}
                 flashMode={_actualFlashMode}
+                {frontMirrored}
                 height="100%"
                 jpegQuality={compressQuality}
                 {pictureSize}
@@ -726,12 +735,12 @@
             {/if}
         </gridlayout>
         <gridlayout
+            horizontalAlignment="center"
             marginBottom={5}
             row={1}
             verticalAlignment="bottom"
             visibility={(maxZoom !== 1 || minZoom !== 1) && maxZoom !== minZoom ? 'visible' : 'collapsed'}
-            width="70%"
-            horizontalAlignment="center">
+            width="70%">
             <slider
                 bind:this={zoomSlider}
                 backgroundColor={colorBackground}
@@ -760,20 +769,22 @@
         </gridlayout>
 
         <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={10} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
-            <IconButton
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
-                colSpan={2}
-                color="white"
-                horizontalAlignment="left"
-                isSelected={batchMode}
-                marginLeft={16}
-                marginTop={20}
-                selectedColor={colorPrimary}
-                subtitle={lc('batch_mode')}
-                text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
-                tooltip={lc('batch_mode')}
-                verticalAlignment="center"
-                on:tap={() => (batchMode = !batchMode)} />
+            {#if !onlyForOCR}
+                <IconButton
+                    style={`transform: rotate(${-$orientationDegrees}, 0)`}
+                    colSpan={2}
+                    color="white"
+                    horizontalAlignment="left"
+                    isSelected={batchMode}
+                    marginLeft={16}
+                    marginTop={20}
+                    selectedColor={colorPrimary}
+                    subtitle={lc('batch_mode')}
+                    text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
+                    tooltip={lc('batch_mode')}
+                    verticalAlignment="center"
+                    on:tap={() => (batchMode = !batchMode)} />
+            {/if}
 
             <image
                 style={`transform: rotate(${-$orientationDegrees}, 0)`}

@@ -289,7 +289,7 @@
     "ocr_document": "识别文本",
     "ocr_enabled": "允许OCR",
     "ocr_enabled_desc": "使用您在此处选择的语言，每次文档更改时都将触发OCR（图片转文字）",
-    "ocr_missing_languages": "未找到 OCR 模型，准备下载：%1$s",
+    "ocr_missing_languages_download": "未找到 OCR 模型，准备下载：%1$s",
     "ocr_settings": "OCR设置",
     "off": "关闭",
     "ok": "确认",

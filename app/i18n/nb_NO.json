@@ -282,7 +282,7 @@
     "ocr_document": "oppdag tekst",
     "ocr_enabled": "OCR Aktivert",
     "ocr_enabled_desc": "OCR på valgt språk vil bli brukt dersom et dokument endres",
-    "ocr_missing_languages": "OCR moduler mangler, vil bli lastet ned: %1$s",
+    "ocr_missing_languages_download": "OCR moduler mangler, vil bli lastet ned: %1$s",
     "ocr_settings": "innstillinger for OCR",
     "off": "av",
     "ok": "OK",

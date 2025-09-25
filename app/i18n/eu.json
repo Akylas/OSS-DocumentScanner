@@ -282,7 +282,7 @@
     "ocr_document": "atzeman testua",
     "ocr_enabled": "OCR gaitua",
     "ocr_enabled_desc": "OCRa dokumentu-aldaketa guztietan abiaraziko da hemen hautatzen dituzun hizkuntzak erabiliz",
-    "ocr_missing_languages": "OCR ereduak falta dira, deskargatuko dira: %1$s",
+    "ocr_missing_languages_download": "OCR ereduak falta dira, deskargatuko dira: %1$s",
     "ocr_settings": "OCR ezarpenak",
     "off": "itzali",
     "ok": "Ados",

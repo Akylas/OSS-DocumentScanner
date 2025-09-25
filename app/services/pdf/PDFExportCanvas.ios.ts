@@ -30,6 +30,10 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
             }
             let pageWidth, pageHeight;
             switch (options.paper_size) {
+                case 'letter':
+                    pageWidth = 612;
+                    pageHeight = 792;
+                    break;
                 case 'a5':
                     pageWidth = 420;
                     pageHeight = 595;

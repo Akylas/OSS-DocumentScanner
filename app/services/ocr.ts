@@ -252,6 +252,28 @@ export class OCRService extends Observable {
         });
     }
 
+    async ocrImage({ dataType, imagePath, language = this.mLanguages, onProgress }: { language?: string; imagePath: string; onProgress?: (progress: number) => void; dataType?: string }) {
+        // TODO: do we need to apply colorMatrix to image before doing OCR?
+        let dataPath = this.currentDataPath;
+        if (dataType) {
+            dataPath = path.join(this.baseDataPath, dataType);
+        }
+        DEV_LOG && console.log('ocrImage', dataPath, language);
+
+        return ocrDocumentFromFile(
+            imagePath,
+            {
+                dataPath,
+                language,
+                // rotation: page.rotation,
+                // oem: 0,
+                detectContours: 0,
+                trim: false
+            },
+            onProgress
+        );
+    }
+
     async checkOrDownload({
         confirmDownload,
         dataType,

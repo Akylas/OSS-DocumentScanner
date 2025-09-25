@@ -282,7 +282,7 @@
     "ocr_document": "detecta el text",
     "ocr_enabled": "OCR habilitat",
     "ocr_enabled_desc": "l'OCR s'activarà en cada canvi de document amb els idiomes que escullis aquí",
-    "ocr_missing_languages": "no s'ha trobat models OCR, es descarregaran: %1$s",
+    "ocr_missing_languages_download": "no s'ha trobat models OCR, es descarregaran: %1$s",
     "ocr_settings": "paràmetres de l'OCR",
     "off": "apaga",
     "ok": "OK",

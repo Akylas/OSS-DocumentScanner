@@ -284,7 +284,7 @@
     "ocr_document": "Erkenne Text",
     "ocr_enabled": "OCR aktiviert",
     "ocr_enabled_desc": "OCR wird bei jeder Dokumentenänderung mit den hier ausgewählten Sprachen ausgelöst",
-    "ocr_missing_languages": "OCR-Modelle fehlen, sie werden nun heruntergeladen: %1$s",
+    "ocr_missing_languages_download": "OCR-Modelle fehlen, sie werden nun heruntergeladen: %1$s",
     "ocr_settings": "OCR-Einstellungen",
     "off": "Aus",
     "ok": "OK",

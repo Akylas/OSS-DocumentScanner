@@ -30,6 +30,7 @@
         CROP_ENABLED,
         DEFAULT_DRAW_FOLDERS_BACKGROUND,
         DEFAULT_EXPORT_DIRECTORY,
+        DEFAULT_FONT_CAM_MIRRORED,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         DEFAULT_NB_COLUMNS,
         DEFAULT_NB_COLUMNS_LANDSCAPE,
@@ -52,6 +53,7 @@
         SETTINGS_DRAW_FOLDERS_BACKGROUND,
         SETTINGS_FILE_NAME_FORMAT,
         SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
+        SETTINGS_FONT_CAM_MIRRORED,
         SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
         SETTINGS_IMAGE_EXPORT_FORMAT,
         SETTINGS_IMAGE_EXPORT_QUALITY,
@@ -76,6 +78,7 @@
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
+    import OCRSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
     const variant = 'outline';
@@ -131,6 +134,11 @@
     }
     function getSubSettings(id: string) {
         switch (id) {
+            case 'ocr':
+                return {
+                    type: 'ocr_settings',
+                    id: 'ocr_settings'
+                };
             case 'camera':
                 return (
                     __ANDROID__
@@ -151,6 +159,13 @@
                         title: lc('start_app_on_cam'),
                         description: lc('start_app_on_cam_desc'),
                         value: ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM)
+                    },
+                    {
+                        type: 'switch',
+                        id: SETTINGS_FONT_CAM_MIRRORED,
+                        title: lc('front_cam_mirrored'),
+                        description: lc('front_cam_mirrored_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_FONT_CAM_MIRRORED, DEFAULT_FONT_CAM_MIRRORED)
                     }
                 ]);
             case 'security':
@@ -775,6 +790,15 @@
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
+                    }
+                ])
+                .concat([
+                    {
+                        id: 'sub_settings',
+                        title: lc('ocr'),
+                        description: lc('ocr_settings'),
+                        icon: 'mdi-ocr',
+                        options: () => getSubSettings('ocr')
                     }
                 ])
                 .concat(
@@ -1507,6 +1531,10 @@
             </Template>
             <Template let:item>
                 <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
+            </Template>
+
+            <Template key="ocr_settings" let:item>
+                <OCRSettingsBottomSheet onlySettings={true} showDownloadButton={true} />
             </Template>
         </collectionview>
         <CActionBar canGoBack title={title || $slc('settings.title')}>
