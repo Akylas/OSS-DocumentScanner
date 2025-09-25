@@ -11,7 +11,7 @@
     import { colors, fonts } from '~/variables';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import Chip from '../widgets/Chip.svelte';
-    import { localizedLanguage } from '~/utils/ui';
+    import { checkOrDownloadOCRLanguages, localizedLanguage } from '~/utils/ui';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorPrimary, colorSurfaceContainer } = $colors);
@@ -20,6 +20,7 @@
     let downloaded = ocrService.downloadedLanguages;
     export let languages = ocrService.languagesArray;
     export let onlySettings = false;
+    export let showDownloadButton = false;
     export let dataType: string = ocrService.dataType;
     async function addLanguages(event) {
         try {
@@ -66,6 +67,19 @@
 
     function startOrCloseOCR() {
         closeBottomSheet(onlySettings ? { languages, dataType } : true);
+    }
+
+    async function downloadLanguages() {
+        try {
+            await checkOrDownloadOCRLanguages({
+                dataType,
+                languages,
+                shouldConfirm: false
+            });
+            downloaded = ocrService.downloadedLanguages;
+        } catch (error) {
+            showError(error);
+        }
     }
 </script>
 
@@ -165,6 +179,12 @@
         <!-- <gridlayout , backgroundColor="" borderRadius="50%" columns="*,auto">
             <textfield hint={lc('languages')} placeholder={lc('languages')} returnKeyType="search" variant="none" verticalTextAlignment="center" />
         </gridlayout> -->
-        <mdbutton id="start" horizontalAlignment="right" padding="10 16 10 16" row={1} text={lc('start')} visibility={onlySettings ? 'collapsed' : 'visible'} on:tap={startOrCloseOCR} />
+        {#if !onlySettings}
+        <mdbutton horizontalAlignment="right" padding="10 16 10 16" row={1} text={lc('start')} on:tap={startOrCloseOCR} />
+        {/if}
+
+        {#if showDownloadButton}
+            <mdbutton horizontalAlignment="right" padding="10 16 10 16" row={1} text={lc('download')} on:tap={downloadLanguages} />
+        {/if}
     </stacklayout>
 </gesturerootview>

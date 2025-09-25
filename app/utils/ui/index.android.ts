@@ -5,8 +5,9 @@ import { showError } from '@shared/utils/showError';
 import { Dayjs } from 'dayjs';
 import { documentsService } from '~/services/documents';
 import { securityService } from '~/services/security';
-import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
+import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
 import { requestStoragePermission } from '../utils.common';
+import { ocrService } from '~/services/ocr';
 
 export * from './index.common';
 
@@ -58,6 +59,22 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                 case 'com.akylas.documentscanner.OPEN_CAMERA':
                     setTimeout(() => {
                         onStartCam();
+                    }, 0);
+                    break;
+                case 'com.akylas.documentscanner.OCR_CAMERA_CLIPBOARD':
+                    setTimeout(async () => {
+                        if (ocrService.downloadedLanguages.length === 0) {
+                            showToast(lc('ocr_missing_languages'));
+                            return;
+                        }
+                        const result = await getOCRFromCamera();
+                        DEV_LOG && console.log('result', result);
+                        if (result) {
+                            copyTextToClipboard(result.text);
+                            showToast(lc('copied'));
+                        } else {
+                            showToast(lc('no_document_found'));
+                        }
                     }, 0);
                     break;
                 case 'android.intent.action.MAIN':

@@ -78,6 +78,7 @@
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
+    import OCRSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
     const variant = 'outline';
@@ -133,6 +134,11 @@
     }
     function getSubSettings(id: string) {
         switch (id) {
+            case 'ocr':
+                return {
+                    type: 'ocr_settings',
+                    id: 'ocr_settings'
+                };
             case 'camera':
                 return (
                     __ANDROID__
@@ -784,6 +790,15 @@
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
+                    }
+                ])
+                .concat([
+                    {
+                        id: 'sub_settings',
+                        title: lc('ocr'),
+                        description: lc('ocr_settings'),
+                        icon: 'mdi-ocr',
+                        options: () => getSubSettings('ocr')
                     }
                 ])
                 .concat(
@@ -1516,6 +1531,10 @@
             </Template>
             <Template let:item>
                 <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
+            </Template>
+
+            <Template key="ocr_settings" let:item>
+                <OCRSettingsBottomSheet onlySettings={true} showDownloadButton={true} />
             </Template>
         </collectionview>
         <CActionBar canGoBack title={title || $slc('settings.title')}>

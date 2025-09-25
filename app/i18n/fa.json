@@ -184,7 +184,7 @@
     "ocr_computing": "شناسایی متن (%1$s%%)...",
     "ocr_computing_document": "شناسایی متن در سند(ها) (%1$s%%)",
     "ocr_document": "شناسایی متن",
-    "ocr_missing_languages": "مدلهای OCR گم شدهاند، دریافت خواهند شد: % 1$s",
+    "ocr_missing_languages_download": "مدلهای OCR گم شدهاند، دریافت خواهند شد: % 1$s",
     "off": "خاموش",
     "ok": "حله",
     "on": "روشن‌",

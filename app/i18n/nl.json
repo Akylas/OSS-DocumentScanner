@@ -236,7 +236,7 @@
     "ocr_computing": "tekst detecteren (%1$s%%)…",
     "ocr_computing_document": "tekst detecteren in document(en) (%1$s%%)",
     "ocr_document": "tekst detecteren",
-    "ocr_missing_languages": "OCR-modellen ontbreken, ze worden gedownload: %1$s",
+    "ocr_missing_languages_download": "OCR-modellen ontbreken, ze worden gedownload: %1$s",
     "off": "uit",
     "ok": "oké",
     "on": "aan",

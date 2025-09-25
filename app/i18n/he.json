@@ -282,7 +282,7 @@
     "ocr_document": "זיהוי טקסט",
     "ocr_enabled": "OCR מופעל",
     "ocr_enabled_desc": "OCR יופעל בכל שינוי מסמך באמצעות השפות שתבחר כאן",
-    "ocr_missing_languages": "חסרים דגמי OCR, אנחנו מורידים אותם: %1$s",
+    "ocr_missing_languages_download": "חסרים דגמי OCR, אנחנו מורידים אותם: %1$s",
     "ocr_settings": "הגדרות OCR",
     "off": "כבוי",
     "ok": "אוקיי",

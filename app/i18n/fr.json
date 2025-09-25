@@ -290,7 +290,7 @@
     "ocr_document": "détecter le texte",
     "ocr_enabled": "OCR activé",
     "ocr_enabled_desc": "L'OCR sera déclenchée à chaque changement de document en utilisant les langues que vous avez sélectionnées ici",
-    "ocr_missing_languages": "Modèles OCR manquants, ils seront téléchargés : %1$s",
+    "ocr_missing_languages_download": "Modèles OCR manquants, ils seront téléchargés : %1$s",
     "ocr_settings": "Paramètres de l'OCR",
     "off": "OFF",
     "ok": "OK",

@@ -285,7 +285,7 @@
     "ocr_document": "wykryj tekst",
     "ocr_enabled": "OCR włączone",
     "ocr_enabled_desc": "OCR będzie uruchomione po każdej modyfikacji dokumentu w językach wybranych w tym miejscu",
-    "ocr_missing_languages": "Brakuje modeli OCR. Zostaną pobrane: %1$s",
+    "ocr_missing_languages_download": "Brakuje modeli OCR. Zostaną pobrane: %1$s",
     "ocr_settings": "ustawienia OCR",
     "off": "wył.",
     "ok": "OK",

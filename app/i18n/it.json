@@ -291,7 +291,7 @@
     "ocr_document": "rileva testo",
     "ocr_enabled": "OCR abilitato",
     "ocr_enabled_desc": "L'OCR verrà attivato a ogni modifica del documento utilizzando le lingue selezionate",
-    "ocr_missing_languages": "i modelli OCR sono mancanti, verranno scaricati: %1$s",
+    "ocr_missing_languages_download": "i modelli OCR sono mancanti, verranno scaricati: %1$s",
     "ocr_settings": "impostazioni OCR",
     "off": "disattiva",
     "ok": "OK",
