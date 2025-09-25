@@ -57,7 +57,6 @@
     $: DEV_LOG && console.log('cameraOptions', JSON.stringify($cameraOptionsStore));
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
     const frontMirrored = ApplicationSettings.getBoolean(SETTINGS_FONT_CAM_MIRRORED, DEFAULT_FONT_CAM_MIRRORED);
-
     cameraOptionsStore.subscribe((newValue) => {
         ApplicationSettings.setString(SETTINGS_CAMERA_SETTINGS, JSON.stringify(newValue));
     });
