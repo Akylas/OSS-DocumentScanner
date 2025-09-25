@@ -180,5 +180,5 @@
     "debug.javascript.defaultRuntimeExecutable": {
         "pwa-node": "/Users/mguillon/.local/share/mise/shims/node"
     },
-    "python.defaultInterpreterPath": "/Users/mguillon/.local/share/mise/installs/python/3.13.7/bin/python"
+    "python.defaultInterpreterPath": "/Users/mguillon/.local/share/mise/installs/python/3.11.13/bin/python"
 }
