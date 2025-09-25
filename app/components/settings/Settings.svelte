@@ -30,6 +30,7 @@
         CROP_ENABLED,
         DEFAULT_DRAW_FOLDERS_BACKGROUND,
         DEFAULT_EXPORT_DIRECTORY,
+        DEFAULT_FONT_CAM_MIRRORED,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         DEFAULT_NB_COLUMNS,
         DEFAULT_NB_COLUMNS_LANDSCAPE,
@@ -52,6 +53,7 @@
         SETTINGS_DRAW_FOLDERS_BACKGROUND,
         SETTINGS_FILE_NAME_FORMAT,
         SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
+        SETTINGS_FONT_CAM_MIRRORED,
         SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
         SETTINGS_IMAGE_EXPORT_FORMAT,
         SETTINGS_IMAGE_EXPORT_QUALITY,
@@ -151,6 +153,13 @@
                         title: lc('start_app_on_cam'),
                         description: lc('start_app_on_cam_desc'),
                         value: ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM)
+                    },
+                    {
+                        type: 'switch',
+                        id: SETTINGS_FONT_CAM_MIRRORED,
+                        title: lc('front_cam_mirrored'),
+                        description: lc('front_cam_mirrored_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_FONT_CAM_MIRRORED, DEFAULT_FONT_CAM_MIRRORED)
                     }
                 ]);
             case 'security':
