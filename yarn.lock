@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=a95903&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=0b7464&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/8bc1b91cd8cf520421704efb9c1df2417d9431b29d42ee31d8bc5502ac9e5b5233450aa3d029699fe56f9d706b72dbd4973d6ad161a635995c35773a7e498537
+  checksum: 10/8d7d6fb291da8579e698f2ea9fd27e8a65812ae89f57dbdc1cb610c2d91bc714ca8b575f81f2667758f7581d19011397b8ee7e49c2c87e57553cc3369bad6901
   languageName: node
   linkType: hard
 
@@ -1109,17 +1109,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/text@npm:1.6.8, @nativescript-community/text@npm:^1.5.2, @nativescript-community/text@npm:^1.5.33, @nativescript-community/text@npm:^1.6.8":
+"@nativescript-community/text@npm:1.6.14":
+  version: 1.6.14
+  resolution: "@nativescript-community/text@npm:1.6.14"
+  checksum: 10/4ab9ec005a9b4e85fa99e21941214bebd627b620201ef7ff68f219dc19cb569a6b2e56e2cc3b8192a15d6635ad93b70f1943fb2d6743865efa7135db993aa180
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/text@npm:^1.5.2, @nativescript-community/text@npm:^1.5.33, @nativescript-community/text@npm:^1.6.8":
   version: 1.6.8
   resolution: "@nativescript-community/text@npm:1.6.8"
   checksum: 10/8e48be29a15af4dc1be9b8543bd242ae4f26d75c3e57820af9ebd05c05c712053446e16660631c9519c500e480ac9204d0f8b98c9672f1514902a1aa0bc85387
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-cameraview@npm:*, @nativescript-community/ui-cameraview@npm:0.5.4":
+"@nativescript-community/ui-cameraview@npm:*":
   version: 0.5.4
   resolution: "@nativescript-community/ui-cameraview@npm:0.5.4"
   checksum: 10/957a5a15c3f02816b530bbb9b5848c9be499631541e523cf8f7d4b8b2bb3fad9b93f0508b4f9142f86e63da435530a0ecf993e6a32660f3a001fe879ebd29873
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/ui-cameraview@npm:0.6.0":
+  version: 0.6.0
+  resolution: "@nativescript-community/ui-cameraview@npm:0.6.0"
+  checksum: 10/4b31ac8edde67ce5efdf8568cde1f8bd7a5b131f92de4b40c411ec712a8a51ae3920a6de0f973cee505db1ddc1f33df32d06354242c1b6af3960813e4afc9699
   languageName: node
   linkType: hard
 
@@ -1169,12 +1183,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-document-picker@npm:1.1.26":
-  version: 1.1.26
-  resolution: "@nativescript-community/ui-document-picker@npm:1.1.26"
+"@nativescript-community/ui-document-picker@npm:1.1.29":
+  version: 1.1.29
+  resolution: "@nativescript-community/ui-document-picker@npm:1.1.29"
   dependencies:
     "@nativescript-community/perms": "npm:^2.3.0"
-  checksum: 10/c0d14a7d9eab831a49e3d77a8f4d710064e2514854d376be3974573fb4c87328c4c84e950a5545cec8938a249076e8af311416988103653fe4e526570ce60768
+  checksum: 10/f26975cada617b4b1b5082ac8c5827a4b498df605f6f1f9f4cca6fd4d09350df701a8805d1b6aa7fa0afa4d450429fc5ad991c8d36851b254d9c3bbd707c3eba
   languageName: node
   linkType: hard
 
@@ -1187,19 +1201,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-image-colorfilter@npm:4.5.5":
-  version: 4.5.5
-  resolution: "@nativescript-community/ui-image-colorfilter@npm:4.5.5"
+"@nativescript-community/ui-image-colorfilter@npm:4.5.7":
+  version: 4.5.7
+  resolution: "@nativescript-community/ui-image-colorfilter@npm:4.5.7"
   dependencies:
-    "@nativescript-community/ui-image": "npm:^4.5.5"
-  checksum: 10/c72a576602758ee6d1fc6cd88aee3ccc22e23232dd1c1c30d030931996811aa730c4c752fcc233b3db231f76418072f24f80fc3843f4bb2a59871cc5e9dad80d
+    "@nativescript-community/ui-image": "npm:^4.5.7"
+  checksum: 10/23fef5b4e47fe9974470a7caec38ad419f69735927139f7e0470eb5b801a4891bb5d5b8cba629237698b2a64e47e540f5e4e2de784b272ea2df3ce0d95ff6e94
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-image@npm:4.5.5, @nativescript-community/ui-image@npm:^4.5.5":
-  version: 4.5.5
-  resolution: "@nativescript-community/ui-image@npm:4.5.5"
-  checksum: 10/8ffea02ecf92689ae87912891515f6a3419b777ba4cd86b3ec25b63b0ef7d108ad7fb944047c60687db8fb3c2d81982231787d3ea630d84e22c19b38266945a0
+"@nativescript-community/ui-image@npm:4.5.7, @nativescript-community/ui-image@npm:^4.5.7":
+  version: 4.5.7
+  resolution: "@nativescript-community/ui-image@npm:4.5.7"
+  checksum: 10/adc20f88be54e32bcf35c9ee8dbe37eaecb94139d0a9ab1f33cc0065237eec8f48edb126a30cfdfcfbe6dbea3b8b982a4970b9a02011343bcba59203aa59b49d
   languageName: node
   linkType: hard
 
@@ -1385,12 +1399,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-zoomimage@npm:4.5.5":
-  version: 4.5.5
-  resolution: "@nativescript-community/ui-zoomimage@npm:4.5.5"
+"@nativescript-community/ui-zoomimage@npm:4.5.7":
+  version: 4.5.7
+  resolution: "@nativescript-community/ui-zoomimage@npm:4.5.7"
   dependencies:
-    "@nativescript-community/ui-image": "npm:^4.5.5"
-  checksum: 10/cd9f19c2fa384bee541da7b9f28de5e572aa6c9cd6537d74ed5ec10052eb2cd946c0d10b265d7d74a4771ab1a532e7434f5a810ae1239e05094b63b6233d1553
+    "@nativescript-community/ui-image": "npm:^4.5.7"
+  checksum: 10/af3a5fe649e310a8b6849eea9fc7bf04bee6a8830a734112d14dc126c436bba8e1c7b2226bfbcc5f7533818102eddf822ff8c50551488a22ccb8a929efd7afb4
   languageName: node
   linkType: hard
 
@@ -10010,16 +10024,16 @@ __metadata:
     "@nativescript-community/sentry": "npm:4.6.42"
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/systemui": "npm:1.1.24"
-    "@nativescript-community/text": "npm:1.6.8"
-    "@nativescript-community/ui-cameraview": "npm:0.5.4"
+    "@nativescript-community/text": "npm:1.6.14"
+    "@nativescript-community/ui-cameraview": "npm:0.6.0"
     "@nativescript-community/ui-canvas": "npm:4.6.42"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.45"
     "@nativescript-community/ui-checkbox": "npm:^2.0.12"
     "@nativescript-community/ui-collectionview": "npm:6.0.5"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.5"
-    "@nativescript-community/ui-document-picker": "npm:1.1.26"
-    "@nativescript-community/ui-image": "npm:4.5.5"
-    "@nativescript-community/ui-image-colorfilter": "npm:4.5.5"
+    "@nativescript-community/ui-document-picker": "npm:1.1.29"
+    "@nativescript-community/ui-image": "npm:4.5.7"
+    "@nativescript-community/ui-image-colorfilter": "npm:4.5.7"
     "@nativescript-community/ui-label": "npm:1.3.34"
     "@nativescript-community/ui-lottie": "npm:~5.0.11"
     "@nativescript-community/ui-material-activityindicator": "npm:7.2.71"
@@ -10039,7 +10053,7 @@ __metadata:
     "@nativescript-community/ui-share-file": "npm:1.3.3"
     "@nativescript-community/ui-svg": "npm:0.2.14"
     "@nativescript-community/ui-webview": "npm:1.6.0"
-    "@nativescript-community/ui-zoomimage": "npm:4.5.5"
+    "@nativescript-community/ui-zoomimage": "npm:4.5.7"
     "@nativescript/biometrics": "npm:1.3.1"
     "@nativescript/core": "npm:8.9.9"
     "@nativescript/datetimepicker": "npm:^3.0.0"
