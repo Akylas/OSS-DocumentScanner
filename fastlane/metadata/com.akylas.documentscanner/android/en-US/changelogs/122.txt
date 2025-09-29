@@ -1,0 +1,13 @@
+Features:
+- * zoom slider in camera view * camera view fixed in portrait mode
+- new app shortcut to ocr and copy text
+
+Bug fixes:
+- thin white line in OCR data view at the bottom of the screen
+- make alert content scrollable
+- wrong actionbar title padding
+- floating action buttons margin fix
+- accessibility font size correctly scale with system display size
+- missing ripple on list items
+- new menu item to enable reordering of pages in document view
+- pdf generation now supports cyrillic charac
