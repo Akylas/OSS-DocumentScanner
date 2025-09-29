@@ -24,6 +24,7 @@ module.exports = {
     preprocess: [
         sveltePreprocess({
             replace: [
+                [/CARD_APP/g, process.env['APP_ID'] === 'com.akylas.cardwallet'],
                 [/PRODUCTION/g, !!webpack_env.production],
                 [/__ANDROID__/g, !!webpack_env.android],
                 [/__IOS__/g, !!webpack_env.ios]
