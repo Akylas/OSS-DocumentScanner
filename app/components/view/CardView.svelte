@@ -48,6 +48,7 @@
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
     import {
+        BOTTOM_BUTTON_OFFSET,
         CARD_RATIO,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         EVENT_DOCUMENT_DELETED,
@@ -104,7 +105,6 @@
 
     let editing = false;
 
-    $: itemWidth = screenWidthDips - 2 * rowMargin;
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
         updateQRCodes();
@@ -1093,9 +1093,9 @@
             autoReloadItemOnLayout={true}
             colWidth={$isLandscape ? '100%' : '50%'}
             height={$isLandscape ? undefined : itemHeight}
-            iosOverflowSafeArea={true}
             {items}
             orientation={$isLandscape ? 'vertical' : 'horizontal'}
+            paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}
@@ -1231,13 +1231,11 @@
 
         <stacklayout
             bind:this={fabHolder}
+            class="fabHolder"
             colSpan={2}
-            horizontalAlignment="right"
-            iosIgnoreSafeArea={true}
             marginBottom={Math.min(60, $windowInset.bottom + 16)}
             orientation="horizontal"
             row={2}
-            verticalAlignment="bottom"
             visibility={editing ? 'collapsed' : 'visible'}>
             <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="bottom" on:tap={startEdit} />
             <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="bottom" on:tap={throttle(() => showImages(), 500)} />

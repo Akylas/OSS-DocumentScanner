@@ -59,7 +59,6 @@
     $: textPaint.color = colorOnBackground || 'black';
     $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
     $: itemRowHeight = getItemRowHeight(viewStyle, $itemHeight, $nbColumns, $isLandscape);
-    $: DEV_LOG && console.log('itemRowHeight');
 
     // function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
     //     const w = canvas.getWidth();
@@ -390,15 +389,7 @@
             on:longPress={(e) => onItemLongPress(item, e)} />
     </Template>
 
-    <stacklayout
-        bind:this={fabHolder}
-        slot="fab"
-        horizontalAlignment="right"
-        marginBottom={Math.min(60, $windowInset.bottom)}
-        orientation="horizontal"
-        row={2}
-        verticalAlignment="bottom"
-        ios:iosIgnoreSafeArea={true}>
+    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
         <mdbutton bind:this={fabHolder} class="fab" text="mdi-plus" on:tap={throttle(() => onAddButton(), 500)} />
     </stacklayout>
 </MainList>

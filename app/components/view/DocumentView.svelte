@@ -27,6 +27,7 @@
         documentsService
     } from '~/services/documents';
     import {
+        BOTTOM_BUTTON_OFFSET,
         DEFAULT_NB_COLUMNS_VIEW,
         DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE,
         EVENT_DOCUMENT_DELETED,
@@ -603,9 +604,8 @@
             id="view"
             autoReloadItemOnLayout={true}
             {colWidth}
-            iosOverflowSafeArea={true}
             {items}
-            paddingBottom={88}
+            paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}
@@ -670,7 +670,7 @@
             </Template>
         </collectionview>
 
-        <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1} verticalAlignment="bottom">
+        <stacklayout bind:this={fabHolder} class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}

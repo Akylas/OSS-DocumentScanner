@@ -5,9 +5,17 @@ mdbutton {
     shape: round;
 }
 
-htmllabel,
+
 canvasview,
+canvaslabel,
+.fabHolder {
+    ios-ignore-safe-area: true;
+}
+
+htmllabel,
 label,
+button,
+textfield,
 mdtextfield,
 mdtextview,
 checkbox,
@@ -30,10 +38,14 @@ mdcardview {
 .fab {
     shape: medium;
     elevation: 2;
+    // width: calc(56 * var(--fontScale));
+    // height: calc(56 * var(--fontScale));
 }
 .small-fab {
     shape: medium;
     elevation: 2;
+    // width: calc(40 * var(--fontScale));
+    // height: calc(40 * var(--fontScale));
 }
 
 mdtextfield[variant=none] {

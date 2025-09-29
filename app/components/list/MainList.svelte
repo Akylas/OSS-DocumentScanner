@@ -120,20 +120,20 @@
         syncEnabled = syncService.enabled;
     }
     $: if (folder) {
-        DEV_LOG && console.log('updating folder title', folder);
         title = createNativeAttributedString({
             spans: [
                 {
                     fontFamily: $fonts.mdi,
                     color: folder.color || colorOutline,
-                    fontSize: 24,
-                    text: 'mdi-folder  '
+                    fontSize: 24 * $fontScale,
+                    text: 'mdi-folder'
                 },
                 {
-                    text: folder.name
+                    text: '  ' + folder.name
                 }
             ]
         });
+        DEV_LOG && console.log('updating folder title', folder, $fonts.mdi, title);
     }
 
     let syncRunning = false;
@@ -909,9 +909,6 @@
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
             spanSize={itemTemplateSpanSize}
-            ios:iosOverflowSafeArea={true}
-            ios:layoutHorizontalAlignment="left"
-            ios:layoutStyle="align"
             {...collectionViewOptions}>
             <Template key="folders" let:item>
                 <collectionView
@@ -921,7 +918,6 @@
                     items={folderItems}
                     orientation="horizontal"
                     row={1}
-                    ios:iosOverflowSafeArea={true}
                     visibility={folders?.length ? 'visible' : 'collapsed'}>
                     <Template let:item>
                         <canvasview
