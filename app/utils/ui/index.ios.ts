@@ -67,61 +67,73 @@ class ColorPickerImpl extends NSObject {
     };
 }
 
+@NativeClass
+class PickerController extends UIColorPickerViewController {
+    onDismiss?: Function;
+    static create(onDismiss): PickerController {
+        const result = super.new() as PickerController;
+        result.onDismiss = onDismiss;
+        return result;
+    }
+
+    viewDidDisappear(animated: boolean): void {
+        super.viewDidDisappear(animated);
+        this.onDismiss?.();
+    }
+}
+
+@NativeClass
+class ColorPickerDelegate extends NSObject implements UIColorPickerViewControllerDelegate {
+    static ObjCProtocols = [UIColorPickerViewControllerDelegate];
+
+    onChange;
+    onDismiss;
+    static initWithChangeDismiss(onChange, onDismiss) {
+        const delegate = ColorPickerDelegate.new() as ColorPickerDelegate;
+        delegate.onChange = onChange;
+        delegate.onDismiss = onDismiss;
+        return delegate;
+    }
+
+    colorPickerViewControllerDidSelectColorContinuously(colorViewCntroller) {
+        const uiColor: UIColor = colorViewCntroller.selectedColor;
+        const components = CGColorGetComponents(uiColor.CGColor);
+        const red = Math.round(components[0] * 255);
+        const green = Math.round(components[1] * 255);
+        const blue = Math.round(components[2] * 255);
+        const alpha = Math.round(components[3] * 255);
+        this.onChange(new Color(alpha, red, green, blue));
+    }
+    colorPickerViewControllerDidFinish() {
+        this.onDismiss();
+    }
+}
+
 export async function pickColor(color: Color | string, { alpha, anchor }: { alpha?: boolean; anchor?: View } = {}) {
     return new Promise<Color>((resolve, reject) => {
         try {
-            //@ts-ignore
-            const colorSelectionController: UIViewController = new MSColorSelectionViewController(null);
+            let resolved = false;
+            function resolveWithValue(value) {
+                if (!resolved) {
+                    resolved = true;
+                    resolve(value);
+                }
+            }
+            const picker = PickerController.create(() => resolveWithValue(null));
             if (color) {
                 if (!(color instanceof Color)) {
                     color = new Color(color as any);
                 }
-                colorSelectionController['color'] = color.ios;
+                // colorSelectionController['color'] = color.ios;
+                picker.selectedColor = color.ios;
             }
+            let currentColor: Color;
+            const delegate = ColorPickerDelegate.initWithChangeDismiss(
+                (color) => (currentColor = color),
+                () => resolveWithValue(currentColor)
+            );
+            picker.delegate = delegate;
 
-            const controller = UINavigationController.alloc().initWithRootViewController(colorSelectionController);
-            controller.modalPresentationStyle = UIModalPresentationStyle.Popover;
-            controller.popoverPresentationController.sourceView = anchor.nativeViewProtected;
-            controller.popoverPresentationController.sourceRect = anchor.nativeViewProtected.bounds;
-            controller.preferredContentSize = colorSelectionController.view.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize);
-
-            const delegate = (NSObject as any)
-                .extend(
-                    {
-                        colorViewControllerDidChangeColor(colorViewCntroller, color) {
-                            const components = CGColorGetComponents(color.CGColor);
-                            const red = Math.round(components[0] * 255);
-                            const green = Math.round(components[1] * 255);
-                            const blue = Math.round(components[2] * 255);
-                            const alpha = Math.round(components[3] * 255);
-                            this.color = new Color(alpha, red, green, blue);
-                        },
-                        popoverPresentationControllerDidDismissPopover() {
-                            _onDismiss();
-                        }
-                    },
-                    {
-                        //@ts-ignore
-                        protocols: [MSColorSelectionViewControllerDelegate]
-                    }
-                )
-                .alloc()
-                .init();
-            delegate.color = color;
-            colorSelectionController['delegate'] = delegate;
-
-            function _onDismiss() {
-                //@ts-ignore
-                const color = delegate.color;
-                controller.popoverPresentationController.delegate = null;
-                resolve(color);
-            }
-            if (!controller.popoverPresentationController.delegate) {
-                controller.popoverPresentationController.delegate = UIPopoverPresentationControllerDelegateImpl.initWithOptions({
-                    outsideTouchable: true,
-                    onDismiss: _onDismiss
-                });
-            }
             let parentWithController = IOSHelper.getParentWithViewController(anchor);
             if (!parentWithController) {
                 throw new Error('missing_parent_controller');
@@ -132,7 +144,7 @@ export async function pickColor(color: Color | string, { alpha, anchor }: { alph
                 parentController = parentController.presentedViewController;
                 parentWithController = parentWithController['_modal'] || parentWithController;
             }
-            parentWithController.viewController.presentModalViewControllerAnimated(controller, true);
+            parentWithController.viewController.presentModalViewControllerAnimated(picker, true);
         } catch (err) {
             reject(err);
         }
