@@ -95,7 +95,7 @@ export const DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE = 3;
 export const DEFAULT_NB_COLUMNS_VIEW = 2;
 export const DEFAULT_COLORMATRIX = null;
 export const DEFAULT_SORT_ORDER = CARD_APP ? 'createdDate ASC' : 'createdDate DESC';
-export const DEFAULT_VIEW_STYLE = CARD_APP ? 'full' : 'default';
+export const DEFAULT_VIEW_STYLE = CARD_APP ? 'columns' : 'default';
 export const DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE = false;
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
