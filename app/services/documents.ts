@@ -177,6 +177,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     }
     migrations = Object.assign(
         {
+            addPageExtra: sql`ALTER TABLE Page ADD COLUMN extra TEXT`,
             addPageName: sql`ALTER TABLE Page ADD COLUMN name TEXT`,
             addPageBrightness: sql`ALTER TABLE Page ADD COLUMN brightness INTEGER`,
             addPageContrasts: sql`ALTER TABLE Page ADD COLUMN contrast INTEGER`,
@@ -221,12 +222,14 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
     }
 
     async createPage(page: OCRPage, dataFolder: string) {
+        const { extra, ...others } = page;
         const createdDate = Date.now();
         return this.create(
             cleanUndefined({
-                ...page,
+                ...others,
                 imagePath: page.imagePath?.replace(dataFolder, ''),
                 sourceImagePath: page.sourceImagePath?.replace(dataFolder, ''),
+                extra: isObject(extra) ? JSON.stringify(extra) : extra,
                 createdDate,
                 pageIndex: -1, // we are stuck with this as we cant migrate to remove pageIndex
                 modifiedDate: createdDate,
@@ -262,7 +265,9 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         Object.keys(data).forEach((k) => {
             const value = data[k];
             toSave[k] = value;
-            if (typeof value === 'object' || Array.isArray(value)) {
+            if (k === 'extra') {
+                toUpdate[k] = JSON.stringify(Object.assign(page.extra || {}, value));
+            } else if (typeof value === 'object' || Array.isArray(value)) {
                 toUpdate[k] = JSON.stringify(value);
             } else {
                 toUpdate[k] = value;
@@ -274,7 +279,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         return page;
     }
     async createModelFromAttributes(attributes: OCRPage): Promise<any> {
-        const { colorMatrix, colors, crop, document_id, id, imagePath, ocrData, qrcode, sourceImagePath, ...other } = attributes as any;
+        const { colorMatrix, colors, crop, document_id, extra, id, imagePath, ocrData, qrcode, sourceImagePath, ...other } = attributes as any;
         const model = new OCRPage(id, document_id);
         Object.assign(model, {
             ...other,
@@ -282,7 +287,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             // sourceImagePath,
             imagePath: imagePath ? dataFolder.path + imagePath : null,
             sourceImagePath: sourceImagePath ? dataFolder.path + sourceImagePath : null,
-
+            extra: isString(extra) ? JSON.parse(extra) : extra,
             crop: typeof crop === 'string' ? JSON.parse(crop) : crop,
             colorMatrix: typeof colorMatrix === 'string' ? JSON.parse(colorMatrix) : colorMatrix,
             ocrData: typeof ocrData === 'string' ? JSON.parse(ocrData) : ocrData,

@@ -125,6 +125,7 @@ export function getDocumentsService() {
 }
 
 export enum ExtraFieldType {
+    // Color = 'color',
     String = 'string',
     Date = 'date',
     Number = 'number'
@@ -499,11 +500,13 @@ export class OCRDocument extends Observable implements Document {
         DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
         const file = File.fromPath(page.imagePath);
         const imageExportSettings = getImageExportSettings();
+        const compressFormat = page.sourceImagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
+
         const images = await cropDocumentFromFile(page.sourceImagePath, [quad], {
             transforms: page.transforms,
             saveInFolder: file.parent.path,
             fileName: file.name,
-            compressFormat: imageExportSettings.imageFormat,
+            compressFormat,
             compressQuality: imageExportSettings.imageQuality
         });
         const image = images[0];
@@ -545,11 +548,12 @@ export class OCRDocument extends Observable implements Document {
                 false
             );
         } else {
+            const compressFormat = page.sourceImagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
             const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
                 transforms,
                 saveInFolder: file.parent.path,
                 fileName: file.name,
-                compressFormat: imageExportSettings.imageFormat,
+                compressFormat,
                 compressQuality: imageExportSettings.imageQuality
             });
             const image = images[0];
@@ -644,6 +648,7 @@ export interface Page {
     ocrData: OCRData;
     qrcode: QRCodeData;
     colors: ColorPaletteData;
+    extra?: DocumentExtra;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -660,6 +665,8 @@ export class OCRPage extends Observable implements Page {
 
     colorType?: MatricesTypes;
     colorMatrix?: Matrix;
+
+    extra?: DocumentExtra;
 
     brightness?: number;
     contrast?: number;

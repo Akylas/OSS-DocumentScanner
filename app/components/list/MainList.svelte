@@ -119,21 +119,25 @@
     $: if ($syncServicesStore) {
         syncEnabled = syncService.enabled;
     }
-    $: if (folder) {
-        title = createNativeAttributedString({
-            spans: [
-                {
-                    fontFamily: $fonts.mdi,
-                    color: folder.color || colorOutline,
-                    fontSize: 24 * $fontScale,
-                    text: 'mdi-folder'
-                },
-                {
-                    text: '  ' + folder.name
-                }
-            ]
-        });
-        DEV_LOG && console.log('updating folder title', folder, $fonts.mdi, title);
+    $: updateTitle(folder);
+
+    function updateTitle(folder) {
+        if (folder) {
+            title = createNativeAttributedString({
+                spans: [
+                    {
+                        fontFamily: $fonts.mdi,
+                        color: folder.color || colorOutline,
+                        fontSize: 24 * $fontScale,
+                        text: 'mdi-folder'
+                    },
+                    {
+                        text: '  ' + folder.name
+                    }
+                ]
+            });
+            DEV_LOG && console.log('updating folder title', folder, $fonts.mdi, title);
+        }
     }
 
     let syncRunning = false;
@@ -520,7 +524,6 @@
     export const onItemTapThrottled = throttle(onItemTapFast, 500);
 
     export const onItemTap = async function (item: Item) {
-        DEV_LOG && console.log('onItemTap');
         if (nbSelected > 0) {
             return onItemTapFast(item);
         }
@@ -877,7 +880,6 @@
                 }
             },
             options,
-
             vertPos: VerticalPosition.BELOW
         });
     }

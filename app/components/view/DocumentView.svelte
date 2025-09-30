@@ -599,10 +599,10 @@
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
+        <!-- with autoReloadItemOnLayout it would hang on iOS when the fontScale change because of the PageIndicator -->
         <collectionview
             bind:this={collectionView}
             id="view"
-            autoReloadItemOnLayout={true}
             {colWidth}
             {items}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}

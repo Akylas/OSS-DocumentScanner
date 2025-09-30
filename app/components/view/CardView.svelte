@@ -90,7 +90,7 @@
     export let transitionOnBack = true;
     let editingTitle = false;
     let editingUpdates: Partial<Document> = {};
-    let topBackgroundColor = isEInk ? 'white' : (editingUpdates?.extra?.color ?? document?.extra?.color ?? document.pages[0]?.colors?.[1] ?? colorTertiary);
+    let topBackgroundColor = computeTopBackgroundColor();
     let qrcodes: (QRCodeSingleData & { svg: string; pageIndex: number; pageQRCodeIndex: number; color: string })[];
     let currentQRCodeIndex = 0;
     let page: NativeViewElementNode<Page>;
@@ -100,6 +100,10 @@
     let statusBarStyle;
     // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
+
+    function computeTopBackgroundColor() {
+        return isEInk ? 'white' : (editingUpdates?.extra?.color ?? document?.extra?.color ?? document.pages[0]?.extra?.color ?? document.pages[0]?.colors?.[1] ?? colorTertiary);
+    }
 
     $: statusBarStyle = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
 
@@ -198,7 +202,6 @@
                     }
                 }
             }
-            DEV_LOG && console.log('updateQRCodes', isDarkTheme(), forceWhiteBackgroundForQRCode, qrcodeColor, newQrCodes.length);
             qrcodes = newQrCodes;
             hasQRCodes = qrcodes?.length > 0;
             if (updateList && !editing) {
@@ -215,7 +218,6 @@
                 }
             }
             // qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode?.map((qr) => ({ ...qr, color, svg: await getQRCodeImage(qr, color) })) || []), []);
-            DEV_LOG && console.log('updateQRCodes', JSON.stringify(qrcodes));
             //we dont recycle images, it will be done in onDestroy
         } catch (error) {
             showError(error);
@@ -224,13 +226,7 @@
     updateQRCodes();
     async function getQRCodeImage(qrcode, color) {
         try {
-            DEV_LOG && console.log('getQRCodeImage', color, qrcode.text);
-            // if (qrcodeSVGs[qrcode.text]) {
-            //     return qrcodeSVGs[qrcode.text];
-            // }
             return qrcodeService.getQRCodeSVG(qrcode, screenWidthDips, color);
-            // qrcodeSVGs[qrcode.text] = (await getQRCodeSVG(qrcode, screenWidthDips, color));
-            // return qrcodeSVGs[qrcode.text];
         } catch (error) {
             console.error(error);
         }
@@ -479,6 +475,9 @@
         document = event.doc;
         const index = event.pageIndex;
         const current = items.getItem(index);
+        if (index === 0) {
+            topBackgroundColor = computeTopBackgroundColor();
+        }
         if (current) {
             const page = document.getObservablePages().getItem(index);
             DEV_LOG && console.log('view onDocumentPageUpdated', index, event.imageUpdated, current.index);
@@ -1078,7 +1077,7 @@
         }
     }
     function getItemBackgroundColor(item) {
-        return isEInk ? null : item.page.colors?.[0] || document.extra?.color;
+        return isEInk ? null : (item.page?.extra?.color ?? item.page.colors?.[0] ?? document.extra?.color);
     }
     function getItemLabelColor(item) {
         return isEInk ? null : new Color(item.page.colors?.[0] || document.extra?.color).getBrightness() < 145 ? 'white' : 'black';
@@ -1087,15 +1086,14 @@
 
 <page bind:this={page} id="cardview" actionBarHidden={true} statusBarColor={topBackgroundColor} {statusBarStyle}>
     <gridlayout class="pageContent" backgroundColor={topBackgroundColor} columns={$isLandscape ? 'auto,*' : '*'} rows={$isLandscape ? 'auto,*' : 'auto,auto,*'}>
+        <!-- with autoReloadItemOnLayout it would hang on iOS when the fontScale change because of the PageIndicator -->
         <collectionview
             bind:this={collectionView}
             id="view"
-            autoReloadItemOnLayout={true}
             colWidth={$isLandscape ? '100%' : '50%'}
             height={$isLandscape ? undefined : itemHeight}
             {items}
             orientation={$isLandscape ? 'vertical' : 'horizontal'}
-            paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}
@@ -1118,7 +1116,7 @@
                         decodeWidth={colWidth}
                         item={item.page}
                         sharedTransitionTag={`document_${document.id}_${item.page.id}`}
-                        stretch="aspectFill"
+                        stretch="aspectFit"
                         width="100%" />
                     <label
                         autoFontSize={true}
@@ -1160,7 +1158,7 @@
                             on:selectedIndexChange={onSelectedIndex}>
                             <Template let:index let:item>
                                 <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
-                                    <svgview backgroundColor={qrcodeBackgroundColor} sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
+                                    <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
                                     <label
                                         fontSize={30}
                                         fontWeight="bold"
@@ -1233,12 +1231,12 @@
             bind:this={fabHolder}
             class="fabHolder"
             colSpan={2}
-            marginBottom={Math.min(60, $windowInset.bottom + 16)}
+            marginBottom={Math.min(60, $windowInset.bottom)}
             orientation="horizontal"
             row={2}
             visibility={editing ? 'collapsed' : 'visible'}>
-            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="bottom" on:tap={startEdit} />
-            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="bottom" on:tap={throttle(() => showImages(), 500)} />
+            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" on:tap={startEdit} />
+            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" on:tap={throttle(() => showImages(), 500)} />
 
             <mdbutton bind:this={fabHolder} id="fab" class="fab" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} />
         </stacklayout>
@@ -1251,7 +1249,7 @@
             onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0 }}>
+            titleProps={{ autoFontSize: true, padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
             <!-- {#if editing}
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-content-save" variant="text" on:tap={saveEdit} />

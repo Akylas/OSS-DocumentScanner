@@ -14,7 +14,7 @@
     import { Writable, writable } from 'svelte/store';
     import { DocFolder, OCRDocument } from '~/models/OCRDocument';
     import { CARD_RATIO, DEFAULT_NB_COLUMNS, DEFAULT_NB_COLUMNS_LANDSCAPE, SETTINGS_NB_COLUMNS, SETTINGS_NB_COLUMNS_LANDSCAPE } from '~/utils/constants';
-    import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
+    import { goToDocumentAfterScan, importImageFromCamera, timeout } from '~/utils/ui';
     import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import MainList, { Item } from './MainList.svelte';
 
@@ -52,59 +52,10 @@
         $itemHeight = itemWidth * CARD_RATIO + 2 * rowMargin;
         refreshCollectionView?.();
     }
-    function getItemImageHeight(viewStyle) {
-        return (condensed ? 44 : 94) * $fontScale;
-    }
 
     $: textPaint.color = colorOnBackground || 'black';
     $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
     $: itemRowHeight = getItemRowHeight(viewStyle, $itemHeight, $nbColumns, $isLandscape);
-
-    // function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
-    //     const w = canvas.getWidth();
-    //     const h = canvas.getHeight();
-    //     const dx = 10 + getItemImageHeight(viewStyle) + 16;
-    //     textPaint.color = colorOnSurfaceVariant;
-    //     const { doc } = item;
-    //     canvas.drawText(
-    //         filesize(
-    //             doc.pages.reduce((acc, v) => acc + v.size, 0),
-    //             { output: 'string' }
-    //         ),
-    //         dx,
-    //         h - (condensed ? 0 : 16) - 10,
-    //         textPaint
-    //     );
-    //     textPaint.color = colorOnBackground;
-    //     const topText = createNativeAttributedString({
-    //         spans: [
-    //             {
-    //                 fontSize: 16 * $fontScale,
-    //                 fontWeight: 'bold',
-    //                 lineBreak: 'end',
-    //                 lineHeight: 18 * $fontScale,
-    //                 text: doc.name
-    //             },
-    //             {
-    //                 color: colorOnSurfaceVariant,
-    //                 fontSize: 14 * $fontScale,
-    //                 lineHeight: (condensed ? 14 : 20) * $fontScale,
-    //                 text: '\n' + dayjs(doc.createdDate).format('L LT')
-    //             }
-    //         ]
-    //     });
-    //     const staticLayout = new StaticLayout(topText, textPaint, w - dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-    //     canvas.translate(dx, (condensed ? 0 : 10) + 10);
-    //     staticLayout.draw(canvas);
-    // }
-
-    // async function onStartCam(inverseUseSystemCamera = false) {
-    //     try {
-    //         await importImageFromCamera({ folder, inverseUseSystemCamera });
-    //     } catch (error) {
-    //         showError(error);
-    //     }
-    // }
 
     async function onAddButton() {
         DEV_LOG && console.log('onAddButton');

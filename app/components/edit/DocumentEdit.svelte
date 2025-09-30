@@ -31,6 +31,7 @@
         getColorMatrix,
         hideLoading,
         onBackButton,
+        pickColor,
         showImagePopoverMenu,
         showLoading,
         showMatrixLevelPopover,
@@ -698,6 +699,28 @@
             showError(error);
         }
     }
+
+    async function changeColor(item: OCRPage, event) {
+        try {
+            const currentColor = item?.extra?.color ?? 'black';
+            const newColor = await pickColor(currentColor, { anchor: event.object });
+            if (newColor) {
+                // editingUpdates.extra = editingUpdates.extra || {};
+                // topBackgroundColor = editingUpdates.extra.color = newColor.hex;
+                // updateExtraItem(item, 'type');
+
+                await document.updatePage(
+                    currentIndex,
+                    {
+                        extra: { color: newColor.hex }
+                    },
+                    false
+                );
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
@@ -705,13 +728,35 @@
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
-                    <RotableImageView id="imageView" {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
+                    <RotableImageView
+                        id="imageView"
+                        backgroundColor={currentItem?.extra?.color}
+                        {item}
+                        sharedTransitionTag={`document_${document.id}_${item.id}`}
+                        zoomable={true}
+                        on:rotated={(e) => onImageRotated(item, e)} />
                 </gridlayout>
             </Template>
         </pager>
         <PageIndicator horizontalAlignment="right" margin={10} row={2} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
 
         <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
+
+        {#if CARD_APP}
+            <absolutelayout
+                backgroundColor={currentItem?.extra?.color ?? 'black'}
+                borderColor={colorOutline}
+                borderRadius="50%"
+                borderWidth={2}
+                height={40}
+                horizontalAlignment="right"
+                margin={10}
+                row={1}
+                verticalAlignment="top"
+                width={40}
+                on:tap={(event) => changeColor(currentItem, event)} />
+        {/if}
+
         <stacklayout backgroundColor="#00000055" borderRadius={10} horizontalAlignment="right" marginRight={5} row={1} verticalAlignment="center">
             <IconButton color="white" text="mdi-share-variant" tooltip={lc('share')} on:tap={showImageExportPopover} />
             <IconButton color="white" isVisible={!!currentItemOCRData} onLongPress={copyText} text="mdi-format-textbox" on:tap={showCurrentOCRData} />

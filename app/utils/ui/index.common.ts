@@ -12,6 +12,7 @@ import {
     AnimationDefinition,
     Application,
     ApplicationSettings,
+    Color,
     File,
     GridLayout,
     ImageSource,
@@ -96,7 +97,7 @@ import {
     getImageExportSettings
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
-import { showToast } from '~/utils/ui';
+import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
@@ -183,9 +184,10 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     try {
                         const start = Date.now();
                         DEV_LOG && console.log('importFromPdf', pdfPath, Date.now() - start, 'ms');
+
                         const pdfImages = await importPdfToTempImages(pdfPath, {
                             importPDFImages: pdfImportsImages === PDFImportImages.always,
-                            compressFormat: imageExportSettings.imageFormat,
+                            compressFormat: 'png', // in case images are with transparent background we need to use png
                             compressQuality: imageExportSettings.imageQuality
                         });
                         DEV_LOG && console.log('importFromPdf done ', pdfPath, pdfImages, Date.now() - start, 'ms');
@@ -279,20 +281,21 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 pagesToAdd = (
                     await doInBatch(
                         items,
-                        (item, index) =>
+                        (item: ImportImageData, index) =>
                             new Promise<PageData[]>(async (resolve, reject) => {
                                 try {
                                     const start = Date.now();
                                     DEV_LOG && console.log('about to cropDocument', index, JSON.stringify(item));
                                     const images: CropResult[] = [];
                                     if (item.quads) {
+                                        const compressFormat = item.imagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
                                         images.push(
                                             ...(await cropDocumentFromFile(item.imagePath, item.quads, {
                                                 // rotation: item.imageRotation,
                                                 transforms,
-                                                fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
+                                                fileName: `cropedBitmap_${index}.${compressFormat}`,
                                                 saveInFolder: knownFolders.temp().path,
-                                                compressFormat: imageExportSettings.imageFormat,
+                                                compressFormat,
                                                 compressQuality: imageExportSettings.imageQuality
                                             }))
                                         );
@@ -354,7 +357,10 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                                                 ...(CARD_APP
                                                     ? {
                                                           qrcode,
-                                                          colors
+                                                          colors,
+                                                          extra: {
+                                                              color: colors.length > 1 ? colors[0] : new Color(colors[0]).getBrightness() < 145 ? '#ffffff' : '#000000'
+                                                          }
                                                       }
                                                     : {})
                                             } as PageData);
@@ -378,6 +384,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     } else {
                         document = await OCRDocument.createDocument(pagesToAdd, folder);
                     }
+
                     await goToDocumentAfterScan(document, nbPagesBefore, canGoToView);
                     return document;
                 }
@@ -392,8 +399,6 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
 }
 export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
     await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {} });
-    // let selection: { files: string[]; ios?; android? };
-    // let editingImage: ImageSource;
     try {
         if (__ANDROID__) {
             // on android a background event will trigger while picking a file
@@ -410,12 +415,6 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
             } catch (error) {
                 selection = null;
             }
-
-            // we need to wait a bit or the presenting controller
-            // is still the image picker and will mix things up
-            // if (__IOS__) {
-            //     await timeout(500);
-            // }
         } else {
             selection = (
                 await openFilePicker({
@@ -429,8 +428,6 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
                 .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith(ANDROID_CONTENT) && s.endsWith(PDF_EXT) ? 'file://' + s : s));
         }
 
-        // }
-        DEV_LOG && console.log('selection', selection);
         if (selection?.length > 0) {
             return await importAndScanImageOrPdfFromUris({ uris: selection, document, canGoToView, folder });
         }
@@ -513,7 +510,7 @@ export async function showPopoverMenu<T = any>({
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
-    const maxHeight = Math.min(400, Screen.mainScreen.heightDIPs - 50);
+    const maxHeight = Screen.mainScreen.heightDIPs - 50;
     const result: T = await showPopover({
         backgroundColor: colorSurfaceContainer,
         view: OptionSelect,
@@ -1411,6 +1408,7 @@ export async function showMatrixLevelPopover({ anchor, currentValue, item, onCha
     });
 }
 export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
+    DEV_LOG && console.log('goToDocumentView');
     if (CARD_APP) {
         const page = (await import('~/components/view/CardView.svelte')).default;
         return navigate({
@@ -1517,9 +1515,10 @@ export async function addCurrentImageToDocument({
     const transforms = ApplicationSettings.getString(SETTINGS_DEFAULT_TRANSFORM, '');
     DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
     const images: CropResult[] = [];
-    const compressFormat = ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-    const compressQuality = ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS);
+    const imageExportSettings = getImageExportSettings();
     if (quads) {
+        const compressFormat = sourceImagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
+
         images.push(
             ...(await cropDocumentFromFile(sourceImagePath, quads, {
                 transforms,
@@ -1527,7 +1526,7 @@ export async function addCurrentImageToDocument({
                 fileName,
                 autoRotate,
                 compressFormat,
-                compressQuality
+                compressQuality: imageExportSettings.imageQuality
             }))
         );
     } else {
@@ -1684,6 +1683,9 @@ export async function processCameraImage({
     return false;
 }
 export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumber = 0, canGoToView = true) {
+    await hideLoading();
+    await timeout(1000);
+    DEV_LOG && console.log('goToDocumentAfterScan', document.pages.length, oldPagesNumber, canGoToView);
     if (oldPagesNumber === 0 || document.pages.length - oldPagesNumber === 1) {
         const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
         DEV_LOG && console.log('goToDocumentAfterScan', document.pages.length);
