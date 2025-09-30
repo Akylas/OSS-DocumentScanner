@@ -49,7 +49,7 @@
         "colorOutlineVariant": "#C6C7C1",
         "colorSurfaceVariant": "#DEE5D9",
         "colorOnSurfaceVariant": "#424940",
-        "colorSurfaceContainer": "#DEE5D9",
+        "colorSurfaceContainer": "#FFFBFF",
         "colorError": "#BA1A1A",
         "colorOnError": "#FFFFFF"
     }
