@@ -311,7 +311,7 @@
     "pdf_export_jpeg_quality": "JPG compression level for exported PDF. You can put 0 to disable JPG compression",
     "pdf_export_settings": "PDF export settings",
     "pdf_filename": "filename for the exported pdf",
-    "pdf_import": "PDF Import",
+    "pdf_import": "PDF import",
     "pdf_import_settings": "PDF import settings",
     "pdf_one_image_per_page": "each page as an image",
     "pdf_one_image_per_pdf_image": "find PDF images and import them (all other data like text wont be imported)",
