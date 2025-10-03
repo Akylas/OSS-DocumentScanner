@@ -58,10 +58,9 @@ mdtextview {
 }
 
 checkbox {
+    margin-left: 10;
     color: var(--colorOnBackground);
     fill-color: var(--colorPrimary);
-    on-check-color: var(--colorOnPrimary);
-    on-tint-color: var(--colorPrimary);
 }
 
 
