@@ -18,10 +18,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-android-runtime@npm:8.9.1":
-  version: 8.9.1
-  resolution: "@akylas/nativescript-android-runtime@npm:8.9.1"
-  checksum: 10/9442a6407b9623718ab42f30487caef843c46cd45f349d09dff999be2f9bae8360036bbc6da61289d1aca32b00573ab00386ea981cb935a73951e24f66400644
+"@akylas/nativescript-android-runtime@npm:8.9.2":
+  version: 8.9.2
+  resolution: "@akylas/nativescript-android-runtime@npm:8.9.2"
+  checksum: 10/3d1cd13b1a3e2256d139c97699097a8fe37e1a05771d17849b6b0a3b07c4784f1160c791e09aed023b14178cff70b6f305562e9e46a8e8594eda218a97dfc3af
   languageName: node
   linkType: hard
 
@@ -1156,10 +1156,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-checkbox@npm:^2.0.13":
-  version: 2.0.13
-  resolution: "@nativescript-community/ui-checkbox@npm:2.0.13"
-  checksum: 10/69ba175a75d180f8ad6ee323747ebabd4e9880643c1383aca3b904dda6722618346890bb6a643eee63a0d71321ce259f541928abee10bca44b682f91823d69c4
+"@nativescript-community/ui-checkbox@npm:2.0.14":
+  version: 2.0.14
+  resolution: "@nativescript-community/ui-checkbox@npm:2.0.14"
+  checksum: 10/ba640dcfd9729ea8774dbecd88763271134c97943836bdf8cc09b79fd85493e8b1a5555538681343de7dbe6477a0b7994afa11d2b6d2db0463bab3d2afd99261
   languageName: node
   linkType: hard
 
@@ -10002,7 +10002,7 @@ __metadata:
   dependencies:
     "@akylas/kiss-orm": "npm:2.1.11"
     "@akylas/nativescript": "npm:8.9.9"
-    "@akylas/nativescript-android-runtime": "npm:8.9.1"
+    "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "file:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.7"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
@@ -10028,7 +10028,7 @@ __metadata:
     "@nativescript-community/ui-cameraview": "npm:0.6.0"
     "@nativescript-community/ui-canvas": "npm:4.6.43"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.46"
-    "@nativescript-community/ui-checkbox": "npm:^2.0.13"
+    "@nativescript-community/ui-checkbox": "npm:2.0.14"
     "@nativescript-community/ui-collectionview": "npm:6.0.8"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.8"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"

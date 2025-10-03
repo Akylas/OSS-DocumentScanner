@@ -222,7 +222,6 @@
                         boxType={item.boxType}
                         checked={item.value}
                         col={item.boxType === 'circle' ? 0 : 2}
-                        ios:marginRight={10}
                         verticalAlignment="center"
                         on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>

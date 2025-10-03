@@ -552,11 +552,15 @@ export async function showPopoverMenu<T = any>({
 }
 
 export async function showSettings(props?) {
-    const Settings = (await import('~/components/settings/Settings.svelte')).default;
-    navigate({
-        page: Settings,
-        props
-    });
+    try {
+        const Settings = (await import('~/components/settings/Settings.svelte')).default;
+        navigate({
+            page: Settings,
+            props
+        });
+    } catch (error) {
+        showError(error);
+    }
 }
 
 export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], document?: OCRDocument, anchor?) {

@@ -302,20 +302,6 @@ const onInitRootView = function (force = false) {
         const rootViewStyle = rootView?.style;
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily') });
 
-        updateIOSWindowInset();
-        Application.on('orientationChanged', () => {
-            const safeAreaInsets = UIApplication.sharedApplication.keyWindow.safeAreaInsets;
-            // DEV_LOG && console.log('safeAreaInsets', safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
-            windowInset.set({
-                left: Math.round(safeAreaInsets.left),
-                top: 0,
-                // top: Math.round(safeAreaInsets.top),
-                right: Math.round(safeAreaInsets.right),
-                // bottom: Math.round(safeAreaInsets.bottom)
-                bottom: 0
-            });
-        });
-
         const currentColors = get(colors);
         Object.keys(currentColors).forEach((c) => {
             currentColors[c] = rootViewStyle.getCssVariable('--' + c);
@@ -324,6 +310,7 @@ const onInitRootView = function (force = false) {
         updateSystemFontScale(getCurrentFontScale());
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
+        updateIOSWindowInset();
     }
     Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
     updateThemeColors(getRealTheme(theme));

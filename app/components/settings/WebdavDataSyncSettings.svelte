@@ -89,8 +89,7 @@
                         on:checkedChange={(e) =>
                             onCheckBox(e, (e) => {
                                 $store.enabled = e.value;
-                            })}
-                        ios:backgroundColor={colorPrimary} />
+                            })} />
                 </ListItemAutoSize>
                 <ListItemAutoSize fontSize={20} subtitle={lc('remote_data_auto_sync')} title={lc('auto_sync')} on:tap={unCheckBoxItemTap}>
                     <switch
@@ -101,8 +100,7 @@
                         on:checkedChange={(e) =>
                             onCheckBox(e, (e) => {
                                 $store.autoSync = e.value;
-                            })}
-                        ios:backgroundColor={colorPrimary} />
+                            })} />
                 </ListItemAutoSize>
                 <WebdavSettingsView bind:this={webdavView} {store} />
             </stacklayout>
