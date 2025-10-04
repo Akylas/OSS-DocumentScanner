@@ -1,12 +1,15 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { EventData, Img } from '@nativescript-community/ui-image';
+    import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, SharedTransition, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import { goBack, showModal } from '@shared/utils/svelte/ui';
     import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -16,14 +19,11 @@
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { TRANSFORMS } from '~/utils/localized_constant';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentDeletedEventData, DocumentPageUpdatedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
+    import { DocumentDeletedEventData, DocumentPageUpdatedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
-    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { goBack, showModal } from '@shared/utils/svelte/ui';
+    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, TRANSFORMS_SPLIT } from '~/utils/constants';
     import {
         ColorMatricesTypes,
         copyTextToClipboard,
@@ -36,15 +36,13 @@
         showLoading,
         showMatrixLevelPopover,
         showPDFPopoverMenu,
-        showPopoverMenu,
         showSlidersPopover,
         showSnack
     } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import PageIndicator from '../common/PageIndicator.svelte';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import IconButton from '../common/IconButton.svelte';
+    import PageIndicator from '../common/PageIndicator.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOutline, colorPrimary, colorSurfaceContainer } = $colors);
@@ -738,7 +736,7 @@
                 </gridlayout>
             </Template>
         </pager>
-        <PageIndicator horizontalAlignment="right" margin={10} row={2} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
+        <PageIndicator horizontalAlignment="right" margin={10} row={2} scale={$fontScale} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
 
         <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
 

@@ -1,24 +1,24 @@
 <script context="module" lang="ts">
-    import { colorTheme, isEInk } from '~/helpers/theme';
-    import MainList, { Item } from './MainList.svelte';
-    import { Template } from 'svelte-native/components';
-    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
-    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import dayjs from 'dayjs';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
-    import { filesize } from 'filesize';
+    import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
+    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { throttle } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import dayjs from 'dayjs';
+    import { filesize } from 'filesize';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { isEInk } from '~/helpers/theme';
+    import { DocFolder } from '~/models/OCRDocument';
+    import { importImageFromCamera } from '~/utils/ui';
+    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
+    import PageIndicator from '../common/PageIndicator.svelte';
     import RotableImageView from '../common/RotableImageView.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
-    import PageIndicator from '../common/PageIndicator.svelte';
-    import { throttle } from '@nativescript/core/utils';
-    import { importImageFromCamera } from '~/utils/ui';
-    import { showError } from '@shared/utils/showError';
-    import { DocFolder } from '~/models/OCRDocument';
-    import { l, lc } from '@nativescript-community/l';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import MainList, { Item } from './MainList.svelte';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -47,7 +47,7 @@
         return 10;
     }
     function getItemImageHeight(viewStyle) {
-        return (condensed ? 44 : 94) * $fontScale;
+        return condensed ? 44 : 94;
     }
 
     $: textPaint.color = colorOnBackground || 'black';
@@ -55,7 +55,7 @@
     function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
-        const dx = 10 + getItemImageHeight(viewStyle) + 16;
+        const dx = 10 + getItemImageHeight(viewStyle) * $fontScale + 16;
         textPaint.color = colorOnSurfaceVariant;
         const { doc } = item;
         textPaint.textSize = condensed ? 11 : 14 * $fontScale;
@@ -135,10 +135,10 @@
                 marginTop={getImageMargin(viewStyle)}
                 sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0]?.id}`}
                 stretch="aspectFill"
-                width={getItemImageHeight(viewStyle)} />
+                width={getItemImageHeight(viewStyle) * $fontScale} />
             <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
             <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
-            <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} />
+            <PageIndicator horizontalAlignment="right" margin={10} scale={$fontScale} text={item.doc.pages.length} />
         </canvasview>
     </Template>
 

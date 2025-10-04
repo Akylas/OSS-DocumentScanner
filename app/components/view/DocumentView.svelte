@@ -599,12 +599,12 @@
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
-        <!-- with autoReloadItemOnLayout it would hang on iOS when the fontScale change because of the PageIndicator -->
         <collectionview
             bind:this={collectionView}
             id="view"
             {colWidth}
             {items}
+            ios:autoReloadItemOnLayout={true}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             reorderEnabled={true}
             row={1}
@@ -647,6 +647,7 @@
                     >/
                     <RotableImageView
                         id="imageView"
+                        backgroundColor="red"
                         borderRadius={12}
                         decodeWidth={itemHeight}
                         horizontalAlignment="center"
@@ -665,7 +666,7 @@
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={(event) => startDragging(item, event)} />
+                    <PageIndicator rowSpan={2} scale={$fontScale} text={index + 1} on:longPress={(event) => startDragging(item, event)} />
                 </gridlayout>
             </Template>
         </collectionview>

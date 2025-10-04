@@ -5,8 +5,10 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { ApplicationSettings, ObservableArray, Screen, Utils, View, knownFolders } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, Utils, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
+    import { SilentError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
     import { printPDF } from 'plugin-nativeprocessor';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -19,11 +21,9 @@
     import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { getPageColorMatrix } from '~/utils/matrix';
-    import { showError } from '@shared/utils/showError';
     import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
-    import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
-    import { SilentError } from '@shared/utils/error';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -335,7 +335,7 @@
                             </Template>
                         {/each}
                     </pager>
-                    <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
+                    <PageIndicator horizontalAlignment="right" margin={10} row={1} scale={$fontScale} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
                     <gridlayout columns="*,*" row={2}>
                         <mdbutton text={lc('export')} on:tap={exportPDF} />
                         <mdbutton col={1} text={lc('open')} on:tap={openPDF} />

@@ -48,7 +48,6 @@
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
     import {
-        BOTTOM_BUTTON_OFFSET,
         CARD_RATIO,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         EVENT_DOCUMENT_DELETED,
@@ -62,11 +61,11 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
-    import { colors, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { requestCameraPermission } from '~/utils/utils.common';
+    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { requestCameraPermission } from '~/utils/utils.common';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
@@ -1086,10 +1085,10 @@
 
 <page bind:this={page} id="cardview" actionBarHidden={true} statusBarColor={topBackgroundColor} {statusBarStyle}>
     <gridlayout class="pageContent" backgroundColor={topBackgroundColor} columns={$isLandscape ? 'auto,*' : '*'} rows={$isLandscape ? 'auto,*' : 'auto,auto,*'}>
-        <!-- with autoReloadItemOnLayout it would hang on iOS when the fontScale change because of the PageIndicator -->
         <collectionview
             bind:this={collectionView}
             id="view"
+            ios:autoReloadItemOnLayout={true}
             colWidth={$isLandscape ? '100%' : '50%'}
             height={$isLandscape ? undefined : itemHeight}
             {items}
@@ -1132,7 +1131,7 @@
                         verticalTextAlignment="center"
                         visibility={item.page.imagePath ? 'hidden' : 'visible'} />
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
+                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} scale={$fontScale} text={index + 1} on:longPress={() => startDragging(item)} />
                 </gridlayout>
             </Template>
         </collectionview>

@@ -71,7 +71,7 @@
         tryCatch,
         tryCatchFunction
     } from '~/utils/ui';
-    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
+    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
 
     const textPaint = new Paint();
 
@@ -731,6 +731,11 @@
         foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }, 10);
+    export const refreshVisibleItems = () => {
+        foldersCollectionView?.nativeView?.refreshVisibleItems();
+        collectionView?.nativeView?.refreshVisibleItems();
+    };
+    onFontScaleChanged(refreshVisibleItems);
     onThemeChanged(refreshCollectionView);
     onFolderBackgroundColorChanged(refreshCollectionView);
 
@@ -901,11 +906,13 @@
     }
 </script>
 
+
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout class="pageContent" rows="auto,*">
         <collectionView
             bind:this={collectionView}
             {colWidth}
+            ios:autoReloadItemOnLayout={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}

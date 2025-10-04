@@ -90,6 +90,7 @@ prefs.on(`key:${SETTINGS_DRAW_FOLDERS_BACKGROUND}`, () => {
 });
 export const onFolderBackgroundColorChanged = createGlobalEventListener(SETTINGS_DRAW_FOLDERS_BACKGROUND);
 
+export const onFontScaleChanged = createGlobalEventListener('fontscale');
 function updateSystemFontScale(value) {
     fontScale.set(value);
     globalObservable.notify({ eventName: 'fontscale', data: get(fontScale) });
