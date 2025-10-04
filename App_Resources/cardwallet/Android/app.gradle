@@ -229,5 +229,8 @@ if (project.hasProperty("sentryEnabled")) {
     // Includes additional source directories into the source bundle.
     // These directories are resolved relative to the project directory.
     additionalSourceDirsForSourceContext = ["plugin-nativeprocessor/platforms/android/cpp/src", "plugin-nativeprocessor/platforms/android/java", "App_Resources/cardwallet/Android/src/main/java"]
+
+    autoUploadProguardMapping = false
+    autoUploadNativeSymbols = false
   }
 }

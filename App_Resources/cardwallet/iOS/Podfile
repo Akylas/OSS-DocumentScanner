@@ -1,5 +1,5 @@
 plugin 'cocoapods-acknowledgements'
-pod "MSColorPicker"
+# pod "MSColorPicker"
 platform :ios, '14.0'
 post_install do |installer|
     installer.pods_project.targets.each do |target|
