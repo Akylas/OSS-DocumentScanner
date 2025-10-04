@@ -82,7 +82,7 @@
                 hintText: lc('pdf_filename')
             });
             if (result?.result && result?.text?.length) {
-                showLoading(l('exporting'));
+                showLoading(lc('exporting'));
                 const exportDirectory = ApplicationSettings.getString(
                     'pdf_export_directory',
                     __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
@@ -109,7 +109,7 @@
     }
     async function openPDF() {
         try {
-            showLoading(l('exporting'));
+            showLoading(lc('exporting'));
             const filePath = await exportPDFAsync({ pages, document });
             hideLoading();
             if (filePath) {
@@ -123,7 +123,7 @@
     }
     async function onPrintPDF() {
         try {
-            showLoading(l('exporting'));
+            showLoading(lc('exporting'));
             const filePath = await exportPDFAsync({ pages, document });
             hideLoading();
             DEV_LOG && console.log('print pdf', filePath);

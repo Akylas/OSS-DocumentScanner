@@ -521,14 +521,14 @@
             const currentTransforms = (page.transforms?.split(TRANSFORMS_SPLIT) || []).filter((s) => s?.length);
             if (value) {
                 if (currentTransforms.indexOf(type) === -1) {
-                    await showLoading(l('computing'));
+                    await showLoading(lc('computing'));
                     currentTransforms.push(type);
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(TRANSFORMS_SPLIT));
                 }
             } else {
                 const index = currentTransforms.indexOf(type);
                 if (index !== -1) {
-                    await showLoading(l('computing'));
+                    await showLoading(lc('computing'));
                     currentTransforms.splice(index, 1);
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(TRANSFORMS_SPLIT));
                 }
@@ -636,7 +636,7 @@
                 }
             });
             if (result) {
-                showLoading();
+                showLoading(lc('computing'));
                 await document.updatePageCrop(currentIndex, result);
             }
         } catch (error) {

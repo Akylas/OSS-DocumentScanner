@@ -124,7 +124,7 @@
     async function processAndAddImage(image: string | UIImage, autoScan = false, onlyForOCR = false) {
         let imageSource: ImageSource;
         try {
-            showLoading(l('computing'));
+            showLoading(lc('computing'));
             let tempImagePath: string;
             if (typeof image === 'string') {
                 tempImagePath = image;
@@ -188,7 +188,7 @@
         try {
             DEV_LOG && console.log('takePicture', autoScan, _actualFlashMode);
             const start = Date.now();
-            await showLoading(l('capturing'));
+            await showLoading(lc('capturing'));
             // on Android we the capture will directly save the image to a temp directory
             // but thus maxWidth / maxHeight is ignored
             const { image } = await cameraView.nativeView.takePicture({

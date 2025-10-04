@@ -110,7 +110,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
     let pagesToAdd: PageData[] = [];
     let items: ImportImageData[] = [];
     try {
-        await showLoading(l('computing'));
+        await showLoading(lc('computing'));
         const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
         const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
         const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
@@ -169,7 +169,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
             }
             if (__IOS__) {
                 //we forced close current loading dialog,let s show it again after
-                await showLoading(l('computing'));
+                await showLoading(lc('computing'));
             }
             DEV_LOG && console.log('showPromptOptionSelect done', result);
         }
@@ -667,7 +667,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     }
                     case 'print': {
                         await closePopover();
-                        await showLoading(l('exporting'));
+                        await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('print pdf', filePath);
@@ -676,7 +676,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     }
                     case 'open': {
                         await closePopover();
-                        await showLoading(l('exporting'));
+                        await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('opening pdf', filePath);
@@ -689,7 +689,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     }
                     case 'share': {
                         await closePopover();
-                        await showLoading(l('exporting'));
+                        await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('sharing pdf', filePath);
@@ -729,7 +729,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                                     const password = componentInstanceInfo.viewInstance.password;
                                     const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
                                     const folder = componentInstanceInfo.viewInstance.folder;
-                                    showLoading(l('exporting'));
+                                    showLoading(lc('exporting'));
                                     DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
                                     const filePath = await exportPDFAsync({
                                         pages,
@@ -831,7 +831,7 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
         }
     }
     DEV_LOG && console.log('exporting images', imageExportSettings.imageFormat, imageExportSettings.imageQuality, exportDirectory, sortedPages.length, outputImageNames);
-    showLoading(l('exporting'));
+    showLoading(lc('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
     if (toGallery) {
@@ -1207,7 +1207,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
             skipCollapsedState: true
         });
         if (updateOptions) {
-            // await showLoading(l('computing'));
+            // await showLoading(lc('computing'));
 
             // we want to ocr the full document.
             const progress = 0;
