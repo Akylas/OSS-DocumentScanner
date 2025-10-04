@@ -74,7 +74,7 @@
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { restartApp } from '~/utils/utils';
-    import { colors, fonts, hasCamera, windowInset } from '~/variables';
+    import { colors, fonts, hasCamera, onFontScaleChanged, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
@@ -1457,6 +1457,11 @@
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
+
+    function refreshCollectionViewVisibleItems() {
+        collectionView?.nativeView?.refreshVisibleItems();
+    }
+    onFontScaleChanged(refreshCollectionViewVisibleItems);
     onThemeChanged(refreshCollectionView);
 </script>
 
