@@ -241,7 +241,7 @@
     "light": "light",
     "limited": "limited",
     "list": "list",
-    "list_used_third_parties": "list used third parties",
+    "list_used_third_parties": "List used third party libraries",
     "loading": "loading",
     "local_auto_sync_desc": "automatically sync on document changes",
     "local_folder": "local folder",
