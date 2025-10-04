@@ -647,7 +647,6 @@
                     >/
                     <RotableImageView
                         id="imageView"
-                        backgroundColor="red"
                         borderRadius={12}
                         decodeWidth={itemHeight}
                         horizontalAlignment="center"

@@ -34,9 +34,6 @@
     <color name="md_theme_surfaceTint">#B61E44</color>
     <color name="md_theme_outlineVariant">#D7C1C2</color>
     <color name="md_theme_scrim">#000000</color>
-    <color name="md_theme_inverseSurface">#382E2F</color>
-    <color name="md_theme_inverseOnSurface">#FFEDED</color>
-    <color name="md_theme_inversePrimary">#FFB2B9</color>
     <color name="md_theme_primaryFixed">#FFDADC</color>
     <color name="md_theme_onPrimaryFixed">#3B0712</color>
     <color name="md_theme_primaryFixedDim">#FFB2B9</color>
