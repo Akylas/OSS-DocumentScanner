@@ -188,7 +188,7 @@ dependencies {
         }
     }
 
-    implementation "androidx.profileinstaller:profileinstaller:1.3.1"
+    implementation "androidx.profileinstaller:profileinstaller:1.4.1"
     baselineProfile project(':baselineprofile')
 
     implementation "com.github.skydoves:colorpickerview:2.2.4"
@@ -207,7 +207,7 @@ if (project.hasProperty("sentryEnabled")) {
     // Experimental flag to turn on support for GuardSquare's tools integration (Dexguard and External Proguard).
     // If enabled, the plugin will try to consume and upload the mapping file produced by Dexguard and External Proguard.
     // Default is disabled.
-    // dexguardEnabled = true
+    dexguardEnabled = true
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
