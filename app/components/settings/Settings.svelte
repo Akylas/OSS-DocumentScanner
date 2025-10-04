@@ -1443,7 +1443,6 @@
                     break;
 
                 default:
-                    DEV_LOG && console.log('updating setting for checkbox', item.id, item.key, value);
                     ApplicationSettings.setBoolean(item.key || item.id, value);
                     break;
             }

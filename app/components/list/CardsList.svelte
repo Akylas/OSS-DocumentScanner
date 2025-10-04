@@ -247,7 +247,7 @@
         }
     }
     onMount(() => {
-        DEV_LOG && console.log('CardsList', 'onMount', viewStyle);
+        // DEV_LOG && console.log('CardsList', 'onMount', viewStyle);
         updateColumns($isLandscape);
     });
 </script>

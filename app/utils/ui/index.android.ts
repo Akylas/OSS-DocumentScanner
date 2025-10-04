@@ -23,7 +23,7 @@ export function showToolTip(tooltip: string, view?: View) {
 
 async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
     if (__ANDROID__) {
-        DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
+        // DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
         if (Application.servicesStarted !== true) {
             return Application.once('servicesStarted', () => innerOnAndroidIntent(event));
         }
@@ -83,6 +83,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     switch (bundleAction) {
                         case 'view':
                             const id = extras?.getString('id');
+                            DEV_LOG && console.log('intent android.intent.action.MAIN view', id);
                             if (id) {
                                 const document = await documentsService.documentRepository.get(id);
                                 if (document) {
@@ -93,8 +94,8 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     }
                     break;
             }
-            DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
             if (__ANDROID__ && uris.length) {
+                DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 const needsStoragePermission = uris.find((d) => d.startsWith('file://'));
                 if (needsStoragePermission) {
                     await requestStoragePermission();

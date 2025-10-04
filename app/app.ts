@@ -126,11 +126,11 @@ try {
     async function start() {
         try {
             Application.servicesStarted = false;
-            DEV_LOG && console.log('start');
+            // DEV_LOG && console.log('start');
             setDocumentsService(documentsService);
             await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(getCurrentISO3Language()), documentsService.start()]);
             Application.servicesStarted = true;
-            DEV_LOG && console.log('servicesStarted');
+            // DEV_LOG && console.log('servicesStarted');
             Application.notify({ eventName: 'servicesStarted' });
             if (ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)) {
                 syncService.syncDocuments({ withFolders: true });
@@ -140,7 +140,7 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
-        DEV_LOG && console.log('launch');
+        // DEV_LOG && console.log('launch');
         startThemeHelper();
         launched = true;
         start();

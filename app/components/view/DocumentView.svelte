@@ -447,7 +447,7 @@
     }
 
     onMount(() => {
-        DEV_LOG && console.log('DocumentView', 'onMount', VIEW_ID++);
+        // DEV_LOG && console.log('DocumentView', 'onMount', VIEW_ID++);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);

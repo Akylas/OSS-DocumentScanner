@@ -325,7 +325,7 @@ export function start() {
 
     function onReady() {
         setCustomCssRootClass(colorTheme);
-        DEV_LOG && console.log('onReady', theme, colorTheme);
+        // DEV_LOG && console.log('onReady', theme, colorTheme);
         applyTheme(theme);
         const realTheme = getRealTheme(theme);
         currentTheme.set(realTheme);

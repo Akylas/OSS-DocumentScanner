@@ -102,7 +102,6 @@ function setWindowInset(newInset) {
     rootViewStyle?.setUnscopedCssVariable('--windowInsetLeft', newInset.left + '');
     rootViewStyle?.setUnscopedCssVariable('--windowInsetRight', newInset.right + '');
     updateRootCss();
-    DEV_LOG && console.log('setWindowInset', get(windowInset));
 }
 function updateIOSWindowInset() {
     if (__IOS__) {
@@ -333,7 +332,7 @@ export function updateThemeColors(theme: string, colorTheme: ColorThemes = Appli
     if (rootView?.parent) {
         rootView = rootView.parent as any;
     }
-    DEV_LOG && console.log('updateThemeColors', theme, colorTheme, rootView);
+    // DEV_LOG && console.log('updateThemeColors', theme, colorTheme, rootView);
     const rootViewStyle = rootView?.style;
     if (!rootViewStyle) {
         return;

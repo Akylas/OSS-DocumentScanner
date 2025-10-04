@@ -293,7 +293,7 @@
     "ocr": "OCR",
     "ocr_computing": "riconoscimento del testo (%1$s%%)...",
     "ocr_computing_document": "rilevamento testo nel documento (%1$s%%)",
-    "ocr_copy_text": "rileva e copia",
+    "ocr_copy_text": "Rileva e copia",
     "ocr_document": "rileva testo",
     "ocr_enabled": "OCR abilitato",
     "ocr_enabled_desc": "L'OCR verrà attivato a ogni modifica del documento utilizzando le lingue selezionate",

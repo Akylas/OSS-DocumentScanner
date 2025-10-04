@@ -292,7 +292,7 @@
     "ocr": "OCR",
     "ocr_computing": "examinando o texto (%1$s%%)...",
     "ocr_computing_document": "a examinar o texto no documento(s) (%1$s%%)",
-    "ocr_copy_text": "detectar e copia",
+    "ocr_copy_text": "Detectar e copia",
     "ocr_document": "detectar texto",
     "ocr_enabled": "OCR Activado",
     "ocr_enabled_desc": "O OCR activarase para todo cambio de documento usando os idiomas aquí indicados",
