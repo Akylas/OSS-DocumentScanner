@@ -100,19 +100,18 @@
     on:tap
     use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 <!-- <mdbutton
+    color={isSelected ? selectedColor : actualColor}
+    disableCss={true}
+    {fontFamily}
+    {height}
     {isEnabled}
+    rippleColor={actualColor}
+    shape={shape || (rounded ? 'round' : null)}
     {text}
     variant="text"
-    shape={shape || (rounded ? 'round' : null)}
-    disableCss={true}
-    rippleColor={actualColor}
-    {fontFamily}
     visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
-    color={isSelected ? selectedColor : actualColor}
     {...$$restProps}
-    on:tap
-    on:longPress={actualLongPress}
-    width={width || size}
-    height={height || size}
     fontSize={fontSize ? fontSize : small ? 16 : 24}
-/> -->
+    {width}
+    on:tap
+    use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} /> -->
