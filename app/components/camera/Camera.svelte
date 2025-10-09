@@ -680,7 +680,7 @@
     }
 </script>
 
-<page bind:this={page} id="camera" actionBarHidden={true} screenOrientation="portrait" statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
+<page bind:this={page} id="camera" actionBarHidden={true} statusBarStyle="dark" on:navigatedTo={onNavigatedTo} on:navigatedFrom={onNavigatedFrom}>
     <gridlayout class="pageContent" backgroundColor="black" rows="auto,*,auto,auto">
         <absolutelayout rowSpan={viewsize === 'full' ? 4 : 2} on:loaded={onCameraHolderLoaded}>
             <cameraView
@@ -710,27 +710,14 @@
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack}></CActionBar>
 
         <gridlayout columns="auto,auto,auto,auto,*,auto,auto" row={2}>
-            <IconButton
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
-                color="white"
-                text={getFlashIcon(flashMode)}
-                tooltip={lc('flash_mode')}
-                on:tap={() => (flashMode = (flashMode + 1) % 3)} />
-            <IconButton
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
-                col={1}
-                color="white"
-                isSelected={torchEnabled}
-                selectedColor={colorPrimary}
-                text="mdi-flashlight"
-                tooltip={lc('torch')}
-                on:tap={switchTorch} />
-            <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={2} color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
+            <IconButton color="white" text={getFlashIcon(flashMode)} tooltip={lc('flash_mode')} on:tap={() => (flashMode = (flashMode + 1) % 3)} />
+            <IconButton col={1} color="white" isSelected={torchEnabled} selectedColor={colorPrimary} text="mdi-flashlight" tooltip={lc('torch')} on:tap={switchTorch} />
+            <IconButton col={2} color="white" text="mdi-camera-flip" tooltip={lc('toggle_camera')} on:tap={toggleCamera} />
 
-            <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={3} color="white" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
+            <IconButton col={3} color="white" isEnabled={cameraOpened} row={2} text="mdi-tune" on:tap={showCameraSettings} />
             {#if startOnCam}
-                <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={5} color="white" row={2} text="mdi-folder" on:tap={() => showDocumentsList()} />
-                <IconButton style={`transform: rotate(${-$orientationDegrees}, 0)`} col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
+                <IconButton col={5} color="white" row={2} text="mdi-folder" on:tap={() => showDocumentsList()} />
+                <IconButton col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
             {/if}
         </gridlayout>
         <gridlayout
@@ -750,7 +737,6 @@
                 on:valueChange={onZoomValue}
                 on:layoutChanged={(e) => updateFloatZoom(zoom)} />
             <label
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
                 backgroundColor={colorBackground}
                 borderColor={colorOutlineVariant}
                 borderRadius={20}
@@ -770,7 +756,6 @@
         <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={10} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
             {#if !onlyForOCR}
                 <IconButton
-                    style={`transform: rotate(${-$orientationDegrees}, 0)`}
                     colSpan={2}
                     color="white"
                     horizontalAlignment="left"
@@ -786,7 +771,6 @@
             {/if}
 
             <image
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
                 borderColor="white"
                 col={3}
                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
@@ -798,21 +782,21 @@
                 stretch="aspectFit"
                 verticalAlignment="center"
                 width={60} />
-            <gridlayout
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
-                col={2}
-                height={70}
-                horizontalAlignment="center"
-                opacity={takingPicture ? 0.6 : 1}
-                verticalAlignment="center"
-                width={70}>
+            <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
                 <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
-                <gridlayout backgroundColor={colorPrimary} borderRadius={27} height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
+                <gridlayout
+                    backgroundColor={colorPrimary}
+                    borderRadius={27}
+                    height={54}
+                    horizontalAlignment="center"
+                    rippleColor="white"
+                    width={54}
+                    on:tap={() => takePicture()}
+                    on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} isUserInteractionEnabled={false} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 
             <IconButton
-                style={`transform: rotate(${-$orientationDegrees}, 0)`}
                 col={4}
                 color="white"
                 horizontalAlignment="right"
