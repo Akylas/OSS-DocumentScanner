@@ -1,0 +1,13 @@
+module.exports = {
+    plugins: ['prettier-plugin-svelte'],
+    overrides: [{ files: '*.svelte', options: { parser: 'svelte' } }],
+    printWidth: 200,
+    semi: true,
+    tabWidth: 4,
+    singleQuote: true,
+    trailingComma: 'none',
+    svelteSortOrder: 'options-styles-scripts-markup',
+    svelteStrictMode: false,
+    svelteBracketNewLine: false,
+    svelteIndentScriptAndStyle: true
+};
