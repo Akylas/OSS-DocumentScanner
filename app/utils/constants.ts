@@ -1,14 +1,14 @@
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { ApplicationSettings, Screen, knownFolders } from '@nativescript/core';
 
+export * from '@shared/constants';
+
 export enum PDFImportImages {
     ask = 'ask',
     never = 'never',
     always = 'always'
 }
 
-export const SETTINGS_LANGUAGE = 'language';
-export const SETTINGS_COLOR_THEME = 'color_theme';
 export const SETTINGS_APP_VERSION = '_app_version';
 export const SETTINGS_FIRST_OPEN = '_first_open';
 export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
@@ -52,12 +52,8 @@ export const PDF_EXT = '.pdf';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
-export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
-
 export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 88;
 export const FAB_BUTTON_OFFSET = 72;
-
-export const DEFAULT_LOCALE = 'auto';
 
 export const AUTO_SYNC = true;
 export const DEFAULT__BATCH_CHUNK_SIZE = 10;
@@ -82,8 +78,7 @@ export const DOCUMENT_NAME_FORMAT = 'L LTS';
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
-export const DEFAULT_FONT_CAM_MIRRORED = true;
-export const DEFAULT_COLOR_THEME = __ANDROID__ ? 'dynamic' : 'default';
+export const DEFAULT_FONT_CAM_MIRRORED = false;
 export const DEFAULT_DRAW_FOLDERS_BACKGROUND = false;
 export const DEFAULT_TRANSFORM = '';
 export const DEFAULT_COLORTYPE = 'normal';

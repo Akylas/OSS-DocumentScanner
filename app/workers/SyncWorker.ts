@@ -7,7 +7,7 @@ import { cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { DocFolder, OCRDocument, OCRPage, getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
-import { prefs } from '~/services/preferences';
+import { prefs } from '@shared/services/preferences';
 import type { SyncStateEventData } from '~/services/sync';
 import { BaseDataSyncService } from '~/services/sync/BaseDataSyncService';
 import { BaseImageSyncService } from '~/services/sync/BaseImageSyncService';

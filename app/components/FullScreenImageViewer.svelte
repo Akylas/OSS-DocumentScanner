@@ -93,10 +93,10 @@
     }
 
     onMount(() => {
-        Application.on('orientationChanged', onOrientationChanged);
+        Application.on(Application.orientationChangedEvent, onOrientationChanged);
     });
     onDestroy(() => {
-        Application.off('orientationChanged', onOrientationChanged);
+        Application.off(Application.orientationChangedEvent, onOrientationChanged);
     });
 </script>
 

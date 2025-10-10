@@ -438,35 +438,6 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
     }
 }
 
-export async function showAlertOptionSelect(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
-    const component = (await import('~/components/common/OptionSelect.svelte')).default;
-    let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
-    try {
-        componentInstanceInfo = resolveComponentElement(component, {
-            onClose: (result) => {
-                view.bindingContext.closeCallback(result);
-            },
-            onCheckBox(item, value, e) {
-                view.bindingContext.closeCallback(item);
-            },
-            trackingScrollView: 'collectionView',
-            ...props
-        }) as ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
-        const view: View = componentInstanceInfo.element.nativeView;
-        const result = await alert({
-            view,
-            okButtonText: lc('cancel'),
-            ...(options ? options : {})
-        });
-        return result;
-    } catch (err) {
-        throw err;
-    } finally {
-        componentInstanceInfo.element.nativeElement._tearDownUI();
-        componentInstanceInfo.viewInstance.$destroy();
-        componentInstanceInfo = null;
-    }
-}
 export async function showConfirmOptionSelect<T>(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<ConfirmOptions & MDCAlertControlerOptions>) {
     const component = (await import('~/components/common/OptionSelect.svelte')).default;
     let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;

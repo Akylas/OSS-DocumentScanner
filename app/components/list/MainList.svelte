@@ -31,7 +31,7 @@
         FolderUpdatedEventData,
         documentsService
     } from '~/services/documents';
-    import { prefs } from '~/services/preferences';
+    import { prefs } from '@shared/services/preferences';
     import { syncService, syncServicesStore } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,

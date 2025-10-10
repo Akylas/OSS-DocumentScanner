@@ -54,7 +54,7 @@
     } from '~/utils/ui';
     import { colors, fontScale, fonts, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import { prefs } from '~/services/preferences';
+    import { prefs } from '@shared/services/preferences';
     const rowMargin = 8;
     interface Item {
         page: OCRPage;
