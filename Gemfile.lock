@@ -5,7 +5,7 @@ GIT
     fastlane-plugin-semantic_release (1.0.0)
 
 GEM
-  remote: https://rubygems.org/
+  remote: https://gem.coop/
   specs:
     CFPropertyList (3.0.7)
       base64
