@@ -675,6 +675,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                                 options.setItem(0, item);
                             } else {
                                 showSnack({ message: lc('please_choose_export_folder') });
+                                return;
                             }
                         }
                         await closePopover();
@@ -824,9 +825,9 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
                         destinationName += '.' + imageExportSettings.imageFormat;
                     }
                     // const imageSource = await ImageSource.fromFile(imagePath);
-                    DEV_LOG && console.warn('exporting image', index, data.page.imagePath);
+                    // DEV_LOG && console.warn('exporting image', index, data.page.imagePath);
                     imageSource = await getTransformedImage({ ...data, defaultBackgroundColor: get(colors).colorPrimary });
-                    DEV_LOG && console.info('exporting image done', index, data.page.imagePath, imageSource);
+                    // DEV_LOG && console.info('exporting image done', index, data.page.imagePath, imageSource);
                     if (imageSource) {
                         finalMessagePart = await saveImage(imageSource, {
                             exportDirectory,
@@ -836,7 +837,7 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
                             reportName: canSetName
                         });
                     }
-                    DEV_LOG && console.info('exporting image saved', index, data.page.imagePath, imageSource);
+                    // DEV_LOG && console.info('exporting image saved', index, data.page.imagePath, imageSource);
                     resolve();
                 } catch (error) {
                     if (/error creating file/.test(error.toString())) {
@@ -886,10 +887,10 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
             permissions: { write: true, persistable: true, read: true },
             forceSAF: true
         });
-        if (result.folders.length) {
+        if (result.folders?.[0]) {
             exportDirectory = result.folders[0];
             if (__IOS__) {
-                const bookmark = NSURL.fileURLWithPathIsDirectory(result.folders[0], true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
+                const bookmark = NSURL.fileURLWithPathIsDirectory(exportDirectory, true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
                     NSURLBookmarkCreationOptions.WithSecurityScope,
                     null,
                     null
@@ -1001,6 +1002,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                     options.setItem(0, item);
                                 } else {
                                     showSnack({ message: lc('please_choose_export_folder') });
+                                    return;
                                 }
                             }
                             await closePopover();
