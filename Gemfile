@@ -2,7 +2,7 @@
 #
 # Ensure this file is checked in to source control!
 
-source "https://rubygems.org"
+source "https://gem.coop"
 
 gem 'fastlane', "2.225.0"
 gem 'cocoapods', "1.15.2"
