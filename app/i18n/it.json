@@ -250,7 +250,7 @@
     "light": "chiaro",
     "limited": "limitato",
     "list": "elenco",
-    "list_used_third_parties": "elenco delle terze parti utilizzate",
+    "list_used_third_parties": "Elenco delle librerie di terze parti utilizzate",
     "loading": "caricamento",
     "local_auto_sync_desc": "sincronizza automaticamente in caso di modifiche ai documenti",
     "local_folder": "cartella locale",
