@@ -157,5 +157,12 @@
     "file_naming_template": "ファイル名命名のテンプレート",
     "filename": "ファイル名",
     "filename_date_format": "ファイル名の日付形式",
-    "filename_date_format_desc": "エクスポートされたファイルは現在の時間に基いて命名されます。ここでその形式を変更することができます"
+    "filename_date_format_desc": "エクスポートされたファイルは現在の時間に基いて命名されます。ここでその形式を変更することができます",
+    "filename_date_format_fulldesc": "ファイルのエクスポート時に使用する日付形式の定義\n* %1$s は %2$s フォーマット\n* %3$s はエポック秒(1970年からの総経過秒)タイムスタンプ\n* %4$sでカスタムフォーマットを使用。%5$s でさらに見つけることができます",
+    "filename_use_document_name": "使用可能ならドキュメント名を使用する",
+    "filters": "フィルタ",
+    "finish": "完了",
+    "flash_mode": "フラッシュのモード",
+    "folder": "フォルダ",
+    "folder_color_as_background": "背景に色を使用する"
 }
