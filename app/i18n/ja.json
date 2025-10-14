@@ -1,5 +1,8 @@
 {
     "$com.akylas.cardwallet": {
+        "app": {
+            "name": "OSS Card Wallet"
+        },
         "ios": {
             "info": {
                 "plist": {
@@ -9,10 +12,16 @@
             }
         }
     },
+    "$com.akylas.documentscanner": {
+        "app": {
+            "name": "OSS Document Scanner"
+        }
+    },
     "a3": "A3",
     "a4": "A4",
     "about": "このアプリについて",
     "add": "追加",
+    "add_extra_field": "追加のフィールドを追加",
     "add_from_camera": "カメラで撮影して追加",
     "add_manual_card": "手動でカードを追加",
     "add_qrcode_camera": "バーコードを撮影して追加",
@@ -22,11 +31,15 @@
     "always": "常時",
     "always_prompt_crop_edit": "常にドキュメントの領域の編集を確認する",
     "always_prompt_crop_edit_desc": "このオプションが有効な場合、バッチモード無しでカメラからキャプチャすると、ドキュメント作成前に常にドキュメントの領域を編集するか尋ねられます",
+    "app": {
+        "name": "OSS Document Scanner"
+    },
     "appearance": "外観",
     "appearance_settings": "テーマとその他の外観設定",
     "apply": "適用",
     "ask_everytime": "常に確認する",
     "aspect_fill": "全画面",
+    "aspect_fit": "縦横比に合わせる",
     "aspect_ratio": "アスペクト比",
     "authenticate_security": "アプリへのアクセスに認証を要求する",
     "authentication": "認証",
@@ -95,12 +108,54 @@
     "data_location": "データの場所",
     "data_settings": "ストレージとデータの設定",
     "data_sync": "アプリデータの同期",
+    "data_sync_desc": "アプリのデータを同期すると、複数のデバイスで使用できるようになります",
     "default_value": "デフォルト",
     "delete": "削除",
     "delete_page": "削除",
     "detect_qrcode": "QRコードを検出する",
     "disable": "無効",
     "disabled": "無効",
+    "document_date_format_desc": "ドキュメントのファイル名に使用する日付形式の定義\n* %1$s は %2$s フォーマット\n* %3$s はエポック秒(1970年からの総経過秒)タイムスタンプ\n* %4$sでカスタムフォーマットを使用。%5$s でさらに見つけることができます",
     "document_detection": "ドキュメントの検出",
-    "document_detection_settings": "ドキュメントの検出設定"
+    "document_detection_settings": "ドキュメントの検出設定",
+    "document_name_date_format": "ドキュメント名の日付形式",
+    "document_name_date_format_desc": "ドキュメント名は作成日に基づいて作成されます。ここでその形式を変更することができます",
+    "document_name_date_format_fulldesc": "新しいドキュメントの名前に使用する日付形式の定義\n* %1$s は %2$s フォーマット\n* %3$s はエポック秒(1970年からの総経過秒)タイムスタンプ\n* %4$sでカスタムフォーマットを使用。%5$s でさらに見つけることができます",
+    "document_naming_settings": "文書とエクスポートされた画像やPDFの名前に関する設定",
+    "document_naming_template": "ドキュメントの命名テンプレート",
+    "document_need_updated_app": "ドキュメント \"%1$s\" は、新しいバージョンのアプリを使用して作成されました。インポートする前に更新してください",
+    "document_not_detected_margin": "ドキュメントの余白無し",
+    "document_not_detected_margin_desc": "文書が見つからない場合、角はわずかなマージンで画像サイズに設定されます",
+    "documents": "ドキュメント",
+    "documents_count": "%1$s 個のドキュメント",
+    "donate": "プロジェクトを支援するために、少しの寄付を検討してください",
+    "download": "ダウンロード",
+    "downloading": "ダウンロード中 (%1$s%%)…",
+    "draw_ocr_overlay": "OCRオーバーレイを描画",
+    "draw_ocr_text": "PDF内の透明なOCRテキスト",
+    "edit": "編集",
+    "edit_extra_field": "追加フィールドを編集",
+    "email": "メール",
+    "enable": "有効",
+    "enabled": "有効",
+    "english": "英語",
+    "enhance": "強調",
+    "enhance_desc": "画像を強調補正します",
+    "enter_passcode": "PINを入力",
+    "error": "エラー",
+    "error_loading_image": "画像 %1$s (%2$s) をロード中にエラーが発生しました",
+    "existing_folders": "既存のフォルダー",
+    "expanded": "拡張",
+    "export": "エクスポート",
+    "export_folder": "エクスポート先フォルダ",
+    "export_settings": "エクスポート設定",
+    "export_settings_desc": "アプリの設定を全てエクスポートすると、後でインポートすることができます",
+    "exporting": "エクスポート中",
+    "failed": "失敗",
+    "feedback_sent": "フィードバックは送信されました",
+    "file_naming_settings": "エクスポート時の画像やPDFの名前に関する設定",
+    "file_naming_template": "ファイル名命名のテンプレート",
+    "filename": "ファイル名",
+    "filename_date_format": "ファイル名の日付形式",
+    "filename_date_format_desc": "エクスポートされたファイルは現在の時間に基いて命名されます。ここでその形式を変更することができます"
 }
