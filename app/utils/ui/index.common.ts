@@ -994,7 +994,8 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 recycleImages(images);
                             }
                             break;
-                        case 'export': {
+                        case 'export':
+                        case 'save_gallery': {
                             if (!exportDirectory) {
                                 if (await pickExportFolder()) {
                                     const item = options.getItem(0);
@@ -1006,13 +1007,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 }
                             }
                             await closePopover();
-                            await exportImages(pages, exportDirectory);
-                            didDoSomething = true;
-                            break;
-                        }
-                        case 'save_gallery': {
-                            await closePopover();
-                            await exportImages(pages, exportDirectory, true);
+                            await exportImages(pages, exportDirectory, item.id === 'save_gallery');
                             didDoSomething = true;
                             break;
                         }
