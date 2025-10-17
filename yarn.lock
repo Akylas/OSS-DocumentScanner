@@ -18,16 +18,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-android-runtime@npm:8.9.2":
-  version: 8.9.2
-  resolution: "@akylas/nativescript-android-runtime@npm:8.9.2"
-  checksum: 10/3d1cd13b1a3e2256d139c97699097a8fe37e1a05771d17849b6b0a3b07c4784f1160c791e09aed023b14178cff70b6f305562e9e46a8e8594eda218a97dfc3af
+"@akylas/nativescript-android-runtime@file:/home/mguillon/dev/nativescript/nativescript-quickjs-android-8.8.5.tgz::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 8.8.5
+  resolution: "@akylas/nativescript-android-runtime@file:/home/mguillon/dev/nativescript/nativescript-quickjs-android-8.8.5.tgz#/home/mguillon/dev/nativescript/nativescript-quickjs-android-8.8.5.tgz::hash=94c65c&locator=root-workspace-0b6124%40workspace%3A."
+  checksum: 10/9ba5e4142813a82d1ed20c87029d9041c0b005a04654470ab46725c983887720126bf61cbbf187f346e4af507079d7d47f36fd3432342e77ca7a2109976bf628
   languageName: node
   linkType: hard
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=dafb9a&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=3e60f3&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/a784b66394d622922d64212e1c2bca10d9255f4b5a4fb857da9a2aed899b27173740dfee9bc2408830e52527027ccbb239373cd49179d659979ffad5634e524d
+  checksum: 10/fb382af83b60de050f8fc208435f4e951f36cc4b4962cd4914e94dd6191eae0f37cc83d2125932e221ccce4b05b35507d531e91694639317f48cc5f2f0bd0524
   languageName: node
   linkType: hard
 
@@ -1172,23 +1172,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.11":
-  version: 6.0.11
-  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.11"
+"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.13":
+  version: 6.0.13
+  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.13"
   dependencies:
     "@nativescript-community/class-mixins": "npm:^1.0.0"
-    "@nativescript-community/ui-collectionview": "npm:^6.0.11"
+    "@nativescript-community/ui-collectionview": "npm:^6.0.13"
     "@nativescript-community/ui-drawer": "npm:^0.1.31"
-  checksum: 10/4fd85c24b23a8b889b1a7e54cbca14b972135454e693c94a41e564fbac748c95d350aa05ec3fa746add8ef5acaf3b48db1019483ea7a6d992c42c3d1d15baf95
+  checksum: 10/20945ed1ed021c71a4c48d32bb6a6363a1d58bf28d11bfca0d5cf19032e3122be1d6758490e31c0c1e8547e5ec7589dbc1a5092e51e39b2c4826ade0c6052d26
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview@npm:6.0.11, @nativescript-community/ui-collectionview@npm:^6.0.11":
-  version: 6.0.11
-  resolution: "@nativescript-community/ui-collectionview@npm:6.0.11"
+"@nativescript-community/ui-collectionview@npm:6.0.13, @nativescript-community/ui-collectionview@npm:^6.0.13":
+  version: 6.0.13
+  resolution: "@nativescript-community/ui-collectionview@npm:6.0.13"
   dependencies:
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/1d8ff0bf54d4c2ae33bed0498e13c09fea203242654d3b3114d51d65f0bc60c0046d6259a02c95df6c8f44c6346add45b8259f25c74228e7d543fa12ae8add36
+  checksum: 10/022a84b7e0571fc4aa6a83f341815ddba900d4c38a9f4c2b18a6be434dd5747dcea404c90e3eb6152c2214d8cec567cdd634a442a90439ccec5a81039bda62f2
   languageName: node
   linkType: hard
 
@@ -1226,12 +1226,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-label@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@nativescript-community/ui-label@npm:1.3.40"
+"@nativescript-community/ui-label@npm:1.3.41":
+  version: 1.3.41
+  resolution: "@nativescript-community/ui-label@npm:1.3.41"
   dependencies:
     "@nativescript-community/text": "npm:^1.6.15"
-  checksum: 10/88c0a8777cda024b44ebdf160d128101e326add9baff59dfccc07b88a1d9abf8f138aa3d296a24f3de273397edc99f726684c87698226d8286b5aeb8195f4293
+  checksum: 10/d536fa107fda253ee450a1c9fc22ab11965f62bbaab8c9ec39d7c7e954d3270fe2053742f5e0f2414c830aac662ee292a26fa5592305dc31da7e8dcefb49f372
   languageName: node
   linkType: hard
 
@@ -10124,7 +10124,7 @@ __metadata:
   dependencies:
     "@akylas/kiss-orm": "npm:2.1.11"
     "@akylas/nativescript": "npm:8.9.10"
-    "@akylas/nativescript-android-runtime": "npm:8.9.2"
+    "@akylas/nativescript-android-runtime": /home/mguillon/dev/nativescript/nativescript-quickjs-android-8.8.5.tgz
     "@akylas/nativescript-app-tools": "file:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.7"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
@@ -10151,12 +10151,12 @@ __metadata:
     "@nativescript-community/ui-canvas": "npm:4.6.43"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.46"
     "@nativescript-community/ui-checkbox": "npm:2.0.16"
-    "@nativescript-community/ui-collectionview": "npm:6.0.11"
-    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.11"
+    "@nativescript-community/ui-collectionview": "npm:6.0.13"
+    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.13"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
     "@nativescript-community/ui-image": "npm:4.6.2"
     "@nativescript-community/ui-image-colorfilter": "npm:4.6.2"
-    "@nativescript-community/ui-label": "npm:1.3.40"
+    "@nativescript-community/ui-label": "npm:1.3.41"
     "@nativescript-community/ui-lottie": "npm:~5.0.11"
     "@nativescript-community/ui-material-activityindicator": "npm:7.2.78"
     "@nativescript-community/ui-material-bottomsheet": "npm:7.2.78"
