@@ -52,6 +52,8 @@
             const data = get(store);
             if (data.authType === AuthType.Password && !data.password?.length) {
                 throw new SilentError(lc('missing_webdav_password'));
+            } else if (data.authType === AuthType.Token && !data.token?.length) {
+                throw new SilentError(lc('missing_webdav_password'));
             }
             testing = true;
             const result = await testWebdavConnection(data as any);
@@ -75,7 +77,7 @@
     }
 </script>
 
-<stacklayout padding={'4 10 4 10'}>
+<stacklayout padding="4 10 4 10">
     <textfield
         autocapitalizationType="none"
         hint={lc('server_address')}
