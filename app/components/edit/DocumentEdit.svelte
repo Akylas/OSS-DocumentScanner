@@ -12,8 +12,8 @@
     import { goBack, showModal } from '@shared/utils/svelte/ui';
     import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';

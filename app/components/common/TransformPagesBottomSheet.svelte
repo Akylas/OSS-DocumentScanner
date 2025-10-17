@@ -6,8 +6,8 @@
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { View } from '@nativescript/core';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { MatricesTypes } from '~/utils/color_matrix';
     import { DEFAULT_BRIGHTNESS, DEFAULT_COLORMATRIX, DEFAULT_COLORTYPE, DEFAULT_CONTRAST, DEFAULT_TRANSFORM, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';

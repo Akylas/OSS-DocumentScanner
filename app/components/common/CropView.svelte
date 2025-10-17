@@ -4,7 +4,7 @@
     import { debounce } from '@nativescript/core/utils';
     import { QRCodeData, QuadPoint, Quads } from 'plugin-nativeprocessor';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { MAGNIFIER_SENSITIVITY, SETTINGS_MAGNIFIER_SENSITIVITY } from '~/utils/constants';
     import { loadImage, recycleImages } from '~/utils/images';
     import { showError } from '@shared/utils/showError';

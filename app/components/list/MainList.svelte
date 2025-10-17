@@ -11,8 +11,8 @@
     import { showError } from '@shared/utils/showError';
     import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';

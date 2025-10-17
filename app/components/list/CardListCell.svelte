@@ -3,7 +3,7 @@
 
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { colorTheme, isEInk } from '~/helpers/theme';
     import { CARD_RATIO } from '~/utils/constants';

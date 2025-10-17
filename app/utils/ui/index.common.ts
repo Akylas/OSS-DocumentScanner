@@ -46,7 +46,7 @@ import {
     processFromFile
 } from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
-import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type ExportPDFAlertOptions__SvelteComponent_ from '~/components/common/ExportPDFAlertOptions.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
