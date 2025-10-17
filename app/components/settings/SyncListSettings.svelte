@@ -166,7 +166,7 @@
     }
     async function onTap(item, event) {
         try {
-            DEV_LOG && console.log('SyncListSettings', 'onItemTap', item);
+            // DEV_LOG && console.log('SyncListSettings', 'onItemTap', item);
             switch (item.id) {
                 case 'add':
                     const options = Object.keys(SERVICES_SYNC_TITLES)
