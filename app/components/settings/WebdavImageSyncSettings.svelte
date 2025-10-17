@@ -6,8 +6,8 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, Page, Utils, View } from '@nativescript/core';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';

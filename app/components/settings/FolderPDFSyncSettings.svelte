@@ -6,7 +6,7 @@
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { Template } from 'svelte-native/components';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';

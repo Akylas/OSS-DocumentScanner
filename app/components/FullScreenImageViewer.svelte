@@ -2,15 +2,15 @@
     import { Pager } from '@nativescript-community/ui-pager';
     import { Application, OrientationChangedEventData } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { isEInk } from '~/helpers/theme';
     import { colors, fontScale, windowInset } from '~/variables';
     import PageIndicator from './common/PageIndicator.svelte';
 
-    // technique for only specific properties to get updated on store change
+    // technique for only specific properties to get updated on store changex
     $: ({ colorOnBackground, colorPrimary } = $colors);
     export let useSVG = false;
     export let keepScreenAwake = false;

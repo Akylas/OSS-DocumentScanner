@@ -8,8 +8,8 @@
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { isEInk } from '~/helpers/theme';
     import { DocFolder } from '~/models/OCRDocument';
     import { importImageFromCamera } from '~/utils/ui';
