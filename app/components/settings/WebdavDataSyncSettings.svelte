@@ -86,6 +86,7 @@
                         checked={$store.enabled}
                         col={1}
                         marginLeft={10}
+                        verticalAlignment="center"
                         on:checkedChange={(e) =>
                             onCheckBox(e, (e) => {
                                 $store.enabled = e.value;

@@ -103,6 +103,7 @@
     const dataSettingsAvailable = __ANDROID__ && android.os.Environment.getExternalStorageState() === 'mounted';
 
     export let title = null;
+    export let id = 'settingsPage';
     export let actionBarButtons = [
         { icon: 'mdi-message-alert', id: 'feedback' },
         { icon: 'mdi-share-variant', id: 'share' },
@@ -963,6 +964,7 @@
                 case 'sub_settings': {
                     showSettings({
                         title: item.title,
+                        id: `settings[${item.id}]`,
                         options: item.options(),
                         actionBarButtons: item.actionBarButtons?.() || []
                     });
@@ -1464,7 +1466,7 @@
     onThemeChanged(refreshCollectionView);
 </script>
 
-<page bind:this={page} id="syncSettingsPage" actionBarHidden={true}>
+<page bind:this={page} {id} actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
@@ -1515,7 +1517,7 @@
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} marginTop={16} verticalAlignment="top" on:checkedChange={(e) => onCheckBox(item, e)} />
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} marginTop={16} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>

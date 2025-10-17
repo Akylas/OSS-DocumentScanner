@@ -341,7 +341,7 @@
     }
 </script>
 
-<page id="settingsPage" actionBarHidden={true}>
+<page id="syncSettingsPage" actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template let:item>
