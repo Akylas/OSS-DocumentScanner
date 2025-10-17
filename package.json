@@ -58,7 +58,7 @@
         "@nativescript-community/svelte-native": "1.0.30",
         "@nativescript-community/systemui": "1.1.24",
         "@nativescript-community/text": "1.6.17",
-        "@nativescript-community/ui-cameraview": "0.6.0",
+        "@nativescript-community/ui-cameraview": "0.6.1",
         "@nativescript-community/ui-canvas": "4.6.43",
         "@nativescript-community/ui-canvaslabel": "1.2.46",
         "@nativescript-community/ui-checkbox": "2.0.16",
