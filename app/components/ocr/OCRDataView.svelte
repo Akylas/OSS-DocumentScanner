@@ -3,7 +3,7 @@
     import { AWebView } from '@nativescript-community/ui-webview';
     import { Color, Page } from '@nativescript/core';
     import { OCRData } from 'plugin-nativeprocessor';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { showError } from '@shared/utils/showError';
     import { copyTextToClipboard } from '~/utils/ui';

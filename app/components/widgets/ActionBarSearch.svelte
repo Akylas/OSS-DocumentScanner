@@ -2,7 +2,7 @@
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Utils } from '@nativescript/core';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { colors } from '~/variables';
 </script>

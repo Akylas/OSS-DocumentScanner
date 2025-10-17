@@ -5,8 +5,8 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { ApplicationSettings, View } from '@nativescript/core';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { MatricesTypes, Matrix } from '~/utils/color_matrix';

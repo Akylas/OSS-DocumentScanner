@@ -12,8 +12,8 @@
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
-    import { closeModal } from '@nativescript-community/svelte-native';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { closeModal } from 'svelte-native';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';

@@ -5,7 +5,7 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { View, verticalAlignmentProperty } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { OCRLanguages, ocrService } from '~/services/ocr';
     import { colors, fonts } from '~/variables';

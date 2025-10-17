@@ -2,7 +2,7 @@
     import { Img } from '@nativescript-community/ui-image';
     import { ImageSource } from '@nativescript/core';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { IMAGE_CONTEXT_OPTIONS, IMAGE_DECODE_HEIGHT } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';

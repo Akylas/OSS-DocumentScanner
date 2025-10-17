@@ -10,8 +10,8 @@
     import { ApplicationSettings, Color, ObservableArray, Page, View } from '@nativescript/core';
     import { closeModal } from '@shared/utils/svelte/ui';
     import { createView } from '@shared/utils/ui';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';

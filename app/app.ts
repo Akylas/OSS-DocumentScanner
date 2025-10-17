@@ -15,7 +15,7 @@ import { Application, ApplicationSettings, Frame, NavigatedData, Page, Trace } f
 import { startSentry } from '@shared/utils/sentry';
 import { showError } from '@shared/utils/showError';
 import { CropView } from 'plugin-nativeprocessor/CropView';
-import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from '@nativescript-community/svelte-native/dom';
+import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import { NestedScrollView } from '@shared/components/NestedScrollView';
 import { getCurrentISO3Language, lc } from '~/helpers/locale';
 import { start as startThemeHelper } from '~/helpers/theme';

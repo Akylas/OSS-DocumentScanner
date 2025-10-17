@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=b9a573&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=b177b3&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/02e8dca50b8fc974cadfbc493048e4bfee07a489b515ef522b5e39d87b0ac248e9668cef827197e049ad8564df52b61f631041b969e119fdf9647f30d056351d
+  checksum: 10/1608508ce491612cb1ed8467f4c18270e1971f29b572a7a54c62064ad39975745bd304ccd8939ab4dc7a31ee1c52cd9f02d6a6d8d1718577f055d5eeafbc0bee
   languageName: node
   linkType: hard
 
@@ -1282,16 +1282,6 @@ __metadata:
     "@nano-sql/core": ^2.3.7
     typeorm: ^0.3.17
   checksum: 10/bb886c44e5478955197b3b9296db8e55bbcb7abb90be5475cf58e8ee94c6d32315e4e76e333646e6b68a47f5ce0081eb1b4697b9d6957588c4a104c717898d84
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/svelte-native@npm:1.0.30":
-  version: 1.0.30
-  resolution: "@nativescript-community/svelte-native@npm:1.0.30"
-  peerDependencies:
-    "@nativescript/core": 8.9.9
-    svelte: 4.2.20
-  checksum: 10/416551a5c6907c330a18d12536a549fb2688d2b6a5585c2b743e3364a4131b039fe865c9454ef226bc1da717eca4c81abf1fd30250df54c8af51248a8ce81dfc
   languageName: node
   linkType: hard
 
@@ -10520,7 +10510,6 @@ __metadata:
     "@nativescript-community/preferences": "npm:1.3.2"
     "@nativescript-community/sentry": "npm:4.6.44"
     "@nativescript-community/sqlite": "npm:3.5.1"
-    "@nativescript-community/svelte-native": "npm:1.0.30"
     "@nativescript-community/systemui": "npm:1.1.24"
     "@nativescript-community/text": "npm:1.6.17"
     "@nativescript-community/ui-cameraview": "npm:0.6.1"
@@ -10568,6 +10557,7 @@ __metadata:
     nested-property: "npm:^4.0.0"
     plugin-nativeprocessor: "portal:plugin-nativeprocessor"
     svelte-loader: "npm:3.2.4"
+    svelte-native: "npm:1.0.29"
     topojson-simplify: "npm:3.0.3"
     util: "npm:0.12.5"
   languageName: unknown
@@ -11514,6 +11504,16 @@ __metadata:
   peerDependencies:
     svelte: ^3.37.0
   checksum: 10/5f8306714ede6bb45a8d8a0762d4499ab64c6052d7d515978f14c87aef5456408292f0e6789d1549447e48c6b5615dc6833abda26145a60067c56f784e11fe5e
+  languageName: node
+  linkType: hard
+
+"svelte-native@npm:1.0.29":
+  version: 1.0.29
+  resolution: "svelte-native@npm:1.0.29"
+  peerDependencies:
+    "@nativescript/core": ^8.5.9
+    svelte: ^4.2.8
+  checksum: 10/70fa94f87d38cd4a3e581aef12c2945974b6aee52330dd34cc6b20b47ae41cef1b5e6b8d75887a7df32d5a5b73618a5cc601e73652dde9046a88495b4abab9ea
   languageName: node
   linkType: hard
 

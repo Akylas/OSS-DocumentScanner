@@ -3,8 +3,8 @@
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { ObservableArray } from '@nativescript/core';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { FORMATS, getBarcodeFallbackString, qrcodeService } from '~/services/qrcode';

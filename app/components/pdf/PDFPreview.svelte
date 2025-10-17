@@ -10,8 +10,8 @@
     import { SilentError } from '@shared/utils/error';
     import { showError } from '@shared/utils/showError';
     import { printPDF } from 'plugin-nativeprocessor';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { getFileNameForDocument, l, lc } from '~/helpers/locale';
