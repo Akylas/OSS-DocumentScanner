@@ -1309,29 +1309,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-cameraview@npm:*, @nativescript-community/ui-cameraview@npm:0.6.1":
+"@nativescript-community/ui-cameraview@npm:*":
   version: 0.6.1
   resolution: "@nativescript-community/ui-cameraview@npm:0.6.1"
   checksum: 10/a8623a35e7520084c924994e52e767303d4afbb08366aaf82d272186f1fc09e0ac06d1512db1c9cc29d25302f842115aab46a601a5f42b4cea5b7f3a2534499f
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-canvas@npm:4.6.43":
-  version: 4.6.43
-  resolution: "@nativescript-community/ui-canvas@npm:4.6.43"
-  dependencies:
-    "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/48041da390ad09098c0478ad15b836fa0cfa65340174ae965dd48db029753bf6937ed963ec06ce34e3481806315a2adb2f6c55b3a8490f15775856be4a0c7117
+"@nativescript-community/ui-cameraview@npm:0.6.2":
+  version: 0.6.2
+  resolution: "@nativescript-community/ui-cameraview@npm:0.6.2"
+  checksum: 10/84dce87b13c6f16049cd0bab55b681f44942878655a0802c930d15ecc067253ed708f5c2b775c7a11a47f6abd9c98da63f01fb81cce8fbb6606d9d1c54e4a3f8
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-canvaslabel@npm:1.2.46":
-  version: 1.2.46
-  resolution: "@nativescript-community/ui-canvaslabel@npm:1.2.46"
+"@nativescript-community/ui-canvas@npm:4.6.44":
+  version: 4.6.44
+  resolution: "@nativescript-community/ui-canvas@npm:4.6.44"
+  dependencies:
+    "@nativescript-community/arraybuffers": "npm:^1.1.5"
+  checksum: 10/711ea6dcbc48bd3c644b9618eb2a4e34368f0076e52bdd26dcedb112c0e9109e5d5c441b4b84f06a9a774f47d08638fd0dd347a01ec686ff4a224df3ea52a784
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/ui-canvaslabel@npm:1.2.47":
+  version: 1.2.47
+  resolution: "@nativescript-community/ui-canvaslabel@npm:1.2.47"
   peerDependencies:
     "@nativescript-community/text": ^1.6.8
     "@nativescript-community/ui-canvas": ^4.6.41
-  checksum: 10/e781f5b1d367d4fcae801f8fb65a680189607159c54f31ea9dd1167841d0d26825cf8074a283fea7a30a7b5714e9eb3e4b7c37575973514998eb8f696f9109ff
+  checksum: 10/05d7df4ad0293cdbcef0f967801dd0bad5134797fc42c5fd47130ad0caf57ea12da2d227277eb1f5adc9f8c5183f4e248f734f31072b435bab0816ead0a10501
   languageName: node
   linkType: hard
 
@@ -1560,12 +1567,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-svg@npm:0.2.15":
-  version: 0.2.15
-  resolution: "@nativescript-community/ui-svg@npm:0.2.15"
+"@nativescript-community/ui-svg@npm:0.2.16":
+  version: 0.2.16
+  resolution: "@nativescript-community/ui-svg@npm:0.2.16"
   peerDependencies:
     "@nativescript-community/ui-canvas": ^4.6.41
-  checksum: 10/b946b772bb737737d470a601b09707afcb00724a1fd2fa90cf7485e976fd320a3d587cea6ea30ca041a550705db1591aaae05bef4bf19d92c455ef02927f0b43
+  checksum: 10/5ebb489c9b7e80ad982a38687c05c2e1e39dad5dd1cabc52e487e20b16decd1aa29d3f5bfff461fc782384ed4d40416ce8349e0240763f3c5bb05d1fe9b04c56
   languageName: node
   linkType: hard
 
@@ -10516,9 +10523,9 @@ __metadata:
     "@nativescript-community/svelte-native": "npm:1.0.30"
     "@nativescript-community/systemui": "npm:1.1.24"
     "@nativescript-community/text": "npm:1.6.17"
-    "@nativescript-community/ui-cameraview": "npm:0.6.1"
-    "@nativescript-community/ui-canvas": "npm:4.6.43"
-    "@nativescript-community/ui-canvaslabel": "npm:1.2.46"
+    "@nativescript-community/ui-cameraview": "npm:0.6.2"
+    "@nativescript-community/ui-canvas": "npm:4.6.44"
+    "@nativescript-community/ui-canvaslabel": "npm:1.2.47"
     "@nativescript-community/ui-checkbox": "npm:2.0.16"
     "@nativescript-community/ui-collectionview": "npm:6.0.13"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.13"
@@ -10542,7 +10549,7 @@ __metadata:
     "@nativescript-community/ui-pager-indicator": "npm:14.1.34"
     "@nativescript-community/ui-popover": "npm:0.1.22"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
-    "@nativescript-community/ui-svg": "npm:0.2.15"
+    "@nativescript-community/ui-svg": "npm:0.2.16"
     "@nativescript-community/ui-webview": "npm:1.6.0"
     "@nativescript-community/ui-zoomimage": "npm:4.6.2"
     "@nativescript/biometrics": "npm:1.3.1"

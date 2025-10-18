@@ -375,6 +375,8 @@
     "share_images": "share images",
     "show_fullscreen_images": "fullscreen",
     "show_love": "If you like the project please share some love or even contribute",
+    "show_quicksettings_tile": "show Quick Settings tile",
+    "show_quicktoggle_desc": "show Quick Settings to tile to open the app",
     "sort": {
         "ascending": "ascending",
         "descending": "descending"

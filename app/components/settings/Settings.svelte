@@ -63,6 +63,7 @@
         SETTINGS_NB_COLUMNS_LANDSCAPE,
         SETTINGS_NB_COLUMNS_VIEW,
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE,
+        SETTINGS_QUICK_TOGGLE_ENABLED,
         SETTINGS_ROOT_DATA_FOLDER,
         SETTINGS_START_ON_CAM,
         SETTINGS_SYNC_ON_START,
@@ -708,6 +709,19 @@
                                       title: lc('force_white_background_qrcode'),
                                       description: lc('force_white_background_qrcode_desc'),
                                       value: ApplicationSettings.getBoolean(SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE, DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE)
+                                  }
+                              ]
+                            : ([] as any)
+                    )
+                    .concat(
+                        __ANDROID__
+                            ? [
+                                  {
+                                      type: 'switch',
+                                      id: 'quicktoggle',
+                                      title: lc('show_quicksettings_tile'),
+                                      description: lc('show_quicktoggle_desc'),
+                                      value: ApplicationSettings.getBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, false)
                                   }
                               ]
                             : ([] as any)
@@ -1444,6 +1458,12 @@
                     // }
                     break;
 
+                case 'quicktoggle': {
+                    if (__ANDROID__) {
+                        (await import('~/android/quicktoggle.android')).toggleQuickSetting(value);
+                    }
+                    break;
+                }
                 default:
                     ApplicationSettings.setBoolean(item.key || item.id, value);
                     break;
