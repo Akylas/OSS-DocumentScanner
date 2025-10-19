@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=a6d7e9&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=df88c2&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/866a67ce8f77045885e9a027b8b89a40debd53207ed0fd2357ae9d1ae05ca40d174badaa64ea402f2d0ad428dccad8fdbf471d80478f3cdd198867f189db1562
+  checksum: 10/40fed4059c8edeb5f080ed218502c9c2abb042f946d2737cf9d6321f5f11fcef936a5ea42a1ac872a96565f5c3950e15034a5cd1cf1ab00f0a35898deb774620
   languageName: node
   linkType: hard
 
@@ -11457,6 +11457,24 @@ __metadata:
   bin:
     svelte-check: bin/svelte-check
   checksum: 10/ac2d1e39c032dcc14b27ef462f129a0537b8e1249f9a9aa59f69002eb2f38ba1bcb64d9a0479a8b60c549b957f7fa8ed18698da00074aa4a407dc64a13b2a42d
+  languageName: node
+  linkType: hard
+
+"svelte-check@patch:svelte-check@npm%3A4.3.1#~/.yarn/patches/svelte-check-npm-4.3.1-7aa559b153.patch":
+  version: 4.3.1
+  resolution: "svelte-check@patch:svelte-check@npm%3A4.3.1#~/.yarn/patches/svelte-check-npm-4.3.1-7aa559b153.patch::version=4.3.1&hash=d38fad"
+  dependencies:
+    "@jridgewell/trace-mapping": "npm:^0.3.25"
+    chokidar: "npm:^4.0.1"
+    fdir: "npm:^6.2.0"
+    picocolors: "npm:^1.0.0"
+    sade: "npm:^1.7.4"
+  peerDependencies:
+    svelte: ^4.0.0 || ^5.0.0-next.0
+    typescript: ">=5.0.0"
+  bin:
+    svelte-check: bin/svelte-check
+  checksum: 10/41041e43f8ba37bfbbabea2fa89860054b85d07d75d309c6f60b804de022d0a5e2ddb548054f96b6064fb2e062d53f57e846a1b667bdd88fa100b44305c7d21b
   languageName: node
   linkType: hard
 
