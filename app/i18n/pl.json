@@ -378,6 +378,8 @@
     "share_images": "udostępniaj obrazy",
     "show_fullscreen_images": "pełny ekran",
     "show_love": "Jeśli podoba Ci się ten projekt, podziel się nim lub wspomóż jego rozwój",
+    "show_quicksettings_tile": "pokaż kafelek Szybkie ustawienia",
+    "show_quicktoggle_desc": "pokaż kafelek Szybkie ustawienia do otwierania aplikacji",
     "sort": {
         "ascending": "rosnąco",
         "descending": "malejąco"

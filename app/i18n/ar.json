@@ -383,6 +383,8 @@
     "share_images": "مشاركة الصور",
     "show_fullscreen_images": "ملء الشاشة",
     "show_love": "إذا كنت تحب المشروع، يرجى مشاركة بعض الحب أو حتى المساهمة",
+    "show_quicksettings_tile": "أظهر مربع الإعدادات السريعة",
+    "show_quicktoggle_desc": "أظهر مربع الإعدادات السريعة لفتح التطبيق",
     "sort": {
         "ascending": "تصاعدي",
         "descending": "تنازلي"
