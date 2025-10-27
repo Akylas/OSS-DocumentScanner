@@ -377,6 +377,8 @@
     "share_images": "compartilhar imagens",
     "show_fullscreen_images": "tela cheia",
     "show_love": "Se você gosta do projeto, compartilhe um pouco de amor ou contribua",
+    "show_quicksettings_tile": "Mostrar o bloco Configurações rápidas",
+    "show_quicktoggle_desc": "Mostrar um bloco de configurações rápidas para abrir o aplicativo",
     "sort": {
         "ascending": "crescente",
         "descending": "decrescente"
