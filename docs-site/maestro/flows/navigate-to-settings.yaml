@@ -1,0 +1,56 @@
+# Navigate to Settings screen
+# This flow navigates from the main screen to Settings
+
+appId: com.akylas.documentscanner
+
+---
+
+# Try to find and tap on settings/menu button
+# NativeScript apps may use different navigation patterns
+
+# Look for hamburger menu or settings icon
+- runFlow:
+    when:
+      visible:
+        id: ".*menu.*"
+    commands:
+      - tapOn:
+          id: ".*menu.*"
+
+- runFlow:
+    when:
+      visible:
+        id: ".*settings.*"
+    commands:
+      - tapOn:
+          id: ".*settings.*"
+
+# Alternative: Look for three-dot menu
+- runFlow:
+    when:
+      visible: "⋮"
+    commands:
+      - tapOn: "⋮"
+      - waitForAnimationToEnd
+      - tapOn:
+          text: ".*[Ss]ettings.*"
+
+# Alternative: Swipe to open drawer if present
+- runFlow:
+    when:
+      notVisible:
+        text: ".*[Ss]ettings.*"
+    commands:
+      - swipe:
+          direction: RIGHT
+          duration: 500
+      - waitForAnimationToEnd
+
+# Try tapping Settings text if visible
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]ettings.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]ettings.*"

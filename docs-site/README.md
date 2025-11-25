@@ -58,6 +58,11 @@ docs-site/
 │   ├── sync-and-backup.md
 │   ├── settings.md
 │   └── faq.md
+├── maestro/                 # Maestro screenshot automation
+│   ├── generate-screenshots.sh
+│   ├── README.md
+│   ├── flows/               # Reusable navigation flows
+│   └── screenshots/         # Individual screenshot flows
 ├── src/
 │   ├── css/
 │   │   └── custom.css      # Custom styles
@@ -77,13 +82,40 @@ docs-site/
 └── package.json
 ```
 
-## Replacing Screenshots with Maestro-Generated Images
+## Generating Screenshots with Maestro
 
-The `static/img/` directory contains placeholder SVG images. These should be replaced with real screenshots generated using [Maestro](https://maestro.mobile.dev/).
+The `maestro/` directory contains [Maestro](https://maestro.mobile.dev/) flows for automatically generating screenshots directly to `static/img/`.
 
-### Screenshot Naming Convention
+### Quick Start
 
-Keep these exact filenames to match references in documentation:
+```bash
+# Install Maestro CLI
+curl -Ls "https://get.maestro.mobile.dev" | bash
+
+# Generate all screenshots (requires running emulator with app installed)
+./docs-site/maestro/generate-screenshots.sh android
+
+# Or for iOS
+./docs-site/maestro/generate-screenshots.sh ios
+```
+
+### Individual Screenshots
+
+Run specific screenshot flows:
+
+```bash
+cd docs-site/maestro
+
+maestro test screenshots/capture-screenshot.yaml
+maestro test screenshots/settings-screenshot.yaml
+maestro test screenshots/sync-screenshot.yaml
+maestro test screenshots/export-screenshot.yaml
+maestro test screenshots/edit-screenshot.yaml
+```
+
+### Screenshot Files
+
+Screenshots are saved directly to `static/img/` with these names:
 
 | Filename | Screen |
 |----------|--------|
@@ -93,35 +125,7 @@ Keep these exact filenames to match references in documentation:
 | `sync-1.png` | Sync settings screen |
 | `settings-1.png` | Settings screen |
 
-### Maestro Integration Script
-
-After running Maestro tests that generate screenshots, use this script to copy them:
-
-```bash
-#!/bin/bash
-# copy-maestro-screenshots.sh
-
-MAESTRO_OUTPUT="${1:-./maestro-output}"
-DOCS_IMG="./docs-site/static/img"
-
-# Ensure target directory exists
-mkdir -p "$DOCS_IMG"
-
-# Copy and rename screenshots (adjust source names as needed)
-cp "$MAESTRO_OUTPUT/capture_screen.png" "$DOCS_IMG/capture-1.png" 2>/dev/null && echo "✓ capture-1.png"
-cp "$MAESTRO_OUTPUT/edit_screen.png" "$DOCS_IMG/edit-1.png" 2>/dev/null && echo "✓ edit-1.png"
-cp "$MAESTRO_OUTPUT/export_screen.png" "$DOCS_IMG/export-1.png" 2>/dev/null && echo "✓ export-1.png"
-cp "$MAESTRO_OUTPUT/sync_screen.png" "$DOCS_IMG/sync-1.png" 2>/dev/null && echo "✓ sync-1.png"
-cp "$MAESTRO_OUTPUT/settings_screen.png" "$DOCS_IMG/settings-1.png" 2>/dev/null && echo "✓ settings-1.png"
-
-echo "Screenshots copied to docs site"
-```
-
-Usage:
-```bash
-chmod +x copy-maestro-screenshots.sh
-./copy-maestro-screenshots.sh /path/to/maestro/screenshots
-```
+See [maestro/README.md](maestro/README.md) for detailed documentation on customizing flows and CI integration.
 
 ## Internationalization (i18n)
 

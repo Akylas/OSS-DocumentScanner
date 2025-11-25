@@ -1,0 +1,35 @@
+# Capture Screenshot - Main scanning interface
+# Run: maestro test docs-site/maestro/screenshots/capture-screenshot.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Handle permission dialogs if they appear
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+      - waitForAnimationToEnd
+
+# Wait for main screen to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+# Take screenshot of main document list / capture overview
+- takeScreenshot: ../../static/img/capture-1
