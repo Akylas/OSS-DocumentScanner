@@ -43,7 +43,7 @@ yarn-error.log*
 .gradle
 .env*
 !.env.ci
-.yarn
+.yarn/install-state.gz
 tmp/
 ._.DS_Store
 

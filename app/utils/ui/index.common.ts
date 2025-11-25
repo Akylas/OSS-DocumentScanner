@@ -46,7 +46,7 @@ import {
     processFromFile
 } from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
-import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type ExportPDFAlertOptions__SvelteComponent_ from '~/components/common/ExportPDFAlertOptions.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
@@ -1656,7 +1656,7 @@ export async function processCameraImage({
 }
 export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumber = 0, canGoToView = true) {
     await hideLoading();
-    await timeout(1000);
+    // await timeout(1000);
     DEV_LOG && console.log('goToDocumentAfterScan', document.pages.length, oldPagesNumber, canGoToView);
     if (oldPagesNumber === 0 || document.pages.length - oldPagesNumber === 1) {
         const component = (await import('~/components/edit/DocumentEdit.svelte')).default;

@@ -11,8 +11,8 @@
     import { showError } from '@shared/utils/showError';
     import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
@@ -805,7 +805,7 @@
     }
     async function showOptions(event) {
         const options = new ObservableArray(
-            (folder ? [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }] : []).concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
+            [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }].concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
                 { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
                 { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
                 { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') },
@@ -905,7 +905,6 @@
         return 1;
     }
 </script>
-
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
     <gridlayout class="pageContent" rows="auto,*">

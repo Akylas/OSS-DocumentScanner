@@ -10,7 +10,7 @@
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
     import { onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import { Writable, writable } from 'svelte/store';
     import { DocFolder, OCRDocument } from '~/models/OCRDocument';
     import { CARD_RATIO, DEFAULT_NB_COLUMNS, DEFAULT_NB_COLUMNS_LANDSCAPE, SETTINGS_NB_COLUMNS, SETTINGS_NB_COLUMNS_LANDSCAPE } from '~/utils/constants';
@@ -23,7 +23,7 @@
 </script>
 
 <script lang="ts">
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CardListCell from './CardListCell.svelte';
 
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
