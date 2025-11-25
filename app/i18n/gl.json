@@ -383,6 +383,8 @@
     "share_images": "compartir imaxes",
     "show_fullscreen_images": "pantalla completa",
     "show_love": "se desfrutas desta app comparte o teu agradecemento ou colabora",
+    "show_quicksettings_tile": "mostrar tesela Axustes Rápidos",
+    "show_quicktoggle_desc": "mostra a tesela Axustes Rápidos ao abrir a app",
     "sort": {
         "ascending": "ascendente",
         "descending": "descendente"

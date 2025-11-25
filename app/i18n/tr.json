@@ -377,6 +377,8 @@
     "share_images": "görüntüleri paylaş",
     "show_fullscreen_images": "tam ekran",
     "show_love": "Projeyi beğendiyseniz lütfen biraz sevgi paylaşın, hatta katkıda bulunun",
+    "show_quicksettings_tile": "Hızlı ayarlar kutucuğunu göster",
+    "show_quicktoggle_desc": "Uygulamayı açmak için hızlı ayarlar kutucuğunu göster",
     "sort": {
         "ascending": "Artan",
         "descending": "Azalan"

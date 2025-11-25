@@ -102,6 +102,7 @@ module.exports = (env, params = {}) => {
     env.appComponents = env.appComponents || [];
     // env.appComponents.push('~/android/cameraactivity');
     env.appComponents.push('~/android/activity.android');
+    env.appComponents.push('~/android/quicktoggle.android');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {
@@ -193,8 +194,8 @@ module.exports = (env, params = {}) => {
     }
     Object.assign(config.resolve.alias, {
         '@shared': resolve(__dirname, 'tools/app'),
-        'svelte-native': '@nativescript-community/svelte-native',
-        'kiss-orm': '@akylas/kiss-orm'
+        'kiss-orm': '@akylas/kiss-orm',
+        'svelte-native': '@nativescript-community/svelte-native'
     });
     let appVersion;
     let buildNumber;

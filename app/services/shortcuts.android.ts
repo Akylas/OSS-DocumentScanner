@@ -37,7 +37,7 @@ export default class ShortcutsService {
      */
     async updateShortcuts(document: OCRDocument) {
         try {
-            DEV_LOG && console.log('updateShortcuts', document.id);
+            // DEV_LOG && console.log('updateShortcuts', document.id);
             // TODO: try to run this in the thread
             const context = Utils.android.getApplicationContext();
             // if (document.archiveStatus == 1) {
@@ -58,13 +58,13 @@ export default class ShortcutsService {
             // java.util.Collections.sort(nlist, java.util.Comparator.comparingInt(ShortcutInfoCompat.class['getRank']));
 
             const foundIndex = list.findIndex((d) => d.getId() === shortcutId);
-            DEV_LOG &&
-                console.log(
-                    'updateShortcuts list',
-                    shortcutId,
-                    foundIndex,
-                    list.map((a) => a.getId())
-                );
+            // DEV_LOG &&
+            //     console.log(
+            //         'updateShortcuts list',
+            //         shortcutId,
+            //         foundIndex,
+            //         list.map((a) => a.getId())
+            //     );
             if (foundIndex !== -1) {
                 // If the item is already found, then the list needs to be
                 // reordered, so that the selected item now has the lowest
@@ -72,12 +72,12 @@ export default class ShortcutsService {
                 list.splice(foundIndex, 1);
             }
             list.unshift((await this.createShortcutBuilder(context, document)).build());
-            DEV_LOG &&
-                console.log(
-                    'updateShortcuts list1',
-                    shortcutId,
-                    list.map((a) => a.getId())
-                );
+            // DEV_LOG &&
+            //     console.log(
+            //         'updateShortcuts list1',
+            //         shortcutId,
+            //         list.map((a) => a.getId())
+            //     );
             const finalList = new java.util.LinkedList<androidx.core.content.pm.ShortcutInfoCompat>();
             let rank = 0;
 
@@ -104,7 +104,7 @@ export default class ShortcutsService {
             }
 
             const result = ShortcutManagerCompat.setDynamicShortcuts(context, finalList);
-            DEV_LOG && console.log('updateShortcuts result', result);
+            // DEV_LOG && console.log('updateShortcuts result', result);
         } catch (error) {
             console.error(error, error.stack);
         } finally {
@@ -122,7 +122,7 @@ export default class ShortcutsService {
     }
 
     async createShortcutBuilder(context, document: OCRDocument) {
-        const intent = new android.content.Intent().setClassName(context, 'com.akylas.cardwallet.MainActivity');
+        const intent = new android.content.Intent().setClassName(context, '__PACKAGE__.MainActivity');
         intent.setAction(android.content.Intent.ACTION_MAIN);
         // Prevent instances of the view activity from piling up; if one exists let this
         // one replace it.

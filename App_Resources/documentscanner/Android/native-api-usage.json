@@ -12,6 +12,8 @@
         "java.nio.file:Files",
         "java.io:FileOutputStream",
         "androidx.core.widget:NestedScrollView",
+        "android.app:PendingIntent",
+        "android.service.quicksettings:TileService",
         "android.text.format:DateFormat",
         "android.graphics:BitmapShader",
         "androidx.documentfile.provider:DocumentFile",
