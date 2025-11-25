@@ -5,23 +5,139 @@
   overflow: hidden;
 }
 
+.badges {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.badges img {
+  height: 20px;
+}
+
 .buttons {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* App Showcase Section */
+.appShowcase {
+  padding: 4rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.appGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.appCard {
+  background: var(--ifm-card-background-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.appCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.featureGraphic {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.appContent {
+  padding: 1.5rem;
+}
+
+.appContent h2 {
+  margin-bottom: 0.5rem;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.featureList li {
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.downloadButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  align-items: center;
+}
+
+.storeButton img {
+  height: 40px;
+  width: auto;
+}
+
+/* Features Section */
 .features {
   display: flex;
   align-items: center;
-  padding: 2rem 0;
+  padding: 4rem 0;
   width: 100%;
+  background: var(--ifm-color-emphasis-100);
 }
 
 .feature {
   margin-bottom: 2rem;
 }
 
+/* Support Section */
+.supportSection {
+  padding: 4rem 0;
+  background: linear-gradient(135deg, var(--ifm-color-primary-darker), var(--ifm-color-primary));
+  color: white;
+}
+
+.supportSection h2,
+.supportSection p {
+  color: white;
+}
+
+.sponsors {
+  margin-top: 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sponsorsImage {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Translation Section */
+.translationSection {
+  padding: 4rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.translationWidget {
+  max-width: 100%;
+  margin-top: 1rem;
+}
+
+/* Screenshot (legacy) */
 .screenshot {
   padding: 2rem 0;
   background: var(--ifm-color-emphasis-100);
@@ -36,5 +152,13 @@
 @media screen and (max-width: 996px) {
   .heroBanner {
     padding: 2rem;
+  }
+  
+  .appGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .featureList {
+    grid-template-columns: 1fr;
   }
 }

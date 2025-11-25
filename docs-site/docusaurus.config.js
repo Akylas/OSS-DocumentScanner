@@ -10,8 +10,8 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'OSS Document Scanner',
-  tagline: 'Open Source Document Scanner for Android and iOS',
+  title: 'OSS Document Scanner & CardWallet',
+  tagline: 'Open Source Apps for Document Scanning and Card Management',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -85,26 +85,62 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
-        title: 'OSS Document Scanner',
+        title: 'OSS Apps',
         logo: {
-          alt: 'OSS Document Scanner Logo',
+          alt: 'OSS Apps Logo',
           src: 'img/logo.svg',
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'docsSidebar',
+            type: 'dropdown',
+            label: 'Document Scanner',
             position: 'left',
-            label: 'Docs',
+            items: [
+              {
+                to: '/getting-started',
+                label: 'Getting Started',
+              },
+              {
+                to: '/capture',
+                label: 'Capture',
+              },
+              {
+                to: '/edit-and-enhance',
+                label: 'Edit & Enhance',
+              },
+              {
+                to: '/export',
+                label: 'Export',
+              },
+            ],
           },
           {
-            to: '/capture',
-            label: 'Capture',
+            type: 'dropdown',
+            label: 'CardWallet',
+            position: 'left',
+            items: [
+              {
+                to: '/cardwallet/getting-started',
+                label: 'Getting Started',
+              },
+              {
+                to: '/cardwallet/scanning-cards',
+                label: 'Scanning Cards',
+              },
+              {
+                to: '/cardwallet/managing-cards',
+                label: 'Managing Cards',
+              },
+            ],
+          },
+          {
+            to: '/sync-and-backup',
+            label: 'Sync & Backup',
             position: 'left',
           },
           {
-            to: '/export',
-            label: 'Export',
+            to: '/settings',
+            label: 'Settings',
             position: 'left',
           },
           {
@@ -122,7 +158,7 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Document Scanner',
             items: [
               {
                 label: 'Getting Started',
@@ -139,6 +175,23 @@ const config = {
             ],
           },
           {
+            title: 'CardWallet',
+            items: [
+              {
+                label: 'Getting Started',
+                to: '/cardwallet/getting-started',
+              },
+              {
+                label: 'Scanning Cards',
+                to: '/cardwallet/scanning-cards',
+              },
+              {
+                label: 'Managing Cards',
+                to: '/cardwallet/managing-cards',
+              },
+            ],
+          },
+          {
             title: 'Community',
             items: [
               {
@@ -149,27 +202,39 @@ const config = {
                 label: 'Weblate Translations',
                 href: 'https://hosted.weblate.org/engage/oss-document-scanner/',
               },
+              {
+                label: 'Sponsor',
+                href: 'https://github.com/sponsors/farfromrefug',
+              },
             ],
           },
           {
-            title: 'More',
+            title: 'Download',
             items: [
               {
-                label: 'GitHub',
-                href: 'https://github.com/Akylas/OSS-DocumentScanner',
+                label: 'GitHub Releases',
+                href: 'https://github.com/Akylas/OSS-DocumentScanner/releases',
               },
               {
-                label: 'Google Play',
+                label: 'Google Play (Scanner)',
                 href: 'https://play.google.com/store/apps/details?id=com.akylas.documentscanner',
               },
               {
-                label: 'App Store',
+                label: 'Google Play (CardWallet)',
+                href: 'https://play.google.com/store/apps/details?id=com.akylas.cardwallet',
+              },
+              {
+                label: 'App Store (Scanner)',
                 href: 'https://apps.apple.com/us/app/oss-document-scanner/id6472918564',
+              },
+              {
+                label: 'App Store (CardWallet)',
+                href: 'https://apps.apple.com/app/oss-cardwallet/id6504414362',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} OSS Document Scanner. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} OSS Document Scanner & CardWallet. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,

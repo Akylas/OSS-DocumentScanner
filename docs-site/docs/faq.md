@@ -7,21 +7,32 @@ slug: /faq
 
 # Frequently Asked Questions
 
-Find answers to common questions about OSS Document Scanner.
+Find answers to common questions about OSS Document Scanner and OSS CardWallet.
 
 ## General
 
-### Is OSS Document Scanner really free?
+### Are these apps really free?
 
-Yes! OSS Document Scanner is completely free and open source. There are no ads, no in-app purchases, and no premium features locked behind a paywall.
+Yes! Both OSS Document Scanner and OSS CardWallet are completely free and open source. There are no ads, no in-app purchases, and no premium features locked behind a paywall.
 
 ### Is my data private?
 
-Absolutely. OSS Document Scanner:
-- Processes all documents on your device
-- Never uploads data to any server (unless you configure sync)
-- Doesn't include analytics or tracking
-- Is open source so you can verify yourself
+Absolutely. Both apps:
+- Process all data on your device
+- Never upload data to any server (unless you configure sync)
+- Don't include analytics or tracking
+- Are open source so you can verify yourself
+
+### What's the difference between the two apps?
+
+| OSS Document Scanner | OSS CardWallet |
+|---------------------|----------------|
+| Scan paper documents | Store loyalty/membership cards |
+| Auto edge detection | Barcode scanning |
+| PDF export with OCR | Multiple barcode formats |
+| Document organization | Card organization |
+
+Both apps share common features like cloud sync, backup, and privacy-first design.
 
 ### Where can I get support?
 
