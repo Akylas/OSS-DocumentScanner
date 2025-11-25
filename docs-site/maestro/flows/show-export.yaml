@@ -1,0 +1,79 @@
+# Show Export options
+# This flow demonstrates the export functionality
+
+appId: com.akylas.documentscanner
+
+---
+
+# If there are documents, tap on one to open it
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - tapOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Alternative: tap on any list item
+- runFlow:
+    when:
+      visible:
+        id: ".*list.*item.*"
+    commands:
+      - tapOn:
+          id: ".*list.*item.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Look for share/export button
+- runFlow:
+    when:
+      visible:
+        id: ".*share.*"
+    commands:
+      - tapOn:
+          id: ".*share.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        id: ".*export.*"
+    commands:
+      - tapOn:
+          id: ".*export.*"
+      - waitForAnimationToEnd
+
+# Look for share icon (common pattern)
+- runFlow:
+    when:
+      visible: "📤"
+    commands:
+      - tapOn: "📤"
+      - waitForAnimationToEnd
+
+# Try more options menu
+- runFlow:
+    when:
+      visible: "⋮"
+    commands:
+      - tapOn: "⋮"
+      - waitForAnimationToEnd
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ee]xport.*"
+          commands:
+            - tapOn:
+                text: ".*[Ee]xport.*"
+            - waitForAnimationToEnd
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ss]hare.*"
+          commands:
+            - tapOn:
+                text: ".*[Ss]hare.*"
+            - waitForAnimationToEnd

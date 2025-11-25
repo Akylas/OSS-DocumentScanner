@@ -1,0 +1,58 @@
+# Export Screenshot
+# Run: maestro test docs-site/maestro/screenshots/export-screenshot.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Try to open a document if available
+- runFlow:
+    when:
+      visible:
+        index: 0
+    commands:
+      - tapOn:
+          index: 0
+      - waitForAnimationToEnd
+
+# Look for share/export button
+- runFlow:
+    when:
+      visible: "⋮"
+    commands:
+      - tapOn: "⋮"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ee]xport.*"
+    commands:
+      - tapOn:
+          text: ".*[Ee]xport.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]hare.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]hare.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*PDF.*"
+    commands:
+      - waitForAnimationToEnd
+
+# Take screenshot
+- takeScreenshot: ../../static/img/export-1

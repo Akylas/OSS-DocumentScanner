@@ -1,0 +1,53 @@
+# Edit Screenshot
+# Run: maestro test docs-site/maestro/screenshots/edit-screenshot.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Try to open a document if available
+- runFlow:
+    when:
+      visible:
+        index: 0
+    commands:
+      - tapOn:
+          index: 0
+      - waitForAnimationToEnd
+
+# Look for edit/crop button
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ee]dit.*"
+    commands:
+      - tapOn:
+          text: ".*[Ee]dit.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Cc]rop.*"
+    commands:
+      - tapOn:
+          text: ".*[Cc]rop.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ee]nhance.*"
+    commands:
+      - tapOn:
+          text: ".*[Ee]nhance.*"
+      - waitForAnimationToEnd
+
+# Take screenshot
+- takeScreenshot: ../../static/img/edit-1

@@ -1,0 +1,86 @@
+# Show Edit screen
+# This flow demonstrates the edit/enhance functionality
+
+appId: com.akylas.documentscanner
+
+---
+
+# If there are documents, tap on one to open it for editing
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - tapOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Alternative: tap on any list item  
+- runFlow:
+    when:
+      visible:
+        id: ".*list.*item.*"
+    commands:
+      - tapOn:
+          id: ".*list.*item.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Look for edit button
+- runFlow:
+    when:
+      visible:
+        id: ".*edit.*"
+    commands:
+      - tapOn:
+          id: ".*edit.*"
+      - waitForAnimationToEnd
+
+# Look for crop/adjust button
+- runFlow:
+    when:
+      visible:
+        id: ".*crop.*"
+    commands:
+      - tapOn:
+          id: ".*crop.*"
+      - waitForAnimationToEnd
+
+# Look for enhance/filter button
+- runFlow:
+    when:
+      visible:
+        id: ".*enhance.*"
+    commands:
+      - tapOn:
+          id: ".*enhance.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        id: ".*filter.*"
+    commands:
+      - tapOn:
+          id: ".*filter.*"
+      - waitForAnimationToEnd
+
+# Look for edit icon (pencil)
+- runFlow:
+    when:
+      visible: "✏️"
+    commands:
+      - tapOn: "✏️"
+      - waitForAnimationToEnd
+
+# Alternative: long press on document to show edit options
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - longPressOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd
