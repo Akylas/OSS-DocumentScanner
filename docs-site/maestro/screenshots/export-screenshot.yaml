@@ -1,0 +1,106 @@
+# Export Screenshot
+# Run: maestro test docs-site/maestro/screenshots/export-screenshot.yaml
+#
+# Prerequisites:
+# - Push test image to device first:
+#   adb push docs-site/maestro/test-document.png /sdcard/DCIM/test-document.png
+# - Or run ./docs-site/maestro/generate-screenshots.sh which handles this
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# First, ensure we have a document to export
+# Run the setup-test-document flow to create one if needed
+- runFlow:
+    file: ../flows/setup-test-document.yaml
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Try to open a document if available (tap on first document in list)
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - tapOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Alternative: tap on any list item
+- runFlow:
+    when:
+      visible:
+        id: ".*list.*"
+    commands:
+      - tapOn:
+          id: ".*list.*"
+          index: 0
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Look for share/export button or menu
+- runFlow:
+    when:
+      visible: "⋮"
+    commands:
+      - tapOn: "⋮"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        id: ".*more.*"
+    commands:
+      - tapOn:
+          id: ".*more.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        id: ".*menu.*"
+    commands:
+      - tapOn:
+          id: ".*menu.*"
+      - waitForAnimationToEnd
+
+# Look for export option in menu
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ee]xport.*"
+    commands:
+      - tapOn:
+          text: ".*[Ee]xport.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]hare.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]hare.*"
+      - waitForAnimationToEnd
+
+# Wait for export dialog to appear
+- runFlow:
+    when:
+      visible:
+        text: ".*PDF.*"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 2000
+
+# Take screenshot
+- takeScreenshot: ../../static/img/export-1
