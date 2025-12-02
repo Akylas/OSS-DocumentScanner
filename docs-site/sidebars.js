@@ -34,6 +34,14 @@ const sidebars = {
         'faq',
       ],
     },
+    {
+      type: 'category',
+      label: 'Contributing',
+      collapsed: false,
+      items: [
+        'contributing',
+      ],
+    },
   ],
 };
 

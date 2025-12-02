@@ -137,6 +137,20 @@
   margin-top: 1rem;
 }
 
+/* Contribute Section */
+.contributeSection {
+  padding: 4rem 0;
+  background: var(--ifm-color-emphasis-100);
+}
+
+.contributeButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
 /* Screenshot (legacy) */
 .screenshot {
   padding: 2rem 0;

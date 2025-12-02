@@ -210,6 +210,32 @@ function TranslationSection() {
   );
 }
 
+function ContributeSection() {
+  return (
+    <section className={styles.contributeSection}>
+      <div className="container text--center">
+        <Heading as="h2">📝 Contribute to Documentation</Heading>
+        <p>
+          Help improve this documentation! Fix typos, add examples, 
+          improve explanations, or translate into your language.
+        </p>
+        <div className={styles.contributeButtons}>
+          <Link
+            className="button button--primary button--lg"
+            to="/contributing">
+            📖 Contribution Guide
+          </Link>
+          <a
+            className="button button--outline button--primary button--lg"
+            href="https://github.com/Akylas/OSS-DocumentScanner/tree/main/docs-site">
+            ✏️ Edit on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   return (
     <Layout
@@ -219,6 +245,7 @@ export default function Home() {
       <main>
         <AppShowcase />
         <CommonFeatures />
+        <ContributeSection />
         <SupportSection />
         <TranslationSection />
       </main>
