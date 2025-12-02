@@ -1,11 +1,19 @@
 # Show Export options
 # This flow demonstrates the export functionality
+# It first ensures a document exists, then navigates to the export view
 
 appId: com.akylas.documentscanner
 
 ---
 
-# If there are documents, tap on one to open it
+# First, ensure we have a document to export
+- runFlow:
+    file: setup-test-document.yaml
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap on the first document to open it
 - runFlow:
     when:
       visible:
