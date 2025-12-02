@@ -41,6 +41,12 @@ Theme and other appearance settings.
 | Document View Columns | `nb_columns_view` | Number of columns in document view |
 | Document View Columns (Landscape) | `nb_columns_view_landscape` | Number of columns in document view while in landscape |
 
+**Android-specific:**
+
+| Setting | Translation Key | Description |
+|---------|----------------|-------------|
+| Show Quick Settings Tile | `show_quicksettings_tile` | Show Quick Settings tile to open the app directly from the notification shade |
+
 **CardWallet-specific:**
 
 | Setting | Translation Key | Description |
@@ -75,6 +81,7 @@ Moving data between storage locations will restart the app and move all your doc
 |---------|----------------|-------------|
 | Use System Camera | `use_system_camera` | Use system camera instead of app view (Android only). When enabled some features like batch or auto-scan will be disabled |
 | Start App on Camera | `start_app_on_cam` | The app will always start on camera. Changing this setting requires an app restart |
+| Front Camera Mirrored | `front_cam_mirrored` | Whether the front camera preview should be mirrored |
 
 ## Document Detection Settings
 <!-- Translation keys: document_detection, document_detection_settings -->
@@ -96,6 +103,25 @@ Moving data between storage locations will restart the app and move all your doc
 | Distance Threshold | `auto_scan_distance_threshold` | When the camera moves auto scan needs to determine if we are still seeing the same document. This is the distance threshold |
 | Auto Scan Duration | `auto_scan_duration` | Duration in milliseconds before the document is added |
 | Auto Scan Delay | `auto_scan_delay` | Delay before starting auto scan on a discovered document |
+
+## OCR Settings
+<!-- Translation keys: ocr, ocr_settings -->
+Optical Character Recognition settings for text detection in scanned documents.
+
+| Setting | Translation Key | Description |
+|---------|----------------|-------------|
+| OCR Enabled | `ocr_enabled` | OCR will be triggered on every document change using the languages you select |
+| OCR Languages | `languages` | Select which languages to use for text detection. Download language models as needed |
+
+### OCR Features
+
+- **Detect Text** (`ocr_document`): Automatically detect and extract text from scanned documents
+- **Detect and Copy** (`ocr_copy_text`): Quickly detect text and copy it to clipboard
+- **Transparent OCR Text in PDF** (`draw_ocr_text`): Add searchable text layer in exported PDFs
+
+:::info
+OCR models need to be downloaded before use. The app will prompt you to download missing language models when needed.
+:::
 
 ## Document Naming Settings
 <!-- Translation keys: document_naming_template, document_naming_settings -->
@@ -222,10 +248,12 @@ Settings implementation can be found at:
 | Feature | Location |
 |---------|----------|
 | Main Settings UI | `app/components/settings/Settings.svelte` (main settings component with all categories) |
+| OCR Settings | `app/components/ocr/OCRSettingsBottomSheet.svelte` |
 | Security Service | `app/services/security.ts` |
 | Documents Service | `app/services/documents.ts` |
 | Translation Files | `app/i18n/*.json` |
 | Constants | `app/utils/constants.ts` |
+| Quick Settings (Android) | `app/android/quicktoggle.android.ts` |
 
 ## Translation Key Reference
 
@@ -240,7 +268,11 @@ All settings use translation keys from `app/i18n/en.json`. When contributing to 
   "image_format": "image format",
   "image_quality": "image quality",
   "pdf_export": "PDF export",
-  "transformer_batch_size": "parallel operations"
+  "transformer_batch_size": "parallel operations",
+  "front_cam_mirrored": "front camera mirrored",
+  "show_quicksettings_tile": "show Quick Settings tile",
+  "ocr_enabled": "OCR Enabled",
+  "ocr_copy_text": "Detect and copy"
 }
 ```
 
