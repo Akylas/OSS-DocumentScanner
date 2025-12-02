@@ -384,6 +384,8 @@
     "share_images": "condividi immagini",
     "show_fullscreen_images": "schermo intero",
     "show_love": "Se ti piace il progetto, condividi un po' di affetto oppure contribuisci",
+    "show_quicksettings_tile": "mostra il riquadro Impostazioni rapide",
+    "show_quicktoggle_desc": "mostra Impostazioni rapide per aprire l'app",
     "sort": {
         "ascending": "ascendente",
         "descending": "discendente"
