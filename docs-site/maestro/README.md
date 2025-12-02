@@ -29,7 +29,44 @@ Generate all screenshots with one command:
 ./docs-site/maestro/generate-screenshots.sh ios
 ```
 
+The script will automatically:
+1. Push a test document image to the device/emulator
+2. Run all screenshot flows
+3. Save screenshots to `docs-site/static/img/`
+
 Screenshots are automatically saved to `docs-site/static/img/`.
+
+## How Document Setup Works
+
+Some screenshots (edit, export) require a document to exist in the app. The Maestro flows handle this automatically:
+
+1. **Test Image**: The script includes `test-document.png` which is pushed to the device before running flows
+2. **Document Setup Flow**: The `flows/setup-test-document.yaml` flow checks if documents exist and imports one if needed
+3. **Automatic Import**: If no documents exist, the flow:
+   - Taps the import button
+   - Selects the test image from gallery
+   - Confirms the crop dialog
+   - Saves the document
+
+### Manual Image Setup
+
+If the automatic setup fails, you can manually prepare:
+
+**Android:**
+```bash
+# Push test image to device
+adb push docs-site/maestro/test-document.png /sdcard/DCIM/test-document.png
+
+# Trigger media scanner
+adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
+    -d file:///sdcard/DCIM/test-document.png
+```
+
+**iOS:**
+```bash
+# Add image to simulator Photos
+xcrun simctl addmedia booted docs-site/maestro/test-document.png
+```
 
 ## Individual Flows
 
@@ -48,10 +85,10 @@ maestro test screenshots/settings-screenshot.yaml
 # Sync settings
 maestro test screenshots/sync-screenshot.yaml
 
-# Export options
+# Export options (requires document)
 maestro test screenshots/export-screenshot.yaml
 
-# Edit screen
+# Edit screen (requires document)
 maestro test screenshots/edit-screenshot.yaml
 ```
 
@@ -61,10 +98,12 @@ maestro test screenshots/edit-screenshot.yaml
 maestro/
 ├── generate-screenshots.sh     # Main script to generate all screenshots
 ├── generate-screenshots.yaml   # Combined flow (alternative)
+├── test-document.png           # Test image for document import
 ├── README.md                   # This file
 ├── flows/                      # Reusable navigation flows
 │   ├── navigate-to-settings.yaml
 │   ├── navigate-to-sync.yaml
+│   ├── setup-test-document.yaml  # Creates a test document if needed
 │   ├── show-export.yaml
 │   └── show-edit.yaml
 └── screenshots/                # Individual screenshot flows

@@ -18,6 +18,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCS_SITE_DIR="$(dirname "$SCRIPT_DIR")"
 SCREENSHOTS_DIR="$DOCS_SITE_DIR/static/img"
+TEST_IMAGE="$SCRIPT_DIR/test-document.png"
 
 # Platform selection
 PLATFORM="${1:-android}"
@@ -37,6 +38,43 @@ fi
 
 # Create output directory if it doesn't exist
 mkdir -p "$SCREENSHOTS_DIR"
+
+# Push test image to device/emulator (needed for edit/export screenshots)
+echo "📤 Pushing test document to device..."
+if [ "$PLATFORM" = "android" ]; then
+    # Check if adb is available
+    if command -v adb &> /dev/null; then
+        # Create DCIM directory if it doesn't exist and push the test image
+        adb shell mkdir -p /sdcard/DCIM 2>/dev/null || true
+        if [ -f "$TEST_IMAGE" ]; then
+            adb push "$TEST_IMAGE" /sdcard/DCIM/test-document.png 2>/dev/null && \
+                echo "   ✅ Test image pushed to /sdcard/DCIM/test-document.png" || \
+                echo "   ⚠️ Warning: Could not push test image (screenshots may fail)"
+            # Trigger media scanner to make image visible in gallery
+            adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/DCIM/test-document.png 2>/dev/null || true
+        else
+            echo "   ⚠️ Warning: Test image not found at $TEST_IMAGE"
+        fi
+    else
+        echo "   ⚠️ Warning: adb not found, cannot push test image"
+        echo "   Please manually add an image to the emulator gallery"
+    fi
+elif [ "$PLATFORM" = "ios" ]; then
+    echo "   ℹ️ For iOS, please add test-document.png to the simulator's Photos app manually"
+    echo "   Or use: xcrun simctl addmedia booted \"$TEST_IMAGE\""
+    if command -v xcrun &> /dev/null; then
+        # Check if there's a booted simulator
+        if xcrun simctl list devices | grep -q "Booted"; then
+            xcrun simctl addmedia booted "$TEST_IMAGE" 2>/dev/null && \
+                echo "   ✅ Test image added to iOS simulator Photos" || \
+                echo "   ⚠️ Warning: Could not add test image to simulator"
+        else
+            echo "   ⚠️ Warning: No booted iOS simulator found"
+            echo "   Start a simulator with: xcrun simctl boot <device_name>"
+        fi
+    fi
+fi
+echo ""
 
 echo "📱 Running screenshot tests..."
 echo ""

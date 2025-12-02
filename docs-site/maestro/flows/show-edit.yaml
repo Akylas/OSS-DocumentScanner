@@ -1,11 +1,19 @@
 # Show Edit screen
 # This flow demonstrates the edit/enhance functionality
+# It first ensures a document exists, then navigates to the edit view
 
 appId: com.akylas.documentscanner
 
 ---
 
-# If there are documents, tap on one to open it for editing
+# First, ensure we have a document to edit
+- runFlow:
+    file: setup-test-document.yaml
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap on the first document to open it
 - runFlow:
     when:
       visible:
@@ -24,6 +32,17 @@ appId: com.akylas.documentscanner
     commands:
       - tapOn:
           id: ".*list.*item.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Tap on page thumbnail to open page view
+- runFlow:
+    when:
+      visible:
+        id: ".*page.*"
+    commands:
+      - tapOn:
+          id: ".*page.*"
           index: 0
       - waitForAnimationToEnd
 
@@ -72,15 +91,5 @@ appId: com.akylas.documentscanner
       visible: "✏️"
     commands:
       - tapOn: "✏️"
-      - waitForAnimationToEnd
-
-# Alternative: long press on document to show edit options
-- runFlow:
-    when:
-      visible:
-        id: ".*document.*"
-    commands:
-      - longPressOn:
-          id: ".*document.*"
-          index: 0
-      - waitForAnimationToEnd
+      - waitForAnimationToEnd:
+          timeout: 3000
