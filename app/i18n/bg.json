@@ -284,7 +284,7 @@
     "ocr_document": "открий текст",
     "ocr_enabled": "OCR активиран",
     "ocr_enabled_desc": "OCR ще се задейства при всяка промяна на документ, използвайки езиците, които изберете тук",
-    "ocr_missing_languages": "OCR моделите липсват, те ще бъдат изтеглени: %1$s",
+    "ocr_missing_languages_download": "OCR моделите липсват, те ще бъдат изтеглени: %1$s",
     "ocr_settings": "OCR настройки",
     "off": "изключено",
     "ok": "OK",

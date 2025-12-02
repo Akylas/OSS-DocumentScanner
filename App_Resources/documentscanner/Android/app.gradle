@@ -11,8 +11,8 @@ android {
   defaultConfig {  
     multiDexEnabled false
     minSdkVersion 21
-    versionCode 121
-    versionName "1.14.5"
+    versionCode 125
+    versionName "1.16.2"
 
     // if (project.hasProperty('resConfigs')) {
     //   def resConfigs = project.findProperty('resConfigs')
@@ -188,7 +188,7 @@ dependencies {
         }
     }
 
-    implementation "androidx.profileinstaller:profileinstaller:1.3.1"
+    implementation "androidx.profileinstaller:profileinstaller:1.4.1"
     baselineProfile project(':baselineprofile')
 
     implementation "com.github.skydoves:colorpickerview:2.2.4"
@@ -207,7 +207,7 @@ if (project.hasProperty("sentryEnabled")) {
     // Experimental flag to turn on support for GuardSquare's tools integration (Dexguard and External Proguard).
     // If enabled, the plugin will try to consume and upload the mapping file produced by Dexguard and External Proguard.
     // Default is disabled.
-    // dexguardEnabled = true
+    dexguardEnabled = true
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
@@ -229,5 +229,8 @@ if (project.hasProperty("sentryEnabled")) {
     // Includes additional source directories into the source bundle.
     // These directories are resolved relative to the project directory.
     additionalSourceDirsForSourceContext = ["plugin-nativeprocessor/platforms/android/cpp/src", "plugin-nativeprocessor/platforms/android/java", "App_Resources/documentscanner/Android/src/main/java"]
+
+    autoUploadProguardMapping = false
+    autoUploadNativeSymbols = false
   }
 }

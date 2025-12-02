@@ -8,4 +8,13 @@
         android:targetClass="com.akylas.carwallet.MainActivity" 
         android:targetPackage="com.akylas.carwallet" />
     </shortcut>
+    <shortcut
+      android:shortcutId="ocr"
+      android:icon="@mipmap/shortcut_ocr"
+      android:shortcutShortLabel="@string/ocr_copy_text">
+      <intent
+        android:action="com.akylas.documentscanner.OCR_CAMERA_CLIPBOARD"
+        android:targetClass="com.akylas.documentscanner.MainActivity" 
+        android:targetPackage="com.akylas.documentscanner" />
+    </shortcut>
   </shortcuts>

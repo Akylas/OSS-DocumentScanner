@@ -284,7 +284,7 @@
     "ocr_document": "Detetar texto",
     "ocr_enabled": "OCR ativado",
     "ocr_enabled_desc": "O OCR será acionado em cada alteração de documento usando os idiomas que selecionar aqui",
-    "ocr_missing_languages": "Modelos OCR ausentes, serão descarregados: %1$s",
+    "ocr_missing_languages_download": "Modelos OCR ausentes, serão descarregados: %1$s",
     "ocr_settings": "Definições de OCR",
     "off": "Desligado",
     "ok": "OK",

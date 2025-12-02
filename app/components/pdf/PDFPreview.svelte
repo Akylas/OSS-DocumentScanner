@@ -5,11 +5,13 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { ApplicationSettings, ObservableArray, Screen, Utils, View, knownFolders } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, Utils, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
+    import { SilentError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
     import { printPDF } from 'plugin-nativeprocessor';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { getFileNameForDocument, l, lc } from '~/helpers/locale';
@@ -19,11 +21,9 @@
     import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { getPageColorMatrix } from '~/utils/matrix';
-    import { showError } from '@shared/utils/showError';
     import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
-    import { colors, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
-    import { SilentError } from '@shared/utils/error';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -38,8 +38,8 @@
 
     const pdfCanvas = new PDFCanvas();
     const optionsStore = writable(pdfCanvas.options);
-    let { color, draw_ocr_overlay, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
-    $: ({ color, draw_ocr_overlay, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
+    let { color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
+    $: ({ color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
     optionsStore.subscribe((newValue) => {
         DEV_LOG && console.log('saving options', newValue);
         Object.assign(pdfCanvas.options, newValue);
@@ -82,7 +82,7 @@
                 hintText: lc('pdf_filename')
             });
             if (result?.result && result?.text?.length) {
-                showLoading(l('exporting'));
+                showLoading(lc('exporting'));
                 const exportDirectory = ApplicationSettings.getString(
                     'pdf_export_directory',
                     __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path
@@ -109,7 +109,7 @@
     }
     async function openPDF() {
         try {
-            showLoading(l('exporting'));
+            showLoading(lc('exporting'));
             const filePath = await exportPDFAsync({ pages, document });
             hideLoading();
             if (filePath) {
@@ -123,7 +123,7 @@
     }
     async function onPrintPDF() {
         try {
-            showLoading(l('exporting'));
+            showLoading(lc('exporting'));
             const filePath = await exportPDFAsync({ pages, document });
             hideLoading();
             DEV_LOG && console.log('print pdf', filePath);
@@ -184,7 +184,7 @@
 
     const tMargin = '4 10 4 10';
     const tPadding = __ANDROID__ ? '10 20 10 20' : '0 10 0 10';
-    const tWidth = (screenWidthDips- 41) / 2;
+    const tWidth = (screenWidthDips - 41) / 2;
     const tHeight = 'auto';
 
     function getPageImageOptions(templatePagesCount: number, item: PDFCanvasItem, pageIndex: number, index?: number) {
@@ -228,6 +228,11 @@
         }
         let pageRatio = 1;
         switch (paper_size) {
+            case 'letter':
+                pageRatio = 612 / 792;
+                break;
+            case 'a5':
+            case 'a3':
             case 'a4':
             default:
                 pageRatio = 595 / 842;
@@ -313,11 +318,11 @@
                         row={1}
                         selectedIndex={currentPagerIndex}
                         on:selectedIndexChange={onPageIndexChanged}>
-                        {#each { length: 6 } as _, i}
+                        {#each { length: 6 } as _, i (i)}
                             <Template key={`${i + 1}`} let:index let:item>
                                 <gridlayout padding={PAGER_PAGE_PADDING - 10}>
                                     <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)} margin={10}>
-                                        {#each { length: i + 1 } as _, j}
+                                        {#each { length: i + 1 } as _, j (j)}
                                             <image
                                                 ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
                                                 {...getPageImageOptions(i + 1, item, j, index)}
@@ -330,8 +335,7 @@
                             </Template>
                         {/each}
                     </pager>
-                    <!-- <checkbox checked={draw_ocr_overlay} margin={14} row={1} text={lc('draw_ocr_overlay')} verticalAlignment="top" on:checkedChange={(e) => updateOption('draw_ocr_overlay', e.value)} /> -->
-                    <PageIndicator horizontalAlignment="right" margin={10} row={1} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
+                    <PageIndicator horizontalAlignment="right" margin={10} row={1} scale={$fontScale} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
                     <gridlayout columns="*,*" row={2}>
                         <mdbutton text={lc('export')} on:tap={exportPDF} />
                         <mdbutton col={1} text={lc('open')} on:tap={openPDF} />

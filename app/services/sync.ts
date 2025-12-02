@@ -214,7 +214,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             return;
         }
         const syncServices = (this.services = this.getStoredSyncServices().filter((s) => s.enabled !== false));
-        DEV_LOG && console.log('Sync', 'start', syncServices);
+        // DEV_LOG && console.log('Sync', 'start', syncServices);
         // bring back old data config
         const configStr = ApplicationSettings.getString(SETTINGS_KEY);
         if (configStr) {
@@ -224,7 +224,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
         }
         syncServicesStore.set(syncServices);
-        DEV_LOG && console.log('Sync', 'start', /* this.services.length,  */ this.enabled);
+        // DEV_LOG && console.log('Sync', 'start', /* this.services.length,  */ this.enabled);
         if (this.enabled) {
             this.notify({ eventName: EVENT_STATE, enabled: this.enabled } as SyncEnabledEventData);
             documentsService.on(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);

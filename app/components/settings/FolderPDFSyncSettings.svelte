@@ -6,7 +6,7 @@
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { Template } from 'svelte-native/components';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { getPDFDefaultExportOptions } from '~/services/pdf/PDFCanvas';
@@ -163,10 +163,8 @@
         const value = event.value;
         item.value = value;
         clearCheckboxTimer();
-        DEV_LOG && console.log('onCheckBox', item.id, value);
         try {
             ignoreNextOnCheckBoxChange = true;
-            DEV_LOG && console.log('updating setting for checkbox', item.id, item.key, value);
             if (pdfOption) {
                 $store.exportOptions[pdfOption] = value;
             } else {
@@ -348,7 +346,7 @@
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="pdfoptions" let:item>

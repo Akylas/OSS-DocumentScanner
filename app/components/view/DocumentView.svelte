@@ -8,8 +8,8 @@
     import { throttle } from '@nativescript/core/utils';
     import { filesize } from 'filesize';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
@@ -27,6 +27,7 @@
         documentsService
     } from '~/services/documents';
     import {
+        BOTTOM_BUTTON_OFFSET,
         DEFAULT_NB_COLUMNS_VIEW,
         DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE,
         EVENT_DOCUMENT_DELETED,
@@ -51,9 +52,9 @@
         showPopoverMenu,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import { prefs } from '~/services/preferences';
+    import { prefs } from '@shared/services/preferences';
     const rowMargin = 8;
     interface Item {
         page: OCRPage;
@@ -237,15 +238,9 @@
         collectionView?.nativeElement.startDragging(index, event.getActivePointers()[0]);
     }
     function onItemLongPress(item: Item, event?) {
-        // console.log('onItemLongPress', event && event.ios && event.ios.state);
-        // if (event && event.ios && event.ios.state !== 1) {
-        //     return;
-        // }
-        // if (event && event.ios) {
-        //     ignoreTap = true;
-        // }
-        // console.log('onItemLongPress', item, Object.keys(event));
-        if (item.selected) {
+        if (inEditMode) {
+            startDragging(item, event);
+        } else if (item.selected) {
             unselectItem(item);
         } else {
             selectItem(item);
@@ -263,7 +258,18 @@
             startDragging(item, event);
         }
     }
-    async function onItemTap(item: Item) {
+    async function onTouch(item: Item, event?) {
+        if (!inEditMode) {
+            return;
+        }
+        switch (event.action) {
+            case 'down': {
+                startDragging(item, event);
+                break;
+            }
+        }
+    }
+    async function onItemTap(item: Item, event?) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -313,7 +319,9 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (nbSelected > 0) {
+            if (inEditMode) {
+                switchEditMode();
+            } else if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
@@ -439,7 +447,7 @@
     }
 
     onMount(() => {
-        DEV_LOG && console.log('DocumentView', 'onMount', VIEW_ID++);
+        // DEV_LOG && console.log('DocumentView', 'onMount', VIEW_ID++);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
@@ -544,6 +552,7 @@
             const options = new ObservableArray([
                 { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
                 { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -572,10 +581,19 @@
                         case 'delete':
                             await deleteDoc();
                             break;
+                        case 'reorder':
+                            unselectAll();
+                            switchEditMode();
+                            break;
                     }
                 }
             });
         }
+    }
+    let inEditMode = false;
+    function switchEditMode() {
+        inEditMode = !inEditMode;
+        collectionView?.nativeElement?.refreshVisibleItems();
     }
 </script>
 
@@ -584,11 +602,10 @@
         <collectionview
             bind:this={collectionView}
             id="view"
-            autoReloadItemOnLayout={true}
             {colWidth}
-            iosOverflowSafeArea={true}
             {items}
-            paddingBottom={88}
+            ios:autoReloadItemOnLayout={true}
+            paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             reorderEnabled={true}
             row={1}
             rowHeight={itemHeight}
@@ -623,7 +640,8 @@
                     padding={10}
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
-                    on:tap={() => onItemTap(item)}
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:touch={(e) => onTouch(item, e)}
                     android:on:pan={(e) => onPan(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
@@ -636,32 +654,36 @@
                         sharedTransitionTag={`document_${document.id}_${item.page.id}`}
                         stretch="aspectFit"
                         verticalAlignment="center" />
-                    <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} height="100%" padding="10 0 0 0" row={1}>
-                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`} textAlignment="left" verticalAlignment="bottom" />
+                    <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} padding="10 0 0 0" row={1}>
+                        <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-reorder-horizontal" visibility={inEditMode ? 'visible' : 'hidden'} />
+                        <cspan
+                            paddingLeft={inEditMode ? 30 : 0}
+                            text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`}
+                            textAlignment="left"
+                            verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator rowSpan={2} text={index + 1} on:longPress={(event) => startDragging(item, event)} />
+                    <PageIndicator rowSpan={2} scale={$fontScale} text={index + 1} on:longPress={(event) => startDragging(item, event)} />
                 </gridlayout>
             </Template>
         </collectionview>
 
-        <stacklayout bind:this={fabHolder} horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
+        <stacklayout bind:this={fabHolder} class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}
             <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
             {#if $hasCamera}
-                <mdbutton class="fab" margin="0 16 0 16" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+                <mdbutton class="fab" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
             {/if}
         </stacklayout>
-
         <CActionBar
-            forceCanGoBack={nbSelected > 0}
-            onGoBack={nbSelected ? unselectAll : null}
+            forceCanGoBack={inEditMode || nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : inEditMode ? switchEditMode : null}
             onTitleTap={() => (editingTitle = true)}
-            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
             <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />

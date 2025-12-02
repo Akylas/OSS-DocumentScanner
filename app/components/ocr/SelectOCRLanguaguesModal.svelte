@@ -2,11 +2,11 @@
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { TextField, Utils } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { colors, fonts } from '~/variables';
     // import SearchCollectionView from './SearchCollectionView.svelte';
-    import { Template } from 'svelte-native/components';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import { OCRLanguages, ocrService } from '~/services/ocr';
     import { showError } from '@shared/utils/showError';
     import MiniSearch from '@shared/utils/minisearch';

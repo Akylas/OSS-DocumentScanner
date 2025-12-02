@@ -2,8 +2,8 @@
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { AndroidActivityBackPressedEventData, Application, Color, Page } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
-    import { closeModal } from 'svelte-native';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { closeModal } from '@nativescript-community/svelte-native';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { getRealTheme } from '~/helpers/theme';
     import { securityService } from '~/services/security';
@@ -241,7 +241,7 @@
     {#if securityService.pincodeEnabled}
         <gridlayout class="pageContent" columns="*,*,*" rows="3*,*,*,*,*" on:layoutChanged={onLayoutChanged}>
             <gridlayout backgroundColor={colorPrimary} colSpan={3} columns="*,*,*,*" row={0}>
-                {#each { length: 4 } as _, i}
+                {#each { length: 4 } as _, i (i)}
                     <label
                         id={'field' + i}
                         backgroundColor="white"
@@ -261,7 +261,7 @@
                 <label colSpan={4} color="white" fontSize={18} fontWeight="bold" paddingTop={30} text={title} textAlignment="center" verticalAlignment="top" />
                 <label colSpan={4} color="white" fontSize={16} fontWeight="bold" paddingBottom={30} text={message} textAlignment="center" verticalAlignment="bottom" />
             </gridlayout>
-            {#each { length: 10 } as _, j}
+            {#each { length: 10 } as _, j (j)}
                 <mdbutton
                     backgroundColor="transparent"
                     borderRadius={30}

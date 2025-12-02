@@ -11,8 +11,8 @@
     import { showError } from '@shared/utils/showError';
     import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
@@ -31,7 +31,7 @@
         FolderUpdatedEventData,
         documentsService
     } from '~/services/documents';
-    import { prefs } from '~/services/preferences';
+    import { prefs } from '@shared/services/preferences';
     import { syncService, syncServicesStore } from '~/services/sync';
     import {
         BOTTOM_BUTTON_OFFSET,
@@ -71,7 +71,7 @@
         tryCatch,
         tryCatchFunction
     } from '~/utils/ui';
-    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, startOnCam, windowInset } from '~/variables';
+    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
 
     const textPaint = new Paint();
 
@@ -119,21 +119,25 @@
     $: if ($syncServicesStore) {
         syncEnabled = syncService.enabled;
     }
-    $: if (folder) {
-        DEV_LOG && console.log('updating folder title', folder);
-        title = createNativeAttributedString({
-            spans: [
-                {
-                    fontFamily: $fonts.mdi,
-                    color: folder.color || colorOutline,
-                    fontSize: 24,
-                    text: 'mdi-folder  '
-                },
-                {
-                    text: folder.name
-                }
-            ]
-        });
+    $: updateTitle(folder);
+
+    function updateTitle(folder) {
+        if (folder) {
+            title = createNativeAttributedString({
+                spans: [
+                    {
+                        fontFamily: $fonts.mdi,
+                        color: folder.color || colorOutline,
+                        fontSize: 24 * $fontScale,
+                        text: 'mdi-folder'
+                    },
+                    {
+                        text: '  ' + folder.name
+                    }
+                ]
+            });
+            DEV_LOG && console.log('updating folder title', folder, $fonts.mdi, title);
+        }
     }
 
     let syncRunning = false;
@@ -160,15 +164,15 @@
     $: if (nbSelected > 0) search.unfocusSearch();
 
     async function refresh(force = true, filter?: string) {
-        DEV_LOG && console.log('refresh', force, filter);
-        if (loading || (!force && lastRefreshFilter === filter)) {
+        // DEV_LOG && console.log('refresh', force, filter);
+        if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
             return;
         }
         lastRefreshFilter = filter;
         nbSelected = 0;
         loading = true;
         try {
-            DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
+            // DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
             await refreshFolders(filter);
@@ -194,7 +198,7 @@
     const refreshFolders = tryCatchFunction(async (filter: string = lastRefreshFilter) => {
         try {
             folders = filter?.length ? [] : await documentsService.folderRepository.findFolders(folder);
-            DEV_LOG && console.log('folders', JSON.stringify(folders));
+            // DEV_LOG && console.log('folders', JSON.stringify(folders));
             folderItems = new ObservableArray(
                 folders
                     .filter((f) => f.count > 0)
@@ -272,7 +276,7 @@
         });
         DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
         if (index >= 0) {
-            if (folder && doc.folders.indexOf(folder.id) === -1) {
+            if (folder && doc.folders && doc.folders.indexOf(folder.id) === -1) {
                 documents.splice(index, 1);
             } else {
                 const item = documents?.getItem(index);
@@ -359,7 +363,7 @@
 
     onMount(() => {
         mounted = true;
-        DEV_LOG && console.log('MainList', 'onMount', documentsService.id, viewStyle);
+        // DEV_LOG && console.log('MainList', 'onMount', documentsService.id, viewStyle);
         updateColumns($isLandscape);
         Application.on('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
@@ -500,7 +504,7 @@
             selectItem(item);
         }
     }
-    export const onItemTap = throttle(async function (item: Item) {
+    export const onItemTapFast = async function (item: Item) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -516,7 +520,15 @@
         } catch (error) {
             showError(error);
         }
-    }, 500);
+    };
+    export const onItemTapThrottled = throttle(onItemTapFast, 500);
+
+    export const onItemTap = async function (item: Item) {
+        if (nbSelected > 0) {
+            return onItemTapFast(item);
+        }
+        return onItemTapThrottled(item);
+    };
 
     function onGoBack(data) {
         if (editingTitle) {
@@ -573,6 +585,9 @@
 
     async function getSelectedDocuments() {
         const selected: OCRDocument[] = [];
+        if (!documentsService.started) {
+            return selected;
+        }
         for (let index = 0; index < documents.length; index++) {
             const d = documents.getItem(index);
             if (d.selected) {
@@ -716,6 +731,11 @@
         foldersCollectionView?.nativeView?.refresh();
         collectionView?.nativeView?.refresh();
     }, 10);
+    export const refreshVisibleItems = () => {
+        foldersCollectionView?.nativeView?.refreshVisibleItems();
+        collectionView?.nativeView?.refreshVisibleItems();
+    };
+    onFontScaleChanged(refreshVisibleItems);
     onThemeChanged(refreshCollectionView);
     onFolderBackgroundColorChanged(refreshCollectionView);
 
@@ -745,14 +765,14 @@
                     fontFamily: $fonts.mdi,
                     fontSize: 20 * $fontScale,
                     color: !$folderBackgroundColor && itemFolder.color ? itemFolder.color : colorOutline,
-                    lineHeight: 24 * $fontScale,
+                    lineHeight: 20 * $fontScale,
                     text: 'mdi-folder '
                 },
                 {
                     fontSize: 16 * $fontScale,
                     fontWeight: 'bold',
                     lineBreak: 'end',
-                    lineHeight: 18 * $fontScale,
+                    lineHeight: 16 * $fontScale,
                     text: folder ? itemFolder.name.replace(folder.name + '/', '') : itemFolder.name
                 },
                 {
@@ -785,7 +805,7 @@
     }
     async function showOptions(event) {
         const options = new ObservableArray(
-            (folder ? [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }] : []).concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
+            [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }].concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
                 { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
                 { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
                 { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') },
@@ -865,7 +885,6 @@
                 }
             },
             options,
-
             vertPos: VerticalPosition.BELOW
         });
     }
@@ -892,14 +911,12 @@
         <collectionView
             bind:this={collectionView}
             {colWidth}
+            ios:autoReloadItemOnLayout={true}
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
             row={1}
             spanSize={itemTemplateSpanSize}
-            ios:iosOverflowSafeArea={true}
-            ios:layoutHorizontalAlignment="left"
-            ios:layoutStyle="align"
             {...collectionViewOptions}>
             <Template key="folders" let:item>
                 <collectionView
@@ -909,7 +926,6 @@
                     items={folderItems}
                     orientation="horizontal"
                     row={1}
-                    ios:iosOverflowSafeArea={true}
                     visibility={folders?.length ? 'visible' : 'collapsed'}>
                     <Template let:item>
                         <canvasview
@@ -968,7 +984,7 @@
             <slot name="fab" />
         {/if}
 
-        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title} titleProps={{ autoFontSize: true, padding: 0 }}>
+        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton
                 class="actionBarButton"
                 class:infinite-rotate={syncRunning}

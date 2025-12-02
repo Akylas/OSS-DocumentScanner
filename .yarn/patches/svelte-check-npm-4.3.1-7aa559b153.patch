@@ -1,0 +1,13 @@
+diff --git a/dist/src/index.js b/dist/src/index.js
+index c1fec75564269073307b822427aec9565de396f4..907e8b76896721993469570fc3486cd1e5bb6959 100644
+--- a/dist/src/index.js
++++ b/dist/src/index.js
+@@ -108096,7 +108096,7 @@ async function createLanguageService(tsconfigPath, workspacePath, docContext) {
+         if (!compilerOptions.jsxFactory || !compilerOptions.jsxFactory.startsWith('svelte')) {
+             if (workspacePath) {
+                 try {
+-                    const svelteNativePkgInfo = (0, importPackage_1$3.getPackageInfo)('svelte-native', workspacePath);
++                    const svelteNativePkgInfo = (0, importPackage_1$3.getPackageInfo)('@nativescript-community/svelte-native', workspacePath) || (0, importPackage_1$3.getPackageInfo)('svelte-native', workspacePath);
+                     if (svelteNativePkgInfo.path) {
+                         parsedConfig.raw.svelteOptions = parsedConfig.raw.svelteOptions || {};
+                         parsedConfig.raw.svelteOptions.namespace = 'svelteNative.JSX';

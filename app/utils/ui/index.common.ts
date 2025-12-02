@@ -4,7 +4,6 @@ import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { MDCAlertControlerOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-import { Slider } from '@nativescript-community/ui-material-slider';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import {
@@ -13,6 +12,7 @@ import {
     AnimationDefinition,
     Application,
     ApplicationSettings,
+    Color,
     File,
     GridLayout,
     ImageSource,
@@ -20,7 +20,6 @@ import {
     PageTransition,
     Screen,
     SharedTransition,
-    StackLayout,
     Utils,
     View,
     knownFolders
@@ -47,7 +46,7 @@ import {
     processFromFile
 } from 'plugin-nativeprocessor';
 import type { ComponentProps } from 'svelte';
-import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type ExportPDFAlertOptions__SvelteComponent_ from '~/components/common/ExportPDFAlertOptions.svelte';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
@@ -98,10 +97,10 @@ import {
     getImageExportSettings
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
-import { showToast } from '~/utils/ui';
+import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { requestCameraPermission, requestStoragePermission, saveImage } from '../utils';
+import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -111,7 +110,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
     let pagesToAdd: PageData[] = [];
     let items: ImportImageData[] = [];
     try {
-        await showLoading(l('computing'));
+        await showLoading(lc('computing'));
         const noDetectionMargin = ApplicationSettings.getNumber('documentNotDetectedMargin', DOCUMENT_NOT_DETECTED_MARGIN);
         const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
         const areaScaleMinFactor = ApplicationSettings.getNumber('areaScaleMinFactor', AREA_SCALE_MIN_FACTOR);
@@ -170,7 +169,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
             }
             if (__IOS__) {
                 //we forced close current loading dialog,let s show it again after
-                await showLoading(l('computing'));
+                await showLoading(lc('computing'));
             }
             DEV_LOG && console.log('showPromptOptionSelect done', result);
         }
@@ -185,9 +184,10 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     try {
                         const start = Date.now();
                         DEV_LOG && console.log('importFromPdf', pdfPath, Date.now() - start, 'ms');
+
                         const pdfImages = await importPdfToTempImages(pdfPath, {
                             importPDFImages: pdfImportsImages === PDFImportImages.always,
-                            compressFormat: imageExportSettings.imageFormat,
+                            compressFormat: 'png', // in case images are with transparent background we need to use png
                             compressQuality: imageExportSettings.imageQuality
                         });
                         DEV_LOG && console.log('importFromPdf done ', pdfPath, pdfImages, Date.now() - start, 'ms');
@@ -281,20 +281,21 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 pagesToAdd = (
                     await doInBatch(
                         items,
-                        (item, index) =>
+                        (item: ImportImageData, index) =>
                             new Promise<PageData[]>(async (resolve, reject) => {
                                 try {
                                     const start = Date.now();
                                     DEV_LOG && console.log('about to cropDocument', index, JSON.stringify(item));
                                     const images: CropResult[] = [];
                                     if (item.quads) {
+                                        const compressFormat = item.imagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
                                         images.push(
                                             ...(await cropDocumentFromFile(item.imagePath, item.quads, {
                                                 // rotation: item.imageRotation,
                                                 transforms,
-                                                fileName: `cropedBitmap_${index}.${IMG_FORMAT}`,
+                                                fileName: `cropedBitmap_${index}.${compressFormat}`,
                                                 saveInFolder: knownFolders.temp().path,
-                                                compressFormat: imageExportSettings.imageFormat,
+                                                compressFormat,
                                                 compressQuality: imageExportSettings.imageQuality
                                             }))
                                         );
@@ -356,7 +357,10 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                                                 ...(CARD_APP
                                                     ? {
                                                           qrcode,
-                                                          colors
+                                                          colors,
+                                                          extra: {
+                                                              color: colors.length > 1 ? colors[0] : new Color(colors[0]).getBrightness() < 145 ? '#ffffff' : '#000000'
+                                                          }
                                                       }
                                                     : {})
                                             } as PageData);
@@ -380,6 +384,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     } else {
                         document = await OCRDocument.createDocument(pagesToAdd, folder);
                     }
+
                     await goToDocumentAfterScan(document, nbPagesBefore, canGoToView);
                     return document;
                 }
@@ -394,8 +399,6 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
 }
 export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
     await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {} });
-    // let selection: { files: string[]; ios?; android? };
-    // let editingImage: ImageSource;
     try {
         if (__ANDROID__) {
             // on android a background event will trigger while picking a file
@@ -412,12 +415,6 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
             } catch (error) {
                 selection = null;
             }
-
-            // we need to wait a bit or the presenting controller
-            // is still the image picker and will mix things up
-            // if (__IOS__) {
-            //     await timeout(500);
-            // }
         } else {
             selection = (
                 await openFilePicker({
@@ -431,8 +428,6 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
                 .map((s) => (__ANDROID__ && !s.startsWith('file://') && !s.startsWith(ANDROID_CONTENT) && s.endsWith(PDF_EXT) ? 'file://' + s : s));
         }
 
-        // }
-        DEV_LOG && console.log('selection', selection);
         if (selection?.length > 0) {
             return await importAndScanImageOrPdfFromUris({ uris: selection, document, canGoToView, folder });
         }
@@ -443,35 +438,6 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
     }
 }
 
-export async function showAlertOptionSelect(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
-    const component = (await import('~/components/common/OptionSelect.svelte')).default;
-    let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
-    try {
-        componentInstanceInfo = resolveComponentElement(component, {
-            onClose: (result) => {
-                view.bindingContext.closeCallback(result);
-            },
-            onCheckBox(item, value, e) {
-                view.bindingContext.closeCallback(item);
-            },
-            trackingScrollView: 'collectionView',
-            ...props
-        }) as ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
-        const view: View = componentInstanceInfo.element.nativeView;
-        const result = await alert({
-            view,
-            okButtonText: lc('cancel'),
-            ...(options ? options : {})
-        });
-        return result;
-    } catch (err) {
-        throw err;
-    } finally {
-        componentInstanceInfo.element.nativeElement._tearDownUI();
-        componentInstanceInfo.viewInstance.$destroy();
-        componentInstanceInfo = null;
-    }
-}
 export async function showConfirmOptionSelect<T>(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<ConfirmOptions & MDCAlertControlerOptions>) {
     const component = (await import('~/components/common/OptionSelect.svelte')).default;
     let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
@@ -515,7 +481,7 @@ export async function showPopoverMenu<T = any>({
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
-    const maxHeight = Math.min(400, Screen.mainScreen.heightDIPs - 50);
+    const maxHeight = Screen.mainScreen.heightDIPs - 50;
     const result: T = await showPopover({
         backgroundColor: colorSurfaceContainer,
         view: OptionSelect,
@@ -557,23 +523,61 @@ export async function showPopoverMenu<T = any>({
 }
 
 export async function showSettings(props?) {
-    const Settings = (await import('~/components/settings/Settings.svelte')).default;
-    navigate({
-        page: Settings,
-        props
-    });
+    try {
+        const Settings = (await import('~/components/settings/Settings.svelte')).default;
+        navigate({
+            page: Settings,
+            props
+        });
+    } catch (error) {
+        showError(error);
+    }
 }
 
 export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], document?: OCRDocument, anchor?) {
-    let exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
+    let exportDirectory: string;
+    // if (__IOS__) {
+    //     const bookmark = NSUserDefaults.standardUserDefaults.objectForKey('pdf_export_directory');
+    //     const stale = new interop.Reference(false);
+    //     const resolvedURL = NSURL.URLByResolvingBookmarkDataOptionsRelativeToURLBookmarkDataIsStaleError(bookmark, NSURLBookmarkResolutionOptions.WithSecurityScope, null, stale);
+    //     exportDirectory =
+    // } else {
+    exportDirectory = ApplicationSettings.getString('pdf_export_directory', DEFAULT_EXPORT_DIRECTORY);
+    // }
     let exportDirectoryName = exportDirectory;
     function updateDirectoryName() {
         exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
     }
     updateDirectoryName();
 
+    async function pickExportFolder() {
+        const result = await pickFolder({
+            multipleSelection: false,
+            permissions: { write: true, persistable: true, read: true },
+            forceSAF: true
+        });
+        if (result.folders.length) {
+            exportDirectory = result.folders[0];
+            DEV_LOG && console.log('set_export_directory', exportDirectory);
+            // ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+            if (__IOS__) {
+                const bookmark = NSURL.fileURLWithPathIsDirectory(result.folders[0], true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
+                    NSURLBookmarkCreationOptions.WithSecurityScope,
+                    null,
+                    null
+                );
+                NSUserDefaults.standardUserDefaults.setObjectForKey(bookmark, 'pdf_export_directory');
+            } else {
+                ApplicationSettings.setString('pdf_export_directory', exportDirectory);
+            }
+            updateDirectoryName();
+            return true;
+        }
+        return false;
+    }
+
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName }] : [])
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : [])
             .concat([
                 { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
                 { id: 'open', name: lc('open'), icon: 'mdi-eye' },
@@ -620,21 +624,12 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     case 'settings': {
                         closePopover();
                         showSettings({
-                            subSettingsOptions: 'pdf'
+                            subSettingsOptions: 'pdf_export'
                         });
                         break;
                     }
                     case 'set_export_directory': {
-                        const result = await pickFolder({
-                            multipleSelection: false,
-                            permissions: { write: true, persistable: true, read: true },
-                            forceSAF: true
-                        });
-                        if (result.folders.length) {
-                            exportDirectory = result.folders[0];
-                            DEV_LOG && console.log('set_export_directory', exportDirectory);
-                            ApplicationSettings.setString('pdf_export_directory', exportDirectory);
-                            updateDirectoryName();
+                        if (await pickExportFolder()) {
                             const item = options.getItem(0);
                             item.subtitle = exportDirectoryName;
                             options.setItem(0, item);
@@ -643,7 +638,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     }
                     case 'print': {
                         await closePopover();
-                        await showLoading(l('exporting'));
+                        await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('print pdf', filePath);
@@ -652,7 +647,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     }
                     case 'open': {
                         await closePopover();
-                        await showLoading(l('exporting'));
+                        await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('opening pdf', filePath);
@@ -665,7 +660,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                     }
                     case 'share': {
                         await closePopover();
-                        await showLoading(l('exporting'));
+                        await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
                         DEV_LOG && console.log('sharing pdf', filePath);
@@ -673,9 +668,16 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                         break;
                     }
                     case 'export': {
-                        // if (!exportDirectory) {
-                        //     showSnack({ message: lc('please_choose_export_folder') });
-                        // } else {
+                        if (!exportDirectory) {
+                            if (await pickExportFolder()) {
+                                const item = options.getItem(0);
+                                item.subtitle = exportDirectoryName;
+                                options.setItem(0, item);
+                            } else {
+                                showSnack({ message: lc('please_choose_export_folder') });
+                                return;
+                            }
+                        }
                         await closePopover();
                         const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
                         let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
@@ -699,10 +701,7 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
                                     const password = componentInstanceInfo.viewInstance.password;
                                     const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
                                     const folder = componentInstanceInfo.viewInstance.folder;
-                                    if (!folder) {
-                                        return showSnack({ message: lc('please_choose_export_folder') });
-                                    }
-                                    showLoading(l('exporting'));
+                                    showLoading(lc('exporting'));
                                     DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
                                     const filePath = await exportPDFAsync({
                                         pages,
@@ -804,11 +803,15 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
         }
     }
     DEV_LOG && console.log('exporting images', imageExportSettings.imageFormat, imageExportSettings.imageQuality, exportDirectory, sortedPages.length, outputImageNames);
-    showLoading(l('exporting'));
+    showLoading(lc('exporting'));
     // const destinationPaths = [];
     let finalMessagePart;
     if (toGallery) {
-        await requestStoragePermission();
+        if (__ANDROID__) {
+            await requestStoragePermission();
+        } else if (__IOS__) {
+            await requestPhotoPermission();
+        }
     }
     await doInBatch(
         sortedPages,
@@ -822,9 +825,9 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
                         destinationName += '.' + imageExportSettings.imageFormat;
                     }
                     // const imageSource = await ImageSource.fromFile(imagePath);
-                    DEV_LOG && console.warn('exporting image', index, data.page.imagePath);
+                    // DEV_LOG && console.warn('exporting image', index, data.page.imagePath);
                     imageSource = await getTransformedImage({ ...data, defaultBackgroundColor: get(colors).colorPrimary });
-                    DEV_LOG && console.info('exporting image done', index, data.page.imagePath, imageSource);
+                    // DEV_LOG && console.info('exporting image done', index, data.page.imagePath, imageSource);
                     if (imageSource) {
                         finalMessagePart = await saveImage(imageSource, {
                             exportDirectory,
@@ -834,7 +837,7 @@ async function exportImages(pages: { page: OCRPage; document: OCRDocument }[], e
                             reportName: canSetName
                         });
                     }
-                    DEV_LOG && console.info('exporting image saved', index, data.page.imagePath, imageSource);
+                    // DEV_LOG && console.info('exporting image saved', index, data.page.imagePath, imageSource);
                     resolve();
                 } catch (error) {
                     if (/error creating file/.test(error.toString())) {
@@ -878,9 +881,32 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
         exportDirectoryName = exportDirectory ? getDirectoryName(exportDirectory) : lc('please_choose_export_folder');
     }
     updateDirectoryName();
+    async function pickExportFolder() {
+        const result = await pickFolder({
+            multipleSelection: false,
+            permissions: { write: true, persistable: true, read: true },
+            forceSAF: true
+        });
+        if (result.folders?.[0]) {
+            exportDirectory = result.folders[0];
+            if (__IOS__) {
+                const bookmark = NSURL.fileURLWithPathIsDirectory(exportDirectory, true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
+                    NSURLBookmarkCreationOptions.WithSecurityScope,
+                    null,
+                    null
+                );
+                NSUserDefaults.standardUserDefaults.setObjectForKey(bookmark, 'image_export_directory');
+            } else {
+                ApplicationSettings.setString('image_export_directory', exportDirectory);
+            }
+            updateDirectoryName();
+            return true;
+        }
+        return false;
+    }
 
     const options = new ObservableArray(
-        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName }] : []).concat([
+        (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
             { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
             { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
@@ -923,14 +949,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                     let didDoSomething = false;
                     switch (item.id) {
                         case 'set_export_directory': {
-                            const result = await pickFolder({
-                                multipleSelection: false,
-                                permissions: { write: true, persistable: true, read: true }
-                            });
-                            if (result.folders.length) {
-                                exportDirectory = result.folders[0];
-                                ApplicationSettings.setString('image_export_directory', exportDirectory);
-                                updateDirectoryName();
+                            if (await pickExportFolder()) {
                                 const item = options.getItem(0);
                                 item.subtitle = exportDirectoryName;
                                 options.setItem(0, item);
@@ -969,24 +988,26 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 await share({ images, files });
                                 didDoSomething = true;
                             } catch (error) {
+                                DEV_LOG && console.log('error while sharing images', error);
                                 throw error;
                             } finally {
                                 recycleImages(images);
                             }
                             break;
-                        case 'export': {
-                            if (!exportDirectory) {
-                                showSnack({ message: lc('please_choose_export_folder') });
-                            } else {
-                                await closePopover();
-                                await exportImages(pages, exportDirectory);
-                            }
-                            didDoSomething = true;
-                            break;
-                        }
+                        case 'export':
                         case 'save_gallery': {
+                            if (!exportDirectory) {
+                                if (await pickExportFolder()) {
+                                    const item = options.getItem(0);
+                                    item.subtitle = exportDirectoryName;
+                                    options.setItem(0, item);
+                                } else {
+                                    showSnack({ message: lc('please_choose_export_folder') });
+                                    return;
+                                }
+                            }
                             await closePopover();
-                            await exportImages(pages, exportDirectory, true);
+                            await exportImages(pages, exportDirectory, item.id === 'save_gallery');
                             didDoSomething = true;
                             break;
                         }
@@ -1112,7 +1133,7 @@ export function checkOrDownloadOCRLanguages({
         confirmDownload: (toDownload) =>
             shouldConfirm
                 ? confirm({
-                      message: lc('ocr_missing_languages', toDownload.map((l) => localizedLanguage(l, OCRLanguages)).join(',')),
+                      message: lc('ocr_missing_languages_download', toDownload.map((l) => localizedLanguage(l, OCRLanguages)).join(',')),
                       okButtonText: lc('download'),
                       cancelButtonText: lc('cancel')
                   })
@@ -1154,7 +1175,7 @@ export async function transformPages({ documents, pages }: { documents?: OCRDocu
             skipCollapsedState: true
         });
         if (updateOptions) {
-            // await showLoading(l('computing'));
+            // await showLoading(lc('computing'));
 
             // we want to ocr the full document.
             const progress = 0;
@@ -1359,6 +1380,7 @@ export async function showMatrixLevelPopover({ anchor, currentValue, item, onCha
     });
 }
 export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
+    DEV_LOG && console.log('goToDocumentView');
     if (CARD_APP) {
         const page = (await import('~/components/view/CardView.svelte')).default;
         return navigate({
@@ -1465,9 +1487,10 @@ export async function addCurrentImageToDocument({
     const transforms = ApplicationSettings.getString(SETTINGS_DEFAULT_TRANSFORM, '');
     DEV_LOG && console.log('addCurrentImageToDocument', sourceImagePath, quads);
     const images: CropResult[] = [];
-    const compressFormat = ApplicationSettings.getString(SETTINGS_IMAGE_EXPORT_FORMAT, IMG_FORMAT) as 'png' | 'jpeg' | 'jpg';
-    const compressQuality = ApplicationSettings.getNumber(SETTINGS_IMAGE_EXPORT_QUALITY, IMG_COMPRESS);
+    const imageExportSettings = getImageExportSettings();
     if (quads) {
+        const compressFormat = sourceImagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
+
         images.push(
             ...(await cropDocumentFromFile(sourceImagePath, quads, {
                 transforms,
@@ -1475,10 +1498,9 @@ export async function addCurrentImageToDocument({
                 fileName,
                 autoRotate,
                 compressFormat,
-                compressQuality
+                compressQuality: imageExportSettings.imageQuality
             }))
         );
-        // we generate
     } else {
         images.push({ imagePath: sourceImagePath, width: imageWidth, height: imageHeight });
     }
@@ -1548,11 +1570,13 @@ export async function processCameraImage({
     imagePath,
     onAfterModalImport,
     onBeforeModalImport,
+    onlyForOCR = false,
     pagesToAdd
 }: {
     imagePath: string;
     fileName?: string;
     autoScan?: boolean;
+    onlyForOCR?: boolean;
     onBeforeModalImport?: Function;
     onAfterModalImport?: Function;
     pagesToAdd;
@@ -1619,6 +1643,10 @@ export async function processCameraImage({
             onAfterModalImport?.();
         }
     }
+
+    if (onlyForOCR) {
+        return { sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads };
+    }
     if (!cropEnabled || quads?.length) {
         await addCurrentImageToDocument({ sourceImagePath: imagePath, fileName, imageWidth, imageHeight, imageRotation, quads, pagesToAdd });
         return true;
@@ -1627,6 +1655,9 @@ export async function processCameraImage({
     return false;
 }
 export async function goToDocumentAfterScan(document?: OCRDocument, oldPagesNumber = 0, canGoToView = true) {
+    await hideLoading();
+    // await timeout(1000);
+    DEV_LOG && console.log('goToDocumentAfterScan', document.pages.length, oldPagesNumber, canGoToView);
     if (oldPagesNumber === 0 || document.pages.length - oldPagesNumber === 1) {
         const component = (await import('~/components/edit/DocumentEdit.svelte')).default;
         DEV_LOG && console.log('goToDocumentAfterScan', document.pages.length);
@@ -1732,6 +1763,100 @@ export async function importImageFromCamera({
     });
     if (document) {
         return goToDocumentAfterScan(document, oldPagesNumber);
+    }
+}
+
+export async function getOCRFromCamera({ inverseUseSystemCamera = false }: { inverseUseSystemCamera? } = {}) {
+    const useSystemCamera = __ANDROID__ ? ApplicationSettings.getBoolean('use_system_camera', USE_SYSTEM_CAMERA) : false;
+    let result: {
+        autoRotate?;
+        fileName?;
+        quads?;
+        sourceImagePath;
+    };
+    await requestCameraPermission();
+    DEV_LOG && console.log('getOCRFromCamera', useSystemCamera, inverseUseSystemCamera);
+    if (__ANDROID__ && (inverseUseSystemCamera ? !useSystemCamera : useSystemCamera)) {
+        const resultImagePath = await new Promise<string>((resolve, reject) => {
+            const takePictureIntent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+            let tempPictureUri;
+            const context = Utils.android.getApplicationContext();
+            const picturePath = context.getExternalFilesDir(null).getAbsolutePath() + SEPARATOR + 'NSIMG_' + dayjs().format('MM_DD_YYYY') + '.jpg';
+            const nativeFile = new java.io.File(picturePath);
+
+            if (SDK_VERSION >= 21) {
+                tempPictureUri = androidx.core.content.FileProvider.getUriForFile(context, __APP_ID__ + '.provider', nativeFile);
+            } else {
+                tempPictureUri = android.net.Uri.fromFile(nativeFile);
+            }
+
+            takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, tempPictureUri);
+            takePictureIntent.putExtra('android.intent.extras.CAMERA_FACING', 0);
+            let resolved = false;
+            // if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
+            const REQUEST_IMAGE_CAPTURE = 3453;
+            function onActivityResult(args) {
+                const { requestCode } = args;
+                const { resultCode } = args;
+
+                if (requestCode === REQUEST_IMAGE_CAPTURE) {
+                    Application.android.off(Application.android.activityResultEvent, onActivityResult);
+                    if (resultCode === android.app.Activity.RESULT_OK) {
+                        DEV_LOG && console.log('startActivityForResult got image', picturePath);
+                        if (!resolved) {
+                            resolved = true;
+                            resolve(picturePath);
+                        } else {
+                            DEV_LOG && console.warn('startActivityForResult got another image!', picturePath);
+                        }
+                    } else if (resultCode === android.app.Activity.RESULT_CANCELED) {
+                        // User cancelled the image capture
+                        reject();
+                    }
+                }
+            }
+            Application.android.on(Application.android.activityResultEvent, onActivityResult);
+            // on android a background event will trigger while picking a file
+            securityService.ignoreNextValidation();
+            DEV_LOG && console.log('startActivityForResult REQUEST_IMAGE_CAPTURE');
+            Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            // } else {
+            //     reject(new Error('camera_intent_not_supported'));
+            // }
+        });
+        if (resultImagePath) {
+            result = { sourceImagePath: resultImagePath };
+        }
+    } else {
+        const Camera = (await import('~/components/camera/Camera.svelte')).default;
+        result = await showModal({
+            page: Camera,
+            fullscreen: true,
+            props: {
+                onlyForOCR: true
+            }
+        });
+    }
+    if (result) {
+        const imageExportSettings = getImageExportSettings();
+        DEV_LOG && console.log('camera for ocr', JSON.stringify(result));
+        const imagePath = result.quads
+            ? (
+                  await cropDocumentFromFile(result.sourceImagePath, result.quads, {
+                      saveInFolder: knownFolders.temp().path,
+                      fileName: result.fileName,
+                      autoRotate: result.autoRotate,
+                      compressFormat: imageExportSettings.imageFormat,
+                      compressQuality: imageExportSettings.imageQuality
+                  })
+              )[0].imagePath
+            : result.sourceImagePath;
+        DEV_LOG && console.log('camera for ocr imagePath', imagePath);
+
+        return ocrService.ocrImage({
+            imagePath
+        });
     }
 }
 

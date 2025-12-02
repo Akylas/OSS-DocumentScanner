@@ -27,8 +27,8 @@
     import dayjs from 'dayjs';
     import { QRCodeData, QRCodeSingleData, detectQRCodeFromFile } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
@@ -61,11 +61,11 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
-    import { colors, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { requestCameraPermission } from '~/utils/utils.common';
+    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { requestCameraPermission } from '~/utils/utils.common';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
@@ -89,7 +89,7 @@
     export let transitionOnBack = true;
     let editingTitle = false;
     let editingUpdates: Partial<Document> = {};
-    let topBackgroundColor = isEInk ? 'white' : (editingUpdates?.extra?.color ?? document?.extra?.color ?? document.pages[0]?.colors?.[1] ?? colorTertiary);
+    let topBackgroundColor = computeTopBackgroundColor();
     let qrcodes: (QRCodeSingleData & { svg: string; pageIndex: number; pageQRCodeIndex: number; color: string })[];
     let currentQRCodeIndex = 0;
     let page: NativeViewElementNode<Page>;
@@ -100,11 +100,14 @@
     // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
 
+    function computeTopBackgroundColor() {
+        return isEInk ? 'white' : (editingUpdates?.extra?.color ?? document?.extra?.color ?? document.pages[0]?.extra?.color ?? document.pages[0]?.colors?.[1] ?? colorTertiary);
+    }
+
     $: statusBarStyle = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
 
     let editing = false;
 
-    $: itemWidth = screenWidthDips - 2 * rowMargin;
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
         updateQRCodes();
@@ -198,7 +201,6 @@
                     }
                 }
             }
-            DEV_LOG && console.log('updateQRCodes', isDarkTheme(), forceWhiteBackgroundForQRCode, qrcodeColor, newQrCodes.length);
             qrcodes = newQrCodes;
             hasQRCodes = qrcodes?.length > 0;
             if (updateList && !editing) {
@@ -215,7 +217,6 @@
                 }
             }
             // qrcodes = document.pages.reduce((acc, page) => acc.concat(page.qrcode?.map((qr) => ({ ...qr, color, svg: await getQRCodeImage(qr, color) })) || []), []);
-            DEV_LOG && console.log('updateQRCodes', JSON.stringify(qrcodes));
             //we dont recycle images, it will be done in onDestroy
         } catch (error) {
             showError(error);
@@ -224,13 +225,7 @@
     updateQRCodes();
     async function getQRCodeImage(qrcode, color) {
         try {
-            DEV_LOG && console.log('getQRCodeImage', color, qrcode.text);
-            // if (qrcodeSVGs[qrcode.text]) {
-            //     return qrcodeSVGs[qrcode.text];
-            // }
             return qrcodeService.getQRCodeSVG(qrcode, screenWidthDips, color);
-            // qrcodeSVGs[qrcode.text] = (await getQRCodeSVG(qrcode, screenWidthDips, color));
-            // return qrcodeSVGs[qrcode.text];
         } catch (error) {
             console.error(error);
         }
@@ -479,6 +474,9 @@
         document = event.doc;
         const index = event.pageIndex;
         const current = items.getItem(index);
+        if (index === 0) {
+            topBackgroundColor = computeTopBackgroundColor();
+        }
         if (current) {
             const page = document.getObservablePages().getItem(index);
             DEV_LOG && console.log('view onDocumentPageUpdated', index, event.imageUpdated, current.index);
@@ -1078,7 +1076,7 @@
         }
     }
     function getItemBackgroundColor(item) {
-        return isEInk ? null : item.page.colors?.[0] || document.extra?.color;
+        return isEInk ? null : (item.page?.extra?.color ?? item.page.colors?.[0] ?? document.extra?.color);
     }
     function getItemLabelColor(item) {
         return isEInk ? null : new Color(item.page.colors?.[0] || document.extra?.color).getBrightness() < 145 ? 'white' : 'black';
@@ -1090,10 +1088,9 @@
         <collectionview
             bind:this={collectionView}
             id="view"
-            autoReloadItemOnLayout={true}
+            ios:autoReloadItemOnLayout={true}
             colWidth={$isLandscape ? '100%' : '50%'}
             height={$isLandscape ? undefined : itemHeight}
-            iosOverflowSafeArea={true}
             {items}
             orientation={$isLandscape ? 'vertical' : 'horizontal'}
             reorderEnabled={true}
@@ -1118,7 +1115,7 @@
                         decodeWidth={colWidth}
                         item={item.page}
                         sharedTransitionTag={`document_${document.id}_${item.page.id}`}
-                        stretch="aspectFill"
+                        stretch="aspectFit"
                         width="100%" />
                     <label
                         autoFontSize={true}
@@ -1134,7 +1131,7 @@
                         verticalTextAlignment="center"
                         visibility={item.page.imagePath ? 'hidden' : 'visible'} />
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} text={index + 1} on:longPress={() => startDragging(item)} />
+                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} scale={$fontScale} text={index + 1} on:longPress={() => startDragging(item)} />
                 </gridlayout>
             </Template>
         </collectionview>
@@ -1160,7 +1157,7 @@
                             on:selectedIndexChange={onSelectedIndex}>
                             <Template let:index let:item>
                                 <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
-                                    <svgview backgroundColor={qrcodeBackgroundColor} sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
+                                    <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
                                     <label
                                         fontSize={30}
                                         fontWeight="bold"
@@ -1231,18 +1228,16 @@
 
         <stacklayout
             bind:this={fabHolder}
+            class="fabHolder"
             colSpan={2}
-            horizontalAlignment="right"
-            iosIgnoreSafeArea={true}
-            marginBottom={Math.min(60, $windowInset.bottom + 16)}
+            marginBottom={Math.min(60, $windowInset.bottom)}
             orientation="horizontal"
             row={2}
-            verticalAlignment="bottom"
             visibility={editing ? 'collapsed' : 'visible'}>
-            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="bottom" on:tap={startEdit} />
-            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="bottom" on:tap={throttle(() => showImages(), 500)} />
+            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" on:tap={startEdit} />
+            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" on:tap={throttle(() => showImages(), 500)} />
 
-            <mdbutton bind:this={fabHolder} id="fab" class="fab" margin="8 16 0 8" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} />
+            <mdbutton bind:this={fabHolder} id="fab" class="fab" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} />
         </stacklayout>
         <CActionBar
             backgroundColor={topBackgroundColor}
@@ -1253,7 +1248,7 @@
             onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0 }}>
+            titleProps={{ autoFontSize: true, padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
             <!-- {#if editing}
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-content-save" variant="text" on:tap={saveEdit} />

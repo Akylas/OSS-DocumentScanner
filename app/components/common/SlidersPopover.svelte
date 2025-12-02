@@ -25,7 +25,7 @@
 </script>
 
 <PopoverBackgroundView rows={Array(items.length).fill('auto').join(',')} {...$$restProps}>
-    {#each items as item, i}
+    {#each items as item, i (item.title)}
         <gridlayout columns="auto,*,auto,auto" row={i} rows="auto,auto">
             {#if item.icon}
                 <label class="icon-label" marginTop={0} text={item.icon} />

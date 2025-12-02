@@ -11,19 +11,19 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { Pager } from '@nativescript-community/ui-pager';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import { Application, ApplicationSettings, Frame, NavigatedData, Page } from '@nativescript/core';
+import { Application, ApplicationSettings, Frame, NavigatedData, Page, Trace } from '@nativescript/core';
 import { startSentry } from '@shared/utils/sentry';
 import { showError } from '@shared/utils/showError';
 import { CropView } from 'plugin-nativeprocessor/CropView';
-import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import { NestedScrollView } from '~/NestedScrollView';
+import { FrameElement, PageElement, createElement, navigate, registerElement, registerNativeViewElement } from '@nativescript-community/svelte-native/dom';
+import { NestedScrollView } from '@shared/components/NestedScrollView';
 import { getCurrentISO3Language, lc } from '~/helpers/locale';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { setDocumentsService } from '~/models/OCRDocument';
 import { networkService } from '~/services/api';
 import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
-import { prefs } from '~/services/preferences';
+import { prefs } from '@shared/services/preferences';
 import { securityService } from '~/services/security';
 import { syncService } from '~/services/sync';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
@@ -116,7 +116,7 @@ try {
 
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
-    // Trace.addCategories(Trace.categories.Accessibility);
+    // Trace.addCategories(Trace.categories.Layout);
     // Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
@@ -126,11 +126,11 @@ try {
     async function start() {
         try {
             Application.servicesStarted = false;
-            DEV_LOG && console.log('start');
+            // DEV_LOG && console.log('start');
             setDocumentsService(documentsService);
             await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(getCurrentISO3Language()), documentsService.start()]);
             Application.servicesStarted = true;
-            DEV_LOG && console.log('servicesStarted');
+            // DEV_LOG && console.log('servicesStarted');
             Application.notify({ eventName: 'servicesStarted' });
             if (ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)) {
                 syncService.syncDocuments({ withFolders: true });
@@ -140,7 +140,7 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
-        DEV_LOG && console.log('launch');
+        // DEV_LOG && console.log('launch');
         startThemeHelper();
         launched = true;
         start();

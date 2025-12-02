@@ -1,3 +1,4 @@
+import { globalIgnores } from 'eslint/config';
 import defaultConfig from './tools/eslint.config.mjs';
 
-export default defaultConfig;
+export default [globalIgnores(['**/opencv', '**/tesseract', '**/zxingcpp', '**/plugin-nativeprocessor']), ...defaultConfig];

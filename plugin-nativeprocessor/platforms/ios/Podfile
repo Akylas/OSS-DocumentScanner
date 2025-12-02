@@ -1,1 +1,3 @@
-pod 'zxing-cpp/CoreZint', :path => '../../../zxingcpp'
+if ENV['APP_ID'] == 'com.akylas.cardwallet'
+    pod 'zxing-cpp/CoreZint', :path => '../../../zxingcpp'
+end

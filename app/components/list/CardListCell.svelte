@@ -3,7 +3,7 @@
 
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
     import { colorTheme, isEInk } from '~/helpers/theme';
     import { CARD_RATIO } from '~/utils/constants';
@@ -106,13 +106,13 @@
             fadeDuration: 100,
             item: item.doc.pages[0],
             sharedTransitionTag: `document_${item.doc.id}_${item.doc.pages[0].id}`,
-            stretch: 'aspectFill'
+            stretch: 'aspectFit'
         };
     }
 
     function getItemHolderParams(layout, item: Item, nbColumns) {
         const page = item.doc.pages[0];
-        const color = isEInk ? null : new Color(page.colors?.[0] || item.doc.extra?.color || colorOnPrimary);
+        const color = isEInk ? null : new Color(page?.extra?.color ?? page.colors?.[1] ?? item.doc.extra?.color ?? colorOnPrimary);
         const result = {
             backgroundColor: color
         };

@@ -70,7 +70,6 @@ export enum FORMATS {
 
 export class QRCodeService extends Observable {
     async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string = '#000000', options?) {
-        DEV_LOG && console.log('getQRCodeSVG', JSON.stringify(qrcode), width, color, !!getSVGFromQRCode);
         return getSVGFromQRCode(qrcode.text, qrcode.format, width, {
             color,
             ...(options || {})

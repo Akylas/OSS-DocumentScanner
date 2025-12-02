@@ -1,18 +1,18 @@
 <script lang="ts">
     import { Pager } from '@nativescript-community/ui-pager';
-    import { AndroidActivityBackPressedEventData, Application, GridLayout, Page, confirm } from '@nativescript/core';
-    import { closeModal } from 'svelte-native';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { AndroidActivityBackPressedEventData, Application, GridLayout, Page } from '@nativescript/core';
+    import { onDestroy, onMount } from 'svelte';
+    import { closeModal } from '@nativescript-community/svelte-native';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';
+    import { isEInk } from '~/helpers/theme';
     import { ImportImageData } from '~/models/OCRDocument';
-    import { colors, windowInset } from '~/variables';
-    import PageIndicator from './common/PageIndicator.svelte';
-    import { onDestroy, onMount } from 'svelte';
     import { confirmGoBack, onBackButton } from '~/utils/ui';
-    import { colorTheme, isEInk } from '~/helpers/theme';
+    import { colors, fontScale, windowInset } from '~/variables';
+    import PageIndicator from './common/PageIndicator.svelte';
 
     let page: NativeViewElementNode<Page>;
     let pager: NativeViewElementNode<Pager>;
@@ -106,7 +106,7 @@
                 <CropView {...item} on:undosChanged={onUndosChanged} />
             </Template>
         </pager>
-        <PageIndicator colSpan={3} horizontalAlignment="right" margin="10 10 0 0" row={2} text={`${currentIndex + 1}/${items.length}`} />
+        <PageIndicator colSpan={3} horizontalAlignment="right" margin="10 10 0 0" row={2} scale={$fontScale} text={`${currentIndex + 1}/${items.length}`} />
         <mdbutton
             class="icon-btn"
             color={textColor}
