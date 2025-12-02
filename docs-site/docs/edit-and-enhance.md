@@ -119,12 +119,21 @@ Extract text from scanned documents:
 4. Wait for processing to complete
 5. View and copy extracted text
 
+### Detect and Copy
+
+For quick text extraction:
+
+1. Open a document page
+2. Use **Detect and Copy** (`ocr_copy_text`) to quickly detect text and copy it to clipboard
+3. The text is automatically copied without opening the full OCR view
+
 ### OCR Features
 
 - **Multi-language support**: OCR works with many languages
 - **Copy text**: Copy extracted text to clipboard
 - **Search**: Search within extracted text
 - **Export**: Include OCR text in PDF exports
+- **Transparent OCR in PDF**: Add searchable text layer to exported PDFs
 
 ### OCR Tips
 
@@ -132,6 +141,7 @@ Extract text from scanned documents:
 - Ensure good capture quality
 - Select correct language(s)
 - For handwriting, results may vary
+- Download language models from **Settings** > **OCR** before use
 
 :::note OCR Processing
 OCR uses Tesseract for text recognition. Processing happens on-device for privacy. See `app/services/ocr.ts` for implementation details.
@@ -144,9 +154,11 @@ OCR uses Tesseract for text recognition. Processing happens on-device for privac
 In multi-page documents:
 
 1. Open the document view
-2. Long-press on a page thumbnail
-3. Drag to the new position
-4. Release to drop
+2. Tap the **Reorder Pages** button (`reorder_pages`) in the toolbar
+3. Long-press on a page thumbnail
+4. Drag to the new position
+5. Release to drop
+6. Tap **Done** to save the new order
 
 ### Deleting Pages
 
