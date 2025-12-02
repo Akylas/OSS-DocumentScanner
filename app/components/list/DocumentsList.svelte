@@ -1,24 +1,24 @@
 <script context="module" lang="ts">
-    import { colorTheme, isEInk } from '~/helpers/theme';
-    import MainList, { Item } from './MainList.svelte';
-    import { Template } from 'svelte-native/components';
-    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
-    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import dayjs from 'dayjs';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
-    import { filesize } from 'filesize';
+    import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
+    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { throttle } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import dayjs from 'dayjs';
+    import { filesize } from 'filesize';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { isEInk } from '~/helpers/theme';
+    import { DocFolder } from '~/models/OCRDocument';
+    import { importImageFromCamera } from '~/utils/ui';
+    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
+    import PageIndicator from '../common/PageIndicator.svelte';
     import RotableImageView from '../common/RotableImageView.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
-    import PageIndicator from '../common/PageIndicator.svelte';
-    import { throttle } from '@nativescript/core/utils';
-    import { importImageFromCamera } from '~/utils/ui';
-    import { showError } from '@shared/utils/showError';
-    import { DocFolder } from '~/models/OCRDocument';
-    import { l, lc } from '@nativescript-community/l';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import MainList, { Item } from './MainList.svelte';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -47,18 +47,18 @@
         return 10;
     }
     function getItemImageHeight(viewStyle) {
-        return (condensed ? 44 : 94) * $fontScale;
+        return condensed ? 44 : 94;
     }
 
     $: textPaint.color = colorOnBackground || 'black';
-    $: textPaint.textSize = (condensed ? 11 : 14) * $fontScale;
 
     function onCanvasDraw(item: Item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
-        const dx = 10 + getItemImageHeight(viewStyle) + 16;
+        const dx = 10 + getItemImageHeight(viewStyle) * $fontScale + 16;
         textPaint.color = colorOnSurfaceVariant;
         const { doc } = item;
+        textPaint.textSize = condensed ? 11 : 14 * $fontScale;
         canvas.drawText(
             filesize(
                 doc.pages.reduce((acc, v) => acc + v.size, 0),
@@ -81,7 +81,7 @@
                 {
                     color: colorOnSurfaceVariant,
                     fontSize: 14 * $fontScale,
-                    lineHeight: (condensed ? 14 : 20) * $fontScale,
+                    lineHeight: condensed ? 14 : 20 * $fontScale,
                     text: '\n' + dayjs(doc.createdDate).format('L LT')
                 }
             ]
@@ -135,14 +135,14 @@
                 marginTop={getImageMargin(viewStyle)}
                 sharedTransitionTag={`document_${item.doc.id}_${item.doc.pages[0]?.id}`}
                 stretch="aspectFill"
-                width={getItemImageHeight(viewStyle)} />
+                width={getItemImageHeight(viewStyle) * $fontScale} />
             <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
             <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
-            <PageIndicator horizontalAlignment="right" margin={10} text={item.doc.pages.length} />
+            <PageIndicator horizontalAlignment="right" margin={10} scale={$fontScale} text={item.doc.pages.length} />
         </canvasview>
     </Template>
 
-    <stacklayout bind:this={fabHolder} slot="fab" horizontalAlignment="right" marginBottom={Math.min(60, $windowInset.bottom + 16)} orientation="horizontal" row={1} verticalAlignment="bottom">
+    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
         {#if __IOS__}
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
         {/if}
@@ -153,7 +153,7 @@
             verticalAlignment="center"
             on:tap={throttle(() => importDocument(), 500)} />
         {#if $hasCamera}
-            <mdbutton id="fab" class="fab" margin="0 16 0 16" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
+            <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
         {/if}
     </stacklayout>
 </MainList>

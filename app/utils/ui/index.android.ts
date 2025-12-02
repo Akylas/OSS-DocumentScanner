@@ -5,10 +5,13 @@ import { showError } from '@shared/utils/showError';
 import { Dayjs } from 'dayjs';
 import { documentsService } from '~/services/documents';
 import { securityService } from '~/services/security';
-import { goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
+import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
 import { requestStoragePermission } from '../utils.common';
+import { ocrService } from '~/services/ocr';
 
 export * from './index.common';
+
+export { onBackButton } from '@shared/utils/ui';
 
 export function showToast(text: string) {
     android.widget.Toast.makeText(Utils.android.getApplicationContext(), text, android.widget.Toast.LENGTH_SHORT).show();
@@ -18,30 +21,9 @@ export function showToolTip(tooltip: string, view?: View) {
     android.widget.Toast.makeText(Utils.android.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
 }
 
-export function onBackButton(view: View, callback) {
-    if (!view) {
-        return;
-    }
-    // if it is not the currentPage of its frame lets ignore (we are in the backstack)
-    if (view instanceof Page && view.frame && view.frame?.currentPage !== view) {
-        return;
-    }
-    let modalParent = view;
-    const lastModalInStack = modalParent._getRootModalViews().slice(-1)[0];
-
-    while (modalParent.parent && !modalParent._modalParent) {
-        modalParent = modalParent.parent as View;
-    }
-    DEV_LOG && console.log('onBackButton', view.id, modalParent._modalParent, lastModalInStack);
-    if (lastModalInStack && lastModalInStack !== modalParent) {
-        return;
-    }
-    callback();
-}
-
 async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
     if (__ANDROID__) {
-        DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
+        // DEV_LOG && console.log('innerOnAndroidIntent', Application.servicesStarted, securityService.validating);
         if (Application.servicesStarted !== true) {
             return Application.once('servicesStarted', () => innerOnAndroidIntent(event));
         }
@@ -79,12 +61,29 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                         onStartCam();
                     }, 0);
                     break;
+                case 'com.akylas.documentscanner.OCR_CAMERA_CLIPBOARD':
+                    setTimeout(async () => {
+                        if (ocrService.downloadedLanguages.length === 0) {
+                            showToast(lc('ocr_missing_languages'));
+                            return;
+                        }
+                        const result = await getOCRFromCamera();
+                        DEV_LOG && console.log('result', result);
+                        if (result) {
+                            copyTextToClipboard(result.text);
+                            showToast(lc('copied'));
+                        } else {
+                            showToast(lc('no_document_found'));
+                        }
+                    }, 0);
+                    break;
                 case 'android.intent.action.MAIN':
                     const extras = intent.getExtras();
                     const bundleAction = extras?.getString('action');
                     switch (bundleAction) {
                         case 'view':
                             const id = extras?.getString('id');
+                            DEV_LOG && console.log('intent android.intent.action.MAIN view', id);
                             if (id) {
                                 const document = await documentsService.documentRepository.get(id);
                                 if (document) {
@@ -95,8 +94,8 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     }
                     break;
             }
-            DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
             if (__ANDROID__ && uris.length) {
+                DEV_LOG && console.log('innerOnAndroidIntent uris', action, uris);
                 const needsStoragePermission = uris.find((d) => d.startsWith('file://'));
                 if (needsStoragePermission) {
                     await requestStoragePermission();

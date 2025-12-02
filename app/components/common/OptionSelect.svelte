@@ -7,7 +7,7 @@
     import { File, ObservableArray, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onDestroy } from 'svelte';
-    import { Template } from 'svelte-native/components';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import IconButton from '~/components/common/IconButton.svelte';
     import ListItem from '~/components/common/ListItem.svelte';
     import { lc } from '~/helpers/locale';
@@ -222,7 +222,6 @@
                         boxType={item.boxType}
                         checked={item.value}
                         col={item.boxType === 'circle' ? 0 : 2}
-                        ios:marginRight={10}
                         verticalAlignment="center"
                         on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>

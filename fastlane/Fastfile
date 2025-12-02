@@ -583,6 +583,8 @@ platform :android do
     when 'fdroid','github'
       if (options[:sentry] == true)
         sh("npm", "run", "build.android.production.fdroid.sentry")
+      elsif (options[:logging] == true)
+        sh("npm", "run", "build.android.production.fdroid.logging")
       else 
         sh("npm", "run", "build.android.production.fdroid")
       end

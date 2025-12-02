@@ -1,29 +1,29 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { EventData, Img } from '@nativescript-community/ui-image';
+    import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, Screen, SharedTransition, View } from '@nativescript/core';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, SharedTransition, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
+    import { goBack, showModal } from '@shared/utils/svelte/ui';
     import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { TRANSFORMS } from '~/utils/localized_constant';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { DocumentDeletedEventData, DocumentPageUpdatedEventData, DocumentUpdatedEventData, DocumentsService, documentsService } from '~/services/documents';
+    import { DocumentDeletedEventData, DocumentPageUpdatedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
     import { qrcodeService } from '~/services/qrcode';
     import { shortcutService } from '~/services/shortcuts';
-    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, FILTER_COL_WIDTH, FILTER_ROW_HEIGHT, TRANSFORMS_SPLIT } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { goBack, showModal } from '@shared/utils/svelte/ui';
+    import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, TRANSFORMS_SPLIT } from '~/utils/constants';
     import {
         ColorMatricesTypes,
         copyTextToClipboard,
@@ -31,19 +31,18 @@
         getColorMatrix,
         hideLoading,
         onBackButton,
+        pickColor,
         showImagePopoverMenu,
         showLoading,
         showMatrixLevelPopover,
         showPDFPopoverMenu,
-        showPopoverMenu,
         showSlidersPopover,
         showSnack
     } from '~/utils/ui';
     import { colors, fontScale, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import PageIndicator from '../common/PageIndicator.svelte';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import IconButton from '../common/IconButton.svelte';
+    import PageIndicator from '../common/PageIndicator.svelte';
 
     // technique for only specific properties to get updated on store change
     $: ({ colorOutline, colorPrimary, colorSurfaceContainer } = $colors);
@@ -522,14 +521,14 @@
             const currentTransforms = (page.transforms?.split(TRANSFORMS_SPLIT) || []).filter((s) => s?.length);
             if (value) {
                 if (currentTransforms.indexOf(type) === -1) {
-                    await showLoading(l('computing'));
+                    await showLoading(lc('computing'));
                     currentTransforms.push(type);
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(TRANSFORMS_SPLIT));
                 }
             } else {
                 const index = currentTransforms.indexOf(type);
                 if (index !== -1) {
-                    await showLoading(l('computing'));
+                    await showLoading(lc('computing'));
                     currentTransforms.splice(index, 1);
                     await document.updatePageTransforms(currentIndex, currentTransforms.join(TRANSFORMS_SPLIT));
                 }
@@ -609,6 +608,9 @@
         //TODO: recrop into modal window
         try {
             const item = items.getItem(currentIndex);
+            if (!item) {
+                return;
+            }
             if (!item.sourceImageWidth) {
                 const size = await getImageSize(item.sourceImagePath);
                 item.sourceImageWidth = size.width;
@@ -634,7 +636,7 @@
                 }
             });
             if (result) {
-                showLoading();
+                showLoading(lc('computing'));
                 await document.updatePageCrop(currentIndex, result);
             }
         } catch (error) {
@@ -695,6 +697,28 @@
             showError(error);
         }
     }
+
+    async function changeColor(item: OCRPage, event) {
+        try {
+            const currentColor = item?.extra?.color ?? 'black';
+            const newColor = await pickColor(currentColor, { anchor: event.object });
+            if (newColor) {
+                // editingUpdates.extra = editingUpdates.extra || {};
+                // topBackgroundColor = editingUpdates.extra.color = newColor.hex;
+                // updateExtraItem(item, 'type');
+
+                await document.updatePage(
+                    currentIndex,
+                    {
+                        extra: { color: newColor.hex }
+                    },
+                    false
+                );
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page bind:this={page} id="pdfEdit" actionBarHidden={true}>
@@ -702,13 +726,35 @@
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
-                    <RotableImageView id="imageView" {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
+                    <RotableImageView
+                        id="imageView"
+                        backgroundColor={currentItem?.extra?.color}
+                        {item}
+                        sharedTransitionTag={`document_${document.id}_${item.id}`}
+                        zoomable={true}
+                        on:rotated={(e) => onImageRotated(item, e)} />
                 </gridlayout>
             </Template>
         </pager>
-        <PageIndicator horizontalAlignment="right" margin={10} row={2} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
+        <PageIndicator horizontalAlignment="right" margin={10} row={2} scale={$fontScale} text={`${currentIndex + 1}/${items.length}`} verticalAlignment="bottom" />
 
         <label fontSize={14} horizontalAlignment="left" padding={10} row={2} text={currentItemSubtitle} verticalTextAlignment="center" />
+
+        {#if CARD_APP}
+            <absolutelayout
+                backgroundColor={currentItem?.extra?.color ?? 'black'}
+                borderColor={colorOutline}
+                borderRadius="50%"
+                borderWidth={2}
+                height={40}
+                horizontalAlignment="right"
+                margin={10}
+                row={1}
+                verticalAlignment="top"
+                width={40}
+                on:tap={(event) => changeColor(currentItem, event)} />
+        {/if}
+
         <stacklayout backgroundColor="#00000055" borderRadius={10} horizontalAlignment="right" marginRight={5} row={1} verticalAlignment="center">
             <IconButton color="white" text="mdi-share-variant" tooltip={lc('share')} on:tap={showImageExportPopover} />
             <IconButton color="white" isVisible={!!currentItemOCRData} onLongPress={copyText} text="mdi-format-textbox" on:tap={showCurrentOCRData} />

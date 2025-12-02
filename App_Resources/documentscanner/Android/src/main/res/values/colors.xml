@@ -34,6 +34,25 @@
     <color name="md_theme_surfaceTint">#006E25</color>
     <color name="md_theme_outlineVariant">#C2C9BD</color>
     <color name="md_theme_scrim">#000000</color>
+    <color name="md_theme_primaryFixed">#BAF0B7</color>
+    <color name="md_theme_onPrimaryFixed">#002106</color>
+    <color name="md_theme_primaryFixedDim">#9FD49C</color>
+    <color name="md_theme_onPrimaryFixedVariant">#205026</color>
+    <color name="md_theme_secondaryFixed">#D5E8D0</color>
+    <color name="md_theme_onSecondaryFixed">#101F10</color>
+    <color name="md_theme_secondaryFixedDim">#B9CCB4</color>
+    <color name="md_theme_onSecondaryFixedVariant">#3A4B39</color>
+    <color name="md_theme_tertiaryFixed">#BCEBF2</color>
+    <color name="md_theme_onTertiaryFixed">#001F23</color>
+    <color name="md_theme_tertiaryFixedDim">#A1CED5</color>
+    <color name="md_theme_onTertiaryFixedVariant">#1F4D53</color>
+    <color name="md_theme_surfaceDim">#D7DBD3</color>
+    <color name="md_theme_surfaceBright">#F7FBF2</color>
+    <color name="md_theme_surfaceContainerLowest">#FFFFFF</color>
+    <color name="md_theme_surfaceContainerLow">#F1F5EC</color>
+    <color name="md_theme_surfaceContainer">#EBEFE6</color>
+    <color name="md_theme_surfaceContainerHigh">#E6E9E1</color>
+    <color name="md_theme_surfaceContainerHighest">#E0E4DB</color>
 
     <color name="md_theme_eink_primary">#5D5F5F</color>
     <color name="md_theme_eink_onPrimary">#FFFFFF</color>

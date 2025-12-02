@@ -125,6 +125,7 @@ export function getDocumentsService() {
 }
 
 export enum ExtraFieldType {
+    // Color = 'color',
     String = 'string',
     Date = 'date',
     Number = 'number'
@@ -253,7 +254,6 @@ export class OCRDocument extends Observable implements Document {
         if (pagesData) {
             const docId = this.id;
             const docData = this.folderPath;
-            const { length } = pagesData;
             const pageStartId = Date.now();
             const imageExportSettings = getImageExportSettings();
             const pages = await doInBatch(pagesData, async (data, index) => {
@@ -299,9 +299,11 @@ export class OCRDocument extends Observable implements Document {
                 } else if (sourceImagePath) {
                     let baseName = sourceImagePath
                         .replace(/%252F/g, SEPARATOR) // for Android content:// paths
+                        .replace(/%2F/g, SEPARATOR) // for Android SAF paths
                         .split(SEPARATOR)
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
+                    DEV_LOG && console.log('baseName', baseName);
                     if (!baseName.endsWith(imageExportSettings.imageFormat)) {
                         baseName += '.' + imageExportSettings.imageFormat;
                     }
@@ -314,23 +316,21 @@ export class OCRDocument extends Observable implements Document {
                     }
                 }
                 if (id) {
-                    try {
-                        const page = await documentsService.pageRepository.get(id);
-                        if (page) {
-                            const { id, ...toUpdate } = attributes;
-                            return documentsService.pageRepository.update(page, toUpdate);
-                        }
-                    } catch (error) {}
+                    const page = await documentsService.pageRepository.get(id);
+                    if (page) {
+                        const { id, ...toUpdate } = attributes;
+                        return documentsService.pageRepository.update(page, toUpdate);
+                    }
                 }
                 return documentsService.pageRepository.createPage(attributes, dataFolderPath);
             });
             // for (let index = 0; index < length; index++) {}
-            // DEV_LOG && console.log('addPages done', JSON.stringify(pages));
             if (this.pages) {
                 this.pages.push(...pages);
             } else {
                 this.pages = pages;
             }
+            DEV_LOG && console.log('addPages done', this.pages.length);
             // this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
@@ -500,11 +500,13 @@ export class OCRDocument extends Observable implements Document {
         DEV_LOG && console.log('updatePageCrop', this.id, pageIndex, quad, page.imagePath);
         const file = File.fromPath(page.imagePath);
         const imageExportSettings = getImageExportSettings();
+        const compressFormat = page.sourceImagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
+
         const images = await cropDocumentFromFile(page.sourceImagePath, [quad], {
             transforms: page.transforms,
             saveInFolder: file.parent.path,
             fileName: file.name,
-            compressFormat: imageExportSettings.imageFormat,
+            compressFormat,
             compressQuality: imageExportSettings.imageQuality
         });
         const image = images[0];
@@ -546,11 +548,12 @@ export class OCRDocument extends Observable implements Document {
                 false
             );
         } else {
+            const compressFormat = page.sourceImagePath.toLowerCase().endsWith('.png') ? 'png' : imageExportSettings.imageFormat;
             const images = await cropDocumentFromFile(page.sourceImagePath, [page.crop], {
                 transforms,
                 saveInFolder: file.parent.path,
                 fileName: file.name,
-                compressFormat: imageExportSettings.imageFormat,
+                compressFormat,
                 compressQuality: imageExportSettings.imageQuality
             });
             const image = images[0];
@@ -645,6 +648,7 @@ export interface Page {
     ocrData: OCRData;
     qrcode: QRCodeData;
     colors: ColorPaletteData;
+    extra?: DocumentExtra;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -661,6 +665,8 @@ export class OCRPage extends Observable implements Page {
 
     colorType?: MatricesTypes;
     colorMatrix?: Matrix;
+
+    extra?: DocumentExtra;
 
     brightness?: number;
     contrast?: number;

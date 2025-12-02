@@ -3,8 +3,8 @@
     import { ObservableArray } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { showModal } from '@shared/utils/svelte/ui';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import { lc, onLanguageChanged } from '~/helpers/locale';
@@ -166,7 +166,7 @@
     }
     async function onTap(item, event) {
         try {
-            DEV_LOG && console.log('SyncListSettings', 'onItemTap', item);
+            // DEV_LOG && console.log('SyncListSettings', 'onItemTap', item);
             switch (item.id) {
                 case 'add':
                     const options = Object.keys(SERVICES_SYNC_TITLES)
@@ -341,7 +341,7 @@
     }
 </script>
 
-<page id="settingsPage" actionBarHidden={true}>
+<page id="syncSettingsPage" actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template let:item>
@@ -381,7 +381,7 @@
             </Template>
         </collectionview>
         <CActionBar canGoBack {title}>
-            {#each actionBarButtons as button}
+            {#each actionBarButtons as button (button.id)}
                 <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
             {/each}
         </CActionBar>

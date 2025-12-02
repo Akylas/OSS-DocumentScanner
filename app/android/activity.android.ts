@@ -56,7 +56,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     public onPostResume(): void {
-        DEV_LOG && console.log(TAG, 'onPostResume', this.getIntent().getAction());
+        // DEV_LOG && console.log(TAG, 'onPostResume', this.getIntent().getAction());
         this._callbacks.onPostResume(this, super.onPostResume);
     }
 

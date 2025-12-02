@@ -127,7 +127,7 @@ There are 2 ways to install them:
 #### OpenCV
 
 * **Android**:
-You can download Opencv 4.8.0 for android [here](https://github.com/nihui/opencv-mobile/releases/latest/download/opencv-mobile-4.8.1-apple.zip).
+You can download Opencv 4.8.0 for android [here](https://github.com/nihui/opencv-mobile/releases/latest/download/opencv-mobile-4.8.1-android.zip).
 Then place the necessary libs/includes in the `opencv/android` at the root of this repo like shown here:
 ![opencv directory structure](images/opencv_structure.png)
 

@@ -3,6 +3,7 @@
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { Slider } from '@nativescript-community/ui-material-slider/slider';
     import { AbsoluteLayout, AndroidActivityBackPressedEventData, Application, ApplicationSettings, Page, Utils, knownFolders, path } from '@nativescript/core';
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce, wrapNativeException } from '@nativescript/core/utils';
@@ -11,8 +12,8 @@
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
-    import { closeModal } from 'svelte-native';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { closeModal } from '@nativescript-community/svelte-native';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
@@ -25,34 +26,37 @@
         AUTO_SCAN_DURATION,
         AUTO_SCAN_ENABLED,
         CROP_ENABLED,
+        DEFAULT_FONT_CAM_MIRRORED,
         IMAGE_CONTEXT_OPTIONS,
         IMG_FORMAT,
         PREVIEW_RESIZE_THRESHOLD,
         SETTINGS_CAMERA_SETTINGS,
         SETTINGS_CROP_ENABLED,
+        SETTINGS_FONT_CAM_MIRRORED,
         SETTINGS_IMAGE_EXPORT_FORMAT,
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
-    import { requestCameraPermission } from '~/utils/utils.common';
-    import { colors, startOnCam, windowInset } from '~/variables';
+    import { requestCameraPermission } from '~/utils/utils';
+    import { colors, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorBackground, colorOnBackground, colorOutlineVariant, colorPrimary } = $colors);
 
     let page: NativeViewElementNode<Page>;
     let cameraView: NativeViewElementNode<CameraView>;
     let focusRing: NativeViewElementNode<AbsoluteLayout>;
     let takPictureBtnCanvas: NativeViewElementNode<CanvasView>;
     let cropView: NativeViewElementNode<CropView>;
+    let zoomSlider: NativeViewElementNode<Slider>;
 
     const cameraOptionsStore = writable<{ aspectRatio: string; stretch: string; viewsize: string; pictureSize: string }>(
         JSON.parse(ApplicationSettings.getString(SETTINGS_CAMERA_SETTINGS, '{"aspectRatio":"4:3", "stretch":"aspectFit","viewsize":"limited", "pictureSize":null}'))
     );
     $: DEV_LOG && console.log('cameraOptions', JSON.stringify($cameraOptionsStore));
     const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
-
+    const frontMirrored = ApplicationSettings.getBoolean(SETTINGS_FONT_CAM_MIRRORED, DEFAULT_FONT_CAM_MIRRORED);
     cameraOptionsStore.subscribe((newValue) => {
         ApplicationSettings.setString(SETTINGS_CAMERA_SETTINGS, JSON.stringify(newValue));
     });
@@ -60,6 +64,7 @@
 
     export let document: OCRDocument = null;
     export let QRCodeOnly = false;
+    export let onlyForOCR = false;
     export let folder: DocFolder = null;
 
     let nbPages = 0;
@@ -68,10 +73,10 @@
     let smallImageRotation: number = 0;
     const previewResizeThreshold = ApplicationSettings.getNumber('previewResizeThreshold', PREVIEW_RESIZE_THRESHOLD);
     let flashMode = ApplicationSettings.getNumber('defaultFlashMode', 0);
-    const zoom = ApplicationSettings.getNumber('defaultZoom', 1);
+    let zoom = 1;
     let _actualFlashMode = flashMode;
     let torchEnabled = false;
-    let batchMode = ApplicationSettings.getBoolean('batchMode', false);
+    let batchMode = !onlyForOCR && ApplicationSettings.getBoolean('batchMode', false);
     let canSaveDoc = false;
     let editing = false;
     const imageExportSettings = getImageExportSettings();
@@ -98,7 +103,7 @@
                       currentResolution: cameraView.nativeView.getCurrentResolutionInfo()
                   }
                 : {};
-            DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
+            // DEV_LOG && console.log('showCameraSettings', JSON.stringify(addedProps), JSON.stringify(get(cameraOptionsStore)));
             const view = (await import('~/components/widgets/ImageProcessingSettingsBottomSheet.svelte')).default;
             await showBottomSheet({
                 parent: page,
@@ -116,10 +121,10 @@
         }
     }
 
-    async function processAndAddImage(image: string | UIImage, autoScan = false) {
+    async function processAndAddImage(image: string | UIImage, autoScan = false, onlyForOCR = false) {
         let imageSource: ImageSource;
         try {
-            showLoading(l('computing'));
+            showLoading(lc('computing'));
             let tempImagePath: string;
             if (typeof image === 'string') {
                 tempImagePath = image;
@@ -134,6 +139,7 @@
             }
 
             return await processCameraImage({
+                onlyForOCR,
                 imagePath: tempImagePath,
                 fileName: `cropedBitmap_${pagesToAdd.length}.${IMG_FORMAT}`,
                 autoScan,
@@ -182,7 +188,7 @@
         try {
             DEV_LOG && console.log('takePicture', autoScan, _actualFlashMode);
             const start = Date.now();
-            await showLoading(l('capturing'));
+            await showLoading(lc('capturing'));
             // on Android we the capture will directly save the image to a temp directory
             // but thus maxWidth / maxHeight is ignored
             const { image } = await cameraView.nativeView.takePicture({
@@ -193,9 +199,12 @@
                 maxWidth: 4500,
                 maxHeight: 4500
             });
-            const didAdd = await processAndAddImage(image, autoScan);
-            DEV_LOG && console.log('takePicture got image', batchMode, !!image, didAdd, Date.now() - start, 'ms');
+            const didAdd = await processAndAddImage(image, autoScan, onlyForOCR);
+            DEV_LOG && console.log('takePicture got image', batchMode, !!image, !!didAdd, Date.now() - start, 'ms');
             if (didAdd) {
+                if (onlyForOCR) {
+                    return closeModal(didAdd);
+                }
                 if (batchMode) {
                     nbPages = pagesToAdd.length;
                     const lastPage = pagesToAdd[pagesToAdd.length - 1];
@@ -245,6 +254,7 @@
     }
 
     onMount(async () => {
+        $shouldListenForSensorOrientation = true;
         // if (!check('camera')) {
         //     stopPreview();
         // }
@@ -257,6 +267,7 @@
         Application.on(Application.foregroundEvent, onForeground);
     });
     onDestroy(() => {
+        $shouldListenForSensorOrientation = false;
         // clearImages();
         document = null;
         nbPages = 0;
@@ -448,9 +459,36 @@
             showError(error);
         }
     }
-    const onZoom = debounce(function onZoom(event) {
-        ApplicationSettings.setNumber('defaultZoom', event.zoom);
-    }, 500);
+    const onZoom = debounce(
+        function onZoom(event) {
+            zoom = event.zoom;
+            ApplicationSettings.setNumber('defaultZoom', zoom);
+            updateFloatZoom(zoom);
+        },
+        500,
+        { leading: true }
+    );
+    const setZoomThrottled = debounce(
+        function (value) {
+            zoom = value;
+            ApplicationSettings.setNumber('defaultZoom', zoom);
+        },
+        500,
+        { leading: true }
+    );
+    let zoomPercentDelta = 0;
+    let floatZoom = zoom;
+
+    function updateFloatZoom(value) {
+        floatZoom = value;
+        const zoomPercent = (floatZoom - minZoom) / (maxZoom - minZoom);
+        const parentWidth = Utils.layout.toDeviceIndependentPixels(zoomSlider.nativeView.getMeasuredWidth()) - 40;
+        zoomPercentDelta = parentWidth * zoomPercent;
+    }
+    function onZoomValue(e) {
+        updateFloatZoom(e.value);
+        setZoomThrottled(floatZoom);
+    }
 
     let autoScan = ApplicationSettings.getBoolean('autoScan', AUTO_SCAN_ENABLED);
     let processor;
@@ -611,10 +649,16 @@
             canvas.drawCircle(w / 2, h / 2, radius, borderPaint);
         }
     }
+
+    let maxZoom = 1;
+    let minZoom = 1;
     let cameraOpened = false;
     function onCameraOpen({ object }: { object: CameraView }) {
         try {
-            DEV_LOG && console.log('onCameraOpen');
+            zoom = ApplicationSettings.getNumber('defaultZoom', cameraView.nativeView.neutralZoom);
+            minZoom = cameraView.nativeView.minZoom;
+            maxZoom = Math.min(cameraView.nativeView.maxZoom, 16);
+            DEV_LOG && console.log('onCameraOpen', minZoom, maxZoom, zoom);
             if (__ANDROID__) {
                 const currentResolution = cameraView.nativeView.getCurrentResolutionInfo();
                 if (currentResolution) {
@@ -646,11 +690,12 @@
                 captureMode={1}
                 enablePinchZoom={true}
                 flashMode={_actualFlashMode}
+                {frontMirrored}
                 height="100%"
                 jpegQuality={compressQuality}
                 {pictureSize}
                 readyToStartPreview={false}
-                ios:iosCaptureMode="videoPhotoWithoutAudio"
+                ios:iosCaptureMode="photo"
                 {stretch}
                 width="100%"
                 {zoom}
@@ -675,21 +720,55 @@
                 <IconButton col={6} color="white" row={2} text="mdi-cogs" on:tap={() => showSettings()} />
             {/if}
         </gridlayout>
-
-        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={30} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
-            <IconButton
-                colSpan={2}
-                color="white"
+        <gridlayout
+            horizontalAlignment="center"
+            marginBottom={5}
+            row={1}
+            verticalAlignment="bottom"
+            visibility={(maxZoom !== 1 || minZoom !== 1) && maxZoom !== minZoom ? 'visible' : 'collapsed'}
+            width="70%">
+            <slider
+                bind:this={zoomSlider}
+                backgroundColor={colorBackground}
+                maxValue={maxZoom}
+                minValue={minZoom}
+                thumbColor="transparent"
+                value={zoom}
+                on:valueChange={onZoomValue}
+                on:layoutChanged={(e) => updateFloatZoom(zoom)} />
+            <label
+                backgroundColor={colorBackground}
+                borderColor={colorOutlineVariant}
+                borderRadius={20}
+                borderWidth={1}
+                color={colorOnBackground}
+                fontSize={13}
+                height={40}
                 horizontalAlignment="left"
-                isSelected={batchMode}
-                marginLeft={16}
-                marginTop={20}
-                selectedColor={colorPrimary}
-                subtitle={lc('batch_mode')}
-                text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
-                tooltip={lc('batch_mode')}
-                verticalAlignment="center"
-                on:tap={() => (batchMode = !batchMode)} />
+                isUserInteractionEnabled={false}
+                marginLeft={zoomPercentDelta}
+                text={Math.round(floatZoom * 10) / 10 + 'x'}
+                textAlignment="center"
+                verticalTextAlignment="center"
+                width={40} />
+        </gridlayout>
+
+        <gridlayout columns="60,*,auto,*,60" ios:paddingBottom={30} android:marginBottom={30 + $windowInset.bottom} paddingTop={10} row={3} visibility={QRCodeOnly ? 'collapsed' : 'visible'}>
+            {#if !onlyForOCR}
+                <IconButton
+                    colSpan={2}
+                    color="white"
+                    horizontalAlignment="left"
+                    isSelected={batchMode}
+                    marginLeft={16}
+                    marginTop={20}
+                    selectedColor={colorPrimary}
+                    subtitle={lc('batch_mode')}
+                    text={batchMode ? 'mdi-image-multiple' : 'mdi-image'}
+                    tooltip={lc('batch_mode')}
+                    verticalAlignment="center"
+                    on:tap={() => (batchMode = !batchMode)} />
+            {/if}
 
             <image
                 borderColor="white"
@@ -705,7 +784,15 @@
                 width={60} />
             <gridlayout col={2} height={70} horizontalAlignment="center" opacity={takingPicture ? 0.6 : 1} verticalAlignment="center" width={70}>
                 <canvasView bind:this={takPictureBtnCanvas} class:infinite-rotate={autoScan} on:draw={drawTakePictureBtnBorder}> </canvasView>
-                <gridlayout backgroundColor={colorPrimary} borderRadius={27} height={54} horizontalAlignment="center" width={54} on:tap={() => takePicture()} on:longPress={() => toggleAutoScan()} />
+                <gridlayout
+                    backgroundColor={colorPrimary}
+                    borderRadius={27}
+                    height={54}
+                    horizontalAlignment="center"
+                    rippleColor="white"
+                    width={54}
+                    on:tap={() => takePicture()}
+                    on:longPress={() => toggleAutoScan()} />
                 <label color="white" fontSize={20} isUserInteractionEnabled={false} text={nbPages + ''} textAlignment="center" verticalAlignment="middle" visibility={nbPages ? 'visible' : 'hidden'} />
             </gridlayout>
 

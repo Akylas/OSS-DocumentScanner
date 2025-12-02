@@ -102,6 +102,7 @@ module.exports = (env, params = {}) => {
     env.appComponents = env.appComponents || [];
     // env.appComponents.push('~/android/cameraactivity');
     env.appComponents.push('~/android/activity.android');
+    env.appComponents.push('~/android/quicktoggle.android');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {
@@ -115,18 +116,14 @@ module.exports = (env, params = {}) => {
         inlineSourceMap, // --env.inlineSourceMap
         sentry = false, // --env.sentry
         uploadSentry = false,
-        verbose, // --env.verbose
         uglify, // --env.uglify
         noconsole, // --env.noconsole
         devlog, // --env.devlog
-        testlog, // --env.testlog
-        fakeall, // --env.fakeall
         profile, // --env.profile
         report,
         fork = true, // --env.fakeall
         accessibility = true, // --env.accessibility
         playStoreBuild = true, // --env.playStoreBuild
-        adhoc, // --env.adhoc
         timeline, // --env.timeline
         locale = 'en', // --env.locale
         theme = 'auto', // --env.theme
@@ -197,14 +194,16 @@ module.exports = (env, params = {}) => {
     }
     Object.assign(config.resolve.alias, {
         '@shared': resolve(__dirname, 'tools/app'),
-        'kiss-orm': '@akylas/kiss-orm'
+        'kiss-orm': '@akylas/kiss-orm',
+        'svelte-native': '@nativescript-community/svelte-native'
     });
     let appVersion;
     let buildNumber;
     if (platform === 'android') {
         const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
         const gradleData = readFileSync(gradlePath, 'utf8');
-        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+(?:-(?:[a-z]|[A-Z])+)?)"/)[1];
+        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+(?:-(?:[a-zA-Z0-9])+)?)"/)[1];
+        console.log('appVersion', appVersion);
         buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
     } else if (platform === 'ios') {
         const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
@@ -220,9 +219,10 @@ module.exports = (env, params = {}) => {
         'global.TNS_WEBPACK': 'true',
         __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
+        __UI_USE_XML_PARSER__: false,
+        __CSS_USE_CSS_TOOLS__: false,
         __ACCESSIBILITY_DEFAULT_ENABLED__: false,
         __ONLY_ALLOW_ROOT_VARIABLES__: true,
-        __UI_USE_XML_PARSER__: false,
         __IOS__: isIOS,
         __ANDROID__: isAndroid,
         'global.autoLoadPolyfills': false,
@@ -247,8 +247,7 @@ module.exports = (env, params = {}) => {
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${isIOS ? `https://itunes.apple.com/app/id${APP_STORE_ID}?action=write-review` : `market://details?id=${appId}`}"`,
         SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
-        DEV_LOG: !!devlog,
-        TEST_LOG: !!devlog || !!testlog
+        DEV_LOG: !!devlog
     };
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
@@ -404,7 +403,7 @@ module.exports = (env, params = {}) => {
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
-            svN: '~/svelteNamespace'
+            svN: '@shared/svelteNamespace'
         })
     );
 
@@ -551,45 +550,42 @@ module.exports = (env, params = {}) => {
     }
 
     if (hiddenSourceMap || sourceMap) {
-        if (!!sentry && !!uploadSentry) {
-            console.warn('UPLOADING SOURCE MAPS TO SENTRY')
+        if (!!sentry) {
             config.devtool = false;
             config.devtool = 'source-map';
             config.plugins.push(
                 new webpack.SourceMapDevToolPlugin({
-                    // moduleFilenameTemplate:  'webpack://[namespace]/[resource-path]?[loaders]',
                     append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
                     filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
                 })
             );
-            // console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
-            config.plugins.push(
-                sentryWebpackPlugin({
-                    telemetry: false,
-                    org: process.env.SENTRY_ORG,
-                    url: process.env.SENTRY_URL,
-                    project: process.env.SENTRY_PROJECT,
-                    authToken: process.env.SENTRY_AUTH_TOKEN,
-                    release: {
-                        name: `${appId}@${appVersion}+${buildNumber}`,
-                        dist: `${buildNumber}.${platform}${isAndroid ? (playStoreBuild ? '.playstore' : '.fdroid') : ''}`,
-                        setCommits: {
-                            auto: true,
-                            ignoreEmpty: true,
-                            ignoreMissing: true
+            if (!!uploadSentry) {
+                config.plugins.push(
+                    sentryWebpackPlugin({
+                        telemetry: false,
+                        org: process.env.SENTRY_ORG,
+                        url: process.env.SENTRY_URL,
+                        project: process.env.SENTRY_PROJECT,
+                        authToken: process.env.SENTRY_AUTH_TOKEN,
+                        release: {
+                            name: `${appId}@${platform}${isAndroid ? (playStoreBuild ? '.playstore' : '.fdroid') : ''}@${appVersion}+${buildNumber}`,
+                            dist: `${buildNumber}.${platform}${isAndroid ? (playStoreBuild ? '.playstore' : '.fdroid') : ''}`,
+                            setCommits: {
+                                auto: true,
+                                ignoreEmpty: true,
+                                ignoreMissing: true
+                            },
+                            create: true,
+                            cleanArtifacts: true
                         },
-                        create: true,
-                        cleanArtifacts: true
-                    },
-                    // debug: true,
-                    sourcemaps: {
-                        // assets: './**/*.nonexistent'
-                        rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
-                        ignore: ['tns-java-classes', 'hot-update'],
-                        assets: [join(dist, '**/*.js'), join(dist, process.env.SOURCEMAP_REL_DIR, '*.map')]
-                    }
-                })
-            );
+                        sourcemaps: {
+                            rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
+                            ignore: ['tns-java-classes', 'hot-update'],
+                            assets: [join(dist, '**/*.js'), join(dist, process.env.SOURCEMAP_REL_DIR, '*.map')]
+                        }
+                    })
+                );
+            }
         } else {
             config.devtool = 'inline-nosources-cheap-module-source-map';
         }

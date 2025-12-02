@@ -71,6 +71,7 @@ jobs:
       github: ${{ github.event.inputs.github }}
       sentry_fdroid: ${{ github.event.inputs.sentry_fdroid }}
       sentry: ${{ github.event.inputs.sentry }}
+      logging: false
     secrets: inherit
 
   release-cardwallet-android:
@@ -84,6 +85,7 @@ jobs:
       sentry_fdroid: ${{ github.event.inputs.sentry_fdroid }}
       github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
+      logging: false
     secrets: inherit
 
   release-documentscanner-ios:

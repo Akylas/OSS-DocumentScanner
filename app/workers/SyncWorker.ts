@@ -7,7 +7,7 @@ import { cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { DocFolder, OCRDocument, OCRPage, getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
-import { prefs } from '~/services/preferences';
+import { prefs } from '@shared/services/preferences';
 import type { SyncStateEventData } from '~/services/sync';
 import { BaseDataSyncService } from '~/services/sync/BaseDataSyncService';
 import { BaseImageSyncService } from '~/services/sync/BaseImageSyncService';
@@ -85,7 +85,6 @@ export default class SyncWorker extends BaseWorker {
         super(context);
 
         this.queue.on('done', () => {
-            DEV_LOG && console.log('queue empty!');
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'finished' } as SyncStateEventData);
             // ensure we unregister preferences or it will crash once the worker is closed
             prefs.destroy();
@@ -177,6 +176,9 @@ export default class SyncWorker extends BaseWorker {
         event?: DocumentEvents;
     } = {}) {
         try {
+            if (!documentsService.started) {
+                return;
+            }
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
             DEV_LOG && console.warn('syncDocuments', bothWays, event?.eventName, type);
 

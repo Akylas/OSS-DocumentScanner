@@ -246,7 +246,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         if (oldValue == null || newValue == null) {
             return;
         }
-        if(autoScanProgress.containsKey(oldValue) ) {
+        if(autoScanProgress.containsKey(oldValue) && autoScanProgress[oldValue] != null) {
             autoScanProgress[newValue] = autoScanProgress[oldValue]!!
             // we don't remove as the MaxSizeHashMap will handle it
             // as AutoScanHandler process and this drawing are async

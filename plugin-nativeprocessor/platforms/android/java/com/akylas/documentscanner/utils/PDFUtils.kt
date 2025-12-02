@@ -3,7 +3,6 @@ package com.akylas.documentscanner.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.pdf.PdfRenderer
@@ -19,9 +18,13 @@ import android.print.PrintAttributes
 import android.print.PrintDocumentInfo
 import android.print.PrintManager
 import android.util.Log
+import com.itextpdf.io.font.PdfEncodings
 import com.itextpdf.io.image.ImageDataFactory
+import com.itextpdf.kernel.colors.Color
 import com.itextpdf.kernel.colors.ColorConstants
+import com.itextpdf.kernel.font.PdfFont
 import com.itextpdf.kernel.font.PdfFontFactory
+import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy
 import com.itextpdf.kernel.geom.PageSize
 import com.itextpdf.kernel.geom.Rectangle
 import com.itextpdf.kernel.pdf.EncryptionConstants
@@ -31,19 +34,26 @@ import com.itextpdf.kernel.pdf.PdfReader
 import com.itextpdf.kernel.pdf.PdfVersion
 import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.WriterProperties
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas
 import com.itextpdf.kernel.pdf.canvas.PdfCanvasConstants
 import com.itextpdf.kernel.pdf.canvas.parser.EventType
 import com.itextpdf.kernel.pdf.canvas.parser.PdfCanvasProcessor
 import com.itextpdf.kernel.pdf.canvas.parser.data.IEventData
 import com.itextpdf.kernel.pdf.canvas.parser.data.ImageRenderInfo
 import com.itextpdf.kernel.pdf.canvas.parser.listener.IEventListener
+import com.itextpdf.kernel.pdf.extgstate.PdfExtGState
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject
 import com.itextpdf.layout.Canvas
 import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.AreaBreak
 import com.itextpdf.layout.element.Image
 import com.itextpdf.layout.element.Paragraph
+import com.itextpdf.layout.layout.LayoutArea
+import com.itextpdf.layout.layout.LayoutContext
+import com.itextpdf.layout.layout.LayoutResult
 import com.itextpdf.layout.properties.TextAlignment
+import com.itextpdf.layout.properties.VerticalAlignment
+import com.itextpdf.layout.renderer.IRenderer
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -53,6 +63,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.Arrays
 import kotlin.concurrent.thread
 import kotlin.math.PI
 import kotlin.math.abs
@@ -129,42 +140,42 @@ class PDFUtils {
         }
 
         @Throws(IOException::class)
-        fun compressPDF(src: String?, dest: String?, compressionLevel: Int, jpgQuality: Int) {
-            val writer = PdfWriter(
-                dest,
-                WriterProperties().setCompressionLevel(compressionLevel)
-                    .setFullCompressionMode(true)
-            )
-            val pdfDoc = PdfDocument(PdfReader(src), writer)
+        // fun compressPDF(src: String?, dest: String?, compressionLevel: Int, jpgQuality: Int) {
+        //     val writer = PdfWriter(
+        //         dest,
+        //         WriterProperties().setCompressionLevel(compressionLevel)
+        //             .setFullCompressionMode(true)
+        //     )
+        //     val pdfDoc = PdfDocument(PdfReader(src), writer)
 
-            // Iterate over all pages to get all images.
-            for (i in 1..pdfDoc.getNumberOfPages()) {
-                val page = pdfDoc.getPage(i)
-                val pageDict = page.pdfObject
-                val resources = pageDict.getAsDictionary(PdfName.Resources)
-                // Get images
-                val xObjects = resources.getAsDictionary(PdfName.XObject)
-                val iter: Iterator<PdfName> = xObjects.keySet().iterator()
-                while (iter.hasNext()) {
+        //     // Iterate over all pages to get all images.
+        //     for (i in 1..pdfDoc.getNumberOfPages()) {
+        //         val page = pdfDoc.getPage(i)
+        //         val pageDict = page.pdfObject
+        //         val resources = pageDict.getAsDictionary(PdfName.Resources)
+        //         // Get images
+        //         val xObjects = resources.getAsDictionary(PdfName.XObject)
+        //         val iter: Iterator<PdfName> = xObjects.keySet().iterator()
+        //         while (iter.hasNext()) {
 
-                    // Get image
-                    val imgRef = iter.next()
-                    val stream = xObjects.getAsStream(imgRef)
-                    if (stream != null && PdfName.Image == stream.getAsName(PdfName.Subtype)) {
-                        val image = PdfImageXObject(stream)
-                        val imageBytes = image.imageBytes
-                        val imgBytes = ByteArrayOutputStream()
-                        (BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                            ?: continue).compress(Bitmap.CompressFormat.JPEG, jpgQuality, imgBytes)
-                        stream.compressionLevel = compressionLevel
-                        stream.setData(imgBytes.toByteArray(), false)
-                        stream.put(PdfName.Filter, PdfName.DCTDecode)
-                        imgBytes.close()
-                    }
-                }
-            }
-            pdfDoc.close()
-        }
+        //             // Get image
+        //             val imgRef = iter.next()
+        //             val stream = xObjects.getAsStream(imgRef)
+        //             if (stream != null && PdfName.Image == stream.getAsName(PdfName.Subtype)) {
+        //                 val image = PdfImageXObject(stream)
+        //                 val imageBytes = image.imageBytes
+        //                 val imgBytes = ByteArrayOutputStream()
+        //                 (BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        //                     ?: continue).compress(Bitmap.CompressFormat.JPEG, jpgQuality, imgBytes)
+        //                 stream.compressionLevel = compressionLevel
+        //                 stream.setData(imgBytes.toByteArray(), false)
+        //                 stream.put(PdfName.Filter, PdfName.DCTDecode)
+        //                 imgBytes.close()
+        //             }
+        //         }
+        //     }
+        //     pdfDoc.close()
+        // }
 
         /**
          * Calculate an inSampleSize for use in a [BitmapFactory.Options] object when decoding
@@ -279,8 +290,88 @@ class PDFUtils {
             return Image(imageData).setRotationAngle(-rotation * PI / 180.0)
         }
 
+        private var cyrillicFont: PdfFont? = null
+        private var cjkFont: PdfFont? = null
+
+        /**
+         * Try decreasing font size until the Paragraph fits inside the box.
+         */
+        fun findFittingFontSize(
+            text: String,
+            font: PdfFont,
+            box: Rectangle,
+            pageNumber: Int,
+            layoutDoc: Document,
+            maxFontSize: Float,
+            minFontSize: Float = 4f,
+            step: Float = 0.5f
+        ): Float {
+            var size = maxFontSize
+            while (size >= minFontSize) {
+                val p = Paragraph(text).setFont(font).setFontSize(size).setMultipliedLeading(1f).setMargin(0f).setFirstLineIndent(0f).setPadding(0f)
+                    .setTextAlignment(TextAlignment.LEFT)
+                    .setVerticalAlignment(VerticalAlignment.TOP)
+                val renderer: IRenderer = p.createRendererSubTree()
+                renderer.setParent(layoutDoc.renderer) // uses LayoutDocument.getRenderer() under the hood
+                try {
+                    val layoutArea = LayoutArea(pageNumber, box)
+                    val result = renderer.layout(LayoutContext(layoutArea))
+
+                    // LayoutResult.FULL means the whole paragraph fits in the provided area
+                    if (result.status == LayoutResult.FULL) {
+                        return size
+                    }
+                } catch (e: Exception) {
+                    // Catch and log the exception so you can see why it crashed for this size.
+                    // Don't rethrow here — we try smaller sizes as fallback.
+                    System.err.println("layout() failed at size $size -> ${e::class.simpleName}: ${e.message}")
+                    e.printStackTrace()
+                }
+                size -= step
+            }
+            return minFontSize
+        }
+
+        fun drawTextInBox(
+            pdfCanvas: PdfCanvas,
+            pdf: PdfDocument,
+            box: Rectangle,
+            text: String,
+            font: PdfFont,
+            fontSize: Float,
+            color: Color = ColorConstants.BLACK,
+            textRenderingMode: Int,
+            hAlign: TextAlignment = TextAlignment.LEFT,   // LEFT, CENTER, RIGHT, JUSTIFIED
+            vAlign: VerticalAlignment = VerticalAlignment.TOP // TOP, MIDDLE, BOTTOM
+        ) {
+            val canvas = Canvas(pdfCanvas, box)
+                .setTextRenderingMode(textRenderingMode)
+                .setFont(font)
+                .setFontSize(fontSize)
+                .setFontColor(color)
+
+            canvas.showTextAligned(
+                text,
+                when (hAlign) {
+                    TextAlignment.LEFT -> box.left
+                    TextAlignment.CENTER -> box.left + box.width / 2
+                    TextAlignment.RIGHT -> box.right
+                    else -> box.left // fallback for JUSTIFIED etc.
+                },
+                when (vAlign) {
+                    VerticalAlignment.TOP -> box.top
+                    VerticalAlignment.MIDDLE -> box.bottom + box.height / 2
+                    VerticalAlignment.BOTTOM -> box.bottom
+                },
+                hAlign,
+                vAlign,
+                0f
+            )
+        }
+
         private fun drawOCRData(
             pdfDoc: PdfDocument,
+            doc: Document,
             page: JSONObject,
             posX: Float,
             posY: Float,
@@ -291,45 +382,117 @@ class PDFUtils {
         ) {
             val ocrData = page.optJSONObject("ocrData")
             if (ocrData != null) {
-//                val canvas =  PdfCanvas(pdfDoc.lastPage).setExtGState(PdfExtGState().setFillOpacity(if (debug) 1.0F else 0.01F)).setTextRenderingMode(PdfCanvasConstants.TextRenderingMode.INVISIBLE)
-                val imageWidth = ocrData.getDouble("imageWidth").toFloat()
+    //            val imageWidth = ocrData.getDouble("imageWidth").toFloat()
                 val imageHeight = ocrData.getDouble("imageHeight").toFloat()
                 val blocks = ocrData.getJSONArray("blocks")
-//                canvas.rectangle(Rectangle(posX ,
-//                    posY,
-//                    imageWidth * imageScale,
-//                    imageHeight * imageScale
-//                )).setFillColor(ColorConstants.BLUE)
-//                    .fill();
+    //                canvas
                 for (i in 0..<blocks.length()) {
                     val block = blocks.getJSONObject(i)
                     var box = block.getJSONObject("box")
                     val width = box.getDouble("width").toFloat()
                     val height = box.getDouble("height").toFloat()
+                    val newHeight = height * 1f;
+                    val heightDecale = newHeight - height;
+                    val boxMargin = 10f
                     val rect = Rectangle(
                         posX + box.getDouble("x").toFloat() * imageScale,
-                        posY + (imageHeight - height - box.getDouble("y").toFloat()) * imageScale,
+                        posY + (imageHeight - height - box.getDouble("y").toFloat() - heightDecale) * imageScale - boxMargin ,
                         width * imageScale,
-                        height * imageScale
+                        newHeight * imageScale + 2*boxMargin
                     )
-//                    canvas.rectangle(rect)
-//                        .stroke();
+                    val fontSize = block.optDouble("fontSize", 15.0).toFloat() * textScale * imageScale
 
-                    Canvas(
-                        pdfDoc.lastPage,
-                        rect
-                    ).setTextRenderingMode(if (debug) PdfCanvasConstants.TextRenderingMode.FILL else PdfCanvasConstants.TextRenderingMode.INVISIBLE)
-                        .setFontColor(if (debug) ColorConstants.RED else ColorConstants.WHITE)
-                        .setTextAlignment(TextAlignment.LEFT)
-                        .setFixedPosition(posX, posY, width * imageScale)
-                        .setFontSize(
-                            block.optDouble("fontSize", 16.0).toFloat() * textScale * imageScale
-                        )
-                        .add(Paragraph(block.getString("text")))
-                        .close()
+                    val canvas = PdfCanvas(pdfDoc.lastPage)
+
+                    val gState = PdfExtGState()
+                    gState.fillOpacity = 0.5f
+                    // draw a debug rectangle
+                    if (debug) {
+                        canvas.saveState().rectangle(rect)
+    //                        .setExtGState(gState)
+                            .setFillColor(ColorConstants.WHITE)
+                            .fill().restoreState()
+                    }
+
+                    var text = block.getString("text")
+                    var font  = getFont(text)
+                    var actualFontSize = findFittingFontSize(text, font, rect, pdfDoc.numberOfPages, doc, fontSize, 4.0f, 2.0f)
+
+                    drawTextInBox(canvas, pdfDoc, rect, text, font, actualFontSize, if (debug) ColorConstants.RED else ColorConstants.BLACK, if (debug) PdfCanvasConstants.TextRenderingMode.FILL else PdfCanvasConstants.TextRenderingMode.INVISIBLE)
                 }
             }
         }
+
+        fun getFont(text: String): PdfFont {
+            var font = when {
+                containsCJK(text) ->  {
+                    if (cjkFont == null) {
+                        cjkFont = PdfFontFactory.createTtcFont("/system/fonts/NotoSansCJK-Regular.ttc", 0, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_NOT_EMBEDDED, false)
+                    }
+                    cjkFont!!
+                }
+                else -> {
+                    if (cyrillicFont == null) {
+                        cyrillicFont = PdfFontFactory.createFont("/system/fonts/Roboto-Regular.ttf", PdfEncodings.IDENTITY_H)
+                    }
+                    cyrillicFont!!
+                }
+            }
+            return font
+        }
+        private fun containsCJK(text: String): Boolean {
+            return text.any { char ->
+                char.code in 0x4E00..0x9FFF || // CJK Unified Ideographs
+                char.code in 0x3040..0x309F || // Hiragana
+                char.code in 0x30A0..0x30FF    // Katakana
+            }
+        }
+
+        // private fun addUnicodeFontsToProvider(fontProvider: FontProvider) {
+
+        //     var path = "/system/fonts";
+        //     val fileNames = File("/system/fonts").listFiles()?.map { it.name }?.toTypedArray() ?: emptyArray()
+        //     fileNames.forEachIndexed { index, name ->
+        //     Log.d("JS", "system font" + name)
+        //     }
+        //     // Add fonts that cover different Unicode ranges
+        //     val systemFonts = arrayOf(
+        //         "/system/fonts/Roboto-Regular.ttf",           // Latin + Cyrillic
+        //         "/system/fonts/NotoSansCJK-Regular.ttc",      // CJK languages  
+        //         "/system/fonts/NotoNaskhArabic-Regular.ttf",   // Arabic
+        //         "/system/fonts/DroidSans.ttf",        // General fallback
+        //         "/system/fonts/NotoColorEmoji.ttf",           // Emoji support
+        //         "/system/fonts/NotoSans-Regular.ttf",         // General Unicode
+        //         "/system/fonts/DejaVuSans.ttf"                // Alternative fallback
+        //     )
+            
+        //     systemFonts.forEach { fontPath ->
+        //         try {
+        //             if (File(fontPath).exists()) {
+        //                 Log.d("JS", "loading system font" + fontPath)
+        //                 fontProvider.addFont(fontPath)
+        //             }
+        //         } catch (e: Exception) {
+        //             // Skip if font doesn't exist or can't be loaded
+        //             e.printStackTrace()
+        //         }
+        //     }
+            
+        //     // Add custom fonts from assets
+        //    // addAssetFontSafely(fontProvider, "fonts/NotoSans-Regular.ttf")
+        //    // addAssetFontSafely(fontProvider, "fonts/DejaVuSans.ttf")
+        //    // addAssetFontSafely(fontProvider, "fonts/NotoSansCJK-Regular.otf")
+        // }
+        
+        // private fun addAssetFontSafely(fontProvider: FontProvider, assetPath: String) {
+        //     try {
+        //         val fullPath = "file:///android_asset/$assetPath"
+        //         fontProvider.addFont(fullPath, PdfEncodings.IDENTITY_H)
+        //     } catch (e: Exception) {
+        //         // Font doesn't exist or can't be loaded, skip silently
+        //         e.printStackTrace()
+        //     }
+        // }
 
         fun generatePDF(
             context: Context,
@@ -344,6 +507,8 @@ class PDFUtils {
                 needsCopy = true
                 generateFilePath = context.cacheDir.toString() + "/compressed.pdf"
             }
+            cyrillicFont = null
+            cjkFont = null
             val jsonOps = JSONObject(options)
             val compressionLevel = jsonOps.optInt("compressionLevel", 9)
             val paperSize = jsonOps.optString("paper_size", "full")
@@ -386,6 +551,21 @@ class PDFUtils {
             val writer = PdfWriter(generateFilePath, props)
             val pdfDoc = PdfDocument(writer)
             var document: Document? = null
+
+            val internalStorageDir = context.getFilesDir().getAbsolutePath()
+
+            // Create FontProvider with comprehensive font support
+            // val fontProvider = FontProvider()
+
+            // Add system fonts first (includes fallbacks)
+            // fontProvider.addSystemFonts()
+            // Log.d("JS", "addSystemFonts " + fontProvider.getFontSet().getFonts().size)
+            
+            // Add comprehensive Unicode fonts
+            // addUnicodeFontsToProvider(fontProvider)
+            // Log.d("JS", "fontProvider fonts " + fontProvider.getFontSet().getFonts().map { it.getFontName() }?.toTypedArray().contentToString())
+
+            //sel.getFontSet().addDirectory("src/main/res/font")
             if (paperSize == "full") {
                 itemsPerPage = 1
                 for (i in 0..<pagesCount) {
@@ -420,8 +600,8 @@ class PDFUtils {
                     ) else PageSize(image.imageWidth, image.imageHeight)
                     if (document == null) {
                         document = Document(pdfDoc, pageSize)
-                        val font = PdfFontFactory.createRegisteredFont("helvetica")
-                        document.setFont(font)
+                        // document.fontProvider = fontProvider
+                        // document.setProperty(Property.FONT, arrayOf("Roboto", "DroidSans"))
                         document.setMargins(0F, 0F, 0F, 0F)
                     } else {
                         pdfDoc.addNewPage(pageSize)
@@ -431,6 +611,7 @@ class PDFUtils {
                     if (drawOcrText) {
                         drawOCRData(
                             pdfDoc,
+                            document,
                             page,
                             0F,
                             0F,
@@ -447,6 +628,7 @@ class PDFUtils {
                     list.add(pages.getJSONObject(i))
                 }
                 val pageSize = when (paperSize) {
+                    "letter" -> if (isLandscape) PageSize.LETTER.rotate() else PageSize.LETTER
                     "a5" -> if (isLandscape) PageSize.A5.rotate() else PageSize.A5
                     "a3" -> if (isLandscape) PageSize.A3.rotate() else PageSize.A3
                     else -> if (isLandscape) PageSize.A4.rotate() else PageSize.A4
@@ -474,9 +656,9 @@ class PDFUtils {
                     var toDrawHeight: Double
                     if (idx == 0) {
                         document = Document(pdfDoc, pageSize)
-                        val font = PdfFontFactory.createRegisteredFont("helvetica")
-                        document!!.setFont(font)
-                        document!!.setMargins(pagePadding, pagePadding, pagePadding, pagePadding)
+                        // document.fontProvider = fontProvider
+                        // document.setProperty(Property.FONT, arrayOf("Roboto", "DroidSans"))
+                        document.setMargins(pagePadding, pagePadding, pagePadding, pagePadding)
                         pdfDoc.addNewPage(pageSize)
                     } else if (idx < items.size) {
                         pdfDoc.addNewPage(pageSize)
@@ -563,7 +745,9 @@ class PDFUtils {
                             document!!.add(image)
                             if (drawOcrText) {
                                 drawOCRData(
-                                    pdfDoc, page, posX, posY,
+                                    pdfDoc,
+                                    document,
+                                    page, posX, posY,
                                     imageRatio.toFloat(), toDrawHeight.toFloat(), textScale, debug
                                 )
                             }
@@ -713,7 +897,7 @@ class PDFUtils {
                                     Bitmap.Config.ARGB_8888
                                 )
                                 val canvas = android.graphics.Canvas(renderedPage);
-                                canvas.drawColor(Color.WHITE);
+                                canvas.drawColor(android.graphics.Color.WHITE);
                                 page.render(
                                     renderedPage,
                                     null,

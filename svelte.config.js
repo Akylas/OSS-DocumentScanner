@@ -12,6 +12,7 @@ if (existsSync(customPath)) {
 const webpack_env = process.env['NATIVESCRIPT_WEBPACK_ENV']
     ? JSON.parse(process.env['NATIVESCRIPT_WEBPACK_ENV'])
     : {
+          production: false,
           android: true,
           ios: true
       };
@@ -23,6 +24,8 @@ module.exports = {
     preprocess: [
         sveltePreprocess({
             replace: [
+                [/CARD_APP/g, process.env['APP_ID'] === 'com.akylas.cardwallet'],
+                [/PRODUCTION/g, !!webpack_env.production],
                 [/__ANDROID__/g, !!webpack_env.android],
                 [/__IOS__/g, !!webpack_env.ios]
             ].concat(customPreprocess?.replace || []),

@@ -76,7 +76,7 @@
     {#if foundFolders.length > 0}
         <label marginTop={15} row={2} text={lc('existing_folders')} />
         <wraplayout margin={5} row={3}>
-            {#each foundFolders as group}
+            {#each foundFolders as group (group.id)}
                 <mdbutton height={30} margin="2" text={group.name} on:tap={() => onFolderTap(group)} />
             {/each}
         </wraplayout>

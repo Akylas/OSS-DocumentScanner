@@ -4,7 +4,7 @@ import { Application, ApplicationSettings, Device, File, Utils } from '@nativesc
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, get, writable } from 'svelte/store';
-import { prefs } from '~/services/preferences';
+import { prefs } from '@shared/services/preferences';
 import { showError } from '@shared/utils/showError';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { showAlertOptionSelect } from '~/utils/ui';
@@ -227,7 +227,6 @@ async function internalSelectLanguage() {
 export async function selectLanguage() {
     try {
         const result = await internalSelectLanguage();
-        DEV_LOG && console.log('selectLanguage', result);
         if (result?.data) {
             ApplicationSettings.setString(SETTINGS_LANGUAGE, result.data);
         }

@@ -1,21 +1,26 @@
 import { HTTPError } from '@shared/utils/error';
 import { parseRawXML } from './tools/dav';
 import { Response, ResponseDataDetailed, WebDAVClientContext } from './types';
+import { lc } from '@nativescript-community/l';
 
 export async function createErrorFromResponse(response: Response, requestParams, prefix: string = '') {
     const serverResponse = await response.content.toStringAsync();
-    DEV_LOG && console.log('createErrorFromResponse', requestParams.url, response.statusCode, serverResponse.replace(/[\s\t\n]+/g, ''));
     const result = await parseRawXML(serverResponse);
+
+    let error = result.error?.message;
+    if (!error && result.html) {
+        error = result.html?.head?.title + (result.html?.body?.p ? ': ' + result.html?.body?.p : '');
+    }
     return new HTTPError({
         statusCode: response.statusCode,
-        message: prefix + result.error?.message,
+        title: lc('webdav_error'),
+        message: prefix + (error || serverResponse),
         requestParams
     });
 }
 
 export async function handleResponseCode(context: WebDAVClientContext, response: Response, requestOptions) {
     const { statusCode } = response;
-    // DEV_LOG && console.log('handleResponseCode', response.statusCode, JSON.stringify(response.headers));
     // if (statusCode === 401 && context.digest) return response;
     if (statusCode >= 400) {
         const err = await createErrorFromResponse(response, requestOptions);
@@ -40,12 +45,14 @@ export async function handleResponseCode(context: WebDAVClientContext, response:
  *  if required
  */
 export function processResponsePayload<T, U extends boolean = false>(response: Response, data: T, isDetailed?: U): U extends true ? ResponseDataDetailed<T> : T {
-    return isDetailed === true
-        ? {
-              data,
-              headers: response.headers,
-              status: response.statusCode,
-              statusText: response.reason
-          }
-        : (data as any);
+    return (
+        isDetailed === true
+            ? {
+                  data,
+                  headers: response.headers,
+                  status: response.statusCode,
+                  statusText: response.reason
+              }
+            : data
+    ) as U extends true ? ResponseDataDetailed<T> : T;
 }

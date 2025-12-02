@@ -9,9 +9,9 @@ android {
                     cppFlags "-frtti -fexceptions"
                     abiFilters 'armeabi-v7a', "arm64-v8a", 'x86', 'x86_64'
                     if (project.hasProperty("withQRCode")) {
-                        arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static", "-DWITH_QRCODE=1"
+                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static", "-DWITH_QRCODE=1"
                     } else {
-                        arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static"
+                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static"
                     }
                 }
             }

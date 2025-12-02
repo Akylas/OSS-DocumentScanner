@@ -111,7 +111,7 @@ class NetworkService extends Observable {
         }
     }
     monitoring = false;
-    start() {
+    async start() {
         if (this.monitoring) {
             return;
         }

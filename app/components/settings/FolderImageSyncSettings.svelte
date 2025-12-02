@@ -5,8 +5,8 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
@@ -150,10 +150,8 @@
         const value = event.value;
         item.value = value;
         clearCheckboxTimer();
-        DEV_LOG && console.log('onCheckBox', item.id, value);
         try {
             ignoreNextOnCheckBoxChange = true;
-            DEV_LOG && console.log('updating setting for checkbox', item.id, item.key, value);
             $store[item.key || item.id] = value;
         } catch (error) {
             showError(error);
@@ -331,7 +329,7 @@
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>

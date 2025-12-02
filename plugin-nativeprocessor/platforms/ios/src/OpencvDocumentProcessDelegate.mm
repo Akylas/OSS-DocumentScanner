@@ -95,9 +95,9 @@ UIImage* MatToUIImage(const cv::Mat& image) {
   return uiImage;
 }
 
-void UIImageToMat(const UIImage* image, cv::Mat& m, bool alphaExist = false) {
+void UIImageToMat(const UIImage* image, cv::Mat& m) {
   CGImageRef imageRef = image.CGImage;
-  CGImageToMat(imageRef, m, alphaExist);
+  CGImageToMat(imageRef, m, CGImageGetAlphaInfo( image.CGImage ) != kCGImageAlphaNone);
 }
 
 void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {

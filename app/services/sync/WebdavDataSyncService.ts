@@ -132,12 +132,12 @@ export class WebdavDataSyncService extends BaseDataSyncService {
         }
     }
     override async addDocumentToRemote(document: OCRDocument) {
-        TEST_LOG && console.log('addDocumentToWebdav', this.remoteFolder, document.id, document.pages);
+        DEV_LOG && console.log('addDocumentToWebdav', this.remoteFolder, document.id, document.pages);
         const docFolder = getDocumentsService().dataFolder.getFolder(document.id);
         await this.sendFolderToRemote(docFolder, document.id);
         await this.client.putFileContents(path.join(this.remoteFolder, document.id, DOCUMENT_DATA_FILENAME), document.toString());
         // mark the document as synced
-        // TEST_LOG && console.log('addDocumentToWebdav done saving synced state', document.id, document.pages);
+        // DEV_LOG && console.log('addDocumentToWebdav done saving synced state', document.id, document.pages);
     }
 
     override async importDocumentFromRemote(data: FileStat) {
@@ -160,7 +160,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
         let pageIds = [];
         let docDataFolder: Folder;
         try {
-            TEST_LOG && console.log('importDocumentFromRemote creating document', JSON.stringify(docProps), JSON.stringify(folders));
+            DEV_LOG && console.log('importDocumentFromRemote creating document', JSON.stringify(docProps), JSON.stringify(folders));
             await getDocumentsService().documentRepository.delete({ id: docId } as any);
             const doc = await getDocumentsService().documentRepository.createDocument({ ...docProps, folders, _synced: 0 });
             docId = doc.id;

@@ -208,7 +208,7 @@
     "ocr_computing": "rozpoznávání textu (%1$s%%)...",
     "ocr_computing_document": "rozpoznávání textu v dokumentu (%1$s%%)",
     "ocr_document": "rozpoznat text",
-    "ocr_missing_languages": "chybí modely OCR, budou staženy: %1$s",
+    "ocr_missing_languages_download": "chybí modely OCR, budou staženy: %1$s",
     "off": "vyp",
     "ok": "OK",
     "on": "zap",

@@ -12,8 +12,8 @@
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import { getLocaleDisplayName, l, lc, lu, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
@@ -30,6 +30,7 @@
         CROP_ENABLED,
         DEFAULT_DRAW_FOLDERS_BACKGROUND,
         DEFAULT_EXPORT_DIRECTORY,
+        DEFAULT_FONT_CAM_MIRRORED,
         DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE,
         DEFAULT_NB_COLUMNS,
         DEFAULT_NB_COLUMNS_LANDSCAPE,
@@ -52,6 +53,7 @@
         SETTINGS_DRAW_FOLDERS_BACKGROUND,
         SETTINGS_FILE_NAME_FORMAT,
         SETTINGS_FILE_NAME_USE_DOCUMENT_NAME,
+        SETTINGS_FONT_CAM_MIRRORED,
         SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE,
         SETTINGS_IMAGE_EXPORT_FORMAT,
         SETTINGS_IMAGE_EXPORT_QUALITY,
@@ -61,6 +63,7 @@
         SETTINGS_NB_COLUMNS_LANDSCAPE,
         SETTINGS_NB_COLUMNS_VIEW,
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE,
+        SETTINGS_QUICK_TOGGLE_ENABLED,
         SETTINGS_ROOT_DATA_FOLDER,
         SETTINGS_START_ON_CAM,
         SETTINGS_SYNC_ON_START,
@@ -72,10 +75,11 @@
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { restartApp } from '~/utils/utils';
-    import { colors, fonts, hasCamera, windowInset } from '~/variables';
+    import { colors, fonts, hasCamera, onFontScaleChanged, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
+    import OCRSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
     const variant = 'outline';
@@ -100,6 +104,7 @@
     const dataSettingsAvailable = __ANDROID__ && android.os.Environment.getExternalStorageState() === 'mounted';
 
     export let title = null;
+    export let id = 'settingsPage';
     export let actionBarButtons = [
         { icon: 'mdi-message-alert', id: 'feedback' },
         { icon: 'mdi-share-variant', id: 'share' },
@@ -131,6 +136,11 @@
     }
     function getSubSettings(id: string) {
         switch (id) {
+            case 'ocr':
+                return {
+                    type: 'ocr_settings',
+                    id: 'ocr_settings'
+                };
             case 'camera':
                 return (
                     __ANDROID__
@@ -151,6 +161,13 @@
                         title: lc('start_app_on_cam'),
                         description: lc('start_app_on_cam_desc'),
                         value: ApplicationSettings.getBoolean(SETTINGS_START_ON_CAM, START_ON_CAM)
+                    },
+                    {
+                        type: 'switch',
+                        id: SETTINGS_FONT_CAM_MIRRORED,
+                        title: lc('front_cam_mirrored'),
+                        description: lc('front_cam_mirrored_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_FONT_CAM_MIRRORED, DEFAULT_FONT_CAM_MIRRORED)
                     }
                 ]);
             case 'security':
@@ -695,6 +712,19 @@
                                   }
                               ]
                             : ([] as any)
+                    )
+                    .concat(
+                        __ANDROID__
+                            ? [
+                                  {
+                                      type: 'switch',
+                                      id: 'quicktoggle',
+                                      title: lc('show_quicksettings_tile'),
+                                      description: lc('show_quicktoggle_desc'),
+                                      value: ApplicationSettings.getBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, false)
+                                  }
+                              ]
+                            : ([] as any)
                     );
             default:
                 break;
@@ -775,6 +805,15 @@
                         description: lc('document_detection_settings'),
                         icon: 'mdi-text-box-search',
                         options: () => getSubSettings('document_detection')
+                    }
+                ])
+                .concat([
+                    {
+                        id: 'sub_settings',
+                        title: lc('ocr'),
+                        description: lc('ocr_settings'),
+                        icon: 'mdi-ocr',
+                        options: () => getSubSettings('ocr')
                     }
                 ])
                 .concat(
@@ -939,6 +978,7 @@
                 case 'sub_settings': {
                     showSettings({
                         title: item.title,
+                        id: `settings[${item.id}]`,
                         options: item.options(),
                         actionBarButtons: item.actionBarButtons?.() || []
                     });
@@ -1418,8 +1458,13 @@
                     // }
                     break;
 
+                case 'quicktoggle': {
+                    if (__ANDROID__) {
+                        (await import('~/android/quicktoggle.android')).toggleQuickSetting(value);
+                    }
+                    break;
+                }
                 default:
-                    DEV_LOG && console.log('updating setting for checkbox', item.id, item.key, value);
                     ApplicationSettings.setBoolean(item.key || item.id, value);
                     break;
             }
@@ -1433,10 +1478,15 @@
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
     }
+
+    function refreshCollectionViewVisibleItems() {
+        collectionView?.nativeView?.refreshVisibleItems();
+    }
+    onFontScaleChanged(refreshCollectionViewVisibleItems);
     onThemeChanged(refreshCollectionView);
 </script>
 
-<page bind:this={page} id="syncSettingsPage" actionBarHidden={true}>
+<page bind:this={page} {id} actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
         <collectionview bind:this={collectionView} accessibilityValue="settingsCV" itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="header" let:item>
@@ -1487,7 +1537,7 @@
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} marginTop={16} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
@@ -1508,9 +1558,13 @@
             <Template let:item>
                 <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
             </Template>
+
+            <Template key="ocr_settings" let:item>
+                <OCRSettingsBottomSheet onlySettings={true} showDownloadButton={true} />
+            </Template>
         </collectionview>
         <CActionBar canGoBack title={title || $slc('settings.title')}>
-            {#each actionBarButtons as button}
+            {#each actionBarButtons as button (button.id)}
                 <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
             {/each}
         </CActionBar>

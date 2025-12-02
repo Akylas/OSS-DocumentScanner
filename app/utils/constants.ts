@@ -1,14 +1,14 @@
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { ApplicationSettings, Screen, knownFolders } from '@nativescript/core';
 
+export * from '@shared/constants';
+
 export enum PDFImportImages {
     ask = 'ask',
     never = 'never',
     always = 'always'
 }
 
-export const SETTINGS_LANGUAGE = 'language';
-export const SETTINGS_COLOR_THEME = 'color_theme';
 export const SETTINGS_APP_VERSION = '_app_version';
 export const SETTINGS_FIRST_OPEN = '_first_open';
 export const SETTINGS_DOCUMENT_NAME_FORMAT = 'document_name_format';
@@ -32,6 +32,7 @@ export const SETTINGS_MAGNIFIER_SENSITIVITY = 'magnifier_sensitivity';
 export const SETTINGS_SYNC_ON_START = 'sync_on_start';
 export const SETTINGS_DRAW_FOLDERS_BACKGROUND = 'draw_folder_background';
 export const SETTINGS_START_ON_CAM = 'start_on_cam';
+export const SETTINGS_FONT_CAM_MIRRORED = 'front_camera_mirrored';
 export const SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE = 'force_white_background_qrcode';
 export const SETTINGS_NB_COLUMNS = 'nb_columns';
 export const SETTINGS_NB_COLUMNS_LANDSCAPE = 'nb_columns_landscape';
@@ -40,6 +41,7 @@ export const SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE = 'nb_columns_view_landscape';
 export const SETTINGS_SORT_ORDER = 'sort_order';
 export const SETTINGS_VIEW_STYLE = 'documents_list_view_style';
 export const SETTINGS_ROOT_DATA_FOLDER = 'root_data_folder';
+export const SETTINGS_QUICK_TOGGLE_ENABLED = 'quick_toggle_enabled';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -51,12 +53,8 @@ export const PDF_EXT = '.pdf';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
-export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
-
-export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 130;
+export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 88;
 export const FAB_BUTTON_OFFSET = 72;
-
-export const DEFAULT_LOCALE = 'auto';
 
 export const AUTO_SYNC = true;
 export const DEFAULT__BATCH_CHUNK_SIZE = 10;
@@ -81,7 +79,7 @@ export const DOCUMENT_NAME_FORMAT = 'L LTS';
 export const AUTO_SCAN_DISTANCETHRESHOLD = 50;
 export const AUTO_SCAN_DURATION = 1000;
 export const AUTO_SCAN_DELAY = 1000;
-export const DEFAULT_COLOR_THEME = __ANDROID__ ? 'dynamic' : 'default';
+export const DEFAULT_FONT_CAM_MIRRORED = false;
 export const DEFAULT_DRAW_FOLDERS_BACKGROUND = false;
 export const DEFAULT_TRANSFORM = '';
 export const DEFAULT_COLORTYPE = 'normal';
@@ -93,7 +91,7 @@ export const DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE = 3;
 export const DEFAULT_NB_COLUMNS_VIEW = 2;
 export const DEFAULT_COLORMATRIX = null;
 export const DEFAULT_SORT_ORDER = CARD_APP ? 'createdDate ASC' : 'createdDate DESC';
-export const DEFAULT_VIEW_STYLE = CARD_APP ? 'full' : 'default';
+export const DEFAULT_VIEW_STYLE = CARD_APP ? 'columns' : 'default';
 export const DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE = false;
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
@@ -105,8 +103,7 @@ export const DEFAULT_PDF_OPTIONS = {
     dpi: 96,
     imageSizeThreshold: 1500,
     imageLoadScale: 2,
-    draw_ocr_text: true,
-    draw_ocr_overlay: false
+    draw_ocr_text: true
 };
 export const IMAGE_CONTEXT_OPTIONS = {
     originalQueryCacheType: 0,

@@ -1,0 +1,5 @@
+Bug fixes:
+- error while syncing data
+- revert camera view forced portrait
+- prevent error while exporting and export directory is not set
+- Translations update

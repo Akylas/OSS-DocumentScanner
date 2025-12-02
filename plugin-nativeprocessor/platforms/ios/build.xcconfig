@@ -1,7 +1,7 @@
 ROOT = $(PROJECT_DIR)/../../..
 HEADER_SEARCH_PATHS = $(ROOT)/tesseract/ios/include/** $(ROOT)/tesseract/ios/include/tesseract $(ROOT)/tesseract/ios/include/tesseract/include $(ROOT)/plugin-nativeprocessor/platforms/ios/src/src/include
 LIBRARY_SEARCH_PATHS = $(inherited)  $(ROOT)/tesseract/ios/lib/**
-OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited)  -lc++ -llept-ios -lpng16-ios -ltesseract-ios
-OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited)  -lc++ -ltesseract-sim -lpng16-sim -llept-sim
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited)  -lc++ -lleptonica-ios -lpng16-ios -ltesseract-ios
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited)  -lc++ -ltesseract-sim -lpng16-sim -lleptonica-sim
 CLANG_CXX_LANGUAGE_STANDARD = gnu++20
 CLANG_CXX_LIBRARY = libc++

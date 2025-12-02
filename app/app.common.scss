@@ -58,10 +58,9 @@ mdtextview {
 }
 
 checkbox {
+    margin-left: 10;
     color: var(--colorOnBackground);
     fill-color: var(--colorPrimary);
-    on-check-color: var(--colorOnPrimary);
-    on-tint-color: var(--colorPrimary);
 }
 
 
@@ -215,6 +214,11 @@ mdtextfield,
     }
 }
 
+.fabHolder {
+    horizontal-align: right;
+    vertical-align: bottom;
+}
+
 .fab {
     @extend .mdi;
     background-color: var(--colorPrimaryContainer);
@@ -278,6 +282,7 @@ mdtextfield,
 .card {
     margin: 8;
     background-color: var(--colorSurfaceContainerHigh);
+    ripple-color: var(--colorSurface);
     border-radius: 12;
 }
 

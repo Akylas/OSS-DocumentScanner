@@ -31,7 +31,7 @@ module.exports = {
             }
         },
         runtimePackageName: '@akylas/nativescript-android-runtime',
-        gradleVersion: '8.10.2',
+        gradleVersion: '8.14.3',
         markingMode: 'none',
         codeCache: true,
         // for cardwallet we enable qrcode. and then we filter aar to only use the one we want
