@@ -35,7 +35,7 @@
         "url": "https://github.com/Akylas/OSS-DocumentScanner/issues"
     },
     "dependencies": {
-        "@akylas/kiss-orm": "2.1.11",
+        "@akylas/kiss-orm": "2.1.12",
         "@akylas/nativescript": "8.9.10",
         "@akylas/nativescript-app-tools": "file:tools",
         "@akylas/nativescript-app-utils": "2.2.7",

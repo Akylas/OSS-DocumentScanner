@@ -24,6 +24,38 @@ function cleanUndefined(obj) {
     return obj;
 }
 
+// helpers for accent-insensitive searches
+function normalizeSearchString(value: any) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    const s = isString(value) ? value : typeof value === 'object' ? JSON.stringify(value) : String(value);
+    // normalize to NFD, remove diacritics and lowercase
+    const lower = s.toLowerCase();
+    let normalized;
+    if (__IOS__) {
+        normalized = NSString.stringWithString(lower).stringByFoldingWithOptionsLocale(NSStringCompareOptions.DiacriticInsensitiveSearch, NSLocale.currentLocale);
+    } else {
+        normalized = java.text.Normalizer.normalize(lower, java.text.Normalizer.Form.NFD);
+    }
+    // some special mappings
+    return normalized
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/ß/g, 'ss')
+        .replace(/[łŁ]/g, 'l')
+        .replace(/[øØ]/g, 'o')
+        .replace(/œ/g, 'oe')
+        .replace(/æ/g, 'ae');
+}
+
+function escapeLike(val: string) {
+    if (!val) {
+        return val;
+    }
+    // escape wildcard chars for LIKE patterns
+    return val.replace(/[\\%_]/g, (m) => '\\' + m);
+}
+
 export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
     constructor(data) {
         super(data);
@@ -37,26 +69,11 @@ export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
         if (!migrations) {
             return;
         }
-
-        // For now disable it as we could have a issue if db is deleted while setting is kept
-        // const settingsKey = `SQLITE_${this.table}_migrations`;
-        // const appliedMigrations = JSON.parse(ApplicationSettings.getString(settingsKey, '[]'));
-
-        // const actualMigrations = { ...migrations };
-        // for (let index = 0; index < appliedMigrations.length; index++) {
-        //     delete actualMigrations[appliedMigrations[index]];
-        // }
-
-        // const migrationKeys = Object.keys(migrations).filter((k) => appliedMigrations.indexOf(k) === -1);
-        // for (let index = 0; index < migrationKeys.length; index++) {
         try {
             await this.database.migrate(migrations);
-            // appliedMigrations.push(...Object.keys(migrations));
         } catch (error) {
             console.error(error, error.stack);
         }
-        // }
-        // ApplicationSettings.setString(settingsKey, JSON.stringify(appliedMigrations));
     }
 }
 
@@ -185,7 +202,40 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             removeDataPath: () => sql`UPDATE Page SET imagePath = replace( imagePath, ${dataFolder.path}, '' ), sourceImagePath = replace( sourceImagePath, ${dataFolder.path}, '' )`,
             addSourceImageWidth: sql`ALTER TABLE Page ADD COLUMN sourceImageWidth INTEGER`,
             addSourceImageHeight: sql`ALTER TABLE Page ADD COLUMN sourceImageHeight INTEGER`,
-            addSourceImageRotation: sql`ALTER TABLE Page ADD COLUMN sourceImageRotation INTEGER`
+            addSourceImageRotation: sql`ALTER TABLE Page ADD COLUMN sourceImageRotation INTEGER`,
+
+            updatePageSearchAccentInsensitive: (sequenceDb: DatabaseInterface) =>
+                new Promise<void>(async (resolve, reject) => {
+                    try {
+                        await sequenceDb.query(sql`ALTER TABLE Page ADD COLUMN nameSearch TEXT`);
+                        await sequenceDb.query(sql`ALTER TABLE Page ADD COLUMN ocrDataSearch TEXT`);
+                        const pages = await this.search();
+                        DEV_LOG && console.log('updateSearchAccentInsensitive for Pages', pages.length);
+                        await doInBatch(
+                            pages,
+                            async (p: OCRPage) => {
+                                const updates: any = {};
+                                if (p.name && !p.nameSearch) {
+                                    updates.nameSearch = normalizeSearchString(p.name);
+                                }
+                                if (p.ocrData && !p.ocrDataSearch) {
+                                    const ocrStr = p.ocrData.text;
+                                    updates.ocrDataSearch = normalizeSearchString(ocrStr);
+                                }
+                                if (Object.keys(updates).length) {
+                                    await super.update(p, updates);
+                                }
+                            },
+                            10
+                        );
+                        await sequenceDb.query(sql`CREATE INDEX IF NOT EXISTS idx_page_nameSearch ON Page(nameSearch)`);
+                        await sequenceDb.query(sql`CREATE INDEX IF NOT EXISTS idx_page_ocrDataSearch ON Page(ocrDataSearch)`);
+                        resolve();
+                    } catch (e) {
+                        console.error('Error filling Page search indexes', e);
+                        reject(e);
+                    }
+                })
         },
         CARD_APP
             ? {
@@ -231,13 +281,15 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
                 sourceImagePath: page.sourceImagePath?.replace(dataFolder, ''),
                 extra: isObject(extra) ? JSON.stringify(extra) : extra,
                 createdDate,
-                pageIndex: -1, // we are stuck with this as we cant migrate to remove pageIndex
+                pageIndex: -1,
                 modifiedDate: createdDate,
                 rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
                 scale: page.scale ?? 1,
                 crop: page.crop ? JSON.stringify(page.crop) : undefined,
                 colorMatrix: page.colorMatrix ? JSON.stringify(page.colorMatrix) : undefined,
                 ocrData: page.ocrData ? JSON.stringify(page.ocrData) : undefined,
+                nameSearch: normalizeSearchString(page.name),
+                ocrDataSearch: page.ocrData ? normalizeSearchString(page.ocrData.text) : undefined,
                 ...(CARD_APP
                     ? {
                           qrcode: page.qrcode ? JSON.stringify(page.qrcode) : undefined,
@@ -247,6 +299,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             })
         );
     }
+
     async update(page: OCRPage, data?: Partial<OCRPage>, updateModifiedDate = true) {
         if (!data) {
             const toUpdate: Partial<OCRPage> = {};
@@ -256,7 +309,6 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             await this.update(page, toUpdate);
             return page;
         }
-
         if (updateModifiedDate && !data.modifiedDate) {
             data.modifiedDate = Date.now();
         }
@@ -267,6 +319,12 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             toSave[k] = value;
             if (k === 'extra') {
                 toUpdate[k] = JSON.stringify(Object.assign(page.extra || {}, value));
+            } else if (k === 'ocrData') {
+                toUpdate[k] = JSON.stringify(value);
+                toUpdate.ocrDataSearch = normalizeSearchString(value.text);
+            } else if (k === 'name') {
+                toUpdate[k] = value;
+                toUpdate.nameSearch = normalizeSearchString(value);
             } else if (typeof value === 'object' || Array.isArray(value)) {
                 toUpdate[k] = JSON.stringify(value);
             } else {
@@ -351,7 +409,34 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
     migrations = {
         addExtra: sql`ALTER TABLE Document ADD COLUMN extra TEXT`,
-        addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`
+        addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`,
+
+        updateDocSearchAccentInsensitive: (sequenceDb: DatabaseInterface) =>
+            new Promise<void>(async (resolve, reject) => {
+                try {
+                    await sequenceDb.query(sql`ALTER TABLE Document ADD COLUMN nameSearch TEXT`);
+                    const docs = await this.search();
+                    DEV_LOG && console.log('updateSearchAccentInsensitive docs', docs.length);
+                    await doInBatch(
+                        docs,
+                        async (d: OCRDocument) => {
+                            const updates: any = {};
+                            if (d.name && !d.nameSearch) {
+                                updates.nameSearch = normalizeSearchString(d.name);
+                            }
+                            if (Object.keys(updates).length) {
+                                await super.update(d, updates);
+                            }
+                        },
+                        10
+                    );
+                    await sequenceDb.query(sql`CREATE INDEX IF NOT EXISTS idx_doc_nameSearch ON Document(nameSearch)`);
+                    resolve();
+                } catch (e) {
+                    console.error('Error filling Page search indexes', e);
+                    reject(e);
+                }
+            })
     };
 
     async createDocument(document: Document) {
@@ -364,7 +449,8 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
                 _synced: 0,
                 createdDate,
                 modifiedDate: createdDate,
-                pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined
+                pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined,
+                nameSearch: normalizeSearchString(others.name)
             })
         );
         if (folders) {
@@ -375,33 +461,6 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         }
         return doc;
     }
-
-    // async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
-    //     const tags = await this.tagsRepository.search({
-    //         where: sql`
-    //         "id" IN (
-    //             SELECT "tag_id"
-    //             FROM "DocumentsTags"
-    //             WHERE "document_id" = ${document.id}
-    //         )
-    //     `
-    //     });
-    //     document.tags = tags.map((g) => g.id);
-    //     return document;
-    // }
-    // async loadFoldersRelationship(document: OCRDocument): Promise<OCRDocument> {
-    //     const folders = await this.foldersRepository.search({
-    //         where: sql`
-    //         "id" IN (
-    //             SELECT "folder_id"
-    //             FROM "DocumentsFolders"
-    //             WHERE "document_id" = ${document.id}
-    //         )
-    //     `
-    //     });
-    //     document.folders = folders.map((g) => g.id);
-    //     return document;
-    // }
 
     async update(document: OCRDocument, data?: Partial<OCRDocument>, updateModifiedDate = true) {
         // DEV_LOG && console.log('doc update', data);
@@ -428,6 +487,9 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             toSave[k] = value;
             if (k === 'extra') {
                 toUpdate[k] = JSON.stringify(Object.assign(document.extra || {}, value));
+            } else if (k === 'name') {
+                toUpdate[k] = value;
+                toUpdate.nameSearch = normalizeSearchString(value);
             } else if (typeof value === 'object' || Array.isArray(value)) {
                 toUpdate[k] = JSON.stringify(value);
             } else {
@@ -486,10 +548,12 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     DocumentsFolders df ON d.id = df.document_id
 LEFT JOIN 
     Folder f ON df.folder_id = f.id`;
+
         if (filter?.length || folder) {
             if (filter?.length) {
-                const realFilter = filter.replace(/[(\[\]%_)]/, '\\$1');
-                const where = `p.name LIKE '%${realFilter}%' OR d.name LIKE '%${realFilter}%' OR p.ocrData LIKE '%${realFilter}%'`;
+                const normalizedFilter = normalizeSearchString(filter);
+                const escaped = escapeLike(normalizedFilter);
+                const where = `p.nameSearch LIKE '%${escaped}%' OR d.nameSearch LIKE '%${escaped}%' OR p.ocrDataSearch LIKE '%${escaped}%'`;
                 if (folder) {
                     args.postfix = sql` LEFT JOIN Page p ON p.document_id = d.id `;
                     args.where = new SqlQuery([`df.folder_id = ${folder.id} AND (${where})`]);

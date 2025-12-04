@@ -146,6 +146,7 @@ export class OCRDocument extends Observable implements Document {
     createdDate: number;
     modifiedDate: number;
     name?: string;
+    nameSearch?: string;
     tags: string[];
     folders: number[];
     _synced: number;
@@ -693,6 +694,10 @@ export class OCRPage extends Observable implements Page {
     ocrData: OCRData;
     qrcode: QRCodeData;
     colors: ColorPaletteData;
+
+    name?: string;
+    nameSearch?: string;
+    ocrDataSearch?: string;
 
     constructor(id: string, docId: string) {
         super();

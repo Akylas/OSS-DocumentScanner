@@ -57,7 +57,7 @@
     }
     function onTextChanged(text: string) {
         const query = text.toLowerCase();
-        DEV_LOG && console.log('onTextChanged', query, filter);
+        // DEV_LOG && console.log('onTextChanged', query, filter);
         if (query !== filter) {
             if (query) {
                 if (searchAsTypeTimer) {
