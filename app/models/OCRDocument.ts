@@ -249,7 +249,7 @@ export class OCRDocument extends Observable implements Document {
         documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
     }
 
-    async addPages(pagesData?: PageData[], notify = true) {
+    async addPages(pagesData?: PageData[], notify = true, createIfNotExisting = false) {
         const dataFolderPath = documentsService.dataFolder.path;
         DEV_LOG && console.log('addPages', dataFolderPath, JSON.stringify(pagesData));
         if (pagesData) {
@@ -317,10 +317,16 @@ export class OCRDocument extends Observable implements Document {
                     }
                 }
                 if (id) {
-                    const page = await documentsService.pageRepository.get(id);
-                    if (page) {
-                        const { id, ...toUpdate } = attributes;
-                        return documentsService.pageRepository.update(page, toUpdate);
+                    try {
+                        const page = await documentsService.pageRepository.get(id);
+                        if (page) {
+                            const { id, ...toUpdate } = attributes;
+                            return documentsService.pageRepository.update(page, toUpdate);
+                        }
+                    } catch (error) {
+                        if (!createIfNotExisting) {
+                            throw error;
+                        }
                     }
                 }
                 return documentsService.pageRepository.createPage(attributes, dataFolderPath);

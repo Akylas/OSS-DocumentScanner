@@ -172,7 +172,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
             });
             pageIds = pages.map((p) => p.id);
             await this.importFolderFromRemote(data.basename, docDataFolder, [DOCUMENT_DATA_FILENAME]);
-            await doc.addPages(pages);
+            await doc.addPages(pages, true, true);
 
             let folder: DocFolder;
             if (folders) {
