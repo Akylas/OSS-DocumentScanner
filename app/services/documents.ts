@@ -8,6 +8,7 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
 import { EVENT_DOCUMENT_DELETED, SETTINGS_ROOT_DATA_FOLDER } from '~/utils/constants';
 import { groupByArray } from '@shared/utils';
+import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
 export const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
