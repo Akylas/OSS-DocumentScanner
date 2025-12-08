@@ -101,7 +101,14 @@
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
 
     function computeTopBackgroundColor() {
-        return isEInk ? 'white' : (editingUpdates?.extra?.color ?? document?.extra?.color ?? document.pages[0]?.extra?.color ?? document.pages[0]?.colors?.[1] ?? colorTertiary);
+        const color = isEInk
+            ? 'white'
+            : (editingUpdates?.extra?.color ??
+              (typeof document.extra?.color === 'string' ? document.extra?.color : undefined) ??
+              document.pages[0]?.extra?.color ??
+              document.pages[0]?.colors?.[1] ??
+              colorTertiary);
+        return color;
     }
 
     $: statusBarStyle = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
@@ -117,7 +124,7 @@
         const result = [];
 
         let extra = document.extra || {};
-        if (extra.color) {
+        if (typeof extra.color === 'string') {
             if (editing && colorTheme !== 'eink') {
                 result.push({ type: 'color' });
             }
@@ -574,7 +581,7 @@
         (e.view as ContentView).content.opacity = 1;
         try {
             await document.movePage(e.index, e.data.targetIndex);
-            topBackgroundColor = document.pages[0]?.colors?.[1] || colorTertiary;
+            topBackgroundColor = computeTopBackgroundColor();
             statusBarStyle = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
             updateQRCodes();
         } catch (error) {
@@ -918,7 +925,7 @@
             editingUpdates = {};
             editing = false;
             refreshExtraItems();
-            topBackgroundColor = editingUpdates?.extra?.color ?? document?.extra?.color ?? document.pages[0].colors?.[1] ?? colorTertiary;
+            topBackgroundColor = computeTopBackgroundColor();
         }
     }
 

@@ -112,7 +112,8 @@
 
     function getItemHolderParams(layout, item: Item, nbColumns) {
         const page = item.doc.pages[0];
-        const color = isEInk ? null : new Color(page?.extra?.color ?? page.colors?.[1] ?? item.doc.extra?.color ?? colorOnPrimary);
+        const colorArg = page?.extra?.color ?? page.colors?.[1] ?? (typeof item.doc.extra?.color === 'string' ? item.doc.extra?.color : undefined) ?? colorOnPrimary;
+        const color = isEInk ? null : new Color(colorArg);
         const result = {
             backgroundColor: color
         };
@@ -132,7 +133,7 @@
             case 'columns':
             case 'list':
                 Object.assign(result, {
-                    elevation: isEInk ? 0 : 3,
+                    elevation: isEInk ? 0 : 2,
                     margin: 4
                 });
                 break;
@@ -144,7 +145,8 @@
         if (page.imagePath) {
             return {};
         }
-        const color = new Color(page.colors?.[0] || item.doc.extra?.color || colorOnPrimary);
+        const colorArg = page?.extra?.color ?? page.colors?.[1] ?? (typeof item.doc.extra?.color === 'string' ? item.doc.extra?.color : undefined) ?? colorOnPrimary;
+        const color = new Color(colorArg);
         const result = {
             color: isEInk ? null : color.getBrightness() < 145 ? 'white' : 'black'
         };
