@@ -72,9 +72,9 @@
         "colorOnSurfaceVariant": "#524344",
         "colorError": "#BA1A1A",
         "colorOnError": "#FFFFFF",
-        "colorInverseSurface": "#F0DEDF",
-        "colorInverseOnSurface": "#382E2F",
-        "colorInversePrimary": "#8F4952",
+        "colorInverseSurface": "#382E2F",
+        "colorInverseOnSurface": "#FFEDED",
+        "colorInversePrimary": "#FFB2B9",
         "colorPrimaryFixed": "#FFDADC",
         "colorOnPrimaryFixed": "#3B0712",
         "colorPrimaryFixedDim": "#FFB2B9",
@@ -87,12 +87,12 @@
         "colorOnTertiaryFixed": "#2A1800",
         "colorTertiaryFixedDim": "#E8C08E",
         "colorOnTertiaryFixedVariant": "#5D411B",
-        "colorSurfaceDim": "#1A1112",
-        "colorSurfaceBright": "#413737",
-        "colorSurfaceContainerLowest": "#140C0D",
-        "colorSurfaceContainerLow": "#22191A",
-        "colorSurfaceContainer": "#271D1E",
-        "colorSurfaceContainerHigh": "#312828",
-        "colorSurfaceContainerHighest": "#3D3233"
+        "colorSurfaceDim": "#E7D6D6",
+        "colorSurfaceBright": "#FFF8F7",
+        "colorSurfaceContainerLowest": "#FFFFFF",
+        "colorSurfaceContainerLow": "#FFF0F0",
+        "colorSurfaceContainer": "#FCEAEA",
+        "colorSurfaceContainerHigh": "#F6E4E4",
+        "colorSurfaceContainerHighest": "#F0DEDF"
     }
 }
