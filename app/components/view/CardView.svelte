@@ -62,7 +62,7 @@
     import { recycleImages } from '~/utils/images';
     import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
     import { requestCameraPermission } from '~/utils/utils.common';
-    import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, hasCamera, isLandscape, onFontScaleChanged, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -94,6 +94,7 @@
     let currentQRCodeIndex = 0;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let collectionViewExtras: NativeViewElementNode<CollectionView>;
     let fabHolder: NativeViewElementNode<StackLayout>;
     let pager: NativeViewElementNode<Pager>;
     let statusBarStyle;
@@ -570,7 +571,6 @@
         documentsService.off(EVENT_DOCUMENT_PAGE_UPDATED, onDocumentPageUpdated);
         documentsService.off(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
-    // onThemeChanged(refreshCollectionView);
 
     function startDragging(item: Item) {
         const index = items.findIndex((p) => p.page === item.page);
@@ -594,11 +594,13 @@
 
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
+        collectionViewExtras.nativeView?.refresh();
     }
     function refreshQRCodePager() {
         // pager?.nativeView.refresh();
     }
     onThemeChanged(refreshCollectionView);
+    onFontScaleChanged(refreshCollectionView);
 
     async function onQRCodeTap() {
         try {
@@ -1150,7 +1152,7 @@
                 <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-file-document-plus-outline" on:tap={throttle(() => importDocument(), 500)} /> -->
         <!-- </stacklayout> -->
         <gridlayout class="cardViewHolder" col={$isLandscape ? 1 : 0} row={$isLandscape ? 1 : 2}>
-            <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} items={extraItems} paddingBottom={Math.max($windowInset.bottom + FAB_BUTTON_OFFSET)}>
+            <collectionview bind:this={collectionViewExtras} itemTemplateSelector={selectTemplate} items={extraItems} paddingBottom={Math.max($windowInset.bottom + FAB_BUTTON_OFFSET)}>
                 <Template key={QRCODES_TYPE} let:item>
                     <gridlayout rows="auto,auto">
                         <pager

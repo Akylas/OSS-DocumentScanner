@@ -86,8 +86,30 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let { colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh, colorSurfaceContainerLowest, colorSurfaceContainerLow } = $colors;
-    $: ({ colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh, colorSurfaceContainerLowest, colorSurfaceContainerLow } = $colors);
+    let {
+        colorError,
+        colorOnBackground,
+        colorOnSurfaceVariant,
+        colorOutline,
+        colorPrimary,
+        colorPrimaryContainer,
+        colorSurface,
+        colorSurfaceContainerHigh,
+        colorSurfaceContainerLow,
+        colorSurfaceContainerLowest
+    } = $colors;
+    $: ({
+        colorError,
+        colorOnBackground,
+        colorOnSurfaceVariant,
+        colorOutline,
+        colorPrimary,
+        colorPrimaryContainer,
+        colorSurface,
+        colorSurfaceContainerHigh,
+        colorSurfaceContainerLow,
+        colorSurfaceContainerLowest
+    } = $colors);
 
     let folders: DocFolder[] = [];
     export let collectionViewOptions = {};
@@ -735,8 +757,11 @@
         foldersCollectionView?.nativeView?.refreshVisibleItems();
         collectionView?.nativeView?.refreshVisibleItems();
     };
+    onThemeChanged(() => {
+        foldersCollectionView?.nativeView?.refresh();
+        collectionView?.nativeView?.refresh();
+    });
     onFontScaleChanged(refreshVisibleItems);
-    onThemeChanged(refreshCollectionView);
     onFolderBackgroundColorChanged(refreshCollectionView);
 
     let lottieDarkFColor;
