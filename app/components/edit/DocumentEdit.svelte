@@ -231,44 +231,48 @@
     }
 
     async function showEnhancements(event) {
-        const OptionSelect = (await import('~/components/edit/EnhancementsPopover.svelte')).default;
-        const result = await showPopover({
-            backgroundColor: colorSurfaceContainer,
-            view: OptionSelect,
-            anchor: event.object,
-            horizPos: HorizontalPosition.ALIGN_LEFT,
-            vertPos: VerticalPosition.ABOVE,
-            props: {
-                transforms,
-                applyImageColorMatrix,
-                setColorMatrixLevels,
-                item: currentItem,
-                imageRotation: currentSelectedImageRotation,
-                imagePath: currentSelectedImagePath,
-                borderRadius: 10,
-                autoSizeListItem: true,
-                elevation: __ANDROID__ ? 3 : 0,
-                margin: 4,
-                fontWeight: 500,
+        try {
+            const EnhancementsPopover = (await import('~/components/edit/EnhancementsPopover.svelte')).default;
+            await showPopover({
                 backgroundColor: colorSurfaceContainer,
-                containerColumns: 'auto',
-                width: screenWidthDips - 50,
-                onLoaded(view) {
-                    enhanceFiltersCollectionView = view;
-                },
-                onClose() {
-                    enhanceFiltersCollectionView = null;
-                },
-                onCheckBox(item, value, e) {
-                    if (updatingTransform) {
-                        e.object.checked = !value;
-                        return;
+                view: EnhancementsPopover,
+                anchor: event.object,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                vertPos: VerticalPosition.ABOVE,
+                props: {
+                    transforms,
+                    applyImageColorMatrix,
+                    setColorMatrixLevels,
+                    item: currentItem,
+                    imageRotation: currentSelectedImageRotation,
+                    imagePath: currentSelectedImagePath,
+                    borderRadius: 10,
+                    autoSizeListItem: true,
+                    elevation: __ANDROID__ ? 3 : 0,
+                    margin: 4,
+                    fontWeight: 500,
+                    backgroundColor: colorSurfaceContainer,
+                    containerColumns: 'auto',
+                    width: screenWidthDips - 50,
+                    onLoaded(view) {
+                        enhanceFiltersCollectionView = view;
+                    },
+                    onClose() {
+                        enhanceFiltersCollectionView = null;
+                    },
+                    onCheckBox(item, value, e) {
+                        if (updatingTransform) {
+                            e.object.checked = !value;
+                            return;
+                        }
+                        updateTransform(value, null, item.id);
                     }
-                    updateTransform(value, null, item.id);
                 }
-            }
-        });
-        return result;
+            });
+        } catch (error) {
+            DEV_LOG && console.log(error, error.stack);
+            throw error;
+        }
     }
     // async function showEnhancements(event) {
     //     try {

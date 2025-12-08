@@ -1,13 +1,12 @@
 <script context="module" lang="ts">
     import { TRANSFORMS } from '~/utils/localized_constant';
     import OptionSelect from '../common/OptionSelect.svelte';
+    import { get } from 'svelte/store';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { FILTER_COL_WIDTH, FILTER_ROW_HEIGHT } from '~/utils/constants';
     import { ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
     import { lc } from '@nativescript-community/l';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { colors } from '~/variables';
+    import { colors, fontScale } from '~/variables';
     const filters = ColorMatricesTypes.map((k) => ({
         ...k,
         text: lc(k.id),
@@ -44,7 +43,7 @@
     }
 </script>
 
-<OptionSelect {options} {...$$restProps}>
+<OptionSelect height={FILTER_ROW_HEIGHT + options.length * ($$restProps?.rowHeight || 70) * get(fontScale)} {options} {...$$restProps}>
     <Template slot="templates" key="filters">
         <collectionview id="filters" colWidth={FILTER_COL_WIDTH} height={FILTER_ROW_HEIGHT} items={filters} orientation="horizontal" row={4} on:loaded={(e) => onLoaded(e.object)}>
             <Template let:item>
