@@ -220,6 +220,8 @@
                     <checkbox
                         id="checkbox"
                         boxType={item.boxType}
+                        ios:marginLeft={0}
+                        ios:marginRight={10}
                         checked={item.value}
                         col={item.boxType === 'circle' ? 0 : 2}
                         verticalAlignment="center"

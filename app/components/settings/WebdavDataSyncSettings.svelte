@@ -98,6 +98,7 @@
                         checked={$store.autoSync}
                         col={1}
                         marginLeft={10}
+                        verticalAlignment="center"
                         on:checkedChange={(e) =>
                             onCheckBox(e, (e) => {
                                 $store.autoSync = e.value;

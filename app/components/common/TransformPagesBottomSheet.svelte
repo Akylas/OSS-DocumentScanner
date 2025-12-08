@@ -187,7 +187,7 @@
                             id="checkbox"
                             checked={transforms.indexOf(item.id) !== -1}
                             col={2}
-                            ios:marginRight={10}
+                            ios:marginRight={0}
                             verticalAlignment="center"
                             on:checkedChange={(e) => onCheckedChanged(item, e)} />
                     </ListItem>

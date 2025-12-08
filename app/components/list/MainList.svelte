@@ -86,8 +86,8 @@
 
 <script lang="ts">
     // technique for only specific properties to get updated on store change
-    let { colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh } = $colors;
-    $: ({ colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh } = $colors);
+    let { colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh, colorSurfaceContainerLowest, colorSurfaceContainerLow } = $colors;
+    $: ({ colorError, colorOnBackground, colorOnSurfaceVariant, colorOutline, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceContainerHigh, colorSurfaceContainerLowest, colorSurfaceContainerLow } = $colors);
 
     let folders: DocFolder[] = [];
     export let collectionViewOptions = {};
@@ -929,7 +929,7 @@
                     visibility={folders?.length ? 'visible' : 'collapsed'}>
                     <Template let:item>
                         <canvasview
-                            backgroundColor={($folderBackgroundColor && item.folder.color) || isEInk ? 'transparent' : colorSurfaceContainerHigh}
+                            backgroundColor={($folderBackgroundColor && item.folder.color) || isEInk ? 'transparent' : colorSurfaceContainerLow}
                             borderColor={colorOutline}
                             borderRadius={12}
                             borderWidth={1}
