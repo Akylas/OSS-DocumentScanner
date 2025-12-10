@@ -20,6 +20,7 @@
     import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { DocumentsService, documentsService } from '~/services/documents';
     import { securityService } from '~/services/security';
+    import { backupService } from '~/services/backup';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         ALWAYS_PROMPT_CROP_EDIT,
@@ -911,6 +912,20 @@
                         title: lc('backup_restore')
                     },
                     {
+                        id: 'create_backup',
+                        title: lc('create_backup'),
+                        description: lc('create_backup_desc')
+                    },
+                    {
+                        id: 'restore_backup',
+                        title: lc('restore_backup'),
+                        description: lc('restore_backup_desc')
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('settings')
+                    },
+                    {
                         id: 'export_settings',
                         title: lc('export_settings'),
                         description: lc('export_settings_desc')
@@ -985,6 +1000,63 @@
 
                     break;
                 }
+                case 'create_backup':
+                    try {
+                        showLoading(lc('creating_backup'));
+                        const backupPath = await backupService.createBackup();
+                        await hideLoading();
+                        showSnack({ message: lc('backup_created') });
+                        DEV_LOG && console.log('create_backup done', backupPath);
+                    } catch (error) {
+                        await hideLoading();
+                        showError(error);
+                    }
+                    break;
+                case 'restore_backup':
+                    try {
+                        const confirmed = await confirm({
+                            message: lc('backup_confirm_restore'),
+                            okButtonText: lc('ok'),
+                            cancelButtonText: lc('cancel')
+                        });
+                        if (!confirmed) {
+                            break;
+                        }
+                        
+                        const result = await openFilePicker({
+                            extensions: ['zip'],
+                            multipleSelection: false,
+                            pickerMode: 0,
+                            forceSAF: true
+                        });
+                        
+                        const zipPath = result.files[0];
+                        DEV_LOG && console.log('restore_backup from file picker', zipPath, zipPath && File.exists(zipPath));
+                        
+                        if (zipPath && File.exists(zipPath)) {
+                            showLoading(lc('restoring_backup'));
+                            await backupService.restoreBackup(zipPath);
+                            await hideLoading();
+                            showSnack({ message: lc('backup_restored') });
+                            
+                            if (__ANDROID__) {
+                                const result = await confirm({
+                                    message: lc('restart_app'),
+                                    okButtonText: lc('restart'),
+                                    cancelButtonText: lc('later')
+                                });
+                                if (result) {
+                                    restartApp();
+                                }
+                            } else {
+                                showSnack({ message: lc('please_restart_app') });
+                            }
+                        }
+                    } catch (error) {
+                        await hideLoading();
+                        showError(error);
+                    }
+                    break;
                 case 'export_settings':
                     // if (__ANDROID__ && SDK_VERSION < 29) {
                     //     const permRes = await request('storage');
