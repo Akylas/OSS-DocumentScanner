@@ -20,7 +20,7 @@
     import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { DocumentsService, documentsService } from '~/services/documents';
     import { securityService } from '~/services/security';
-    import { backupService } from '~/services/backup';
+    import { backupWorkerService } from '~/services/backupWorker';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         ALWAYS_PROMPT_CROP_EDIT,
@@ -1003,7 +1003,7 @@
                 case 'create_backup':
                     try {
                         showLoading(lc('creating_backup'));
-                        const backupPath = await backupService.createBackup();
+                        const backupPath = await backupWorkerService.createBackup();
                         await hideLoading();
                         showSnack({ message: lc('backup_created') });
                         DEV_LOG && console.log('create_backup done', backupPath);
@@ -1035,7 +1035,7 @@
                         
                         if (zipPath && File.exists(zipPath)) {
                             showLoading(lc('restoring_backup'));
-                            await backupService.restoreBackup(zipPath);
+                            await backupWorkerService.restoreBackup(zipPath);
                             await hideLoading();
                             showSnack({ message: lc('backup_restored') });
                             
