@@ -225,12 +225,15 @@ export class BackupService implements IBackupService {
                 zos.putNextEntry(entry);
                 
                 const fis = new java.io.FileInputStream(file);
-                const buffer = Array.create('byte', 1024);
-                let length;
-                while ((length = fis.read(buffer)) > 0) {
-                    zos.write(buffer, 0, length);
+                try {
+                    const buffer = Array.create('byte', 1024);
+                    let length;
+                    while ((length = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, length);
+                    }
+                } finally {
+                    fis.close();
                 }
-                fis.close();
                 zos.closeEntry();
             }
         }
@@ -249,7 +252,21 @@ export class BackupService implements IBackupService {
         
         try {
             while ((entry = zis.getNextEntry()) !== null) {
-                const newFile = new java.io.File(destDir, entry.getName());
+                const entryName = entry.getName();
+                
+                // Security: Prevent zip slip vulnerability by validating paths
+                if (entryName.indexOf('..') !== -1) {
+                    throw new Error('Invalid zip entry path: ' + entryName);
+                }
+                
+                const newFile = new java.io.File(destDir, entryName);
+                
+                // Additional security check: ensure the file is within destDir
+                const canonicalDestPath = destDir.getCanonicalPath();
+                const canonicalNewFilePath = newFile.getCanonicalPath();
+                if (!canonicalNewFilePath.startsWith(canonicalDestPath + java.io.File.separator)) {
+                    throw new Error('Invalid zip entry path: ' + entryName);
+                }
                 
                 if (entry.isDirectory()) {
                     newFile.mkdirs();
@@ -257,12 +274,15 @@ export class BackupService implements IBackupService {
                     new java.io.File(newFile.getParent()).mkdirs();
                     
                     const fos = new java.io.FileOutputStream(newFile);
-                    const buffer = Array.create('byte', 1024);
-                    let length;
-                    while ((length = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, length);
+                    try {
+                        const buffer = Array.create('byte', 1024);
+                        let length;
+                        while ((length = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, length);
+                        }
+                    } finally {
+                        fos.close();
                     }
-                    fos.close();
                 }
                 zis.closeEntry();
             }

@@ -211,7 +211,11 @@ export class BackupService implements IBackupService {
             
             // Remove existing zip if it exists
             if (fileManager.fileExistsAtPath(zipPath)) {
-                fileManager.removeItemAtPathError(zipPath);
+                const error = new interop.Reference<NSError>();
+                fileManager.removeItemAtPathError(zipPath, error);
+                if (error.value) {
+                    throw new Error(`Failed to remove existing zip: ${error.value.localizedDescription}`);
+                }
             }
             
             const coordinator = NSFileCoordinator.alloc().initWithFilePresenter(null);
@@ -222,8 +226,12 @@ export class BackupService implements IBackupService {
                 NSFileCoordinatorReadingOptions.ForUploading,
                 error,
                 (newURL: NSURL) => {
+                    const copyError = new interop.Reference<NSError>();
                     // newURL points to a zipped version of the source
-                    fileManager.copyItemAtURLToURLError(newURL, zipURL);
+                    fileManager.copyItemAtURLToURLError(newURL, zipURL, copyError);
+                    if (copyError.value) {
+                        throw new Error(`Failed to copy zip: ${copyError.value.localizedDescription}`);
+                    }
                 }
             );
             
