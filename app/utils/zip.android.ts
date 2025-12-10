@@ -69,7 +69,8 @@ class ZipUtilsImpl implements ZipUtils {
                 // Additional security check: ensure the file is within destDir
                 const canonicalDestPath = destDir.getCanonicalPath();
                 const canonicalNewFilePath = newFile.getCanonicalPath();
-                if (!canonicalNewFilePath.startsWith(canonicalDestPath + java.io.File.separator)) {
+                if (!canonicalNewFilePath.startsWith(canonicalDestPath + java.io.File.separator) && 
+                    !canonicalNewFilePath.equals(canonicalDestPath)) {
                     throw new Error('Invalid zip entry path: ' + entryName);
                 }
                 

@@ -1,5 +1,8 @@
 import type { ZipUtils } from './zip';
 
+// SSZipArchive global type declaration
+declare const SSZipArchive: any;
+
 // Note: This iOS implementation requires SSZipArchive to be added as a CocoaPod dependency
 // Add to App_Resources/iOS/Podfile:
 // pod 'SSZipArchive'

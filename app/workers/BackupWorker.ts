@@ -13,7 +13,7 @@ let documentsService: DocumentsService;
 let backupService: BackupService;
 
 export default class BackupWorker extends BaseWorker {
-    constructor(protected context) {
+    constructor(protected context: Worker) {
         DEV_LOG && console.log(TAG, 'constructor');
         super(context);
     }
