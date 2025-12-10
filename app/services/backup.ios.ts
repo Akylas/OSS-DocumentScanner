@@ -3,6 +3,7 @@ import { saveFile } from '@nativescript-community/ui-document-picker';
 import dayjs from 'dayjs';
 import { documentsService } from './documents';
 import { DOCUMENT_DATA_FILENAME, FOLDERS_DATA_FILENAME } from '~/utils/constants';
+import { basename } from '~/utils/path';
 import type { BackupService as IBackupService } from './backup';
 
 const BACKUP_FILENAME_PREFIX = `${__APP_ID__}_backup_`;
@@ -105,8 +106,8 @@ export class BackupService implements IBackupService {
             
             // 3. Clear existing documents
             const existingDocs = await documentsService.documentRepository.search();
-            for (const doc of existingDocs) {
-                await documentsService.deleteDocument(doc);
+            if (existingDocs.length > 0) {
+                await documentsService.deleteDocuments(existingDocs);
             }
             
             // 4. Restore folders
@@ -165,14 +166,14 @@ export class BackupService implements IBackupService {
             const targetDocFolder = documentsService.dataFolder.getFolder(doc.id);
             await this.copyFolderRecursive(docFolder.path, targetDocFolder.path);
             
-            // Add pages
+            // Add pages with corrected paths
             if (pages && pages.length > 0) {
-                const updatedPages = pages.map(page => ({
-                    ...page,
-                    sourceImagePath: path.join(targetDocFolder.path, page.id, path.basename(page.sourceImagePath)),
-                    imagePath: path.join(targetDocFolder.path, page.id, path.basename(page.imagePath))
-                }));
-                await doc.addPages(updatedPages, true, true);
+                pages.forEach((page) => {
+                    const pageDataFolder = targetDocFolder.getFolder(page.id);
+                    page.sourceImagePath = path.join(pageDataFolder.path, basename(page.sourceImagePath));
+                    page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
+                });
+                await doc.addPages(pages, true, true);
             }
         } catch (error) {
             DEV_LOG && console.error('Error restoring document:', docProps.id, error);
