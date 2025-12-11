@@ -68,7 +68,6 @@
     "backup_restored": "sauvegarde restaurée avec succès",
     "backup_failed": "échec de la sauvegarde",
     "restore_failed": "échec de la restauration",
-    "backup_confirm_restore": "la restauration d'une sauvegarde remplacera toutes les données actuelles. Êtes-vous sûr?",
     "barcode": "code-barres",
     "barcode_type": "type de code-barres",
     "barcore_qrcode": "code-barres / QRCode",

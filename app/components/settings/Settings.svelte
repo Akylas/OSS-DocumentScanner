@@ -81,6 +81,7 @@
     import { share } from '@akylas/nativescript-app-utils/share';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
     import OCRSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
+    import { restoreSettings } from '~/utils/settings.android';
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     const storeSettings = {};
     const variant = 'outline';
@@ -1008,49 +1009,42 @@
                         showSnack({ message: lc('backup_created') });
                         DEV_LOG && console.log('create_backup done', backupPath);
                     } catch (error) {
+                        DEV_LOG && console.log('error while creating backup', error);
                         await hideLoading();
                         showError(error);
                     }
                     break;
                 case 'restore_backup':
                     try {
-                        const confirmed = await confirm({
-                            message: lc('backup_confirm_restore'),
-                            okButtonText: lc('ok'),
-                            cancelButtonText: lc('cancel')
-                        });
-                        if (!confirmed) {
-                            break;
-                        }
-                        
+
                         const result = await openFilePicker({
                             extensions: ['zip'],
                             multipleSelection: false,
                             pickerMode: 0,
                             forceSAF: true
                         });
-                        
+
                         const zipPath = result.files[0];
                         DEV_LOG && console.log('restore_backup from file picker', zipPath, zipPath && File.exists(zipPath));
-                        
+
                         if (zipPath && File.exists(zipPath)) {
                             showLoading(lc('restoring_backup'));
                             await backupWorkerService.restoreBackup(zipPath);
                             await hideLoading();
                             showSnack({ message: lc('backup_restored') });
-                            
-                            if (__ANDROID__) {
-                                const result = await confirm({
-                                    message: lc('restart_app'),
-                                    okButtonText: lc('restart'),
-                                    cancelButtonText: lc('later')
-                                });
-                                if (result) {
-                                    restartApp();
-                                }
-                            } else {
-                                showSnack({ message: lc('please_restart_app') });
-                            }
+
+                            // if (__ANDROID__) {
+                            //     const result = await confirm({
+                            //         message: lc('restart_app'),
+                            //         okButtonText: lc('restart'),
+                            //         cancelButtonText: lc('later')
+                            //     });
+                            //     if (result) {
+                            //         restartApp();
+                            //     }
+                            // } else {
+                            //     showSnack({ message: lc('please_restart_app') });
+                            // }
                         }
                     } catch (error) {
                         await hideLoading();

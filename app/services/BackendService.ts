@@ -1,6 +1,6 @@
 import { ApplicationSettings, Observable } from '@nativescript/core';
 
-export const stringProperty = (target: Object, key: string | symbol) => {
+export const stringProperty = (target: object, key: string | symbol) => {
     // property value
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
@@ -27,7 +27,7 @@ export const stringProperty = (target: Object, key: string | symbol) => {
         set: setter
     });
 };
-export const objectProperty = (target: Object, key: string | symbol) => {
+export const objectProperty = (target: object, key: string | symbol) => {
     // property value
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
@@ -74,7 +74,7 @@ function createSetter<T>(actualkey: string, innerKey: string, options: PropertyD
         return setFunc(actualkey, newVal);
     };
 }
-function nativePropertyGenerator<T>(target: Object, key: any, options: PropertyDecoratorOptions<T>, getFunc: Function, setFunc: Function) {
+function nativePropertyGenerator<T>(target: object, key: any, options: PropertyDecoratorOptions<T>, getFunc: Function, setFunc: Function) {
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
     const savedValue = getFunc(actualkey);
@@ -104,7 +104,7 @@ export function booleanProperty(...args) {
         return nativePropertyGenerator<boolean>(args[startIndex], args[startIndex + 1], options || {}, ApplicationSettings.getBoolean, ApplicationSettings.setBoolean);
     }
 }
-export const numberProperty = (target: Object, key: string | symbol) => {
+export const numberProperty = (target: object, key: string | symbol) => {
     // property value
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;

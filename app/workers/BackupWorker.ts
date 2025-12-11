@@ -10,7 +10,6 @@ const TAG = '[BackupWorker]';
 DEV_LOG && console.log(TAG, 'main');
 
 let documentsService: DocumentsService;
-let backupService: BackupService;
 
 export default class BackupWorker extends BaseWorker {
     constructor(protected context: Worker) {
@@ -32,27 +31,25 @@ export default class BackupWorker extends BaseWorker {
             setDocumentsService(documentsService);
             await documentsService.start(event.data.nativeData.db);
         }
-        
-        if (!backupService) {
-            backupService = BackupService.getInstance();
-        }
     }
 
     async receivedMessage(event: WorkerEvent) {
         const data = event.data;
         DEV_LOG && console.log(TAG, 'receivedMessage', data.type);
-        
+
         try {
             switch (data.type) {
                 case 'createBackup':
                     await this.handleStart(event);
-                    const backupPath = await backupService.createBackup();
-                    this.sendResult(data.id, { success: true, path: backupPath });
+                    const backupPath = await BackupService.createBackup(documentsService, data.messageData.zipPath);
+                    (global as any).postMessage({ id: data.id, messageData: backupPath });
+                    this.stop(data.messageData?.error, data.id);
                     break;
                 case 'restoreBackup':
                     await this.handleStart(event);
-                    await backupService.restoreBackup(data.messageData.zipPath);
-                    this.sendResult(data.id, { success: true });
+                    await BackupService.restoreBackup(documentsService, data.messageData.zipPath);
+                    (global as any).postMessage({ id: data.id, messageData: data.messageData.zipPath });
+                    this.stop(data.messageData?.error, data.id);
                     break;
                 case 'stop':
                     this.stop(data.messageData?.error, data.id);
@@ -60,7 +57,7 @@ export default class BackupWorker extends BaseWorker {
             }
         } catch (error) {
             console.error(TAG, 'Error in receivedMessage', error);
-            this.sendError(error, data.id);
+            this.sendError(error);
         }
     }
 }

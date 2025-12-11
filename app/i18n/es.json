@@ -68,7 +68,6 @@
     "backup_restored": "copia de seguridad restaurada con éxito",
     "backup_failed": "falló la copia de seguridad",
     "restore_failed": "falló la restauración",
-    "backup_confirm_restore": "restaurar una copia de seguridad reemplazará todos los datos actuales. ¿Estás seguro?",
     "barcode": "código de barras",
     "barcode_type": "tipo de código de barras",
     "barcore_qrcode": "código de barras / código QR",
