@@ -191,8 +191,8 @@
     let qrcodeBackgroundColor;
 
     function updateQRCodeColors() {
-        qrcodeColor = !isDarkTheme() || !forceWhiteBackgroundForQRCode ? $colors.colorOnBackground : $colors.colorBackground;
-        qrcodeBackgroundColor = !isDarkTheme() || !forceWhiteBackgroundForQRCode ? $colors.colorBackground : $colors.colorOnBackground;
+        qrcodeColor = forceWhiteBackgroundForQRCode ? 'black' : $colors.colorOnBackground;
+        qrcodeBackgroundColor = forceWhiteBackgroundForQRCode ? (isDarkTheme() ? $colors.colorOnBackground : $colors.colorBackground) : $colors.colorBackground;
     }
 
     async function updateQRCodes(updateList = true) {
@@ -1166,7 +1166,7 @@
                             on:selectedIndexChange={onSelectedIndex}>
                             <Template let:index let:item>
                                 <gridlayout rows="*,auto" on:tap={onQRCodeTap}>
-                                    <svgview sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
+                                    <svgview backgroundColor={qrcodeBackgroundColor} sharedTransitionTag={'qrcode' + index} src={item.svg} stretch="aspectFit" />
                                     <label
                                         fontSize={30}
                                         fontWeight="bold"
