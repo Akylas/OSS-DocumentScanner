@@ -99,6 +99,7 @@
         "nativescript-iqkeyboardmanager": "1.5.1",
         "nested-property": "^4.0.0",
         "plugin-nativeprocessor": "portal:plugin-nativeprocessor",
+        "plugin-zip": "portal:plugin-zip",
         "topojson-simplify": "3.0.3",
         "util": "0.12.5"
     },
