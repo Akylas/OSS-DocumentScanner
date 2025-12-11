@@ -1,5 +1,5 @@
 import { HttpsRequestOptions, request } from '@nativescript-community/https';
-import { ApplicationSettings, File, Folder, Observable, knownFolders, path } from '@nativescript/core';
+import { ApplicationSettings, File, Folder, Observable, Utils, knownFolders, path } from '@nativescript/core';
 import { NoNetworkError } from '@shared/utils/error';
 import { ocrDocumentFromFile } from 'plugin-nativeprocessor';
 import type { OCRDocument } from '~/models/OCRDocument';
@@ -336,11 +336,18 @@ export class OCRService extends Observable {
                 method: 'GET'
             } as HttpsRequestOptions;
             try {
+                let currentProgress = 0;
                 const result = await request({
                     ...requestParams,
+                    progressOnMainThread: false,
                     onProgress(current, total) {
                         const progress = Math.round(((index + current / total) / langArray.length) * 100);
-                        updateProgress(progress);
+                        if (progress !== currentProgress) {
+                            currentProgress = progress;
+                            Utils.executeOnMainThread(() => {
+                                updateProgress(progress);
+                            });
+                        }
                     }
                 });
                 await result.content.toFile(destinationFile);

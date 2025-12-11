@@ -9,6 +9,7 @@ import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from
 import { EVENT_DOCUMENT_DELETED, SETTINGS_ROOT_DATA_FOLDER } from '~/utils/constants';
 import { groupByArray } from '@shared/utils';
 import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
+import QueryIdentifier from 'kiss-orm/dist/Queries/QueryIdentifier';
 export const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
@@ -528,11 +529,18 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const element = await this.get(itemId);
         return element;
     }
-    async search(args: { from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery } = {}) {
+    async search(args: { end?: SqlQuery; from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery } = {}) {
         const result = await super.search({ ...args });
         // remove all documents with no Page, it is a bug and should never happen
 
         return result.filter((d) => d.pages?.length > 0);
+    }
+    async existsById(itemId: string) {
+        const result = await this.exists({
+            where: sql`id = ${new QueryIdentifier(itemId)}`
+        });
+        DEV_LOG && console.log('exists', itemId, result);
+        return result;
     }
     async findDocuments({ filter, folder, omitThoseWithFolders = false, order = 'id DESC' }: { filter?: string; folder?: DocFolder; omitThoseWithFolders?: boolean; order?: string } = {}) {
         const args = {
@@ -699,6 +707,7 @@ export class DocumentsService extends Observable {
         this.rootDataFolder = rootDataFolder;
         dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
         DEV_LOG && console.info('DocumentsService', 'start', this.id, rootDataFolder, !!db, dataFolder.path);
+
         if (db) {
             this.db = new NSQLDatabase(db, {
                 // for now it breaks
@@ -720,10 +729,6 @@ export class DocumentsService extends Observable {
         this.tagRepository = new TagRepository(this.db);
         this.folderRepository = new FolderRepository(this.db);
         this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository);
-        await this.documentRepository.createTables();
-        await this.pageRepository.createTables();
-        await this.tagRepository.createTables();
-        await this.folderRepository.createTables();
         if (!db) {
             await this.documentRepository.createTables();
             await this.pageRepository.createTables();
