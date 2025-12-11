@@ -19,6 +19,8 @@
         "androidx.core.os:LocaleListCompat",
         "java.nio.file:Files",
         "java.io:FileOutputStream",
+        "java.text:Normalizer",
+        "java.text:Normalizer.Form",
         "androidx.core.widget:NestedScrollView",
         "android.app:PendingIntent",
         "android.service.quicksettings:TileService",
