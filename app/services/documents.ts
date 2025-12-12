@@ -121,6 +121,12 @@ export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
         );
         `);
     }
+    async existsById(itemId: string) {
+        const result = await this.exists({
+            where: sql`id = ${new QueryIdentifier(itemId)}`
+        });
+        return result;
+    }
 
     async findFolders(rootFolder?: DocFolder) {
         const folders = await this.search({
@@ -539,7 +545,6 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const result = await this.exists({
             where: sql`id = ${new QueryIdentifier(itemId)}`
         });
-        DEV_LOG && console.log('exists', itemId, result);
         return result;
     }
     async findDocuments({ filter, folder, omitThoseWithFolders = false, order = 'id DESC' }: { filter?: string; folder?: DocFolder; omitThoseWithFolders?: boolean; order?: string } = {}) {
