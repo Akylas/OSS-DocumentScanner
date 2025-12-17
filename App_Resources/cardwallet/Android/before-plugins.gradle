@@ -17,7 +17,7 @@ ext {
     androidXPreferenceVersion = "1.2.1"
     okHttpVersion = "4.12.0"
     lottieVersion = "6.2.0"
-    ndkVersion = "27.2.12479018"
+    ndkVersion = "27.3.13750724"
     licenseReporterVersion = "2.4"
     sentryVersion = "7.22.6"
     sentryGradleVersion = "4.12.0"
