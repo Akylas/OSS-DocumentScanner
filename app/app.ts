@@ -108,7 +108,7 @@ try {
     SwipeMenuElement.register();
     DrawerElement.register();
     startSentry();
-    initialize({ usePersistentCacheKeyStore: true });
+    initialize({ isDownsampleEnabled: true });
 
     if (PLAY_STORE_BUILD) {
         import('@shared/utils/inapp-purchase').then((r) => r.init());
