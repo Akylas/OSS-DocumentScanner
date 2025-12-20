@@ -4,10 +4,29 @@ import { CustomError } from '@shared/utils/error';
 import type BackupWorker from '~/workers/BackupWorker';
 import { pickFolder } from '@nativescript-community/ui-document-picker';
 import { documentsService } from './documents';
+import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 
 export class BackupWorkerService extends BaseWorkerHandler<BackupWorker> {
-    onWorkerEvent(eventData: any) {
-        DEV_LOG && console.log('onWorkerEvent', eventData);
+    async onWorkerEvent(eventData) {
+        if (eventData.target === 'documentsService') {
+            if (eventData.doc) {
+                eventData.doc = OCRDocument.fromJSON(eventData.doc);
+            }
+            if (eventData.documents) {
+                eventData.documents = eventData.documents.map((d) => OCRDocument.fromJSON(d));
+            }
+            if (eventData.pages) {
+                eventData.pages = eventData.pages.map((d) => OCRPage.fromJSON(d));
+            }
+            if (eventData.object?.id === eventData.doc?.id) {
+                eventData.object = eventData.doc;
+            } else {
+                delete eventData.object;
+            }
+            documentsService.notify({ ...eventData, object: eventData.object || documentsService, fromWorker: true });
+        } else {
+            this.notify({ ...eventData });
+        }
     }
     private static instance: BackupWorkerService;
 

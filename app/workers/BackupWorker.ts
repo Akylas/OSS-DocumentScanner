@@ -13,14 +13,12 @@ let documentsService: DocumentsService;
 
 export default class BackupWorker extends BaseWorker {
     constructor(protected context: Worker) {
-        DEV_LOG && console.log(TAG, 'constructor');
         super(context);
     }
 
     async handleStart(event: WorkerEvent) {
         if (!documentsService) {
             documentsService = new DocumentsService();
-            DEV_LOG && console.warn(TAG, 'handleStart', documentsService.id, event.data.nativeData.db);
             documentsService.notify = (e) => {
                 if (e.eventName === 'started') {
                     return;
@@ -35,7 +33,6 @@ export default class BackupWorker extends BaseWorker {
 
     async receivedMessage(event: WorkerEvent) {
         const data = event.data;
-        DEV_LOG && console.log(TAG, 'receivedMessage', data.type);
 
         try {
             switch (data.type) {
@@ -56,7 +53,6 @@ export default class BackupWorker extends BaseWorker {
                     break;
             }
         } catch (error) {
-            console.error(TAG, 'Error in receivedMessage', error);
             this.sendError(error);
         }
     }

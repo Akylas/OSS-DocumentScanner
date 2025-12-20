@@ -1006,8 +1006,10 @@
                         showLoading(lc('creating_backup'));
                         const backupPath = await backupWorkerService.createBackup();
                         await hideLoading();
-                        showSnack({ message: lc('backup_created') });
-                        DEV_LOG && console.log('create_backup done', backupPath);
+                        if (backupPath) {
+                            showSnack({ message: lc('backup_created') });
+                            DEV_LOG && console.log('create_backup done', backupPath);
+                        }
                     } catch (error) {
                         DEV_LOG && console.log('error while creating backup', error);
                         await hideLoading();
@@ -1016,7 +1018,6 @@
                     break;
                 case 'restore_backup':
                     try {
-
                         const result = await openFilePicker({
                             extensions: ['zip'],
                             multipleSelection: false,
