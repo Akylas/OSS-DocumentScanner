@@ -1,0 +1,87 @@
+# Show Export options
+# This flow demonstrates the export functionality
+# It first ensures a document exists, then navigates to the export view
+
+appId: com.akylas.documentscanner
+
+---
+
+# First, ensure we have a document to export
+- runFlow:
+    file: setup-test-document.yaml
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap on the first document to open it
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - tapOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Alternative: tap on any list item
+- runFlow:
+    when:
+      visible:
+        id: ".*list.*item.*"
+    commands:
+      - tapOn:
+          id: ".*list.*item.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Look for share/export button
+- runFlow:
+    when:
+      visible:
+        id: ".*share.*"
+    commands:
+      - tapOn:
+          id: ".*share.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        id: ".*export.*"
+    commands:
+      - tapOn:
+          id: ".*export.*"
+      - waitForAnimationToEnd
+
+# Look for share icon (common pattern)
+- runFlow:
+    when:
+      visible: "📤"
+    commands:
+      - tapOn: "📤"
+      - waitForAnimationToEnd
+
+# Try more options menu
+- runFlow:
+    when:
+      visible: "⋮"
+    commands:
+      - tapOn: "⋮"
+      - waitForAnimationToEnd
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ee]xport.*"
+          commands:
+            - tapOn:
+                text: ".*[Ee]xport.*"
+            - waitForAnimationToEnd
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ss]hare.*"
+          commands:
+            - tapOn:
+                text: ".*[Ss]hare.*"
+            - waitForAnimationToEnd
