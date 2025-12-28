@@ -32,7 +32,15 @@ export class BackupService {
             const zipFileName = `${BACKUP_FILENAME_PREFIX}${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.zip`;
             const outputZipPath = Folder.fromPath(zipPath).getFile(zipFileName, true).path;
 
+            let nURL: NSURL;
+
+            // on IOS we need to use startAccessingSecurityScopedResource if we write in non local app sandbox paths (like NSDocumentsDirectory, NSCachesDirectory)
+            if (__IOS__) {
+                nURL = NSURL.fileURLWithPathIsDirectory(outputZipPath, true);
+                nURL.startAccessingSecurityScopedResource();
+            }
             await zip({ directory: tempBackupDir.path, archive: outputZipPath, keepParent: false });
+            nURL?.stopAccessingSecurityScopedResource();
 
             await tempBackupDir.remove();
 
