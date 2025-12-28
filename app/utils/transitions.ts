@@ -1,5 +1,5 @@
 import { View } from '@nativescript/core';
-import { writable, get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 export interface TransitionConfig {
     duration?: number;
@@ -23,7 +23,7 @@ export class TransitionManager {
      * Creates a store that manages the visibility state with animations
      */
     createAnimatedVisibility(initialValue: boolean = false) {
-        const { subscribe, set } = writable(initialValue);
+        const { set, subscribe } = writable(initialValue);
         const self = this;
 
         return {
@@ -33,7 +33,7 @@ export class TransitionManager {
                     self.shouldShow = value;
                     return;
                 }
-                
+
                 if (value) {
                     // Show immediately, animate will happen via onLoaded
                     set(true);
@@ -52,16 +52,8 @@ export class TransitionManager {
     /**
      * Slide vertical transition with fade for entering/exiting
      */
-    async slideVertical(
-        node: any,
-        params: SlideVerticalConfig = {},
-        entering: boolean = true
-    ): Promise<void> {
-        const {
-            duration = 300,
-            delay = 0,
-            distance = 100
-        } = params;
+    async slideVertical(node: any, params: SlideVerticalConfig = {}, entering: boolean = true): Promise<void> {
+        const { delay = 0, distance = 100, duration = 300 } = params;
 
         if (!node?.nativeView) {
             return;
@@ -72,14 +64,14 @@ export class TransitionManager {
 
         try {
             if (delay > 0) {
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise((resolve) => setTimeout(resolve, delay));
             }
 
             if (entering) {
                 // Enter: slide up from bottom with fade
                 view.opacity = 0;
                 view.translateY = distance;
-                
+
                 await view.animate({
                     opacity: 1,
                     translate: { x: 0, y: 0 },
@@ -101,15 +93,8 @@ export class TransitionManager {
     /**
      * Fade transition for entering/exiting
      */
-    async fade(
-        node: any,
-        params: TransitionConfig = {},
-        entering: boolean = true
-    ): Promise<void> {
-        const {
-            duration = 300,
-            delay = 0
-        } = params;
+    async fade(node: any, params: TransitionConfig = {}, entering: boolean = true): Promise<void> {
+        const { delay = 0, duration = 300 } = params;
 
         if (!node?.nativeView) {
             return;
@@ -120,7 +105,7 @@ export class TransitionManager {
 
         try {
             if (delay > 0) {
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise((resolve) => setTimeout(resolve, delay));
             }
 
             if (entering) {
@@ -227,7 +212,7 @@ export function animateVisibility(
  * This ensures the component waits for animation before destruction
  */
 export function createTransitionStore(initialValue: boolean = false) {
-    const { subscribe, set: originalSet, update } = writable(initialValue);
+    const { set: originalSet, subscribe, update } = writable(initialValue);
     let isTransitioning = false;
     let pendingValue: boolean | null = null;
 
@@ -241,8 +226,8 @@ export function createTransitionStore(initialValue: boolean = false) {
         originalSet(value);
 
         // Give time for animation
-        await new Promise(resolve => setTimeout(resolve, 350)); // Slightly longer than animation
-        
+        await new Promise((resolve) => setTimeout(resolve, 350)); // Slightly longer than animation
+
         isTransitioning = false;
 
         if (pendingValue !== null) {
