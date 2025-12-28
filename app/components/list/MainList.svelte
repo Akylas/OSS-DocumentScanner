@@ -22,7 +22,7 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { createTransitionStore } from '~/utils/transitions';
+    import { withTransition } from '~/utils/transitions';
     import {
         DocumentAddedEventData,
         DocumentDeletedEventData,
@@ -195,9 +195,8 @@
         });
     }
 
-    // Transition store for SelectionToolbar
-    const selectionToolbarTransition = createTransitionStore(false, 300);
-    $: selectionToolbarTransition.set(nbSelected > 0);
+    // Transition-aware store for SelectionToolbar
+    const showSelectionToolbar = withTransition(() => nbSelected > 0, 300);
 
     async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
@@ -1139,8 +1138,8 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
         {/if}
-        {#if $selectionToolbarTransition.mounted}
-            <SelectionToolbar maxVisibleActions={4} onAction={handleSelectionAction} options={getSelectionToolbarOptions()} show={$selectionToolbarTransition.visible} />
+        {#if $showSelectionToolbar}
+            <SelectionToolbar maxVisibleActions={4} onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

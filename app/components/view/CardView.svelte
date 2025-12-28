@@ -38,7 +38,7 @@
     import { lc } from '~/helpers/locale';
     import { colorTheme, isDarkTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { Document, ExtraFieldType, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { createTransitionStore } from '~/utils/transitions';
+    import { withTransition } from '~/utils/transitions';
     import {
         DocumentDeletedEventData,
         DocumentPageDeletedEventData,
@@ -126,9 +126,8 @@
         });
     }
 
-    // Transition store for SelectionToolbar
-    const selectionToolbarTransition = createTransitionStore(false, 300);
-    $: selectionToolbarTransition.set(nbSelected > 0);
+    // Transition-aware store for SelectionToolbar
+    const showSelectionToolbar = withTransition(() => nbSelected > 0, 300);
 
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
@@ -1325,8 +1324,8 @@
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             {/if}
         </CActionBar>
-        {#if $selectionToolbarTransition.mounted}
-            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} show={$selectionToolbarTransition.visible} />
+        {#if $showSelectionToolbar}
+            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar

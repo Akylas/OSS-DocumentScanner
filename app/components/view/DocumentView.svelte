@@ -19,7 +19,7 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { createTransitionStore } from '~/utils/transitions';
+    import { withTransition } from '~/utils/transitions';
     import {
         DocumentDeletedEventData,
         DocumentPageDeletedEventData,
@@ -102,9 +102,8 @@
         });
     }
 
-    // Transition store for SelectionToolbar
-    const selectionToolbarTransition = createTransitionStore(false, 300);
-    $: selectionToolbarTransition.set(nbSelected > 0);
+    // Transition-aware store for SelectionToolbar
+    const showSelectionToolbar = withTransition(() => nbSelected > 0, 300);
     }
 
     // $: {
@@ -728,8 +727,8 @@
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             {/if}
         </CActionBar>
-        {#if $selectionToolbarTransition.mounted}
-            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} show={$selectionToolbarTransition.visible} />
+        {#if $showSelectionToolbar}
+            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />

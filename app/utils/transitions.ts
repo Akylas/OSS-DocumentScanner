@@ -1,5 +1,5 @@
 import { View } from '@nativescript/core';
-import { get, writable } from 'svelte/store';
+import { writable, type Readable } from 'svelte/store';
 
 export interface TransitionConfig {
     duration?: number;
@@ -26,9 +26,6 @@ export interface CustomTransitionConfig {
  */
 export class TransitionManager {
     private isAnimating = false;
-    private shouldDestroy = false;
-    private node: any = null;
-    private destroyCallback: (() => void) | null = null;
 
     /**
      * Slide vertical transition with fade for entering/exiting
@@ -123,172 +120,176 @@ export class TransitionManager {
 }
 
 /**
- * Transition directive - manages component lifecycle with animations
- * This is a complete replacement for Svelte's transition system
+ * Transition action that works with {#if} blocks
+ * Handles intro animation automatically
+ * 
+ * For outro animations, wrap your condition with withTransition():
+ * const showWithTransition = withTransition(() => show, 300);
+ * {#if $showWithTransition}
+ *   <element use:slideVertical={{ duration: 300 }}>
+ * {/if}
  */
 export function transition(
     node: any,
     params: {
-        show: boolean;
         type?: 'slideVertical' | 'fade' | 'custom';
         config?: SlideVerticalConfig | TransitionConfig | any;
         customTransition?: CustomTransitionConfig;
         onIntroStart?: () => void;
         onIntroEnd?: () => void;
-        onOutroStart?: () => void;
-        onOutroEnd?: () => void;
-    }
+    } = {}
 ) {
     const manager = new TransitionManager();
-    let lastShow = params.show;
-    let isComponentMounted = params.show;
-    let pendingDestroy = false;
     const type = params.type || 'slideVertical';
     const config = params.config || {};
 
-    // Set initial hidden state for slideVertical to prevent flash
-    if (node?.nativeView) {
-        const view = node.nativeView as View;
-        if (type === 'slideVertical' && !params.show) {
-            view.opacity = 0;
-            const distance = (config as SlideVerticalConfig).distance || 100;
-            view.translateY = distance;
-        } else if (type === 'fade' && !params.show) {
-            view.opacity = 0;
-        }
+    if (!node?.nativeView) {
+        return { destroy: () => {} };
     }
 
-    // Run intro animation if initially showing
-    if (params.show && node?.nativeView) {
-        setTimeout(async () => {
-            params.onIntroStart?.();
-            try {
-                const view = node.nativeView as View;
-                if (type === 'custom' && params.customTransition) {
-                    await manager.executeTransition(view, params.customTransition, true);
-                } else if (type === 'slideVertical') {
-                    await manager.slideVertical(view, config as SlideVerticalConfig, true);
-                } else if (type === 'fade') {
-                    await manager.fade(view, config, true);
-                }
-            } finally {
-                params.onIntroEnd?.();
-            }
-        }, 0);
+    const view = node.nativeView as View;
+
+    // Set initial hidden state to prevent flash
+    if (type === 'slideVertical') {
+        view.opacity = 0;
+        const distance = (config as SlideVerticalConfig).distance || 100;
+        view.translateY = distance;
+    } else if (type === 'fade') {
+        view.opacity = 0;
     }
+
+    // Run intro animation on next tick (after component is mounted)
+    setTimeout(async () => {
+        params.onIntroStart?.();
+        try {
+            if (type === 'custom' && params.customTransition) {
+                await manager.executeTransition(view, params.customTransition, true);
+            } else if (type === 'slideVertical') {
+                await manager.slideVertical(view, config as SlideVerticalConfig, true);
+            } else if (type === 'fade') {
+                await manager.fade(view, config, true);
+            }
+        } finally {
+            params.onIntroEnd?.();
+        }
+    }, 0);
 
     return {
-        update: async (newParams: typeof params) => {
-            if (newParams.show === lastShow) {
-                return;
-            }
-
-            lastShow = newParams.show;
-
-            if (!node?.nativeView) {
-                return;
-            }
-
-            const view = node.nativeView as View;
-
-            if (newParams.show) {
-                // Intro animation
-                isComponentMounted = true;
-                pendingDestroy = false;
-                params.onIntroStart?.();
-                try {
-                    if (type === 'custom' && params.customTransition) {
-                        await manager.executeTransition(view, params.customTransition, true);
-                    } else if (type === 'slideVertical') {
-                        await manager.slideVertical(view, config as SlideVerticalConfig, true);
-                    } else if (type === 'fade') {
-                        await manager.fade(view, config, true);
-                    }
-                } finally {
-                    params.onIntroEnd?.();
-                }
-            } else {
-                // Outro animation - run animation then hide component
-                params.onOutroStart?.();
-                pendingDestroy = true;
-                try {
-                    if (type === 'custom' && params.customTransition) {
-                        await manager.executeTransition(view, params.customTransition, false);
-                    } else if (type === 'slideVertical') {
-                        await manager.slideVertical(view, config as SlideVerticalConfig, false);
-                    } else if (type === 'fade') {
-                        await manager.fade(view, config, false);
-                    }
-                } finally {
-                    params.onOutroEnd?.();
-                    // Signal that component should be unmounted
-                    isComponentMounted = false;
-                }
-            }
-        },
         destroy: () => {
-            // Synchronous destroy - nothing to do here
+            // Note: Svelte actions can't delay destruction
+            // Use withTransition() wrapper for the {#if} condition to handle outro
         }
     };
 }
 
 /**
- * Creates a transition-aware store that controls component mounting/unmounting
- * Usage: const showStore = createTransitionStore(false);
+ * Wraps a reactive getter to automatically delay unmounting for transitions
+ * This hooks into Svelte's reactivity system to manage component lifecycle
+ * 
+ * Usage (works just like Svelte transitions):
+ * const showWithTransition = withTransition(() => show, 300);
+ * 
+ * {#if $showWithTransition}
+ *   <element use:slideVertical={{ duration: 300 }}>
+ * {/if}
+ * 
+ * The element will:
+ * - Mount immediately when show becomes true
+ * - Animate in via use:slideVertical
+ * - Animate out when show becomes false
+ * - Unmount after animation completes (300ms + buffer)
  */
-export function createTransitionStore(initialValue: boolean = false, transitionDuration: number = 300) {
-    const mountedStore = writable(initialValue);
-    const visibleStore = writable(initialValue);
-    let isTransitioning = false;
-    let pendingValue: boolean | null = null;
+export function withTransition(getter: () => boolean, duration: number = 300): Readable<boolean> {
+    const delayedStore = writable(getter());
+    let timeout: any = null;
+    let currentValue = getter();
 
-    const set = async (value: boolean) => {
-        if (isTransitioning) {
-            pendingValue = value;
+    // Create a reactive subscription by checking the getter regularly
+    const checkInterval = setInterval(() => {
+        const newValue = getter();
+        if (newValue === currentValue) {
             return;
         }
+        
+        currentValue = newValue;
 
-        const currentMounted = get(mountedStore);
-        const currentVisible = get(visibleStore);
-
-        if (value === currentVisible) {
-            return;
-        }
-
-        isTransitioning = true;
-
-        if (value) {
-            // Showing: mount immediately, then make visible
-            mountedStore.set(true);
-            // Small delay to ensure component is mounted before animation
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            visibleStore.set(true);
-            isTransitioning = false;
+        if (newValue) {
+            // Showing: update immediately
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            delayedStore.set(true);
         } else {
-            // Hiding: make invisible, wait for animation, then unmount
-            visibleStore.set(false);
-            // Wait for animation to complete
-            await new Promise((resolve) => setTimeout(resolve, transitionDuration + 50));
-            mountedStore.set(false);
-            isTransitioning = false;
+            // Hiding: delay the update
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+            timeout = setTimeout(() => {
+                delayedStore.set(false);
+                timeout = null;
+            }, duration + 50);
         }
+    }, 16); // Check ~60fps
 
-        // Handle any pending value
-        if (pendingValue !== null) {
-            const next = pendingValue;
-            pendingValue = null;
-            await set(next);
+    // Cleanup function
+    const unsubscribe = () => {
+        clearInterval(checkInterval);
+        if (timeout) {
+            clearTimeout(timeout);
         }
     };
 
     return {
-        mounted: { subscribe: mountedStore.subscribe },
-        visible: { subscribe: visibleStore.subscribe },
-        set,
-        update: (fn: (value: boolean) => boolean) => {
-            const current = get(visibleStore);
-            const next = fn(current);
-            set(next);
+        subscribe: (run) => {
+            const unsubStore = delayedStore.subscribe(run);
+            return () => {
+                unsubStore();
+                unsubscribe();
+            };
         }
+    };
+}
+
+/**
+ * Pre-made transition functions that work like Svelte's built-in transitions
+ * 
+ * Usage:
+ * const showWithTransition = withTransition(() => show, 300);
+ * 
+ * {#if $showWithTransition}
+ *   <element use:slideVertical={{ duration: 300, distance: 100 }}>
+ * {/if}
+ */
+export function slideVertical(node: any, params: SlideVerticalConfig = {}) {
+    return transition(node, { type: 'slideVertical', config: params });
+}
+
+export function fade(node: any, params: TransitionConfig = {}) {
+    return transition(node, { type: 'fade', config: params });
+}
+
+/**
+ * Helper to create custom transitions
+ * 
+ * Usage:
+ * const myTransition = customTransition({
+ *   inTransition: async (view, params, entering) => { ... },
+ *   outTransition: async (view, params, entering) => { ... },
+ *   config: { duration: 300 }
+ * });
+ * 
+ * const showWithTransition = withTransition(() => show, 300);
+ * {#if $showWithTransition}
+ *   <element use:myTransition>
+ * {/if}
+ */
+export function customTransition(config: CustomTransitionConfig) {
+    return (node: any, params: any = {}) => {
+        return transition(node, {
+            type: 'custom',
+            customTransition: config,
+            config: { ...config.config, ...params }
+        });
     };
 }
