@@ -492,7 +492,6 @@
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
                 DEV_LOG && console.log('view onDocumentPageUpdated update image', imageView);
-                getImagePipeline().evictFromCache(current.page.imagePath);
                 if (imageView) {
                     imageView?.updateImageUri();
                 } else if (__IOS__) {

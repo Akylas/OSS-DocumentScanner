@@ -284,13 +284,13 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         const createdDate = Date.now();
         return this.create(
             cleanUndefined({
+                modifiedDate: createdDate,
+                createdDate,
                 ...others,
                 imagePath: page.imagePath?.replace(dataFolder, ''),
                 sourceImagePath: page.sourceImagePath?.replace(dataFolder, ''),
                 extra: isObject(extra) ? JSON.stringify(extra) : extra,
-                createdDate,
                 pageIndex: -1,
-                modifiedDate: createdDate,
                 rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
                 scale: page.scale ?? 1,
                 crop: page.crop ? JSON.stringify(page.crop) : undefined,
@@ -452,11 +452,11 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const createdDate = Date.now();
         const doc = await this.create(
             cleanUndefined({
+                createdDate,
+                modifiedDate: createdDate,
                 ...others,
                 extra: isObject(extra) ? JSON.stringify(extra) : extra,
                 _synced: 0,
-                createdDate,
-                modifiedDate: createdDate,
                 pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined,
                 nameSearch: normalizeSearchString(others.name)
             })
