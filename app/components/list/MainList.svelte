@@ -169,7 +169,7 @@
     let lastRefreshFilter = null;
     let showSearch = false;
     let loading = false;
-    let nbSelected = 0;
+    export let nbSelected = 0;
     let ignoreTap = false;
     let editingTitle = false;
     export let nbColumns = writable(1);
@@ -185,7 +185,7 @@
     prefs.on(`key:${SETTINGS_NB_COLUMNS_LANDSCAPE}`, () => updateColumns($isLandscape));
 
     $: if (nbSelected > 0) search.unfocusSearch();
-    
+
     // Animate FAB visibility when selection changes
     $: if (fabHolder?.nativeView) {
         fabHolder.nativeView.animate({
@@ -1158,7 +1158,7 @@
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
         {/if}
         {#if showSelectionToolbar}
-            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
+            <SelectionToolbar maxVisibleActions={4} onAction={handleSelectionAction} options={getSelectionToolbarOptions()} visible={nbSelected > 0} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

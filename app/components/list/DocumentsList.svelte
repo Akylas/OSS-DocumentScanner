@@ -19,6 +19,7 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import MainList, { Item } from './MainList.svelte';
+    import { animateVisibility } from '~/utils/transitions';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -33,6 +34,7 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let viewStyle: string;
     let syncEnabled: boolean;
+    let nbSelected: number = 0;
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
     let onItemLongPress: (item: Item, event?) => Promise<void>;
@@ -111,6 +113,7 @@
     bind:onItemLongPress
     bind:syncEnabled
     bind:folder
+    bind:nbSelected
     bind:importDocument
     bind:refreshCollectionView
     bind:documents
@@ -142,7 +145,14 @@
         </canvasview>
     </Template>
 
-    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
+    <stacklayout
+        bind:this={fabHolder}
+        slot="fab"
+        class="fabHolder"
+        marginBottom={Math.min(60, $windowInset.bottom)}
+        orientation="horizontal"
+        row={1}
+        use:animateVisibility={{ visible: nbSelected === 0, type: 'fade', config: { duration: 300, distance: 100 } }}>
         {#if __IOS__}
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
         {/if}

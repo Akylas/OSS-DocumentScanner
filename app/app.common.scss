@@ -264,21 +264,23 @@ mdtextfield,
         border-color: var(--colorOutlineVariant);
         border-width: 1;
     }
-}
+}   
 
 .selectionToolbar {
     elevation: 8;
+    height: var(--actionBarHeight);
+    border-radius: 24;
     horizontal-align: stretch;
     vertical-align: bottom;
 }
 
 .selectionToolbarButton {
     @extend .mdi;
+    width: var(--actionBarButtonHeight);
+    height: var(--actionBarButtonHeight);
     font-size: 24;
     padding: 0;
     margin: 4;
-    width: 48;
-    height: 48;
 }
 
 .icon-label {
