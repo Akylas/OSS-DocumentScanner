@@ -38,6 +38,7 @@
     import { lc } from '~/helpers/locale';
     import { colorTheme, isDarkTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { Document, ExtraFieldType, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { createTransitionStore } from '~/utils/transitions';
     import {
         DocumentDeletedEventData,
         DocumentPageDeletedEventData,
@@ -125,28 +126,9 @@
         });
     }
 
-    // Delayed visibility for SelectionToolbar to allow exit animation
-    let showSelectionToolbar = false;
-    let selectionToolbarTimeout: any = null;
-    $: {
-        if (nbSelected > 0) {
-            // Show immediately
-            showSelectionToolbar = true;
-            if (selectionToolbarTimeout) {
-                clearTimeout(selectionToolbarTimeout);
-                selectionToolbarTimeout = null;
-            }
-        } else {
-            // Delay hiding to allow exit animation (300ms animation + 50ms buffer)
-            if (selectionToolbarTimeout) {
-                clearTimeout(selectionToolbarTimeout);
-            }
-            selectionToolbarTimeout = setTimeout(() => {
-                showSelectionToolbar = false;
-                selectionToolbarTimeout = null;
-            }, 350);
-        }
-    }
+    // Transition store for SelectionToolbar
+    const selectionToolbarTransition = createTransitionStore(false, 300);
+    $: selectionToolbarTransition.set(nbSelected > 0);
 
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
@@ -1343,8 +1325,8 @@
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             {/if}
         </CActionBar>
-        {#if showSelectionToolbar}
-            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
+        {#if $selectionToolbarTransition.mounted}
+            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} show={$selectionToolbarTransition.visible} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar

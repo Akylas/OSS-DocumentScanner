@@ -22,6 +22,7 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { createTransitionStore } from '~/utils/transitions';
     import {
         DocumentAddedEventData,
         DocumentDeletedEventData,
@@ -194,28 +195,9 @@
         });
     }
 
-    // Delayed visibility for SelectionToolbar to allow exit animation
-    let showSelectionToolbar = false;
-    let selectionToolbarTimeout: any = null;
-    $: {
-        if (nbSelected > 0) {
-            // Show immediately
-            showSelectionToolbar = true;
-            if (selectionToolbarTimeout) {
-                clearTimeout(selectionToolbarTimeout);
-                selectionToolbarTimeout = null;
-            }
-        } else {
-            // Delay hiding to allow exit animation (300ms animation + 50ms buffer)
-            if (selectionToolbarTimeout) {
-                clearTimeout(selectionToolbarTimeout);
-            }
-            selectionToolbarTimeout = setTimeout(() => {
-                showSelectionToolbar = false;
-                selectionToolbarTimeout = null;
-            }, 350);
-        }
-    }
+    // Transition store for SelectionToolbar
+    const selectionToolbarTransition = createTransitionStore(false, 300);
+    $: selectionToolbarTransition.set(nbSelected > 0);
 
     async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
@@ -1157,8 +1139,8 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
         {/if}
-        {#if showSelectionToolbar}
-            <SelectionToolbar maxVisibleActions={4} onAction={handleSelectionAction} options={getSelectionToolbarOptions()} visible={nbSelected > 0} />
+        {#if $selectionToolbarTransition.mounted}
+            <SelectionToolbar maxVisibleActions={4} onAction={handleSelectionAction} options={getSelectionToolbarOptions()} show={$selectionToolbarTransition.visible} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

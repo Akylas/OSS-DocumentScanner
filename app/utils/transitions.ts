@@ -11,7 +11,7 @@ export interface SlideVerticalConfig extends TransitionConfig {
     distance?: number;
 }
 
-export type TransitionFunction = (node: any, params: any, entering: boolean) => Promise<void>;
+export type TransitionFunction = (view: View, params: any, entering: boolean) => Promise<void>;
 
 export interface CustomTransitionConfig {
     inTransition?: TransitionFunction;
@@ -22,53 +22,20 @@ export interface CustomTransitionConfig {
 
 /**
  * Custom transition manager for NativeScript Svelte components.
- * Handles animations properly with {#if} statements.
+ * Complete replacement for Svelte transition system.
  */
 export class TransitionManager {
     private isAnimating = false;
-    private shouldShow = false;
-
-    /**
-     * Creates a store that manages the visibility state with animations
-     */
-    createAnimatedVisibility(initialValue: boolean = false) {
-        const { set, subscribe } = writable(initialValue);
-        const self = this;
-
-        return {
-            subscribe,
-            set: async (value: boolean) => {
-                if (self.isAnimating) {
-                    self.shouldShow = value;
-                    return;
-                }
-
-                if (value) {
-                    // Show immediately, animate will happen via onLoaded
-                    set(true);
-                } else {
-                    // Animate out, then hide
-                    set(false);
-                }
-            },
-            toggle: async () => {
-                const current = get({ subscribe });
-                await self.set(!current);
-            }
-        };
-    }
+    private shouldDestroy = false;
+    private node: any = null;
+    private destroyCallback: (() => void) | null = null;
 
     /**
      * Slide vertical transition with fade for entering/exiting
      */
-    async slideVertical(node: any, params: SlideVerticalConfig = {}, entering: boolean = true): Promise<void> {
+    async slideVertical(view: View, params: SlideVerticalConfig = {}, entering: boolean = true): Promise<void> {
         const { delay = 0, distance = 100, duration = 300 } = params;
 
-        if (!node?.nativeView) {
-            return;
-        }
-
-        const view = node.nativeView as View;
         this.isAnimating = true;
 
         try {
@@ -102,14 +69,9 @@ export class TransitionManager {
     /**
      * Fade transition for entering/exiting
      */
-    async fade(node: any, params: TransitionConfig = {}, entering: boolean = true): Promise<void> {
+    async fade(view: View, params: TransitionConfig = {}, entering: boolean = true): Promise<void> {
         const { delay = 0, duration = 300 } = params;
 
-        if (!node?.nativeView) {
-            return;
-        }
-
-        const view = node.nativeView as View;
         this.isAnimating = true;
 
         try {
@@ -137,15 +99,7 @@ export class TransitionManager {
     /**
      * Execute a custom transition
      */
-    async executeTransition(
-        node: any,
-        customConfig: CustomTransitionConfig,
-        entering: boolean
-    ): Promise<void> {
-        if (!node?.nativeView) {
-            return;
-        }
-
+    async executeTransition(view: View, customConfig: CustomTransitionConfig, entering: boolean): Promise<void> {
         this.isAnimating = true;
 
         try {
@@ -153,13 +107,13 @@ export class TransitionManager {
                 // Use inTransition if provided, otherwise use transition
                 const transitionFn = customConfig.inTransition || customConfig.transition;
                 if (transitionFn) {
-                    await transitionFn(node, customConfig.config, true);
+                    await transitionFn(view, customConfig.config, true);
                 }
             } else {
                 // Use outTransition if provided, otherwise use transition (reversed)
                 const transitionFn = customConfig.outTransition || customConfig.transition;
                 if (transitionFn) {
-                    await transitionFn(node, customConfig.config, false);
+                    await transitionFn(view, customConfig.config, false);
                 }
             }
         } finally {
@@ -169,108 +123,122 @@ export class TransitionManager {
 }
 
 /**
- * Action to handle enter/exit animations with proper timing
- * Usage: <div use:animateVisibility={{ visible: $showState, type: 'slideVertical', config: { duration: 300 } }}>
+ * Transition directive - manages component lifecycle with animations
+ * This is a complete replacement for Svelte's transition system
  */
-export function animateVisibility(
+export function transition(
     node: any,
     params: {
-        visible: boolean;
+        show: boolean;
         type?: 'slideVertical' | 'fade' | 'custom';
         config?: SlideVerticalConfig | TransitionConfig | any;
         customTransition?: CustomTransitionConfig;
-        onAnimationStart?: () => void;
-        onAnimationEnd?: () => void;
+        onIntroStart?: () => void;
+        onIntroEnd?: () => void;
+        onOutroStart?: () => void;
+        onOutroEnd?: () => void;
     }
 ) {
     const manager = new TransitionManager();
-    let lastVisible = params.visible;
+    let lastShow = params.show;
+    let isComponentMounted = params.show;
+    let pendingDestroy = false;
     const type = params.type || 'slideVertical';
     const config = params.config || {};
 
-    // Set initial state based on visibility to prevent flash
+    // Set initial hidden state for slideVertical to prevent flash
     if (node?.nativeView) {
         const view = node.nativeView as View;
-        if (!params.visible) {
-            // Initially hidden - set starting hidden state
+        if (type === 'slideVertical' && !params.show) {
             view.opacity = 0;
-            if (type === 'slideVertical') {
-                const distance = (config as SlideVerticalConfig).distance || 100;
-                view.translateY = distance;
-            }
+            const distance = (config as SlideVerticalConfig).distance || 100;
+            view.translateY = distance;
+        } else if (type === 'fade' && !params.show) {
+            view.opacity = 0;
         }
     }
 
-    // Initial setup - animate in if visible
-    if (params.visible) {
-        // Delay to next frame to ensure view is loaded
+    // Run intro animation if initially showing
+    if (params.show && node?.nativeView) {
         setTimeout(async () => {
-            params.onAnimationStart?.();
+            params.onIntroStart?.();
             try {
+                const view = node.nativeView as View;
                 if (type === 'custom' && params.customTransition) {
-                    await manager.executeTransition(node, params.customTransition, true);
+                    await manager.executeTransition(view, params.customTransition, true);
                 } else if (type === 'slideVertical') {
-                    await manager.slideVertical(node, config as SlideVerticalConfig, true);
+                    await manager.slideVertical(view, config as SlideVerticalConfig, true);
                 } else if (type === 'fade') {
-                    await manager.fade(node, config, true);
+                    await manager.fade(view, config, true);
                 }
             } finally {
-                params.onAnimationEnd?.();
+                params.onIntroEnd?.();
             }
         }, 0);
     }
 
     return {
         update: async (newParams: typeof params) => {
-            if (newParams.visible === lastVisible) {
+            if (newParams.show === lastShow) {
                 return;
             }
 
-            lastVisible = newParams.visible;
+            lastShow = newParams.show;
 
-            if (newParams.visible) {
-                // Entering
-                params.onAnimationStart?.();
+            if (!node?.nativeView) {
+                return;
+            }
+
+            const view = node.nativeView as View;
+
+            if (newParams.show) {
+                // Intro animation
+                isComponentMounted = true;
+                pendingDestroy = false;
+                params.onIntroStart?.();
                 try {
                     if (type === 'custom' && params.customTransition) {
-                        await manager.executeTransition(node, params.customTransition, true);
+                        await manager.executeTransition(view, params.customTransition, true);
                     } else if (type === 'slideVertical') {
-                        await manager.slideVertical(node, config as SlideVerticalConfig, true);
+                        await manager.slideVertical(view, config as SlideVerticalConfig, true);
                     } else if (type === 'fade') {
-                        await manager.fade(node, config, true);
+                        await manager.fade(view, config, true);
                     }
                 } finally {
-                    params.onAnimationEnd?.();
+                    params.onIntroEnd?.();
                 }
             } else {
-                // Exiting - IMPORTANT: Must wait for animation to complete
-                params.onAnimationStart?.();
+                // Outro animation - run animation then hide component
+                params.onOutroStart?.();
+                pendingDestroy = true;
                 try {
                     if (type === 'custom' && params.customTransition) {
-                        await manager.executeTransition(node, params.customTransition, false);
+                        await manager.executeTransition(view, params.customTransition, false);
                     } else if (type === 'slideVertical') {
-                        await manager.slideVertical(node, config as SlideVerticalConfig, false);
+                        await manager.slideVertical(view, config as SlideVerticalConfig, false);
                     } else if (type === 'fade') {
-                        await manager.fade(node, config, false);
+                        await manager.fade(view, config, false);
                     }
                 } finally {
-                    params.onAnimationEnd?.();
+                    params.onOutroEnd?.();
+                    // Signal that component should be unmounted
+                    isComponentMounted = false;
                 }
             }
         },
         destroy: () => {
-            // Destroy is called synchronously by Svelte, so we can't await here
-            // The parent component should handle visibility change before destroying
+            // Synchronous destroy - nothing to do here
         }
     };
 }
 
 /**
- * Helper to create a transition-aware writable store
- * This ensures the component waits for animation before destruction
+ * Creates a transition-aware store that controls component mounting/unmounting
+ * Usage: const showStore = createTransitionStore(false);
  */
-export function createTransitionStore(initialValue: boolean = false, animationDuration: number = 300) {
-    const { set: originalSet, subscribe, update } = writable(initialValue);
+export function createTransitionStore(initialValue: boolean = false, transitionDuration: number = 300) {
+    const mountedStore = writable(initialValue);
+    const visibleStore = writable(initialValue);
     let isTransitioning = false;
     let pendingValue: boolean | null = null;
 
@@ -280,18 +248,29 @@ export function createTransitionStore(initialValue: boolean = false, animationDu
             return;
         }
 
-        const previousValue = get({ subscribe });
+        const currentMounted = get(mountedStore);
+        const currentVisible = get(visibleStore);
 
-        // If going from true to false, we need to wait for animation
-        if (previousValue && !value) {
-            isTransitioning = true;
-            // Wait for animation to complete
-            await new Promise((resolve) => setTimeout(resolve, animationDuration + 50));
-            originalSet(value);
+        if (value === currentVisible) {
+            return;
+        }
+
+        isTransitioning = true;
+
+        if (value) {
+            // Showing: mount immediately, then make visible
+            mountedStore.set(true);
+            // Small delay to ensure component is mounted before animation
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            visibleStore.set(true);
             isTransitioning = false;
         } else {
-            // If going from false to true, set immediately
-            originalSet(value);
+            // Hiding: make invisible, wait for animation, then unmount
+            visibleStore.set(false);
+            // Wait for animation to complete
+            await new Promise((resolve) => setTimeout(resolve, transitionDuration + 50));
+            mountedStore.set(false);
+            isTransitioning = false;
         }
 
         // Handle any pending value
@@ -303,10 +282,11 @@ export function createTransitionStore(initialValue: boolean = false, animationDu
     };
 
     return {
-        subscribe,
+        mounted: { subscribe: mountedStore.subscribe },
+        visible: { subscribe: visibleStore.subscribe },
         set,
         update: (fn: (value: boolean) => boolean) => {
-            const current = get({ subscribe });
+            const current = get(visibleStore);
             const next = fn(current);
             set(next);
         }
