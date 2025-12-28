@@ -9,7 +9,7 @@
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { debounce, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
+    import { fade, goBack, navigate, slideVertical } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
@@ -17,6 +17,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SelectionToolbar from '~/components/common/SelectionToolbar.svelte';
     import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
@@ -184,6 +185,14 @@
     prefs.on(`key:${SETTINGS_NB_COLUMNS_LANDSCAPE}`, () => updateColumns($isLandscape));
 
     $: if (nbSelected > 0) search.unfocusSearch();
+    
+    // Animate FAB visibility when selection changes
+    $: if (fabHolder?.nativeView) {
+        fabHolder.nativeView.animate({
+            opacity: nbSelected > 0 ? 0 : 1,
+            duration: 200
+        });
+    }
 
     async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
@@ -828,6 +837,101 @@
     async function showImageExportPopover(event) {
         return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object);
     }
+
+    function getSelectionToolbarOptions() {
+        // Main actions that appear in the toolbar (configurable, default 4)
+        const mainActions = [
+            { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
+            { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
+            { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') }
+        ];
+
+        // Additional actions that go to overflow menu
+        const overflowActions = [
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            ...(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []),
+            { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
+            { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+        ];
+
+        return [...mainActions, ...overflowActions];
+    }
+
+    async function handleSelectionAction(option) {
+        try {
+            let result;
+            switch (option.id) {
+                case 'pdf':
+                    const data = getSelectedPagesAndPossibleSingleDocument();
+                    await showPDFPopoverMenu(data[0], data[1], null);
+                    break;
+                case 'select_all':
+                    selectAll();
+                    break;
+                case 'rename':
+                    const item = getSelectedItems()[0];
+                    result = await prompt({
+                        title: lc('rename'),
+                        defaultText: (item.doc || item.folder).name
+                    });
+                    if (result.result && result.text?.length) {
+                        await (item.doc || item.folder).save({
+                            name: result.text
+                        });
+                    }
+                    break;
+                case 'share':
+                    result = await showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], null);
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'fullscreen':
+                    await fullscreenSelectedDocuments();
+                    unselectAll();
+                    break;
+                case 'ocr':
+                    result = await detectOCR({ documents: await getSelectedDocuments() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'transform':
+                    result = await transformPages({ documents: await getSelectedDocuments() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'delete':
+                    result = await deleteSelectedDocuments();
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'move_folder':
+                    const selected = await getSelectedDocuments();
+                    let defaultFolder;
+                    DEV_LOG && console.log('move_folder', folders);
+                    const folderName = await promptForFolderName(
+                        defaultFolder,
+                        Object.values(folders).filter((g) => g.name !== 'none')
+                    );
+                    if (typeof folderName === 'string') {
+                        for (let index = 0; index < selected.length; index++) {
+                            const doc = selected[index];
+                            await doc.setFolder({ folderName: folderName === 'none' ? undefined : folderName });
+                        }
+                        unselectAll();
+                    }
+                    break;
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
     async function showOptions(event) {
         const options = new ObservableArray(
             [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }].concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
@@ -1028,10 +1132,8 @@
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         {#if nbSelected > 0}
-            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }}>
-                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
-            </CActionBar>
+            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
+            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} transition:slideVertical={{ duration: 300 }} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

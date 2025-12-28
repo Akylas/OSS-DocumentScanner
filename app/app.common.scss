@@ -266,6 +266,20 @@ mdtextfield,
     }
 }
 
+.selectionToolbar {
+    horizontal-align: stretch;
+    vertical-align: bottom;
+}
+
+.selectionToolbarButton {
+    @extend .mdi;
+    font-size: 24;
+    padding: 0;
+    margin: 4;
+    width: 48;
+    height: 48;
+}
+
 .icon-label {
     @extend .mdi;
 
