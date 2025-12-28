@@ -1,13 +1,16 @@
 <script lang="ts">
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { ObservableArray } from '@nativescript/core';
+    import { onMount } from 'svelte';
     import { showPopoverMenu } from '~/utils/ui';
+    import { animateVisibility } from '~/utils/transitions';
     import { colors, windowInset } from '~/variables';
     import type { OptionType } from './OptionSelect.svelte';
 
     export let options: OptionType[] | ObservableArray<OptionType> = [];
     export let maxVisibleActions: number = 4;
     export let onAction: (option: OptionType) => void | Promise<void> = null;
+    export let visible: boolean = true;
 
     $: ({ colorSurfaceContainerHigh, colorOnSurface } = $colors);
 
@@ -44,7 +47,8 @@
     paddingLeft={8}
     paddingRight={8}
     paddingTop={8}
-    verticalAlignment="bottom">
+    verticalAlignment="bottom"
+    use:animateVisibility={{ visible, type: 'slideVertical', config: { duration: 300, distance: 100 } }}>
     <stacklayout col={hasOverflow ? 1 : 0} horizontalAlignment="center" orientation="horizontal">
         {#each visibleOptions as option, index}
             <mdbutton

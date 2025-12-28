@@ -23,7 +23,7 @@
     import { throttle } from '@nativescript/core/utils';
     import { create as createImagePicker } from '@nativescript/imagepicker';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate, showModal, slideVertical } from '@shared/utils/svelte/ui';
+    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
     import { QRCodeData, QRCodeSingleData, detectQRCodeFromFile } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
@@ -1321,7 +1321,7 @@
             {/if}
         </CActionBar>
         {#if nbSelected > 0}
-            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} transition:slideVertical={{ duration: 300 }} />
+            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar

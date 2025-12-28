@@ -9,7 +9,7 @@
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { debounce, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import { fade, goBack, navigate, slideVertical } from '@shared/utils/svelte/ui';
+    import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
@@ -1133,7 +1133,7 @@
         </CActionBar>
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
-            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} transition:slideVertical={{ duration: 300 }} />
+            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

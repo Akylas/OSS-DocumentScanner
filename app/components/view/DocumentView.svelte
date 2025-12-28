@@ -40,7 +40,7 @@
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE
     } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate, slideVertical } from '@shared/utils/svelte/ui';
+    import { goBack, navigate } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         hideLoading,
@@ -723,7 +723,7 @@
             {/if}
         </CActionBar>
         {#if nbSelected > 0}
-            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} transition:slideVertical={{ duration: 300 }} />
+            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />
