@@ -23,7 +23,7 @@
     import { throttle } from '@nativescript/core/utils';
     import { create as createImagePicker } from '@nativescript/imagepicker';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
+    import { goBack, navigate, showModal, slideVertical } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
     import { QRCodeData, QRCodeSingleData, detectQRCodeFromFile } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
@@ -33,6 +33,7 @@
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SelectionToolbar from '~/components/common/SelectionToolbar.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { lc } from '~/helpers/locale';
     import { colorTheme, isDarkTheme, isEInk, onThemeChanged } from '~/helpers/theme';
@@ -115,6 +116,14 @@
     $: statusBarStyle = new Color(topBackgroundColor).getBrightness() < 145 ? 'dark' : 'light';
 
     let editing = false;
+    
+    // Animate FAB visibility when selection changes
+    $: if (fabHolder?.nativeView) {
+        fabHolder.nativeView.animate({
+            opacity: nbSelected > 0 ? 0 : 1,
+            duration: 200
+        });
+    }
 
     onThemeChanged(() => {
         DEV_LOG && console.log('onThemeChanged', $colors.colorOnBackground);
@@ -625,56 +634,104 @@
                 vertPos: VerticalPosition.BELOW,
 
                 onClose: async (item) => {
-                    try {
-                        let result;
-                        switch (item.id) {
-                            case 'share':
-                                result = await showImageExportPopover(event);
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'fullscreen':
-                                await fullscreenSelectedPages();
-                                unselectAll();
-                                break;
-                            case 'ocr':
-                                result = await detectOCR({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'qrcode':
-                                let found = false;
-                                await Promise.all(
-                                    getSelectedPagesWithData().map((page) =>
-                                        qrcodeService.detectQRcode(document, page.pageIndex).then((r) => {
-                                            found = found || r?.length > 0;
-                                        })
-                                    )
-                                );
-                                if (!found) {
-                                    showSnack({ message: lc('no_qrcode_found') });
-                                }
+                    await handleSelectionAction(item);
+                }
+            });
+        } else {
 
-                                unselectAll();
-                                break;
-                            case 'delete':
-                                result = await deleteSelectedPages();
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'transform':
-                                result = await transformPages({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                        }
-                    } catch (error) {
-                        showError(error);
+    function getSelectionToolbarOptions() {
+        // Main actions that appear in the toolbar (configurable, default 4)
+        const mainActions = [
+            { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
+            { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
+            { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') }
+        ];
+
+        // Additional actions that go to overflow menu
+        const overflowActions = [
+            { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+            { id: 'qrcode', name: lc('detect_qrcode'), icon: 'mdi-qrcode-scan' },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+        ];
+
+        return [...mainActions, ...overflowActions];
+    }
+
+    async function handleSelectionAction(item) {
+        try {
+            let result;
+            switch (item.id) {
+                case 'pdf':
+                    const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
+                    await showPDFPopoverMenu(pages, document, null);
+                    break;
+                case 'share':
+                    result = await showImagePopoverMenu(getSelectedPages(), null);
+                    if (result) {
+                        unselectAll();
                     }
+                    break;
+                case 'fullscreen':
+                    await fullscreenSelectedPages();
+                    unselectAll();
+                    break;
+                case 'ocr':
+                    result = await detectOCR({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'qrcode':
+                    let found = false;
+                    await Promise.all(
+                        getSelectedPagesWithData().map((page) =>
+                            qrcodeService.detectQRcode(document, page.pageIndex).then((r) => {
+                                found = found || r?.length > 0;
+                            })
+                        )
+                    );
+                    if (!found) {
+                        showSnack({ message: lc('no_qrcode_found') });
+                    }
+
+                    unselectAll();
+                    break;
+                case 'delete':
+                    result = await deleteSelectedPages();
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'transform':
+                    result = await transformPages({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    async function showOptions(event) {
+        if (nbSelected > 0) {
+            const options = new ObservableArray([
+                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
+                { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
+                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                { id: 'qrcode', name: lc('detect_qrcode'), icon: 'mdi-qrcode-scan' },
+                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+            ] as any);
+            return showPopoverMenu({
+                options,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+
+                onClose: async (item) => {
+                    await handleSelectionAction(item);
                 }
             });
         } else {
@@ -1258,14 +1315,14 @@
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
-            <!-- {#if editing}
-                <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
-                <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-content-save" variant="text" on:tap={saveEdit} />
-            {:else} -->
-            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
-            <!-- {/if} -->
+            {#if !nbSelected}
+                <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+                <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            {/if}
         </CActionBar>
+        {#if nbSelected > 0}
+            <SelectionToolbar colSpan={2} options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} transition:slideVertical={{ duration: 300 }} />
+        {/if}
         {#if editingTitle}
             <EditNameActionBar
                 autoFocus={!editing}

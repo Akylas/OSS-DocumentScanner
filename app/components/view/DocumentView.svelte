@@ -14,6 +14,7 @@
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SelectionToolbar from '~/components/common/SelectionToolbar.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
@@ -39,7 +40,7 @@
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE
     } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate } from '@shared/utils/svelte/ui';
+    import { goBack, navigate, slideVertical } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         hideLoading,
@@ -91,6 +92,14 @@
 
     prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW}`, () => (nbColumns = updateColumns($isLandscape)));
     prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE}`, () => (nbColumns = updateColumns($isLandscape)));
+
+    // Animate FAB visibility when selection changes
+    $: if (fabHolder?.nativeView) {
+        fabHolder.nativeView.animate({
+            opacity: nbSelected > 0 ? 0 : 1,
+            duration: 200
+        });
+    }
 
     // $: {
     const pages = document.getObservablePages();
@@ -493,6 +502,65 @@
     }
     onThemeChanged(refreshCollectionView);
 
+    function getSelectionToolbarOptions() {
+        // Main actions that appear in the toolbar (configurable, default 4)
+        const mainActions = [
+            { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
+            { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
+            { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') }
+        ];
+
+        // Additional actions that go to overflow menu
+        const overflowActions = [
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+        ];
+
+        return [...mainActions, ...overflowActions];
+    }
+
+    async function handleSelectionAction(item) {
+        try {
+            let result;
+            switch (item.id) {
+                case 'pdf':
+                    const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
+                    await showPDFPopoverMenu(pages, document, null);
+                    break;
+                case 'select_all':
+                    selectAll();
+                    break;
+                case 'share':
+                    result = await showImagePopoverMenu(getSelectedPages(), null);
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'ocr':
+                    result = await detectOCR({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'delete':
+                    result = await deleteSelectedPages();
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'transform':
+                    result = await transformPages({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
     async function showOptions(event) {
         if (nbSelected > 0) {
             const options = new ObservableArray([
@@ -509,43 +577,7 @@
                 vertPos: VerticalPosition.BELOW,
 
                 onClose: async (item) => {
-                    try {
-                        let result;
-                        switch (item.id) {
-                            case 'select_all':
-                                selectAll();
-                                break;
-                            case 'share':
-                                result = await showImageExportPopover(event);
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            // case 'fullscreen':
-                            // await fullscreenSelectedDocuments();
-                            // break;
-                            case 'ocr':
-                                result = await detectOCR({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'delete':
-                                result = await deleteSelectedPages();
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'transform':
-                                result = await transformPages({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                        }
-                    } catch (error) {
-                        showError(error);
-                    }
+                    await handleSelectionAction(item);
                 }
             });
         } else {
@@ -685,9 +717,14 @@
             onTitleTap={() => (editingTitle = true)}
             title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            {#if !nbSelected}
+                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            {/if}
         </CActionBar>
+        {#if nbSelected > 0}
+            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} transition:slideVertical={{ duration: 300 }} />
+        {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />
         {/if}
