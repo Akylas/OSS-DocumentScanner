@@ -101,6 +101,29 @@
         });
     }
 
+    // Delayed visibility for SelectionToolbar to allow exit animation
+    let showSelectionToolbar = false;
+    let selectionToolbarTimeout: any = null;
+    $: {
+        if (nbSelected > 0) {
+            // Show immediately
+            showSelectionToolbar = true;
+            if (selectionToolbarTimeout) {
+                clearTimeout(selectionToolbarTimeout);
+                selectionToolbarTimeout = null;
+            }
+        } else {
+            // Delay hiding to allow exit animation (300ms animation + 50ms buffer)
+            if (selectionToolbarTimeout) {
+                clearTimeout(selectionToolbarTimeout);
+            }
+            selectionToolbarTimeout = setTimeout(() => {
+                showSelectionToolbar = false;
+                selectionToolbarTimeout = null;
+            }, 350);
+        }
+    }
+
     // $: {
     const pages = document.getObservablePages();
     let items = pages.map((page, index) => ({ selected: false, page, index })) as any as ObservableArray<Item>;
@@ -722,7 +745,7 @@
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             {/if}
         </CActionBar>
-        {#if nbSelected > 0}
+        {#if showSelectionToolbar}
             <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
         {/if}
         {#if editingTitle}

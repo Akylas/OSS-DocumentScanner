@@ -194,6 +194,29 @@
         });
     }
 
+    // Delayed visibility for SelectionToolbar to allow exit animation
+    let showSelectionToolbar = false;
+    let selectionToolbarTimeout: any = null;
+    $: {
+        if (nbSelected > 0) {
+            // Show immediately
+            showSelectionToolbar = true;
+            if (selectionToolbarTimeout) {
+                clearTimeout(selectionToolbarTimeout);
+                selectionToolbarTimeout = null;
+            }
+        } else {
+            // Delay hiding to allow exit animation (300ms animation + 50ms buffer)
+            if (selectionToolbarTimeout) {
+                clearTimeout(selectionToolbarTimeout);
+            }
+            selectionToolbarTimeout = setTimeout(() => {
+                showSelectionToolbar = false;
+                selectionToolbarTimeout = null;
+            }, 350);
+        }
+    }
+
     async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
         if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
@@ -1133,6 +1156,8 @@
         </CActionBar>
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
+        {/if}
+        {#if showSelectionToolbar}
             <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} visible={nbSelected > 0} />
         {/if}
         {#if editingTitle}
