@@ -19,7 +19,6 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import MainList, { Item } from './MainList.svelte';
-    import { animateVisibility } from '~/utils/transitions';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -108,6 +107,7 @@
         default: { name: lc('expanded') },
         condensed: { name: lc('condensed') }
     }}
+    bind:fabHolder
     bind:viewStyle
     bind:onItemTap
     bind:onItemLongPress
@@ -145,14 +145,7 @@
         </canvasview>
     </Template>
 
-    <stacklayout
-        bind:this={fabHolder}
-        slot="fab"
-        class="fabHolder"
-        marginBottom={Math.min(60, $windowInset.bottom)}
-        orientation="horizontal"
-        row={1}
-        use:animateVisibility={{ visible: nbSelected === 0, type: 'fade', config: { duration: 300, distance: 100 } }}>
+    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
         {#if __IOS__}
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
         {/if}

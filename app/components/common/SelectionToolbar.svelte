@@ -1,25 +1,26 @@
 <script lang="ts">
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { ObservableArray } from '@nativescript/core';
+    import { ObservableArray, Utils, View } from '@nativescript/core';
     import { showPopoverMenu } from '~/utils/ui';
-    import { slideVertical } from '~/utils/transitions';
-    import { colors, windowInset } from '~/variables';
-    import type { OptionType } from './OptionSelect.svelte';
+    import { actionBarButtonHeight, colors, windowInset } from '~/variables';
+    import { OptionType } from '@shared/components/OptionSelect.svelte';
+    import { slide } from '@shared/utils/svelte/ui';
 
     export let options: OptionType[] | ObservableArray<OptionType> = [];
-    export let maxVisibleActions: number = 4;
-    export let onAction: (option: OptionType) => void | Promise<void> = null;
-
-    $: ({ colorOnSurface, colorSurfaceContainerHigh } = $colors);
+    export let onAction: (event, option: OptionType) => void | Promise<void> = null;
+    let visibleOptions: OptionType[] | ObservableArray<OptionType> = [];
+    let overflowOptions: OptionType[] | ObservableArray<OptionType> = [];
+    let hasOverflow = false;
+    $: ({ colorOnSurface, colorSurfaceContainer, colorSurfaceContainerHigh } = $colors);
 
     // Split options into visible and overflow
-    $: visibleOptions = options.slice(0, maxVisibleActions);
-    $: overflowOptions = options.slice(maxVisibleActions);
-    $: hasOverflow = overflowOptions.length > 0;
+    // $: visibleOptions = options.slice(0, maxVisibleActions);
+    // $: overflowOptions = options.slice(maxVisibleActions);
+    // $: hasOverflow = overflowOptions.length > 0;
 
-    async function handleAction(option: OptionType) {
+    async function handleAction(event, option: OptionType) {
         if (onAction) {
-            await onAction(option);
+            await onAction(event, option);
         }
     }
 
@@ -29,9 +30,23 @@
             options: new ObservableArray(overflowOptions),
             vertPos: VerticalPosition.ABOVE,
             onClose: async (item) => {
-                await handleAction(item);
+                await handleAction(event, item);
             }
         });
+    }
+    function onLayoutChanged(event: EventData) {
+        const width = Utils.layout.toDeviceIndependentPixels((event.object as View).getMeasuredWidth());
+        const nbVisibleButtons = (width - 32) / $actionBarButtonHeight;
+        DEV_LOG && console.log('onLayoutChanged', width, $actionBarButtonHeight);
+        if (options.length > nbVisibleButtons) {
+            visibleOptions = options.slice(0, nbVisibleButtons - 1);
+            overflowOptions = options.slice(nbVisibleButtons);
+            hasOverflow = true;
+        } else {
+            hasOverflow = false;
+            visibleOptions = options;
+            overflowOptions = [];
+        }
     }
 </script>
 
@@ -44,10 +59,11 @@
     marginRight={8}
     marginTop={8}
     row={1}
-    use:slideVertical={{ duration: 300, distance: 100 }}>
+    on:layoutChanged={onLayoutChanged}
+    transition:slide={{ duration: 200 }}>
     <stacklayout col={hasOverflow ? 1 : 0} horizontalAlignment="center" orientation="horizontal">
         {#each visibleOptions as option, index}
-            <mdbutton class="selectionToolbarButton" color={option.color || colorOnSurface} text={option.icon} variant="text" on:tap={() => handleAction(option)} />
+            <mdbutton class="selectionToolbarButton" color={option.color || colorOnSurface} text={option.icon} variant="text" on:tap={(event) => handleAction(event, option)} />
         {/each}
     </stacklayout>
     {#if hasOverflow}

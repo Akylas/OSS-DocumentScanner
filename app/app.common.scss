@@ -267,11 +267,14 @@ mdtextfield,
 }   
 
 .selectionToolbar {
-    elevation: 8;
+    elevation: 2;
     height: var(--actionBarHeight);
-    border-radius: 24;
+    border-radius: 30;
     horizontal-align: stretch;
     vertical-align: bottom;
+    .ns-eink & {
+        elevation:0;
+    }
 }
 
 .selectionToolbarButton {

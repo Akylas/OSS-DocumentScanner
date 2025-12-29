@@ -19,7 +19,6 @@
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { withTransition } from '~/utils/transitions';
     import {
         DocumentDeletedEventData,
         DocumentPageDeletedEventData,
@@ -64,7 +63,7 @@
         index: number;
     }
 
-    let VIEW_ID = 0;
+    const VIEW_ID = 0;
 </script>
 
 <script lang="ts">
@@ -102,10 +101,6 @@
         });
     }
 
-    // Transition-aware store for SelectionToolbar
-    const showSelectionToolbar = withTransition(() => nbSelected > 0, 300);
-    }
-
     // $: {
     const pages = document.getObservablePages();
     let items = pages.map((page, index) => ({ selected: false, page, index })) as any as ObservableArray<Item>;
@@ -136,10 +131,11 @@
             showError(err);
         }
     }
+
     async function showPDFPopover(event) {
         try {
             const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
-            await showPDFPopoverMenu(pages, document, event.object);
+            await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document] });
         } catch (err) {
             showError(err);
         }
@@ -152,6 +148,7 @@
             showError(err);
         }
     }
+
     async function addPages(inverseUseSystemCamera = false) {
         try {
             await importImageFromCamera({ document, inverseUseSystemCamera });
@@ -371,7 +368,6 @@
             }
         }
     }
-
     function getImageView(index: number) {
         return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
     }
@@ -508,36 +504,29 @@
     onThemeChanged(refreshCollectionView);
 
     function getSelectionToolbarOptions() {
-        // Main actions that appear in the toolbar (configurable, default 4)
-        const mainActions = [
+        return [
             { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
             { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
             { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
-            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') }
-        ];
-
-        // Additional actions that go to overflow menu
-        const overflowActions = [
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') },
             { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
             { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
         ];
-
-        return [...mainActions, ...overflowActions];
     }
 
-    async function handleSelectionAction(item) {
+    async function handleSelectionAction(event, item) {
         try {
             let result;
             switch (item.id) {
                 case 'pdf':
                     const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
-                    await showPDFPopoverMenu(pages, document, null);
+                    await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document], popoverOptions: { vertPos: VerticalPosition.ABOVE } });
                     break;
                 case 'select_all':
                     selectAll();
                     break;
                 case 'share':
-                    result = await showImagePopoverMenu(getSelectedPages(), null);
+                    result = await showImagePopoverMenu(getSelectedPages(), event.object, { vertPos: VerticalPosition.ABOVE });
                     if (result) {
                         unselectAll();
                     }
@@ -567,65 +556,45 @@
     }
 
     async function showOptions(event) {
-        if (nbSelected > 0) {
-            const options = new ObservableArray([
-                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-                // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
-            return showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
+        const options = new ObservableArray([
+            { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
+            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+        ] as any);
+        return showPopoverMenu({
+            options,
+            anchor: event.object,
+            vertPos: VerticalPosition.BELOW,
 
-                onClose: async (item) => {
-                    await handleSelectionAction(item);
+            onClose: async (item) => {
+                switch (item.id) {
+                    case 'rename':
+                        editingTitle = true;
+                        break;
+                    case 'select_all':
+                        selectAll();
+                        break;
+                    case 'ocr':
+                        await detectOCR({ documents: [document] });
+                        unselectAll();
+                        break;
+                    case 'transform':
+                        await transformPages({ documents: [document] });
+                        unselectAll();
+                        break;
+                    case 'delete':
+                        await deleteDoc();
+                        break;
+                    case 'reorder':
+                        unselectAll();
+                        switchEditMode();
+                        break;
                 }
-            });
-        } else {
-            const options = new ObservableArray([
-                { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
-                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
-            return showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-
-                onClose: async (item) => {
-                    switch (item.id) {
-                        case 'rename':
-                            editingTitle = true;
-                            break;
-                        case 'select_all':
-                            selectAll();
-                            break;
-                        case 'ocr':
-                            await detectOCR({ documents: [document] });
-                            unselectAll();
-                            break;
-                        case 'transform':
-                            await transformPages({ documents: [document] });
-                            unselectAll();
-                            break;
-                        case 'delete':
-                            await deleteDoc();
-                            break;
-                        case 'reorder':
-                            unselectAll();
-                            switchEditMode();
-                            break;
-                    }
-                }
-            });
-        }
+            }
+        });
     }
     let inEditMode = false;
     function switchEditMode() {
@@ -727,8 +696,9 @@
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             {/if}
         </CActionBar>
-        {#if $showSelectionToolbar}
-            <SelectionToolbar options={getSelectionToolbarOptions()} maxVisibleActions={4} onAction={handleSelectionAction} />
+
+        {#if nbSelected > 0}
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />

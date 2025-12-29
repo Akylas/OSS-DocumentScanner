@@ -1297,13 +1297,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/svelte-native@npm:1.0.30":
-  version: 1.0.30
-  resolution: "@nativescript-community/svelte-native@npm:1.0.30"
+"@nativescript-community/svelte-native@npm:1.0.32":
+  version: 1.0.32
+  resolution: "@nativescript-community/svelte-native@npm:1.0.32"
   peerDependencies:
     "@nativescript/core": 8.9.9
     svelte: 4.2.20
-  checksum: 10/416551a5c6907c330a18d12536a549fb2688d2b6a5585c2b743e3364a4131b039fe865c9454ef226bc1da717eca4c81abf1fd30250df54c8af51248a8ce81dfc
+  checksum: 10/989adb85587bb4e62501ffa1ba3365b63388a99d50d9c42138fa769a5b0354ec1493cef11d24d9a281b67e9c97246de4d11c5a2a1aafcd49ab1ebfabadcaad9a
   languageName: node
   linkType: hard
 
@@ -10492,7 +10492,7 @@ __metadata:
     "@nativescript-community/preferences": "npm:1.3.2"
     "@nativescript-community/sentry": "npm:4.6.45"
     "@nativescript-community/sqlite": "npm:3.5.1"
-    "@nativescript-community/svelte-native": "npm:1.0.30"
+    "@nativescript-community/svelte-native": "npm:1.0.32"
     "@nativescript-community/systemui": "npm:1.1.24"
     "@nativescript-community/text": "npm:1.6.17"
     "@nativescript-community/ui-cameraview": "npm:0.6.2"

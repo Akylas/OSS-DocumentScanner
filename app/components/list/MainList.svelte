@@ -22,7 +22,6 @@
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { DocFolder, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { withTransition } from '~/utils/transitions';
     import {
         DocumentAddedEventData,
         DocumentDeletedEventData,
@@ -74,6 +73,7 @@
         tryCatchFunction
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
+    import { OptionType } from '@shared/components/OptionSelect.svelte';
 
     const textPaint = new Paint();
 
@@ -124,7 +124,7 @@
     export let collectionView: NativeViewElementNode<CollectionView>;
     let foldersCollectionView: NativeViewElementNode<CollectionView>;
     // let lottieView: NativeViewElementNode<LottieView>;
-    let fabHolder: NativeViewElementNode<StackLayout>;
+    export let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
 
     export let folder: DocFolder = null;
@@ -194,9 +194,6 @@
             duration: 200
         });
     }
-
-    // Transition-aware store for SelectionToolbar
-    const showSelectionToolbar = withTransition(() => nbSelected > 0, 300);
 
     async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
@@ -657,7 +654,7 @@
         }
         return selected;
     }
-    function getSelectedPagesAndPossibleSingleDocument(): [{ page: OCRPage; document: OCRDocument }[], OCRDocument?] {
+    function getSelectedPagesAndPossibleSingleDocument(): [{ page: OCRPage; document: OCRDocument }[], OCRDocument, OCRDocument[]] {
         const selected: { page: OCRPage; document: OCRDocument }[] = [];
         const docs: OCRDocument[] = [];
         let doc;
@@ -668,7 +665,7 @@
                 selected.push(...doc.pages.map((page) => ({ page, document: doc })));
             }
         });
-        return [selected, docs.length === 1 ? docs[0] : undefined];
+        return [selected, docs.length === 1 ? docs[0] : undefined, docs];
     }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
@@ -681,8 +678,9 @@
                 });
                 if (result) {
                     await documentsService.deleteDocuments(await getSelectedDocuments());
+                    return true;
                 }
-                return true;
+                return false;
             } catch (error) {
                 showError(error);
             }
@@ -832,44 +830,39 @@
     async function showPDFPopover(event) {
         try {
             const data = getSelectedPagesAndPossibleSingleDocument();
-            await showPDFPopoverMenu(data[0], data[1], event.object);
+            await showPDFPopoverMenu({ pages: data[0], document: data[1], documents: data[2], anchor: event.object });
         } catch (err) {
             showError(err);
         }
     }
 
     async function showImageExportPopover(event) {
-        return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object);
+        return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
     }
 
     function getSelectionToolbarOptions() {
         // Main actions that appear in the toolbar (configurable, default 4)
-        const mainActions = [
+        return [
             { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
             { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
             { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
-            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') }
-        ];
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') },
 
-        // Additional actions that go to overflow menu
-        const overflowActions = [
             { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') },
             ...(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []),
             { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
-            { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') },
-            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+            { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') }
         ];
-
-        return [...mainActions, ...overflowActions];
     }
 
-    async function handleSelectionAction(option) {
+    async function handleSelectionAction(event, option: OptionType) {
         try {
             let result;
             switch (option.id) {
                 case 'pdf':
                     const data = getSelectedPagesAndPossibleSingleDocument();
-                    await showPDFPopoverMenu(data[0], data[1], null);
+                    await showPDFPopoverMenu({ pages: data[0], document: data[1], documents: data[2], anchor: event.object, popoverOptions: { vertPos: VerticalPosition.ABOVE } });
                     break;
                 case 'select_all':
                     selectAll();
@@ -887,7 +880,7 @@
                     }
                     break;
                 case 'share':
-                    result = await showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], null);
+                    result = await showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
                     if (result) {
                         unselectAll();
                     }
@@ -1138,8 +1131,8 @@
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
         {/if}
-        {#if $showSelectionToolbar}
-            <SelectionToolbar maxVisibleActions={4} onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
+        {#if nbSelected > 0}
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />
