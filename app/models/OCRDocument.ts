@@ -31,6 +31,7 @@ import {
     SETTINGS_DOCUMENT_NAME_FORMAT,
     getImageExportSettings
 } from '../utils/constants';
+import { getImagePipeline } from '@nativescript-community/ui-image';
 
 export const sql = SqlQuery.createFromTemplateString;
 
@@ -517,13 +518,14 @@ export class OCRDocument extends Observable implements Document {
             compressQuality: imageExportSettings.imageQuality
         });
         const image = images[0];
+        const croppedImagePath = page.imagePath;
         // const croppedImagePath = page.imagePath;
         // await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         // if (__IOS__) {
         //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
         //     getImagePipeline().clearCaches();
         // } else {
-        //     getImagePipeline().evictFromCache(croppedImagePath);
+        await getImagePipeline().evictFromCache(croppedImagePath);
         // }
         await this.updatePage(
             pageIndex,

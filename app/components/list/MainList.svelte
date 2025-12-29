@@ -363,7 +363,6 @@
                     const imageView = getImageView(index);
                     DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
                     const page = document.pages[event.pageIndex];
-                    getImagePipeline().evictFromCache(page.imagePath);
                     if (imageView) {
                         imageView?.updateImageUri();
                     } else if (__IOS__) {

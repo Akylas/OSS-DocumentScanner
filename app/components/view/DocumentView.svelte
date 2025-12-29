@@ -62,8 +62,6 @@
         selected: boolean;
         index: number;
     }
-
-    const VIEW_ID = 0;
 </script>
 
 <script lang="ts">
@@ -376,9 +374,7 @@
         if (event.doc.id !== document.id) {
             return;
         }
-        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         document = event.doc;
-        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         try {
             if (items) {
                 const length = items.length;
@@ -400,7 +396,6 @@
             const page = document.getObservablePages().getItem(index);
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
-                getImagePipeline().evictFromCache(current.page.imagePath);
                 if (imageView) {
                     imageView?.updateImageUri();
                 } else if (__IOS__) {
@@ -469,7 +464,7 @@
         documentsService.on(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
+        DEV_LOG && console.log('DocumentView', 'onDestroy', !!document);
         items = null;
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
