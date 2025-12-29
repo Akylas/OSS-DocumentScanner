@@ -33,6 +33,7 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let viewStyle: string;
     let syncEnabled: boolean;
+    let nbSelected: number = 0;
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
     let onItemLongPress: (item: Item, event?) => Promise<void>;
@@ -106,11 +107,13 @@
         default: { name: lc('expanded') },
         condensed: { name: lc('condensed') }
     }}
+    bind:fabHolder
     bind:viewStyle
     bind:onItemTap
     bind:onItemLongPress
     bind:syncEnabled
     bind:folder
+    bind:nbSelected
     bind:importDocument
     bind:refreshCollectionView
     bind:documents

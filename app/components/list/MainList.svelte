@@ -17,6 +17,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SelectionToolbar from '~/components/common/SelectionToolbar.svelte';
     import ActionBarSearch from '~/components/widgets/ActionBarSearch.svelte';
     import { l, lc } from '~/helpers/locale';
     import { getRealTheme, isEInk, onThemeChanged } from '~/helpers/theme';
@@ -72,6 +73,7 @@
         tryCatchFunction
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
+    import { OptionType } from '@shared/components/OptionSelect.svelte';
 
     const textPaint = new Paint();
 
@@ -122,7 +124,7 @@
     export let collectionView: NativeViewElementNode<CollectionView>;
     let foldersCollectionView: NativeViewElementNode<CollectionView>;
     // let lottieView: NativeViewElementNode<LottieView>;
-    let fabHolder: NativeViewElementNode<StackLayout>;
+    export let fabHolder: NativeViewElementNode<StackLayout>;
     let search: ActionBarSearch;
 
     export let folder: DocFolder = null;
@@ -168,7 +170,7 @@
     let lastRefreshFilter = null;
     let showSearch = false;
     let loading = false;
-    let nbSelected = 0;
+    export let nbSelected = 0;
     let ignoreTap = false;
     let editingTitle = false;
     export let nbColumns = writable(1);
@@ -184,6 +186,14 @@
     prefs.on(`key:${SETTINGS_NB_COLUMNS_LANDSCAPE}`, () => updateColumns($isLandscape));
 
     $: if (nbSelected > 0) search.unfocusSearch();
+
+    // Animate FAB visibility when selection changes
+    $: if (fabHolder?.nativeView) {
+        fabHolder.nativeView.animate({
+            opacity: nbSelected > 0 ? 0 : 1,
+            duration: 200
+        });
+    }
 
     async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
@@ -643,7 +653,7 @@
         }
         return selected;
     }
-    function getSelectedPagesAndPossibleSingleDocument(): [{ page: OCRPage; document: OCRDocument }[], OCRDocument?] {
+    function getSelectedPagesAndPossibleSingleDocument(): [{ page: OCRPage; document: OCRDocument }[], OCRDocument, OCRDocument[]] {
         const selected: { page: OCRPage; document: OCRDocument }[] = [];
         const docs: OCRDocument[] = [];
         let doc;
@@ -654,7 +664,7 @@
                 selected.push(...doc.pages.map((page) => ({ page, document: doc })));
             }
         });
-        return [selected, docs.length === 1 ? docs[0] : undefined];
+        return [selected, docs.length === 1 ? docs[0] : undefined, docs];
     }
     async function deleteSelectedDocuments() {
         if (nbSelected > 0) {
@@ -667,8 +677,9 @@
                 });
                 if (result) {
                     await documentsService.deleteDocuments(await getSelectedDocuments());
+                    return true;
                 }
-                return true;
+                return false;
             } catch (error) {
                 showError(error);
             }
@@ -818,15 +829,105 @@
     async function showPDFPopover(event) {
         try {
             const data = getSelectedPagesAndPossibleSingleDocument();
-            await showPDFPopoverMenu(data[0], data[1], event.object);
+            await showPDFPopoverMenu({ pages: data[0], document: data[1], documents: data[2], anchor: event.object });
         } catch (err) {
             showError(err);
         }
     }
 
     async function showImageExportPopover(event) {
-        return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object);
+        return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
     }
+
+    function getSelectionToolbarOptions() {
+        // Main actions that appear in the toolbar (configurable, default 4)
+        return [
+            { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
+            { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
+            { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') },
+
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') },
+            ...(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []),
+            { icon: 'mdi-folder-swap', id: 'move_folder', name: lc('move_folder') },
+            { icon: 'mdi-fullscreen', id: 'fullscreen', name: lc('show_fullscreen_images') }
+        ];
+    }
+
+    async function handleSelectionAction(event, option: OptionType) {
+        try {
+            let result;
+            switch (option.id) {
+                case 'pdf':
+                    const data = getSelectedPagesAndPossibleSingleDocument();
+                    await showPDFPopoverMenu({ pages: data[0], document: data[1], documents: data[2], anchor: event.object, popoverOptions: { vertPos: VerticalPosition.ABOVE } });
+                    break;
+                case 'select_all':
+                    selectAll();
+                    break;
+                case 'rename':
+                    const item = getSelectedItems()[0];
+                    result = await prompt({
+                        title: lc('rename'),
+                        defaultText: (item.doc || item.folder).name
+                    });
+                    if (result.result && result.text?.length) {
+                        await (item.doc || item.folder).save({
+                            name: result.text
+                        });
+                    }
+                    break;
+                case 'share':
+                    result = await showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'fullscreen':
+                    await fullscreenSelectedDocuments();
+                    unselectAll();
+                    break;
+                case 'ocr':
+                    result = await detectOCR({ documents: await getSelectedDocuments() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'transform':
+                    result = await transformPages({ documents: await getSelectedDocuments() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'delete':
+                    result = await deleteSelectedDocuments();
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'move_folder':
+                    const selected = await getSelectedDocuments();
+                    let defaultFolder;
+                    DEV_LOG && console.log('move_folder', folders);
+                    const folderName = await promptForFolderName(
+                        defaultFolder,
+                        Object.values(folders).filter((g) => g.name !== 'none')
+                    );
+                    if (typeof folderName === 'string') {
+                        for (let index = 0; index < selected.length; index++) {
+                            const doc = selected[index];
+                            await doc.setFolder({ folderName: folderName === 'none' ? undefined : folderName });
+                        }
+                        unselectAll();
+                    }
+                    break;
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
     async function showOptions(event) {
         const options = new ObservableArray(
             [{ id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' }].concat(nbSelected === 1 ? [{ icon: 'mdi-rename', id: 'rename', name: lc('rename') }] : []).concat([
@@ -1027,10 +1128,10 @@
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         {#if nbSelected > 0}
-            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }}>
-                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
-            </CActionBar>
+            <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
+        {/if}
+        {#if nbSelected > 0}
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

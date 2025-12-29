@@ -264,6 +264,26 @@ mdtextfield,
         border-color: var(--colorOutlineVariant);
         border-width: 1;
     }
+}   
+
+.selectionToolbar {
+    elevation: 2;
+    height: var(--actionBarHeight);
+    border-radius: 30;
+    horizontal-align: stretch;
+    vertical-align: bottom;
+    .ns-eink & {
+        elevation:0;
+    }
+}
+
+.selectionToolbarButton {
+    @extend .mdi;
+    width: var(--actionBarButtonHeight);
+    height: var(--actionBarButtonHeight);
+    font-size: 24;
+    padding: 0;
+    margin: 4;
 }
 
 .icon-label {

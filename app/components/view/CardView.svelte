@@ -262,7 +262,7 @@
     async function showPDFPopover(event) {
         try {
             const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
-            await showPDFPopoverMenu(pages, document, event.object);
+            await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document] });
         } catch (err) {
             showError(err);
         }

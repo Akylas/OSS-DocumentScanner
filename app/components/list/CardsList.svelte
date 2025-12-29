@@ -269,6 +269,7 @@
         columns: { name: lc('columns'), icon: 'mdi-view-grid' },
         list: { name: lc('list'), icon: 'mdi-view-day' }
     }}
+    bind:fabHolder
     bind:nbColumns
     bind:viewStyle
     bind:onItemTap

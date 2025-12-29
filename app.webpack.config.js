@@ -415,7 +415,8 @@ module.exports = (env, params = {}) => {
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
             clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
-            requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
+            // this breaks svelte-native transitions which uses custom override
+            // requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );

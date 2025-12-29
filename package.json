@@ -55,7 +55,7 @@
         "@nativescript-community/preferences": "1.3.2",
         "@nativescript-community/sentry": "4.6.45",
         "@nativescript-community/sqlite": "3.5.1",
-        "@nativescript-community/svelte-native": "1.0.30",
+        "@nativescript-community/svelte-native": "1.0.32",
         "@nativescript-community/systemui": "1.1.24",
         "@nativescript-community/text": "1.6.17",
         "@nativescript-community/ui-cameraview": "0.6.2",

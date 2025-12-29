@@ -534,7 +534,19 @@ export async function showSettings(props?) {
     }
 }
 
-export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], document?: OCRDocument, anchor?) {
+export async function showPDFPopoverMenu({
+    anchor,
+    document,
+    documents,
+    pages,
+    popoverOptions
+}: {
+    pages: { page: OCRPage; document: OCRDocument }[];
+    document?: OCRDocument;
+    documents: OCRDocument[];
+    anchor?;
+    popoverOptions?: Partial<PopoverOptions>;
+}) {
     let exportDirectory: string;
     // if (__IOS__) {
     //     const bookmark = NSUserDefaults.standardUserDefaults.objectForKey('pdf_export_directory');
@@ -758,7 +770,8 @@ export async function showPDFPopoverMenu(pages: { page: OCRPage; document: OCRDo
             } finally {
                 hideLoading();
             }
-        }
+        },
+        ...(popoverOptions ?? {})
     });
 }
 
@@ -873,7 +886,7 @@ export function getDirectoryName(folderPath: string) {
         .pop();
 }
 
-export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], anchor, vertPos = VerticalPosition.BELOW) {
+export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCRDocument }[], anchor, popoverOptions?: Partial<PopoverOptions>) {
     let exportDirectory = ApplicationSettings.getString('image_export_directory', DEFAULT_EXPORT_DIRECTORY);
     let exportDirectoryName = exportDirectory;
     DEV_LOG && console.log('showImagePopoverMenu', exportDirectoryName, pages.length);
@@ -916,7 +929,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
         showPopoverMenu({
             options,
             anchor,
-            vertPos,
+            vertPos: VerticalPosition.BELOW,
             props: {
                 width: 250,
                 // rows: 'auto',
@@ -1018,7 +1031,8 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                 } finally {
                     hideLoading();
                 }
-            }
+            },
+            ...(popoverOptions ?? {})
         });
     });
 }

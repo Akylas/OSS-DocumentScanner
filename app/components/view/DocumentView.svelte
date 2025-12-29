@@ -14,6 +14,7 @@
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SelectionToolbar from '~/components/common/SelectionToolbar.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
@@ -90,6 +91,14 @@
     prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW}`, () => (nbColumns = updateColumns($isLandscape)));
     prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE}`, () => (nbColumns = updateColumns($isLandscape)));
 
+    // Animate FAB visibility when selection changes
+    $: if (fabHolder?.nativeView) {
+        fabHolder.nativeView.animate({
+            opacity: nbSelected > 0 ? 0 : 1,
+            duration: 200
+        });
+    }
+
     // $: {
     const pages = document.getObservablePages();
     let items = pages.map((page, index) => ({ selected: false, page, index })) as any as ObservableArray<Item>;
@@ -120,10 +129,11 @@
             showError(err);
         }
     }
+
     async function showPDFPopover(event) {
         try {
             const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
-            await showPDFPopoverMenu(pages, document, event.object);
+            await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document] });
         } catch (err) {
             showError(err);
         }
@@ -136,6 +146,7 @@
             showError(err);
         }
     }
+
     async function addPages(inverseUseSystemCamera = false) {
         try {
             await importImageFromCamera({ document, inverseUseSystemCamera });
@@ -355,7 +366,6 @@
             }
         }
     }
-
     function getImageView(index: number) {
         return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
     }
@@ -488,102 +498,98 @@
     }
     onThemeChanged(refreshCollectionView);
 
-    async function showOptions(event) {
-        if (nbSelected > 0) {
-            const options = new ObservableArray([
-                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-                // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
-            return showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
+    function getSelectionToolbarOptions() {
+        return [
+            { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
+            { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
+            { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') },
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+        ];
+    }
 
-                onClose: async (item) => {
-                    try {
-                        let result;
-                        switch (item.id) {
-                            case 'select_all':
-                                selectAll();
-                                break;
-                            case 'share':
-                                result = await showImageExportPopover(event);
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            // case 'fullscreen':
-                            // await fullscreenSelectedDocuments();
-                            // break;
-                            case 'ocr':
-                                result = await detectOCR({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'delete':
-                                result = await deleteSelectedPages();
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'transform':
-                                result = await transformPages({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                        }
-                    } catch (error) {
-                        showError(error);
+    async function handleSelectionAction(event, item) {
+        try {
+            let result;
+            switch (item.id) {
+                case 'pdf':
+                    const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
+                    await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document], popoverOptions: { vertPos: VerticalPosition.ABOVE } });
+                    break;
+                case 'select_all':
+                    selectAll();
+                    break;
+                case 'share':
+                    result = await showImagePopoverMenu(getSelectedPages(), event.object, { vertPos: VerticalPosition.ABOVE });
+                    if (result) {
+                        unselectAll();
                     }
-                }
-            });
-        } else {
-            const options = new ObservableArray([
-                { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
-                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
-            return showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-
-                onClose: async (item) => {
-                    switch (item.id) {
-                        case 'rename':
-                            editingTitle = true;
-                            break;
-                        case 'select_all':
-                            selectAll();
-                            break;
-                        case 'ocr':
-                            await detectOCR({ documents: [document] });
-                            unselectAll();
-                            break;
-                        case 'transform':
-                            await transformPages({ documents: [document] });
-                            unselectAll();
-                            break;
-                        case 'delete':
-                            await deleteDoc();
-                            break;
-                        case 'reorder':
-                            unselectAll();
-                            switchEditMode();
-                            break;
+                    break;
+                case 'ocr':
+                    result = await detectOCR({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
                     }
-                }
-            });
+                    break;
+                case 'delete':
+                    result = await deleteSelectedPages();
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'transform':
+                    result = await transformPages({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+            }
+        } catch (error) {
+            showError(error);
         }
+    }
+
+    async function showOptions(event) {
+        const options = new ObservableArray([
+            { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
+            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+        ] as any);
+        return showPopoverMenu({
+            options,
+            anchor: event.object,
+            vertPos: VerticalPosition.BELOW,
+
+            onClose: async (item) => {
+                switch (item.id) {
+                    case 'rename':
+                        editingTitle = true;
+                        break;
+                    case 'select_all':
+                        selectAll();
+                        break;
+                    case 'ocr':
+                        await detectOCR({ documents: [document] });
+                        unselectAll();
+                        break;
+                    case 'transform':
+                        await transformPages({ documents: [document] });
+                        unselectAll();
+                        break;
+                    case 'delete':
+                        await deleteDoc();
+                        break;
+                    case 'reorder':
+                        unselectAll();
+                        switchEditMode();
+                        break;
+                }
+            }
+        });
     }
     let inEditMode = false;
     function switchEditMode() {
@@ -680,9 +686,15 @@
             onTitleTap={() => (editingTitle = true)}
             title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            {#if !nbSelected}
+                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            {/if}
         </CActionBar>
+
+        {#if nbSelected > 0}
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
+        {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />
         {/if}
