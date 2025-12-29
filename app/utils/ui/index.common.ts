@@ -594,7 +594,8 @@ export async function showPDFPopoverMenu({
                 { id: 'settings', name: lc('pdf_export_settings'), icon: 'mdi-cog' },
                 { id: 'open', name: lc('open'), icon: 'mdi-eye' },
                 { id: 'share', name: lc('share'), icon: 'mdi-share-variant' },
-                { id: 'export', name: lc('export'), icon: 'mdi-export' }
+                { id: 'export', name: lc('export'), icon: 'mdi-export' },
+                ...(documents.length > 1 ? [{ id: 'bulk_export', name: lc('bulk_export'), icon: 'mdi-file-document-multiple-outline' }] : [])
             ] as any)
             .concat(__ANDROID__ ? ([{ id: 'print', name: lc('print'), icon: 'mdi-printer' }] as any) : [])
             .concat([{ id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }] as any)
@@ -741,6 +742,71 @@ export async function showPDFPopoverMenu({
                                         openFile(filePath);
                                     }
                                 }
+                            }
+                        } catch (err) {
+                            throw err;
+                        } finally {
+                            componentInstanceInfo.element.nativeElement._tearDownUI();
+                            componentInstanceInfo.viewInstance.$destroy();
+                            componentInstanceInfo = null;
+                        }
+                        break;
+                    }
+                    case 'bulk_export': {
+                        if (!exportDirectory) {
+                            if (await pickExportFolder()) {
+                                const item = options.getItem(0);
+                                item.subtitle = exportDirectoryName;
+                                options.setItem(0, item);
+                            } else {
+                                showSnack({ message: lc('please_choose_export_folder') });
+                                return;
+                            }
+                        }
+                        await closePopover();
+                        const component = (await import('~/components/common/ExportPDFAlertOptions.svelte')).default;
+                        let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
+                        try {
+                            const defaultOptions = getPDFDefaultExportOptions();
+                            DEV_LOG && console.log('defaultOptions', JSON.stringify(defaultOptions));
+                            componentInstanceInfo = resolveComponentElement(component, {
+                                jpegQuality: defaultOptions.jpegQuality,
+                                password: defaultOptions.password,
+                                folder: exportDirectory,
+                                showFilename: false
+                            }) as ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
+                            const result = await confirm({
+                                okButtonText: lc('ok'),
+                                cancelButtonText: lc('cancel'),
+                                view: componentInstanceInfo.element.nativeView
+                            });
+                            if (result) {
+                                showLoading(lc('exporting'));
+                                const password = componentInstanceInfo.viewInstance.password;
+                                const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
+                                const folder = componentInstanceInfo.viewInstance.folder;
+                                await Promise.all(
+                                    documents.map((document) => {
+                                        const filename = getFileNameForDocument(document) + PDF_EXT;
+                                        DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
+                                        return exportPDFAsync({
+                                            pages,
+                                            document,
+                                            folder,
+                                            filename,
+                                            options: {
+                                                jpegQuality,
+                                                password
+                                            }
+                                        });
+                                    })
+                                );
+
+                                hideLoading();
+
+                                DEV_LOG && console.log('bulk exportPDF done');
+
+                                await showSnack({ message: lc('pdfs_saved') });
                             }
                         } catch (err) {
                             throw err;

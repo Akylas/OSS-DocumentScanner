@@ -10,7 +10,8 @@
     export let jpegQuality;
     export let folder;
     export let password;
-    export let filename;
+    export let filename = null;
+    export let showFilename = true;
 
     $: DEV_LOG && console.log('jpegQuality', jpegQuality);
 
@@ -24,16 +25,18 @@
         <stacklayout>
             <label class="sectionBigHeader" margin={10} text={lc('export_settings')} />
             <FolderTextView text={folder} on:folder={onFolderSelect} />
-            <textfield
-                autocapitalizationType="none"
-                autocorrect={false}
-                hint={lc('pdf_filename')}
-                margin="5 10 5 10"
-                placeholder={lc('filename')}
-                returnKeyType="next"
-                text={filename}
-                variant="outline"
-                on:textChange={(e) => (filename = e['value'])} />
+            {#if showFilename}
+                <textfield
+                    autocapitalizationType="none"
+                    autocorrect={false}
+                    hint={lc('pdf_filename')}
+                    margin="5 10 5 10"
+                    placeholder={lc('filename')}
+                    returnKeyType="next"
+                    text={filename}
+                    variant="outline"
+                    on:textChange={(e) => (filename = e['value'])} />
+            {/if}
             <SettingsSlider margin="5 10 5 10" max={100} min={0} onChange={(value) => (jpegQuality = value)} step={1} title={lc('jpeg_quality')} value={jpegQuality} />
             <textfield
                 autocapitalizationType="none"
