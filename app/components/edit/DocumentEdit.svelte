@@ -77,11 +77,7 @@
 
     async function showPDFPopover(event) {
         try {
-            await showPDFPopoverMenu(
-                document.pages.map((page) => ({ page, document })),
-                document,
-                event.object
-            );
+            await showPDFPopoverMenu({ pages: document.pages.map((page) => ({ page, document })), document, documents: [document], anchor: event.object });
         } catch (err) {
             showError(err);
         }
