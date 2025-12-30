@@ -56,6 +56,7 @@
     import { colors, fontScale, fonts, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import { prefs } from '@shared/services/preferences';
+    import { ROOT_GESTURE_HANDLER_TAG } from '@nativescript-community/gesturehandler/gesturehandler.common';
     const rowMargin = 8;
     interface Item {
         page: OCRPage;
@@ -77,7 +78,6 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let nbSelected = 0;
     let editingTitle = false;
-    let ignoreTap = false;
 
     let nbColumns = updateColumns($isLandscape);
 
@@ -248,46 +248,26 @@
         const index = items.findIndex((p) => p.page === item.page);
         collectionView?.nativeElement.startDragging(index, event.getActivePointers()[0]);
     }
-    function onItemLongPress(item: Item, event?) {
-        if (inEditMode) {
-            startDragging(item, event);
-        } else if (item.selected) {
+
+    function toggleSelection(item: Item) {
+        if (item.selected) {
             unselectItem(item);
         } else {
             selectItem(item);
         }
     }
-    async function onPan(item: Item, event) {
-        const extraData = event.eventData.extraData;
-        if (Math.abs(extraData.velocityX) > 1000 || Math.abs(extraData.velocityY) > 1000 || Math.abs(extraData.translationX) > 100 || Math.abs(extraData.translationY) > 100) {
-            event.handler?.cancel();
-            return;
-        }
-
-        if (Math.abs(extraData.translationX) > 30 || Math.abs(extraData.translationY) > 30) {
-            event.handler?.cancel();
-            startDragging(item, event);
-        }
+    function onItemLongPress(item: Item, event?) {
+        toggleSelection(item);
     }
-    async function onTouch(item: Item, event?) {
-        if (!inEditMode) {
-            return;
-        }
-        switch (event.action) {
-            case 'down': {
-                startDragging(item, event);
-                break;
-            }
+    async function onPan(item: Item, event) {
+        if (event.state === 2 && nbSelected === 0) {
+            startDragging(item, event);
         }
     }
     async function onItemTap(item: Item, event?) {
         try {
-            if (ignoreTap) {
-                ignoreTap = false;
-                return;
-            }
             if (nbSelected > 0) {
-                onItemLongPress(item);
+                toggleSelection(item);
             } else {
                 const index = items.findIndex((p) => p.page === item.page);
                 navigate({
@@ -330,9 +310,7 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (inEditMode) {
-                switchEditMode();
-            } else if (nbSelected > 0) {
+            if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
@@ -559,7 +537,6 @@
         const options = new ObservableArray([
             { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
             { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-            { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
             { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
             { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
             { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -588,18 +565,9 @@
                     case 'delete':
                         await deleteDoc();
                         break;
-                    case 'reorder':
-                        unselectAll();
-                        switchEditMode();
-                        break;
                 }
             }
         });
-    }
-    let inEditMode = false;
-    function switchEditMode() {
-        inEditMode = !inEditMode;
-        collectionView?.nativeElement?.refreshVisibleItems();
     }
 </script>
 
@@ -644,11 +612,13 @@
                     borderWidth={0}
                     margin={8}
                     padding={10}
+                    panGestureOptions={(view, tag, rootTag) => ({
+                        minDist: 100
+                    })}
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
                     on:tap={(e) => onItemTap(item, e)}
-                    on:touch={(e) => onTouch(item, e)}
-                    android:on:pan={(e) => onPan(item, e)}
+                    on:pan={(e) => onPan(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
                     <RotableImageView
@@ -661,12 +631,7 @@
                         stretch="aspectFit"
                         verticalAlignment="center" />
                     <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} padding="10 0 0 0" row={1}>
-                        <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-reorder-horizontal" visibility={inEditMode ? 'visible' : 'hidden'} />
-                        <cspan
-                            paddingLeft={inEditMode ? 30 : 0}
-                            text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`}
-                            textAlignment="left"
-                            verticalAlignment="bottom" />
+                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`} textAlignment="left" verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
@@ -686,10 +651,10 @@
             {/if}
         </stacklayout>
         <CActionBar
-            forceCanGoBack={inEditMode || nbSelected > 0}
-            onGoBack={nbSelected ? unselectAll : inEditMode ? switchEditMode : null}
+            forceCanGoBack={nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
-            title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
+            title={nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ autoFontSize: true, padding: 0 }}>
             {#if !nbSelected}
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />

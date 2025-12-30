@@ -37,7 +37,6 @@
     function onLayoutChanged(event: EventData) {
         const width = Utils.layout.toDeviceIndependentPixels((event.object as View).getMeasuredWidth());
         const nbVisibleButtons = (width - 32) / $actionBarButtonHeight;
-        DEV_LOG && console.log('onLayoutChanged', width, $actionBarButtonHeight);
         if (options.length > nbVisibleButtons) {
             visibleOptions = options.slice(0, nbVisibleButtons - 1);
             overflowOptions = options.slice(nbVisibleButtons);

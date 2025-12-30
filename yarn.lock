@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=170403&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=db96b9&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/fdc2caeffac2ca1817a80a456b2decb1b05c7d16da56cc8da0a50451d32723927a5acd51a60dfe54641d0bf2b4ddcfdb0f6625122301cbd5bd4c902b23192cb5
+  checksum: 10/b5d09f76e04f7f9380005efafcfbddb6f36b7aa2aaeb402fca1671f30a111fdc15943796c1a6b8fc3685893896237d79242d1e3b999872c3e44d1630c15e41f0
   languageName: node
   linkType: hard
 
@@ -1165,23 +1165,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/gesturehandler@npm:2.0.38":
-  version: 2.0.38
-  resolution: "@nativescript-community/gesturehandler@npm:2.0.38"
+"@nativescript-community/gesturehandler@portal:/home/mguillon/dev/nativescript/gesturehandler/packages/gesturehandler::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@nativescript-community/gesturehandler@portal:/home/mguillon/dev/nativescript/gesturehandler/packages/gesturehandler::locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@nativescript-community/observable": "npm:^2.0.10"
-  checksum: 10/999c45fa20414da750465fef05f70bccf4b4e220a7ddc60c56f1c725c6abe1e9ea29eb3d342fde44b72de367cb744658cc78487a44ee0e73744aa290abd09c24
   languageName: node
-  linkType: hard
-
-"@nativescript-community/gesturehandler@npm:^2.0.8":
-  version: 2.0.37
-  resolution: "@nativescript-community/gesturehandler@npm:2.0.37"
-  dependencies:
-    "@nativescript-community/observable": "npm:^2.0.10"
-  checksum: 10/6a8607c7f74a71d66dc7e0151352bc0f90a8491a8b79c0d1585ebce2583a22d04f1fe7fee452dadcd624f2c32710cc0ae7cbbe1728783acba9b4b2a6a8055df9
-  languageName: node
-  linkType: hard
+  linkType: soft
 
 "@nativescript-community/https@npm:4.1.25":
   version: 4.1.25
@@ -10483,7 +10473,7 @@ __metadata:
     "@nativescript-community/arraybuffers": "npm:1.1.5"
     "@nativescript-community/css-theme": "npm:1.2.14"
     "@nativescript-community/extendedinfo": "npm:1.3.1"
-    "@nativescript-community/gesturehandler": "npm:2.0.38"
+    "@nativescript-community/gesturehandler": "npm:2.0.39"
     "@nativescript-community/https": "npm:4.1.25"
     "@nativescript-community/l": "npm:4.3.10"
     "@nativescript-community/licenses": "npm:2.0.9"
