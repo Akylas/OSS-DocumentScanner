@@ -108,7 +108,7 @@ try {
     SwipeMenuElement.register();
     DrawerElement.register();
     startSentry();
-    initialize({ isDownsampleEnabled: true });
+    initialize({ usePersistentCacheKeyStore: true, globalSignatureKey: 'oss-doc-v3' });
 
     if (PLAY_STORE_BUILD) {
         import('@shared/utils/inapp-purchase').then((r) => r.init());
