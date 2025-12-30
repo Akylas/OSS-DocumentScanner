@@ -1,0 +1,4 @@
+Bug fixes:
+- new selection toolbar
+- bulk pdf export support
+- you can now easily start reordering and long press to select
