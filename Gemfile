@@ -4,8 +4,8 @@
 
 source "https://gem.coop"
 
-gem 'fastlane', "2.225.0"
-gem 'cocoapods', "1.15.2"
+gem 'fastlane', "2.230.0"
+gem 'cocoapods', "1.16.2"
 gem 'cocoapods-acknowledgements'
 
 plugins_path = File.join(File.dirname(__FILE__), 'fastlane', 'Pluginfile')
