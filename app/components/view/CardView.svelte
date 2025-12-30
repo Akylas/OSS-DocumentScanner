@@ -343,11 +343,19 @@
         }
     }
     let ignoreTap = false;
-    function onItemLongPress(item: Item, event?) {
+    function toggleSelection(item: Item) {
         if (item.selected) {
             unselectItem(item);
         } else {
             selectItem(item);
+        }
+    }
+    function onItemLongPress(item: Item, event?) {
+        toggleSelection(item);
+    }
+    async function onPan(item: Item, event) {
+        if (event.state === 2 && nbSelected === 0) {
+            startDragging(item, event);
         }
     }
     async function onItemTap(item: Item) {
@@ -571,9 +579,9 @@
         documentsService.off(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
 
-    function startDragging(item: Item) {
+    function startDragging(item: Item, event) {
         const index = items.findIndex((p) => p.page === item.page);
-        collectionView?.nativeElement.startDragging(index);
+        collectionView?.nativeElement.startDragging(index, event.getActivePointers()[0]);
     }
     async function onItemReordered(e) {
         DEV_LOG && console.log('onItemReordered');
@@ -1114,9 +1122,13 @@
                     backgroundColor={getItemBackgroundColor(item)}
                     elevation={isEInk ? 0 : 6}
                     margin={12}
+                    panGestureOptions={(view, tag, rootTag) => ({
+                        minDist: 100
+                    })}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
-                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    on:pan={(e) => onPan(item, e)}>
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
@@ -1139,7 +1151,7 @@
                         verticalTextAlignment="center"
                         visibility={item.page.imagePath ? 'hidden' : 'visible'} />
                     <SelectedIndicator rowSpan={2} selected={item.selected} />
-                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} scale={$fontScale} text={index + 1} on:longPress={() => startDragging(item)} />
+                    <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} scale={$fontScale} text={index + 1} />
                 </gridlayout>
             </Template>
         </collectionview>
