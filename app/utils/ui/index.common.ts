@@ -790,7 +790,7 @@ export async function showPDFPopoverMenu({
                                         const filename = getFileNameForDocument(document) + PDF_EXT;
                                         DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
                                         return exportPDFAsync({
-                                            pages,
+                                            pages: document.pages.map((page) => ({ document, page })),
                                             document,
                                             folder,
                                             filename,
