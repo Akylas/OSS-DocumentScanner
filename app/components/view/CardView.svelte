@@ -350,12 +350,51 @@
             selectItem(item);
         }
     }
+    let longPressTimer: NodeJS.Timeout;
+    let currentLongPressItem: Item;
+    let dragStarted = false;
     function onItemLongPress(item: Item, event?) {
-        toggleSelection(item);
+        if (nbSelected > 0) {
+            toggleSelection(item);
+            return;
+        }
+
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+        }
+
+        currentLongPressItem = item;
+        dragStarted = false;
+
+        longPressTimer = setTimeout(() => {
+            if (!dragStarted && currentLongPressItem) {
+                toggleSelection(item);
+            }
+            currentLongPressItem = null;
+        }, 200);
     }
     async function onPan(item: Item, event) {
-        if (event.state === 2 && nbSelected === 0) {
+        if (!currentLongPressItem) {
+            return;
+        }
+
+        if (event.state === 2 && !dragStarted) {
+            dragStarted = true;
+
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
             startDragging(item, event);
+
+            currentLongPressItem = null;
+        } else if (event.state === 5 || event.state === 3) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            dragStarted = false;
+            currentLongPressItem = null;
         }
     }
     async function onItemTap(item: Item) {
@@ -1121,9 +1160,12 @@
                     class="cardItemTemplate"
                     backgroundColor={getItemBackgroundColor(item)}
                     elevation={isEInk ? 0 : 6}
+                    longPressGestureOptions={(view, tag, rootTag) => ({
+                        simultaneousHandlers: [rootTag, view['PAN_HANDLER_TAG']]
+                    })}
                     margin={12}
                     panGestureOptions={(view, tag, rootTag) => ({
-                        minDist: 100
+                        minDist: 20
                     })}
                     rippleColor={colorSurface}
                     on:tap={() => onItemTap(item)}
