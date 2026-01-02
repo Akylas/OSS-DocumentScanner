@@ -1,4 +1,4 @@
-import { Observable, PageTransition, SharedTransition } from '@nativescript/core';
+import { Color, Observable, PageTransition, SharedTransition } from '@nativescript/core';
 import { navigate, showModal } from '@shared/utils/svelte/ui';
 import { QRCodeSingleData, detectQRCodeFromFile, getSVGFromQRCode } from 'plugin-nativeprocessor';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
@@ -69,9 +69,9 @@ export enum FORMATS {
 }
 
 export class QRCodeService extends Observable {
-    async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string = '#000000', options?) {
+    async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string | Color = '#000000', options?) {
         return getSVGFromQRCode(qrcode.text, qrcode.format, width, {
-            color,
+            color: color instanceof Color ? color.hex : color,
             ...(options || {})
         });
     }

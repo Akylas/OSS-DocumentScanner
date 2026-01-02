@@ -129,8 +129,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 acc.then((obj) => {
                     if (testStr.endsWith(PKPASS_EXT)) {
                         obj[2].push(e);
-                    }
-                    else if (testStr.endsWith(PDF_EXT)) {
+                    } else if (testStr.endsWith(PDF_EXT)) {
                         obj[0].push(e);
                     } else {
                         obj[1].push(e);

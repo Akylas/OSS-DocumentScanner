@@ -247,11 +247,11 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
                 }
             });
         }
-        
+
         if (!toUpdate.modifiedDate) {
             toUpdate.modifiedDate = Date.now();
         }
-        
+
         await super.update(pkpass, toUpdate);
         if (data) {
             Object.assign(pkpass, data);
@@ -260,7 +260,7 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
     }
 
     async createModelFromAttributes(attributes: any): Promise<PKPass> {
-        const { passData, images, ...other } = attributes;
+        const { images, passData, ...other } = attributes;
         const model = new PKPass(attributes.id, attributes.document_id);
         Object.assign(model, {
             ...other,
@@ -460,7 +460,8 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         database: NSQLDatabase,
         public pagesRepository: PageRepository,
         public tagsRepository: TagRepository,
-        public foldersRepository: FolderRepository
+        public foldersRepository: FolderRepository,
+        public pkpassRepository: PKPassRepository
     ) {
         super({
             database,
@@ -706,7 +707,7 @@ LEFT JOIN
                 await document.save({}, true);
             }
         }
-        
+
         // Load PKPass data if document has it
         if (document.extra?.pkpass) {
             try {
@@ -715,7 +716,7 @@ LEFT JOIN
                     document.pkpass = pkpass;
                 }
             } catch (error) {
-                console.error('Error loading PKPass for document:', document.id, error);
+                console.error('Error loading PKPass for document:', document.id, error, error.stack);
             }
         }
 
@@ -834,7 +835,7 @@ export class DocumentsService extends Observable {
         this.tagRepository = new TagRepository(this.db);
         this.folderRepository = new FolderRepository(this.db);
         this.pkpassRepository = new PKPassRepository(this.db);
-        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository);
+        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository, this.pkpassRepository);
         if (!db) {
             await this.documentRepository.createTables();
             await this.pageRepository.createTables();

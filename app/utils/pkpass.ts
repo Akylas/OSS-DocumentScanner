@@ -1,6 +1,7 @@
 import { File, Folder, knownFolders, path } from '@nativescript/core';
 import { unzip } from 'plugin-zip';
-import { PKPass, PKPassData, PKPassImages } from '~/models/PKPass';
+import { PKPass, PKPassBarcode, PKPassData, PKPassImages } from '~/models/PKPass';
+import { qrcodeService } from '~/services/qrcode';
 
 /**
  * PKPass parser utility
@@ -40,60 +41,57 @@ export interface PKPassParseResult {
  * @param targetFolder Folder where to extract the pass data
  * @returns PKPassParseResult with the parsed pass and extraction path
  */
-export async function parsePKPassFile(pkpassFilePath: string, targetFolder: Folder): Promise<PKPassParseResult> {
+export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFolder: Folder): Promise<PKPassParseResult> {
     DEV_LOG && console.log('parsePKPassFile', pkpassFilePath, targetFolder.path);
-    
+
     if (!File.exists(pkpassFilePath)) {
         throw new Error(`PKPass file not found: ${pkpassFilePath}`);
     }
-    
+
     // Create a unique folder for this pass
     const passId = Date.now().toString();
     const extractPath = path.join(targetFolder.path, passId);
     const extractFolder = Folder.fromPath(extractPath);
-    
+
     try {
         // Extract the .pkpass file (which is a ZIP archive)
         await unzip({
             archive: pkpassFilePath,
             directory: extractPath
         });
-        
+
         DEV_LOG && console.log('PKPass extracted to', extractPath);
-        
+
         // Read pass.json
         const passJsonPath = path.join(extractPath, PASS_JSON_FILE);
         if (!File.exists(passJsonPath)) {
             throw new Error('pass.json not found in PKPass file');
         }
-        
+
         const passJsonFile = File.fromPath(passJsonPath);
         const passJsonContent = await passJsonFile.readText();
         const passData: PKPassData = JSON.parse(passJsonContent);
-        
+
         DEV_LOG && console.log('PKPass data parsed', passData.organizationName, passData.description);
-        
+
         // Extract image paths
         const images: PKPassImages = {};
         for (const imageFile of IMAGE_FILES) {
             const imagePath = path.join(extractPath, imageFile);
             if (File.exists(imagePath)) {
-                const key = imageFile
-                    .replace('.png', '')
-                    .replace('@2x', '2x')
-                    .replace('@3x', '3x');
+                const key = imageFile.replace('.png', '').replace('@2x', '2x').replace('@3x', '3x');
                 images[key] = imagePath;
                 DEV_LOG && console.log('Found image:', key, imagePath);
             }
         }
-        
+
         // Create PKPass object
         const pass = new PKPass(passId, ''); // document_id will be set by caller
         pass.passData = passData;
         pass.images = images;
         pass.passJsonPath = passJsonPath;
         pass.imagesPath = extractPath;
-        
+
         return {
             pass,
             extractedPath: extractPath
@@ -118,16 +116,16 @@ export async function parsePKPassFile(pkpassFilePath: string, targetFolder: Fold
  */
 export function getPKPassDisplayName(pass: PKPass): string {
     const { passData } = pass;
-    
+
     // Try to get a meaningful name from the pass
     if (passData.logoText) {
         return passData.logoText;
     }
-    
+
     if (passData.organizationName) {
         return passData.organizationName;
     }
-    
+
     return passData.description || 'Pass';
 }
 
@@ -138,7 +136,7 @@ export function getPKPassDisplayName(pass: PKPass): string {
  */
 export function getPKPassPrimaryImage(pass: PKPass): string | undefined {
     const { images } = pass;
-    
+
     // Priority order for primary image
     const imagePriority = [
         images.strip2x,
@@ -154,13 +152,13 @@ export function getPKPassPrimaryImage(pass: PKPass): string | undefined {
         images.icon,
         images.icon3x
     ];
-    
+
     for (const imagePath of imagePriority) {
         if (imagePath && File.exists(imagePath)) {
             return imagePath;
         }
     }
-    
+
     return undefined;
 }
 
@@ -171,7 +169,7 @@ export function getPKPassPrimaryImage(pass: PKPass): string | undefined {
  */
 export function getPKPassIconImage(pass: PKPass): string | undefined {
     const { images } = pass;
-    
+
     if (images.icon2x && File.exists(images.icon2x)) {
         return images.icon2x;
     }
@@ -181,7 +179,7 @@ export function getPKPassIconImage(pass: PKPass): string | undefined {
     if (images.icon3x && File.exists(images.icon3x)) {
         return images.icon3x;
     }
-    
+
     return undefined;
 }
 
@@ -194,7 +192,25 @@ export function isPKPassFile(filePath: string): boolean {
     if (!File.exists(filePath)) {
         return false;
     }
-    
+
     // Check file extension
     return filePath.toLowerCase().endsWith('.pkpass');
+}
+
+export async function getBarcodeImage({ barcode, foregroundColor, width = 300 }: { barcode: PKPassBarcode; foregroundColor; width?: number }): Promise<string | undefined> {
+    if (!barcode) return undefined;
+
+    try {
+        // Convert PKPass barcode format to QRCodeData format
+        const qrcodeData = {
+            text: barcode.message,
+            format: barcode.format.replace('PKBarcodeFormat', '').replace('QR', 'QRCode'),
+            position: null
+        };
+        DEV_LOG && console.log('getBarcodeImage', barcode, qrcodeData);
+        return await qrcodeService.getQRCodeSVG(qrcodeData, width, foregroundColor);
+    } catch (error) {
+        console.error('Error generating barcode image:', error);
+        return undefined;
+    }
 }

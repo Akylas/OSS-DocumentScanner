@@ -68,30 +68,30 @@ export interface PKPassData {
     teamIdentifier: string;
     organizationName: string;
     description: string;
-    
+
     // Visual appearance
     logoText?: string;
     foregroundColor?: string;
     backgroundColor?: string;
     labelColor?: string;
-    
+
     // Relevance
     locations?: PKPassLocation[];
     relevantDate?: string;
     expirationDate?: string;
     voided?: boolean;
-    
+
     // Barcode
     barcode?: PKPassBarcode;
     barcodes?: PKPassBarcode[];
-    
+
     // Pass structure (one of these will be present based on style)
     boardingPass?: PKPassStructure;
     coupon?: PKPassStructure;
     eventTicket?: PKPassStructure;
     generic?: PKPassStructure;
     storeCard?: PKPassStructure;
-    
+
     // Web service
     webServiceURL?: string;
     authenticationToken?: string;
@@ -121,26 +121,26 @@ export interface PKPassImages {
 export class PKPass extends Observable {
     id: string;
     document_id: string;
-    
+
     // PKPass data
     passData: PKPassData;
     images: PKPassImages;
-    
+
     // Storage paths
     passJsonPath?: string;
     imagesPath?: string;
-    
+
     // Metadata
     createdDate: number;
     modifiedDate?: number;
-    
+
     constructor(id: string, docId: string) {
         super();
         this.id = id;
         this.document_id = docId;
         this.createdDate = Date.now();
     }
-    
+
     getPassStyle(): PKPassStyle {
         if (this.passData.boardingPass) return PKPassStyle.BoardingPass;
         if (this.passData.coupon) return PKPassStyle.Coupon;
@@ -148,7 +148,7 @@ export class PKPass extends Observable {
         if (this.passData.storeCard) return PKPassStyle.StoreCard;
         return PKPassStyle.Generic;
     }
-    
+
     getPassStructure(): PKPassStructure | undefined {
         const style = this.getPassStyle();
         switch (style) {
@@ -164,7 +164,7 @@ export class PKPass extends Observable {
                 return this.passData.generic;
         }
     }
-    
+
     getPrimaryBarcode(): PKPassBarcode | undefined {
         // iOS 9+ uses barcodes array, older uses barcode
         if (this.passData.barcodes && this.passData.barcodes.length > 0) {
@@ -172,7 +172,7 @@ export class PKPass extends Observable {
         }
         return this.passData.barcode;
     }
-    
+
     getAllBarcodes(): PKPassBarcode[] {
         const barcodes: PKPassBarcode[] = [];
         if (this.passData.barcodes) {
@@ -182,18 +182,18 @@ export class PKPass extends Observable {
         }
         return barcodes;
     }
-    
+
     isExpired(): boolean {
         if (!this.passData.expirationDate) {
             return false;
         }
         return new Date(this.passData.expirationDate) < new Date();
     }
-    
+
     isVoided(): boolean {
         return this.passData.voided === true;
     }
-    
+
     static fromJSON(jsonObj: any): PKPass {
         const pass = new PKPass(jsonObj.id, jsonObj.document_id);
         Object.assign(pass, {
@@ -206,7 +206,7 @@ export class PKPass extends Observable {
         });
         return pass;
     }
-    
+
     toJSON() {
         return {
             id: this.id,
@@ -219,7 +219,7 @@ export class PKPass extends Observable {
             modifiedDate: this.modifiedDate
         };
     }
-    
+
     toString() {
         return JSON.stringify(this.toJSON());
     }
