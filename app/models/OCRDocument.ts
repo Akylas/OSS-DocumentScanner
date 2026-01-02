@@ -32,6 +32,7 @@ import {
     getImageExportSettings
 } from '../utils/constants';
 import { getImagePipeline } from '@nativescript-community/ui-image';
+import { PKPass } from './PKPass';
 
 export const sql = SqlQuery.createFromTemplateString;
 
@@ -160,6 +161,9 @@ export class OCRDocument extends Observable implements Document {
 
     #observables: ObservableArray<OCRPage>;
     pages: OCRPage[];
+    
+    // PKPass data - loaded automatically with the document
+    pkpass?: PKPass;
 
     constructor(public id: string) {
         super();

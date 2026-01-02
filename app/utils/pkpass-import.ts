@@ -127,17 +127,9 @@ export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): 
  * @param document Document to get PKPass data for
  * @returns PKPass object or null if document doesn't have PKPass data
  */
-export async function getPKPassForDocument(document: OCRDocument): Promise<PKPass | null> {
-    if (!document.extra?.pkpass) {
-        return null;
-    }
-    
-    try {
-        return await documentsService.pkpassRepository.getByDocumentId(document.id);
-    } catch (error) {
-        console.error('Error loading PKPass for document:', error);
-        return null;
-    }
+export function getPKPassForDocument(document: OCRDocument): PKPass | null {
+    // PKPass is now loaded automatically with the document
+    return document.pkpass || null;
 }
 
 /**
@@ -146,5 +138,5 @@ export async function getPKPassForDocument(document: OCRDocument): Promise<PKPas
  * @returns true if document has PKPass data
  */
 export function hasPKPassData(document: OCRDocument): boolean {
-    return document.extra?.pkpass === true;
+    return !!document.pkpass;
 }

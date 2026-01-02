@@ -706,6 +706,18 @@ LEFT JOIN
                 await document.save({}, true);
             }
         }
+        
+        // Load PKPass data if document has it
+        if (document.extra?.pkpass) {
+            try {
+                const pkpass = await this.pkpassRepository.getByDocumentId(document.id);
+                if (pkpass) {
+                    document.pkpass = pkpass;
+                }
+            } catch (error) {
+                console.error('Error loading PKPass for document:', document.id, error);
+            }
+        }
 
         return document;
     }

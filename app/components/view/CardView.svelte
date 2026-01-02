@@ -103,7 +103,8 @@
     let statusBarStyle;
     // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
-    let pkpass: PKPass | null = null;
+    // PKPass is now loaded directly with the document
+    const pkpass = document.pkpass;
     const PKPASS_TYPE = 'pkpass';
     const isPKPassDocument = hasPKPassData(document);
 
@@ -249,22 +250,6 @@
         }
     }
     updateQRCodes();
-
-    // Load PKPass data if document has it
-    async function loadPKPassData() {
-        if (hasPKPassData(document)) {
-            try {
-                pkpass = await getPKPassForDocument(document);
-                if (pkpass) {
-                    DEV_LOG && console.log('PKPass loaded', pkpass.passData.organizationName);
-                    refreshExtraItems();
-                }
-            } catch (error) {
-                console.error('Error loading PKPass data:', error);
-            }
-        }
-    }
-    loadPKPassData();
 
     async function getQRCodeImage(qrcode, color) {
         try {

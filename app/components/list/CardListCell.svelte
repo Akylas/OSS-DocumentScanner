@@ -18,9 +18,8 @@
 
 <script lang="ts">
     import PKPassCardCell from './PKPassCardCell.svelte';
-    import { onMount } from 'svelte';
     import { PKPass } from '~/models/PKPass';
-    
+
     let { colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnPrimary, colorSurface } = $colors);
 
@@ -244,21 +243,10 @@
     function itemHasImage(item: Item) {
         return !!item.doc.pages[0].imagePath;
     }
-    
-    let pkpass: PKPass | null = null;
+
+    // PKPass is now loaded directly with the document
     const isPKPass = hasPKPassData(item.doc);
-    
-    // Load PKPass data if needed
-    onMount(async () => {
-        if (isPKPass) {
-            try {
-                const { getPKPassForDocument } = await import('~/utils/pkpass-import');
-                pkpass = await getPKPassForDocument(item.doc);
-            } catch (error) {
-                console.error('Error loading PKPass for card cell:', error);
-            }
-        }
-    });
+    const pkpass = item.doc.pkpass;
 </script>
 
 <swipemenu
