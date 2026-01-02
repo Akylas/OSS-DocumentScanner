@@ -18,8 +18,11 @@
     $: backgroundColor = passData.backgroundColor || colorSurface;
     $: labelColor = passData.labelColor || colorOnBackground;
     $: logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo;
+    $: iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon;
     $: stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip;
-    $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, pkpass.images,  JSON.stringify(pkpass.passData));
+    $: backgroundImage = pkpass?.images?.background2x || pkpass?.images?.background;
+    $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail;
+    $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, iconImage, backgroundImage, thumbnailImage, pkpass.images,  JSON.stringify(pkpass.passData));
 
     let barcodeSvg: string | undefined;
     if (primaryBarcode) {
@@ -35,13 +38,24 @@
 </script>
 
 <gridlayout {backgroundColor} rows="auto,auto,*,auto">
-    <!-- Header section with logo -->
+    <!-- Header section with logo and icon -->
     <stacklayout padding="16" row={0}>
-        {#if logoImage}
-            <image height="50" horizontalAlignment="center" src={path.join(pkpass.imagesPath, logoImage)} stretch="aspectFit" />
-        {/if}
+        <gridlayout columns="auto,*,auto" verticalAlignment="center">
+            <!-- Icon on the left -->
+            {#if iconImage}
+                <image col={0} height="30" src={path.join(pkpass.imagesPath, iconImage)} stretch="aspectFit" width="30" />
+            {/if}
+            <!-- Logo in the center -->
+            {#if logoImage}
+                <image col={1} height="50" horizontalAlignment="center" marginLeft={iconImage ? 8 : 0} marginRight={iconImage ? 8 : 0} src={path.join(pkpass.imagesPath, logoImage)} stretch="aspectFit" />
+            {/if}
+            <!-- Thumbnail on the right (optional, for event tickets typically) -->
+            {#if thumbnailImage}
+                <image col={2} height="50" src={path.join(pkpass.imagesPath, thumbnailImage)} stretch="aspectFit" width="50" />
+            {/if}
+        </gridlayout>
         {#if passData.logoText}
-            <label color={foregroundColor} fontSize="24" fontWeight="bold" marginTop={logoImage ? 8 : 0} text={passData.logoText} textAlignment="center" />
+            <label color={foregroundColor} fontSize="24" fontWeight="bold" marginTop={logoImage || iconImage ? 8 : 0} text={passData.logoText} textAlignment="center" />
         {/if}
         <label
             color={labelColor}
@@ -52,9 +66,11 @@
             visibility={passData.logoText !== passData.organizationName ? 'visible' : 'collapsed'} />
     </stacklayout>
 
-    <!-- Strip image if available -->
+    <!-- Strip or background image if available -->
     {#if stripImage}
         <image height="150" row={1} src={path.join(pkpass.imagesPath, stripImage)} stretch="aspectFill" />
+    {:else if backgroundImage}
+        <image height="150" row={1} src={path.join(pkpass.imagesPath, backgroundImage)} stretch="aspectFill" />
     {/if}
 
     <!-- Main content -->
