@@ -31,7 +31,7 @@
         }
         return '';
     }
-    
+
     function getLocalizedText(text: string): string {
         return text ? pkpass.getLocalizedValue(text, lang) : text;
     }
@@ -41,16 +41,16 @@
     <gridlayout {backgroundColor} borderRadius="12" padding="12" rows="auto,auto,auto">
         <!-- Strip or thumbnail image at top if available -->
         {#if stripImage}
-            <image height="60" horizontalAlignment="stretch" row={0} src={path.join(pkpass.imagesPath, stripImage)} stretch="aspectFill" borderRadius="8 8 0 0" marginBottom="8" />
+            <image borderRadius="8 8 0 0" height="60" horizontalAlignment="stretch" marginBottom="8" row={0} src={stripImage} stretch="aspectFill" />
         {:else if thumbnailImage}
-            <image height="60" horizontalAlignment="center" row={0} src={path.join(pkpass.imagesPath, thumbnailImage)} stretch="aspectFit" marginBottom="8" />
+            <image height="60" horizontalAlignment="center" marginBottom="8" row={0} src={thumbnailImage} stretch="aspectFit" />
         {/if}
 
         <!-- Header with icon and logo -->
-        <gridlayout columns="auto,*,auto" row={1} marginBottom="8">
+        <gridlayout columns="auto,*,auto" marginBottom="8" row={1}>
             <!-- Icon on the left -->
             {#if iconImage}
-                <image col={0} height="24" src={path.join(pkpass.imagesPath, iconImage)} stretch="aspectFit" width="24" verticalAlignment="center" />
+                <image col={0} height="24" src={iconImage} stretch="aspectFit" verticalAlignment="center" width="24" />
             {/if}
             <!-- Logo in the center -->
             {#if logoImage}
@@ -60,14 +60,7 @@
 
         <!-- Organization name and primary value -->
         <stacklayout row={2}>
-            <label
-                color={foregroundColor}
-                fontSize={14}
-                fontWeight="bold"
-                maxLines={2}
-                text={passData.organizationName || getLocalizedText(passData.logoText) || item.doc.name}
-                textAlignment="center"
-                textWrap={true} />
+            <label color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={2} text={passData.organizationName || passData.logoText || item.doc.name} textAlignment="center" textWrap={true} />
 
             <!-- Primary value -->
             {#if getPrimaryValue()}

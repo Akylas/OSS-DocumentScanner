@@ -13,12 +13,12 @@
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import { Item } from './MainList.svelte';
     import { hasPKPassData } from '~/utils/pkpass-import';
+    import PKPassCardCell from './PKPassCardCell.svelte';
+    import { PKPass } from '~/models/PKPass';
     const rowMargin = 8;
 </script>
 
 <script lang="ts">
-    import PKPassCardCell from './PKPassCardCell.svelte';
-    import { PKPass } from '~/models/PKPass';
 
     let { colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnPrimary, colorSurface } = $colors);
