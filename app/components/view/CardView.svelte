@@ -105,6 +105,7 @@
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
     let pkpass: PKPass | null = null;
     const PKPASS_TYPE = 'pkpass';
+    const isPKPassDocument = hasPKPassData(document);
 
     function computeTopBackgroundColor() {
         const color = isEInk
@@ -504,6 +505,11 @@
         });
     }
     async function deleteSelectedPages() {
+        // Disable page deletion for PKPass documents
+        if (isPKPassDocument) {
+            showSnack({ message: lc('pkpass_cannot_edit') });
+            return false;
+        }
         if (nbSelected > 0) {
             try {
                 const result = await confirm({
@@ -791,6 +797,11 @@
         }
     }
     async function onAddButton() {
+        // Disable adding pages for PKPass documents
+        if (isPKPassDocument) {
+            showSnack({ message: lc('pkpass_cannot_edit') });
+            return;
+        }
         try {
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const rowHeight = 58;
@@ -996,6 +1007,11 @@
         extraItems.splice(0, extraItems.length, ...getExtraItems());
     }
     async function startEdit() {
+        // Disable editing for PKPass documents
+        if (isPKPassDocument) {
+            showSnack({ message: lc('pkpass_cannot_edit') });
+            return;
+        }
         if (editing === false) {
             editing = true;
             editingTitle = true;
@@ -1335,10 +1351,10 @@
             orientation="horizontal"
             row={2}
             visibility={editing ? 'collapsed' : 'visible'}>
-            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" on:tap={startEdit} />
+            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" on:tap={startEdit} visibility={isPKPassDocument ? 'collapsed' : 'visible'} />
             <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" on:tap={throttle(() => showImages(), 500)} />
 
-            <mdbutton bind:this={fabHolder} id="fab" class="fab" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} />
+            <mdbutton bind:this={fabHolder} id="fab" class="fab" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} visibility={isPKPassDocument ? 'collapsed' : 'visible'} />
         </stacklayout>
         <CActionBar
             backgroundColor={topBackgroundColor}

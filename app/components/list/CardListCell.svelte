@@ -12,10 +12,15 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import { Item } from './MainList.svelte';
+    import { hasPKPassData } from '~/utils/pkpass-import';
     const rowMargin = 8;
 </script>
 
 <script lang="ts">
+    import PKPassCardCell from './PKPassCardCell.svelte';
+    import { onMount } from 'svelte';
+    import { PKPass } from '~/models/PKPass';
+    
     let { colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnPrimary, colorSurface } = $colors);
 
@@ -239,6 +244,21 @@
     function itemHasImage(item: Item) {
         return !!item.doc.pages[0].imagePath;
     }
+    
+    let pkpass: PKPass | null = null;
+    const isPKPass = hasPKPassData(item.doc);
+    
+    // Load PKPass data if needed
+    onMount(async () => {
+        if (isPKPass) {
+            try {
+                const { getPKPassForDocument } = await import('~/utils/pkpass-import');
+                pkpass = await getPKPassForDocument(item.doc);
+            } catch (error) {
+                console.error('Error loading PKPass for card cell:', error);
+            }
+        }
+    });
 </script>
 
 <swipemenu
@@ -253,20 +273,24 @@
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
-        <RotableImageView {...getItemRotableImageParams(item)} />
-        <label
-            autoFontSize={true}
-            autoFontSizeStep={10}
-            fontSize={30}
-            fontWeight="bold"
-            lineBreak="end"
-            maxFontSize={35}
-            minFontSize={20}
-            padding={16}
-            text={item.doc.name}
-            textWrap={false}
-            visibility={itemHasImage(item) ? 'hidden' : 'visible'}
-            {...getLabelParams(layout, item, height, itemHeight)} />
+        {#if isPKPass && pkpass}
+            <PKPassCardCell {item} {pkpass} {itemWidth} {layout} />
+        {:else}
+            <RotableImageView {...getItemRotableImageParams(item)} />
+            <label
+                autoFontSize={true}
+                autoFontSizeStep={10}
+                fontSize={30}
+                fontWeight="bold"
+                lineBreak="end"
+                maxFontSize={35}
+                minFontSize={20}
+                padding={16}
+                text={item.doc.name}
+                textWrap={false}
+                visibility={itemHasImage(item) ? 'hidden' : 'visible'}
+                {...getLabelParams(layout, item, height, itemHeight)} />
+        {/if}
         <!-- <gridlayout borderRadius={12}> -->
         <SelectedIndicator selected={item.selected} />
         <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />

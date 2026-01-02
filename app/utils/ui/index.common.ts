@@ -22,7 +22,8 @@ import {
     SharedTransition,
     Utils,
     View,
-    knownFolders
+    knownFolders,
+    path
 } from '@nativescript/core';
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
@@ -2018,4 +2019,62 @@ export async function showCustomAlert<T>(component, options, props = {}): Promis
         componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
     } catch (error) {}
     return result;
+}
+
+export async function importPKPassFromUris({ uris, canGoToView = true }: { uris: string[]; canGoToView?: boolean }) {
+    try {
+        await showLoading(lc('importing'));
+        const { importPKPassFile } = await import('~/utils/pkpass-import');
+        
+        for (const uri of uris) {
+            try {
+                // Copy URI content to temp file if needed
+                let pkpassPath = uri;
+                if (__ANDROID__ && uri.startsWith('content://')) {
+                    // Copy content URI to temp file
+                    const tempDir = knownFolders.temp().path;
+                    const fileName = `temp_${Date.now()}.pkpass`;
+                    pkpassPath = path.join(tempDir, fileName);
+                    
+                    const context = Utils.android.getApplicationContext();
+                    const contentResolver = context.getContentResolver();
+                    const inputStream = contentResolver.openInputStream(android.net.Uri.parse(uri));
+                    const outputFile = new java.io.File(pkpassPath);
+                    const outputStream = new java.io.FileOutputStream(outputFile);
+                    
+                    const buffer = Array.create('byte', 4096);
+                    let read;
+                    while ((read = inputStream.read(buffer)) !== -1) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                    
+                    inputStream.close();
+                    outputStream.close();
+                } else if (uri.startsWith('file://')) {
+                    pkpassPath = uri.replace('file://', '');
+                }
+                
+                // Import the PKPass file
+                const document = await importPKPassFile(pkpassPath, null);
+                
+                // Clean up temp file if created
+                if (pkpassPath !== uri && File.exists(pkpassPath)) {
+                    File.fromPath(pkpassPath).remove();
+                }
+                
+                if (canGoToView && document) {
+                    await goToDocumentView(document);
+                }
+                
+                showSnack({ message: lc('imported') });
+            } catch (error) {
+                console.error('Error importing PKPass:', error);
+                showError(error);
+            }
+        }
+    } catch (error) {
+        showError(error);
+    } finally {
+        hideLoading();
+    }
 }

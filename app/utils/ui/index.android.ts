@@ -34,25 +34,41 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
             const intent = event.intent as android.content.Intent;
             const action = intent.getAction();
             let uris: string[] = [];
+            let pkpassUris: string[] = [];
             switch (action) {
                 case 'android.intent.action.SEND':
                     const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
                     if (imageUri) {
-                        uris.push(imageUri.toString());
+                        const uri = imageUri.toString();
+                        if (isPKPassUri(intent, uri)) {
+                            pkpassUris.push(uri);
+                        } else {
+                            uris.push(uri);
+                        }
                     }
                     break;
                 case 'android.intent.action.VIEW':
                     const uri = intent.getData();
                     DEV_LOG && console.log('uris', uri);
                     if (uri) {
-                        uris.push(uri.toString());
+                        const uriStr = uri.toString();
+                        if (isPKPassUri(intent, uriStr)) {
+                            pkpassUris.push(uriStr);
+                        } else {
+                            uris.push(uriStr);
+                        }
                     }
                     break;
                 case 'android.intent.action.SEND_MULTIPLE':
                     const imageUris = intent.getParcelableArrayListExtra('android.intent.extra.STREAM') as java.util.ArrayList<android.net.Uri>;
                     if (imageUris) {
                         for (let index = 0; index < imageUris.size(); index++) {
-                            uris.push(imageUris.get(index).toString());
+                            const uri = imageUris.get(index).toString();
+                            if (isPKPassUri(intent, uri)) {
+                                pkpassUris.push(uri);
+                            } else {
+                                uris.push(uri);
+                            }
                         }
                     }
                     break;
@@ -113,6 +129,9 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     });
                 }
             }
+            if (pkpassUris.length) {
+                await importPKPassFromUris({ uris: pkpassUris });
+            }
             if (uris.length) {
                 await importAndScanImageOrPdfFromUris({ uris });
             }
@@ -120,6 +139,19 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
             showError(error);
         }
     }
+}
+
+function isPKPassUri(intent: android.content.Intent, uri: string): boolean {
+    const mimeType = intent.getType();
+    if (mimeType) {
+        const mimeTypeLower = mimeType.toLowerCase();
+        if (mimeTypeLower.includes('pkpass') || mimeTypeLower.includes('espass')) {
+            return true;
+        }
+    }
+    // Check file extension as fallback
+    const uriLower = uri.toLowerCase();
+    return uriLower.endsWith('.pkpass') || uriLower.endsWith('.espass');
 }
 export const onAndroidNewItent = throttle(async function onAndroidNewItent(event: AndroidActivityNewIntentEventData) {
     DEV_LOG && console.log('onAndroidNewItent', Application.servicesStarted, securityService.validating);
