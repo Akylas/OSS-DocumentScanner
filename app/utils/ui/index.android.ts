@@ -5,7 +5,7 @@ import { showError } from '@shared/utils/showError';
 import { Dayjs } from 'dayjs';
 import { documentsService } from '~/services/documents';
 import { securityService } from '~/services/security';
-import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, onStartCam } from './index.common';
+import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, importPKPassFromUris, onStartCam } from './index.common';
 import { requestStoragePermission } from '../utils.common';
 import { ocrService } from '~/services/ocr';
 
@@ -34,7 +34,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
             const intent = event.intent as android.content.Intent;
             const action = intent.getAction();
             let uris: string[] = [];
-            let pkpassUris: string[] = [];
+            const pkpassUris: string[] = [];
             switch (action) {
                 case 'android.intent.action.SEND':
                     const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;

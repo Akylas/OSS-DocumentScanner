@@ -138,7 +138,7 @@
             extra = { ...extra };
             delete extra.color;
         }
-        
+
         // Add PKPass view if document has PKPass data
         if (hasPKPassData(document) && pkpass && !editing) {
             result.push({
@@ -146,7 +146,7 @@
                 pkpass
             });
         }
-        
+
         if (editing) {
             // add qrcodes
             for (let index = 0; index < qrcodes.length; index++) {
@@ -249,7 +249,7 @@
         }
     }
     updateQRCodes();
-    
+
     // Load PKPass data if document has it
     async function loadPKPassData() {
         if (hasPKPassData(document)) {
@@ -265,7 +265,7 @@
         }
     }
     loadPKPassData();
-    
+
     async function getQRCodeImage(qrcode, color) {
         try {
             return qrcodeService.getQRCodeSVG(qrcode, screenWidthDips, color);
@@ -705,13 +705,9 @@
                 { id: 'qrcode', name: lc('detect_qrcode'), icon: 'mdi-qrcode-scan' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
             ];
-            
+
             // For PKPass documents, only allow share and fullscreen
-            const options = new ObservableArray(
-                isPKPassDocument 
-                    ? allOptions.filter(opt => ['share', 'fullscreen'].includes(opt.id))
-                    : allOptions
-            );
+            const options = new ObservableArray(isPKPassDocument ? allOptions.filter((opt) => ['share', 'fullscreen'].includes(opt.id)) : allOptions);
             return showPopoverMenu({
                 options,
                 anchor: event.object,
@@ -778,13 +774,9 @@
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
             ];
-            
+
             // For PKPass documents, only allow delete (of the whole document)
-            const options = new ObservableArray(
-                isPKPassDocument 
-                    ? allOptions.filter(opt => opt.id === 'delete')
-                    : allOptions
-            );
+            const options = new ObservableArray(isPKPassDocument ? allOptions.filter((opt) => opt.id === 'delete') : allOptions);
             return showPopoverMenu({
                 options,
                 anchor: event.object,
@@ -1364,10 +1356,16 @@
             orientation="horizontal"
             row={2}
             visibility={editing ? 'collapsed' : 'visible'}>
-            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" on:tap={startEdit} visibility={isPKPassDocument ? 'collapsed' : 'visible'} />
+            <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" visibility={isPKPassDocument ? 'collapsed' : 'visible'} on:tap={startEdit} />
             <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" on:tap={throttle(() => showImages(), 500)} />
 
-            <mdbutton bind:this={fabHolder} id="fab" class="fab" text={editing ? 'mdi-check' : 'mdi-plus'} on:tap={throttle(() => onAddButton(), 500)} visibility={isPKPassDocument ? 'collapsed' : 'visible'} />
+            <mdbutton
+                bind:this={fabHolder}
+                id="fab"
+                class="fab"
+                text={editing ? 'mdi-check' : 'mdi-plus'}
+                visibility={isPKPassDocument ? 'collapsed' : 'visible'}
+                on:tap={throttle(() => onAddButton(), 500)} />
         </stacklayout>
         <CActionBar
             backgroundColor={topBackgroundColor}

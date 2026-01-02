@@ -78,6 +78,7 @@ import {
     PDFImportImages,
     PDF_EXT,
     PDF_IMPORT_IMAGES,
+    PKPASS_EXT,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
     SEPARATOR,
@@ -102,6 +103,7 @@ import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { importPKPassFile } from '~/utils/pkpass-import';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -118,14 +120,17 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
-        const [pdf, images] = await uris.reduce(
+        const [pdf, images, pkpasses] = await uris.reduce(
             async (acc, e) => {
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
                     testStr = await getFileName(e);
                 }
                 acc.then((obj) => {
-                    if (testStr.endsWith(PDF_EXT)) {
+                    if (testStr.endsWith(PKPASS_EXT)) {
+                        obj[2].push(e);
+                    }
+                    else if (testStr.endsWith(PDF_EXT)) {
                         obj[0].push(e);
                     } else {
                         obj[1].push(e);
@@ -134,10 +139,12 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 return acc;
                 // return testStr.endsWith(PDF_EXT) ? [[...p, e], f] : [p, [...f, e]];
             },
-            Promise.resolve([[], []] as [string[], string[]])
+            Promise.resolve([[], [], []] as [string[], string[], string[]])
         );
-        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
-
+        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
+        if (pkpasses.length) {
+            await importPKPassFromUris({ uris: pkpasses, canGoToView: pdf.length === 0 && images.length === 0 });
+        }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
@@ -419,7 +426,7 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
         } else {
             selection = (
                 await openFilePicker({
-                    mimeTypes: ['image/*', 'application/pdf'],
+                    mimeTypes: ['image/*', 'application/pdf'].concat(CARD_APP ? ['application/vnd.apple.pkpass'] : []),
                     documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
                     multipleSelection: true,
                     pickerMode: 0,
@@ -2021,11 +2028,10 @@ export async function showCustomAlert<T>(component, options, props = {}): Promis
     return result;
 }
 
-export async function importPKPassFromUris({ uris, canGoToView = true }: { uris: string[]; canGoToView?: boolean }) {
+export async function importPKPassFromUris({ canGoToView = true, uris }: { uris: string[]; canGoToView?: boolean }) {
     try {
         await showLoading(lc('importing'));
-        const { importPKPassFile } = await import('~/utils/pkpass-import');
-        
+
         for (const uri of uris) {
             try {
                 // Copy URI content to temp file if needed
@@ -2035,37 +2041,37 @@ export async function importPKPassFromUris({ uris, canGoToView = true }: { uris:
                     const tempDir = knownFolders.temp().path;
                     const fileName = `temp_${Date.now()}.pkpass`;
                     pkpassPath = path.join(tempDir, fileName);
-                    
+
                     const context = Utils.android.getApplicationContext();
                     const contentResolver = context.getContentResolver();
                     const inputStream = contentResolver.openInputStream(android.net.Uri.parse(uri));
                     const outputFile = new java.io.File(pkpassPath);
                     const outputStream = new java.io.FileOutputStream(outputFile);
-                    
+
                     const buffer = Array.create('byte', 4096);
                     let read;
                     while ((read = inputStream.read(buffer)) !== -1) {
                         outputStream.write(buffer, 0, read);
                     }
-                    
+
                     inputStream.close();
                     outputStream.close();
                 } else if (uri.startsWith('file://')) {
                     pkpassPath = uri.replace('file://', '');
                 }
-                
+
                 // Import the PKPass file
                 const document = await importPKPassFile(pkpassPath, null);
-                
+
                 // Clean up temp file if created
                 if (pkpassPath !== uri && File.exists(pkpassPath)) {
                     File.fromPath(pkpassPath).remove();
                 }
-                
+
                 if (canGoToView && document) {
                     await goToDocumentView(document);
                 }
-                
+
                 showSnack({ message: lc('imported') });
             } catch (error) {
                 console.error('Error importing PKPass:', error);
