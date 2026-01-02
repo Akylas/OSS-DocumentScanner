@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Color, path } from '@nativescript/core';
-    import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassField, PKPassStructure } from '~/models/PKPass';
+    import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassField, PKPassStructure, PKPassTransitType } from '~/models/PKPass';
     import { colors } from '~/variables';
     import { qrcodeService } from '~/services/qrcode';
     import { getBarcodeImage } from '~/utils/pkpass';
@@ -28,6 +28,7 @@
     const secondaryFieldsCount = structure?.secondaryFields?.length ?? 0;
     const primaryFieldsCount = structure?.primaryFields.length ?? 0;
     const auxiliaryFieldsCount = structure?.auxiliaryFields.length ?? 0;
+    const transitType = structure?.transitType;
 
     let barcodeSvg: string | undefined;
     if (primaryBarcode) {
@@ -46,6 +47,31 @@
     function getLocalizedText(text: string): string {
         return text ? pkpass.getLocalizedValue(text, lang) : text;
     }
+
+    /**
+     * Get Material Design Icon for transit type
+     * Used to display an icon between primary fields on boarding passes
+     */
+    function getTransitIcon(transitType?: PKPassTransitType): string | undefined {
+        if (!transitType) return undefined;
+        
+        switch (transitType) {
+            case PKPassTransitType.Air:
+                return 'mdi-airplane';
+            case PKPassTransitType.Boat:
+                return 'mdi-ferry';
+            case PKPassTransitType.Bus:
+                return 'mdi-bus';
+            case PKPassTransitType.Train:
+                return 'mdi-train';
+            case PKPassTransitType.Generic:
+                return 'mdi-transit-connection-variant';
+            default:
+                return undefined;
+        }
+    }
+
+    $: transitIcon = getTransitIcon(transitType);
 </script>
 
 <gridlayout {backgroundColor} rows="auto,auto,*,auto">
@@ -87,17 +113,42 @@
         <stacklayout padding="16">
             <!-- Primary fields -->
             {#if primaryFieldsCount > 0}
-                <gridlayout class="pass-section" columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')}>
-                    {#each structure.primaryFields as field, index}
-                        {@const textAlignment = index === primaryFieldsCount - 1 ? 'right' : index === 0 ? 'left' : 'center'}
-                        <stacklayout class="pass-field primary-field" col={index} marginBottom="16">
-                            {#if field.label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} />
+                {#if transitIcon && primaryFieldsCount === 2}
+                    <!-- Boarding pass with transit icon between two primary fields -->
+                    <gridlayout class="pass-section" columns="*,auto,*" marginBottom="16">
+                        <!-- Left primary field (departure) -->
+                        <stacklayout class="pass-field primary-field" col={0}>
+                            {#if structure.primaryFields[0].label}
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(structure.primaryFields[0])} textAlignment="left" />
                             {/if}
-                            <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
+                            <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(structure.primaryFields[0])} textAlignment="left" textWrap={true} />
                         </stacklayout>
-                    {/each}
-                </gridlayout>
+                        
+                        <!-- Transit icon in center -->
+                        <label class="mdi" col={1} color={foregroundColor} fontSize="40" text={transitIcon} textAlignment="center" verticalAlignment="center" marginLeft="16" marginRight="16" />
+                        
+                        <!-- Right primary field (arrival) -->
+                        <stacklayout class="pass-field primary-field" col={2}>
+                            {#if structure.primaryFields[1].label}
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(structure.primaryFields[1])} textAlignment="right" />
+                            {/if}
+                            <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(structure.primaryFields[1])} textAlignment="right" textWrap={true} />
+                        </stacklayout>
+                    </gridlayout>
+                {:else}
+                    <!-- Default primary fields layout (no transit icon or different field count) -->
+                    <gridlayout class="pass-section" columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')}>
+                        {#each structure.primaryFields as field, index}
+                            {@const textAlignment = index === primaryFieldsCount - 1 ? 'right' : index === 0 ? 'left' : 'center'}
+                            <stacklayout class="pass-field primary-field" col={index} marginBottom="16">
+                                {#if field.label}
+                                    <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} />
+                                {/if}
+                                <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
+                            </stacklayout>
+                        {/each}
+                    </gridlayout>
+                {/if}
             {/if}
 
             <!-- Secondary fields -->
