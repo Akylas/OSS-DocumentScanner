@@ -97,7 +97,6 @@ export interface PKPassData {
     authenticationToken?: string;
     
     // Localization support (added by parser)
-    _localizations?: { [key: string]: string }; // Current language localized strings
     _allLocalizations?: { [languageCode: string]: { [key: string]: string } }; // All available localizations
 }
 
@@ -196,6 +195,57 @@ export class PKPass extends Observable {
 
     isVoided(): boolean {
         return this.passData.voided === true;
+    }
+
+    /**
+     * Get localized value for a given key based on current app language
+     * @param key The key to localize
+     * @param currentLang Current app language (from ~/helpers/locale)
+     * @returns Localized value or the original key if no localization found
+     */
+    getLocalizedValue(key: string, currentLang: string): string {
+        if (!key || !this.passData._allLocalizations) {
+            return key;
+        }
+
+        const localizations = this.passData._allLocalizations;
+        
+        // Normalize current language (handle both 'en_US' and 'en-US' formats)
+        const normalizedLang = currentLang.replace('_', '-').toLowerCase();
+        const langCode = normalizedLang.split('-')[0]; // Get base language code (e.g., 'en' from 'en-US')
+        
+        // Try exact match first (e.g., 'en-US')
+        if (localizations[normalizedLang] && localizations[normalizedLang][key]) {
+            return localizations[normalizedLang][key];
+        }
+        
+        // Try base language code (e.g., 'en')
+        if (localizations[langCode] && localizations[langCode][key]) {
+            return localizations[langCode][key];
+        }
+        
+        // Try locale-specific variants (e.g., 'en_US', 'en-GB')
+        for (const localeKey of Object.keys(localizations)) {
+            const keyLower = localeKey.toLowerCase();
+            if ((keyLower.startsWith(langCode + '-') || keyLower.startsWith(langCode + '_')) && localizations[localeKey][key]) {
+                return localizations[localeKey][key];
+            }
+        }
+        
+        // Fall back to 'en' if available
+        if (localizations['en'] && localizations['en'][key]) {
+            return localizations['en'][key];
+        }
+        
+        // Fall back to first available localization
+        for (const localeKey of Object.keys(localizations)) {
+            if (localizations[localeKey][key]) {
+                return localizations[localeKey][key];
+            }
+        }
+        
+        // Return original key if no localization found
+        return key;
     }
 
     static fromJSON(jsonObj: any): PKPass {

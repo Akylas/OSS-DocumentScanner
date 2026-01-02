@@ -4,6 +4,7 @@
     import { colors } from '~/variables';
     import { qrcodeService } from '~/services/qrcode';
     import { getBarcodeImage } from '~/utils/pkpass';
+    import { lang } from '~/helpers/locale';
 
     export let pkpass: PKPass;
 
@@ -30,10 +31,16 @@
     }
 
     function renderFieldValue(field: PKPassField): string {
-        if (typeof field.value === 'string') {
-            return field.value;
-        }
-        return String(field.value);
+        const value = typeof field.value === 'string' ? field.value : String(field.value);
+        return pkpass.getLocalizedValue(value, lang);
+    }
+    
+    function renderFieldLabel(field: PKPassField): string {
+        return field.label ? pkpass.getLocalizedValue(field.label, lang) : '';
+    }
+    
+    function getLocalizedText(text: string): string {
+        return text ? pkpass.getLocalizedValue(text, lang) : text;
     }
 </script>
 
@@ -55,7 +62,7 @@
             {/if}
         </gridlayout>
         {#if passData.logoText}
-            <label color={foregroundColor} fontSize="24" fontWeight="bold" marginTop={logoImage || iconImage ? 8 : 0} text={passData.logoText} textAlignment="center" />
+            <label color={foregroundColor} fontSize="24" fontWeight="bold" marginTop={logoImage || iconImage ? 8 : 0} text={getLocalizedText(passData.logoText)} textAlignment="center" />
         {/if}
         <label
             color={labelColor}
@@ -82,7 +89,7 @@
                     {#each structure.primaryFields as field}
                         <stacklayout class="pass-field primary-field" marginBottom="16">
                             {#if field.label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={field.label} />
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} />
                             {/if}
                             <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(field)} textWrap={true} />
                         </stacklayout>
@@ -96,7 +103,7 @@
                     {#each structure.secondaryFields as field, index}
                         <stacklayout class="pass-field" col={index}>
                             {#if field.label}
-                                <label color={labelColor} fontSize="11" fontWeight="500" text={field.label} />
+                                <label color={labelColor} fontSize="11" fontWeight="500" text={renderFieldLabel(field)} />
                             {/if}
                             <label color={foregroundColor} fontSize="18" fontWeight="bold" text={renderFieldValue(field)} textWrap={true} />
                         </stacklayout>
@@ -110,7 +117,7 @@
                     {#each structure.auxiliaryFields as field, index}
                         <stacklayout class="pass-field" col={index}>
                             {#if field.label}
-                                <label color={labelColor} fontSize="10" fontWeight="500" text={field.label} />
+                                <label color={labelColor} fontSize="10" fontWeight="500" text={renderFieldLabel(field)} />
                             {/if}
                             <label color={foregroundColor} fontSize="14" text={renderFieldValue(field)} textWrap={true} />
                         </stacklayout>
@@ -135,7 +142,7 @@
                     {#each structure.backFields as field}
                         <stacklayout class="pass-field" marginBottom="12">
                             {#if field.label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={field.label} />
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} />
                             {/if}
                             <label color={foregroundColor} fontSize="14" text={renderFieldValue(field)} textWrap={true} />
                         </stacklayout>

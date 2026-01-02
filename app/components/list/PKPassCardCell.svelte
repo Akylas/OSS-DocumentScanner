@@ -3,6 +3,7 @@
     import { PKPass } from '~/models/PKPass';
     import { colors } from '~/variables';
     import { Item } from './MainList.svelte';
+    import { lang } from '~/helpers/locale';
 
     export let item: Item;
     export let pkpass: PKPass;
@@ -25,9 +26,14 @@
         const structure = pkpass?.getPassStructure();
         if (structure?.primaryFields && structure.primaryFields.length > 0) {
             const field = structure.primaryFields[0];
-            return typeof field.value === 'string' ? field.value : String(field.value);
+            const value = typeof field.value === 'string' ? field.value : String(field.value);
+            return pkpass.getLocalizedValue(value, lang);
         }
         return '';
+    }
+    
+    function getLocalizedText(text: string): string {
+        return text ? pkpass.getLocalizedValue(text, lang) : text;
     }
 </script>
 
@@ -59,7 +65,7 @@
                 fontSize={14}
                 fontWeight="bold"
                 maxLines={2}
-                text={passData.organizationName || passData.logoText || item.doc.name}
+                text={passData.organizationName || getLocalizedText(passData.logoText) || item.doc.name}
                 textAlignment="center"
                 textWrap={true} />
 
