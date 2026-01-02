@@ -1,7 +1,8 @@
-import { File, Folder, knownFolders, path } from '@nativescript/core';
+import { File, Folder, knownFolders, path, Device } from '@nativescript/core';
 import { unzip } from 'plugin-zip';
 import { PKPass, PKPassBarcode, PKPassData, PKPassImages } from '~/models/PKPass';
 import { qrcodeService } from '~/services/qrcode';
+import { getCurrentISO3Language } from '~/helpers/locale';
 
 /**
  * PKPass parser utility
@@ -33,6 +34,161 @@ const IMAGE_FILES = [
 export interface PKPassParseResult {
     pass: PKPass;
     extractedPath: string;
+}
+
+/**
+ * Load localized strings from .lproj folders in PKPass
+ * @param extractPath Path to extracted PKPass contents
+ * @returns Object with language codes as keys and localized strings as values
+ */
+function loadPKPassLocalizations(extractPath: string): { [languageCode: string]: { [key: string]: string } } {
+    const localizations: { [languageCode: string]: { [key: string]: string } } = {};
+    
+    try {
+        const extractFolder = Folder.fromPath(extractPath);
+        const entities = extractFolder.getEntitiesSync();
+        
+        for (const entity of entities) {
+            const entityName = entity.name;
+            // Check if it's a .lproj folder
+            if (entityName.endsWith('.lproj') && entity instanceof Folder) {
+                const languageCode = entityName.replace('.lproj', '');
+                const stringsFilePath = path.join(entity.path, 'pass.strings');
+                
+                if (File.exists(stringsFilePath)) {
+                    try {
+                        const stringsFile = File.fromPath(stringsFilePath);
+                        const stringsContent = stringsFile.readTextSync();
+                        
+                        // Parse .strings file (format: "key" = "value";)
+                        const strings: { [key: string]: string } = {};
+                        const regex = /"([^"]+)"\s*=\s*"([^"]*)"\s*;/g;
+                        let match;
+                        
+                        while ((match = regex.exec(stringsContent)) !== null) {
+                            strings[match[1]] = match[2];
+                        }
+                        
+                        if (Object.keys(strings).length > 0) {
+                            localizations[languageCode] = strings;
+                            DEV_LOG && console.log(`Loaded ${Object.keys(strings).length} localized strings for ${languageCode}`);
+                        }
+                    } catch (error) {
+                        console.error(`Error parsing pass.strings for ${languageCode}:`, error);
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading PKPass localizations:', error);
+    }
+    
+    return localizations;
+}
+
+/**
+ * Get the best matching localization for current device language
+ * @param localizations All available localizations
+ * @param currentLang Current device language (e.g., 'en', 'fr', 'de')
+ * @returns Best matching localized strings or empty object
+ */
+function getBestMatchingLocalization(localizations: { [languageCode: string]: { [key: string]: string } }, currentLang: string): { [key: string]: string } {
+    if (!localizations || Object.keys(localizations).length === 0) {
+        return {};
+    }
+    
+    // Normalize current language (handle both 'en_US' and 'en-US' formats)
+    const normalizedLang = currentLang.replace('_', '-').toLowerCase();
+    const langCode = normalizedLang.split('-')[0]; // Get base language code (e.g., 'en' from 'en-US')
+    
+    // Try exact match first (e.g., 'en-US')
+    if (localizations[normalizedLang]) {
+        return localizations[normalizedLang];
+    }
+    
+    // Try base language code (e.g., 'en')
+    if (localizations[langCode]) {
+        return localizations[langCode];
+    }
+    
+    // Try locale-specific variants (e.g., 'en_US', 'en-GB')
+    for (const key of Object.keys(localizations)) {
+        const keyLower = key.toLowerCase();
+        if (keyLower.startsWith(langCode + '-') || keyLower.startsWith(langCode + '_')) {
+            return localizations[key];
+        }
+    }
+    
+    // Fall back to 'en' if available
+    if (localizations['en']) {
+        return localizations['en'];
+    }
+    
+    // Fall back to first available localization
+    const firstKey = Object.keys(localizations)[0];
+    return localizations[firstKey];
+}
+
+/**
+ * Apply localization to pass data
+ * @param passData Original pass data
+ * @param localizedStrings Localized strings for current language
+ * @returns Pass data with localized strings applied
+ */
+function applyLocalizationToPassData(passData: PKPassData, localizedStrings: { [key: string]: string }): PKPassData {
+    if (!localizedStrings || Object.keys(localizedStrings).length === 0) {
+        return passData;
+    }
+    
+    // Create a deep copy to avoid modifying original
+    const localizedPassData = JSON.parse(JSON.stringify(passData));
+    
+    // Helper function to localize a field value
+    const localizeValue = (value: any): any => {
+        if (typeof value === 'string' && localizedStrings[value]) {
+            return localizedStrings[value];
+        }
+        return value;
+    };
+    
+    // Localize top-level strings
+    if (localizedPassData.logoText) {
+        localizedPassData.logoText = localizeValue(localizedPassData.logoText);
+    }
+    if (localizedPassData.description) {
+        localizedPassData.description = localizeValue(localizedPassData.description);
+    }
+    
+    // Localize field structures (boardingPass, eventTicket, etc.)
+    const passStructures = [
+        'boardingPass',
+        'coupon',
+        'eventTicket',
+        'generic',
+        'storeCard'
+    ];
+    
+    for (const structureType of passStructures) {
+        if (localizedPassData[structureType]) {
+            const structure = localizedPassData[structureType];
+            const fieldTypes = ['headerFields', 'primaryFields', 'secondaryFields', 'auxiliaryFields', 'backFields'];
+            
+            for (const fieldType of fieldTypes) {
+                if (structure[fieldType] && Array.isArray(structure[fieldType])) {
+                    structure[fieldType] = structure[fieldType].map(field => ({
+                        ...field,
+                        label: localizeValue(field.label),
+                        value: localizeValue(field.value)
+                    }));
+                }
+            }
+        }
+    }
+    
+    // Store all localizations in passData for future use
+    localizedPassData._localizations = localizedStrings;
+    
+    return localizedPassData;
 }
 
 /**
@@ -70,9 +226,31 @@ export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFo
 
         const passJsonFile = File.fromPath(passJsonPath);
         const passJsonContent = await passJsonFile.readText();
-        const passData: PKPassData = JSON.parse(passJsonContent);
+        let passData: PKPassData = JSON.parse(passJsonContent);
 
         DEV_LOG && console.log('PKPass data parsed', passData.organizationName, passData.description);
+
+        // Load all localizations from .lproj folders
+        const allLocalizations = loadPKPassLocalizations(extractPath);
+        DEV_LOG && console.log('PKPass localizations found:', Object.keys(allLocalizations));
+        
+        // Get current device language
+        const currentLang = Device.language;
+        DEV_LOG && console.log('Device language:', currentLang);
+        
+        // Get best matching localization
+        const localizedStrings = getBestMatchingLocalization(allLocalizations, currentLang);
+        
+        // Apply localization to pass data
+        if (Object.keys(localizedStrings).length > 0) {
+            passData = applyLocalizationToPassData(passData, localizedStrings);
+            DEV_LOG && console.log('Applied localization with', Object.keys(localizedStrings).length, 'strings');
+        }
+        
+        // Store all localizations in passData for language switching
+        if (Object.keys(allLocalizations).length > 0) {
+            passData._allLocalizations = allLocalizations;
+        }
 
         // Extract image paths
         const images: PKPassImages = {};

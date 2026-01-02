@@ -95,6 +95,10 @@ export interface PKPassData {
     // Web service
     webServiceURL?: string;
     authenticationToken?: string;
+    
+    // Localization support (added by parser)
+    _localizations?: { [key: string]: string }; // Current language localized strings
+    _allLocalizations?: { [languageCode: string]: { [key: string]: string } }; // All available localizations
 }
 
 export interface PKPassImages {
