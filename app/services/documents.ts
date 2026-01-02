@@ -6,6 +6,7 @@ import { doInBatch } from '@shared/utils/batch';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
+import { PKPass } from '~/models/PKPass';
 import { EVENT_DOCUMENT_DELETED, SETTINGS_ROOT_DATA_FOLDER } from '~/utils/constants';
 import { groupByArray } from '@shared/utils';
 import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
@@ -191,6 +192,92 @@ LEFT JOIN DocumentsFolders pf ON f.id = pf.folder_id`
         return model;
     }
 }
+
+export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
+    constructor(database: NSQLDatabase) {
+        super({
+            database,
+            table: 'PKPass',
+            primaryKey: 'id',
+            model: PKPass
+        });
+    }
+
+    async createTables() {
+        return this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "PKPass" (
+            id TEXT PRIMARY KEY NOT NULL,
+            document_id TEXT NOT NULL,
+            passData TEXT NOT NULL,
+            images TEXT,
+            passJsonPath TEXT,
+            imagesPath TEXT,
+            createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
+            modifiedDate BIGINT,
+            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE
+        );
+        `);
+    }
+
+    async createPKPass(pkpass: PKPass): Promise<PKPass> {
+        const createdDate = Date.now();
+        return this.create(
+            cleanUndefined({
+                id: pkpass.id,
+                document_id: pkpass.document_id,
+                passData: JSON.stringify(pkpass.passData),
+                images: JSON.stringify(pkpass.images),
+                passJsonPath: pkpass.passJsonPath,
+                imagesPath: pkpass.imagesPath,
+                createdDate,
+                modifiedDate: createdDate
+            })
+        );
+    }
+
+    async update(pkpass: PKPass, data?: Partial<PKPass>) {
+        const toUpdate: any = {};
+        if (data) {
+            Object.keys(data).forEach((k) => {
+                const value = data[k];
+                if (k === 'passData' || k === 'images') {
+                    toUpdate[k] = JSON.stringify(value);
+                } else {
+                    toUpdate[k] = value;
+                }
+            });
+        }
+        
+        if (!toUpdate.modifiedDate) {
+            toUpdate.modifiedDate = Date.now();
+        }
+        
+        await super.update(pkpass, toUpdate);
+        if (data) {
+            Object.assign(pkpass, data);
+        }
+        return pkpass;
+    }
+
+    async createModelFromAttributes(attributes: any): Promise<PKPass> {
+        const { passData, images, ...other } = attributes;
+        const model = new PKPass(attributes.id, attributes.document_id);
+        Object.assign(model, {
+            ...other,
+            passData: typeof passData === 'string' ? JSON.parse(passData) : passData,
+            images: typeof images === 'string' ? JSON.parse(images) : images
+        });
+        return model;
+    }
+
+    async getByDocumentId(documentId: string): Promise<PKPass | null> {
+        const results = await this.search({
+            where: sql`document_id=${documentId}`
+        });
+        return results.length > 0 ? results[0] : null;
+    }
+}
+
 export class PageRepository extends BaseRepository<OCRPage, Page> {
     constructor(database: NSQLDatabase) {
         super({
@@ -685,6 +772,7 @@ export class DocumentsService extends Observable {
     tagRepository: TagRepository;
     folderRepository: FolderRepository;
     documentRepository: DocumentRepository;
+    pkpassRepository: PKPassRepository;
 
     constructor() {
         super();
@@ -733,12 +821,14 @@ export class DocumentsService extends Observable {
         this.pageRepository = new PageRepository(this.db);
         this.tagRepository = new TagRepository(this.db);
         this.folderRepository = new FolderRepository(this.db);
+        this.pkpassRepository = new PKPassRepository(this.db);
         this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository);
         if (!db) {
             await this.documentRepository.createTables();
             await this.pageRepository.createTables();
             await this.tagRepository.createTables();
             await this.folderRepository.createTables();
+            await this.pkpassRepository.createTables();
             try {
                 await this.db.migrate(Object.assign({}, this.documentRepository.migrations, this.pageRepository.migrations, this.tagRepository.migrations, this.folderRepository.migrations));
             } catch (error) {

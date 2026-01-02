@@ -134,8 +134,10 @@ export enum ExtraFieldType {
 
 export interface DocumentExtra {
     color?: string;
+    pkpass?: boolean; // Indicates if this document has PKPass data
     [k: string]:
         | string
+        | boolean
         | {
               type: string;
               value: any;
