@@ -507,7 +507,6 @@
     async function deleteSelectedPages() {
         // Disable page deletion for PKPass documents
         if (isPKPassDocument) {
-            showSnack({ message: lc('pkpass_cannot_edit') });
             return false;
         }
         if (nbSelected > 0) {
@@ -697,14 +696,22 @@
     }
     async function showOptions(event) {
         if (nbSelected > 0) {
-            const options = new ObservableArray([
+            // Filter options based on PKPass document
+            const allOptions = [
                 { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
                 { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'qrcode', name: lc('detect_qrcode'), icon: 'mdi-qrcode-scan' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
+            ];
+            
+            // For PKPass documents, only allow share and fullscreen
+            const options = new ObservableArray(
+                isPKPassDocument 
+                    ? allOptions.filter(opt => ['share', 'fullscreen'].includes(opt.id))
+                    : allOptions
+            );
             return showPopoverMenu({
                 options,
                 anchor: event.object,
@@ -764,12 +771,20 @@
                 }
             });
         } else {
-            const options = new ObservableArray([
+            // Filter options based on PKPass document
+            const allOptions = [
                 { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
+            ];
+            
+            // For PKPass documents, only allow delete (of the whole document)
+            const options = new ObservableArray(
+                isPKPassDocument 
+                    ? allOptions.filter(opt => opt.id === 'delete')
+                    : allOptions
+            );
             return showPopoverMenu({
                 options,
                 anchor: event.object,
@@ -799,7 +814,6 @@
     async function onAddButton() {
         // Disable adding pages for PKPass documents
         if (isPKPassDocument) {
-            showSnack({ message: lc('pkpass_cannot_edit') });
             return;
         }
         try {
@@ -1009,7 +1023,6 @@
     async function startEdit() {
         // Disable editing for PKPass documents
         if (isPKPassDocument) {
-            showSnack({ message: lc('pkpass_cannot_edit') });
             return;
         }
         if (editing === false) {
