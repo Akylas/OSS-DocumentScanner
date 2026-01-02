@@ -37,6 +37,7 @@
     import { lc } from '~/helpers/locale';
     import { colorTheme, isDarkTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { Document, ExtraFieldType, OCRDocument, OCRPage } from '~/models/OCRDocument';
+    import { PKPass } from '~/models/PKPass';
     import {
         DocumentDeletedEventData,
         DocumentPageDeletedEventData,
@@ -66,6 +67,8 @@
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import PKPassView from './PKPassView.svelte';
+    import { getPKPassForDocument, hasPKPassData } from '~/utils/pkpass-import';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
@@ -100,6 +103,8 @@
     let statusBarStyle;
     // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
+    let pkpass: PKPass | null = null;
+    const PKPASS_TYPE = 'pkpass';
 
     function computeTopBackgroundColor() {
         const color = isEInk
@@ -132,6 +137,15 @@
             extra = { ...extra };
             delete extra.color;
         }
+        
+        // Add PKPass view if document has PKPass data
+        if (hasPKPassData(document) && pkpass && !editing) {
+            result.push({
+                type: PKPASS_TYPE,
+                pkpass
+            });
+        }
+        
         if (editing) {
             // add qrcodes
             for (let index = 0; index < qrcodes.length; index++) {
@@ -149,10 +163,13 @@
             });
         }
         Object.keys(extra).forEach((k) => {
-            result.push({
-                name: k,
-                extra: { ...(extra[k] as any), name: k }
-            });
+            // Skip the pkpass flag as it's already handled
+            if (k !== 'pkpass') {
+                result.push({
+                    name: k,
+                    extra: { ...(extra[k] as any), name: k }
+                });
+            }
         });
         return result;
     }
@@ -231,6 +248,23 @@
         }
     }
     updateQRCodes();
+    
+    // Load PKPass data if document has it
+    async function loadPKPassData() {
+        if (hasPKPassData(document)) {
+            try {
+                pkpass = await getPKPassForDocument(document);
+                if (pkpass) {
+                    DEV_LOG && console.log('PKPass loaded', pkpass.passData.organizationName);
+                    refreshExtraItems();
+                }
+            } catch (error) {
+                console.error('Error loading PKPass data:', error);
+            }
+        }
+    }
+    loadPKPassData();
+    
     async function getQRCodeImage(qrcode, color) {
         try {
             return qrcodeService.getQRCodeSVG(qrcode, screenWidthDips, color);
@@ -1245,6 +1279,11 @@
                             verticalAlignment="bottom"
                             visibility={hasQRCodes ? 'visible' : 'collapsed'} />
                     </gridlayout>
+                </Template>
+                <Template key={PKPASS_TYPE} let:item>
+                    <stacklayout padding="0">
+                        <PKPassView pkpass={item.pkpass} />
+                    </stacklayout>
                 </Template>
                 <Template key="color" let:item>
                     <ListItemAutoSize fontSize={20} title={lc('color')} on:tap={(event) => changeColor(item, event)}>
