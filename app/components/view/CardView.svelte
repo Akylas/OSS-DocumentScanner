@@ -68,7 +68,7 @@
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import PKPassView from './PKPassView.svelte';
-    import { getPKPassForDocument, hasPKPassData } from '~/utils/pkpass-import';
+    import { documentHasPKPassData, getPKPassForPage, hasPKPassData } from '~/utils/pkpass-import';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
@@ -103,10 +103,9 @@
     let statusBarStyle;
     // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
-    // PKPass is now loaded directly with the document
-    const pkpass = document.pkpass;
+    // Check if any page in the document has PKPass data
+    const isPKPassDocument = documentHasPKPassData(document);
     const PKPASS_TYPE = 'pkpass';
-    const isPKPassDocument = hasPKPassData(document);
 
     function computeTopBackgroundColor() {
         const color = isEInk
@@ -140,11 +139,16 @@
             delete extra.color;
         }
 
-        // Add PKPass view if document has PKPass data
-        if (hasPKPassData(document) && pkpass && !editing) {
-            result.push({
-                type: PKPASS_TYPE,
-                pkpass
+        // Add PKPass views for pages that have PKPass data (not in editing mode)
+        if (!editing) {
+            document.pages.forEach((page, index) => {
+                if (hasPKPassData(page) && page.pkpass) {
+                    result.push({
+                        type: PKPASS_TYPE,
+                        pkpass: page.pkpass,
+                        pageIndex: index
+                    });
+                }
             });
         }
 

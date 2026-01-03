@@ -203,18 +203,23 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
         });
     }
 
+    migrations = {
+        // Migration to change from document_id to page_id
+        pkpassMoveToPage: sql`ALTER TABLE PKPass RENAME COLUMN document_id TO page_id`
+    };
+
     async createTables() {
         return this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "PKPass" (
             id TEXT PRIMARY KEY NOT NULL,
-            document_id TEXT NOT NULL,
+            page_id TEXT NOT NULL,
             passData TEXT NOT NULL,
             images TEXT,
             passJsonPath TEXT,
             imagesPath TEXT,
             createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
             modifiedDate BIGINT,
-            FOREIGN KEY(document_id) REFERENCES Document(id) ON DELETE CASCADE
+            FOREIGN KEY(page_id) REFERENCES Page(id) ON DELETE CASCADE
         );
         `);
     }
@@ -224,7 +229,7 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
         return this.create(
             cleanUndefined({
                 id: pkpass.id,
-                document_id: pkpass.document_id,
+                page_id: pkpass.page_id,
                 passData: JSON.stringify(pkpass.passData),
                 images: JSON.stringify(pkpass.images),
                 passJsonPath: pkpass.passJsonPath,
@@ -261,7 +266,7 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
 
     async createModelFromAttributes(attributes: any): Promise<PKPass> {
         const { images, passData, ...other } = attributes;
-        const model = new PKPass(attributes.id, attributes.document_id);
+        const model = new PKPass(attributes.id, attributes.page_id || attributes.document_id); // Support both for migration
         Object.assign(model, {
             ...other,
             passData: typeof passData === 'string' ? JSON.parse(passData) : passData,
@@ -270,9 +275,18 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
         return model;
     }
 
-    async getByDocumentId(documentId: string): Promise<PKPass | null> {
+    async getByPageId(pageId: string): Promise<PKPass | null> {
         const results = await this.search({
-            where: sql`document_id=${documentId}`
+            where: sql`page_id=${pageId}`
+        });
+        return results.length > 0 ? results[0] : null;
+    }
+    
+    // Keep for backward compatibility during migration
+    async getByDocumentId(documentId: string): Promise<PKPass | null> {
+        // This will be removed after migration is complete
+        const results = await this.search({
+            where: sql`page_id=${documentId}` // Try page_id first (might be old data)
         });
         return results.length > 0 ? results[0] : null;
     }
@@ -706,17 +720,17 @@ LEFT JOIN
                 document.pages = pages;
                 await document.save({}, true);
             }
-        }
-
-        // Load PKPass data if document has it
-        if (document.extra?.pkpass) {
-            try {
-                const pkpass = await this.pkpassRepository.getByDocumentId(document.id);
-                if (pkpass) {
-                    document.pkpass = pkpass;
+            
+            // Load PKPass data for each page
+            for (const page of pages) {
+                try {
+                    const pkpass = await this.pkpassRepository.getByPageId(page.id);
+                    if (pkpass) {
+                        page.pkpass = pkpass;
+                    }
+                } catch (error) {
+                    console.error('Error loading PKPass for page:', page.id, error, error.stack);
                 }
-            } catch (error) {
-                console.error('Error loading PKPass for document:', document.id, error, error.stack);
             }
         }
 

@@ -135,7 +135,6 @@ export enum ExtraFieldType {
 
 export interface DocumentExtra {
     color?: string;
-    pkpass?: boolean; // Indicates if this document has PKPass data
     [k: string]:
         | string
         | boolean
@@ -161,9 +160,6 @@ export class OCRDocument extends Observable implements Document {
 
     #observables: ObservableArray<OCRPage>;
     pages: OCRPage[];
-    
-    // PKPass data - loaded automatically with the document
-    pkpass?: PKPass;
 
     constructor(public id: string) {
         super();
@@ -712,6 +708,9 @@ export class OCRPage extends Observable implements Page {
     name?: string;
     nameSearch?: string;
     ocrDataSearch?: string;
+    
+    // PKPass data - loaded automatically with the page
+    pkpass?: PKPass;
 
     constructor(id: string, docId: string) {
         super();

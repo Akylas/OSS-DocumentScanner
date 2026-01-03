@@ -244,9 +244,10 @@
         return !!item.doc.pages[0].imagePath;
     }
 
-    // PKPass is now loaded directly with the document
-    const isPKPass = hasPKPassData(item.doc);
-    const pkpass = item.doc.pkpass;
+    // Check if first page has PKPass data
+    const firstPage = item.doc.pages[0];
+    const isPKPass = hasPKPassData(firstPage);
+    const pkpass = firstPage?.pkpass;
 </script>
 
 <swipemenu

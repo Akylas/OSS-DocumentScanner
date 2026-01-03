@@ -123,7 +123,7 @@ export interface PKPassImages {
 
 export class PKPass extends Observable {
     id: string;
-    document_id: string;
+    page_id: string; // Changed from document_id to page_id
 
     // PKPass data
     passData: PKPassData;
@@ -137,10 +137,10 @@ export class PKPass extends Observable {
     createdDate: number;
     modifiedDate?: number;
 
-    constructor(id: string, docId: string) {
+    constructor(id: string, pageId: string) {
         super();
         this.id = id;
-        this.document_id = docId;
+        this.page_id = pageId;
         this.createdDate = Date.now();
     }
 
@@ -248,8 +248,45 @@ export class PKPass extends Observable {
         return key;
     }
 
+    /**
+     * Render PKPass to a canvas for export to PDF or image
+     * @param canvas Canvas element to render to
+     * @param options Rendering options
+     * @returns Promise that resolves when rendering is complete
+     */
+    async renderToCanvas(
+        canvas: any,
+        options: {
+            includeBackFields?: boolean;
+            backgroundColor?: string;
+            width?: number;
+            height?: number;
+        } = {}
+    ): Promise<void> {
+        // Implementation will render the pass visually to a canvas
+        // This allows export to PDF and images
+        const {
+            includeBackFields = false,
+            backgroundColor = this.passData.backgroundColor || '#ffffff',
+            width = 600,
+            height = includeBackFields ? 1200 : 800
+        } = options;
+
+        // TODO: This needs to be implemented with actual canvas rendering
+        // For now, this is a placeholder that marks where canvas rendering happens
+        // The implementation should:
+        // 1. Set canvas dimensions
+        // 2. Draw background color
+        // 3. Draw pass images (strip, logo, icon, etc.)
+        // 4. Draw pass fields (header, primary, secondary, auxiliary)
+        // 5. Draw barcode
+        // 6. Optionally draw back fields
+        
+        throw new Error('renderToCanvas not yet implemented - requires canvas rendering logic');
+    }
+
     static fromJSON(jsonObj: any): PKPass {
-        const pass = new PKPass(jsonObj.id, jsonObj.document_id);
+        const pass = new PKPass(jsonObj.id, jsonObj.page_id || jsonObj.document_id); // Support both old and new schema
         Object.assign(pass, {
             passData: typeof jsonObj.passData === 'string' ? JSON.parse(jsonObj.passData) : jsonObj.passData,
             images: typeof jsonObj.images === 'string' ? JSON.parse(jsonObj.images) : jsonObj.images,
@@ -264,7 +301,7 @@ export class PKPass extends Observable {
     toJSON() {
         return {
             id: this.id,
-            document_id: this.document_id,
+            page_id: this.page_id,
             passData: this.passData,
             images: this.images,
             passJsonPath: this.passJsonPath,
