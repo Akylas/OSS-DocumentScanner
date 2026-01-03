@@ -196,7 +196,7 @@
     }
 
     async function refresh(force = true, filter?: string) {
-        // DEV_LOG && console.log('refresh', force, filter);
+        DEV_LOG && console.log('refresh', force, filter);
         if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
             return;
         }
@@ -204,7 +204,7 @@
         nbSelected = 0;
         loading = true;
         try {
-            // DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
+            DEV_LOG && console.log('MainList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
             await refreshFolders(filter);
@@ -219,6 +219,11 @@
                     )
                 )
             );
+            DEV_LOG &&
+                console.log(
+                    'documents',
+                    documents.map((d) => d.doc.id)
+                );
             updateNoDocument();
         } catch (error) {
             showError(error);

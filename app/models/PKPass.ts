@@ -1,4 +1,7 @@
 import { Observable } from '@nativescript/core';
+import dayjs from 'dayjs';
+import { formatCurrency } from '~/helpers/locale';
+import { getBarcodeSVG } from '~/utils/pkpass';
 
 /**
  * PKPass model representing an Apple Wallet Pass
@@ -407,9 +410,8 @@ export class PKPass extends Observable {
                     }
 
                     const barcodeWidth = Math.min(300, canvasWidth - 2 * padding);
-                    const svgString = await getSVGFromQRCode(barcode.message, barcodeFormat, barcodeWidth, {
-                        color: this.passData.foregroundColor || '#000000'
-                    });
+                    const svgString = await getBarcodeSVG({ barcode, width: barcodeWidth, foregroundColor: this.passData.foregroundColor || '#000000' });
+                    //TODO: draw svg
 
                     // Draw barcode alt text if available
                     if (barcode.altText) {
@@ -469,7 +471,7 @@ export class PKPass extends Observable {
             // Draw label
             labelPaint.textSize = labelSize;
             const label = this.getLocalizedValue(field.label || field.key, currentLang);
-            
+
             // Handle label alignment
             let labelX = x;
             if (field.textAlignment === 'PKTextAlignmentRight') {
@@ -484,7 +486,7 @@ export class PKPass extends Observable {
             // Format and draw value
             valuePaint.textSize = valueSize;
             const formattedValue = this.formatFieldValue(field, currentLang);
-            
+
             // Handle value alignment
             let valueX = x;
             if (field.textAlignment === 'PKTextAlignmentRight') {
@@ -503,72 +505,61 @@ export class PKPass extends Observable {
     /**
      * Format field value based on style attributes
      */
-    private formatFieldValue(field: PKPassField, currentLang: string): string {
+    public formatFieldValue(field: PKPassField, currentLang: string): string {
         let value = String(field.value);
-        value = this.getLocalizedValue(value, currentLang);
-
         // Handle date/time formatting
         if (field.dateStyle || field.timeStyle) {
-            try {
-                const date = new Date(field.value as string);
-                if (!isNaN(date.getTime())) {
-                    const options: Intl.DateTimeFormatOptions = {};
-                    
-                    // Map PKPass date styles to Intl.DateTimeFormat options
-                    if (field.dateStyle && field.dateStyle !== 'PKDateStyleNone') {
-                        const dateStyleMap = {
-                            'PKDateStyleShort': 'short',
-                            'PKDateStyleMedium': 'medium',
-                            'PKDateStyleLong': 'long',
-                            'PKDateStyleFull': 'full'
-                        };
-                        options.dateStyle = dateStyleMap[field.dateStyle] as any;
-                    }
-                    
-                    if (field.timeStyle && field.timeStyle !== 'PKDateStyleNone') {
-                        const timeStyleMap = {
-                            'PKDateStyleShort': 'short',
-                            'PKDateStyleMedium': 'medium',
-                            'PKDateStyleLong': 'long',
-                            'PKDateStyleFull': 'full'
-                        };
-                        options.timeStyle = timeStyleMap[field.timeStyle] as any;
-                    }
-                    
-                    // Handle timezone
-                    if (!field.ignoresTimeZone) {
-                        options.timeZone = undefined; // Use local timezone
-                    } else {
-                        options.timeZone = 'UTC';
-                    }
-                    
-                    value = new Intl.DateTimeFormat(currentLang, options).format(date);
+            let date = dayjs(field.value as string);
+            if (!isNaN(date.valueOf())) {
+                const options: Intl.DateTimeFormatOptions = {};
+
+                // Map PKPass date styles to Intl.DateTimeFormat options
+                if (field.dateStyle && field.dateStyle !== 'PKDateStyleNone') {
+                    const dateStyleMap = {
+                        PKDateStyleShort: 'L',
+                        PKDateStyleMedium: 'll',
+                        PKDateStyleLong: 'LL',
+                        PKDateStyleFull: 'dddd, MMMM D, YYYY'
+                    };
+                    options.dateStyle = dateStyleMap[field.dateStyle] as any;
                 }
-            } catch (e) {
-                console.warn('Error formatting date/time:', e);
+
+                if (field.timeStyle && field.timeStyle !== 'PKDateStyleNone') {
+                    const timeStyleMap = {
+                        PKDateStyleShort: 'LT',
+                        PKDateStyleMedium: 'LTS',
+                        PKDateStyleLong: 'LTS',
+                        PKDateStyleFull: 'LTS'
+                    };
+                    options.timeStyle = timeStyleMap[field.timeStyle] as any;
+                }
+                if (field.ignoresTimeZone) {
+                    date = dayjs.utc(field.value);
+                }
+                return date.format(options.timeStyle);
             }
         }
-        
+        value = this.getLocalizedValue(value, currentLang);
+
         // Handle number formatting
         if (field.numberStyle && typeof field.value === 'number') {
             try {
                 const options: Intl.NumberFormatOptions = {};
-                
+
                 if (field.numberStyle === 'PKNumberStylePercent') {
-                    options.style = 'percent';
+                    value = value + '%';
                 } else if (field.numberStyle === 'PKNumberStyleScientific') {
-                    options.notation = 'scientific';
+                    // options.notation = 'scientific';
                 } else if (field.currencyCode) {
                     options.style = 'currency';
-                    options.currency = field.currencyCode;
+                    value = formatCurrency(field.value, field.currencyCode);
+                } else {
                 }
-                
-                value = new Intl.NumberFormat(currentLang, options).format(field.value as number);
             } catch (e) {
                 console.warn('Error formatting number:', e);
             }
         }
-        
+
         return value;
     }
 

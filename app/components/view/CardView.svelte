@@ -68,7 +68,7 @@
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import PKPassView from './PKPassView.svelte';
-    import { documentHasPKPassData } from '~/utils/pkpass-import';
+    import { documentHasPKPassData } from '~/utils/pkpass';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
@@ -114,7 +114,7 @@
               (typeof document.extra?.color === 'string' ? document.extra?.color : undefined) ??
               document.pages[0]?.extra?.color ??
               document.pages[0]?.colors?.[1] ??
-              colorTertiary);
+              colorBackground);
         return color;
     }
 
@@ -664,7 +664,7 @@
 
     function refreshCollectionView() {
         collectionView?.nativeView?.refresh();
-        collectionViewExtras.nativeView?.refresh();
+        collectionViewExtras?.nativeView?.refresh();
     }
     function refreshQRCodePager() {
         // pager?.nativeView.refresh();

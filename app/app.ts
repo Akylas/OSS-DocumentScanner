@@ -29,6 +29,7 @@ import { syncService } from '~/services/sync';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { SETTINGS_APP_VERSION, SETTINGS_SYNC_ON_START } from '~/utils/constants';
 import { startOnCam } from './variables';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
@@ -117,10 +118,10 @@ try {
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Layout);
-    // Trace.addCategories(CollectionViewTraceCategory);
+    Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
-    // Trace.enable();
+    Trace.enable();
 
     let launched = false;
     async function start() {

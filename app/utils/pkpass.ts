@@ -1,8 +1,9 @@
-import { File, Folder, knownFolders, path } from '@nativescript/core';
+import { Color, File, Folder, knownFolders, path } from '@nativescript/core';
 import { unzip } from 'plugin-zip';
-import { PKPass, PKPassBarcode, PKPassData, PKPassImages } from '~/models/PKPass';
+import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassData, PKPassField, PKPassImages, PKPassTransitType } from '~/models/PKPass';
 import { qrcodeService } from '~/services/qrcode';
 import { lang } from '~/helpers/locale';
+import { OCRDocument } from '~/models/OCRDocument';
 
 /**
  * PKPass parser utility
@@ -257,20 +258,102 @@ export function isPKPassFile(filePath: string): boolean {
     return filePath.toLowerCase().endsWith('.pkpass');
 }
 
-export async function getBarcodeImage({ barcode, foregroundColor, width = 300 }: { barcode: PKPassBarcode; foregroundColor; width?: number }): Promise<string | undefined> {
+export function getFieldTextAlignment(field: PKPassField): 'left' | 'right' | 'center' | 'initial' {
+    if (field.textAlignment) {
+        return field.textAlignment.slice(15).toLowerCase() as any;
+    }
+    return 'left';
+}
+
+export async function getBarcodeSVG({ barcode, foregroundColor, width = 300 }: { barcode: PKPassBarcode; foregroundColor; width?: number }) {
     if (!barcode) return undefined;
+    let barcodeFormat = 'QRCode';
+    switch (barcode.format) {
+        case PKBarcodeFormat.QR:
+            barcodeFormat = 'QRCode';
+            break;
+        case PKBarcodeFormat.PDF417:
+            barcodeFormat = 'PDF417';
+            break;
+        case PKBarcodeFormat.Aztec:
+            barcodeFormat = 'Aztec';
+            break;
+        case PKBarcodeFormat.Code128:
+            barcodeFormat = 'Code128';
+            break;
+    }
 
     try {
         // Convert PKPass barcode format to QRCodeData format
         const qrcodeData = {
             text: barcode.message,
-            format: barcode.format.replace('PKBarcodeFormat', '').replace('QR', 'QRCode'),
+            format: barcodeFormat,
             position: null
         };
-        DEV_LOG && console.log('getBarcodeImage', barcode, qrcodeData);
-        return await qrcodeService.getQRCodeSVG(qrcodeData, width, foregroundColor);
+        DEV_LOG && console.log('getBarcodeSVG', barcode, foregroundColor, qrcodeData);
+        return await qrcodeService.getQRCodeSVG(qrcodeData, width, new Color(foregroundColor));
     } catch (error) {
         console.error('Error generating barcode image:', error);
         return undefined;
+    }
+}
+export async function getBarcodeImage({ barcode, foregroundColor, width = 300 }: { barcode: PKPassBarcode; foregroundColor; width?: number }) {
+    if (!barcode) return undefined;
+    let barcodeFormat = 'QRCode';
+    switch (barcode.format) {
+        case PKBarcodeFormat.QR:
+            barcodeFormat = 'QRCode';
+            break;
+        case PKBarcodeFormat.PDF417:
+            barcodeFormat = 'PDF417';
+            break;
+        case PKBarcodeFormat.Aztec:
+            barcodeFormat = 'Aztec';
+            break;
+        case PKBarcodeFormat.Code128:
+            barcodeFormat = 'Code128';
+            break;
+    }
+
+    try {
+        // Convert PKPass barcode format to QRCodeData format
+        const qrcodeData = {
+            text: barcode.message,
+            format: barcodeFormat,
+            position: null
+        };
+        DEV_LOG && console.log('getBarcodeImage', barcode, qrcodeData);
+        return await qrcodeService.getQRCodeImage(qrcodeData, width, new Color(foregroundColor));
+    } catch (error) {
+        console.error('Error generating barcode image:', error);
+        return undefined;
+    }
+}
+
+// Keep for backward compatibility - now checks if document has any pages with PKPass
+export function documentHasPKPassData(document: OCRDocument): boolean {
+    return document.pages?.some((page) => !!page.pkpass) || false;
+}
+
+/**
+ * Get Material Design Icon for transit type
+ * Used to display an icon between primary fields on boarding passes
+ */
+export function getTransitIcon(transitType?: PKPassTransitType): string | undefined {
+    if (!transitType) return undefined;
+
+    switch (transitType) {
+        case PKPassTransitType.Air:
+            return 'mdi-airplane';
+        case PKPassTransitType.Boat:
+            return 'mdi-ferry';
+        case PKPassTransitType.Bus:
+            return 'mdi-bus';
+        case PKPassTransitType.Train:
+            return 'mdi-train';
+        case PKPassTransitType.Generic:
+            return 'mdi-transit-connection-variant';
+        default:
+            return undefined;
     }
 }

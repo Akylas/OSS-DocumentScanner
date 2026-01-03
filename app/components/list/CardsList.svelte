@@ -25,6 +25,7 @@
 <script lang="ts">
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CardListCell from './CardListCell.svelte';
+    import { documentHasPKPassData } from '~/utils/pkpass';
 
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors);
@@ -188,19 +189,20 @@
                 return itemHeight;
         }
     }
-    function itemTemplateSelector(viewStyle, item?) {
+    function itemTemplateSelector(viewStyle, item?: Item) {
         if (item?.type) {
             return item.type;
         }
+        const prefix = item?.doc && documentHasPKPassData(item.doc) ? 'pkpass_' : '';
         switch (viewStyle) {
             case 'list':
             case 'columns':
                 if ($isLandscape) {
-                    return 'columns';
+                    return prefix + 'columns';
                 }
-                return viewStyle;
+                return prefix + viewStyle;
             default:
-                return viewStyle;
+                return prefix + viewStyle;
         }
     }
     function onFullCardItemTouch(item: Item, event) {
@@ -336,6 +338,69 @@
             layout="columns"
             {nbColumns}
             {onFullCardItemTouch}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
+    </Template>
+    <Template key="pkpass_cardholder" let:item>
+        <absolutelayout height={itemRowHeight}>
+            <CardListCell
+                {collectionView}
+                height={$itemHeight}
+                {item}
+                itemHeight={itemRowHeight}
+                {itemWidth}
+                layout="cardholder"
+                {nbColumns}
+                {onFullCardItemTouch}
+                pkPassCell={true}
+                {syncEnabled}
+                on:tap={() => onItemTap(item)}
+                on:longPress={(e) => onItemLongPress(item, e)} />
+            <absolutelayout boxShadow="0 0 8 rgba(1, 0, 0, 1)" height={3} top={itemRowHeight} width="100%" />
+        </absolutelayout>
+    </Template>
+    <Template key="pkpass_full" let:item>
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="full"
+            {nbColumns}
+            {onFullCardItemTouch}
+            pkPassCell={true}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
+    </Template>
+    <Template key="pkpass_list" let:item>
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="list"
+            {nbColumns}
+            {onFullCardItemTouch}
+            pkPassCell={true}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
+    </Template>
+    <Template key="pkpass_columns" let:item>
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="columns"
+            {nbColumns}
+            {onFullCardItemTouch}
+            pkPassCell={true}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />

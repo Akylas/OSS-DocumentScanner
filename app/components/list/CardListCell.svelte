@@ -28,6 +28,7 @@
     export let nbColumns: Writable<number>;
     export let item: Item;
     export let syncEnabled: boolean;
+    export let pkPassCell: boolean = false;
     export let onFullCardItemTouch;
     export let layout: string;
 
@@ -244,7 +245,6 @@
 
     // Check if first page has PKPass data
     const pkpass = item.doc.pages[0]?.pkpass;
-    const isPKPass = !!pkpass;
 </script>
 
 <swipemenu
@@ -259,8 +259,8 @@
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
-        {#if isPKPass && pkpass}
-            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} />
+        {#if pkPassCell}
+            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} borderRadius={12} />
         {:else}
             <RotableImageView {...getItemRotableImageParams(item)} />
             <label

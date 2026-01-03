@@ -277,7 +277,3 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
     return document;
 }
 
-// Keep for backward compatibility - now checks if document has any pages with PKPass
-export function documentHasPKPassData(document: OCRDocument): boolean {
-    return document.pages?.some((page) => !!page.pkpass) || false;
-}
