@@ -43,32 +43,32 @@ export interface PKPassParseResult {
  */
 function loadPKPassLocalizations(extractPath: string): { [languageCode: string]: { [key: string]: string } } {
     const localizations: { [languageCode: string]: { [key: string]: string } } = {};
-    
+
     try {
         const extractFolder = Folder.fromPath(extractPath);
         const entities = extractFolder.getEntitiesSync();
-        
+
         for (const entity of entities) {
             const entityName = entity.name;
             // Check if it's a .lproj folder
             if (entityName.endsWith('.lproj') && entity instanceof Folder) {
                 const languageCode = entityName.replace('.lproj', '');
                 const stringsFilePath = path.join(entity.path, 'pass.strings');
-                
+
                 if (File.exists(stringsFilePath)) {
                     try {
                         const stringsFile = File.fromPath(stringsFilePath);
                         const stringsContent = stringsFile.readTextSync();
-                        
+
                         // Parse .strings file (format: "key" = "value";)
                         const strings: { [key: string]: string } = {};
                         const regex = /"([^"]+)"\s*=\s*"([^"]*)"\s*;/g;
                         let match;
-                        
+
                         while ((match = regex.exec(stringsContent)) !== null) {
                             strings[match[1]] = match[2];
                         }
-                        
+
                         if (Object.keys(strings).length > 0) {
                             localizations[languageCode] = strings;
                             DEV_LOG && console.log(`Loaded ${Object.keys(strings).length} localized strings for ${languageCode}`);
@@ -82,7 +82,7 @@ function loadPKPassLocalizations(extractPath: string): { [languageCode: string]:
     } catch (error) {
         console.error('Error loading PKPass localizations:', error);
     }
-    
+
     return localizations;
 }
 
@@ -128,7 +128,7 @@ export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFo
         // Load all localizations from .lproj folders
         const allLocalizations = loadPKPassLocalizations(extractPath);
         DEV_LOG && console.log('PKPass localizations found:', Object.keys(allLocalizations));
-        
+
         // Store all localizations in passData
         if (Object.keys(allLocalizations).length > 0) {
             passData._allLocalizations = allLocalizations;

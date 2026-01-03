@@ -95,7 +95,7 @@ export interface PKPassData {
     // Web service
     webServiceURL?: string;
     authenticationToken?: string;
-    
+
     // Localization support (added by parser)
     _allLocalizations?: { [languageCode: string]: { [key: string]: string } }; // All available localizations
 }
@@ -209,21 +209,21 @@ export class PKPass extends Observable {
         }
 
         const localizations = this.passData._allLocalizations;
-        
+
         // Normalize current language (handle both 'en_US' and 'en-US' formats)
         const normalizedLang = currentLang.replace('_', '-').toLowerCase();
         const langCode = normalizedLang.split('-')[0]; // Get base language code (e.g., 'en' from 'en-US')
-        
+
         // Try exact match first (e.g., 'en-US')
         if (localizations[normalizedLang] && localizations[normalizedLang][key]) {
             return localizations[normalizedLang][key];
         }
-        
+
         // Try base language code (e.g., 'en')
         if (localizations[langCode] && localizations[langCode][key]) {
             return localizations[langCode][key];
         }
-        
+
         // Try locale-specific variants (e.g., 'en_US', 'en-GB')
         for (const localeKey of Object.keys(localizations)) {
             const keyLower = localeKey.toLowerCase();
@@ -231,19 +231,19 @@ export class PKPass extends Observable {
                 return localizations[localeKey][key];
             }
         }
-        
+
         // Fall back to 'en' if available
         if (localizations['en'] && localizations['en'][key]) {
             return localizations['en'][key];
         }
-        
+
         // Fall back to first available localization
         for (const localeKey of Object.keys(localizations)) {
             if (localizations[localeKey][key]) {
                 return localizations[localeKey][key];
             }
         }
-        
+
         // Return original key if no localization found
         return key;
     }
@@ -263,48 +263,43 @@ export class PKPass extends Observable {
             height?: number;
         } = {}
     ): Promise<void> {
-        const { Canvas, Paint, StaticLayout, LayoutAlignment } = await import('@nativescript-community/ui-canvas');
+        const { Canvas, LayoutAlignment, Paint, StaticLayout } = await import('@nativescript-community/ui-canvas');
         const { loadImage, recycleImages } = await import('~/utils/images');
         const { getSVGFromQRCode } = await import('plugin-nativeprocessor');
         const { lang } = await import('~/helpers/locale');
         const { path } = await import('@nativescript/core');
-        
-        const {
-            includeBackFields = false,
-            backgroundColor = this.passData.backgroundColor || '#ffffff',
-            width = 600,
-            height = includeBackFields ? 1200 : 800
-        } = options;
+
+        const { backgroundColor = this.passData.backgroundColor || '#ffffff', height = options.includeBackFields ? 1200 : 800, includeBackFields = false, width = 600 } = options;
 
         const canvasWidth = canvas.getWidth?.() || width;
         const canvasHeight = canvas.getHeight?.() || height;
-        
+
         // Create paints for rendering
         const bgPaint = new Paint();
         bgPaint.color = backgroundColor;
-        
+
         const fgPaint = new Paint();
         fgPaint.color = this.passData.foregroundColor || '#000000';
         fgPaint.setAntiAlias(true);
-        
+
         const labelPaint = new Paint();
         labelPaint.color = this.passData.labelColor || this.passData.foregroundColor || '#666666';
         labelPaint.setAntiAlias(true);
-        
+
         const imagePaint = new Paint();
         imagePaint.setAntiAlias(true);
-        
+
         // Draw background
         canvas.drawRect(0, 0, canvasWidth, canvasHeight, bgPaint);
-        
+
         let y = 20; // Starting Y position
         const padding = 20;
         const sectionSpacing = 30;
-        
+
         // Get pass structure and style
         const structure = this.getPassStructure();
         const style = this.getPassStyle();
-        
+
         try {
             // 1. Draw strip or background image if available
             if (this.images.strip) {
@@ -319,11 +314,11 @@ export class PKPass extends Observable {
                 canvas.drawBitmap(bgImage, 0, 0, imagePaint);
                 recycleImages(bgImage);
             }
-            
+
             // 2. Draw header section (icon, logo, thumbnail)
-            let headerY = y;
+            const headerY = y;
             let logoX = padding;
-            
+
             // Draw icon if available
             if (this.images.icon) {
                 const iconPath = path.join(this.imagesPath, this.images.icon);
@@ -332,7 +327,7 @@ export class PKPass extends Observable {
                 recycleImages(iconImage);
                 logoX += 40;
             }
-            
+
             // Draw logo if available
             if (this.images.logo) {
                 const logoPath = path.join(this.imagesPath, this.images.logo);
@@ -340,7 +335,7 @@ export class PKPass extends Observable {
                 canvas.drawBitmap(logoImage, logoX, headerY, imagePaint);
                 recycleImages(logoImage);
             }
-            
+
             // Draw thumbnail if available (right side)
             if (this.images.thumbnail) {
                 const thumbPath = path.join(this.imagesPath, this.images.thumbnail);
@@ -348,40 +343,40 @@ export class PKPass extends Observable {
                 canvas.drawBitmap(thumbImage, canvasWidth - 50 - padding, headerY, imagePaint);
                 recycleImages(thumbImage);
             }
-            
+
             // Draw logo text if available
             if (this.passData.logoText) {
                 fgPaint.textSize = 14;
                 const logoText = this.getLocalizedValue(this.passData.logoText, lang);
                 canvas.drawText(logoText, logoX, headerY + 55, fgPaint);
             }
-            
+
             y = headerY + 70;
-            
+
             // 3. Draw header fields
             if (structure?.headerFields?.length) {
                 y = this.drawFieldGroup(canvas, structure.headerFields, y, canvasWidth, padding, labelPaint, fgPaint, 12, 16, lang);
                 y += sectionSpacing;
             }
-            
+
             // 4. Draw primary fields (larger text)
             if (structure?.primaryFields?.length) {
                 y = this.drawFieldGroup(canvas, structure.primaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 14, 28, lang);
                 y += sectionSpacing;
             }
-            
+
             // 5. Draw secondary fields
             if (structure?.secondaryFields?.length) {
                 y = this.drawFieldGroup(canvas, structure.secondaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 12, 18, lang);
                 y += sectionSpacing;
             }
-            
+
             // 6. Draw auxiliary fields
             if (structure?.auxiliaryFields?.length) {
                 y = this.drawFieldGroup(canvas, structure.auxiliaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 10, 14, lang);
                 y += sectionSpacing;
             }
-            
+
             // 7. Draw barcode if available
             const barcode = this.getPrimaryBarcode();
             if (barcode) {
@@ -402,25 +397,25 @@ export class PKPass extends Observable {
                             barcodeFormat = 'Code128';
                             break;
                     }
-                    
+
                     const barcodeWidth = Math.min(300, canvasWidth - 2 * padding);
                     const svgString = await getSVGFromQRCode(barcode.message, barcodeFormat, barcodeWidth, {
                         color: this.passData.foregroundColor || '#000000'
                     });
-                    
+
                     // Draw barcode alt text if available
                     if (barcode.altText) {
                         fgPaint.textSize = 12;
                         const textWidth = fgPaint.measureText(barcode.altText);
                         canvas.drawText(barcode.altText, (canvasWidth - textWidth) / 2, y + barcodeWidth + 20, fgPaint);
                     }
-                    
+
                     y += barcodeWidth + 40;
                 } catch (error) {
                     console.error('Error rendering barcode:', error);
                 }
             }
-            
+
             // 8. Draw back fields if requested
             if (includeBackFields && structure?.backFields?.length) {
                 y += sectionSpacing;
@@ -430,10 +425,9 @@ export class PKPass extends Observable {
                 separatorPaint.strokeWidth = 1;
                 canvas.drawLine(padding, y, canvasWidth - padding, y, separatorPaint);
                 y += sectionSpacing;
-                
+
                 y = this.drawFieldGroup(canvas, structure.backFields, y, canvasWidth, padding, labelPaint, fgPaint, 12, 16, lang);
             }
-            
         } catch (error) {
             console.error('Error rendering PKPass to canvas:', error);
             // Draw error message
@@ -441,7 +435,7 @@ export class PKPass extends Observable {
             canvas.drawText('Error rendering pass', padding, 50, fgPaint);
         }
     }
-    
+
     /**
      * Helper method to draw a group of fields
      */
@@ -457,23 +451,23 @@ export class PKPass extends Observable {
         valueSize: number,
         currentLang: string
     ): number {
-        let y = startY;
+        const y = startY;
         const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * 10) / fields.length;
-        
+
         fields.forEach((field, index) => {
             const x = padding + index * (fieldWidth + 10);
-            
+
             // Draw label
             labelPaint.textSize = labelSize;
             const label = this.getLocalizedValue(field.label || field.key, currentLang);
             canvas.drawText(label, x, y, labelPaint);
-            
+
             // Draw value
             valuePaint.textSize = valueSize;
             const value = this.getLocalizedValue(String(field.value), currentLang);
             canvas.drawText(value, x, y + labelSize + 5, valuePaint);
         });
-        
+
         return y + labelSize + valueSize + 10;
     }
 

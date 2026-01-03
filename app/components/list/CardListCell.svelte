@@ -12,14 +12,12 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import { Item } from './MainList.svelte';
-    import { hasPKPassData } from '~/utils/pkpass-import';
     import PKPassCardCell from './PKPassCardCell.svelte';
     import { PKPass } from '~/models/PKPass';
     const rowMargin = 8;
 </script>
 
 <script lang="ts">
-
     let { colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnPrimary, colorSurface } = $colors);
 
@@ -245,9 +243,8 @@
     }
 
     // Check if first page has PKPass data
-    const firstPage = item.doc.pages[0];
-    const isPKPass = hasPKPassData(firstPage);
-    const pkpass = firstPage?.pkpass;
+    const pkpass = item.doc.pages[0]?.pkpass;
+    const isPKPass = !!pkpass;
 </script>
 
 <swipemenu
@@ -263,7 +260,7 @@
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         {#if isPKPass && pkpass}
-            <PKPassCardCell {item} {pkpass} {itemWidth} {layout} />
+            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} />
         {:else}
             <RotableImageView {...getItemRotableImageParams(item)} />
             <label

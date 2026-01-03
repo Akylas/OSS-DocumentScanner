@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Color, path } from '@nativescript/core';
     import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassField, PKPassStructure, PKPassTransitType } from '~/models/PKPass';
-    import { colors } from '~/variables';
+    import { colors, windowInset } from '~/variables';
     import { qrcodeService } from '~/services/qrcode';
     import { getBarcodeImage } from '~/utils/pkpass';
     import { lang } from '~/helpers/locale';
@@ -72,7 +72,7 @@
     }
 </script>
 
-<gridlayout {backgroundColor} rows="auto,auto,*,auto">
+<gridlayout {backgroundColor} borderRadius={8} margin={16} marginBottom={$windowInset.bottom + 16} rows="auto,auto,*,auto">
     <!-- Header section with logo and icon -->
     <stacklayout padding="16" row={0}>
         <gridlayout columns="auto,*,auto" verticalAlignment="center">
@@ -196,7 +196,7 @@
                     {#each structure.backFields as field}
                         <stacklayout class="pass-field" marginBottom="12">
                             {#if field.label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} textTransform="uppercase"/>
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} textTransform="uppercase" />
                             {/if}
                             <label color={foregroundColor} fontSize="14" html={renderFieldValue(field)} textWrap={true} />
                         </stacklayout>

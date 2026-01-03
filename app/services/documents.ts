@@ -203,11 +203,6 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
         });
     }
 
-    migrations = {
-        // Migration to change from document_id to page_id
-        pkpassMoveToPage: sql`ALTER TABLE PKPass RENAME COLUMN document_id TO page_id`
-    };
-
     async createTables() {
         return this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "PKPass" (
@@ -281,7 +276,7 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
         });
         return results.length > 0 ? results[0] : null;
     }
-    
+
     // Keep for backward compatibility during migration
     async getByDocumentId(documentId: string): Promise<PKPass | null> {
         // This will be removed after migration is complete
@@ -349,7 +344,8 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         CARD_APP
             ? {
                   addQRCode: sql`ALTER TABLE Page ADD COLUMN qrcode TEXT`,
-                  addColors: sql`ALTER TABLE Page ADD COLUMN colors TEXT`
+                  addColors: sql`ALTER TABLE Page ADD COLUMN colors TEXT`,
+                  addPKPass: sql`ALTER TABLE Page ADD COLUMN pkpass_id TEXT REFERENCES PKPass(id)`
               }
             : {}
     );
@@ -475,7 +471,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         public pagesRepository: PageRepository,
         public tagsRepository: TagRepository,
         public foldersRepository: FolderRepository,
-        public pkpassRepository: PKPassRepository
+        public pkpassRepository?: PKPassRepository
     ) {
         super({
             database,
@@ -569,6 +565,7 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             }
             doc.folders = folders;
         }
+        doc.pages = [];
         return doc;
     }
 
@@ -720,16 +717,12 @@ LEFT JOIN
                 document.pages = pages;
                 await document.save({}, true);
             }
-            
-            // Load PKPass data for each page
-            for (const page of pages) {
-                try {
-                    const pkpass = await this.pkpassRepository.getByPageId(page.id);
-                    if (pkpass) {
-                        page.pkpass = pkpass;
+            if (CARD_APP) {
+                // Load PKPass data for each page
+                for (const page of pages) {
+                    if (page.pkpass_id) {
+                        page.pkpass = await this.pkpassRepository.getByPageId(page.id);
                     }
-                } catch (error) {
-                    console.error('Error loading PKPass for page:', page.id, error, error.stack);
                 }
             }
         }
@@ -799,7 +792,7 @@ export class DocumentsService extends Observable {
     tagRepository: TagRepository;
     folderRepository: FolderRepository;
     documentRepository: DocumentRepository;
-    pkpassRepository: PKPassRepository;
+    pkpassRepository?: PKPassRepository;
 
     constructor() {
         super();
@@ -848,18 +841,31 @@ export class DocumentsService extends Observable {
         this.pageRepository = new PageRepository(this.db);
         this.tagRepository = new TagRepository(this.db);
         this.folderRepository = new FolderRepository(this.db);
-        this.pkpassRepository = new PKPassRepository(this.db);
+        if (CARD_APP) {
+            this.pkpassRepository = new PKPassRepository(this.db);
+        }
         this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository, this.pkpassRepository);
         if (!db) {
             await this.documentRepository.createTables();
             await this.pageRepository.createTables();
             await this.tagRepository.createTables();
             await this.folderRepository.createTables();
-            await this.pkpassRepository.createTables();
+            if (CARD_APP) {
+                await this.pkpassRepository.createTables();
+            }
             try {
-                await this.db.migrate(Object.assign({}, this.documentRepository.migrations, this.pageRepository.migrations, this.tagRepository.migrations, this.folderRepository.migrations));
+                await this.db.migrate(
+                    Object.assign(
+                        {},
+                        this.documentRepository.migrations,
+                        this.pageRepository.migrations,
+                        this.tagRepository.migrations,
+                        this.folderRepository.migrations,
+                        CARD_APP ? this.pkpassRepository.migrations : {}
+                    )
+                );
             } catch (error) {
-                console.error('error applying migrations', error.stack);
+                console.error('error applying migrations', error, error.stack);
             }
         }
 
