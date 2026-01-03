@@ -12,6 +12,8 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import { Item } from './MainList.svelte';
+    import PKPassCardCell from './PKPassCardCell.svelte';
+    import { PKPass } from '~/models/PKPass';
     const rowMargin = 8;
 </script>
 
@@ -26,6 +28,7 @@
     export let nbColumns: Writable<number>;
     export let item: Item;
     export let syncEnabled: boolean;
+    export let pkPassCell: boolean = false;
     export let onFullCardItemTouch;
     export let layout: string;
 
@@ -239,6 +242,9 @@
     function itemHasImage(item: Item) {
         return !!item.doc.pages[0].imagePath;
     }
+
+    // Check if first page has PKPass data
+    const pkpass = item.doc.pages[0]?.pkpass;
 </script>
 
 <swipemenu
@@ -253,20 +259,24 @@
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
-        <RotableImageView {...getItemRotableImageParams(item)} />
-        <label
-            autoFontSize={true}
-            autoFontSizeStep={10}
-            fontSize={30}
-            fontWeight="bold"
-            lineBreak="end"
-            maxFontSize={35}
-            minFontSize={20}
-            padding={16}
-            text={item.doc.name}
-            textWrap={false}
-            visibility={itemHasImage(item) ? 'hidden' : 'visible'}
-            {...getLabelParams(layout, item, height, itemHeight)} />
+        {#if pkPassCell}
+            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} borderRadius={12} />
+        {:else}
+            <RotableImageView {...getItemRotableImageParams(item)} />
+            <label
+                autoFontSize={true}
+                autoFontSizeStep={10}
+                fontSize={30}
+                fontWeight="bold"
+                lineBreak="end"
+                maxFontSize={35}
+                minFontSize={20}
+                padding={16}
+                text={item.doc.name}
+                textWrap={false}
+                visibility={itemHasImage(item) ? 'hidden' : 'visible'}
+                {...getLabelParams(layout, item, height, itemHeight)} />
+        {/if}
         <!-- <gridlayout borderRadius={12}> -->
         <SelectedIndicator selected={item.selected} />
         <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
