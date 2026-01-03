@@ -42,6 +42,14 @@ export interface PKPassField {
     textAlignment?: 'PKTextAlignmentLeft' | 'PKTextAlignmentCenter' | 'PKTextAlignmentRight' | 'PKTextAlignmentNatural';
     changeMessage?: string;
     dataDetectorTypes?: string[];
+    // Date/time formatting
+    dateStyle?: 'PKDateStyleNone' | 'PKDateStyleShort' | 'PKDateStyleMedium' | 'PKDateStyleLong' | 'PKDateStyleFull';
+    timeStyle?: 'PKDateStyleNone' | 'PKDateStyleShort' | 'PKDateStyleMedium' | 'PKDateStyleLong' | 'PKDateStyleFull';
+    isRelative?: boolean;
+    ignoresTimeZone?: boolean;
+    // Number formatting
+    numberStyle?: 'PKNumberStyleDecimal' | 'PKNumberStylePercent' | 'PKNumberStyleScientific' | 'PKNumberStyleSpellOut';
+    currencyCode?: string;
 }
 
 export interface PKPassLocation {
@@ -451,6 +459,7 @@ export class PKPass extends Observable {
         valueSize: number,
         currentLang: string
     ): number {
+        const { Paint } = require('@nativescript-community/ui-canvas');
         const y = startY;
         const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * 10) / fields.length;
 
@@ -460,15 +469,107 @@ export class PKPass extends Observable {
             // Draw label
             labelPaint.textSize = labelSize;
             const label = this.getLocalizedValue(field.label || field.key, currentLang);
-            canvas.drawText(label, x, y, labelPaint);
+            
+            // Handle label alignment
+            let labelX = x;
+            if (field.textAlignment === 'PKTextAlignmentRight') {
+                const labelWidth = labelPaint.measureText(label);
+                labelX = x + fieldWidth - labelWidth;
+            } else if (field.textAlignment === 'PKTextAlignmentCenter') {
+                const labelWidth = labelPaint.measureText(label);
+                labelX = x + (fieldWidth - labelWidth) / 2;
+            }
+            canvas.drawText(label, labelX, y, labelPaint);
 
-            // Draw value
+            // Format and draw value
             valuePaint.textSize = valueSize;
-            const value = this.getLocalizedValue(String(field.value), currentLang);
-            canvas.drawText(value, x, y + labelSize + 5, valuePaint);
+            const formattedValue = this.formatFieldValue(field, currentLang);
+            
+            // Handle value alignment
+            let valueX = x;
+            if (field.textAlignment === 'PKTextAlignmentRight') {
+                const valueWidth = valuePaint.measureText(formattedValue);
+                valueX = x + fieldWidth - valueWidth;
+            } else if (field.textAlignment === 'PKTextAlignmentCenter') {
+                const valueWidth = valuePaint.measureText(formattedValue);
+                valueX = x + (fieldWidth - valueWidth) / 2;
+            }
+            canvas.drawText(formattedValue, valueX, y + labelSize + 5, valuePaint);
         });
 
         return y + labelSize + valueSize + 10;
+    }
+
+    /**
+     * Format field value based on style attributes
+     */
+    private formatFieldValue(field: PKPassField, currentLang: string): string {
+        let value = String(field.value);
+        value = this.getLocalizedValue(value, currentLang);
+
+        // Handle date/time formatting
+        if (field.dateStyle || field.timeStyle) {
+            try {
+                const date = new Date(field.value as string);
+                if (!isNaN(date.getTime())) {
+                    const options: Intl.DateTimeFormatOptions = {};
+                    
+                    // Map PKPass date styles to Intl.DateTimeFormat options
+                    if (field.dateStyle && field.dateStyle !== 'PKDateStyleNone') {
+                        const dateStyleMap = {
+                            'PKDateStyleShort': 'short',
+                            'PKDateStyleMedium': 'medium',
+                            'PKDateStyleLong': 'long',
+                            'PKDateStyleFull': 'full'
+                        };
+                        options.dateStyle = dateStyleMap[field.dateStyle] as any;
+                    }
+                    
+                    if (field.timeStyle && field.timeStyle !== 'PKDateStyleNone') {
+                        const timeStyleMap = {
+                            'PKDateStyleShort': 'short',
+                            'PKDateStyleMedium': 'medium',
+                            'PKDateStyleLong': 'long',
+                            'PKDateStyleFull': 'full'
+                        };
+                        options.timeStyle = timeStyleMap[field.timeStyle] as any;
+                    }
+                    
+                    // Handle timezone
+                    if (!field.ignoresTimeZone) {
+                        options.timeZone = undefined; // Use local timezone
+                    } else {
+                        options.timeZone = 'UTC';
+                    }
+                    
+                    value = new Intl.DateTimeFormat(currentLang, options).format(date);
+                }
+            } catch (e) {
+                console.warn('Error formatting date/time:', e);
+            }
+        }
+        
+        // Handle number formatting
+        if (field.numberStyle && typeof field.value === 'number') {
+            try {
+                const options: Intl.NumberFormatOptions = {};
+                
+                if (field.numberStyle === 'PKNumberStylePercent') {
+                    options.style = 'percent';
+                } else if (field.numberStyle === 'PKNumberStyleScientific') {
+                    options.notation = 'scientific';
+                } else if (field.currencyCode) {
+                    options.style = 'currency';
+                    options.currency = field.currencyCode;
+                }
+                
+                value = new Intl.NumberFormat(currentLang, options).format(field.value as number);
+            } catch (e) {
+                console.warn('Error formatting number:', e);
+            }
+        }
+        
+        return value;
     }
 
     static fromJSON(jsonObj: any): PKPass {
