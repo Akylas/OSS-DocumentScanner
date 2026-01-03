@@ -263,8 +263,12 @@ export class PKPass extends Observable {
             height?: number;
         } = {}
     ): Promise<void> {
-        // Implementation will render the pass visually to a canvas
-        // This allows export to PDF and images
+        const { Canvas, Paint, StaticLayout, LayoutAlignment } = await import('@nativescript-community/ui-canvas');
+        const { loadImage, recycleImages } = await import('~/utils/images');
+        const { getSVGFromQRCode } = await import('plugin-nativeprocessor');
+        const { lang } = await import('~/helpers/locale');
+        const { path } = await import('@nativescript/core');
+        
         const {
             includeBackFields = false,
             backgroundColor = this.passData.backgroundColor || '#ffffff',
@@ -272,17 +276,205 @@ export class PKPass extends Observable {
             height = includeBackFields ? 1200 : 800
         } = options;
 
-        // TODO: This needs to be implemented with actual canvas rendering
-        // For now, this is a placeholder that marks where canvas rendering happens
-        // The implementation should:
-        // 1. Set canvas dimensions
-        // 2. Draw background color
-        // 3. Draw pass images (strip, logo, icon, etc.)
-        // 4. Draw pass fields (header, primary, secondary, auxiliary)
-        // 5. Draw barcode
-        // 6. Optionally draw back fields
+        const canvasWidth = canvas.getWidth?.() || width;
+        const canvasHeight = canvas.getHeight?.() || height;
         
-        throw new Error('renderToCanvas not yet implemented - requires canvas rendering logic');
+        // Create paints for rendering
+        const bgPaint = new Paint();
+        bgPaint.color = backgroundColor;
+        
+        const fgPaint = new Paint();
+        fgPaint.color = this.passData.foregroundColor || '#000000';
+        fgPaint.setAntiAlias(true);
+        
+        const labelPaint = new Paint();
+        labelPaint.color = this.passData.labelColor || this.passData.foregroundColor || '#666666';
+        labelPaint.setAntiAlias(true);
+        
+        const imagePaint = new Paint();
+        imagePaint.setAntiAlias(true);
+        
+        // Draw background
+        canvas.drawRect(0, 0, canvasWidth, canvasHeight, bgPaint);
+        
+        let y = 20; // Starting Y position
+        const padding = 20;
+        const sectionSpacing = 30;
+        
+        // Get pass structure and style
+        const structure = this.getPassStructure();
+        const style = this.getPassStyle();
+        
+        try {
+            // 1. Draw strip or background image if available
+            if (this.images.strip) {
+                const stripPath = path.join(this.imagesPath, this.images.strip);
+                const stripImage = await loadImage(stripPath, { width: canvasWidth, height: 150 });
+                canvas.drawBitmap(stripImage, 0, y, imagePaint);
+                recycleImages(stripImage);
+                y += 150 + 10;
+            } else if (this.images.background && style !== PKPassStyle.BoardingPass) {
+                const bgPath = path.join(this.imagesPath, this.images.background);
+                const bgImage = await loadImage(bgPath, { width: canvasWidth, height: canvasHeight });
+                canvas.drawBitmap(bgImage, 0, 0, imagePaint);
+                recycleImages(bgImage);
+            }
+            
+            // 2. Draw header section (icon, logo, thumbnail)
+            let headerY = y;
+            let logoX = padding;
+            
+            // Draw icon if available
+            if (this.images.icon) {
+                const iconPath = path.join(this.imagesPath, this.images.icon);
+                const iconImage = await loadImage(iconPath, { width: 30, height: 30 });
+                canvas.drawBitmap(iconImage, padding, headerY, imagePaint);
+                recycleImages(iconImage);
+                logoX += 40;
+            }
+            
+            // Draw logo if available
+            if (this.images.logo) {
+                const logoPath = path.join(this.imagesPath, this.images.logo);
+                const logoImage = await loadImage(logoPath, { width: 120, height: 40 });
+                canvas.drawBitmap(logoImage, logoX, headerY, imagePaint);
+                recycleImages(logoImage);
+            }
+            
+            // Draw thumbnail if available (right side)
+            if (this.images.thumbnail) {
+                const thumbPath = path.join(this.imagesPath, this.images.thumbnail);
+                const thumbImage = await loadImage(thumbPath, { width: 50, height: 50 });
+                canvas.drawBitmap(thumbImage, canvasWidth - 50 - padding, headerY, imagePaint);
+                recycleImages(thumbImage);
+            }
+            
+            // Draw logo text if available
+            if (this.passData.logoText) {
+                fgPaint.textSize = 14;
+                const logoText = this.getLocalizedValue(this.passData.logoText, lang);
+                canvas.drawText(logoText, logoX, headerY + 55, fgPaint);
+            }
+            
+            y = headerY + 70;
+            
+            // 3. Draw header fields
+            if (structure?.headerFields?.length) {
+                y = this.drawFieldGroup(canvas, structure.headerFields, y, canvasWidth, padding, labelPaint, fgPaint, 12, 16, lang);
+                y += sectionSpacing;
+            }
+            
+            // 4. Draw primary fields (larger text)
+            if (structure?.primaryFields?.length) {
+                y = this.drawFieldGroup(canvas, structure.primaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 14, 28, lang);
+                y += sectionSpacing;
+            }
+            
+            // 5. Draw secondary fields
+            if (structure?.secondaryFields?.length) {
+                y = this.drawFieldGroup(canvas, structure.secondaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 12, 18, lang);
+                y += sectionSpacing;
+            }
+            
+            // 6. Draw auxiliary fields
+            if (structure?.auxiliaryFields?.length) {
+                y = this.drawFieldGroup(canvas, structure.auxiliaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 10, 14, lang);
+                y += sectionSpacing;
+            }
+            
+            // 7. Draw barcode if available
+            const barcode = this.getPrimaryBarcode();
+            if (barcode) {
+                try {
+                    // Map PKPass barcode format to our format
+                    let barcodeFormat = 'QRCode';
+                    switch (barcode.format) {
+                        case PKBarcodeFormat.QR:
+                            barcodeFormat = 'QRCode';
+                            break;
+                        case PKBarcodeFormat.PDF417:
+                            barcodeFormat = 'PDF417';
+                            break;
+                        case PKBarcodeFormat.Aztec:
+                            barcodeFormat = 'Aztec';
+                            break;
+                        case PKBarcodeFormat.Code128:
+                            barcodeFormat = 'Code128';
+                            break;
+                    }
+                    
+                    const barcodeWidth = Math.min(300, canvasWidth - 2 * padding);
+                    const svgString = await getSVGFromQRCode(barcode.message, barcodeFormat, barcodeWidth, {
+                        color: this.passData.foregroundColor || '#000000'
+                    });
+                    
+                    // Draw barcode alt text if available
+                    if (barcode.altText) {
+                        fgPaint.textSize = 12;
+                        const textWidth = fgPaint.measureText(barcode.altText);
+                        canvas.drawText(barcode.altText, (canvasWidth - textWidth) / 2, y + barcodeWidth + 20, fgPaint);
+                    }
+                    
+                    y += barcodeWidth + 40;
+                } catch (error) {
+                    console.error('Error rendering barcode:', error);
+                }
+            }
+            
+            // 8. Draw back fields if requested
+            if (includeBackFields && structure?.backFields?.length) {
+                y += sectionSpacing;
+                // Draw separator line
+                const separatorPaint = new Paint();
+                separatorPaint.color = this.passData.foregroundColor || '#cccccc';
+                separatorPaint.strokeWidth = 1;
+                canvas.drawLine(padding, y, canvasWidth - padding, y, separatorPaint);
+                y += sectionSpacing;
+                
+                y = this.drawFieldGroup(canvas, structure.backFields, y, canvasWidth, padding, labelPaint, fgPaint, 12, 16, lang);
+            }
+            
+        } catch (error) {
+            console.error('Error rendering PKPass to canvas:', error);
+            // Draw error message
+            fgPaint.textSize = 16;
+            canvas.drawText('Error rendering pass', padding, 50, fgPaint);
+        }
+    }
+    
+    /**
+     * Helper method to draw a group of fields
+     */
+    private drawFieldGroup(
+        canvas: any,
+        fields: PKPassField[],
+        startY: number,
+        canvasWidth: number,
+        padding: number,
+        labelPaint: any,
+        valuePaint: any,
+        labelSize: number,
+        valueSize: number,
+        currentLang: string
+    ): number {
+        let y = startY;
+        const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * 10) / fields.length;
+        
+        fields.forEach((field, index) => {
+            const x = padding + index * (fieldWidth + 10);
+            
+            // Draw label
+            labelPaint.textSize = labelSize;
+            const label = this.getLocalizedValue(field.label || field.key, currentLang);
+            canvas.drawText(label, x, y, labelPaint);
+            
+            // Draw value
+            valuePaint.textSize = valueSize;
+            const value = this.getLocalizedValue(String(field.value), currentLang);
+            canvas.drawText(value, x, y + labelSize + 5, valuePaint);
+        });
+        
+        return y + labelSize + valueSize + 10;
     }
 
     static fromJSON(jsonObj: any): PKPass {
