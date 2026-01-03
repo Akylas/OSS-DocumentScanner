@@ -14,6 +14,11 @@
     const passData = pkpass.passData;
     const structure = pkpass.getPassStructure();
     const primaryBarcode = pkpass.getPrimaryBarcode();
+    const transitType = structure?.transitType;
+    const transitIcon = getTransitIcon(transitType);
+    const secondaryFieldsCount = structure?.secondaryFields?.length ?? 0;
+    const primaryFieldsCount = structure?.primaryFields.length ?? 0;
+    const auxiliaryFieldsCount = structure?.auxiliaryFields.length ?? 0;
 
     $: foregroundColor = passData.foregroundColor || colorOnBackground;
     $: backgroundColor = passData.backgroundColor || colorSurface;
@@ -24,11 +29,6 @@
     $: backgroundImage = pkpass?.images?.background2x || pkpass?.images?.background;
     $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail;
     $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, iconImage, backgroundImage, thumbnailImage, pkpass.images, JSON.stringify(pkpass.passData));
-
-    const secondaryFieldsCount = structure?.secondaryFields?.length ?? 0;
-    const primaryFieldsCount = structure?.primaryFields.length ?? 0;
-    const auxiliaryFieldsCount = structure?.auxiliaryFields.length ?? 0;
-    const transitType = structure?.transitType;
 
     let barcodeSvg: string | undefined;
     if (primaryBarcode) {
@@ -54,7 +54,7 @@
      */
     function getTransitIcon(transitType?: PKPassTransitType): string | undefined {
         if (!transitType) return undefined;
-        
+
         switch (transitType) {
             case PKPassTransitType.Air:
                 return 'mdi-airplane';
@@ -70,8 +70,6 @@
                 return undefined;
         }
     }
-
-    $: transitIcon = getTransitIcon(transitType);
 </script>
 
 <gridlayout {backgroundColor} rows="auto,auto,*,auto">
@@ -119,20 +117,20 @@
                         <!-- Left primary field (departure) -->
                         <stacklayout class="pass-field primary-field" col={0}>
                             {#if structure.primaryFields[0].label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(structure.primaryFields[0])} textAlignment="left" />
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(structure.primaryFields[0])} textAlignment="left" textTransform="uppercase" />
                             {/if}
-                            <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(structure.primaryFields[0])} textAlignment="left" textWrap={true} />
+                            <label color={foregroundColor} fontSize="32" text={renderFieldValue(structure.primaryFields[0])} textAlignment="left" textWrap={true} />
                         </stacklayout>
-                        
+
                         <!-- Transit icon in center -->
-                        <label class="mdi" col={1} color={foregroundColor} fontSize="40" text={transitIcon} textAlignment="center" verticalAlignment="center" marginLeft="16" marginRight="16" />
-                        
+                        <label class="mdi" col={1} color={labelColor} fontSize="40" marginLeft="16" marginRight="16" text={transitIcon} textAlignment="center" verticalAlignment="center" />
+
                         <!-- Right primary field (arrival) -->
                         <stacklayout class="pass-field primary-field" col={2}>
                             {#if structure.primaryFields[1].label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(structure.primaryFields[1])} textAlignment="right" />
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(structure.primaryFields[1])} textAlignment="right" textTransform="uppercase" />
                             {/if}
-                            <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(structure.primaryFields[1])} textAlignment="right" textWrap={true} />
+                            <label color={foregroundColor} fontSize="32" text={renderFieldValue(structure.primaryFields[1])} textAlignment="right" textWrap={true} />
                         </stacklayout>
                     </gridlayout>
                 {:else}
@@ -142,9 +140,9 @@
                             {@const textAlignment = index === primaryFieldsCount - 1 ? 'right' : index === 0 ? 'left' : 'center'}
                             <stacklayout class="pass-field primary-field" col={index} marginBottom="16">
                                 {#if field.label}
-                                    <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} />
+                                    <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} textTransform="uppercase" />
                                 {/if}
-                                <label color={foregroundColor} fontSize="32" fontWeight="bold" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
+                                <label color={foregroundColor} fontSize="32" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
                             </stacklayout>
                         {/each}
                     </gridlayout>
@@ -158,9 +156,9 @@
                         {@const textAlignment = index === secondaryFieldsCount - 1 ? 'right' : index === 0 ? 'left' : 'center'}
                         <stacklayout class="pass-field" col={index}>
                             {#if field.label}
-                                <label color={labelColor} fontSize="11" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} />
+                                <label color={labelColor} fontSize="11" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} textTransform="uppercase" />
                             {/if}
-                            <label color={foregroundColor} fontSize="18" fontWeight="bold" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
+                            <label color={foregroundColor} fontSize="18" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
                         </stacklayout>
                     {/each}
                 </gridlayout>
@@ -173,7 +171,7 @@
                         {@const textAlignment = index === auxiliaryFieldsCount - 1 ? 'right' : index === 0 ? 'left' : 'center'}
                         <stacklayout class="pass-field" col={index}>
                             {#if field.label}
-                                <label color={labelColor} fontSize="10" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} />
+                                <label color={labelColor} fontSize="10" fontWeight="500" text={renderFieldLabel(field)} {textAlignment} textTransform="uppercase" />
                             {/if}
                             <label color={foregroundColor} fontSize="14" text={renderFieldValue(field)} {textAlignment} textWrap={true} />
                         </stacklayout>
@@ -198,7 +196,7 @@
                     {#each structure.backFields as field}
                         <stacklayout class="pass-field" marginBottom="12">
                             {#if field.label}
-                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} />
+                                <label color={labelColor} fontSize="12" fontWeight="500" text={renderFieldLabel(field)} textTransform="uppercase"/>
                             {/if}
                             <label color={foregroundColor} fontSize="14" html={renderFieldValue(field)} textWrap={true} />
                         </stacklayout>
