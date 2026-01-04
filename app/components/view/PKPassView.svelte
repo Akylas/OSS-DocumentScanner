@@ -17,6 +17,7 @@
     const primaryBarcode = pkpass.getPrimaryBarcode();
     const transitType = structure?.transitType;
     const transitIcon = getTransitIcon(transitType);
+    const headerFieldsCount = structure?.headerFields?.length ?? 0;
     const secondaryFieldsCount = structure?.secondaryFields?.length ?? 0;
     const primaryFieldsCount = structure?.primaryFields.length ?? 0;
     const auxiliaryFieldsCount = structure?.auxiliaryFields.length ?? 0;
@@ -89,6 +90,21 @@
     <!-- Main content -->
     <scrollview row={2}>
         <stacklayout padding={16}>
+            <!-- Header fields -->
+            {#if headerFieldsCount > 0}
+                <gridlayout class="pass-section" columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
+                    {#each structure.headerFields as field, index}
+                        {@const textAlignment = getFieldTextAlignment(field)}
+                        <stacklayout class="pass-field" col={index} padding={index !== 0 && index !== headerFieldsCount - 1 ? '0 10 0 10' : 0}>
+                            {#if field.label}
+                                <label color={labelColor} fontSize={11} fontWeight="500" text={renderFieldLabel(field)} {textAlignment} textTransform="uppercase" />
+                            {/if}
+                            <label color={foregroundColor} fontSize={14} fontWeight="bold" text={renderFieldValue(field)} {textAlignment} />
+                        </stacklayout>
+                    {/each}
+                </gridlayout>
+            {/if}
+
             <!-- Primary fields -->
             {#if primaryFieldsCount > 0}
                 {#if transitIcon && primaryFieldsCount === 2}
