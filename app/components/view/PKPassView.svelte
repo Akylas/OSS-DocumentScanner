@@ -25,12 +25,14 @@
     $: foregroundColor = passData.foregroundColor || colorOnBackground;
     $: backgroundColor = passData.backgroundColor || colorSurface;
     $: labelColor = passData.labelColor || colorOnBackground;
-    $: logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo;
-    $: iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon;
-    $: stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip;
-    $: backgroundImage = pkpass?.images?.background2x || pkpass?.images?.background;
-    $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail;
-    $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, iconImage, backgroundImage, thumbnailImage, pkpass.images, JSON.stringify(pkpass.passData));
+    // Apple PKPass image specifications - prefer @2x for quality
+    $: logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo; // Max 160x50 points
+    $: iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon; // 29x29 points
+    $: stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip; // Variable by device/type
+    $: backgroundImage = pkpass?.images?.background2x || pkpass?.images?.background; // 180x220 points
+    $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail; // 90x90 points
+    $: footerImage = pkpass?.images?.footer2x || pkpass?.images?.footer; // 286x15 points
+    $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, iconImage, backgroundImage, thumbnailImage, footerImage, pkpass.images, JSON.stringify(pkpass.passData));
     const orgName = passData?.organizationName || getLocalizedText(passData?.logoText) || '';
 
     let barcodeSvg: string | undefined;
@@ -54,27 +56,33 @@
 </script>
 
 <gridlayout {backgroundColor} borderRadius={8} elevation={isEInk ? 0 : 2} margin={16} marginBottom={$windowInset.bottom + 16} rows="auto,auto,*,auto">
-    <!-- Header section with logo and icon -->
+    <!-- Background image if available (180x220 points per Apple spec) -->
+    {#if backgroundImage}
+        <image colSpan={4} height="220" rowSpan={4} src={backgroundImage} stretch="aspectFill" opacity="0.3" />
+    {/if}
 
+    <!-- Header section with icon, logo, and thumbnail -->
     <stacklayout padding="16" row={0}>
         <gridlayout columns="auto,*,auto,auto" verticalAlignment="center">
-            <!-- Icon on the left -->
+            <!-- Icon on the left (29x29 points per Apple spec) -->
+            {#if iconImage}
+                <image col={0} height={29} marginRight={6} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={29} />
+            {/if}
 
+            <!-- Logo (max 160x50 points per Apple spec) -->
             {#if logoImage}
-                <!-- Logo takes priority -->
-                <image height={50} marginRight={8} src={logoImage} stretch="aspectFit" verticalAlignment="center" />
-            {:else if iconImage}
-                <!-- Icon + Name -->
-                <image height={30} marginRight={6} src={iconImage} stretch="aspectFit" verticalAlignment="center" />
-                <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120} />
+                <image col={1} height={50} marginRight={8} src={logoImage} stretch="aspectFit" verticalAlignment="center" width={160} />
+            {:else if !iconImage}
+                <!-- Just name if no icon or logo -->
+                <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" />
             {:else}
-                <!-- Just name -->
+                <!-- Name next to icon -->
                 <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120} />
             {/if}
 
-            <!-- Thumbnail on the right (optional, for event tickets typically) -->
+            <!-- Thumbnail on the right (90x90 points per Apple spec) -->
             {#if thumbnailImage}
-                <image col={3} height="50" src={thumbnailImage} stretch="aspectFit" width="50" />
+                <image col={3} height={90} src={thumbnailImage} stretch="aspectFit" width={90} />
             {/if}
 
             <!-- Header fields -->
@@ -102,9 +110,9 @@
             visibility={passData.logoText !== passData.organizationName ? 'visible' : 'collapsed'} />
     </stacklayout>
 
-    <!-- Strip or background image if available -->
-    {#if stripImage || backgroundImage}
-        <image height="150" row={1} src={stripImage || backgroundImage} stretch="aspectFill" />
+    <!-- Strip image behind primary fields (variable dimensions per Apple spec) -->
+    {#if stripImage}
+        <image height="150" row={1} src={stripImage} stretch="aspectFill" />
     {/if}
 
     <!-- Main content -->
@@ -230,8 +238,8 @@
         </stacklayout>
     </scrollview>
 
-    <!-- Footer image if available -->
-    {#if pkpass.images.footer || pkpass.images.footer2x}
-        <image height={40} margin={8} row={3} src={pkpass.images.footer2x || pkpass.images.footer} stretch="aspectFit" />
+    <!-- Footer image if available (286x15 points per Apple spec) -->
+    {#if footerImage}
+        <image height={15} margin={8} row={3} src={footerImage} stretch="aspectFill" width="286" />
     {/if}
 </gridlayout>

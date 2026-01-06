@@ -352,13 +352,16 @@ export class PKPass extends Observable {
         const structure = this.getPassStructure();
         let height = 100 * scaleFactor; // Initial padding and header
 
-        // Strip or background image
-        if (this.images.strip || this.images.background) {
+        // Strip image (Apple spec: variable, using 150px as scaled average)
+        // or background image (Apple spec: 180x220 points)
+        if (this.images.strip || this.images.strip2x) {
             height += 150 * scaleFactor + 10 * scaleFactor;
+        } else if ((this.images.background || this.images.background2x) && this.getPassStyle() !== PKPassStyle.BoardingPass) {
+            // Background typically used as backdrop, not adding to height
         }
 
-        // Header section with images and text
-        height += 70 * scaleFactor;
+        // Header section with images (icon: 29x29, logo: 160x50, thumbnail: 90x90)
+        height += 90 * scaleFactor; // Max of icon/logo/thumbnail heights
 
         // Header fields
         if (structure?.headerFields?.length) {
@@ -392,6 +395,11 @@ export class PKPass extends Observable {
             height += structure.backFields.length * 40 * scaleFactor;
         }
 
+        // Footer image (Apple spec: 286x15 points)
+        if (this.images.footer || this.images.footer2x) {
+            height += 25 * scaleFactor; // Footer image + spacing
+        }
+
         height += 50 * scaleFactor; // Bottom padding
 
         return Math.round(height);
@@ -422,25 +430,31 @@ export class PKPass extends Observable {
         const headerY = y;
         const logoX = padding;
 
-        // Draw logo or icon + name
-        if (this.images.logo) {
-            const logoPath = path.join(this.imagesPath, this.images.logo);
-            const logoImage = await loadImage(logoPath, { width: Math.round(90 * scaleFactor), height: Math.round(40 * scaleFactor) });
+        // Apple spec: prefer @2x images for quality
+        const logo2x = this.images.logo2x || this.images.logo;
+        const icon2x = this.images.icon2x || this.images.icon;
+
+        // Draw logo (Apple spec: max 160x50, scaled to 80px width for card) or icon (Apple spec: 29x29, scaled to ~20px)
+        if (logo2x) {
+            const logoPath = path.join(this.imagesPath, logo2x);
+            // Apple spec: max 160x50 points, scale proportionally for card
+            const logoImage = await loadImage(logoPath, { width: Math.round(80 * scaleFactor), height: Math.round(40 * scaleFactor) });
             canvas.drawBitmap(logoImage, logoX, headerY, imagePaint);
             recycleImages(logoImage);
-        } else if (this.images.icon) {
-            const iconPath = path.join(this.imagesPath, this.images.icon);
-            const iconImage = await loadImage(iconPath, { width: Math.round(26 * scaleFactor), height: Math.round(26 * scaleFactor) });
+        } else if (icon2x) {
+            const iconPath = path.join(this.imagesPath, icon2x);
+            // Apple spec: 29x29 points, scaled to ~20px for card
+            const iconImage = await loadImage(iconPath, { width: Math.round(20 * scaleFactor), height: Math.round(20 * scaleFactor) });
             canvas.drawBitmap(iconImage, logoX, headerY, imagePaint);
             recycleImages(iconImage);
 
             // Draw organization name next to icon
             fgPaint.textSize = 14 * scaleFactor;
-            canvas.drawText(this.passData.organizationName || '', logoX + 32 * scaleFactor, headerY + 20 * scaleFactor, fgPaint);
+            canvas.drawText(this.passData.organizationName || '', logoX + 26 * scaleFactor, headerY + 15 * scaleFactor, fgPaint);
         } else {
             // Just name
             fgPaint.textSize = 14 * scaleFactor;
-            canvas.drawText(this.passData.organizationName || '', logoX, headerY + 20 * scaleFactor, fgPaint);
+            canvas.drawText(this.passData.organizationName || '', logoX, headerY + 15 * scaleFactor, fgPaint);
         }
 
         // Draw header fields on the right
@@ -532,46 +546,58 @@ export class PKPass extends Observable {
 
         let y = 20 * scaleFactor;
 
-        // 1. Draw strip or background image if available
-        if (this.images.strip) {
-            const stripPath = path.join(this.imagesPath, this.images.strip);
+        // Apple spec: prefer @2x images for quality
+        const strip2x = this.images.strip2x || this.images.strip;
+        const background2x = this.images.background2x || this.images.background;
+        const icon2x = this.images.icon2x || this.images.icon;
+        const logo2x = this.images.logo2x || this.images.logo;
+        const thumbnail2x = this.images.thumbnail2x || this.images.thumbnail;
+        const footer2x = this.images.footer2x || this.images.footer;
+
+        // 1. Draw strip image behind primary fields (Apple spec: variable dimensions)
+        // iPhone 6+: 375x98 (events), 375x144 (gift/coupon), 375x123 (other)
+        // Earlier: 320x84 (events), 320x110 (square barcode), 320x123 (other)
+        if (strip2x) {
+            const stripPath = path.join(this.imagesPath, strip2x);
             const stripImage = await loadImage(stripPath, { width: canvasWidth, height: Math.round(150 * scaleFactor) });
             canvas.drawBitmap(stripImage, 0, y, imagePaint);
             recycleImages(stripImage);
             y += Math.round(150 * scaleFactor) + Math.round(10 * scaleFactor);
-        } else if (this.images.background && style !== 'boardingPass') {
-            const bgPath = path.join(this.imagesPath, this.images.background);
+        } else if (background2x && style !== PKPassStyle.BoardingPass) {
+            // Background image (Apple spec: 180x220 points) - not typically used with strip
+            // Draw as backdrop if no strip and not boarding pass
+            const bgPath = path.join(this.imagesPath, background2x);
             const bgImage = await loadImage(bgPath, { width: canvasWidth, height: canvasHeight });
             canvas.drawBitmap(bgImage, 0, 0, imagePaint);
             recycleImages(bgImage);
         }
 
-        // 2. Draw header section (icon, logo, thumbnail)
+        // 2. Draw header section (icon, logo, thumbnail per Apple specs)
         const headerY = y;
         let logoX = padding;
 
-        // Draw icon if available
-        if (this.images.icon) {
-            const iconPath = path.join(this.imagesPath, this.images.icon);
-            const iconImage = await loadImage(iconPath, { width: Math.round(30 * scaleFactor), height: Math.round(30 * scaleFactor) });
+        // Draw icon if available (Apple spec: 29x29 points)
+        if (icon2x) {
+            const iconPath = path.join(this.imagesPath, icon2x);
+            const iconImage = await loadImage(iconPath, { width: Math.round(29 * scaleFactor), height: Math.round(29 * scaleFactor) });
             canvas.drawBitmap(iconImage, padding, headerY, imagePaint);
             recycleImages(iconImage);
-            logoX += Math.round(40 * scaleFactor);
+            logoX += Math.round(35 * scaleFactor);
         }
 
-        // Draw logo if available
-        if (this.images.logo) {
-            const logoPath = path.join(this.imagesPath, this.images.logo);
-            const logoImage = await loadImage(logoPath, { width: Math.round(120 * scaleFactor), height: Math.round(40 * scaleFactor) });
+        // Draw logo if available (Apple spec: max 160x50 points)
+        if (logo2x) {
+            const logoPath = path.join(this.imagesPath, logo2x);
+            const logoImage = await loadImage(logoPath, { width: Math.round(160 * scaleFactor), height: Math.round(50 * scaleFactor) });
             canvas.drawBitmap(logoImage, logoX, headerY, imagePaint);
             recycleImages(logoImage);
         }
 
-        // Draw thumbnail if available (right side)
-        if (this.images.thumbnail) {
-            const thumbPath = path.join(this.imagesPath, this.images.thumbnail);
-            const thumbImage = await loadImage(thumbPath, { width: Math.round(50 * scaleFactor), height: Math.round(50 * scaleFactor) });
-            canvas.drawBitmap(thumbImage, canvasWidth - Math.round(50 * scaleFactor) - padding, headerY, imagePaint);
+        // Draw thumbnail if available (Apple spec: 90x90 points)
+        if (thumbnail2x) {
+            const thumbPath = path.join(this.imagesPath, thumbnail2x);
+            const thumbImage = await loadImage(thumbPath, { width: Math.round(90 * scaleFactor), height: Math.round(90 * scaleFactor) });
+            canvas.drawBitmap(thumbImage, canvasWidth - Math.round(90 * scaleFactor) - padding, headerY, imagePaint);
             recycleImages(thumbImage);
         }
 
@@ -649,6 +675,20 @@ export class PKPass extends Observable {
             y += sectionSpacing;
 
             y = this.drawFieldGroup(canvas, structure.backFields, y, canvasWidth, padding, labelPaint, fgPaint, 12 * scaleFactor, 16 * scaleFactor, currentLang);
+        }
+
+        // 9. Draw footer image if available (Apple spec: 286x15 points)
+        if (footer2x) {
+            try {
+                const footerPath = path.join(this.imagesPath, footer2x);
+                const footerImage = await loadImage(footerPath, { width: Math.round(286 * scaleFactor), height: Math.round(15 * scaleFactor) });
+                // Center footer image
+                const footerX = (canvasWidth - Math.round(286 * scaleFactor)) / 2;
+                canvas.drawBitmap(footerImage, footerX, y, imagePaint);
+                recycleImages(footerImage);
+            } catch (error) {
+                console.error('Error rendering footer image:', error);
+            }
         }
     }
 

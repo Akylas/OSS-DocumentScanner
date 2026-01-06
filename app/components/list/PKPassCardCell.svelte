@@ -18,10 +18,11 @@
     $: foregroundColor = passData?.foregroundColor || colorOnBackground;
     $: labelColor = passData.labelColor || colorOnBackground;
     $: backgroundColor = passData?.backgroundColor || colorSurface;
-    $: logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo;
-    $: iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon;
-    $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail;
-    $: stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip;
+    // Apple PKPass image specifications - prefer @2x for quality
+    $: logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo; // Max 160x50 points
+    $: iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon; // 29x29 points
+    $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail; // 90x90 points
+    $: stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip; // Variable dimensions
 
     // Get the pass structure and style
     $: passStyle = pkpass?.getPassStyle();
@@ -66,18 +67,25 @@
 
 <!-- Credit card sized layout with scalable content -->
 <gridlayout {backgroundColor} {...$$restProps}>
+    <!-- Strip or thumbnail banner at top if available -->
+    {#if stripImage}
+        <image colSpan={3} height={60 * scaleFactor} row={0} src={stripImage} stretch="aspectFill" />
+    {:else if thumbnailImage}
+        <image colSpan={3} height={60 * scaleFactor} row={0} src={thumbnailImage} stretch="aspectFill" />
+    {/if}
+
     <!-- Content container with proper padding -->
     <gridlayout padding={12 * scaleFactor} rows="auto,*,auto,auto">
         <!-- Top row: Logo/Icon + Name (limited width) + Important right-side data -->
         <gridlayout columns="auto,*,auto" marginBottom={5 * scaleFactor} row={0}>
-            <!-- Left: Logo or Icon + Name -->
+            <!-- Left: Logo (max 80px scaled) or Icon (20px scaled) + Name -->
             <stacklayout col={0} orientation="horizontal" verticalAlignment="center">
                 {#if logoImage}
-                    <!-- Logo takes priority -->
-                    <image height={40 * scaleFactor} marginRight={8 * scaleFactor} src={logoImage} stretch="aspectFit" verticalAlignment="center"/>
+                    <!-- Logo takes priority (Apple spec: max 160x50, scaled to 80px width max for card) -->
+                    <image height={40 * scaleFactor} marginRight={8 * scaleFactor} src={logoImage} stretch="aspectFit" verticalAlignment="center" width={80 * scaleFactor} />
                 {:else if iconImage}
-                    <!-- Icon + Name -->
-                    <image height={26 * scaleFactor} marginRight={6 * scaleFactor} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={26 * scaleFactor} />
+                    <!-- Icon (Apple spec: 29x29, scaled to ~20px for card) + Name -->
+                    <image height={20 * scaleFactor} marginRight={6 * scaleFactor} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={20 * scaleFactor} />
                     <label color={foregroundColor} fontSize={14 * scaleFactor} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120 * scaleFactor} />
                 {:else}
                     <!-- Just name -->
