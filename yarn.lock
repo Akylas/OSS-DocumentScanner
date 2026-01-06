@@ -1337,10 +1337,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-checkbox@npm:2.0.16":
-  version: 2.0.16
-  resolution: "@nativescript-community/ui-checkbox@npm:2.0.16"
-  checksum: 10/f47226e209d27e7f45efa8e05ff19592f796790231bb01216d613ef30eeb9f18168bc7bfbbe31b171f923d7e82573e80c0710a57add2e01e5c537962894d42fd
+"@nativescript-community/ui-checkbox@npm:2.0.18":
+  version: 2.0.18
+  resolution: "@nativescript-community/ui-checkbox@npm:2.0.18"
+  checksum: 10/9e92740a672dc14d8a2cfc8ff02f6651faf390d1e07b05319fb86a56eeb46fd045aaf31ac8d9e674b8611898e793fd4bbe1ea4dda862d2d129294b8c0f5331f7
   languageName: node
   linkType: hard
 
@@ -10481,7 +10481,7 @@ __metadata:
     "@nativescript-community/ui-cameraview": "npm:0.6.2"
     "@nativescript-community/ui-canvas": "npm:4.6.44"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.47"
-    "@nativescript-community/ui-checkbox": "npm:2.0.16"
+    "@nativescript-community/ui-checkbox": "npm:2.0.18"
     "@nativescript-community/ui-collectionview": "npm:6.0.14"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.14"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
