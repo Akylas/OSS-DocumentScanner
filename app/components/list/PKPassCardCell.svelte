@@ -69,12 +69,12 @@
     <!-- Content container with proper padding -->
     <gridlayout padding={12 * scaleFactor} rows="auto,*,auto,auto">
         <!-- Top row: Logo/Icon + Name (limited width) + Important right-side data -->
-        <gridlayout columns="auto,*,auto" marginBottom={10} row={0} backgroundColor='green'>
+        <gridlayout columns="auto,*,auto" marginBottom={5 * scaleFactor} row={0}>
             <!-- Left: Logo or Icon + Name -->
             <stacklayout col={0} orientation="horizontal" verticalAlignment="center">
                 {#if logoImage}
                     <!-- Logo takes priority -->
-                    <image height={40 * scaleFactor} marginRight={8 * scaleFactor} src={logoImage} stretch="aspectFit" verticalAlignment="center" width={90 * scaleFactor}  backgroundColor='blue'/>
+                    <image height={40 * scaleFactor} marginRight={8 * scaleFactor} src={logoImage} stretch="aspectFit" verticalAlignment="center"/>
                 {:else if iconImage}
                     <!-- Icon + Name -->
                     <image height={26 * scaleFactor} marginRight={6 * scaleFactor} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={26 * scaleFactor} />
@@ -87,7 +87,7 @@
 
             <!-- Right: Important data (header fields like gate, seat, date) -->
             {#if headerFieldsCount > 0}
-                <gridlayout class="pass-section" col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
+                <gridlayout class="pass-section" col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={10* scaleFactor}>
                     {#each structure.headerFields as field, index}
                         {@const textAlignment = getFieldTextAlignment(field, 'right')}
                         <stacklayout class="pass-field" col={index} paddingLeft={index !== 0 ? 12 * scaleFactor : 0}>
