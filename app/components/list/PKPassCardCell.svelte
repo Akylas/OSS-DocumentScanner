@@ -4,7 +4,7 @@
     import { colors } from '~/variables';
     import { Item } from './MainList.svelte';
     import { lang } from '~/helpers/locale';
-    import { getTransitIcon } from '~/utils/pkpass';
+    import { getFieldTextAlignment, getTransitIcon } from '~/utils/pkpass';
 
     export let item: Item;
     export let pkpass: PKPass;
@@ -53,6 +53,7 @@
     const auxiliaryFields = structure?.auxiliaryFields || [];
     const secondaryFieldsCount = secondaryFields.length;
     const primaryFieldsCount = primaryFields.length;
+    const headerFieldsCount = headerFields.length;
     const auxiliaryFieldsCount = auxiliaryFields.length;
     const transitType = structure?.transitType;
     const transitIcon = getTransitIcon(transitType);
@@ -68,32 +69,35 @@
     <!-- Content container with proper padding -->
     <gridlayout padding={12 * scaleFactor} rows="auto,*,auto,auto">
         <!-- Top row: Logo/Icon + Name (limited width) + Important right-side data -->
-        <gridlayout columns="auto,*,auto" marginBottom={10} row={0}>
+        <gridlayout columns="auto,*,auto" marginBottom={10} row={0} backgroundColor='green'>
             <!-- Left: Logo or Icon + Name -->
             <stacklayout col={0} orientation="horizontal" verticalAlignment="center">
                 {#if logoImage}
                     <!-- Logo takes priority -->
-                    <image height={40 * scaleFactor} marginRight={8 * scaleFactor} src={logoImage} stretch="aspectFit" verticalAlignment="center" width={90 * scaleFactor} />
+                    <image height={40 * scaleFactor} marginRight={8 * scaleFactor} src={logoImage} stretch="aspectFit" verticalAlignment="center" width={90 * scaleFactor}  backgroundColor='blue'/>
                 {:else if iconImage}
                     <!-- Icon + Name -->
                     <image height={26 * scaleFactor} marginRight={6 * scaleFactor} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={26 * scaleFactor} />
-                    <label color={foregroundColor} fontSize={14 * scaleFactor} fontWeight="bold" maxLines={1} text={orgName} textWrap={false} verticalAlignment="center" width={120 * scaleFactor} />
+                    <label color={foregroundColor} fontSize={14 * scaleFactor} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120 * scaleFactor} />
                 {:else}
                     <!-- Just name -->
-                    <label color={foregroundColor} fontSize={14 * scaleFactor} fontWeight="bold" maxLines={1} text={orgName} textWrap={false} verticalAlignment="center" width={120 * scaleFactor} />
+                    <label color={foregroundColor} fontSize={14 * scaleFactor} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120 * scaleFactor} />
                 {/if}
             </stacklayout>
 
             <!-- Right: Important data (header fields like gate, seat, date) -->
-            {#if headerFields.length > 0}
-                <stacklayout col={2} horizontalAlignment="right" orientation="horizontal" verticalAlignment="center">
-                    {#each headerFields as field, idx}
-                        <stacklayout marginLeft={idx > 0 ? 12 * scaleFactor : 0} verticalAlignment="center">
-                            <label color={labelColor} fontSize={11 * scaleFactor} text={getFieldLabel(field)} textAlignment="right" />
-                            <label color={foregroundColor} fontSize={14 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} textAlignment="right" />
+            {#if headerFieldsCount > 0}
+                <gridlayout class="pass-section" col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
+                    {#each structure.headerFields as field, index}
+                        {@const textAlignment = getFieldTextAlignment(field, 'right')}
+                        <stacklayout class="pass-field" col={index} paddingLeft={index !== 0 ? 12 * scaleFactor : 0}>
+                            {#if field.label}
+                                <label color={labelColor} fontSize={10 * scaleFactor} fontWeight="500" text={getFieldLabel(field)} {textAlignment} textTransform="uppercase" />
+                            {/if}
+                            <label color={foregroundColor} fontSize={13 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} {textAlignment} />
                         </stacklayout>
                     {/each}
-                </stacklayout>
+                </gridlayout>
             {/if}
         </gridlayout>
 
@@ -102,7 +106,7 @@
             {#if transitIcon && primaryFieldsCount === 2}
                 <!-- Departure -->
                 <stacklayout col={0} horizontalAlignment="left" verticalAlignment="center">
-                    <label color={labelColor} fontSize={10 * scaleFactor} opacity="0.7" text={getFieldLabel(primaryFields[0])} />
+                    <label color={labelColor} fontSize={10 * scaleFactor} text={getFieldLabel(primaryFields[0])} textTransform="uppercase" />
                     <label color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[0])} />
                 </stacklayout>
 
@@ -120,7 +124,7 @@
 
                 <!-- Arrival -->
                 <stacklayout col={2} horizontalAlignment="right" verticalAlignment="center">
-                    <label color={labelColor} fontSize={10 * scaleFactor} opacity="0.7" text={getFieldLabel(primaryFields[1])} textAlignment="right" />
+                    <label color={labelColor} fontSize={10 * scaleFactor} text={getFieldLabel(primaryFields[1])} textAlignment="right" textTransform="uppercase" />
                     <label color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[1])} textAlignment="right" />
                 </stacklayout>
             {:else if primaryFieldsCount > 0}
@@ -129,9 +133,9 @@
                     {#each primaryFields as field, idx}
                         <stacklayout marginTop={idx > 0 ? 4 * scaleFactor : 0} padding={idx !== 0 && idx !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
                             {#if field.label}
-                                <label color={labelColor} fontSize={10 * scaleFactor} opacity="0.7" text={getFieldLabel(field)} />
+                                <label color={labelColor} fontSize={10 * scaleFactor} text={getFieldLabel(field)} textTransform="uppercase" />
                             {/if}
-                            <label color={foregroundColor} fontSize={24 * scaleFactor} fontWeight="bold" maxLines={1} text={getFieldValue(field)} textWrap={false} />
+                            <label color={foregroundColor} fontSize={24 * scaleFactor} fontWeight="bold" maxLines={1} text={getFieldValue(field)} />
                         </stacklayout>
                     {/each}
                 </gridlayout>
@@ -144,7 +148,7 @@
             <gridlayout class="pass-section" colSpan={3} columns={Array.from('*'.repeat(secondaryFieldsCount)).join(',')} row={2}>
                 {#each secondaryFields as field, index}
                     <stacklayout col={index} padding={index !== 0 && index !== secondaryFieldsCount - 1 ? '0 10 0 10' : 0}>
-                        <label color={labelColor} fontSize={9 * scaleFactor} opacity="0.7" text={getFieldLabel(field)} />
+                        <label color={labelColor} fontSize={9 * scaleFactor} text={getFieldLabel(field)} textTransform="uppercase" />
                         <label color={foregroundColor} fontSize={11 * scaleFactor} fontWeight="600" text={getFieldValue(field)} />
                     </stacklayout>
                 {/each}
@@ -156,7 +160,7 @@
             <gridlayout class="pass-section" colSpan={3} columns={Array.from('*'.repeat(auxiliaryFieldsCount)).join(',')} row={3}>
                 {#each auxiliaryFields as field, index}
                     <stacklayout col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
-                        <label color={labelColor} fontSize={9 * scaleFactor} opacity="0.7" text={getFieldLabel(field)} />
+                        <label color={labelColor} fontSize={9 * scaleFactor} text={getFieldLabel(field)} textTransform="uppercase" />
                         <label color={foregroundColor} fontSize={11 * scaleFactor} fontWeight="600" text={getFieldValue(field)} />
                     </stacklayout>
                 {/each}
@@ -168,7 +172,7 @@
                 <stacklayout col={1} horizontalAlignment="right" orientation="horizontal">
                     {#each auxiliaryFields as field, idx}
                         <stacklayout marginLeft={idx > 0 ? 8 * scaleFactor : 0}>
-                            <label color={labelColor} fontSize={9 * scaleFactor} opacity="0.7" text={getFieldLabel(field)} textAlignment="right" />
+                            <label color={labelColor} fontSize={9 * scaleFactor} text={getFieldLabel(field)} textAlignment="right" />
                             <label color={foregroundColor} fontSize={11 * scaleFactor} fontWeight="600" text={getFieldValue(field)} textAlignment="right" />
                         </stacklayout>
                     {/each}

@@ -31,6 +31,7 @@
     $: backgroundImage = pkpass?.images?.background2x || pkpass?.images?.background;
     $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail;
     $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, iconImage, backgroundImage, thumbnailImage, pkpass.images, JSON.stringify(pkpass.passData));
+    const orgName = passData?.organizationName || getLocalizedText(passData?.logoText) || '';
 
     let barcodeSvg: string | undefined;
     $: if (primaryBarcode && foregroundColor) {
@@ -40,7 +41,6 @@
 
     function renderFieldValue(field: PKPassField): string {
         const value = pkpass.formatFieldValue(field, lang);
-        DEV_LOG && console.log('renderFieldValue', JSON.stringify(field), value);
         return value;
     }
 
@@ -55,24 +55,44 @@
 
 <gridlayout {backgroundColor} borderRadius={8} elevation={isEInk ? 0 : 2} margin={16} marginBottom={$windowInset.bottom + 16} rows="auto,auto,*,auto">
     <!-- Header section with logo and icon -->
+
     <stacklayout padding="16" row={0}>
-        <gridlayout columns="auto,*,auto" verticalAlignment="center">
+        <gridlayout columns="auto,*,auto,auto" verticalAlignment="center">
             <!-- Icon on the left -->
-            {#if iconImage}
-                <image col={0} height="30" src={iconImage} stretch="aspectFit" width="30" />
-            {/if}
-            <!-- Logo in the center -->
+
             {#if logoImage}
-                <image col={1} height="50" horizontalAlignment="center" marginLeft={iconImage ? 8 : 0} marginRight={iconImage ? 8 : 0} src={logoImage} stretch="aspectFit" />
+                <!-- Logo takes priority -->
+                <image height={50} marginRight={8} src={logoImage} stretch="aspectFit" verticalAlignment="center" />
+            {:else if iconImage}
+                <!-- Icon + Name -->
+                <image height={30} marginRight={6} src={iconImage} stretch="aspectFit" verticalAlignment="center" />
+                <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120} />
+            {:else}
+                <!-- Just name -->
+                <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120} />
             {/if}
+
             <!-- Thumbnail on the right (optional, for event tickets typically) -->
             {#if thumbnailImage}
-                <image col={2} height="50" src={thumbnailImage} stretch="aspectFit" width="50" />
+                <image col={3} height="50" src={thumbnailImage} stretch="aspectFit" width="50" />
+            {/if}
+
+            <!-- Header fields -->
+            {#if headerFieldsCount > 0}
+                <gridlayout class="pass-section" col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
+                    {#each structure.headerFields as field, index}
+                        {@const textAlignment = getFieldTextAlignment(field, 'right')}
+                        <stacklayout class="pass-field" col={index} paddingLeft={index !== 0 ? 10 : 0}>
+                            {#if field.label}
+                                <label color={labelColor} fontSize={13} fontWeight="500" text={renderFieldLabel(field)} {textAlignment} textTransform="uppercase" />
+                            {/if}
+                            <label color={foregroundColor} fontSize={17} fontWeight="bold" text={renderFieldValue(field)} {textAlignment} />
+                        </stacklayout>
+                    {/each}
+                </gridlayout>
             {/if}
         </gridlayout>
-        {#if passData.logoText}
-            <label color={foregroundColor} fontSize="24" fontWeight="bold" marginTop={logoImage || iconImage ? 8 : 0} text={getLocalizedText(passData.logoText)} textAlignment="center" />
-        {/if}
+
         <label
             color={labelColor}
             fontSize="14"
@@ -90,21 +110,6 @@
     <!-- Main content -->
     <scrollview row={2}>
         <stacklayout padding={16}>
-            <!-- Header fields -->
-            {#if headerFieldsCount > 0}
-                <gridlayout class="pass-section" columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
-                    {#each structure.headerFields as field, index}
-                        {@const textAlignment = getFieldTextAlignment(field)}
-                        <stacklayout class="pass-field" col={index} padding={index !== 0 && index !== headerFieldsCount - 1 ? '0 10 0 10' : 0}>
-                            {#if field.label}
-                                <label color={labelColor} fontSize={11} fontWeight="500" text={renderFieldLabel(field)} {textAlignment} textTransform="uppercase" />
-                            {/if}
-                            <label color={foregroundColor} fontSize={14} fontWeight="bold" text={renderFieldValue(field)} {textAlignment} />
-                        </stacklayout>
-                    {/each}
-                </gridlayout>
-            {/if}
-
             <!-- Primary fields -->
             {#if primaryFieldsCount > 0}
                 {#if transitIcon && primaryFieldsCount === 2}

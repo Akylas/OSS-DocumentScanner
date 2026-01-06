@@ -258,11 +258,11 @@ export function isPKPassFile(filePath: string): boolean {
     return filePath.toLowerCase().endsWith('.pkpass');
 }
 
-export function getFieldTextAlignment(field: PKPassField): 'left' | 'right' | 'center' | 'initial' {
+export function getFieldTextAlignment(field: PKPassField, defaultValue = 'left'): 'left' | 'right' | 'center' | 'initial' {
     if (field.textAlignment) {
         return field.textAlignment.slice(15).toLowerCase() as any;
     }
-    return 'left';
+    return defaultValue as any;
 }
 
 export async function getBarcodeSVG({ barcode, foregroundColor, width = 300 }: { barcode: PKPassBarcode; foregroundColor; width?: number }) {
