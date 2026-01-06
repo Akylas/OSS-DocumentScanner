@@ -222,7 +222,7 @@
             DEV_LOG &&
                 console.log(
                     'documents',
-                    documents.map((d) => d.doc.id)
+                    documents.map((d) => d.doc?.id)
                 );
             updateNoDocument();
         } catch (error) {
