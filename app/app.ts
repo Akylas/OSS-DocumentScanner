@@ -4,7 +4,7 @@ import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { ImagePipeline, getImagePipeline, initialize } from '@nativescript-community/ui-image';
+import { ImagePipeline, ImageViewTraceCategory, getImagePipeline, initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
@@ -109,7 +109,8 @@ try {
     SwipeMenuElement.register();
     DrawerElement.register();
     startSentry();
-    initialize({ usePersistentCacheKeyStore: true, globalSignatureKey: 'oss-doc-v3' });
+    // initialize({ usePersistentCacheKeyStore: true, globalSignatureKey: 'oss-doc-v3' });
+    initialize({ isDownsampleEnabled: true });
 
     if (PLAY_STORE_BUILD) {
         import('@shared/utils/inapp-purchase').then((r) => r.init());
@@ -120,7 +121,7 @@ try {
     // Trace.addCategories(Trace.categories.Layout);
     Trace.addCategories(CollectionViewTraceCategory);
     // Trace.addCategories(ImageViewTraceCategory);
-    // Trace.addCategories(ImageViewTraceCategory);
+    Trace.addCategories(ImageViewTraceCategory);
     Trace.enable();
 
     let launched = false;
@@ -141,7 +142,7 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
-        // DEV_LOG && console.log('launch');
+       // DEV_LOG && console.log('launch');
         startThemeHelper();
         launched = true;
         start();
