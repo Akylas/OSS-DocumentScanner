@@ -426,7 +426,7 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
             selection = (
                 await openFilePicker({
                     mimeTypes: ['image/*', 'application/pdf'].concat(CARD_APP ? ['application/vnd.apple.pkpass'] : []),
-                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
+                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier, UTType.typeWithFilenameExtension('pkpass').identifier] : undefined,
                     multipleSelection: true,
                     pickerMode: 0,
                     forceSAF: true
@@ -1477,6 +1477,7 @@ export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
             }
         });
     } else {
+        
         const page = (await import('~/components/view/DocumentView.svelte')).default;
         return navigate({
             page,
