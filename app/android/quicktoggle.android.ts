@@ -12,7 +12,6 @@ export function updateQuickToggle() {
     if (enabled) {
         pm.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
 
-        // 🔄 Request Android to refresh the tile’s state
         android.service.quicksettings.TileService.requestListeningState(context, component);
     } else {
         pm.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
