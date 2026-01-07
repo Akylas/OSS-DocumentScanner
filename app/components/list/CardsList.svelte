@@ -34,7 +34,9 @@
     let viewStyle: string;
     let nbColumns: Writable<number>;
     let syncEnabled: boolean;
+
     export let folder: DocFolder;
+    let getSyncColors: (item: Item) => string[];
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
@@ -264,7 +266,7 @@
     {itemTemplateSelector}
     {title}
     {updateColumns}
-    viewStyleChanged={(oldValue, newValue) => itemTemplateSelector(oldValue !== itemTemplateSelector(newValue))}
+    viewStyleChanged={(oldValue, newValue) => itemTemplateSelector(oldValue) !== itemTemplateSelector(newValue)}
     viewStyles={{
         cardholder: { name: lc('cardholder'), icon: 'mdi-view-agenda' },
         full: { name: lc('full'), icon: 'mdi-view-split-horizontal' },
@@ -280,6 +282,7 @@
     bind:folder
     bind:importDocument
     bind:refreshCollectionView
+    bind:getSyncColors
     bind:documents
     bind:folderItems
     bind:collectionView>
@@ -294,6 +297,7 @@
                 layout="cardholder"
                 {nbColumns}
                 {onFullCardItemTouch}
+                syncColors={getSyncColors(item)}
                 {syncEnabled}
                 on:tap={() => onItemTap(item)}
                 on:longPress={(e) => onItemLongPress(item, e)} />
@@ -310,6 +314,7 @@
             layout="full"
             {nbColumns}
             {onFullCardItemTouch}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -324,6 +329,7 @@
             layout="list"
             {nbColumns}
             {onFullCardItemTouch}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -338,6 +344,7 @@
             layout="columns"
             {nbColumns}
             {onFullCardItemTouch}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -354,6 +361,7 @@
                 {nbColumns}
                 {onFullCardItemTouch}
                 pkPassCell={true}
+                syncColors={getSyncColors(item)}
                 {syncEnabled}
                 on:tap={() => onItemTap(item)}
                 on:longPress={(e) => onItemLongPress(item, e)} />
@@ -371,6 +379,7 @@
             {nbColumns}
             {onFullCardItemTouch}
             pkPassCell={true}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -386,6 +395,7 @@
             {nbColumns}
             {onFullCardItemTouch}
             pkPassCell={true}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -401,6 +411,7 @@
             {nbColumns}
             {onFullCardItemTouch}
             pkPassCell={true}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />

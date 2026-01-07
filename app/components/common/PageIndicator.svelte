@@ -3,8 +3,6 @@
     export let text: string;
     export let defaultPadding = 6;
     export let scale = 1;
-    // technique for only specific properties to get updated on store change
-    $: ({ colorOnPrimary, colorPrimary } = $colors);
 </script>
 
 <label

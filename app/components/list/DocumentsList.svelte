@@ -36,10 +36,12 @@
     let nbSelected: number = 0;
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
+    let getSyncColors: (item: Item) => string[];
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
     let refreshCollectionView: () => void;
+
     $: condensed = viewStyle === 'condensed';
     function getItemRowHeight(viewStyle) {
         return condensed ? 80 : 150;
@@ -116,6 +118,7 @@
     bind:nbSelected
     bind:importDocument
     bind:refreshCollectionView
+    bind:getSyncColors
     bind:documents
     bind:folderItems
     bind:collectionView>
@@ -140,7 +143,7 @@
                 stretch="aspectFill"
                 width={getItemImageHeight(viewStyle) * $fontScale} />
             <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
-            <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
+            <SyncIndicator syncColors={getSyncColors(item)} visible={syncEnabled} />
             <PageIndicator horizontalAlignment="right" margin={10} scale={$fontScale} text={item.doc.pages.length} />
         </canvasview>
     </Template>

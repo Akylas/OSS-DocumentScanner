@@ -74,6 +74,7 @@
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
     import { OptionType } from '@shared/components/OptionSelect.svelte';
+    import { SERVICES_SYNC_COLOR, SERVICES_SYNC_MASK } from '~/services/sync/types';
 
     const textPaint = new Paint();
 
@@ -139,6 +140,19 @@
     export let sortOrder = ApplicationSettings.getString(SETTINGS_SORT_ORDER, DEFAULT_SORT_ORDER);
     export let syncEnabled = syncService.enabled;
     export let viewStyle: string = ApplicationSettings.getString(SETTINGS_VIEW_STYLE, DEFAULT_VIEW_STYLE);
+
+    export const getSyncColors = (item: Item) => {
+        const synced = item.doc._synced;
+        const result = [];
+        $syncServicesStore.forEach((d) => {
+            const mask = SERVICES_SYNC_MASK[d.type];
+            const color = d.color || SERVICES_SYNC_COLOR[d.type];
+            if (synced === 1 || (synced & mask) !== 0) {
+                result.push(color);
+            }
+        });
+        return result;
+    };
 
     $: if ($syncServicesStore) {
         syncEnabled = syncService.enabled;
@@ -778,6 +792,7 @@
     });
     onFontScaleChanged(refreshVisibleItems);
     onFolderBackgroundColorChanged(refreshCollectionView);
+    syncServicesStore.subscribe(refreshVisibleItems);
 
     let lottieDarkFColor;
     let lottieLightColor;

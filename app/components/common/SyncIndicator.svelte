@@ -10,25 +10,19 @@
 <script lang="ts">
     export let visible: boolean = false;
     export let size = 6;
-    export let synced = 0;
+    export let syncColors: string[] = [];
     let canvas: NativeViewElementNode<CanvasView>;
     // technique for only specific properties to get updated on store change
-    $: requestDraw(synced);
-    $: requestDraw($syncServicesStore);
+    $: requestDraw(syncColors);
     function requestDraw(...args) {
         canvas?.nativeElement.redraw();
     }
     function onDraw({ canvas }: { canvas: Canvas }) {
         let deltaX = 20;
-        // DEV_LOG && console.log('SyncIndicator', synced , $syncServicesStore);
-        $syncServicesStore.forEach((d) => {
-            const mask = SERVICES_SYNC_MASK[d.type];
-            const color = d.color || SERVICES_SYNC_COLOR[d.type];
-            if (synced === 1 || (synced & mask) !== 0) {
-                paint.color = color;
-                canvas.drawRoundRect(deltaX, size / 2, deltaX + 24, size, size / 2, size / 2, paint);
-                deltaX += 30;
-            }
+        syncColors.forEach((color) => {
+            paint.color = color;
+            canvas.drawRoundRect(deltaX, size / 2, deltaX + 24, size, size / 2, size / 2, paint);
+            deltaX += 30;
         });
     }
 </script>

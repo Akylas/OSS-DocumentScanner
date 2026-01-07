@@ -31,6 +31,7 @@
     export let pkPassCell: boolean = false;
     export let onFullCardItemTouch;
     export let layout: string;
+    export let syncColors: string[];
 
     function animateCards(animOptions, startIndex, endIndex = -1) {
         let index = startIndex;
@@ -260,7 +261,7 @@
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         {#if pkPassCell}
-            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} borderRadius={12} />
+            <PKPassCardCell borderRadius={12} {item} {itemWidth} {layout} {pkpass} />
         {:else}
             <RotableImageView {...getItemRotableImageParams(item)} />
             <label
@@ -279,7 +280,7 @@
         {/if}
         <!-- <gridlayout borderRadius={12}> -->
         <SelectedIndicator selected={item.selected} />
-        <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
+        <SyncIndicator {syncColors} verticalAlignment="top" visible={syncEnabled} />
         <!-- </gridlayout> -->
     </gridlayout>
     <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
