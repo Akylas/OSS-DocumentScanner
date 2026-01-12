@@ -1,0 +1,113 @@
+# Maestro Screenshot Generation for OSS Document Scanner Documentation
+#
+# This flow generates all screenshots needed for the documentation site.
+# Screenshots are saved directly to docs-site/static/img/ for the Docusaurus build.
+#
+# Prerequisites:
+# - Maestro CLI installed: https://maestro.mobile.dev/
+# - Android emulator or iOS simulator running
+# - OSS Document Scanner app installed (com.akylas.documentscanner)
+#
+# Usage:
+#   maestro test docs-site/maestro/generate-screenshots.yaml
+#
+# Or for specific platform:
+#   maestro test --platform android docs-site/maestro/generate-screenshots.yaml
+#   maestro test --platform ios docs-site/maestro/generate-screenshots.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+# Wait for app to fully load
+- launchApp:
+    clearState: true
+    
+- waitForAnimationToEnd
+
+# Allow time for initial load and any permission dialogs
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# Handle potential permission dialogs (Camera, Storage)
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+      
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+
+- waitForAnimationToEnd
+
+# Screenshot 1: Main document list (capture screen overview)
+- takeScreenshot: ../../static/img/capture-1
+
+# Navigate to camera/capture screen if not already there
+- runFlow:
+    when:
+      visible:
+        id: ".*fab.*"
+    commands:
+      - tapOn:
+          id: ".*fab.*"
+      - waitForAnimationToEnd
+      - takeScreenshot: ../../static/img/capture-1
+
+# Go back to document list
+- runFlow:
+    when:
+      visible: ".*back.*"
+    commands:
+      - tapOn: ".*back.*"
+      - waitForAnimationToEnd
+
+# Screenshot 2: Settings screen
+- runFlow:
+    file: flows/navigate-to-settings.yaml
+    
+- waitForAnimationToEnd
+- takeScreenshot: ../../static/img/settings-1
+
+# Navigate back from settings
+- pressKey: back
+- waitForAnimationToEnd
+
+# Screenshot 3: Sync settings (if accessible)
+- runFlow:
+    file: flows/navigate-to-sync.yaml
+    
+- waitForAnimationToEnd
+- takeScreenshot: ../../static/img/sync-1
+
+# Navigate back
+- pressKey: back
+- waitForAnimationToEnd
+
+# Screenshot 4: Export options (open a document first if available)
+- runFlow:
+    file: flows/show-export.yaml
+    
+- waitForAnimationToEnd
+- takeScreenshot: ../../static/img/export-1
+
+# Navigate back
+- pressKey: back
+- waitForAnimationToEnd
+
+# Screenshot 5: Edit screen (need a document to edit)
+- runFlow:
+    file: flows/show-edit.yaml
+    
+- waitForAnimationToEnd
+- takeScreenshot: ../../static/img/edit-1
+
+# Clean up
+- pressKey: back
+- pressKey: back
+- stopApp
