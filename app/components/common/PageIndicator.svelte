@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { colors } from '~/variables';
     export let text: string;
     export let defaultPadding = 6;
     export let scale = 1;
