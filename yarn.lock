@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=3f219b&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=435695&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -63,9 +63,9 @@ __metadata:
     postcss-combine-duplicated-selectors: "npm:10.0.3"
     postcss-loader: "npm:8.2.0"
     prettier: "npm:3.6.2"
-    prettier-plugin-svelte: "npm:3.4.0"
-    sass: "npm:1.92.1"
-    sass-loader: "npm:16.0.5"
+    prettier-plugin-svelte: "npm:3.4.1"
+    sass: "npm:1.97.2"
+    sass-loader: "npm:16.0.6"
     scss-symbols-parser: "npm:2.0.1"
     speed-measure-webpack-plugin: "npm:1.5.0"
     stats-webpack-plugin: "npm:0.7.0"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/10cec9070094ea95754e32f299ad0dacf5a1c4f1d1ec6da8f01834b27436db9e4440110658c25b6f866e9061862d9b71ff211cc2553b05dacd7e08768dde6e8a
+  checksum: 10/f914089eb98fe196806fc7e2e12e07513d7c34af51acea2d8e584ab4be53e0250abf44611795f6d7f64af235001f7b84015ce9ad7ae5be48cf4d4e7da5aa6440
   languageName: node
   linkType: hard
 
@@ -1165,13 +1165,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/gesturehandler@portal:/home/mguillon/dev/nativescript/gesturehandler/packages/gesturehandler::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@nativescript-community/gesturehandler@portal:/home/mguillon/dev/nativescript/gesturehandler/packages/gesturehandler::locator=root-workspace-0b6124%40workspace%3A."
+"@nativescript-community/gesturehandler@npm:2.0.39, @nativescript-community/gesturehandler@npm:^2.0.8":
+  version: 2.0.39
+  resolution: "@nativescript-community/gesturehandler@npm:2.0.39"
   dependencies:
     "@nativescript-community/observable": "npm:^2.0.10"
+  checksum: 10/d5bb73a8d48a039b4c1426cbc39045dd828cf0a700569a5b7c2d6954081dcc0d1e519605bd7e98cee56c930ca661b8b810dcbde3a1d38e1eaaacb33cea955323
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nativescript-community/https@npm:4.1.26":
   version: 4.1.26
@@ -1391,10 +1392,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-image@npm:4.6.6, @nativescript-community/ui-image@npm:^4.6.6":
+"@nativescript-community/ui-image@npm:4.6.6":
   version: 4.6.6
   resolution: "@nativescript-community/ui-image@npm:4.6.6"
   checksum: 10/6ffdda0f961e6e9db37f6baf548a68407e018f285779daadfe7563fd3be9683cea0c6f53e65466d38fd512d38609438b596d5282b06b40c04d81ce16e29cfc31
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/ui-image@npm:^4.6.6":
+  version: 4.6.8
+  resolution: "@nativescript-community/ui-image@npm:4.6.8"
+  checksum: 10/f7f223c083170549095f2f8759a0d8bc9a8eca3f13fe7375c87f8b403a6c99e1b7845ac84ce04aa723ee75366bc75f6809f67291a285de53ba316246caf488c9
   languageName: node
   linkType: hard
 
@@ -9887,13 +9895,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-svelte@npm:3.4.0":
-  version: 3.4.0
-  resolution: "prettier-plugin-svelte@npm:3.4.0"
+"prettier-plugin-svelte@npm:3.4.1":
+  version: 3.4.1
+  resolution: "prettier-plugin-svelte@npm:3.4.1"
   peerDependencies:
     prettier: ^3.0.0
     svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
-  checksum: 10/3ad8acae6348e699c0a61c8fe73a04fabf10cb2e5bc3f5d0d89c2443bdfafc24fe8d92db8c006a1d44f66320be65305c5a9c8f88c2f27ab4c248a31cb0051ba5
+  checksum: 10/e7b7eb30c652c3c26acc1d38d71528bbaacde7d82979dcfe30690419756f76b3baa4eb4ac9f896765b17d5bb5877f1b26d0fa3fac0f29b8de8b54c2f1c7ff8ea
   languageName: node
   linkType: hard
 
@@ -10586,33 +10594,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass-loader@npm:16.0.5":
-  version: 16.0.5
-  resolution: "sass-loader@npm:16.0.5"
-  dependencies:
-    neo-async: "npm:^2.6.2"
-  peerDependencies:
-    "@rspack/core": 0.x || 1.x
-    node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
-    sass: ^1.3.0
-    sass-embedded: "*"
-    webpack: ^5.0.0
-  peerDependenciesMeta:
-    "@rspack/core":
-      optional: true
-    node-sass:
-      optional: true
-    sass:
-      optional: true
-    sass-embedded:
-      optional: true
-    webpack:
-      optional: true
-  checksum: 10/978b553900427c3fc24ed16b8258829d6a851bc5b0ab226cf43143fc08a0386e8cd07db367104d190a6cf0945af071805f70773525a970673c5b61fda4b7a59e
-  languageName: node
-  linkType: hard
-
-"sass-loader@npm:^16.0.0":
+"sass-loader@npm:16.0.6, sass-loader@npm:^16.0.0":
   version: 16.0.6
   resolution: "sass-loader@npm:16.0.6"
   dependencies:
@@ -10638,9 +10620,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.92.1":
-  version: 1.92.1
-  resolution: "sass@npm:1.92.1"
+"sass@npm:1.97.2":
+  version: 1.97.2
+  resolution: "sass@npm:1.97.2"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -10651,7 +10633,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10/ded47fd238d20a826bf3c5d129b4849100abae6fafe525a082d936b5793d7fd59a914134a302f0a6780efb5b26fdc2d1f1bfa37d8a9302ba632cad5e67675eec
+  checksum: 10/a6b27e6a75bc8eedf0ce941a86e996f4a477640dfd214ecdcee5e8d7dca054bb03070974690b7f988a99ea729983cd8ddcdbb887bd068c73fde2d0010d835064
   languageName: node
   linkType: hard
 
