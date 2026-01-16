@@ -119,10 +119,12 @@ try {
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Layout);
-    Trace.addCategories(CollectionViewTraceCategory);
-    // Trace.addCategories(ImageViewTraceCategory);
-    Trace.addCategories(ImageViewTraceCategory);
-    Trace.enable();
+    if (__DEV__) {
+        Trace.addCategories(CollectionViewTraceCategory);
+        // Trace.addCategories(ImageViewTraceCategory);
+        Trace.addCategories(ImageViewTraceCategory);
+        Trace.enable();
+    }
 
     let launched = false;
     async function start() {
@@ -142,7 +144,7 @@ try {
         }
     }
     Application.on(Application.launchEvent, async () => {
-       // DEV_LOG && console.log('launch');
+        // DEV_LOG && console.log('launch');
         startThemeHelper();
         launched = true;
         start();
