@@ -3,6 +3,7 @@ import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale } from 
 import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+import UTC from 'dayjs/plugin/utc';
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '@shared/services/preferences';
 import { showError } from '@shared/utils/showError';
@@ -12,6 +13,7 @@ import { showAlertOptionSelect } from '~/utils/ui';
 import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_LOCALE, SETTINGS_LANGUAGE } from '~/utils/constants';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
+dayjs.extend(UTC);
 
 export let lang;
 export const $lang = writable(null);
@@ -178,18 +180,40 @@ prefs.on('key:clock_24', () => {
 });
 
 let currentLocale: any = null;
-export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
+export function getCurrentLocale() {
     if (__IOS__) {
         if (!currentLocale) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
-        const localeStr = (currentLocale as NSLocale).displayNameForKeyValue(NSLocaleIdentifier, locale || lang);
-        return localeStr ? capitalize(localeStr) : canReturnEmpty ? undefined : locale || lang;
     } else {
         if (!currentLocale) {
             currentLocale = java.util.Locale.forLanguageTag(lang);
         }
-        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayName(currentLocale as java.util.Locale));
+    }
+    return currentLocale;
+}
+
+export function formatCurrency(value, locale) {
+    if (__IOS__) {
+        // const nLocal = NSLoca.le.alloc().initWithLocaleIdentifier(locale) || (getCurrentLocale() as NSLocale);
+        const formatter = NSNumberFormatter.alloc().init();
+        // formatter.locale = nLocal;
+        formatter.currencyCode = locale;
+        formatter.numberStyle = NSNumberFormatterStyle.CurrencyStyle
+        return formatter.stringFromNumber(value);
+    } else {
+        const nLocal = java.util.Locale.forLanguageTag(locale) || (getCurrentLocale() as java.util.Locale);
+        const defaultCurrencyFormatter = java.text.NumberFormat.getCurrencyInstance(nLocal || currentLocale);
+        return defaultCurrencyFormatter.format(value);
+    }
+}
+
+export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
+    if (__IOS__) {
+        const localeStr = (getCurrentLocale() as NSLocale).displayNameForKeyValue(NSLocaleIdentifier, locale || lang);
+        return localeStr ? capitalize(localeStr) : canReturnEmpty ? undefined : locale || lang;
+    } else {
+        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayName(getCurrentLocale() as java.util.Locale));
     }
 }
 export function getCurrentISO3Language() {

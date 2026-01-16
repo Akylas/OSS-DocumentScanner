@@ -67,7 +67,8 @@ export async function getTransformedImage({
     document?: OCRDocument;
     defaultBackgroundColor?: string;
 }) {
-    DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
+    //TODO: support PKPass
+    // DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
     if (page.imagePath) {
         const imageSource = await loadImage(page.imagePath, { sourceWidth: page.width, sourceHeight: page.height, ...loadOptions });
         if (isNaN(imageSource.width)) {

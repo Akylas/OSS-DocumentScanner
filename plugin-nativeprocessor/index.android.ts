@@ -162,7 +162,7 @@ export async function detectQRCodeFromFile(src: string, options: Partial<DetectQ
 }
 
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
-    return androidFunctionCallbackPromise<any>(
+    return androidFunctionCallbackPromise<ImageSource>(
         (callback) => {
             com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCode(text, format, width, height, callback, options ? JSON.stringify(options) : '');
         },
@@ -171,7 +171,7 @@ export async function generateQRCodeImage(text: string, format: string, width: n
 }
 
 export async function getSVGFromQRCode(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
-    return androidFunctionCallbackPromise<any>(
+    return androidFunctionCallbackPromise<string>(
         (callback) => {
             com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSVG(text, format, hintSize, callback, options ? JSON.stringify(options) : '');
         },

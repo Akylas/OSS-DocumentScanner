@@ -22,7 +22,8 @@ import {
     SharedTransition,
     Utils,
     View,
-    knownFolders
+    knownFolders,
+    path
 } from '@nativescript/core';
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
@@ -77,6 +78,7 @@ import {
     PDFImportImages,
     PDF_EXT,
     PDF_IMPORT_IMAGES,
+    PKPASS_EXT,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
     SEPARATOR,
@@ -101,6 +103,7 @@ import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { importPKPassFile, importPKPassFiles } from '~/utils/pkpass-import';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -117,14 +120,16 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
-        const [pdf, images] = await uris.reduce(
+        const [pdf, images, pkpasses] = await uris.reduce(
             async (acc, e) => {
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
                     testStr = await getFileName(e);
                 }
                 acc.then((obj) => {
-                    if (testStr.endsWith(PDF_EXT)) {
+                    if (testStr.endsWith(PKPASS_EXT)) {
+                        obj[2].push(e);
+                    } else if (testStr.endsWith(PDF_EXT)) {
                         obj[0].push(e);
                     } else {
                         obj[1].push(e);
@@ -133,10 +138,12 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 return acc;
                 // return testStr.endsWith(PDF_EXT) ? [[...p, e], f] : [p, [...f, e]];
             },
-            Promise.resolve([[], []] as [string[], string[]])
+            Promise.resolve([[], [], []] as [string[], string[], string[]])
         );
-        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
-
+        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
+        if (pkpasses.length) {
+            return importPKPassFromUris({ uris: pkpasses, canGoToView: pdf.length === 0 && images.length === 0 });
+        }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
@@ -418,7 +425,7 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
         } else {
             selection = (
                 await openFilePicker({
-                    mimeTypes: ['image/*', 'application/pdf'],
+                    mimeTypes: ['image/*', 'application/pdf'].concat(CARD_APP ? ['application/vnd.apple.pkpass'] : []),
                     documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
                     multipleSelection: true,
                     pickerMode: 0,
@@ -2018,4 +2025,23 @@ export async function showCustomAlert<T>(component, options, props = {}): Promis
         componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
     } catch (error) {}
     return result;
+}
+
+export async function importPKPassFromUris({ canGoToView = true, uris }: { uris: string[]; canGoToView?: boolean }) {
+    try {
+        await showLoading(lc('importing'));
+
+        // Import the PKPass file
+        const document = await importPKPassFiles(uris, null);
+
+        if (canGoToView && document) {
+            await goToDocumentView(document);
+        }
+
+        showSnack({ message: lc('imported') });
+    } catch (error) {
+        showError(error);
+    } finally {
+        hideLoading();
+    }
 }
