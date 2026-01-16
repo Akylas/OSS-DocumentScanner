@@ -32,14 +32,12 @@
     $: backgroundImage = pkpass?.images?.background2x || pkpass?.images?.background; // 180x220 points
     $: thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail; // 90x90 points
     $: footerImage = pkpass?.images?.footer2x || pkpass?.images?.footer; // 286x15 points
-    $: DEV_LOG && console.log('pkpass', pkpass.imagesPath, logoImage, stripImage, iconImage, backgroundImage, thumbnailImage, footerImage, pkpass.images, JSON.stringify(pkpass.passData));
     const orgName = passData?.organizationName || getLocalizedText(passData?.logoText) || '';
 
     let barcodeSvg: string | undefined;
     $: if (primaryBarcode && foregroundColor) {
         getBarcodeSVG({ barcode: primaryBarcode, foregroundColor }).then((svg) => (barcodeSvg = svg));
     }
-    $: DEV_LOG && console.log('barcodeSvg', foregroundColor, barcodeSvg);
 
     function renderFieldValue(field: PKPassField): string {
         const value = pkpass.formatFieldValue(field, lang);
@@ -65,19 +63,19 @@
     <stacklayout padding="16" row={0}>
         <gridlayout columns="auto,*,auto,auto" verticalAlignment="center">
             <!-- Icon on the left (29x29 points per Apple spec) -->
-            {#if iconImage}
+            <!-- {#if iconImage}
                 <image col={0} height={29} marginRight={6} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={29} />
-            {/if}
+            {/if} -->
 
             <!-- Logo (max 160x50 points per Apple spec) -->
             {#if logoImage}
-                <image col={1} height={50} marginRight={8} src={logoImage} stretch="aspectFit" verticalAlignment="center" width={160} />
+                <image col={0} height={50} marginRight={8} src={logoImage} stretch="aspectFit" verticalAlignment="center" />
             {:else if !iconImage}
                 <!-- Just name if no icon or logo -->
-                <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" />
+                <label col={0} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" />
             {:else}
                 <!-- Name next to icon -->
-                <label col={1} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120} />
+                <label col={0} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} text={orgName} verticalAlignment="center" width={120} />
             {/if}
 
             <!-- Thumbnail on the right (90x90 points per Apple spec) -->

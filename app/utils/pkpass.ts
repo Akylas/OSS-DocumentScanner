@@ -290,7 +290,6 @@ export async function getBarcodeSVG({ barcode, foregroundColor, width = 300 }: {
             format: barcodeFormat,
             position: null
         };
-        DEV_LOG && console.log('getBarcodeSVG', barcode, foregroundColor, qrcodeData);
         return await qrcodeService.getQRCodeSVG(qrcodeData, width, new Color(foregroundColor));
     } catch (error) {
         console.error('Error generating barcode image:', error);
