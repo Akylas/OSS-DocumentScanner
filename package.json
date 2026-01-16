@@ -36,7 +36,7 @@
     },
     "dependencies": {
         "@akylas/kiss-orm": "2.1.14",
-        "@akylas/nativescript": "8.9.11",
+        "@akylas/nativescript": "8.9.12",
         "@akylas/nativescript-app-tools": "file:tools",
         "@akylas/nativescript-app-utils": "2.2.7",
         "@akylas/nativescript-inapp-purchase": "0.0.4",
@@ -65,7 +65,7 @@
         "@nativescript-community/ui-collectionview": "6.0.14",
         "@nativescript-community/ui-collectionview-swipemenu": "6.0.14",
         "@nativescript-community/ui-document-picker": "1.1.29",
-        "@nativescript-community/ui-image": "5.0.13",
+        "@nativescript-community/ui-image": "5.0.14",
         "@nativescript-community/ui-image-colorfilter": "5.0.14",
         "@nativescript-community/ui-label": "1.3.41",
         "@nativescript-community/ui-lottie": "~5.0.11",
@@ -122,8 +122,5 @@
         "./plugin-nativeprocessor",
         "./webpdfviewer"
     ],
-    "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
-    },
     "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b"
 }
