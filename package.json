@@ -36,7 +36,7 @@
     },
     "dependencies": {
         "@akylas/kiss-orm": "2.1.14",
-        "@akylas/nativescript": "8.9.12",
+        "@akylas/nativescript": "8.9.13",
         "@akylas/nativescript-app-tools": "file:tools",
         "@akylas/nativescript-app-utils": "2.2.7",
         "@akylas/nativescript-inapp-purchase": "0.0.4",
