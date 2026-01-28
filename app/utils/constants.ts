@@ -53,7 +53,7 @@ export const PDF_EXT = '.pdf';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
-export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 88;
+export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 120;
 export const FAB_BUTTON_OFFSET = 72;
 
 export const AUTO_SYNC = true;
