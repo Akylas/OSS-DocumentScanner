@@ -768,7 +768,6 @@ export async function showPDFPopoverMenu({
                         let componentInstanceInfo: ComponentInstanceInfo<GridLayout, ExportPDFAlertOptions__SvelteComponent_>;
                         try {
                             const defaultOptions = getPDFDefaultExportOptions();
-                            DEV_LOG && console.log('defaultOptions', JSON.stringify(defaultOptions));
                             componentInstanceInfo = resolveComponentElement(component, {
                                 jpegQuality: defaultOptions.jpegQuality,
                                 password: defaultOptions.password,
@@ -785,22 +784,28 @@ export async function showPDFPopoverMenu({
                                 const password = componentInstanceInfo.viewInstance.password;
                                 const jpegQuality = componentInstanceInfo.viewInstance.jpegQuality;
                                 const folder = componentInstanceInfo.viewInstance.folder;
-                                await Promise.all(
-                                    documents.map((document) => {
-                                        const filename = getFileNameForDocument(document) + PDF_EXT;
-                                        DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
-                                        return exportPDFAsync({
-                                            pages: document.pages.map((page) => ({ document, page })),
-                                            document,
-                                            folder,
-                                            filename,
-                                            options: {
-                                                jpegQuality,
-                                                password
-                                            }
-                                        });
-                                    })
-                                );
+                                DEV_LOG &&
+                                    console.log(
+                                        'bulk export',
+                                        documents.length,
+                                        documents.map((d) => d.name)
+                                    );
+                                // we do it in sequence as it mixes documents in parallel on Android. Could be a itextpdf issue
+                                for (let index = 0; index < documents.length; index++) {
+                                    const doc = documents[index];
+                                    const filename = getFileNameForDocument(doc) + PDF_EXT;
+                                    DEV_LOG && console.log('exportPDF', folder, filename, jpegQuality, password);
+                                    await exportPDFAsync({
+                                        pages: doc.pages.map((page) => ({ document: doc, page })),
+                                        document: doc,
+                                        folder,
+                                        filename,
+                                        options: {
+                                            jpegQuality,
+                                            password
+                                        }
+                                    });
+                                }
 
                                 hideLoading();
 
