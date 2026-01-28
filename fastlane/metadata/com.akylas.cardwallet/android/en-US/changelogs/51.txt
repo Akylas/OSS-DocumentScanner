@@ -1,0 +1,3 @@
+Bug fixes:
+- quicktoggle not showing
+- crash while trying to scan a document
