@@ -1,0 +1,5 @@
+Bug fixes:
+- bulk export fix
+- making the long press / drag easier
+- selection fixes in main view
+- another images regression fix
