@@ -19,6 +19,7 @@ import { type WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sy
 import { WebdavImageSyncService } from '~/services/sync/WebdavImageSyncService';
 import { WebdavPDFSyncService } from '~/services/sync/WebdavPDFSyncService';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/services/sync/types';
+import { SyncNotificationManager } from '~/workers/SyncNotificationManager';
 import {
     DOCUMENT_DATA_FILENAME,
     EVENT_DOCUMENT_ADDED,
@@ -28,6 +29,7 @@ import {
     EVENT_DOCUMENT_UPDATED,
     EVENT_FOLDER_ADDED,
     EVENT_FOLDER_UPDATED,
+    EVENT_SYNC_PROGRESS,
     EVENT_SYNC_STATE,
     FOLDERS_DATA_FILENAME,
     IMG_COMPRESS,
@@ -146,12 +148,29 @@ export default class SyncWorker extends BaseWorker {
         return this.services?.length > 0;
     }
     services: BaseSyncService[];
+    notificationManager: SyncNotificationManager;
 
     getStoredSyncServices() {
         return JSON.parse(ApplicationSettings.getString(SETTINGS_SYNC_SERVICES, '[]')) as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[];
     }
 
     queue = new Queue();
+    
+    // Helper method to update progress on both notification and event
+    updateSyncProgress(type: 'data' | 'image' | 'pdf', current: number, total: number, documentId?: string, documentName?: string) {
+        // Update Android notification
+        if (__ANDROID__ && this.notificationManager) {
+            this.notificationManager.updateProgress(current, total, documentName);
+        }
+        
+        // Emit progress event
+        this.notify({
+            eventName: EVENT_SYNC_STATE,
+            state: 'running',
+            progress: { type, current, total, documentId, documentName }
+        } as SyncStateEventData);
+    }
+    
     async syncDocumentsQueue(
         data: {
             withFolders?;
@@ -180,6 +199,17 @@ export default class SyncWorker extends BaseWorker {
             if (!documentsService.started) {
                 return;
             }
+            
+            // Initialize notification manager if not already done
+            if (__ANDROID__ && !this.notificationManager) {
+                this.notificationManager = new SyncNotificationManager();
+            }
+            
+            // Show sync started notification
+            if (__ANDROID__ && this.notificationManager) {
+                this.notificationManager.showSyncStarted();
+            }
+            
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
             DEV_LOG && console.warn('syncDocuments', bothWays, event?.eventName, type);
 
@@ -207,8 +237,19 @@ export default class SyncWorker extends BaseWorker {
             if (type === 0 || (type & SyncType.PDF) !== 0) {
                 await this.syncPDFDocuments({ force, event });
             }
+            
+            // Show sync complete notification
+            if (__ANDROID__ && this.notificationManager) {
+                this.notificationManager.showSyncComplete();
+            }
         } catch (error) {
             // console.error('error during worker sync', error, error.stack);
+            
+            // Show error notification
+            if (__ANDROID__ && this.notificationManager) {
+                this.notificationManager.showSyncError(error?.message || 'Sync failed');
+            }
+            
             this.sendError(error);
         } finally {
             console.warn('sync done');
@@ -301,12 +342,18 @@ export default class SyncWorker extends BaseWorker {
                                 toBeSyncDocuments.map((d) => d.id)
                             );
 
+                        // Calculate total items to sync for progress tracking
+                        const totalItemsToSync = documentsToDeleteOnRemote.length + missingRemoteDocuments.length + missingLocalDocuments.length + toBeSyncDocuments.length;
+                        let currentItemIndex = 0;
+
                         for (let index = 0; index < documentsToDeleteOnRemote.length; index++) {
                             const id = documentsToDeleteOnRemote[index];
                             const missingLocalIndex = missingLocalDocuments.findIndex((d) => d.basename === id);
                             if (missingLocalIndex !== -1) {
                                 missingLocalDocuments.splice(missingLocalIndex, 1);
                                 await service.removeDocumentFromRemote(id);
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, id);
                             }
                         }
                         ApplicationSettings.remove(deleteKey);
@@ -314,6 +361,8 @@ export default class SyncWorker extends BaseWorker {
                             const doc = missingRemoteDocuments[index];
                             await service.addDocumentToRemote(doc);
                             doc.save({ _synced: doc._synced | service.syncMask }, false);
+                            currentItemIndex++;
+                            this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, doc.id, doc.name);
                         }
                         for (let index = 0; index < missingLocalDocuments.length; index++) {
                             const data = await service.importDocumentFromRemote(missingLocalDocuments[index]);
@@ -322,10 +371,14 @@ export default class SyncWorker extends BaseWorker {
                                 await doc.save({ _synced: doc._synced | service.syncMask }, true, false);
                                 DEV_LOG && console.log('importFolderFromWebdav done');
                                 documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc, folder });
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, doc.id, doc.name);
                             }
                         }
                         for (let index = 0; index < toBeSyncDocuments.length; index++) {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
+                            currentItemIndex++;
+                            this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, toBeSyncDocuments[index].id, toBeSyncDocuments[index].name);
                         }
                     } else {
                         if (withFolders || (event && (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED))) {
@@ -380,6 +433,11 @@ export default class SyncWorker extends BaseWorker {
                                     'toBeSyncDocuments',
                                     toBeSyncDocuments.map((d) => d.id)
                                 );
+                            
+                            // Calculate total items to sync for progress tracking
+                            const totalItemsToSync = documentsToDeleteOnRemote.length + missingRemoteDocuments.length + toBeSyncDocuments.length;
+                            let currentItemIndex = 0;
+                            
                             if (service.allowToRemoveOnRemote) {
                                 for (let index = 0; index < documentsToDeleteOnRemote.length; index++) {
                                     const id = documentsToDeleteOnRemote[index];
@@ -387,17 +445,23 @@ export default class SyncWorker extends BaseWorker {
                                     if (missingLocalIndex !== -1) {
                                         missingLocalDocuments.splice(missingLocalIndex, 1);
                                         await service.removeDocumentFromRemote(id);
+                                        currentItemIndex++;
+                                        this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, id);
                                     }
                                 }
                             }
                             for (let index = 0; index < missingRemoteDocuments.length; index++) {
                                 await service.addDocumentToRemote(missingRemoteDocuments[index]);
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, missingRemoteDocuments[index].id, missingRemoteDocuments[index].name);
                             }
                             // for (let index = 0; index < missingLocalDocuments.length; index++) {
                             //     await this.importDocumentFromWebdav(missingLocalDocuments[index]);
                             // }
                             for (let index = 0; index < toBeSyncDocuments.length; index++) {
                                 await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, toBeSyncDocuments[index].id, toBeSyncDocuments[index].name);
                             }
                         }
                     }
