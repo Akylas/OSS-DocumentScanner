@@ -33,6 +33,7 @@ import {
     IMG_COMPRESS,
     IMG_FORMAT,
     SETTINGS_SYNC_SERVICES,
+    VALID_MARKER_FILENAME,
     getImageExportSettings
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
@@ -561,7 +562,11 @@ export default class SyncWorker extends BaseWorker {
             }
 
             if (needsRemoteDocUpdate) {
+                // Remove .valid marker before updating to mark as invalid during sync
+                await service.removeValidMarker(document.id);
                 await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString());
+                // Recreate .valid marker after successful update
+                await service.createValidMarker(document.id);
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate || (document.folders && !dataJSON.folders)) {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
@@ -665,7 +670,11 @@ export default class SyncWorker extends BaseWorker {
                     }
                 }
             }
+            // Remove .valid marker before updating to mark as invalid during sync
+            await service.removeValidMarker(document.id);
             await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString(), { overwrite: true });
+            // Recreate .valid marker after successful update
+            await service.createValidMarker(document.id);
             return document.save({ _synced: document._synced | service.syncMask });
         } else if ((document._synced & service.syncMask) === 0) {
             // DEV_LOG && console.log('syncDocumentOnWebdav just changing sync state');

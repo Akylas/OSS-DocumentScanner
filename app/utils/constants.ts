@@ -141,3 +141,4 @@ export const EVENT_SYNC_STATE = 'syncState';
 
 export const FOLDERS_DATA_FILENAME = 'folders.json';
 export const DOCUMENT_DATA_FILENAME = 'data.json';
+export const VALID_MARKER_FILENAME = '.valid';
