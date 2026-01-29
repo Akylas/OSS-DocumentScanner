@@ -486,6 +486,18 @@ export default class SyncWorker extends BaseWorker {
         const dataJSON = JSON.parse(await service.getFileFromRemote(DOCUMENT_DATA_FILENAME, document)) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
         DEV_LOG && console.info('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
+        
+        // Check if this is a legacy document (no .valid marker yet) for migration
+        let needsValidMarkerMigration = false;
+        try {
+            needsValidMarkerMigration = !(await service.hasValidMarker(document.id));
+            if (needsValidMarkerMigration) {
+                DEV_LOG && console.log('syncDocumentOnRemote: legacy document without .valid marker', document.id);
+            }
+        } catch (error) {
+            // Ignore errors checking for .valid marker
+        }
+        
         if (dataJSON.modifiedDate > document.modifiedDate) {
             let needsRemoteDocUpdate = false;
             const { folders: localFolders, pages: docPages, ...docProps } = document.toJSON();
@@ -631,6 +643,11 @@ export default class SyncWorker extends BaseWorker {
                 await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString());
                 // Recreate .valid marker after successful update
                 await service.createValidMarker(document.id);
+            } else if (needsValidMarkerMigration) {
+                // No changes to push, but this is a legacy document without .valid marker
+                // Create the marker to complete migration
+                await service.createValidMarker(document.id);
+                DEV_LOG && console.log('syncDocumentOnRemote: created .valid marker for legacy document (no changes)', document.id);
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate || (document.folders && !dataJSON.folders)) {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
@@ -742,7 +759,17 @@ export default class SyncWorker extends BaseWorker {
             return document.save({ _synced: document._synced | service.syncMask });
         } else if ((document._synced & service.syncMask) === 0) {
             // DEV_LOG && console.log('syncDocumentOnWebdav just changing sync state');
+            if (needsValidMarkerMigration) {
+                // No changes to sync, but this is a legacy document without .valid marker
+                // Create the marker to complete migration
+                await service.createValidMarker(document.id);
+                DEV_LOG && console.log('syncDocumentOnRemote: created .valid marker for legacy document (sync state only)', document.id);
+            }
             return document.save({ _synced: document._synced | service.syncMask });
+        } else if (needsValidMarkerMigration) {
+            // Document is already synced and no changes, but needs .valid marker for migration
+            await service.createValidMarker(document.id);
+            DEV_LOG && console.log('syncDocumentOnRemote: created .valid marker for legacy document (already synced)', document.id);
         }
     }
     async syncImageDocuments({ event, force = false }: { force; event: DocumentEvents }) {
