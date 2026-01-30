@@ -156,29 +156,22 @@ export class WebdavDataSyncService extends BaseDataSyncService {
         // Check for .valid marker to ensure sync safety
         const hasValid = await this.hasValidMarker(data.basename);
         
+        // REQUIREMENT: No legacy migration - if no .valid file, skip the document
+        // First sync to remote will create .valid, then we can pull
+        if (!hasValid) {
+            DEV_LOG && console.warn('importDocumentFromRemote: skipping remote document without .valid marker', data.basename);
+            return;
+        }
+        
         let remoteData: string;
         try {
             remoteData = await this.client.getFileContents(path.join(data.filename, DOCUMENT_DATA_FILENAME), {
                 format: 'text'
             });
         } catch (error) {
-            // No data.json in that folder
-            if (!hasValid) {
-                // Neither .valid nor data.json exists - invalid/corrupt folder, skip it
-                DEV_LOG && console.warn('importDocumentFromRemote: invalid remote document (no .valid, no data.json)', data.basename);
-                return;
-            }
             // Has .valid but no data.json - corrupt, skip it
             DEV_LOG && console.warn('importDocumentFromRemote: corrupt remote document (has .valid but no data.json)', data.basename);
             return;
-        }
-
-        // Migration path: If data.json exists but no .valid marker, this is a legacy document
-        // We'll import it and create a .valid marker for future syncs
-        const isLegacyDocument = !hasValid;
-        
-        if (isLegacyDocument) {
-            DEV_LOG && console.log('importDocumentFromRemote: migrating legacy document', data.basename);
         }
 
         const dataJSON: OCRDocument & { pages: OCRPage[]; db_version?: number } = JSON.parse(remoteData);
@@ -211,17 +204,6 @@ export class WebdavDataSyncService extends BaseDataSyncService {
                 for (let index = 0; index < actualFolders.length; index++) {
                     folder = actualFolders[index];
                     doc.setFolder({ folderId: folder.id });
-                }
-            }
-            
-            // If this was a legacy document, create .valid marker now for future syncs
-            if (isLegacyDocument) {
-                try {
-                    await this.createValidMarker(data.basename);
-                    DEV_LOG && console.log('importDocumentFromRemote: created .valid marker for legacy document', data.basename);
-                } catch (error) {
-                    DEV_LOG && console.warn('importDocumentFromRemote: failed to create .valid marker', data.basename, error);
-                    // Don't fail the import if .valid creation fails
                 }
             }
             
