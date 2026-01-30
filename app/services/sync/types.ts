@@ -26,3 +26,11 @@ export enum SyncType {
 export function getRemoteDeleteDocumentSettingsKey(s: BaseSyncService) {
     return s.type + '_docs_to_remove_remote';
 }
+
+export interface SyncProgressData {
+    type: 'data' | 'image' | 'pdf';
+    current: number;
+    total: number;
+    documentId?: string;
+    documentName?: string;
+}
