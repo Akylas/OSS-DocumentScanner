@@ -814,8 +814,13 @@ export default class SyncWorker extends BaseWorker {
                         await service.ensureRemoteFolder();
                         const remoteFiles = await service.getRemoteFolderFiles('');
                         DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
-                        for (let index = 0; index < localDocuments.length; index++) {
-                            const doc = localDocuments[index];
+                        
+                        // Calculate total pages for progress tracking
+                        const totalPages = documentsToSync.reduce((sum, d) => sum + d.pages.length, 0);
+                        let currentPageIndex = 0;
+                        
+                        for (let index = 0; index < documentsToSync.length; index++) {
+                            const doc = documentsToSync[index];
                             for (let j = 0; j < doc.pages.length; j++) {
                                 const page = doc.pages[j];
                                 const name = service.getImageName(doc.document, page, j, exportFormat);
@@ -848,6 +853,8 @@ export default class SyncWorker extends BaseWorker {
                                         }
                                     }
                                 }
+                                currentPageIndex++;
+                                this.updateSyncProgress('image', currentPageIndex, totalPages, doc.document.id, doc.document.name);
                             }
                             await doc.document.save({ _synced: doc.document._synced | service.syncMask });
                         }
@@ -886,6 +893,11 @@ export default class SyncWorker extends BaseWorker {
                         const remoteFiles = await service.getRemoteFolderFiles('');
                         DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
                         const baseOCRDataPath = ApplicationSettings.getString('tesseract_datapath_base', path.join(knownFolders.documents().path, 'tesseract'));
+                        
+                        // Calculate total documents for progress tracking
+                        const totalDocuments = documentsToSync.length;
+                        let currentDocIndex = 0;
+                        
                         for (let index = 0; index < documentsToSync.length; index++) {
                             const doc = documentsToSync[index];
                             //see if we need to OCR
@@ -901,6 +913,8 @@ export default class SyncWorker extends BaseWorker {
                                 await service.writePDF(doc, name, service.useFoldersStructure && doc.folders?.length ? await documentsService.folderRepository.findFolderById(doc.folders[0]) : null);
                             }
                             await doc.save({ _synced: doc._synced | service.syncMask });
+                            currentDocIndex++;
+                            this.updateSyncProgress('pdf', currentDocIndex, totalDocuments, doc.id, doc.name);
                         }
                     }
                     DEV_LOG && console.log('syncPDFDocuments', 'handling service done', service.type, service.id, service.autoSync, force);
