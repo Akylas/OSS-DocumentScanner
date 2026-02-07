@@ -69,7 +69,7 @@ try {
     installUIMixins();
     overrideSpanAndFormattedString();
 
-    registerNativeViewElement('cropview', () => CropView);
+    // registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
     registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
     registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
@@ -120,9 +120,9 @@ try {
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Layout);
     if (__DEV__) {
-        Trace.addCategories(CollectionViewTraceCategory);
+        // Trace.addCategories(CollectionViewTraceCategory);
         // Trace.addCategories(ImageViewTraceCategory);
-        Trace.addCategories(ImageViewTraceCategory);
+        // Trace.addCategories(ImageViewTraceCategory);
         Trace.enable();
     }
 

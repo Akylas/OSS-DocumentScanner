@@ -103,7 +103,7 @@ import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
 import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
-import { importPKPassFile, importPKPassFiles } from '~/utils/pkpass-import';
+import { importPKPassFiles } from '~/utils/pkpass-import';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -127,7 +127,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                     testStr = await getFileName(e);
                 }
                 acc.then((obj) => {
-                    if (testStr.endsWith(PKPASS_EXT)) {
+                    if (CARD_APP && testStr.endsWith(PKPASS_EXT)) {
                         obj[2].push(e);
                     } else if (testStr.endsWith(PDF_EXT)) {
                         obj[0].push(e);
@@ -141,7 +141,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
             Promise.resolve([[], [], []] as [string[], string[], string[]])
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
-        if (pkpasses.length) {
+        if (CARD_APP && pkpasses.length) {
             return importPKPassFromUris({ uris: pkpasses, canGoToView: pdf.length === 0 && images.length === 0 });
         }
         // First we check/ask the user if he wants to import PDF pages or images
@@ -1082,7 +1082,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                             break;
                         case 'export':
                         case 'save_gallery': {
-                            if (!exportDirectory) {
+                            if (!exportDirectory && item.id !== 'save_gallery') {
                                 if (await pickExportFolder()) {
                                     const item = options.getItem(0);
                                     item.subtitle = exportDirectoryName;
@@ -1477,7 +1477,6 @@ export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
             }
         });
     } else {
-        
         const page = (await import('~/components/view/DocumentView.svelte')).default;
         return navigate({
             page,
@@ -2029,20 +2028,22 @@ export async function showCustomAlert<T>(component, options, props = {}): Promis
 }
 
 export async function importPKPassFromUris({ canGoToView = true, uris }: { uris: string[]; canGoToView?: boolean }) {
-    try {
-        await showLoading(lc('importing'));
+    if (CARD_APP) {
+        try {
+            await showLoading(lc('importing'));
 
-        // Import the PKPass file
-        const document = await importPKPassFiles(uris, null);
+            // Import the PKPass file
+            const document = await importPKPassFiles(uris, null);
 
-        if (canGoToView && document) {
-            await goToDocumentView(document);
+            if (canGoToView && document) {
+                await goToDocumentView(document);
+            }
+
+            showSnack({ message: lc('imported') });
+        } catch (error) {
+            showError(error);
+        } finally {
+            hideLoading();
         }
-
-        showSnack({ message: lc('imported') });
-    } catch (error) {
-        showError(error);
-    } finally {
-        hideLoading();
     }
 }

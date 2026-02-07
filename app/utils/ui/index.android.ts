@@ -40,7 +40,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     const imageUri = intent.getParcelableExtra('android.intent.extra.STREAM') as android.net.Uri;
                     if (imageUri) {
                         const uri = imageUri.toString();
-                        if (isPKPassUri(intent, uri)) {
+                        if (CARD_APP && isPKPassUri(intent, uri)) {
                             pkpassUris.push(uri);
                         } else {
                             uris.push(uri);
@@ -52,7 +52,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     DEV_LOG && console.log('uris', uri);
                     if (uri) {
                         const uriStr = uri.toString();
-                        if (isPKPassUri(intent, uriStr)) {
+                        if (CARD_APP && isPKPassUri(intent, uriStr)) {
                             pkpassUris.push(uriStr);
                         } else {
                             uris.push(uriStr);
@@ -64,7 +64,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     if (imageUris) {
                         for (let index = 0; index < imageUris.size(); index++) {
                             const uri = imageUris.get(index).toString();
-                            if (isPKPassUri(intent, uri)) {
+                            if (CARD_APP && isPKPassUri(intent, uri)) {
                                 pkpassUris.push(uri);
                             } else {
                                 uris.push(uri);
@@ -129,7 +129,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                     });
                 }
             }
-            if (pkpassUris.length) {
+            if (CARD_APP && pkpassUris.length) {
                 await importPKPassFromUris({ uris: pkpassUris });
             }
             if (uris.length) {

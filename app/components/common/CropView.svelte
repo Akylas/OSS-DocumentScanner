@@ -58,6 +58,8 @@
     export let undos = [];
     export let redos = [];
 
+    $: DEV_LOG && console.log('cropview imagePath', imagePath);
+
     let actualWidth = imageWidth;
     let actualHeight = imageHeight;
     let needRotation = false;
@@ -547,6 +549,6 @@
 </script>
 
 <gridlayout backgroundColor={isEInk ? 'white' : 'black'} {...$$restProps} id="cropView" on:redo={applyRedo} on:undo={applyUndo}>
-    <RotableImageView backgroundColor="white" decodeWidth={ZOOM_IMAGE_MAX_SIZE} margin={padding} src={imagePath} stretch="aspectFit" />
+    <RotableImageView backgroundColor="white" decodeWidth={ZOOM_IMAGE_MAX_SIZE} margin={padding} src={imagePath} stretch="aspectFit" zoomable={true}/>
     <canvasView bind:this={canvasView} on:draw={onCanvasDraw} on:layoutChanged={() => updateMatrix()} on:touch={onTouch} />
 </gridlayout>

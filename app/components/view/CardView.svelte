@@ -1,6 +1,8 @@
 <script context="module" lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
+    import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { Pager } from '@nativescript-community/ui-pager';
@@ -27,8 +29,6 @@
     import dayjs from 'dayjs';
     import { QRCodeData, QRCodeSingleData, detectQRCodeFromFile } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
@@ -37,7 +37,6 @@
     import { lc } from '~/helpers/locale';
     import { colorTheme, isDarkTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { Document, ExtraFieldType, OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import { PKPass } from '~/models/PKPass';
     import {
         DocumentDeletedEventData,
         DocumentPageDeletedEventData,
@@ -61,14 +60,14 @@
         SETTINGS_FORCE_WHITE_BACKGROUND_QRCODE
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
+    import { documentHasPKPassData } from '~/utils/pkpass';
     import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
     import { requestCameraPermission } from '~/utils/utils.common';
     import { colors, fontScale, hasCamera, isLandscape, onFontScaleChanged, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
-    import EditNameActionBar from '../common/EditNameActionBar.svelte';
-    import IconButton from '../common/IconButton.svelte';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import PKPassView from './PKPassView.svelte';
-    import { documentHasPKPassData } from '~/utils/pkpass';
+    import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
+    import PKPassView from '~/components/pkpass/PKPassView.svelte';
 
     const rowMargin = 8;
     // -10 show just a bit of the one hidden on the right
@@ -1176,7 +1175,7 @@
             <pager bind:this={pager} items={document.pages} row={2} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
                 <Template let:item>
                     <stacklayout padding="0">
-                        <PKPassView pkpass={item.pkpass} />
+                        <PKPassView {document} pkpass={item.pkpass} />
                     </stacklayout>
                 </Template>
             </pager>
@@ -1338,7 +1337,7 @@
             row={2}
             visibility={editing ? 'collapsed' : 'visible'}>
             <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" visibility={isPKPassDocument ? 'collapsed' : 'visible'} on:tap={startEdit} />
-            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" on:tap={throttle(() => showFullscreen(), 500)} />
+            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" visibility={isPKPassDocument ? 'collapsed' : 'visible'} on:tap={throttle(() => showFullscreen(), 500)} />
 
             <mdbutton
                 bind:this={fabHolder}

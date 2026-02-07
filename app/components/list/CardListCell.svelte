@@ -1,19 +1,18 @@
 <script context="module" lang="ts">
     import { Color, Utils, View } from '@akylas/nativescript';
 
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
-    import { colorTheme, isEInk } from '~/helpers/theme';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SyncIndicator from '~/components/common/SyncIndicator.svelte';
+    import { Item } from '~/components/list/MainList.svelte';
+    import PKPassCardCell from '~/components/pkpass/PKPassCardCell.svelte';
+    import { isEInk } from '~/helpers/theme';
     import { CARD_RATIO } from '~/utils/constants';
-    import { colors, isLandscape, screenHeightDips, screenWidthDips } from '~/variables';
-    import RotableImageView from '../common/RotableImageView.svelte';
-    import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    import SyncIndicator from '../common/SyncIndicator.svelte';
-    import { Item } from './MainList.svelte';
-    import PKPassCardCell from './PKPassCardCell.svelte';
-    import { PKPass } from '~/models/PKPass';
+    import { colors } from '~/variables';
     const rowMargin = 8;
 </script>
 
@@ -261,7 +260,7 @@
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         {#if pkPassCell}
-            <PKPassCardCell borderRadius={12} {item} {itemWidth} {layout} {pkpass} />
+            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} />
         {:else}
             <RotableImageView {...getItemRotableImageParams(item)} />
             <label

@@ -1,5 +1,5 @@
 import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
-import { Screen, Utils, knownFolders } from '@nativescript/core';
+import { ImageSource, Screen, Utils, knownFolders, path } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { CustomError, SilentError, TimeoutError } from '@shared/utils/error';
 import { generatePDFASync } from 'plugin-nativeprocessor';
@@ -10,6 +10,9 @@ import { requestStoragePermission } from '~/utils/utils.common';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
 import { timeout } from '~/utils/ui';
 import { throwError } from '@nativescript-community/sqlite/sqlite.common';
+import { Canvas } from '@nativescript-community/ui-canvas';
+import { recycleImages } from '~/utils/images';
+import { pkpassToImage, renderPKPassToCanvas } from '~/utils/pkpass';
 export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, options: baseOptions, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
@@ -23,6 +26,23 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
         //         page.colorMatrix = getColorMatrix(page.colorType);
         //     }
         // });
+        if (CARD_APP) {
+            // look through pages to find pkpasses
+            for (const page of pages) {
+                if (page.page.pkpass) {
+                    const imageSource = await pkpassToImage(page.page.pkpass, {
+                        layout: 'full',
+                        includeBackFields: false
+                    });
+                    // render the pkpass in temp file and pass that image to the pdf renderer
+                    const tempImage = path.join(knownFolders.temp().path, `pkpass_${page.page.pkpass_id}.jpg`);
+                    await imageSource.saveToFileAsync(tempImage, 'png', 100);
+                    recycleImages(imageSource);
+                    page.page = { ...page.page, imagePath: tempImage, scale:2, width: imageSource.width, height: imageSource.height } as any;
+                }
+            }
+        }
+
         const options = JSON.stringify({
             ...getPDFDefaultExportOptions(),
             // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
