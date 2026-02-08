@@ -732,7 +732,7 @@
                             // color: (item) => (!!item.value ? colorPrimary : undefined)
                         }))
                     )
-                    .concat([{ type: 'checkbox', title: lc('ascending'), id: 'ascending' }])
+                    .concat([{ type: 'checkbox', title: lc('ascending'), id: 'ascending', value: sortOrder.indexOf('ASC') !== -1 }])
             );
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
             await showPopoverMenu({
