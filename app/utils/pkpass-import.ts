@@ -7,6 +7,7 @@ import { getFormatedDateForFilename } from '~/utils/utils.common';
 import { DOCUMENT_NAME_FORMAT, EVENT_DOCUMENT_ADDED, SETTINGS_DOCUMENT_NAME_FORMAT } from '~/utils/constants';
 import { ApplicationSettings, ImageSource } from '@nativescript/core';
 import { doInBatch } from '@shared/utils/batch';
+import { copyFolderContent } from './file';
 
 /**
  * Import a PKPass file and create a document from it
@@ -54,13 +55,7 @@ export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): 
 
         // Copy extracted files to page folder
         const extractedFolder = Folder.fromPath(extractedPath);
-        const entities = await extractedFolder.getEntities();
-        for (const entity of entities) {
-            const destPath = path.join(pkpassFolder.path, entity.name);
-            if (entity instanceof File) {
-                await entity.copy(destPath);
-            }
-        }
+        await copyFolderContent(extractedPath, pkpassFolder.path);
 
         // Clean up temp folder
         await extractedFolder.remove();
@@ -207,13 +202,7 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
 
             // Copy extracted files to page folder
             const extractedFolder = Folder.fromPath(extractedPath);
-            const entities = await extractedFolder.getEntities();
-            for (const entity of entities) {
-                const destPath = path.join(pkpassFolder.path, entity.name);
-                if (entity instanceof File) {
-                    await entity.copy(destPath);
-                }
-            }
+            await copyFolderContent(extractedPath, pkpassFolder.path);
 
             // Clean up temp folder
             await extractedFolder.remove();
@@ -276,4 +265,3 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
 
     return document;
 }
-

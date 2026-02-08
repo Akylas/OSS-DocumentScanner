@@ -56,7 +56,6 @@ function loadPKPassLocalizations(extractPath: string): { [languageCode: string]:
     try {
         const extractFolder = Folder.fromPath(extractPath);
         const entities = extractFolder.getEntitiesSync();
-
         for (const entity of entities) {
             const entityName = entity.name;
             // Check if it's a .lproj folder

@@ -102,8 +102,10 @@ import { recycleImages } from '~/utils/images';
 import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { cleanFilename, requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
 import { importPKPassFiles } from '~/utils/pkpass-import';
+import { zip } from 'plugin-zip';
+import { getPKPassDisplayName } from '../pkpass';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -993,11 +995,23 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
 
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
-            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
-            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
+            { id: 'export', name: lc('export'), icon: 'mdi-export' },
+            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple' },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
         ] as any)
     );
+    if (CARD_APP && pages.some((p) => p.page.pkpass)) {
+        options.splice(options.length - 2, 0, {
+            id: 'export_pkpass',
+            name: lc('export_passbooks'),
+            icon: 'mdi-export'
+        } as any);
+        options.push({
+            id: 'share_pkpass',
+            name: lc('share_passbooks'),
+            icon: 'mdi-share-variant'
+        } as any);
+    }
     return new Promise<boolean>((resolve, reject) => {
         showPopoverMenu({
             options,
@@ -1080,6 +1094,80 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 recycleImages(images);
                             }
                             break;
+                        case 'share_pkpass': {
+                            if (CARD_APP) {
+                                await closePopover();
+                                const files = [];
+                                await doInBatch(
+                                    pages.filter((p) => p.page.pkpass),
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const page = p.page;
+                                        const fileName = page.name ?? p.document.name ?? `${p.document.id}_${page.pkpass_id}`;
+                                        const outputZip = knownFolders.temp().getFolder(`${cleanFilename(fileName)}.pkpass`, false);
+
+                                        const docFolder = p.document.folderPath;
+                                        const pageFolder = docFolder.getFolder(page.id);
+                                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                                        await zip({ directory: pkpassFolder.path, archive: outputZip.path, keepParent: false });
+
+                                        files.push(outputZip.path);
+                                    }
+                                );
+                                await share({ files });
+                                didDoSomething = true;
+                            }
+                            break;
+                        }
+                        case 'export_pkpass': {
+                            if (CARD_APP) {
+                                if (!exportDirectory) {
+                                    if (await pickExportFolder()) {
+                                        const item = options.getItem(0);
+                                        item.subtitle = exportDirectoryName;
+                                        options.setItem(0, item);
+                                    } else {
+                                        showSnack({ message: lc('please_choose_export_folder') });
+                                        return;
+                                    }
+                                }
+                                await closePopover();
+                                await doInBatch(
+                                    pages.filter((p) => p.page.pkpass),
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const needsCopy = __ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT);
+                                        const page = p.page;
+                                        const fileName = page.name ?? p.document.name ?? `${p.document.id}_${page.pkpass_id}`;
+                                        const actualFileName = `${cleanFilename(fileName)}.pkpass`;
+                                        const outputZip = needsCopy ? path.join(knownFolders.temp().path, actualFileName) : path.join(exportDirectory, actualFileName);
+
+                                        const docFolder = p.document.folderPath;
+                                        const pageFolder = docFolder.getFolder(page.id);
+                                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                                        await zip({ directory: pkpassFolder.path, archive: outputZip, keepParent: false });
+
+                                        if (__ANDROID__ && needsCopy) {
+                                            const context = Utils.android.getApplicationContext();
+                                            com.akylas.documentscanner.utils.FileUtils.Companion.copyFileToDocumentFile(context, outputZip, 'application/vnd.apple.pkpass', exportDirectory);
+                                        }
+                                    }
+                                );
+                                didDoSomething = true;
+                            }
+                            showSnack({ message: lc('passbooks_saved') });
+                            break;
+                        }
                         case 'export':
                         case 'save_gallery': {
                             if (!exportDirectory && item.id !== 'save_gallery') {

@@ -9,7 +9,7 @@ export async function copyFolderContent(src: string, dst: string) {
         throw new Error('failed copying folder ' + dst);
     }
     const folder = Folder.fromPath(src);
-    // DEV_LOG && console.log('copyFolderContent ', src, dst, Folder.exists(dst));
+    DEV_LOG && console.log('copyFolderContent ', src, dst, Folder.exists(dst));
     await doInBatch(
         await folder.getEntities(),
         async (e, index) => {

@@ -69,7 +69,7 @@ try {
     installUIMixins();
     overrideSpanAndFormattedString();
 
-    // registerNativeViewElement('cropview', () => CropView);
+    registerNativeViewElement('cropview', () => CropView);
     registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
     registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
     registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
