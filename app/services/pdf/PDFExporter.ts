@@ -35,10 +35,10 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
                         includeBackFields: false
                     });
                     // render the pkpass in temp file and pass that image to the pdf renderer
-                    const tempImage = path.join(knownFolders.temp().path, `pkpass_${page.page.pkpass_id}.jpg`);
-                    await imageSource.saveToFileAsync(tempImage, 'png', 100);
+                    const tempImagePath = path.join(knownFolders.temp().path, `pkpass_${page.document.id}_${page.page.pkpass_id}.jpg`);
+                    await imageSource.saveToFileAsync(tempImagePath, 'png', 100);
                     recycleImages(imageSource);
-                    page.page = { ...page.page, imagePath: tempImage, scale:2, width: imageSource.width, height: imageSource.height } as any;
+                    page.page = { ...page.page, imagePath: tempImagePath, scale: 2, width: imageSource.width, height: imageSource.height } as any;
                 }
             }
         }
@@ -52,7 +52,7 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             debug: false
         });
         const context = Utils.android.getApplicationContext();
-        DEV_LOG && console.log('exportPDFAsync', context, folder, filename, options);
+        // DEV_LOG && console.log('exportPDFAsync', context, folder, filename, pages.length, options);
         return generatePDFASync(folder, filename, options, (e) => {
             if (/could not create file/.test(e.toString())) {
                 return new SilentError(lc('please_choose_export_folder_again'));

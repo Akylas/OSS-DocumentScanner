@@ -80,7 +80,7 @@ export async function getTransformedImage({
             } else {
                 return pkpassToImage(page.pkpass, {
                     width: options?.width,
-                    layout: options?.pkpassLayout === 'full' ? 'full' : 'card',
+                    layout: options?.pkpassLayout === 'card' ? 'card' : 'full',
                     includeBackFields: false
                 });
             }

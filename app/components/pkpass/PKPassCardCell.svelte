@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Color, path } from '@nativescript/core';
-    import { PKPass, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
+    import { PKPass, PKPassData, PKPassField, PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
     import { colors } from '~/variables';
     import { Item } from '../list/MainList.svelte';
     import { lang } from '~/helpers/locale';
@@ -13,21 +13,61 @@
     let { colorOnBackground, colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorSurface } = $colors);
 
-    $: passData = pkpass?.passData;
-    $: foregroundColor = passData?.foregroundColor || colorOnBackground;
-    $: labelColor = passData.labelColor || colorOnBackground;
-    $: backgroundColor = passData?.backgroundColor || colorSurface;
-    // Apple PKPass image specifications - prefer @2x for quality
-    const logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo; // Max 160x50 points
-    const iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon; // 29x29 points
-    const thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail; // 90x90 points
-    const stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip; // Variable dimensions
+    let passData: PKPassData;
+    let foregroundColor: string;
+    let labelColor: string;
+    let backgroundColor: string;
+    let logoImage: string;
+    let iconImage: string;
+    let thumbnailImage: string;
+    let stripImage: string;
+    let structure: PKPassStructure;
+    let primaryFields: PKPassField[];
+    let headerFields: PKPassField[];
+    let secondaryFields: PKPassField[];
+    let auxiliaryFields: PKPassField[];
+    let secondaryFieldsCount: number;
+    let primaryFieldsCount: number;
+    let headerFieldsCount: number;
+    let auxiliaryFieldsCount: number;
+    let transitType: PKPassTransitType;
+    let transitIcon: string;
+    let withTransitionIcon: boolean;
 
-    // Get the pass structure and style
-    const passStyle = pkpass?.getPassStyle();
+    // Get organization name
+    $: orgName = passData?.organizationName || getLocalizedText(passData?.logoText) || item?.doc?.name || '';
+
+    $: updatePkPass(pkpass);
+
+    function updatePkPass(pkpass: PKPass) {
+        passData = pkpass?.passData;
+        foregroundColor = passData?.foregroundColor || colorOnBackground;
+        labelColor = passData.labelColor || colorOnBackground;
+        backgroundColor = passData?.backgroundColor || colorSurface;
+        // Apple PKPass image specifications - prefer @2x for quality
+        logoImage = pkpass?.images?.logo2x || pkpass?.images?.logo; // Max 160x50 points
+        iconImage = pkpass?.images?.icon2x || pkpass?.images?.icon; // 29x29 points
+        thumbnailImage = pkpass?.images?.thumbnail2x || pkpass?.images?.thumbnail; // 90x90 points
+        stripImage = pkpass?.images?.strip2x || pkpass?.images?.strip; // Variable dimensions
+        structure = pkpass.getPassStructure();
+        primaryFields = structure?.primaryFields || [];
+        headerFields = structure?.headerFields || [];
+        secondaryFields = structure?.secondaryFields || [];
+        auxiliaryFields = structure?.auxiliaryFields || [];
+        secondaryFieldsCount = secondaryFields.length;
+        primaryFieldsCount = primaryFields.length;
+        headerFieldsCount = headerFields.length;
+        auxiliaryFieldsCount = auxiliaryFields.length;
+        transitType = structure?.transitType;
+        transitIcon = getTransitIcon(transitType);
+        withTransitionIcon = transitIcon && primaryFieldsCount === 2;
+
+        // Get organization name
+        orgName = passData?.organizationName || getLocalizedText(passData?.logoText) || item?.doc?.name || '';
+    }
 
     // Calculate scale factor based on card width (credit card aspect ratio ~1.586:1)
-    const scaleFactor = itemWidth / 320; // Base width 320px
+    $: scaleFactor = itemWidth / 320; // Base width 320px
 
     // Get formatted field value
     function getFieldValue(field: any): string {
@@ -44,24 +84,6 @@
     function getLocalizedText(text: string): string {
         return text ? pkpass.getLocalizedValue(text, lang) : text;
     }
-
-    // Get primary fields for display
-    const structure = pkpass.getPassStructure();
-    const primaryFields = structure?.primaryFields || [];
-    const headerFields = structure?.headerFields || [];
-    const secondaryFields = structure?.secondaryFields || [];
-    const auxiliaryFields = structure?.auxiliaryFields || [];
-    const secondaryFieldsCount = secondaryFields.length;
-    const primaryFieldsCount = primaryFields.length;
-    const headerFieldsCount = headerFields.length;
-    const auxiliaryFieldsCount = auxiliaryFields.length;
-    const transitType = structure?.transitType;
-    const transitIcon = getTransitIcon(transitType);
-
-    // Get organization name
-    $: orgName = passData?.organizationName || getLocalizedText(passData?.logoText) || item?.doc?.name || '';
-
-    // Transit icon
 </script>
 
 <!-- Credit card sized layout with scalable content -->
@@ -99,7 +121,7 @@
             <!-- Right: Important data (header fields like gate, seat, date) -->
             <gridlayout col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={10 * scaleFactor} visibility={headerFieldsCount > 0 ? 'visible' : 'collapsed'}>
                 {#each { length: 4 } as _, index (index)}
-                    {@const field = structure.headerFields[index]}
+                    {@const field = structure?.headerFields?.[index]}
 
                     <label col={index} paddingLeft={index !== 0 ? 12 * scaleFactor : 0} textAlignment={getFieldTextAlignment(field, 'right')} visibility={field ? 'visible' : 'collapsed'}>
                         <cspan color={labelColor} fontSize={10 * scaleFactor} fontWeight="500" lineHeight={50} text={getFieldLabel(field)} visibility={field?.label ? 'visible' : 'hidden'} />
@@ -110,43 +132,41 @@
         </gridlayout>
 
         <!-- Middle row: Primary fields + Transit icon (for boarding passes) -->
-        <gridlayout colSpan={3} columns={transitIcon && primaryFieldsCount === 2 ? '*,auto,*' : '*'} row={1} verticalAlignment="center">
-            {#if transitIcon && primaryFieldsCount === 2}
-                <!-- Departure -->
-                <label col={0} horizontalAlignment="left" verticalAlignment="center">
-                    <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(primaryFields[0])} />
-                    <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[0])} />
-                </label>
+        <gridlayout colSpan={3} columns={withTransitionIcon ? '*,auto,*' : '*'} row={1} verticalAlignment="center">
+            <!-- Departure -->
+            <label col={0} horizontalAlignment="left" verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
+                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(primaryFields[0])} />
+                <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[0])} />
+            </label>
 
-                <!-- Transit Icon -->
-                <label
-                    class="mdi"
-                    col={1}
-                    color={labelColor}
-                    fontSize={32 * scaleFactor}
-                    horizontalAlignment="center"
-                    marginLeft={16 * scaleFactor}
-                    marginRight={16 * scaleFactor}
-                    text={transitIcon}
-                    verticalAlignment="center" />
+            <!-- Transit Icon -->
+            <label
+                class="mdi"
+                col={1}
+                color={labelColor}
+                fontSize={32 * scaleFactor}
+                horizontalAlignment="center"
+                marginLeft={16 * scaleFactor}
+                marginRight={16 * scaleFactor}
+                text={transitIcon}
+                verticalAlignment="center"
+                visibility={withTransitionIcon ? 'visible' : 'collapsed'} />
 
-                <!-- Arrival -->
-                <label col={2} horizontalAlignment="right" textAlignment="right" verticalAlignment="center">
-                    <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(primaryFields[1])} />
-                    <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[1])} />
-                </label>
-            {:else if primaryFieldsCount > 0}
-                <!-- Standard layout for primary fields -->
-                <gridlayout columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')}>
-                    {#each { length: 4 } as _, index (index)}
-                        {@const field = primaryFields[index]}
-                        <label marginTop={index > 0 ? 4 * scaleFactor : 0} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
-                            <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(field)} visibility={field?.label ? 'visible' : 'hidden'} />
-                            <cspan color={foregroundColor} fontSize={24 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} />
-                        </label>
-                    {/each}
-                </gridlayout>
-            {/if}
+            <!-- Arrival -->
+            <label col={2} horizontalAlignment="right" textAlignment="right" verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
+                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(primaryFields[1])} />
+                <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[1])} />
+            </label>
+            <!-- Standard layout for primary fields -->
+            <gridlayout columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')} visibility={!withTransitionIcon && primaryFieldsCount > 0 ? 'visible' : 'collapsed'}>
+                {#each { length: 4 } as _, index (index)}
+                    {@const field = primaryFields?.[index]}
+                    <label col={index} marginTop={4 * scaleFactor} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
+                        <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(field)} visibility={field?.label ? 'visible' : 'hidden'} />
+                        <cspan color={foregroundColor} fontSize={24 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} />
+                    </label>
+                {/each}
+            </gridlayout>
         </gridlayout>
 
         <!-- Bottom row: Secondary and auxiliary fields -->

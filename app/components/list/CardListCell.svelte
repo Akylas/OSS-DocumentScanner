@@ -243,8 +243,6 @@
         return !!item.doc.pages[0].imagePath;
     }
 
-    // Check if first page has PKPass data
-    const pkpass = item.doc.pages[0]?.pkpass;
 </script>
 
 <swipemenu
@@ -260,7 +258,7 @@
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         {#if pkPassCell}
-            <PKPassCardCell {item} {itemWidth} {layout} {pkpass} />
+            <PKPassCardCell {item} {itemWidth} {layout} pkpass={item.doc.pages[0]?.pkpass} />
         {:else}
             <RotableImageView {...getItemRotableImageParams(item)} />
             <label
