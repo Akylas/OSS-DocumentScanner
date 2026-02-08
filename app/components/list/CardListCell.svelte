@@ -26,8 +26,8 @@
     export let height: number;
     export let nbColumns: Writable<number>;
     export let item: Item;
-    export let syncEnabled: boolean;
     export let pkPassCell: boolean = false;
+    export let syncEnabled: boolean;
     export let onFullCardItemTouch;
     export let layout: string;
     export let syncColors: string[];

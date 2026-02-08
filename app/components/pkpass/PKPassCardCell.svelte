@@ -6,9 +6,12 @@
     import { lang } from '~/helpers/locale';
     import { getFieldTextAlignment, getTransitIcon } from '~/utils/pkpass';
 
+    const FIELD_LINE_HEIGHT = 15;
+
     export let item: Item = null;
     export let pkpass: PKPass;
     export let itemWidth: number;
+    export let layout: string;
 
     let { colorOnBackground, colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorSurface } = $colors);
@@ -122,10 +125,15 @@
             <gridlayout col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={10 * scaleFactor} visibility={headerFieldsCount > 0 ? 'visible' : 'collapsed'}>
                 {#each { length: 4 } as _, index (index)}
                     {@const field = structure?.headerFields?.[index]}
-
-                    <label col={index} paddingLeft={index !== 0 ? 12 * scaleFactor : 0} textAlignment={getFieldTextAlignment(field, 'right')} visibility={field ? 'visible' : 'collapsed'}>
-                        <cspan color={labelColor} fontSize={10 * scaleFactor} fontWeight="500" lineHeight={50} text={getFieldLabel(field)} visibility={field?.label ? 'visible' : 'hidden'} />
-                        <cspan color={foregroundColor} fontSize={13 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} />
+                    <label col={index} maxLines={2} paddingLeft={index !== 0 ? 12 * scaleFactor : 0} textAlignment={getFieldTextAlignment(field, 'right')} visibility={field ? 'visible' : 'collapsed'}>
+                        <cspan
+                            color={labelColor}
+                            fontSize={10 * scaleFactor}
+                            fontWeight="500"
+                            lineHeight={FIELD_LINE_HEIGHT * scaleFactor}
+                            text={getFieldLabel(field)}
+                            visibility={field?.label ? 'visible' : 'hidden'} />
+                        <span color={foregroundColor} fontSize={13 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} />
                     </label>
                 {/each}
             </gridlayout>
@@ -134,8 +142,8 @@
         <!-- Middle row: Primary fields + Transit icon (for boarding passes) -->
         <gridlayout colSpan={3} columns={withTransitionIcon ? '*,auto,*' : '*'} row={1} verticalAlignment="center">
             <!-- Departure -->
-            <label col={0} horizontalAlignment="left" verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
-                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(primaryFields[0])} />
+            <label col={0} horizontalAlignment="left" maxLines={2} verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
+                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(primaryFields[0])} />
                 <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[0])} />
             </label>
 
@@ -153,16 +161,21 @@
                 visibility={withTransitionIcon ? 'visible' : 'collapsed'} />
 
             <!-- Arrival -->
-            <label col={2} horizontalAlignment="right" textAlignment="right" verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
-                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(primaryFields[1])} />
+            <label col={2} horizontalAlignment="right" maxLines={2} textAlignment="right" verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
+                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(primaryFields[1])} />
                 <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[1])} />
             </label>
             <!-- Standard layout for primary fields -->
             <gridlayout columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')} visibility={!withTransitionIcon && primaryFieldsCount > 0 ? 'visible' : 'collapsed'}>
                 {#each { length: 4 } as _, index (index)}
                     {@const field = primaryFields?.[index]}
-                    <label col={index} marginTop={4 * scaleFactor} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
-                        <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={50} text={getFieldLabel(field)} visibility={field?.label ? 'visible' : 'hidden'} />
+                    <label col={index} marginTop={4 * scaleFactor} maxLines={2} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
+                        <cspan
+                            color={labelColor}
+                            fontSize={10 * scaleFactor}
+                            lineHeight={FIELD_LINE_HEIGHT * scaleFactor}
+                            text={getFieldLabel(field)}
+                            visibility={field?.label ? 'visible' : 'hidden'} />
                         <cspan color={foregroundColor} fontSize={24 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} />
                     </label>
                 {/each}
@@ -174,8 +187,8 @@
         <gridlayout colSpan={3} columns={Array.from('*'.repeat(secondaryFieldsCount)).join(',')} row={2} visibility={secondaryFieldsCount > 0 ? 'visible' : 'collapsed'}>
             {#each { length: 4 } as _, index (index)}
                 {@const field = secondaryFields[index]}
-                <label col={index} padding={index !== 0 && index !== secondaryFieldsCount - 1 ? '0 10 0 10' : 0}>
-                    <cspan color={labelColor} fontSize={9 * scaleFactor} lineHeight={50} text={getFieldLabel(field)} />
+                <label col={index} maxLines={2} padding={index !== 0 && index !== secondaryFieldsCount - 1 ? '0 10 0 10' : 0}>
+                    <cspan color={labelColor} fontSize={9 * scaleFactor} lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(field)} />
                     <cspan color={foregroundColor} fontSize={11 * scaleFactor} fontWeight="600" text={getFieldValue(field)} />
                 </label>
             {/each}
@@ -185,8 +198,8 @@
         <gridlayout colSpan={3} columns={Array.from('*'.repeat(auxiliaryFieldsCount)).join(',')} row={3} visibility={auxiliaryFieldsCount > 0 ? 'visible' : 'collapsed'}>
             {#each { length: 4 } as _, index (index)}
                 {@const field = auxiliaryFields[index]}
-                <label col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
-                    <cspan color={labelColor} fontSize={9 * scaleFactor} lineHeight={50} text={getFieldLabel(field)} />
+                <label col={index} maxLines={2} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0}>
+                    <cspan color={labelColor} fontSize={9 * scaleFactor} lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(field)} />
                     <cspan color={foregroundColor} fontSize={11 * scaleFactor} fontWeight="600" text={getFieldValue(field)} />
                 </label>
             {/each}

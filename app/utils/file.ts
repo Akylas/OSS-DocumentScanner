@@ -8,24 +8,24 @@ export async function copyFolderContent(src: string, dst: string) {
     if (!Folder.exists(dst)) {
         throw new Error('failed copying folder ' + dst);
     }
-    const folder = Folder.fromPath(src);
+    const folder = Folder.fromPath(src, false);
     DEV_LOG && console.log('copyFolderContent ', src, dst, Folder.exists(dst));
     await doInBatch(
         await folder.getEntities(),
         async (e, index) => {
-            // DEV_LOG && console.log('doInBatch ', src, index);
-            if (typeof e['getFolder'] === 'undefined') {
-                const dstFile = dstFolder.getFile(e.name, true).path;
-                // DEV_LOG && console.log('copyFile ', e.path, dstFile);
-                const r = await (e as File).copy(dstFile);
-                // DEV_LOG && console.info('copyFile done ', e.path, dstFile, r, File.exists(dstFile));
+            DEV_LOG && console.log('doInBatch ', e.path, e.isFolder);
+            if (e.isFolder === true && Folder.exists(e.path)) {
+                const newDstFolder = dstFolder.getFolder(e.name, false);
+                DEV_LOG && console.log('copyFolder ', e.name, newDstFolder.path, Folder.exists(e.path));
+                await copyFolderContent(e.path, newDstFolder.path);
+            } else {
+                const dstFile = dstFolder.getFile(e.name, false).path;
+                DEV_LOG && console.log('copyFile ', e.path, dstFile);
+                const r = await File.fromPath(e.path).copy(dstFile);
+                DEV_LOG && console.info('copyFile done ', e.path, dstFile, r, File.exists(dstFile));
                 if (!File.exists(dstFile)) {
                     throw new Error('failed copying file ' + dstFile);
                 }
-            } else {
-                const newDstFolder = dstFolder.getFolder(e.name, true);
-                // DEV_LOG && console.log('copyFolder ', e.path, dstFolder.path, e.name, newDstFolder.path);
-                await copyFolderContent(e.path, newDstFolder.path);
             }
             // DEV_LOG && console.log('doInBatch done ', src, index);
         },

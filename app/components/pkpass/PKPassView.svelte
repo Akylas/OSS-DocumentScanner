@@ -12,6 +12,8 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { openLink } from '~/utils/ui';
 
+    const FIELD_LINE_HEIGHT = 20;
+
     export let pkpass: PKPass;
     export let document: OCRDocument;
     export let includeBackFields = true;
@@ -125,6 +127,7 @@
                 <label col={0} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} selectable={true} text={orgName} verticalAlignment="center" />
             {:else}
                 <!-- Name next to icon -->
+                <image col={0} height={50} src={iconImage} stretch="aspectFit" verticalAlignment="top" />
                 <label col={0} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} selectable={true} text={orgName} verticalAlignment="center" width={120} />
             {/if}
 
@@ -135,10 +138,17 @@
 
             <!-- Header fields -->
             {#if headerFieldsCount > 0}
-                <gridlayout class="pass-section" col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
+                <gridlayout col={2} columns={Array.from('*'.repeat(headerFieldsCount)).join(',')} marginBottom={16}>
                     {#each structure.headerFields as field, index}
                         <label col={index} paddingLeft={index !== 0 ? 10 : 0} selectable={true} textAlignment={getFieldTextAlignment(field, 'right')}>
-                            <cspan color={labelColor} fontSize={13} fontWeight="medium" lineHeight={60} text={renderFieldLabel(field)} visibility={field.label ? 'visible' : 'hidden'} />
+                            <cspan
+                                color={labelColor}
+                                fontSize={13}
+                                fontWeight="500"
+                                lineHeight={FIELD_LINE_HEIGHT}
+                                text={renderFieldLabel(field)}
+                                verticalTextAlignment="top"
+                                visibility={field.label ? 'visible' : 'hidden'} />
                             <cspan color={foregroundColor} fontSize={17} fontWeight="bold" text={renderFieldValue(field)} />
                         </label>
                     {/each}
@@ -172,7 +182,7 @@
                         <!-- Left primary field (departure) -->
                         <label col={0} selectable={true} textAlignment="left">
                             {#if structure.primaryFields[0].label}
-                                <cspan color={labelColor} fontSize={12} fontWeight="medium" lineHeight={60} text={renderFieldLabel(structure.primaryFields[0])} />
+                                <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(structure.primaryFields[0])} />
                             {/if}
                             <cspan color={foregroundColor} fontSize={32} text={renderFieldValue(structure.primaryFields[0])} />
                         </label>
@@ -183,7 +193,7 @@
                         <!-- Right primary field (arrival) -->
                         <label col={2} selectable={true} textAlignment="right">
                             {#if structure.primaryFields[1].label}
-                                <cspan color={labelColor} fontSize={12} fontWeight="medium" text={renderFieldLabel(structure.primaryFields[1])} />
+                                <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(structure.primaryFields[1])} />
                             {/if}
                             <cspan color={foregroundColor} fontSize={32} text={renderFieldValue(structure.primaryFields[1])} />
                         </label>
@@ -194,7 +204,7 @@
                         {#each structure.primaryFields as field, index}
                             <label col={index} marginBottom="16" selectable={true} textAlignment={getFieldTextAlignment(field)}>
                                 {#if field.label}
-                                    <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={60} text={renderFieldLabel(field)} />
+                                    <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(field)} />
                                 {/if}
                                 <cspan color={foregroundColor} fontSize={32} text={renderFieldValue(field)} />
                             </label>
@@ -209,7 +219,7 @@
                     {#each structure.secondaryFields as field, index}
                         <label col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0} selectable={true} textAlignment={getFieldTextAlignment(field)}>
                             {#if field.label}
-                                <cspan color={labelColor} fontSize={11} fontWeight="500" lineHeight={60} text={renderFieldLabel(field)} />
+                                <cspan color={labelColor} fontSize={11} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(field)} />
                             {/if}
                             <cspan color={foregroundColor} fontSize={18} text={renderFieldValue(field)} />
                         </label>
@@ -223,7 +233,7 @@
                     {#each structure.auxiliaryFields as field, index}
                         <label col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0} selectable={true} textAlignment={getFieldTextAlignment(field)}>
                             {#if field.label}
-                                <cspan color={labelColor} fontSize={10} fontWeight="500" lineHeight={60} text={renderFieldLabel(field)} />
+                                <cspan color={labelColor} fontSize={10} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(field)} />
                             {/if}
                             <cspan color={foregroundColor} fontSize={14} text={renderFieldValue(field)} />
                         </label>
@@ -256,9 +266,9 @@
                     {#each structure.backFields as field}
                         <label color={foregroundColor} marginBottom={12} selectable={true} on:linkTap={onLinkTap}>
                             {#if field.label}
-                                <cspan color={labelColor} fontSize={12} fontWeight="500" text={renderFieldLabel(field)} />
+                                <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(field)} />
                             {/if}
-                            <cspan fontSize={14} html={renderFieldValue(field)} lineHeight={60} linkColor={labelColor} tappable={true} />
+                            <cspan fontSize={14} html={renderFieldValue(field)} linkColor={labelColor} tappable={true} />
                         </label>
                     {/each}
                 </stacklayout>
