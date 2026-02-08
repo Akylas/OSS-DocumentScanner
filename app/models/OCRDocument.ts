@@ -195,7 +195,7 @@ export class OCRDocument extends Observable implements Document {
         return documentsService.dataFolder.getFolder(this.id);
     }
 
-    async addPage(pageData: PageData, index: number = this.pages.length, onAdded?) {
+    async addPage(pageData: PageData, index: number = this.pages.length, onAdded?, notify = true) {
         const docId = this.id;
         const dataFolderPath = documentsService.dataFolder.path;
         const docData = documentsService.dataFolder.getFolder(docId);
@@ -249,7 +249,9 @@ export class OCRDocument extends Observable implements Document {
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
-        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
+        if (notify) {
+            documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
+        }
         return addedPage;
     }
 

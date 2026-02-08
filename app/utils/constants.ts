@@ -118,7 +118,7 @@ export const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
     ? SDK_VERSION < 30
         ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
         : undefined
-    : knownFolders.externalDocuments().path;
+    : undefined;
 
 export function getImageExportSettings() {
     return {

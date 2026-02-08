@@ -16,7 +16,6 @@ import { copyFolderContent } from './file';
  * @returns Created document with PKPass data
  */
 export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): Promise<OCRDocument> {
-    DEV_LOG && console.log('importPKPassFile', pkpassPath, folder?.name);
 
     if (!File.exists(pkpassPath)) {
         throw new Error(`PKPass file not found: ${pkpassPath}`);
@@ -37,8 +36,6 @@ export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): 
         const docId = date + '';
         const passDisplayName = getPKPassDisplayName(pass);
         const name = passDisplayName || getFormatedDateForFilename(date, ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
-
-        DEV_LOG && console.log('Creating document for PKPass', docId, name);
 
         // Create the document
         const doc = await documentsService.documentRepository.createDocument({
@@ -101,7 +98,6 @@ export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): 
         await doc.save({}, false, false);
 
         DEV_LOG && console.log('PKPass imported successfully', doc.id, 'page', pageId);
-
         return doc;
     } catch (error) {
         // Clean up on error
@@ -132,7 +128,6 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
     const name = getFormatedDateForFilename(date, ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
     // DEV_LOG && console.log('createDocument', docId);
     const document = await documentsService.documentRepository.createDocument({ id: docId, name, ...(folder ? { folders: [folder.id] } : {}) } as any);
-    DEV_LOG && console.log('importPKPassFiles', pkpassPaths);
     const pages = await doInBatch(pkpassPaths, async (uri, index) => {
         // Copy URI content to temp file if needed
         let pkpassPath = uri;
@@ -171,27 +166,6 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
         const targetFolder = Folder.fromPath(targetFolderPath, true);
         const parseResult = await extractAndParsePKPassFile(pkpassPath, targetFolder);
         const { extractedPath, pass } = parseResult;
-        DEV_LOG && console.log('importPKPassFile', pkpassPath, extractedPath, JSON.stringify(pass));
-
-        // if (!document) {
-        //     // Create a document for this pass
-        //     const date = Date.now();
-        //     const docId = date + '';
-        //     const passDisplayName = getPKPassDisplayName(pass);
-        //     const name = passDisplayName || getFormatedDateForFilename(date, ApplicationSettings.getString(SETTINGS_DOCUMENT_NAME_FORMAT, DOCUMENT_NAME_FORMAT), false);
-
-        //     DEV_LOG && console.log('Creating document for PKPass', docId, name);
-
-        //     // Create the document
-        //     document = await documentsService.documentRepository.createDocument({
-        //         id: docId,
-        //         name,
-        //         extra: {
-        //             color: pass.passData.backgroundColor
-        //         },
-        //         ...(folder ? { folders: [folder.id] } : {})
-        //     } as any);
-        // }
 
         try {
             // Create a new page for this pass
@@ -236,7 +210,8 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
                 document.pages.length,
                 (page: OCRPage) => {
                     page.pkpass = pass;
-                }
+                },
+                false
             );
         } catch (error) {
             // Clean up on error

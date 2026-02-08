@@ -4,7 +4,6 @@ import { DateTimePicker } from '@nativescript/datetimepicker';
 import { Dayjs } from 'dayjs';
 import { lang } from '~/helpers/locale';
 import { showSnack } from './index.common';
-
 export * from './index.common';
 
 export function showToast(text: string) {

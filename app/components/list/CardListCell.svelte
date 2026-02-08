@@ -164,7 +164,9 @@
                 break;
             case 'full':
                 Object.assign(result, {
-                    verticalTextAlignment: 'top',
+                    verticalAlignment: 'top',
+                    padding: 0,
+                    margin: 16,
                     maxFontSize: 40,
                     maxLines: 2
                 });
@@ -242,7 +244,6 @@
     function itemHasImage(item: Item) {
         return !!item.doc.pages[0].imagePath;
     }
-
 </script>
 
 <swipemenu

@@ -12,6 +12,7 @@ import { ComponentInstanceInfo, resolveComponentElement } from './ui';
 import { CARD_RATIO } from './constants';
 import { GestureRootView } from '@nativescript-community/gesturehandler';
 import { tick } from 'svelte';
+import { debounce, throttle } from '@nativescript/core/utils';
 
 /**
  * PKPass parser utility
@@ -101,8 +102,6 @@ function loadPKPassLocalizations(extractPath: string): { [languageCode: string]:
  * @returns PKPassParseResult with the parsed pass and extraction path
  */
 export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFolder: Folder): Promise<PKPassParseResult> {
-    DEV_LOG && console.log('parsePKPassFile', pkpassFilePath, targetFolder.path);
-
     if (!File.exists(pkpassFilePath)) {
         throw new Error(`PKPass file not found: ${pkpassFilePath}`);
     }
@@ -119,8 +118,6 @@ export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFo
             directory: extractPath
         });
 
-        DEV_LOG && console.log('PKPass extracted to', extractPath);
-
         // Read pass.json
         const passJsonPath = path.join(extractPath, PASS_JSON_FILE);
         if (!File.exists(passJsonPath)) {
@@ -131,11 +128,8 @@ export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFo
         const passJsonContent = await passJsonFile.readText();
         const passData: PKPassData = JSON.parse(passJsonContent);
 
-        DEV_LOG && console.log('PKPass data parsed', passData.organizationName, passData.description);
-
         // Load all localizations from .lproj folders
         const allLocalizations = loadPKPassLocalizations(extractPath);
-        DEV_LOG && console.log('PKPass localizations found:', Object.keys(allLocalizations));
 
         // Store all localizations in passData
         if (Object.keys(allLocalizations).length > 0) {
@@ -149,7 +143,6 @@ export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFo
             if (File.exists(imagePath)) {
                 const key = imageFile.replace('.png', '').replace('@2x', '2x').replace('@3x', '3x');
                 images[key] = imagePath;
-                DEV_LOG && console.log('Found image:', key, imagePath);
             }
         }
 
@@ -385,7 +378,10 @@ export async function pkpassToImage(
         ...(options?.layout === 'full'
             ? {
                   width: itemWidth,
-                  includeBackFields: false
+                  verticalAlignment: 'top',
+                  includeBackFields: false,
+                  iosOverflowSafeArea:false,
+                  iosIgnoreSafeArea:false
               }
             : {
                   width: itemWidth,
@@ -397,11 +393,13 @@ export async function pkpassToImage(
     // gesturerootview.parent = Application.getRootView()
     const rootView = Application.getRootView();
     gesturerootview.addChild(view);
-    gesturerootview.visibility = 'collapsed';
+    if (__ANDROID__) {
+        gesturerootview.visibility = 'collapsed';
+    }
     (rootView as GridLayout).addChild(gesturerootview);
     const imageSource = await new Promise<ImageSource>((resolve) => {
-        view.once('layoutChanged', (event) => {
-            const nView = gesturerootview.nativeView;
+        const onLayoutChanged = (event) => {
+            const nView = view.nativeView;
             if (__ANDROID__) {
                 // create a higher-resolution bitmap and scale the canvas so view is rendered at higher DPI
                 const w = Math.max(1, Math.round(nView.getWidth() * scale));
@@ -418,31 +416,34 @@ export async function pkpassToImage(
                 nView.draw(canvas);
                 resolve(new ImageSource(bmp));
             } else {
+                const size = nView.frame.size;
                 try {
                     // Use UIGraphicsBeginImageContextWithOptions to specify the scale (dpi multiplier)
-                    const size = nView.frame.size;
-                    UIGraphicsBeginImageContextWithOptions(size, false, scale);
-                    // drawViewHierarchyInRectAfterScreenUpdates draws the view into the current context
+                    UIGraphicsBeginImageContextWithOptions(size, false, 2);
                     nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, size.width, size.height), true);
                     const imageFromContext = UIGraphicsGetImageFromCurrentImageContext();
                     UIGraphicsEndImageContext();
                     resolve(new ImageSource(imageFromContext));
                 } catch (err) {
+                    DEV_LOG && console.log(err, err.stack);
                     // fallback to previous renderer if anything goes wrong
-                    const renderer = new UIGraphicsImageRenderer({ size: nView.frame.size });
+                    const renderer = new UIGraphicsImageRenderer({ size });
                     const image = renderer.imageWithActions((context) => {
-                        nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, nView.frame.size.width, nView.frame.size.height), true);
+                        nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, size.width, size.height), true);
                     });
                     resolve(new ImageSource(image));
                 }
             }
-        });
+        };
+        view.once('layoutChanged', onLayoutChanged);
         gesturerootview.measure(Utils.layout.makeMeasureSpec(0, Utils.layout.UNSPECIFIED), Utils.layout.makeMeasureSpec(0, Utils.layout.UNSPECIFIED));
+
         gesturerootview.layout(0, 0, gesturerootview.getMeasuredWidth(), gesturerootview.getMeasuredHeight());
     });
     (rootView as GridLayout).removeChild(gesturerootview);
     componentInstanceInfo.element.nativeElement._tearDownUI();
     componentInstanceInfo.viewInstance?.$destroy();
+    DEV_LOG && console.log('imageSource', imageSource.width, imageSource.height);
     return imageSource;
 }
 

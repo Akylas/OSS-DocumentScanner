@@ -11,7 +11,7 @@
     export let item: Item = null;
     export let pkpass: PKPass;
     export let itemWidth: number;
-    export let layout: string;
+    export let layout: string = null;
 
     let { colorOnBackground, colorOnPrimary, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorSurface } = $colors);
@@ -133,7 +133,7 @@
                             lineHeight={FIELD_LINE_HEIGHT * scaleFactor}
                             text={getFieldLabel(field)}
                             visibility={field?.label ? 'visible' : 'hidden'} />
-                        <span color={foregroundColor} fontSize={13 * scaleFactor} fontWeight="bold" text={getFieldValue(field)} />
+                        <span color={foregroundColor} fontSize={13 * scaleFactor} fontWeight="500" text={getFieldValue(field)} />
                     </label>
                 {/each}
             </gridlayout>

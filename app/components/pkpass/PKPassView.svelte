@@ -103,7 +103,7 @@
     elevation={forImageRendering || isEInk ? 0 : 2}
     margin={forImageRendering ? 0 : 16}
     marginBottom={forImageRendering ? 0 : $windowInset.bottom + 16}
-    rows="auto,auto,*,auto"
+    rows={`auto,auto,${forImageRendering ? 'auto' : '*'},auto`}
     {...$$restProps}
     use:conditionalEvent={{ condition: forImageRendering, event: 'layoutChanged', callback: onLayoutChanged }}>
     <!-- Background image if available (180x220 points per Apple spec) -->
@@ -149,7 +149,7 @@
                                 text={renderFieldLabel(field)}
                                 verticalTextAlignment="top"
                                 visibility={field.label ? 'visible' : 'hidden'} />
-                            <cspan color={foregroundColor} fontSize={17} fontWeight="bold" text={renderFieldValue(field)} />
+                            <cspan color={foregroundColor} fontSize={17} fontWeight="500" text={renderFieldValue(field)} />
                         </label>
                     {/each}
                 </gridlayout>
@@ -178,7 +178,7 @@
             {#if primaryFieldsCount > 0}
                 {#if transitIcon && primaryFieldsCount === 2}
                     <!-- Boarding pass with transit icon between two primary fields -->
-                    <gridlayout class="pass-section" columns="*,auto,*" marginBottom={16}>
+                    <gridlayout columns="*,auto,*" marginBottom={16}>
                         <!-- Left primary field (departure) -->
                         <label col={0} selectable={true} textAlignment="left">
                             {#if structure.primaryFields[0].label}
@@ -200,7 +200,7 @@
                     </gridlayout>
                 {:else}
                     <!-- Default primary fields layout (no transit icon or different field count) -->
-                    <gridlayout class="pass-section" columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')}>
+                    <gridlayout columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')}>
                         {#each structure.primaryFields as field, index}
                             <label col={index} marginBottom="16" selectable={true} textAlignment={getFieldTextAlignment(field)}>
                                 {#if field.label}
@@ -215,7 +215,7 @@
 
             <!-- Secondary fields -->
             {#if secondaryFieldsCount > 0}
-                <gridlayout class="pass-section" columns={Array.from('*'.repeat(secondaryFieldsCount)).join(',')} marginTop={16} padding={4}>
+                <gridlayout columns={Array.from('*'.repeat(secondaryFieldsCount)).join(',')} marginTop={16} padding={4}>
                     {#each structure.secondaryFields as field, index}
                         <label col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0} selectable={true} textAlignment={getFieldTextAlignment(field)}>
                             {#if field.label}
@@ -229,7 +229,7 @@
 
             <!-- Auxiliary fields -->
             {#if auxiliaryFieldsCount > 0}
-                <gridlayout class="pass-section" columns={Array.from('*'.repeat(auxiliaryFieldsCount)).join(',')} marginTop={16}>
+                <gridlayout columns={Array.from('*'.repeat(auxiliaryFieldsCount)).join(',')} marginTop={16}>
                     {#each structure.auxiliaryFields as field, index}
                         <label col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0} selectable={true} textAlignment={getFieldTextAlignment(field)}>
                             {#if field.label}
@@ -244,7 +244,6 @@
             <!-- Barcode -->
             {#if barcodeSvg}
                 <stacklayout
-                    class="pass-section"
                     backgroundColor={foregroundColor && new Color(foregroundColor).getBrightness() < 145 ? '#ffffff' : 'transparent'}
                     borderRadius={4}
                     horizontalAlignment="center"
@@ -261,14 +260,14 @@
 
             <!-- Back fields (additional info) -->
             {#if includeBackFields && structure?.backFields && structure.backFields.length > 0}
-                <stacklayout class="pass-section" marginTop={24}>
+                <stacklayout marginTop={24}>
                     <label color={labelColor} fontSize="16" fontWeight="bold" marginBottom="12" text="Additional Information" />
                     {#each structure.backFields as field}
                         <label color={foregroundColor} marginBottom={12} selectable={true} on:linkTap={onLinkTap}>
                             {#if field.label}
                                 <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(field)} />
                             {/if}
-                            <cspan fontSize={14} html={renderFieldValue(field)} linkColor={labelColor} tappable={true} />
+                            <cspan color={foregroundColor} fontSize={14} html={renderFieldValue(field)} linkColor={labelColor} tappable={true} />
                         </label>
                     {/each}
                 </stacklayout>

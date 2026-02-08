@@ -105,7 +105,6 @@ import { MatricesTypes, Matrix } from '../color_matrix';
 import { cleanFilename, requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
 import { importPKPassFiles } from '~/utils/pkpass-import';
 import { zip } from 'plugin-zip';
-import { getPKPassDisplayName } from '../pkpass';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -144,7 +143,7 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
         if (CARD_APP && pkpasses.length) {
-            return importPKPassFromUris({ uris: pkpasses, canGoToView: pdf.length === 0 && images.length === 0 });
+            return importPKPassFromUris({ uris: pkpasses, canGoToView: true });
         }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
@@ -1126,6 +1125,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                         }
                         case 'export_pkpass': {
                             if (CARD_APP) {
+                                DEV_LOG && console.log('export_pkpass', exportDirectory);
                                 if (!exportDirectory) {
                                     if (await pickExportFolder()) {
                                         const item = options.getItem(0);
@@ -2124,6 +2124,7 @@ export async function importPKPassFromUris({ canGoToView = true, uris }: { uris:
             const document = await importPKPassFiles(uris, null);
 
             if (canGoToView && document) {
+                await hideLoading();
                 await goToDocumentView(document);
             }
 
