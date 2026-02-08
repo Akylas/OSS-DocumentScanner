@@ -308,7 +308,7 @@
 
     function onDocumentMovedFolder(event: DocumentMovedFolderEventData) {
         // TODO: for now we refresh otherwise the order might be lost
-        // DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolderId, !!folder, folder?.id === event.oldFolderId, typeof folder?.id, typeof event.oldFolderId);
+        DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolderId, !!folder, folder?.id === event.oldFolderId, typeof folder?.id, typeof event.oldFolderId);
         if (!folder && (!event.folder || !event.oldFolderId)) {
             refresh();
         } else if (!!folder && (folder.id === event.folder?.id || folder.id === event.oldFolderId)) {
@@ -740,7 +740,8 @@
                 options,
                 vertPos: VerticalPosition.BELOW,
                 props: {
-                    autoSizeListItem: true,
+                    width: 300 * $fontScale,
+                    autoSizeListItem: false,
                     onCheckBox: (item, value) => {
                         if (item.group === 'viewStyle') {
                             const changed = viewStyleChanged(item.id, viewStyle);
