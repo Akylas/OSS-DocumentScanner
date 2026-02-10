@@ -1091,7 +1091,7 @@
                     </Template>
                 </collectionView>
             </Template>
-            <slot></slot>
+            <slot />
         </collectionView>
         <progress backgroundColor="transparent" busy={true} indeterminate={true} row={2} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
@@ -1129,6 +1129,7 @@
         {#if showActionButton}
             <slot name="fab" />
         {/if}
+            <slot name="test" />
 
         <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton

@@ -27,6 +27,7 @@
     "add_qrcode_camera": "add barcode from camera",
     "add_qrcode_file": "add barcode from image",
     "add_qrcode_manual": "add barcode manually",
+    "additional_information": "Additional Information",
     "allow_app_screenshot": "allow app screenshot",
     "always": "always",
     "always_prompt_crop_edit": "always prompt for document region edit",

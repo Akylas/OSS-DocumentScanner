@@ -1,19 +1,20 @@
-import { Application, Color, File, Folder, GridLayout, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
+import { createNativeAttributedString } from '@nativescript-community/text';
+import { Align, Canvas, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
+import { SVG } from '@nativescript-community/ui-svg/canvas';
+import { Color, File, Folder, ImageSource, PercentLength, Utils, path } from '@nativescript/core';
 import { unzip } from 'plugin-zip';
-import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassData, PKPassField, PKPassImages, PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
-import { qrcodeService } from '~/services/qrcode';
-import { lang } from '~/helpers/locale';
-import { OCRDocument } from '~/models/OCRDocument';
-import { loadImage, recycleImages } from './images';
-import { Canvas, Paint } from '@nativescript-community/ui-canvas';
-import { colors, fonts, screenWidthDips } from '~/variables';
 import { get } from 'svelte/store';
-import { ComponentInstanceInfo, resolveComponentElement } from './ui';
+import type { OCRDocument } from '~/models/OCRDocument';
+import { PKBarcodeFormat, PKPass, type PKPassBarcode, type PKPassData, type PKPassField, type PKPassImages, type PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
 import { CARD_RATIO } from './constants';
-import { GestureRootView } from '@nativescript-community/gesturehandler';
-import { tick } from 'svelte';
-import { debounce, throttle } from '@nativescript/core/utils';
+import { loadImage, recycleImages } from './images';
+import { generateQRCodeImage, getSVGFromQRCode } from 'plugin-nativeprocessor';
+import { screenWidthDips } from '@shared/variables';
+import { lc } from '@nativescript-community/l';
 
+let startingInLandscape;
+// export let screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
+// export let screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;
 /**
  * PKPass parser utility
  * Extracts and parses .pkpass files (Apple Wallet passes)
@@ -80,7 +81,6 @@ function loadPKPassLocalizations(extractPath: string): { [languageCode: string]:
 
                         if (Object.keys(strings).length > 0) {
                             localizations[languageCode] = strings;
-                            DEV_LOG && console.log(`Loaded ${Object.keys(strings).length} localized strings for ${languageCode}`);
                         }
                     } catch (error) {
                         console.error(`Error parsing pass.strings for ${languageCode}:`, error);
@@ -297,7 +297,10 @@ export async function getBarcodeSVG({ barcode, foregroundColor, width = 300 }: {
             format: barcodeFormat,
             position: null
         };
-        return await qrcodeService.getQRCodeSVG(qrcodeData, width, new Color(foregroundColor));
+        const color = new Color(foregroundColor);
+        return await getSVGFromQRCode(barcode.message, barcodeFormat, width, {
+            color: color instanceof Color ? color.hex : color
+        });
     } catch (error) {
         console.error('Error generating barcode image:', error);
         return undefined;
@@ -312,8 +315,10 @@ export async function getBarcodeImage({ barcode, foregroundColor, height, width 
             format: getBarcodeFormat(barcode),
             position: null
         };
-        DEV_LOG && console.log('getBarcodeImage', barcode, qrcodeData);
-        return await qrcodeService.getQRCodeImage(qrcodeData, width, height ?? width, new Color(foregroundColor));
+        const color = new Color(foregroundColor);
+        return generateQRCodeImage(barcode.message, getBarcodeFormat(barcode), width, height, {
+            color: color instanceof Color ? color.hex : color
+        });
     } catch (error) {
         console.error('Error generating barcode image:', error);
         return undefined;
@@ -351,100 +356,115 @@ export function getTransitIcon(transitType?: PKPassTransitType): string | undefi
 export async function pkpassToImage(
     pkpass: PKPass,
     options: {
-        layout?: 'logo' | 'card' | 'full'; // Card for compact credit-card sized, full for complete details
+        lang: string;
+        layout?: 'card' | 'full'; // Card for compact credit-card sized, full for complete details
         includeBackFields?: boolean;
         backgroundColor?: string;
         width?: number;
         height?: number;
         // rendering scale (dpi multiplier). 1 = native points, 2 = double resolution, etc.
         scale?: number;
-    } = {}
+    }
 ) {
-    const component = (options?.layout === 'full' ? await import('~/components/pkpass/PKPassView.svelte') : await import('~/components/pkpass/PKPassCardCell.svelte')).default;
-    const primaryBarcode = pkpass.getPrimaryBarcode();
-    const foregroundColor = pkpass.passData.foregroundColor || get(colors).colorOnBackground;
-    let barcodeSvg;
-    if (primaryBarcode && foregroundColor) {
-        barcodeSvg = await getBarcodeSVG({ barcode: primaryBarcode, foregroundColor });
-    }
-    const itemWidth = screenWidthDips;
-    const scale = (options.scale ?? options?.width) ? options?.width / itemWidth : 1;
-    const componentInstanceInfo = resolveComponentElement(component, {
-        pkpass,
-        itemWidth,
-        document: null,
-        forImageRendering: true,
-        barcodeSvg,
-        ...(options?.layout === 'full'
-            ? {
-                  width: itemWidth,
-                  verticalAlignment: 'top',
-                  includeBackFields: false,
-                  iosOverflowSafeArea:false,
-                  iosIgnoreSafeArea:false
-              }
-            : {
-                  width: itemWidth,
-                  height: itemWidth * CARD_RATIO
-              })
-    }) as ComponentInstanceInfo<GridLayout, any>;
-    const view = componentInstanceInfo.element.nativeElement;
-    const gesturerootview = new GestureRootView();
-    // gesturerootview.parent = Application.getRootView()
-    const rootView = Application.getRootView();
-    gesturerootview.addChild(view);
-    if (__ANDROID__) {
-        gesturerootview.visibility = 'collapsed';
-    }
-    (rootView as GridLayout).addChild(gesturerootview);
-    const imageSource = await new Promise<ImageSource>((resolve) => {
-        const onLayoutChanged = (event) => {
-            const nView = view.nativeView;
-            if (__ANDROID__) {
-                // create a higher-resolution bitmap and scale the canvas so view is rendered at higher DPI
-                const w = Math.max(1, Math.round(nView.getWidth() * scale));
-                const h = Math.max(1, Math.round(nView.getHeight() * scale));
-                const bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888);
-                // Set density so Android knows this is a high-DPI bitmap (improves image scaling/filtering)
-                const metrics = Utils.android.getApplicationContext().getResources().getDisplayMetrics();
-                // bmp.setDensity(metrics.densityDpi * scale);
-                const canvas = new android.graphics.Canvas(bmp);
-                canvas.setDensity(metrics.densityDpi);
-                // scale so that drawing commands map correctly (view draws in logical pixels)
-                canvas.scale(scale, scale);
-                // nView.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
-                nView.draw(canvas);
-                resolve(new ImageSource(bmp));
-            } else {
-                const size = nView.frame.size;
-                try {
-                    // Use UIGraphicsBeginImageContextWithOptions to specify the scale (dpi multiplier)
-                    UIGraphicsBeginImageContextWithOptions(size, false, 2);
-                    nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, size.width, size.height), true);
-                    const imageFromContext = UIGraphicsGetImageFromCurrentImageContext();
-                    UIGraphicsEndImageContext();
-                    resolve(new ImageSource(imageFromContext));
-                } catch (err) {
-                    DEV_LOG && console.log(err, err.stack);
-                    // fallback to previous renderer if anything goes wrong
-                    const renderer = new UIGraphicsImageRenderer({ size });
-                    const image = renderer.imageWithActions((context) => {
-                        nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, size.width, size.height), true);
-                    });
-                    resolve(new ImageSource(image));
-                }
-            }
-        };
-        view.once('layoutChanged', onLayoutChanged);
-        gesturerootview.measure(Utils.layout.makeMeasureSpec(0, Utils.layout.UNSPECIFIED), Utils.layout.makeMeasureSpec(0, Utils.layout.UNSPECIFIED));
+    // const component = (options?.layout === 'full' ? await import('~/components/pkpass/PKPassView.svelte') : await import('~/components/pkpass/PKPassCardCell.svelte')).default;
+    // const primaryBarcode = pkpass.getPrimaryBarcode();
+    // const foregroundColor = pkpass.passData.foregroundColor || get(colors).colorOnBackground;
+    // let barcodeSvg;
+    // if (primaryBarcode && foregroundColor) {
+    //     barcodeSvg = await getBarcodeSVG({ barcode: primaryBarcode, foregroundColor });
+    // }
+    // const itemWidth = screenWidthDips;
+    // const scale = (options.scale ?? options?.width) ? options?.width / itemWidth : 1;
+    // const componentInstanceInfo = resolveComponentElement(component, {
+    //     pkpass,
+    //     itemWidth,
+    //     document: null,
+    //     forImageRendering: true,
+    //     barcodeSvg,
+    //     ...(options?.layout === 'full'
+    //         ? {
+    //               width: itemWidth,
+    //               verticalAlignment: 'top',
+    //               includeBackFields: false,
+    //               iosOverflowSafeArea: false,
+    //               iosIgnoreSafeArea: false
+    //           }
+    //         : {
+    //               width: itemWidth,
+    //               height: itemWidth * CARD_RATIO
+    //           })
+    // }) as ComponentInstanceInfo<GridLayout, any>;
+    // const view = componentInstanceInfo.element.nativeElement;
+    // const gesturerootview = new GestureRootView();
+    // // gesturerootview.parent = Application.getRootView()
+    // const rootView = Application.getRootView();
+    // gesturerootview.addChild(view);
+    // if (__ANDROID__) {
+    //     gesturerootview.visibility = 'collapsed';
+    // }
+    // (rootView as GridLayout).addChild(gesturerootview);
+    // const imageSource = await new Promise<ImageSource>((resolve) => {
+    //     const onLayoutChanged = (event) => {
+    //         const nView = view.nativeView;
+    //         if (__ANDROID__) {
+    //             // create a higher-resolution bitmap and scale the canvas so view is rendered at higher DPI
+    //             const w = Math.max(1, Math.round(nView.getWidth() * scale));
+    //             const h = Math.max(1, Math.round(nView.getHeight() * scale));
+    //             const bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888);
+    //             // Set density so Android knows this is a high-DPI bitmap (improves image scaling/filtering)
+    //             const metrics = Utils.android.getApplicationContext().getResources().getDisplayMetrics();
+    //             // bmp.setDensity(metrics.densityDpi * scale);
+    //             const canvas = new android.graphics.Canvas(bmp);
+    //             canvas.setDensity(metrics.densityDpi);
+    //             // scale so that drawing commands map correctly (view draws in logical pixels)
+    //             canvas.scale(scale, scale);
+    //             // nView.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
+    //             nView.draw(canvas);
+    //             resolve(new ImageSource(bmp));
+    //         } else {
+    //             const size = nView.frame.size;
+    //             try {
+    //                 // Use UIGraphicsBeginImageContextWithOptions to specify the scale (dpi multiplier)
+    //                 UIGraphicsBeginImageContextWithOptions(size, false, 2);
+    //                 nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, size.width, size.height), true);
+    //                 const imageFromContext = UIGraphicsGetImageFromCurrentImageContext();
+    //                 UIGraphicsEndImageContext();
+    //                 resolve(new ImageSource(imageFromContext));
+    //             } catch (err) {
+    //                 DEV_LOG && console.log(err, err.stack);
+    //                 // fallback to previous renderer if anything goes wrong
+    //                 const renderer = new UIGraphicsImageRenderer({ size });
+    //                 const image = renderer.imageWithActions((context) => {
+    //                     nView.drawViewHierarchyInRectAfterScreenUpdates(CGRectMake(0, 0, size.width, size.height), true);
+    //                 });
+    //                 resolve(new ImageSource(image));
+    //             }
+    //         }
+    //     };
+    //     view.once('layoutChanged', onLayoutChanged);
+    //     gesturerootview.measure(Utils.layout.makeMeasureSpec(0, Utils.layout.UNSPECIFIED), Utils.layout.makeMeasureSpec(0, Utils.layout.UNSPECIFIED));
 
-        gesturerootview.layout(0, 0, gesturerootview.getMeasuredWidth(), gesturerootview.getMeasuredHeight());
+    //     gesturerootview.layout(0, 0, gesturerootview.getMeasuredWidth(), gesturerootview.getMeasuredHeight());
+    // });
+    // (rootView as GridLayout).removeChild(gesturerootview);
+    // componentInstanceInfo.element.nativeElement._tearDownUI();
+    // componentInstanceInfo.viewInstance?.$destroy();
+    // DEV_LOG && console.log('imageSource', imageSource.width, imageSource.height);
+    // return imageSource;
+
+    const width = Utils.layout.toDevicePixels(options?.width ?? screenWidthDips);
+    const height = options?.height ? Utils.layout.toDevicePixels(options?.height) : undefined;
+
+    // canvas.drawColor('green')
+    const canvas = await renderPKPassToCanvas(pkpass, {
+        ...options,
+        width: Utils.layout.toDevicePixels(width),
+        height: height ? Utils.layout.toDevicePixels(height) : undefined
     });
-    (rootView as GridLayout).removeChild(gesturerootview);
-    componentInstanceInfo.element.nativeElement._tearDownUI();
-    componentInstanceInfo.viewInstance?.$destroy();
-    DEV_LOG && console.log('imageSource', imageSource.width, imageSource.height);
-    return imageSource;
+    // const paint = new Paint();
+    // paint.color = 'black'
+    // canvas.drawText("test", 0, 4, 20,60, paint)
+    return new ImageSource(canvas.getImage());
 }
 
 /**
@@ -455,25 +475,26 @@ export async function pkpassToImage(
  */
 export async function renderPKPassToCanvas(
     pkpass: PKPass,
-    canvas: any,
     options: {
+        canvas?: Canvas;
+        lang: string;
         layout?: 'card' | 'full'; // Card for compact credit-card sized, full for complete details
         includeBackFields?: boolean;
         backgroundColor?: string;
         width?: number;
         height?: number;
-    } = {}
-): Promise<void> {
+    }
+): Promise<Canvas> {
     const passData = pkpass.passData;
-    const { backgroundColor = passData.backgroundColor || '#ffffff', includeBackFields = false, layout = 'full', width = 600 } = options;
+    let canvas = options.canvas;
+    const { backgroundColor = passData.backgroundColor || '#ffffff', includeBackFields = false, layout = 'full', width = 400 } = options;
 
     // Calculate dimensions based on layout
-    const baseWidth = 600;
+    const baseWidth = 1000;
     const scaleFactor = width / baseWidth;
-    DEV_LOG && console.log('renderToCanvas', width, scaleFactor);
 
     // Credit card aspect ratio: 1.586:1
-    const cardHeight = Math.round(width / 1.586);
+    const cardHeight = Math.round(width / CARD_RATIO);
 
     // For full layout, compute height dynamically based on content
     let computedHeight = 0;
@@ -481,132 +502,84 @@ export async function renderPKPassToCanvas(
         computedHeight = cardHeight;
     } else {
         // Estimate height for full layout
-        computedHeight = computeFullLayoutHeight(pkpass, scaleFactor, includeBackFields);
+        computedHeight = width;
     }
 
-    const canvasWidth = width;
-    const canvasHeight = options.height || computedHeight;
+    const canvasWidth = Utils.layout.toDeviceIndependentPixels(width);
+    const canvasHeight = Utils.layout.toDeviceIndependentPixels(options.height || computedHeight);
 
     // Create paints for rendering
-    const bgPaint = new Paint();
-    bgPaint.color = backgroundColor;
+    // const bgPaint = new Paint();
+    // bgPaint.color = backgroundColor;
 
     const fgPaint = new Paint();
-    fgPaint.color = passData.foregroundColor || '#000000';
-    fgPaint.setAntiAlias(true);
-
-    const iconPaint = new Paint();
-    iconPaint.color = passData.foregroundColor || '#000000';
-    iconPaint.fontFamily = get(fonts).mdi;
-    iconPaint.setAntiAlias(true);
+    const fgColor = passData.foregroundColor || '#000000';
+    fgPaint.color = fgColor;
 
     const labelPaint = new Paint();
-    labelPaint.color = passData.labelColor || passData.foregroundColor || '#666666';
-    labelPaint.setAntiAlias(true);
+    const labelColor = passData.labelColor || passData.foregroundColor || '#666666';
+    labelPaint.color = labelColor;
+
+    const iconPaint = new Paint();
+    iconPaint.color = labelColor;
+    iconPaint.fontFamily = MDI_FONT_FAMILY;
 
     const imagePaint = new Paint();
-    imagePaint.setAntiAlias(true);
 
     // Draw background
-    canvas.drawRect(0, 0, canvasWidth, canvasHeight, bgPaint);
 
     const padding = 20 * scaleFactor;
-    const sectionSpacing = 30 * scaleFactor;
+    const sectionSpacing = 0 * scaleFactor;
 
     // Get pass structure and style
     const structure = pkpass.getPassStructure();
     const style = pkpass.getPassStyle();
 
-    try {
-        if (layout === 'card') {
-            // Card layout: compact credit-card sized rendering
-            await renderCardLayout({ pkpass, canvas, canvasWidth, canvasHeight, scaleFactor, structure, style, padding, labelPaint, fgPaint, imagePaint, iconPaint, lang });
-        } else {
-            // Full layout: comprehensive pass view
-            await renderFullLayout({
-                pkpass,
-                canvas,
-                canvasWidth,
-                canvasHeight,
-                scaleFactor,
-                structure,
-                style,
-                padding,
-                sectionSpacing,
-                includeBackFields,
-                labelPaint,
-                fgPaint,
-                imagePaint,
-                iconPaint,
-                lang
-            });
+    if (layout === 'card') {
+        imagePaint.color = backgroundColor;
+        if (!canvas) {
+            canvas = new Canvas(width, computedHeight);
         }
-    } catch (error) {
-        console.error('Error rendering PKPass to canvas:', error, error.stack);
-        // Draw error message
-        fgPaint.textSize = 16 * scaleFactor;
-        canvas.drawText('Error rendering pass', padding, 50 * scaleFactor, fgPaint);
+        canvas.drawRoundRect(0, 0, width, computedHeight, 12 * scaleFactor, 12 * scaleFactor, imagePaint);
+        // Card layout: compact credit-card sized rendering
+        return renderCardLayout({
+            pkpass,
+            canvas,
+            canvasWidth,
+            scaleFactor,
+            structure,
+            style,
+            padding,
+            labelColor,
+            fgColor,
+            imagePaint,
+            iconPaint,
+            lang: options.lang,
+            fgPaint,
+            labelPaint
+        });
+    } else {
+        // Full layout: comprehensive pass view
+        return renderFullLayout({
+            pkpass,
+            canvas,
+            canvasWidth,
+            backgroundColor,
+            scaleFactor,
+            structure,
+            style,
+            padding,
+            sectionSpacing,
+            fgPaint,
+            labelPaint,
+            includeBackFields,
+            labelColor,
+            fgColor,
+            imagePaint,
+            iconPaint,
+            lang: options.lang
+        });
     }
-}
-
-/**
- * Compute height for full layout based on content
- */
-function computeFullLayoutHeight(pkpass: PKPass, scaleFactor: number, includeBackFields: boolean): number {
-    const structure = pkpass.getPassStructure();
-    let height = 100 * scaleFactor; // Initial padding and header
-
-    // Strip image (Apple spec: variable, using 150px as scaled average)
-    // or background image (Apple spec: 180x220 points)
-    if (pkpass.images.strip || pkpass.images.strip2x) {
-        height += 150 * scaleFactor + 10 * scaleFactor;
-    } else if ((pkpass.images.background || pkpass.images.background2x) && pkpass.getPassStyle() !== PKPassStyle.BoardingPass) {
-        // Background typically used as backdrop, not adding to height
-    }
-
-    // Header section with images (icon: 29x29, logo: 160x50, thumbnail: 90x90)
-    height += 90 * scaleFactor; // Max of icon/logo/thumbnail heights
-
-    // Header fields
-    if (structure?.headerFields?.length) {
-        height += 50 * scaleFactor;
-    }
-
-    // Primary fields
-    if (structure?.primaryFields?.length) {
-        height += 70 * scaleFactor;
-    }
-
-    // Secondary fields
-    if (structure?.secondaryFields?.length) {
-        height += 50 * scaleFactor;
-    }
-
-    // Auxiliary fields
-    if (structure?.auxiliaryFields?.length) {
-        height += 50 * scaleFactor;
-    }
-
-    // Barcode
-    const barcode = pkpass.getPrimaryBarcode();
-    if (barcode) {
-        height += 350 * scaleFactor; // Barcode + alt text
-    }
-
-    // Back fields
-    if (includeBackFields && structure?.backFields?.length) {
-        height += 60 * scaleFactor; // Separator
-        height += structure.backFields.length * 40 * scaleFactor;
-    }
-
-    // Footer image (Apple spec: 286x15 points)
-    if (pkpass.images.footer || pkpass.images.footer2x) {
-        height += 25 * scaleFactor; // Footer image + spacing
-    }
-
-    height += 50 * scaleFactor; // Bottom padding
-
-    return Math.round(height);
 }
 
 /**
@@ -614,11 +587,12 @@ function computeFullLayoutHeight(pkpass: PKPass, scaleFactor: number, includeBac
  */
 async function renderCardLayout({
     canvas,
-    canvasHeight,
     canvasWidth,
+    fgColor,
     fgPaint,
     iconPaint,
     imagePaint,
+    labelColor,
     labelPaint,
     lang,
     padding,
@@ -630,7 +604,6 @@ async function renderCardLayout({
     pkpass: PKPass;
     canvas: Canvas;
     canvasWidth: number;
-    canvasHeight: number;
     scaleFactor: number;
     structure: PKPassStructure;
     style: PKPassStyle;
@@ -638,9 +611,11 @@ async function renderCardLayout({
     labelPaint: Paint;
     fgPaint: Paint;
     iconPaint: Paint;
+    labelColor: string;
+    fgColor: string;
     imagePaint: Paint;
     lang: string;
-}): Promise<void> {
+}): Promise<Canvas> {
     let y = padding;
 
     // Top row: Logo or Icon + Name, and header fields
@@ -664,29 +639,46 @@ async function renderCardLayout({
         recycleImages(iconImage);
 
         // Draw organization name next to icon
+        fgPaint.setTextAlign(Align.LEFT);
         fgPaint.textSize = 14 * scaleFactor;
         canvas.drawText(pkpass.passData.organizationName || '', logoX + 26 * scaleFactor, headerY + 15 * scaleFactor, fgPaint);
     } else {
         // Just name
+        fgPaint.setTextAlign(Align.LEFT);
         fgPaint.textSize = 14 * scaleFactor;
         canvas.drawText(pkpass.passData.organizationName || '', logoX, headerY + 15 * scaleFactor, fgPaint);
     }
 
     // Draw header fields on the right
     if (structure?.headerFields?.length) {
-        const headerFieldsX = canvasWidth - padding - 100 * scaleFactor;
-        let fieldY = headerY;
-        for (const field of structure.headerFields) {
-            labelPaint.textSize = 11 * scaleFactor;
-            const label = pkpass.getLocalizedValue(field.label || field.key, lang);
-            canvas.drawText(label, headerFieldsX, fieldY, labelPaint);
+        drawFieldGroup(canvas, {
+            pkpass,
+            canvasWidth,
+            fields: structure.headerFields,
+            startX: canvasWidth - padding,
+            startY: y,
+            scaleFactor,
+            padding,
+            labelColor,
+            fgColor,
+            labelSize: 10,
+            valueSize: 13,
+            lang,
+            horizontalAlignment: 'right'
+        });
+        // const headerFieldsX = canvasWidth - padding - 100 * scaleFactor;
+        // let fieldY = headerY;
+        // for (const field of structure.headerFields) {
+        //     labelPaint.textSize = 1 * scaleFactor;
+        //     const label = pkpass.getLocalizedValue(field.label || field.key, lang);
+        //     canvas.drawText(label, headerFieldsX, fieldY, labelPaint);
 
-            fgPaint.textSize = 14 * scaleFactor;
-            const value = pkpass.formatFieldValue(field, lang);
-            canvas.drawText(value, headerFieldsX, fieldY + 15 * scaleFactor, fgPaint);
+        //     fgPaint.textSize = 14 * scaleFactor;
+        //     const value = pkpass.formatFieldValue(field, lang);
+        //     canvas.drawText(value, headerFieldsX, fieldY + 15 * scaleFactor, fgPaint);
 
-            fieldY += 30 * scaleFactor;
-        }
+        //     fieldY += 30 * scaleFactor;
+        // }
     }
 
     y += 50 * scaleFactor;
@@ -698,59 +690,99 @@ async function renderCardLayout({
         const fieldWidth = (canvasWidth - 2 * padding - 50 * scaleFactor) / 2;
 
         // Left field (departure)
-        labelPaint.textSize = 10 * scaleFactor;
-        const leftLabel = pkpass.getLocalizedValue(structure.primaryFields[0].label || '', lang);
-        canvas.drawText(leftLabel, padding, y, labelPaint);
-
-        fgPaint.textSize = 28 * scaleFactor;
-        const leftValue = pkpass.formatFieldValue(structure.primaryFields[0], lang);
-        canvas.drawText(leftValue, padding, y + 35 * scaleFactor, fgPaint);
+        drawFieldGroup(canvas, {
+            pkpass,
+            fields: [structure.primaryFields[0]],
+            startX: logoX,
+            startY: y,
+            canvasWidth,
+            padding,
+            labelColor,
+            fgColor,
+            labelSize: 10,
+            valueSize: 24,
+            lang,
+            scaleFactor
+        });
 
         const transitIcon = getTransitIcon(transitType);
         // Transit icon (center) - simplified, just text representation
         iconPaint.textSize = 32 * scaleFactor;
         canvas.drawText(transitIcon, padding + fieldWidth, y + 20 * scaleFactor, iconPaint);
 
-        // Right field (arrival)
-        labelPaint.textSize = 10 * scaleFactor;
-        const rightLabel = pkpass.getLocalizedValue(structure.primaryFields[1].label || '', lang);
-        const rightLabelWidth = labelPaint.measureText(rightLabel);
-        canvas.drawText(rightLabel, canvasWidth - padding - rightLabelWidth, y, labelPaint);
-
-        fgPaint.textSize = 28 * scaleFactor;
-        const rightValue = pkpass.formatFieldValue(structure.primaryFields[1], lang);
-        const rightValueWidth = fgPaint.measureText(rightValue);
-        canvas.drawText(rightValue, canvasWidth - padding - rightValueWidth, y + 35 * scaleFactor, fgPaint);
+        drawFieldGroup(canvas, {
+            pkpass,
+            fields: [structure.primaryFields[1]],
+            startX: logoX,
+            startY: y,
+            canvasWidth,
+            padding,
+            labelColor,
+            fgColor,
+            labelSize: 10,
+            valueSize: 24,
+            lang,
+            scaleFactor
+        });
 
         y += 60 * scaleFactor;
     } else if (structure?.primaryFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.primaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 10 * scaleFactor, 24 * scaleFactor, lang);
+        y = drawFieldGroup(canvas, {
+            pkpass,
+            fields: structure.secondaryFields,
+            startX: logoX,
+            startY: y,
+            canvasWidth,
+            padding,
+            labelColor,
+            fgColor,
+            labelSize: 10,
+            valueSize: 24,
+            lang,
+            scaleFactor
+        });
     }
 
     y += 20 * scaleFactor;
 
     // Bottom row: Secondary and auxiliary fields
     if (structure?.secondaryFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.secondaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 9 * scaleFactor, 11 * scaleFactor, lang);
+        y = drawFieldGroup(canvas, {
+            pkpass,
+            fields: structure.secondaryFields,
+            startX: logoX,
+            startY: y,
+            canvasWidth,
+            padding,
+            labelColor,
+            fgColor,
+            labelSize: 9,
+            valueSize: 11,
+            lang,
+            scaleFactor
+        });
         y += 10 * scaleFactor;
     }
 
     if (structure?.auxiliaryFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.auxiliaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 9 * scaleFactor, 11 * scaleFactor, lang);
+        y = drawFieldGroup(canvas, { pkpass, fields: structure.auxiliaryFields, startX: logoX, startY: y, canvasWidth, padding, labelColor, fgColor, labelSize: 9, valueSize: 11, lang, scaleFactor });
     }
+    return canvas;
 }
 
 /**
  * Render full layout (comprehensive)
  */
 async function renderFullLayout({
+    backgroundColor,
     canvas,
-    canvasHeight,
     canvasWidth,
+    fgColor,
     fgPaint,
     iconPaint,
     imagePaint,
     includeBackFields,
+    labelColor,
     labelPaint,
     lang,
     padding,
@@ -763,11 +795,13 @@ async function renderFullLayout({
     pkpass: PKPass;
     canvas: Canvas;
     canvasWidth: number;
-    canvasHeight: number;
     scaleFactor: number;
     structure: PKPassStructure;
     style: PKPassStyle;
     padding: number;
+    backgroundColor: string;
+    labelColor: string;
+    fgColor: string;
     labelPaint: Paint;
     fgPaint: Paint;
     iconPaint: Paint;
@@ -775,9 +809,7 @@ async function renderFullLayout({
     includeBackFields: boolean;
     imagePaint: Paint;
     lang: string;
-}): Promise<void> {
-    let y = 20 * scaleFactor;
-
+}): Promise<Canvas> {
     // Apple spec: prefer @2x images for quality
     const strip2x = pkpass.images.strip2x || pkpass.images.strip;
     const background2x = pkpass.images.background2x || pkpass.images.background;
@@ -786,104 +818,252 @@ async function renderFullLayout({
     const thumbnail2x = pkpass.images.thumbnail2x || pkpass.images.thumbnail;
     const footer2x = pkpass.images.footer2x || pkpass.images.footer;
 
-    // 1. Draw strip image behind primary fields (Apple spec: variable dimensions)
-    // iPhone 6+: 375x98 (events), 375x144 (gift/coupon), 375x123 (other)
-    // Earlier: 320x84 (events), 320x110 (square barcode), 320x123 (other)
-    if (strip2x) {
-        const stripImage = await loadImage(strip2x, { width: canvasWidth, height: Math.round(150 * scaleFactor) });
-        canvas.drawBitmap(stripImage, 0, y, imagePaint);
-        recycleImages(stripImage);
-        y += Math.round(150 * scaleFactor) + Math.round(10 * scaleFactor);
-    } else if (background2x && style !== PKPassStyle.BoardingPass) {
-        // Background image (Apple spec: 180x220 points) - not typically used with strip
-        // Draw as backdrop if no strip and not boarding pass
-        const bgImage = await loadImage(background2x, { width: canvasWidth, height: canvasHeight });
-        canvas.drawBitmap(bgImage, 0, 0, imagePaint);
-        recycleImages(bgImage);
+    // first we compute all layouts to measure
+    const imagesToDraw = [];
+    const staticLayoutsToDraw = [];
+    const svgsToDraw = [];
+    let y = padding;
+
+    if (background2x && style === PKPassStyle.EventTicket) {
+        const bgImage = await loadImage(background2x, { width: canvasWidth });
+        imagesToDraw.push({ image: bgImage, x: 0, y: 0, width: '100%', height: '100%' });
     }
 
-    // 2. Draw header section (icon, logo, thumbnail per Apple specs)
     const headerY = y;
-    let logoX = padding;
-
-    // Draw icon if available (Apple spec: 29x29 points)
-    if (icon2x) {
-        const iconImage = await loadImage(icon2x, { width: Math.round(29 * scaleFactor), height: Math.round(29 * scaleFactor) });
-        DEV_LOG && console.log('rendering icon', icon2x, iconImage.android, File.exists(icon2x));
-        canvas.drawBitmap(iconImage, padding, headerY, imagePaint);
-        recycleImages(iconImage);
-        logoX += Math.round(35 * scaleFactor);
-    }
+    const logoX = padding;
 
     // Draw logo if available (Apple spec: max 160x50 points)
     if (logo2x) {
-        const logoImage = await loadImage(logo2x, { width: Math.round(160 * scaleFactor), height: Math.round(50 * scaleFactor) });
-        canvas.drawBitmap(logoImage, logoX, headerY, imagePaint);
-        recycleImages(logoImage);
+        const image = await loadImage(logo2x, { width: canvasWidth });
+        imagesToDraw.push({ image, x: logoX, y: headerY, height: Math.round(50 * scaleFactor) });
+    } else if (icon2x) {
+        const image = await loadImage(icon2x, { width: canvasWidth });
+        imagesToDraw.push({ image, x: logoX, y: headerY, height: Math.round(50 * scaleFactor) });
+    }
+    const orgName = pkpass.passData?.organizationName || pkpass.getLocalizedValue(pkpass.passData?.logoText, lang) || '';
+    if (orgName && !logo2x) {
+        staticLayoutsToDraw.push({
+            staticLayout: new StaticLayout(
+                createNativeAttributedString({
+                    spans: [
+                        {
+                            text: orgName,
+                            fontSize: 14 * scaleFactor,
+                            fontWeight: 'bold'
+                        }
+                    ]
+                }),
+                fgPaint,
+                canvasWidth - 2 * padding - (icon2x ? 50 * scaleFactor : 0),
+                LayoutAlignment.ALIGN_NORMAL,
+                1,
+                0,
+                true
+            ),
+            x: logoX,
+            y: headerY + Math.round((25 - 7) * scaleFactor)
+        });
     }
 
-    // Draw thumbnail if available (Apple spec: 90x90 points)
-    if (thumbnail2x) {
-        const thumbImage = await loadImage(thumbnail2x, { width: Math.round(90 * scaleFactor), height: Math.round(90 * scaleFactor) });
-        canvas.drawBitmap(thumbImage, canvasWidth - Math.round(90 * scaleFactor) - padding, headerY, imagePaint);
-        recycleImages(thumbImage);
-    }
-
-    // Draw logo text if available
-    if (pkpass.passData.logoText) {
-        fgPaint.textSize = 14 * scaleFactor;
-        const logoText = pkpass.getLocalizedValue(pkpass.passData.logoText, lang);
-        canvas.drawText(logoText, logoX, headerY + Math.round(55 * scaleFactor), fgPaint);
-    }
-
-    y = headerY + Math.round(70 * scaleFactor);
-
-    // 3. Draw header fields
+    // Draw header fields
     if (structure?.headerFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.headerFields, y, canvasWidth, padding, labelPaint, fgPaint, 12 * scaleFactor, 16 * scaleFactor, lang);
-        y += sectionSpacing;
+        // we draw aligned right
+        addFieldGroup(
+            {
+                pkpass,
+                canvasWidth: canvasWidth / 2,
+                fields: structure.headerFields,
+                startX: canvasWidth - padding,
+                startY: y,
+                scaleFactor,
+                padding,
+                labelColor,
+                fgColor,
+                labelSize: 13,
+                valueSize: 17,
+                lang,
+                horizontalAlignment: 'right'
+            },
+            staticLayoutsToDraw
+        );
+        // y += sectionSpacing;
     }
 
-    // 4. Draw primary fields (larger text)
-    if (structure?.primaryFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.primaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 14 * scaleFactor, 28 * scaleFactor, lang);
-        y += sectionSpacing;
+    y = headerY + 50 * scaleFactor;
+
+    if (pkpass.passData?.organizationName) {
+        y += 20 * scaleFactor;
+        staticLayoutsToDraw.push({
+            text: pkpass.passData?.organizationName,
+            textSize: 14 * scaleFactor,
+            textAlign: Align.CENTER,
+            x: canvasWidth / 2,
+            y,
+            paint: labelPaint
+        });
+    }
+    y += 16 * scaleFactor;
+    y += 16 * scaleFactor;
+
+    // Draw primary fields (larger text)
+    const transitType = structure?.transitType;
+    if (transitType && structure?.primaryFields?.length === 2) {
+        // Boarding pass layout with transit icon
+        const fieldWidth = (canvasWidth - 2 * padding - 50 * scaleFactor) / 2;
+
+        addFieldGroup(
+            {
+                pkpass,
+                fields: [structure.primaryFields[0]],
+                startX: padding,
+                startY: y,
+                scaleFactor,
+                padding,
+                labelColor,
+                valueFontWeight: 'bold',
+                fgColor,
+                labelSize: 12,
+                valueSize: 32,
+                lang,
+                canvasWidth
+            },
+            staticLayoutsToDraw
+        );
+
+        const transitIcon = getTransitIcon(transitType);
+        // Transit icon (center) - simplified, just text representation
+        staticLayoutsToDraw.push({
+            text: transitIcon,
+            textSize: 50 * scaleFactor,
+            textAlign: Align.CENTER,
+            x: canvasWidth / 2,
+            y: y + 50 * scaleFactor,
+            paint: iconPaint
+        });
+
+        y = addFieldGroup(
+            {
+                pkpass,
+                fields: [structure.primaryFields[1]],
+                startX: canvasWidth - padding,
+                startY: y,
+                scaleFactor,
+                padding,
+                labelColor,
+                fgColor,
+                labelSize: 12,
+                valueSize: 32,
+                lang,
+                valueFontWeight: 'bold',
+                horizontalAlignment: 'right',
+                canvasWidth: canvasWidth / 2
+            },
+            staticLayoutsToDraw
+        );
+        y += 16 * scaleFactor;
+    } else if (structure?.primaryFields?.length) {
+        if (strip2x && style !== PKPassStyle.BoardingPass) {
+            const stripImage = await loadImage(strip2x, { width: canvasWidth, height: Math.round(150 * scaleFactor) });
+            imagesToDraw.push({ image: stripImage, x: 0, y });
+        }
+
+        // Draw thumbnail if available (Apple spec: 90x90 points)
+        if (thumbnail2x) {
+            const image = await loadImage(thumbnail2x, { height: Math.round(90 * scaleFactor) });
+            imagesToDraw.push({ image, x: 0, y, height: Math.round(90 * scaleFactor), rightAligned: true });
+        }
+        y = addFieldGroup(
+            {
+                pkpass,
+                fields: structure.primaryFields,
+                startX: logoX,
+                startY: y,
+                scaleFactor,
+                padding,
+                labelColor,
+                fgColor,
+                valueFontWeight: 'bold',
+                labelSize: 12,
+                valueSize: 32,
+                lang,
+                canvasWidth
+            },
+            staticLayoutsToDraw
+        );
+        y += 16 * scaleFactor;
     }
 
-    // 5. Draw secondary fields
+    // Draw secondary fields
     if (structure?.secondaryFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.secondaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 12 * scaleFactor, 18 * scaleFactor, lang);
-        y += sectionSpacing;
+        y += 16 * scaleFactor;
+        y = addFieldGroup(
+            {
+                pkpass,
+                fields: structure.secondaryFields,
+                startX: logoX,
+                startY: y,
+                canvasWidth,
+                padding,
+                labelColor,
+                fgColor,
+                labelSize: 11,
+                valueSize: 18,
+                lang,
+                scaleFactor
+            },
+            staticLayoutsToDraw
+        );
     }
 
-    // 6. Draw auxiliary fields
+    // Draw auxiliary fields
     if (structure?.auxiliaryFields?.length) {
-        y = drawFieldGroup(pkpass, canvas, structure.auxiliaryFields, y, canvasWidth, padding, labelPaint, fgPaint, 10 * scaleFactor, 14 * scaleFactor, lang);
-        y += sectionSpacing;
+        y += 16 * scaleFactor;
+        y = addFieldGroup(
+            { pkpass, fields: structure.auxiliaryFields, startX: logoX, startY: y, canvasWidth, padding, labelColor, fgColor, labelSize: 10, valueSize: 14, lang, scaleFactor },
+            staticLayoutsToDraw
+        );
     }
+    y += 24 * scaleFactor;
 
-    // 7. Draw barcode if available
+    // Draw footer image if available (Apple spec: 286x15 points)
+    if (footer2x) {
+        try {
+            const image = await loadImage(footer2x, { height: Math.round(15 * scaleFactor) });
+            imagesToDraw.push({ image, x: 0, y, height: Math.round(1590 * scaleFactor), width: '100%' });
+            y += 20 * scaleFactor;
+        } catch (error) {
+            console.error('Error rendering footer image:', error);
+        }
+    }
+    // Draw barcode if available
     const barcode = pkpass.getPrimaryBarcode();
     if (barcode) {
         try {
-            const barcodeWidth = Math.min(Math.round(300 * scaleFactor), canvasWidth - 2 * padding);
-            const barcodeImage = await getBarcodeImage({ barcode, foregroundColor: pkpass.passData.foregroundColor || '#000000', width: barcodeWidth });
+            const barcodeWidth = Math.round((canvasWidth - 2 * padding) / 2);
+
+            const barcodeImage = await getBarcodeSVG({ barcode, foregroundColor: pkpass.passData.foregroundColor || '#000000' });
 
             if (barcodeImage) {
-                // Center the barcode
-                const barcodeX = (canvasWidth - barcodeWidth) / 2;
-                canvas.drawBitmap(barcodeImage, barcodeX, y, imagePaint);
-                recycleImages(barcodeImage);
+                svgsToDraw.push({
+                    src: barcodeImage,
+                    width: barcodeWidth,
+                    height: barcodeWidth,
+                    horizontalAlignment: 'middle',
+                    x: (canvasWidth - barcodeWidth) / 2,
+                    y
+                });
 
-                const barcodeHeight = Math.round(barcodeWidth * 0.8); // Approximate barcode height
-                y += barcodeHeight + Math.round(10 * scaleFactor);
-
+                y += barcodeWidth + 10 * scaleFactor;
                 // Draw barcode alt text if available
                 if (barcode.altText) {
-                    fgPaint.textSize = 12 * scaleFactor;
-                    const textWidth = fgPaint.measureText(barcode.altText);
-                    canvas.drawText(barcode.altText, (canvasWidth - textWidth) / 2, y + Math.round(10 * scaleFactor), fgPaint);
-                    y += Math.round(30 * scaleFactor);
+                    staticLayoutsToDraw.push({
+                        text: barcode.altText,
+                        textSize: 12 * scaleFactor,
+                        textAlign: Align.CENTER,
+                        x: canvasWidth / 2,
+                        y,
+                        paint: fgPaint
+                    });
                 }
             }
         } catch (error) {
@@ -891,87 +1071,290 @@ async function renderFullLayout({
         }
     }
 
-    // 8. Draw back fields if requested
+    // Draw back fields if requested
     if (includeBackFields && structure?.backFields?.length) {
-        y += sectionSpacing;
-        // Draw separator line
-        const { Paint } = await import('@nativescript-community/ui-canvas');
-        const separatorPaint = new Paint();
-        separatorPaint.color = pkpass.passData.foregroundColor || '#cccccc';
-        separatorPaint.strokeWidth = 1;
-        canvas.drawLine(padding, y, canvasWidth - padding, y, separatorPaint);
-        y += sectionSpacing;
-
-        y = drawFieldGroup(pkpass, canvas, structure.backFields, y, canvasWidth, padding, labelPaint, fgPaint, 12 * scaleFactor, 16 * scaleFactor, lang);
-    }
-
-    // 9. Draw footer image if available (Apple spec: 286x15 points)
-    if (footer2x) {
-        try {
-            const footerImage = await loadImage(footer2x, { width: Math.round(286 * scaleFactor), height: Math.round(15 * scaleFactor) });
-            // Center footer image
-            const footerX = (canvasWidth - Math.round(286 * scaleFactor)) / 2;
-            canvas.drawBitmap(footerImage, footerX, y, imagePaint);
-            recycleImages(footerImage);
-        } catch (error) {
-            console.error('Error rendering footer image:', error);
+        y += Math.round(44 * scaleFactor);
+        staticLayoutsToDraw.push({
+            text: lc('additional_information'),
+            textSize: 16 * scaleFactor,
+            fontWeight: 'bold',
+            x: logoX,
+            y,
+            paint: labelPaint
+        });
+        y += Math.round(12 * scaleFactor);
+        for (let i = 0; i < structure.backFields.length; i++) {
+            y = addFieldGroup(
+                {
+                    pkpass,
+                    fields: [structure.backFields[i]],
+                    startX: logoX,
+                    startY: y,
+                    valueFontWeight: 'normal',
+                    canvasWidth,
+                    padding,
+                    labelColor,
+                    fgColor,
+                    labelSize: 11,
+                    valueSize: 14,
+                    lang,
+                    scaleFactor,
+                    fieldSpacing: 10
+                },
+                staticLayoutsToDraw
+            );
+            y += Math.round(10 * scaleFactor);
         }
     }
+    y += padding;
+
+    if (!canvas) {
+        canvas = new Canvas(canvasWidth, y);
+    }
+    canvas.drawColor(backgroundColor);
+
+    for (let i = 0; i < imagesToDraw.length; i++) {
+        const imageData = imagesToDraw[i];
+        const imageSource = imageData.image;
+        const srcRect = new Rect(0, 0, imageSource.width, imageSource.height);
+        let scale = 1;
+        let width = imageSource.width;
+        if (imageData.width) {
+            width = imageData.width;
+            if (typeof width === 'string') {
+                width = PercentLength.toDevicePixels(PercentLength.parse(width));
+            }
+            scale = width / imageSource.width;
+        }
+        let height = imageSource.height;
+        if (imageData.height) {
+            height = imageData.height;
+            if (typeof height === 'string') {
+                height = PercentLength.toDevicePixels(PercentLength.parse(height));
+            }
+            if (!imageData.width) {
+                scale = height / imageSource.height;
+            }
+        }
+        const dstRect = new Rect(
+            imageData.rightAligned ? imageData.x - imageSource.width * scale : imageData.x,
+            imageData.y,
+            imageData.rightAligned ? imageData.x : imageData.x + imageSource.width * scale,
+            imageData.y + imageSource.height * scale
+        );
+        canvas.drawBitmap(imageSource, srcRect, dstRect, imagePaint);
+    }
+    for (let i = 0; i < staticLayoutsToDraw.length; i++) {
+        const staticLayoutData = staticLayoutsToDraw[i];
+        if (staticLayoutData.staticLayout) {
+            canvas.save();
+            canvas.translate(staticLayoutData.x, staticLayoutData.y);
+            staticLayoutData.staticLayout.draw(canvas);
+            canvas.restore();
+        } else if (staticLayoutData.text) {
+            const paint = staticLayoutData.paint as Paint;
+            let oldTextAlign;
+            let oldFontWeight;
+            if (staticLayoutData.textSize) {
+                paint.setTextSize(staticLayoutData.textSize);
+            }
+            if (staticLayoutData.textAlign !== undefined) {
+                oldTextAlign = paint.getTextAlign();
+                paint.setTextAlign(staticLayoutData.textAlign);
+            }
+            if (staticLayoutData.fontWeight !== undefined) {
+                oldFontWeight = paint.fontWeight;
+                paint.fontWeight = staticLayoutData.fontWeight;
+            }
+            canvas.drawText(staticLayoutData.text, staticLayoutData.x, staticLayoutData.y, staticLayoutData.paint);
+
+            if (oldTextAlign !== undefined) {
+                paint.setTextAlign(oldTextAlign);
+            }
+            if (oldFontWeight !== undefined) {
+                paint.fontWeight = oldFontWeight;
+            }
+        }
+    }
+
+    for (let index = 0; index < svgsToDraw.length; index++) {
+        const svgData = svgsToDraw[index];
+        const svg = new SVG();
+        svg.width = svgData.width;
+        svg.height = svgData.height;
+        svg.src = svgData.src;
+        svg.cache = false;
+        svg.horizontalAlignment = 'middle';
+        canvas.save();
+        canvas.translate(svgData.x, svgData.y);
+        svg.drawMyShapeOnCanvas(canvas, {} as any, svg.width as any, svg.height as any);
+        canvas.restore();
+    }
+
+    recycleImages(imagesToDraw.map((d) => d.image));
+    return canvas;
 }
 
+const fieldsPaint = new Paint();
+fieldsPaint.fontWeight = '500';
+
+function drawFieldGroup(
+    canvas,
+    {
+        canvasWidth,
+        fgColor,
+        fields,
+        fieldSpacing = 10,
+        horizontalAlignment = 'left',
+        labelColor,
+        labelSize,
+        lang,
+        padding,
+        pkpass,
+        scaleFactor,
+        startX,
+        startY,
+        valueFontWeight,
+        valueSize
+    }: {
+        pkpass: PKPass;
+        fields: PKPassField[];
+        startX: number;
+        startY: number;
+        scaleFactor: number;
+        canvasWidth;
+        padding: number;
+        fieldSpacing?: number;
+        labelColor: string;
+        fgColor: string;
+        labelSize: number;
+        valueSize: number;
+        valueFontWeight?: string;
+        lang: string;
+        horizontalAlignment?: string;
+    }
+): number {
+    const staticLayoutsToDraw = [];
+    const y = addFieldGroup(
+        {
+            canvasWidth,
+            fgColor,
+            fields,
+            fieldSpacing,
+            horizontalAlignment,
+            labelColor,
+            labelSize,
+            lang,
+            padding,
+            pkpass,
+            scaleFactor,
+            startX,
+            startY,
+            valueFontWeight,
+            valueSize
+        },
+        staticLayoutsToDraw
+    );
+    for (let index = 0; index < staticLayoutsToDraw.length; index++) {
+        const staticLayoutData = staticLayoutsToDraw[index];
+        canvas.save();
+        canvas.translate(staticLayoutData.x, staticLayoutData.y);
+        staticLayoutData.staticLayout.draw(canvas);
+        canvas.restore();
+    }
+    return y;
+}
 /**
  * Helper method to draw a group of fields
  */
-function drawFieldGroup(
-    pkpass: PKPass,
-    canvas: Canvas,
-    fields: PKPassField[],
-    startY: number,
-    canvasWidth: number,
-    padding: number,
-    labelPaint: Paint,
-    valuePaint: Paint,
-    labelSize: number,
-    valueSize: number,
-    currentLang: string
+function addFieldGroup(
+    {
+        canvasWidth,
+        fgColor,
+        fields,
+        fieldSpacing = 10,
+        horizontalAlignment = 'left',
+        labelColor,
+        labelSize,
+        lang,
+        padding,
+        pkpass,
+        scaleFactor,
+        startX,
+        startY,
+        valueFontWeight,
+        valueSize
+    }: {
+        pkpass: PKPass;
+        fields: PKPassField[];
+        startX: number;
+        startY: number;
+        scaleFactor: number;
+        canvasWidth;
+        padding: number;
+        fieldSpacing?: number;
+        labelColor: string;
+        fgColor: string;
+        labelSize: number;
+        valueSize: number;
+        valueFontWeight?: string;
+        lang: string;
+        horizontalAlignment?: string;
+    },
+    staticLayoutsToDraw
 ): number {
     const y = startY;
-    const fieldSpacing = 10;
-    const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * fieldSpacing) / fields.length;
-
-    fields.forEach((field, index) => {
-        const x = padding + index * (fieldWidth + fieldSpacing);
-
-        // Draw label
-        labelPaint.textSize = labelSize;
-        const label = pkpass.getLocalizedValue(field.label || field.key, currentLang);
-
-        // Handle label alignment
-        let labelX = x;
+    const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * fieldSpacing * scaleFactor) / fields.length;
+    let x = startX;
+    let deltaY = 0;
+    (horizontalAlignment === 'right' ? fields.reverse() : fields).forEach((field, index) => {
+        const topText = createNativeAttributedString({
+            spans: [
+                {
+                    text: field.label || field.key ? pkpass.getLocalizedValue(field.label || field.key, lang).toUpperCase() + '\n' : '',
+                    fontSize: labelSize * scaleFactor,
+                    fontWeight: '500',
+                    color: labelColor,
+                    lineHeight: 16 * scaleFactor
+                },
+                {
+                    text: pkpass.formatFieldValue(field, lang),
+                    fontWeight: valueFontWeight ?? '500',
+                    fontSize: valueSize * scaleFactor,
+                    color: fgColor
+                }
+            ]
+        });
+        let textAlignment = LayoutAlignment.ALIGN_NORMAL;
+        let deltaX = 0;
         if (field.textAlignment === 'PKTextAlignmentRight') {
-            const labelWidth = labelPaint.measureText(label);
-            labelX = x + fieldWidth - labelWidth;
+            // fieldsPaint.setTextAlign(Align.RIGHT);
+            textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
         } else if (field.textAlignment === 'PKTextAlignmentCenter') {
-            const labelWidth = labelPaint.measureText(label);
-            labelX = x + (fieldWidth - labelWidth) / 2;
+            // fieldsPaint.setTextAlign(Align.CENTER);
+            textAlignment = LayoutAlignment.ALIGN_CENTER;
+        } else {
+            fieldsPaint.setTextAlign(Align.LEFT);
         }
-        canvas.drawText(label, labelX, y, labelPaint);
-
-        // Format and draw value
-        valuePaint.textSize = valueSize;
-        const formattedValue = pkpass.formatFieldValue(field, currentLang);
-
-        // Handle value alignment
-        let valueX = x;
-        if (field.textAlignment === 'PKTextAlignmentRight') {
-            const valueWidth = valuePaint.measureText(formattedValue);
-            valueX = x + fieldWidth - valueWidth;
-        } else if (field.textAlignment === 'PKTextAlignmentCenter') {
-            const valueWidth = valuePaint.measureText(formattedValue);
-            valueX = x + (fieldWidth - valueWidth) / 2;
+        if (horizontalAlignment === 'right') {
+            textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
         }
-        canvas.drawText(formattedValue, valueX, y + labelSize + 5, valuePaint);
+        const staticLayout = new StaticLayout(topText, fieldsPaint, fieldWidth, textAlignment, 1, 0, true);
+        if (horizontalAlignment === 'right') {
+            deltaX -= staticLayout.getWidth();
+        }
+        // canvas.translate(x + deltaX, y);
+        staticLayoutsToDraw.push({ staticLayout, x: x + deltaX, y });
+        // staticLayout.draw(canvas);
+        // canvas.restore();
+        deltaY = Math.max(deltaY, staticLayout.getHeight());
+
+        if (horizontalAlignment === 'right') {
+            x -= staticLayout.getWidth() + fieldSpacing * scaleFactor;
+        } else {
+            x += staticLayout.getWidth() + fieldSpacing * scaleFactor;
+        }
     });
 
-    return y + labelSize + valueSize + 15;
+    return y + deltaY;
 }

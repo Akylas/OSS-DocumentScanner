@@ -11,6 +11,7 @@ import { createGlobalEventListener, globalObservable } from '@shared/utils/svelt
 import { showAlertOptionSelect } from '~/utils/ui';
 
 import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_LOCALE, SETTINGS_LANGUAGE } from '~/utils/constants';
+import { deviceLanguage, getActualLanguage } from './lang';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
 dayjs.extend(UTC);
@@ -95,38 +96,6 @@ function setLang(newLang) {
     $lang.set(actualNewLang);
 }
 
-const deviceLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
-function getActualLanguage(language: string) {
-    if (language === 'auto') {
-        if (__ANDROID__) {
-            // N Device.language reads app config which thus does return locale app language and not device language
-            language = java.util.Locale.getDefault().toLanguageTag();
-        } else {
-            language = Device.language;
-        }
-    }
-
-    if (supportedLanguages.indexOf(language) === -1) {
-        language = language.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(language) === -1) {
-            language = 'en';
-        }
-    }
-
-    switch (language) {
-        // case 'cs':
-        //     language = 'cz';
-        //     break;
-        case 'jp':
-            language = 'ja';
-            break;
-        case 'lv':
-            language = 'la';
-            break;
-    }
-    return language;
-}
-
 // const rtf = new Intl.RelativeTimeFormat('es');
 
 export function formatDate(date: number | string | dayjs.Dayjs, formatStr: string = 'dddd LT') {
@@ -199,7 +168,7 @@ export function formatCurrency(value, locale) {
         const formatter = NSNumberFormatter.alloc().init();
         // formatter.locale = nLocal;
         formatter.currencyCode = locale;
-        formatter.numberStyle = NSNumberFormatterStyle.CurrencyStyle
+        formatter.numberStyle = NSNumberFormatterStyle.CurrencyStyle;
         return formatter.stringFromNumber(value);
     } else {
         const nLocal = java.util.Locale.forLanguageTag(locale) || (getCurrentLocale() as java.util.Locale);
