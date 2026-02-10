@@ -1,10 +1,10 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Canvas, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ApplicationSettings, ObservableArray, StackLayout } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, StackLayout, Utils } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
@@ -25,7 +25,9 @@
 <script lang="ts">
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CardListCell from './CardListCell.svelte';
-    import { documentHasPKPassData } from '~/utils/pkpass';
+    import { documentHasPKPassData, pkpassToImage, renderPKPassToCanvas } from '~/utils/pkpass';
+    import { share } from '@akylas/nativescript-app-utils/share';
+    import { getActualLanguage } from '~/helpers/lang';
 
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors);
@@ -254,6 +256,20 @@
         // DEV_LOG && console.log('CardsList', 'onMount', viewStyle);
         updateColumns($isLandscape);
     });
+
+    let canvastest: NativeViewElementNode<CanvasView>;
+    let pkPassTestImage;
+    $: pkpass = documents?.getItem(0)?.doc?.pages?.[0]?.pkpass;
+    $: if (pkpass) {
+        pkpassToImage(pkpass, {
+            lang: getActualLanguage(),
+            width: screenWidthDips,
+            layout: 'full',
+            includeBackFields: true
+        })
+            .then((img) => (pkPassTestImage = img))
+            .catch((err) => console.error(err, err.stack));
+    }
 </script>
 
 <MainList
@@ -420,4 +436,16 @@
     <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
         <mdbutton bind:this={fabHolder} class="fab" text="mdi-plus" on:tap={throttle(() => onAddButton(), 500)} />
     </stacklayout>
+
+    <!-- <canvasview bind:this={canvastest} slot="test" row={2} on:draw={onDrawCanvasTest} on:tap={() => (canvastest.nativeView.visibility = 'hidden')}> </canvasview> -->
+    <image
+        bind:this={canvastest}
+        slot="test"
+        backgroundColor="red"
+        row={2}
+        src={pkPassTestImage}
+        stretch="aspectFit"
+        verticalAlignment="top"
+        width="100%"
+        on:tap={() => (canvastest.nativeView.visibility = 'hidden')} />
 </MainList>

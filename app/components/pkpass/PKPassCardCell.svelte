@@ -90,7 +90,7 @@
 </script>
 
 <!-- Credit card sized layout with scalable content -->
-<gridlayout {backgroundColor} borderRadius={12} {...$$restProps}>
+<gridlayout {backgroundColor} borderRadius={12 * scaleFactor} {...$$restProps}>
     <!-- Strip or thumbnail banner at top if available -->
     <image colSpan={3} height={60 * scaleFactor} row={0} src={stripImage || thumbnailImage} stretch="aspectFill" visibility={stripImage || thumbnailImage ? 'visible' : 'collapse'} />
 
@@ -143,7 +143,7 @@
         <gridlayout colSpan={3} columns={withTransitionIcon ? '*,auto,*' : '*'} row={1} verticalAlignment="center">
             <!-- Departure -->
             <label col={0} horizontalAlignment="left" maxLines={2} verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
-                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(primaryFields[0])} />
+                <cspan color={labelColor} fontSize={10 * scaleFactor} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(primaryFields[0])} />
                 <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[0])} />
             </label>
 
@@ -162,7 +162,7 @@
 
             <!-- Arrival -->
             <label col={2} horizontalAlignment="right" maxLines={2} textAlignment="right" verticalAlignment="center" visibility={withTransitionIcon ? 'visible' : 'collapsed'}>
-                <cspan color={labelColor} fontSize={10 * scaleFactor} lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(primaryFields[1])} />
+                <cspan color={labelColor} fontSize={10 * scaleFactor} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT * scaleFactor} text={getFieldLabel(primaryFields[1])} />
                 <cspan color={foregroundColor} fontSize={28 * scaleFactor} fontWeight="bold" text={getFieldValue(primaryFields[1])} />
             </label>
             <!-- Standard layout for primary fields -->
@@ -173,6 +173,7 @@
                         <cspan
                             color={labelColor}
                             fontSize={10 * scaleFactor}
+                            fontWeight="500"
                             lineHeight={FIELD_LINE_HEIGHT * scaleFactor}
                             text={getFieldLabel(field)}
                             visibility={field?.label ? 'visible' : 'hidden'} />

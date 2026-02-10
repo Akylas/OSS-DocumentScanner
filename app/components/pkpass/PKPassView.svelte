@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Color, GridLayout, path } from '@nativescript/core';
-    import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassField, PKPassStructure, PKPassTransitType } from '~/models/PKPass';
+    import { PKBarcodeFormat, PKPass, PKPassBarcode, PKPassField, PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
     import { colors, windowInset } from '~/variables';
     import { qrcodeService } from '~/services/qrcode';
     import { getBarcodeSVG, getFieldTextAlignment, getTransitIcon } from '~/utils/pkpass';
@@ -12,7 +12,7 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { openLink } from '~/utils/ui';
 
-    const FIELD_LINE_HEIGHT = 20;
+    const FIELD_LINE_HEIGHT = 16;
 
     export let pkpass: PKPass;
     export let document: OCRDocument;
@@ -25,6 +25,7 @@
     $: ({ colorOnBackground, colorSurface, colorSurfaceContainerHigh } = $colors);
 
     const passData = pkpass.passData;
+    const passStyle = pkpass.getPassStyle();
     const structure = pkpass.getPassStructure();
     const primaryBarcode = pkpass.getPrimaryBarcode();
     const transitType = structure?.transitType;
@@ -105,14 +106,12 @@
     rows={`auto,auto,${forImageRendering ? 'auto' : '*'},auto`}
     {...$$restProps}
     use:conditionalEvent={{ condition: forImageRendering, event: 'layoutChanged', callback: onLayoutChanged }}>
-    <!-- Background image if available (180x220 points per Apple spec) -->
-    {#if backgroundImage}
-        <image colSpan={4} height="220" opacity="0.3" rowSpan={4} src={backgroundImage} stretch="aspectFill" />
+    {#if backgroundImage && passStyle === PKPassStyle.EventTicket}
+        <image height="100%" opacity="0.3" rowSpan={4} src={backgroundImage} stretch="aspectFill" />
     {/if}
 
-    <!-- Header section with icon, logo, and thumbnail -->
     <stacklayout padding="16" row={0}>
-        <gridlayout columns="auto,*,auto,auto" verticalAlignment="center">
+        <gridlayout columns="auto,*,auto,auto">
             <!-- Icon on the left (29x29 points per Apple spec) -->
             <!-- {#if iconImage}
                 <image col={0} height={29} marginRight={6} src={iconImage} stretch="aspectFit" verticalAlignment="center" width={29} />
@@ -128,11 +127,6 @@
                 <!-- Name next to icon -->
                 <image col={0} height={50} src={iconImage} stretch="aspectFit" verticalAlignment="top" />
                 <label col={0} color={foregroundColor} fontSize={14} fontWeight="bold" maxLines={1} selectable={true} text={orgName} verticalAlignment="center" width={120} />
-            {/if}
-
-            <!-- Thumbnail on the right (90x90 points per Apple spec) -->
-            {#if thumbnailImage}
-                <image col={3} height={90} src={thumbnailImage} stretch="aspectFit" width={90} />
             {/if}
 
             <!-- Header fields -->
@@ -157,25 +151,25 @@
 
         <label
             color={labelColor}
-            fontSize="14"
-            marginTop="4"
+            fontSize={14}
+            marginTop={4}
             selectable={true}
             text={passData.organizationName}
             textAlignment="center"
             visibility={passData.logoText !== passData.organizationName ? 'visible' : 'collapsed'} />
     </stacklayout>
 
-    <!-- Strip image behind primary fields (variable dimensions per Apple spec) -->
-    {#if stripImage}
-        <image height="150" row={1} src={stripImage} stretch="aspectFill" />
-    {/if}
-
     <!-- Main content -->
     <scrollview row={2}>
         <stacklayout padding={16}>
             <!-- Primary fields -->
             {#if primaryFieldsCount > 0}
-                {#if transitIcon && primaryFieldsCount === 2}
+                <!-- Strip image behind primary fields (variable dimensions per Apple spec) -->
+                {#if stripImage}
+                    <image height={60} row={1} src={stripImage} stretch="aspectFill" />
+                {/if}
+
+                {#if passStyle === PKPassStyle.BoardingPass && transitIcon && primaryFieldsCount === 2}
                     <!-- Boarding pass with transit icon between two primary fields -->
                     <gridlayout columns="*,auto,*" marginBottom={16}>
                         <!-- Left primary field (departure) -->
@@ -183,7 +177,7 @@
                             {#if structure.primaryFields[0].label}
                                 <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(structure.primaryFields[0])} />
                             {/if}
-                            <cspan color={foregroundColor} fontSize={32} text={renderFieldValue(structure.primaryFields[0])} />
+                            <cspan color={foregroundColor} fontSize={32} fontWeight="bold" text={renderFieldValue(structure.primaryFields[0])} />
                         </label>
 
                         <!-- Transit icon in center -->
@@ -194,18 +188,18 @@
                             {#if structure.primaryFields[1].label}
                                 <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(structure.primaryFields[1])} />
                             {/if}
-                            <cspan color={foregroundColor} fontSize={32} text={renderFieldValue(structure.primaryFields[1])} />
+                            <cspan color={foregroundColor} fontSize={32} fontWeight="bold" text={renderFieldValue(structure.primaryFields[1])} />
                         </label>
                     </gridlayout>
                 {:else}
                     <!-- Default primary fields layout (no transit icon or different field count) -->
-                    <gridlayout columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')}>
+                    <gridlayout columns={Array.from('*'.repeat(primaryFieldsCount)).join(',')} marginBottom={16}>
                         {#each structure.primaryFields as field, index}
                             <label col={index} marginBottom="16" selectable={true} textAlignment={getFieldTextAlignment(field)}>
                                 {#if field.label}
                                     <cspan color={labelColor} fontSize={12} fontWeight="500" lineHeight={FIELD_LINE_HEIGHT} text={renderFieldLabel(field)} />
                                 {/if}
-                                <cspan color={foregroundColor} fontSize={32} text={renderFieldValue(field)} />
+                                <cspan color={foregroundColor} fontSize={32} fontWeight="bold" text={renderFieldValue(field)} />
                             </label>
                         {/each}
                     </gridlayout>
@@ -260,7 +254,7 @@
             <!-- Back fields (additional info) -->
             {#if includeBackFields && structure?.backFields && structure.backFields.length > 0}
                 <stacklayout marginTop={24}>
-                    <label color={labelColor} fontSize="16" fontWeight="bold" marginBottom="12" text="Additional Information" />
+                    <label color={labelColor} fontSize="16" fontWeight="bold" marginBottom="12" text={lc('additional_information')} />
                     {#each structure.backFields as field}
                         <label color={foregroundColor} marginBottom={12} selectable={true} on:linkTap={onLinkTap}>
                             {#if field.label}

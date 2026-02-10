@@ -10,6 +10,7 @@ import { getPageColorMatrix } from '~/utils/matrix';
 import { pkpassToImage } from '~/utils/pkpass';
 import { requestStoragePermission } from '~/utils/utils.common';
 import { PDFExportOptions, getPDFDefaultExportOptions } from './PDFCanvas';
+import { getActualLanguage } from '~/helpers/lang';
 export async function exportPDFAsync({ compress, document, filename, folder = knownFolders.temp().path, options: baseOptions, pages }: PDFExportOptions): Promise<string> {
     DEV_LOG && console.log('exportPDFAsync', pages.length, folder, filename);
     if (!filename) {
@@ -28,6 +29,7 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             for (const page of pages) {
                 if (page.page.pkpass) {
                     const imageSource = await pkpassToImage(page.page.pkpass, {
+                        lang: getActualLanguage(),
                         layout: 'full',
                         includeBackFields: false
                     });

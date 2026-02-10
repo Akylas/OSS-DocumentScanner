@@ -7,6 +7,7 @@ import { loadImage, recycleImages } from '~/utils/images';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { pkpassToImage } from '~/utils/pkpass';
 import PDFCanvas from './PDFCanvas';
+import { getActualLanguage } from '~/helpers/lang';
 
 const textPaint = new Paint();
 textPaint.setTextSize(40);
@@ -70,22 +71,7 @@ export async function getTransformedImage({
 }) {
     let imagePath = page.imagePath;
     let canvasBackgroundColor;
-    if (CARD_APP) {
-        // look through pages to find pkpasses
-        if (page.pkpass) {
-            const logoImage = page.pkpass?.images?.logo2x || page.pkpass?.images?.logo; // Max 160x50 points
-            if (options?.pkpassLayout === 'logo' && logoImage && File.exists(logoImage)) {
-                imagePath = logoImage;
-                canvasBackgroundColor = page.pkpass.passData.backgroundColor;
-            } else {
-                return pkpassToImage(page.pkpass, {
-                    width: options?.width,
-                    layout: options?.pkpassLayout === 'card' ? 'card' : 'full',
-                    includeBackFields: false
-                });
-            }
-        }
-    }
+
     // DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
     if (imagePath) {
         const imageSource = await loadImage(imagePath, { sourceWidth: page.width, sourceHeight: page.height, ...loadOptions });
@@ -124,6 +110,19 @@ export async function getTransformedImage({
             return new ImageSource(pageCanvas.getImage());
         }
         return imageSource;
+    } else if (CARD_APP && page.pkpass) {
+        const logoImage = page.pkpass?.images?.logo2x || page.pkpass?.images?.logo; // Max 160x50 points
+        if (options?.pkpassLayout === 'logo' && logoImage && File.exists(logoImage)) {
+            imagePath = logoImage;
+            canvasBackgroundColor = page.pkpass.passData.backgroundColor;
+        } else {
+            return pkpassToImage(page.pkpass, {
+                lang: getActualLanguage(),
+                width: options?.width,
+                layout: options?.pkpassLayout === 'card' ? 'card' : 'full',
+                includeBackFields: false
+            });
+        }
     } else if (CARD_APP && document) {
         const backgroundColor = new Color(page.colors?.[0] || document.extra?.color || defaultBackgroundColor);
         const padding = 16 * 4;
