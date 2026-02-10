@@ -199,7 +199,7 @@ export default class PDFCanvas {
         const canvas = this.canvas;
         const w = canvas.getWidth() - 2;
         const h = canvas.getHeight() - 2;
-        DEV_LOG && console.log('drawPages', pages.length, JSON.stringify(this.options), canvas.getWidth(), canvas.getHeight(), w, h);
+        DEV_LOG && console.log('drawPages', pages.length, canvas.getWidth(), canvas.getHeight(), w, h);
 
         const nbItems = pages.length;
         // console.log('drawPDFPage', w, h, nbItems, srcs);
