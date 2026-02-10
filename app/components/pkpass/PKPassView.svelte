@@ -86,7 +86,6 @@
         }
     }
     function onLayoutChanged() {
-        DEV_LOG && console.log('onLayoutChanged');
         if (waitCounter <= 0) {
             mainGrid.nativeView.notify({ eventName: 'layoutDone' });
         }
