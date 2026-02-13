@@ -36,10 +36,13 @@
     let nbSelected: number = 0;
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
+    let getSyncColors: (item: Item) => string[];
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
+    let importImages: () => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
     let refreshCollectionView: () => void;
+
     $: condensed = viewStyle === 'condensed';
     function getItemRowHeight(viewStyle) {
         return condensed ? 80 : 150;
@@ -115,7 +118,9 @@
     bind:folder
     bind:nbSelected
     bind:importDocument
+    bind:importImages
     bind:refreshCollectionView
+    bind:getSyncColors
     bind:documents
     bind:folderItems
     bind:collectionView>
@@ -140,7 +145,7 @@
                 stretch="aspectFill"
                 width={getItemImageHeight(viewStyle) * $fontScale} />
             <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
-            <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
+            <SyncIndicator syncColors={getSyncColors(item)} visible={syncEnabled} />
             <PageIndicator horizontalAlignment="right" margin={10} scale={$fontScale} text={item.doc.pages.length} />
         </canvasview>
     </Template>
@@ -154,6 +159,7 @@
             horizontalAlignment="center"
             text="mdi-file-document-plus-outline"
             verticalAlignment="center"
+            on:longPress={throttle(() => importImages(), 500)}
             on:tap={throttle(() => importDocument(), 500)} />
         {#if $hasCamera}
             <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />

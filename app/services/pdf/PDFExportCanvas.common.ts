@@ -1,11 +1,13 @@
 import { lc } from '@nativescript-community/l';
-import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
-import { Color, File, ImageSource, Utils } from '@nativescript/core';
+import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+import { Color, File, ImageSource } from '@nativescript/core';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { CARD_RATIO } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { getPageColorMatrix } from '~/utils/matrix';
+import { pkpassToImage } from '~/utils/pkpass';
 import PDFCanvas from './PDFCanvas';
+import { getActualLanguage } from '~/helpers/lang';
 
 const textPaint = new Paint();
 textPaint.setTextSize(40);
@@ -62,14 +64,17 @@ export async function getTransformedImage({
     page
 }: {
     page: OCRPage;
-    options?: { width?; height?; scale?; colorMatrix?; rotation?; brightness?; contrast? };
+    options?: { width?; height?; scale?; colorMatrix?; rotation?; brightness?; contrast?; pkpassLayout? };
     loadOptions?;
     document?: OCRDocument;
     defaultBackgroundColor?: string;
 }) {
-    DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
-    if (page.imagePath) {
-        const imageSource = await loadImage(page.imagePath, { sourceWidth: page.width, sourceHeight: page.height, ...loadOptions });
+    let imagePath = page.imagePath;
+    let canvasBackgroundColor;
+
+    // DEV_LOG && console.log('getTransformedImage', JSON.stringify(page), JSON.stringify(options), JSON.stringify(loadOptions));
+    if (imagePath) {
+        const imageSource = await loadImage(imagePath, { sourceWidth: page.width, sourceHeight: page.height, ...loadOptions });
         if (isNaN(imageSource.width)) {
             throw new Error(lc('error_loading_image', page.imagePath, File.exists(page.imagePath)));
         }
@@ -94,7 +99,9 @@ export async function getTransformedImage({
             if (colorMatrix) {
                 bitmapPaint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
             }
-
+            if (canvasBackgroundColor) {
+                pageCanvas.drawColor(canvasBackgroundColor);
+            }
             pageCanvas.translate(rotateWidth / 2, rotateHeight / 2);
             pageCanvas.rotate(page.rotation, 0, 0);
             pageCanvas.scale(scale, scale, 0, 0);
@@ -103,6 +110,19 @@ export async function getTransformedImage({
             return new ImageSource(pageCanvas.getImage());
         }
         return imageSource;
+    } else if (CARD_APP && page.pkpass) {
+        const logoImage = page.pkpass?.images?.logo2x || page.pkpass?.images?.logo; // Max 160x50 points
+        if (options?.pkpassLayout === 'logo' && logoImage && File.exists(logoImage)) {
+            imagePath = logoImage;
+            canvasBackgroundColor = page.pkpass.passData.backgroundColor;
+        } else {
+            return pkpassToImage(page.pkpass, {
+                lang: getActualLanguage(),
+                width: options?.width,
+                layout: options?.pkpassLayout === 'card' ? 'card' : 'full',
+                includeBackFields: false
+            });
+        }
     } else if (CARD_APP && document) {
         const backgroundColor = new Color(page.colors?.[0] || document.extra?.color || defaultBackgroundColor);
         const padding = 16 * 4;

@@ -15,7 +15,6 @@ export async function loadImage(imagePath, loadOptions: { width?; height?; resiz
 }
 
 export function recycleImages(...args) {
-    // DEV_LOG && console.log('recycleImages', args.length, new Error().stack);
     if (__ANDROID__) {
         for (let index = 0; index < args.length; index++) {
             const arg = args[index];

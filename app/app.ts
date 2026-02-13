@@ -4,7 +4,7 @@ import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { ImagePipeline, getImagePipeline, initialize } from '@nativescript-community/ui-image';
+import { ImagePipeline, ImageViewTraceCategory, getImagePipeline, initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
@@ -29,6 +29,7 @@ import { syncService } from '~/services/sync';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { SETTINGS_APP_VERSION, SETTINGS_SYNC_ON_START } from '~/utils/constants';
 import { startOnCam } from './variables';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
@@ -118,10 +119,12 @@ try {
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Layout);
-    // Trace.addCategories(CollectionViewTraceCategory);
-    // Trace.addCategories(ImageViewTraceCategory);
-    // Trace.addCategories(ImageViewTraceCategory);
-    // Trace.enable();
+    if (__DEV__) {
+        // Trace.addCategories(CollectionViewTraceCategory);
+        // Trace.addCategories(ImageViewTraceCategory);
+        // Trace.addCategories(ImageViewTraceCategory);
+        Trace.enable();
+    }
 
     let launched = false;
     async function start() {

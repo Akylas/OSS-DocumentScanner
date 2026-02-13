@@ -15,3 +15,4 @@
 
 declare const START_ON_CAM: boolean;
 declare const CARD_APP: boolean;
+declare const MDI_FONT_FAMILY: string;

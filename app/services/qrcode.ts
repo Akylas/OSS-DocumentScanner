@@ -1,8 +1,9 @@
-import { Observable, PageTransition, SharedTransition } from '@nativescript/core';
+import { Color, Observable, PageTransition, SharedTransition } from '@nativescript/core';
 import { navigate, showModal } from '@shared/utils/svelte/ui';
-import { QRCodeSingleData, detectQRCodeFromFile, getSVGFromQRCode } from 'plugin-nativeprocessor';
+import { QRCodeSingleData, detectQRCodeFromFile, generateQRCodeImage, getSVGFromQRCode } from 'plugin-nativeprocessor';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { QRCODE_RESIZE_THRESHOLD } from '~/utils/constants';
+import { getBarcodeFormat } from '~/utils/pkpass';
 import { screenWidthDips } from '~/variables';
 
 const TAG = 'QRCodeService';
@@ -69,9 +70,15 @@ export enum FORMATS {
 }
 
 export class QRCodeService extends Observable {
-    async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string = '#000000', options?) {
+    async getQRCodeSVG(qrcode: QRCodeSingleData, width: number, color: string | Color = '#000000', options?) {
         return getSVGFromQRCode(qrcode.text, qrcode.format, width, {
-            color,
+            color: color instanceof Color ? color.hex : color,
+            ...(options || {})
+        });
+    }
+    async getQRCodeImage(qrcode: QRCodeSingleData, width: number, height: number, color: string | Color = '#000000', options?) {
+        return generateQRCodeImage(qrcode.text, qrcode.format, width, height, {
+            color: color instanceof Color ? color.hex : color,
             ...(options || {})
         });
     }
@@ -99,7 +106,21 @@ export class QRCodeService extends Observable {
     }
 
     async showQRCode(pages: OCRPage[], document?: OCRDocument, startPageIndex = 0) {
-        const qrcodes = pages.reduce((acc, page) => acc.concat(page.qrcode || []), []);
+        const qrcodes = pages.reduce((acc, page) => {
+            if (CARD_APP && page.pkpass) {
+                const qrcodes = page.pkpass.getAllBarcodes().map(
+                    (q) =>
+                        ({
+                            text: q.message,
+                            format: getBarcodeFormat(q)
+                        }) as QRCodeSingleData
+                );
+                return acc.concat(qrcodes);
+            } else {
+                return acc.concat(page.qrcode || []);
+            }
+        }, []);
+
         const component = (await import('~/components/FullScreenImageViewer.svelte')).default;
         navigate({
             page: component,

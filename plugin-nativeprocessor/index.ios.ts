@@ -3,6 +3,31 @@ import { File, ImageSource } from '@nativescript/core';
 import type { CornersOptions, CropOptions, DetectOptions, DetectQRCodeOptions, GenerateColorOptions, GenerateQRCodeOptions, LoadImageOptions, OCRData, PDFImportOptions, Quads } from '.';
 import { CropView } from './CropView';
 
+const runningPromises = new Set();
+
+// we use wrapPromiseWithCompletionHandler to hold a reference to the promise while doing async native work.
+// if we don't a GC might happen and it wouldnt know the current context.
+// thus we could loose native references stored in the async method waiting for that promise.
+async function wrapPromiseWithCompletionHandler<T = any>(callback: (delegate: CompletionDelegateImpl) => void, wrapResult = r=>r, progress?, shouldParse = true) {
+    const promise = new Promise<T>((resolve, reject) => {
+        try {
+
+            callback( CompletionDelegateImpl.initWithResolveReject((res)=>{
+                    resolve(wrapResult(res));
+                    runningPromises.delete(promise)
+                }, (err) => {
+                    reject(err);
+                    runningPromises.delete(promise)
+                }, progress, shouldParse))
+        } catch (error) {
+            reject(error);
+        }
+    });
+    runningPromises.add(promise)
+    return promise;
+}
+
+
 @NativeClass
 class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
     static ObjCProtocols = [CompletionDelegate];
@@ -36,71 +61,44 @@ class CompletionDelegateImpl extends NSObject implements CompletionDelegate {
 }
 
 export async function cropDocument(editingImage: ImageSource, quads, transforms = '') {
-    return new Promise<any[]>((resolve, reject) => {
-        try {
-            // nImages is a NSArray
-            OpencvDocumentProcessDelegate.cropDocumentQuadsDelegateTransforms(
+    return wrapPromiseWithCompletionHandler(delegate => 
+         OpencvDocumentProcessDelegate.cropDocumentQuadsDelegateTransforms(
                 editingImage.ios,
-                JSON.stringify(quads),
-                CompletionDelegateImpl.initWithResolveReject((nImages) => {
-                    const images = [];
-                    for (let index = 0; index < nImages.count; index++) {
-                        images[index] = nImages.objectAtIndex(index);
-                    }
-                    resolve(images);
-                }, reject),
-                transforms
-            );
-        } catch (error) {
-            reject(error);
+                JSON.stringify(quads), delegate, transforms)
+    , nImages => {
+        const images = [];
+        for (let index = 0; index < nImages.count; index++) {
+            images[index] = nImages.objectAtIndex(index);
         }
+        return images;
     });
 }
 export async function cropDocumentFromFile(src: string, quads, options: CropOptions = {}) {
-    return new Promise<any[]>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.cropDocumentFromFileQuadsDelegateOptions(src, JSON.stringify(quads), CompletionDelegateImpl.initWithResolveReject(resolve, reject), JSON.stringify(options));
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return wrapPromiseWithCompletionHandler(delegate => 
+         OpencvDocumentProcessDelegate.cropDocumentFromFileQuadsDelegateOptions(src, JSON.stringify(quads), delegate, JSON.stringify(options))
+    );
 }
 export async function getJSONDocumentCorners(editingImage: ImageSource, resizeThreshold = 300, imageRotation = 0): Promise<Quads> {
-    return new Promise((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(
+    return wrapPromiseWithCompletionHandler(delegate => 
+         OpencvDocumentProcessDelegate.getJSONDocumentCornersShrunkImageHeightImageRotationDelegate(
                 editingImage.ios,
                 resizeThreshold,
                 imageRotation,
-                CompletionDelegateImpl.initWithResolveReject(resolve, reject)
-            );
-        } catch (error) {
-            reject(error);
-        }
-    });
+                delegate)
+    );
 }
 export async function getJSONDocumentCornersFromFile(src: string, options: CornersOptions = {}): Promise<Quads> {
-    return new Promise((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileDelegateOptions(src, CompletionDelegateImpl.initWithResolveReject(resolve, reject), JSON.stringify(options));
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return wrapPromiseWithCompletionHandler(delegate => 
+          OpencvDocumentProcessDelegate.getJSONDocumentCornersFromFileDelegateOptions(src, delegate, JSON.stringify(options))
+    );
 }
 export async function processFromFile(src: string, processes: any[], options: LoadImageOptions = {}): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.processFromFileProcessesOptionsDelegate(
+    return wrapPromiseWithCompletionHandler(delegate => 
+           OpencvDocumentProcessDelegate.processFromFileProcessesOptionsDelegate(
                 src,
                 JSON.stringify(processes),
-                JSON.stringify(options),
-                CompletionDelegateImpl.initWithResolveReject(resolve, reject)
-            );
-        } catch (error) {
-            reject(error);
-        }
-    });
+                JSON.stringify(options),delegate)
+    );
 }
 export async function getColorPalette(
     editingImage: ImageSource,
@@ -117,85 +115,67 @@ export async function getColorPaletteFromFile(
 }
 
 export async function ocrDocument(editingImage: ImageSource | UIImage, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
-    return new Promise<OCRData>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.ocrDocumentOptionsDelegate(
+    return wrapPromiseWithCompletionHandler(delegate => 
+          OpencvDocumentProcessDelegate.ocrDocumentOptionsDelegate(
                 editingImage['ios'] || editingImage,
-                options ? JSON.stringify(options) : '',
-                CompletionDelegateImpl.initWithResolveReject(resolve, reject, onProgress)
-            );
-        } catch (error) {
-            reject(error);
-        }
-    });
+                options ? JSON.stringify(options) : '',delegate)
+    , r => r, onProgress);
 }
 export async function ocrDocumentFromFile(src: string, options?: Partial<DetectOptions>, onProgress?: (progress: number) => void) {
-    return new Promise<OCRData>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.ocrDocumentFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', CompletionDelegateImpl.initWithResolveReject(resolve, reject, onProgress));
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return wrapPromiseWithCompletionHandler(delegate => 
+         OpencvDocumentProcessDelegate.ocrDocumentFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', delegate)
+    , r => r, onProgress);
 }
 
 export async function detectQRCode(editingImage: ImageSource | UIImage, options?: Partial<DetectQRCodeOptions>) {
-    return new Promise<OCRData>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.detectQRCodeOptionsDelegate(
+    return wrapPromiseWithCompletionHandler(delegate => {
+         OpencvDocumentProcessDelegate.detectQRCodeOptionsDelegate(
                 editingImage['ios'] || editingImage,
                 options ? JSON.stringify(options) : '',
-                CompletionDelegateImpl.initWithResolveReject(resolve, reject)
+                delegate
             );
-        } catch (error) {
-            reject(error);
-        }
     });
 }
 
 export async function detectQRCodeFromFile(src: string, options?: Partial<DetectQRCodeOptions>) {
-    return new Promise<OCRData>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.detectQRCodeFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', CompletionDelegateImpl.initWithResolveReject(resolve, reject));
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return wrapPromiseWithCompletionHandler(delegate => 
+         OpencvDocumentProcessDelegate.detectQRCodeFromFileOptionsDelegate(src, options ? JSON.stringify(options) : '', delegate)
+    );
 }
 
+
+
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
-    return new Promise<ImageSource>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.generateQRCodeFormatWidthHeightOptionsDelegate(
+    return wrapPromiseWithCompletionHandler(delegate => {
+        OpencvDocumentProcessDelegate.generateQRCodeFormatWidthHeightOptionsDelegate(
                 text,
                 format,
                 width,
                 height,
                 options ? JSON.stringify(options) : '',
-                CompletionDelegateImpl.initWithResolveReject((image) => {
-                    resolve(new ImageSource(image));
-                }, reject)
+                delegate
             );
-        } catch (error) {
-            reject(error);
-        }
-    });
+    }, image => new ImageSource(image));
 }
 
 export async function getSVGFromQRCode(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
-    return new Promise<string>((resolve, reject) => {
-        try {
-            OpencvDocumentProcessDelegate.generateQRCodeSVGFormatSizeHintOptionsDelegate(
+    return wrapPromiseWithCompletionHandler(delegate => {
+        OpencvDocumentProcessDelegate.generateQRCodeSVGFormatSizeHintOptionsDelegate(
                 text,
                 format,
                 hintSize,
                 options ? JSON.stringify(options) : '',
-                CompletionDelegateImpl.initWithResolveReject(resolve, reject, undefined, false)
+               delegate
             );
-        } catch (error) {
-            reject(error);
-        }
-    });
+    },r => r, undefined, false);
+}
+export function getSVGFromQRCodeSync(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
+    return OpencvDocumentProcessDelegate.generateQRCodeSVGSyncFormatSizeHintOptions(
+        text,
+        format,
+        hintSize,
+        options ? JSON.stringify(options) : ''
+    );
 }
 
 @NativeClass
@@ -236,9 +216,9 @@ export function createQRCodeCallback(onQRCodes): any {
 }
 
 export async function importPdfToTempImages(pdfPath: string, options?: Partial<PDFImportOptions>) {
-    return new Promise<string[]>((resolve, reject) => {
-        PDFUtils.importPdfToTempImagesDelegateOptions(pdfPath, CompletionDelegateImpl.initWithResolveReject(resolve, reject), options ? JSON.stringify(options) : '');
-    });
+    return wrapPromiseWithCompletionHandler<string[]>(delegate => 
+        PDFUtils.importPdfToTempImagesDelegateOptions(pdfPath, delegate, options ? JSON.stringify(options) : '')
+    );
 }
 
 export async function getImageSize(imagePath: string) {

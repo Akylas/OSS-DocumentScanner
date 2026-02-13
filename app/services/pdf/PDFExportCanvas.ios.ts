@@ -67,11 +67,12 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
                 pageWidth = pageHeight;
                 pageHeight = temp;
             }
-            const pageRect = CGRectMake(0, 0, pageWidth, pageHeight);
-            UIGraphicsBeginPDFPageWithInfo(pageRect, null);
-            const context = UIGraphicsGetCurrentContext();
-            this.canvas.setContext(context, pageWidth, pageHeight);
-            hasPages = (await this.drawPages(index, items[index].pages)) || hasPages;
+            let hasContext = false;
+            if (pageWidth && pageHeight) {
+                this.createContextCanvas(pageWidth, pageHeight);
+                hasContext = true;
+            }
+            hasPages = (await this.drawPages(index, items[index].pages, hasContext ? null : this.createContextCanvas.bind(this))) || hasPages;
         }
         UIGraphicsEndPDFContext();
         if (!hasPages) {
@@ -95,5 +96,14 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         nURL?.stopAccessingSecurityScopedResource();
         DEV_LOG && console.log('export PDF done', filename, nURL, Date.now() - start, 'ms');
         return pdfFile.path;
+    }
+
+    createContextCanvas(pageWidth, pageHeight) {
+        DEV_LOG && console.log('createContextCanvas', pageWidth, pageHeight);
+        const pageRect = CGRectMake(0, 0, pageWidth, pageHeight);
+        UIGraphicsBeginPDFPageWithInfo(pageRect, null);
+        const context = UIGraphicsGetCurrentContext();
+        this.canvas.setContext(context, pageWidth, pageHeight);
+        return this.canvas;
     }
 }

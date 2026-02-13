@@ -40,7 +40,9 @@ export class BackupService {
                 nURL.startAccessingSecurityScopedResource();
             }
             await zip({ directory: tempBackupDir.path, archive: outputZipPath, keepParent: false });
-            nURL?.stopAccessingSecurityScopedResource();
+            if (__IOS__) {
+                nURL?.stopAccessingSecurityScopedResource();
+            }
 
             await tempBackupDir.remove();
 

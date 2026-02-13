@@ -24,6 +24,7 @@
     import { hideLoading, showLoading, showPopoverMenu, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, fontScale, fonts, screenHeightDips, screenRatio, screenWidthDips, windowInset } from '~/variables';
     import PageIndicator from '../common/PageIndicator.svelte';
+    import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
     // let bitmapPaint: Paint;
     // const textPaint = new Paint();
     const bgPaint = new Paint();
@@ -206,7 +207,14 @@
         }
         Object.assign(result, {
             margin: paper_size === 'full' ? 0 : Utils.layout.toDeviceIndependentPixels(page_padding),
-            src: page.imagePath,
+            src: async () => {
+                if (page.pkpass) {
+                    return getTransformedImage({
+                        page
+                    });
+                }
+                return page.imagePath;
+            },
             imageRotation: page.rotation,
             colorMatrix: getPageColorMatrix(page, color === 'black_white' ? 'grayscale' : undefined)
         });

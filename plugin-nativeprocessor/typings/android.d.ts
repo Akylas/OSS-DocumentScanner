@@ -713,6 +713,8 @@ declare namespace com {
 				export namespace FileUtils {
 					export namespace Companion {
 						 function getUriFromFile(a: globalAndroid.content.Context, b: string): globalAndroid.net.Uri;
+                        export function copyFileToDocumentFile(context: globalAndroid.content.Context, outputZip: string, arg2: string, outDocument: string)
+
 					}
 				}
 			}

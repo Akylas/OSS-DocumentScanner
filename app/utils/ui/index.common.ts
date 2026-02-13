@@ -22,7 +22,8 @@ import {
     SharedTransition,
     Utils,
     View,
-    knownFolders
+    knownFolders,
+    path
 } from '@nativescript/core';
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
@@ -77,6 +78,7 @@ import {
     PDFImportImages,
     PDF_EXT,
     PDF_IMPORT_IMAGES,
+    PKPASS_EXT,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
     SEPARATOR,
@@ -100,7 +102,9 @@ import { recycleImages } from '~/utils/images';
 import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { cleanFilename, requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { importPKPassFiles } from '~/utils/pkpass-import';
+import { zip } from 'plugin-zip';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -117,14 +121,16 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
-        const [pdf, images] = await uris.reduce(
+        const [pdf, images, pkpasses] = await uris.reduce(
             async (acc, e) => {
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
                     testStr = await getFileName(e);
                 }
                 acc.then((obj) => {
-                    if (testStr.endsWith(PDF_EXT)) {
+                    if (CARD_APP && testStr.endsWith(PKPASS_EXT)) {
+                        obj[2].push(e);
+                    } else if (testStr.endsWith(PDF_EXT)) {
                         obj[0].push(e);
                     } else {
                         obj[1].push(e);
@@ -133,10 +139,12 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 return acc;
                 // return testStr.endsWith(PDF_EXT) ? [[...p, e], f] : [p, [...f, e]];
             },
-            Promise.resolve([[], []] as [string[], string[]])
+            Promise.resolve([[], [], []] as [string[], string[], string[]])
         );
-        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
-
+        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
+        if (CARD_APP && pkpasses.length) {
+            return importPKPassFromUris({ uris: pkpasses, canGoToView: true });
+        }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
@@ -397,7 +405,19 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         hideLoading();
     }
 }
-export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
+export async function importAndScanImage({
+    canGoToView = true,
+    document,
+    folder,
+    forceGalleryPick = false,
+    importPDFs = false
+}: {
+    document?: OCRDocument;
+    importPDFs?: boolean;
+    canGoToView?: boolean;
+    forceGalleryPick?: boolean;
+    folder?: DocFolder;
+}) {
     await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {} });
     try {
         if (__ANDROID__) {
@@ -405,7 +425,7 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
             securityService.ignoreNextValidation();
         }
         let selection: string[];
-        if (__IOS__ && !importPDFs) {
+        if ((__IOS__ && !importPDFs) || forceGalleryPick) {
             try {
                 const data = await createImagePicker({
                     mediaType: 1,
@@ -418,8 +438,8 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
         } else {
             selection = (
                 await openFilePicker({
-                    mimeTypes: ['image/*', 'application/pdf'],
-                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
+                    mimeTypes: ['image/*', 'application/pdf'].concat(CARD_APP ? ['application/vnd.apple.pkpass'] : []),
+                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier, UTType.typeWithFilenameExtension('pkpass').identifier] : undefined,
                     multipleSelection: true,
                     pickerMode: 0,
                     forceSAF: true
@@ -991,11 +1011,23 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
 
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
-            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
-            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
+            { id: 'export', name: lc('export'), icon: 'mdi-export' },
+            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple' },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
         ] as any)
     );
+    if (CARD_APP && pages.some((p) => p.page.pkpass)) {
+        options.splice(options.length - 2, 0, {
+            id: 'export_pkpass',
+            name: lc('export_passbooks'),
+            icon: 'mdi-export'
+        } as any);
+        options.push({
+            id: 'share_pkpass',
+            name: lc('share_passbooks'),
+            icon: 'mdi-share-variant'
+        } as any);
+    }
     return new Promise<boolean>((resolve, reject) => {
         showPopoverMenu({
             options,
@@ -1078,9 +1110,84 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 recycleImages(images);
                             }
                             break;
+                        case 'share_pkpass': {
+                            if (CARD_APP) {
+                                await closePopover();
+                                const files = [];
+                                await doInBatch(
+                                    pages.filter((p) => p.page.pkpass),
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const page = p.page;
+                                        const fileName = page.name ?? p.document.name ?? `${p.document.id}_${page.pkpass_id}`;
+                                        const outputZip = knownFolders.temp().getFolder(`${cleanFilename(fileName)}.pkpass`, false);
+
+                                        const docFolder = p.document.folderPath;
+                                        const pageFolder = docFolder.getFolder(page.id);
+                                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                                        await zip({ directory: pkpassFolder.path, archive: outputZip.path, keepParent: false });
+
+                                        files.push(outputZip.path);
+                                    }
+                                );
+                                await share({ files });
+                                didDoSomething = true;
+                            }
+                            break;
+                        }
+                        case 'export_pkpass': {
+                            if (CARD_APP) {
+                                DEV_LOG && console.log('export_pkpass', exportDirectory);
+                                if (!exportDirectory) {
+                                    if (await pickExportFolder()) {
+                                        const item = options.getItem(0);
+                                        item.subtitle = exportDirectoryName;
+                                        options.setItem(0, item);
+                                    } else {
+                                        showSnack({ message: lc('please_choose_export_folder') });
+                                        return;
+                                    }
+                                }
+                                await closePopover();
+                                await doInBatch(
+                                    pages.filter((p) => p.page.pkpass),
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const needsCopy = __ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT);
+                                        const page = p.page;
+                                        const fileName = page.name ?? p.document.name ?? `${p.document.id}_${page.pkpass_id}`;
+                                        const actualFileName = `${cleanFilename(fileName)}.pkpass`;
+                                        const outputZip = needsCopy ? path.join(knownFolders.temp().path, actualFileName) : path.join(exportDirectory, actualFileName);
+
+                                        const docFolder = p.document.folderPath;
+                                        const pageFolder = docFolder.getFolder(page.id);
+                                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                                        await zip({ directory: pkpassFolder.path, archive: outputZip, keepParent: false });
+
+                                        if (__ANDROID__ && needsCopy) {
+                                            const context = Utils.android.getApplicationContext();
+                                            com.akylas.documentscanner.utils.FileUtils.Companion.copyFileToDocumentFile(context, outputZip, 'application/vnd.apple.pkpass', exportDirectory);
+                                        }
+                                    }
+                                );
+                                didDoSomething = true;
+                            }
+                            showSnack({ message: lc('passbooks_saved') });
+                            break;
+                        }
                         case 'export':
                         case 'save_gallery': {
-                            if (!exportDirectory) {
+                            if (!exportDirectory && item.id !== 'save_gallery') {
                                 if (await pickExportFolder()) {
                                     const item = options.getItem(0);
                                     item.subtitle = exportDirectoryName;
@@ -2023,4 +2130,26 @@ export async function showCustomAlert<T>(component, options, props = {}): Promis
         componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
     } catch (error) {}
     return result;
+}
+
+export async function importPKPassFromUris({ canGoToView = true, uris }: { uris: string[]; canGoToView?: boolean }) {
+    if (CARD_APP) {
+        try {
+            await showLoading(lc('importing'));
+
+            // Import the PKPass file
+            const document = await importPKPassFiles(uris, null);
+
+            if (canGoToView && document) {
+                await hideLoading();
+                await goToDocumentView(document);
+            }
+
+            showSnack({ message: lc('imported') });
+        } catch (error) {
+            showError(error);
+        } finally {
+            hideLoading();
+        }
+    }
 }

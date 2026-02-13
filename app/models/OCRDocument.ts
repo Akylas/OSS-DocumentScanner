@@ -32,6 +32,7 @@ import {
     getImageExportSettings
 } from '../utils/constants';
 import { getImagePipeline } from '@nativescript-community/ui-image';
+import { PKPass } from './PKPass';
 
 export const sql = SqlQuery.createFromTemplateString;
 
@@ -136,6 +137,7 @@ export interface DocumentExtra {
     color?: string;
     [k: string]:
         | string
+        | boolean
         | {
               type: string;
               value: any;
@@ -193,7 +195,7 @@ export class OCRDocument extends Observable implements Document {
         return documentsService.dataFolder.getFolder(this.id);
     }
 
-    async addPage(pageData: PageData, index: number = this.pages.length) {
+    async addPage(pageData: PageData, index: number = this.pages.length, onAdded?, notify = true) {
         const docId = this.id;
         const dataFolderPath = documentsService.dataFolder.path;
         const docData = documentsService.dataFolder.getFolder(docId);
@@ -202,19 +204,19 @@ export class OCRDocument extends Observable implements Document {
         // const page = new OCRPage(pageId, docId);
         const pageFileData = docData.getFolder(pageId);
         const attributes = { ...otherPageData, id: pageId, document_id: docId } as OCRPage;
-        attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
-        if (imagePath) {
-            if (imagePath !== attributes.imagePath) {
-                const file = File.fromPath(imagePath);
-                await file.copy(attributes.imagePath);
+        if (image || image) {
+            attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
+            if (imagePath) {
+                if (imagePath !== attributes.imagePath) {
+                    const file = File.fromPath(imagePath);
+                    await file.copy(attributes.imagePath);
+                }
+            } else if (image) {
+                const imageExportSettings = getImageExportSettings();
+                await new ImageSource(image).saveToFileAsync(attributes.imagePath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
             }
-        } else if (image) {
-            const imageExportSettings = getImageExportSettings();
-            await new ImageSource(image).saveToFileAsync(attributes.imagePath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
-        } else {
-            return;
+            attributes.size = File.fromPath(attributes.imagePath).size;
         }
-        attributes.size = File.fromPath(attributes.imagePath).size;
         DEV_LOG && console.log('add single page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
         if (sourceImagePath) {
             let baseName = sourceImagePath
@@ -237,7 +239,7 @@ export class OCRDocument extends Observable implements Document {
         // }
         const addedPage = await documentsService.pageRepository.createPage(attributes, dataFolderPath);
         // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
-
+        onAdded?.(addedPage);
         //using saved image to disk
         if (this.pages) {
             this.pages.splice(index, 0, addedPage);
@@ -247,7 +249,10 @@ export class OCRDocument extends Observable implements Document {
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
-        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
+        if (notify) {
+            documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
+        }
+        return addedPage;
     }
 
     async addPages(pagesData?: PageData[], notify = true, createIfNotExisting = false) {
@@ -658,6 +663,9 @@ export interface Page {
     qrcode: QRCodeData;
     colors: ColorPaletteData;
     extra?: DocumentExtra;
+
+    pkpass_id?: string;
+    pkpass?: PKPass;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -707,6 +715,10 @@ export class OCRPage extends Observable implements Page {
     nameSearch?: string;
     ocrDataSearch?: string;
 
+    // PKPass data - loaded automatically with the page
+    pkpass_id?: string;
+    pkpass?: PKPass;
+
     constructor(id: string, docId: string) {
         super();
         this.id = id;
@@ -728,6 +740,9 @@ export class OCRPage extends Observable implements Page {
     }
     static fromJSON(jsonObj: Page) {
         const page = new OCRPage(jsonObj.id, jsonObj.document_id);
+        if (jsonObj.pkpass) {
+            jsonObj.pkpass = PKPass.fromJSON(jsonObj.pkpass);
+        }
         // DEV_LOG && console.log('OCRPage', 'fromJSON', Object.keys(jsonObj));
         Object.assign(page, jsonObj);
         return page;

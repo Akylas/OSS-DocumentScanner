@@ -575,67 +575,70 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 }
 
 // PRAGMA: generateQRCode
-+(void)generateQRCodeSync:(NSString*)text format:(NSString*)format  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
-#ifdef WITH_QRCODE
-  @try {
-    cv::Mat result = generateQRCode(std::string([text UTF8String]), std::string([format UTF8String]), width, height, std::string([options UTF8String]));
-    dispatch_async(dispatch_get_main_queue(), ^(void) {
-      [delegate onComplete:MatToUIImage(result) error:nil];
-    });
-  }
-  @catch (NSException *exception) {
-    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
-    
-    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
-    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
-    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
-    dispatch_async(dispatch_get_main_queue(), ^(void) {
-      [delegate onComplete:nil error:err];
-      
-    });
-  }
-#else
-  [delegate onComplete:nil error:nil];
-#endif
++( UIImage*)generateQRCodeSync:(NSString*)text format:(NSString*)format  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options {
+  cv::Mat result = generateQRCode(std::string([text UTF8String]), std::string([format UTF8String]), width, height, std::string([options UTF8String]));
+  return MatToUIImage(result);
 }
 
 +(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
 {
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self generateQRCodeSync:text format:fromat  width:width height:height  options:options delegate:delegate];
-  });
-}
+  #ifdef WITH_QRCODE
 
-// PRAGMA: generateQRCode
-+(void)generateQRCodeSVGSync:(NSString*)text format:(NSString*)format  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
- #ifdef WITH_QRCODE
- @try {
-    std::string result = generateQRCodeSVG(std::string([text UTF8String]), std::string([format UTF8String]), sizeHint, std::string([options UTF8String]));
-    dispatch_async(dispatch_get_main_queue(), ^(void) {
-      [delegate onComplete:[NSString stringWithUTF8String:result.c_str()] error:nil];
-    });
-  }
-  @catch (NSException *exception) {
-    NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
-    
-    [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
-    [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
-    NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
-    dispatch_async(dispatch_get_main_queue(), ^(void) {
-      [delegate onComplete:nil error:err];
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    @try {
+      UIImage* result = [self generateQRCodeSync:text format:fromat  width:width height:height  options:options];
+      dispatch_async(dispatch_get_main_queue(), ^(void) {
+        [delegate onComplete:result error:nil];
+      });
+    }
+    @catch (NSException *exception) {
+      NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
       
-    });
-  }
+      [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+      [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+      NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+      dispatch_async(dispatch_get_main_queue(), ^(void) {
+        [delegate onComplete:nil error:err];
+        
+      });
+    }
+  });
 #else
   [delegate onComplete:nil error:nil];
 #endif
 }
 
+// PRAGMA: generateQRCode
++(NSString*)generateQRCodeSVGSync:(NSString*)text format:(NSString*)format  sizeHint:(NSInteger)sizeHint  options:(NSString*)options {
+  std::string result = generateQRCodeSVG(std::string([text UTF8String]), std::string([format UTF8String]), sizeHint, std::string([options UTF8String]));
+  return [NSString stringWithUTF8String:result.c_str()];
+}
+
 +(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
 {
+#ifdef WITH_QRCODE
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    [self generateQRCodeSVGSync:text format:fromat  sizeHint:sizeHint  options:options delegate:delegate];
+    @try {
+       NSString* result = [self generateQRCodeSVGSync:text format:fromat  sizeHint:sizeHint  options:options];
+        dispatch_async(dispatch_get_main_queue(), ^(void) {
+          [delegate onComplete:result error:nil];
+        });
+      }
+      @catch (NSException *exception) {
+        NSMutableDictionary *info = [exception.userInfo mutableCopy]?:[[NSMutableDictionary alloc] init];
+        
+        [info addEntriesFromDictionary: [exception dictionaryWithValuesForKeys:@[@"ExceptionName", @"ExceptionReason", @"ExceptionCallStackReturnAddresses", @"ExceptionCallStackSymbols"]]];
+        [info addEntriesFromDictionary:@{NSLocalizedDescriptionKey: exception.name, NSLocalizedFailureReasonErrorKey:exception.reason }];
+        NSError* err = [NSError errorWithDomain:@"OCRError" code:-10 userInfo:info];
+        dispatch_async(dispatch_get_main_queue(), ^(void) {
+          [delegate onComplete:nil error:err];
+          
+        });
+      }
   });
+#else
+      [delegate onComplete:nil error:nil];
+#endif
 }
 
 // PRAGMA: process

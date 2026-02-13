@@ -74,6 +74,7 @@
     } from '~/utils/ui';
     import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
     import { OptionType } from '@shared/components/OptionSelect.svelte';
+    import { SERVICES_SYNC_COLOR, SERVICES_SYNC_MASK } from '~/services/sync/types';
 
     const textPaint = new Paint();
 
@@ -140,6 +141,19 @@
     export let syncEnabled = syncService.enabled;
     export let viewStyle: string = ApplicationSettings.getString(SETTINGS_VIEW_STYLE, DEFAULT_VIEW_STYLE);
 
+    export const getSyncColors = (item: Item) => {
+        const synced = item.doc._synced;
+        const result = [];
+        $syncServicesStore.forEach((d) => {
+            const mask = SERVICES_SYNC_MASK[d.type];
+            const color = d.color || SERVICES_SYNC_COLOR[d.type];
+            if (synced === 1 || (synced & mask) !== 0) {
+                result.push(color);
+            }
+        });
+        return result;
+    };
+
     $: if ($syncServicesStore) {
         syncEnabled = syncService.enabled;
     }
@@ -204,7 +218,7 @@
         nbSelected = 0;
         loading = true;
         try {
-            // DEV_LOG && console.log('DocumentsList', 'refresh', folder, filter, sortOrder);
+            // DEV_LOG && console.log('MainList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
             await refreshFolders(filter);
@@ -219,6 +233,11 @@
                     )
                 )
             );
+            DEV_LOG &&
+                console.log(
+                    'documents',
+                    documents.map((d) => d.doc?.id)
+                );
             updateNoDocument();
         } catch (error) {
             showError(error);
@@ -267,9 +286,9 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
-        DEV_LOG && console.log('onDocumentAdded', event.doc.id, event.doc.folders, event.folder);
+        // DEV_LOG && console.log('onDocumentAdded', event.doc.id, event.doc.folders, event.folder);
         if ((!event.folder && !folder) || folder?.name === event.folder?.name) {
-            DEV_LOG && console.log('onDocumentAdded', nbDocuments);
+            // DEV_LOG && console.log('onDocumentAdded', nbDocuments);
             // find the first document index to add the new doc just before
             const index = documents?.findIndex((d) => !!d.doc);
             if (index !== -1) {
@@ -306,7 +325,7 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
+        // DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
         if (index >= 0) {
             if (folder && doc.folders && doc.folders.indexOf(folder.id) === -1) {
                 documents.splice(index, 1);
@@ -321,20 +340,20 @@
         }
     }
     function onFolderAdded(event: DocumentFolderAddedEventData) {
-        DEV_LOG && console.log('onFolderAdded', event.folder);
+        // DEV_LOG && console.log('onFolderAdded', event.folder);
         refreshFolders();
     }
     function onFolderUpdated(event: FolderUpdatedEventData) {
-        DEV_LOG && console.log('onFolderUpdated', event.folder);
+        // DEV_LOG && console.log('onFolderUpdated', event.folder);
         refreshFolders();
     }
     async function onDocumentsDeleted(event: DocumentDeletedEventData) {
-        DEV_LOG &&
-            console.log(
-                'onDocumentsDeleted',
-                event.documents.map((d) => d.id),
-                event.folders
-            );
+        // DEV_LOG &&
+        //     console.log(
+        //         'onDocumentsDeleted',
+        //         event.documents.map((d) => d.id),
+        //         event.folders
+        //     );
         for (let i = 0; i < event.documents.length; i++) {
             const id = event.documents[i].id;
             const index = documents.findIndex((item) => item.doc && item.doc.id === id);
@@ -361,8 +380,8 @@
             if (event.pageIndex === 0) {
                 if (!!event.imageUpdated) {
                     const imageView = getImageView(index);
-                    DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
-                    const page = document.pages[event.pageIndex];
+                    // DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
+                    // const page = document.pages[event.pageIndex];
                     if (imageView) {
                         imageView?.updateImageUri();
                     } else if (__IOS__) {
@@ -441,6 +460,14 @@
         DEV_LOG && console.log('importDocument', importPDFs);
         try {
             await importAndScanImage({ folder, importPDFs });
+        } catch (error) {
+            showError(error);
+        }
+    }
+    export async function importImages() {
+        DEV_LOG && console.log('importImages');
+        try {
+            await importAndScanImage({ folder, forceGalleryPick: true });
         } catch (error) {
             showError(error);
         }
@@ -740,7 +767,7 @@
                             // color: (item) => (!!item.value ? colorPrimary : undefined)
                         }))
                     )
-                    .concat([{ type: 'checkbox', title: lc('ascending'), id: 'ascending' }])
+                    .concat([{ type: 'checkbox', title: lc('ascending'), id: 'ascending', value: sortOrder.indexOf('ASC') !== -1 }])
             );
             // const options = Object.keys(OPTIONS[option]).map((k) => ({ ...OPTIONS[option][k], id: k }));
             await showPopoverMenu({
@@ -748,7 +775,8 @@
                 options,
                 vertPos: VerticalPosition.BELOW,
                 props: {
-                    autoSizeListItem: true,
+                    width: 300 * $fontScale,
+                    autoSizeListItem: false,
                     onCheckBox: (item, value) => {
                         if (item.group === 'viewStyle') {
                             const changed = viewStyleChanged(item.id, viewStyle);
@@ -800,6 +828,7 @@
     });
     onFontScaleChanged(refreshVisibleItems);
     onFolderBackgroundColorChanged(refreshCollectionView);
+    syncServicesStore.subscribe(refreshVisibleItems);
 
     let lottieDarkFColor;
     let lottieLightColor;
@@ -1091,7 +1120,7 @@
                     </Template>
                 </collectionView>
             </Template>
-            <slot></slot>
+            <slot />
         </collectionView>
         <progress backgroundColor="transparent" busy={true} indeterminate={true} row={2} verticalAlignment="top" visibility={loading ? 'visible' : 'hidden'} />
         {#if showNoDocument}
@@ -1129,6 +1158,7 @@
         {#if showActionButton}
             <slot name="fab" />
         {/if}
+        <slot name="test" />
 
         <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton

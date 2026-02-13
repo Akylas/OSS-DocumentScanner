@@ -1,17 +1,18 @@
 <script context="module" lang="ts">
     import { Color, Utils, View } from '@akylas/nativescript';
 
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
-    import { colorTheme, isEInk } from '~/helpers/theme';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SyncIndicator from '~/components/common/SyncIndicator.svelte';
+    import { Item } from '~/components/list/MainList.svelte';
+    import PKPassCardCell from '~/components/pkpass/PKPassCardCell.svelte';
+    import { isEInk } from '~/helpers/theme';
     import { CARD_RATIO } from '~/utils/constants';
-    import { colors, isLandscape, screenHeightDips, screenWidthDips } from '~/variables';
-    import RotableImageView from '../common/RotableImageView.svelte';
-    import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    import SyncIndicator from '../common/SyncIndicator.svelte';
-    import { Item } from './MainList.svelte';
+    import { colors } from '~/variables';
     const rowMargin = 8;
 </script>
 
@@ -25,9 +26,11 @@
     export let height: number;
     export let nbColumns: Writable<number>;
     export let item: Item;
+    export let pkPassCell: boolean = false;
     export let syncEnabled: boolean;
     export let onFullCardItemTouch;
     export let layout: string;
+    export let syncColors: string[];
 
     function animateCards(animOptions, startIndex, endIndex = -1) {
         let index = startIndex;
@@ -161,7 +164,9 @@
                 break;
             case 'full':
                 Object.assign(result, {
-                    verticalTextAlignment: 'top',
+                    verticalAlignment: 'top',
+                    padding: 0,
+                    margin: 16,
                     maxFontSize: 40,
                     maxLines: 2
                 });
@@ -253,23 +258,27 @@
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
     on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
-        <RotableImageView {...getItemRotableImageParams(item)} />
-        <label
-            autoFontSize={true}
-            autoFontSizeStep={10}
-            fontSize={30}
-            fontWeight="bold"
-            lineBreak="end"
-            maxFontSize={35}
-            minFontSize={20}
-            padding={16}
-            text={item.doc.name}
-            textWrap={false}
-            visibility={itemHasImage(item) ? 'hidden' : 'visible'}
-            {...getLabelParams(layout, item, height, itemHeight)} />
+        {#if pkPassCell}
+            <PKPassCardCell {item} {itemWidth} {layout} pkpass={item.doc.pages[0]?.pkpass} />
+        {:else}
+            <RotableImageView {...getItemRotableImageParams(item)} />
+            <label
+                autoFontSize={true}
+                autoFontSizeStep={10}
+                fontSize={30}
+                fontWeight="bold"
+                lineBreak="end"
+                maxFontSize={35}
+                minFontSize={20}
+                padding={16}
+                text={item.doc.name}
+                textWrap={false}
+                visibility={itemHasImage(item) ? 'hidden' : 'visible'}
+                {...getLabelParams(layout, item, height, itemHeight)} />
+        {/if}
         <!-- <gridlayout borderRadius={12}> -->
         <SelectedIndicator selected={item.selected} />
-        <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
+        <SyncIndicator {syncColors} verticalAlignment="top" visible={syncEnabled} />
         <!-- </gridlayout> -->
     </gridlayout>
     <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />

@@ -1,6 +1,7 @@
 import '@nativescript/core/globals';
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { OCRDocument, OCRPage } from '~/models/OCRDocument';
 
 const context: Worker = self as any;
 const TAG = '[PDFExportWorker]';
@@ -17,10 +18,11 @@ class PDFExportWorker extends BaseWorker {
         }
     }
 
-    async export(id, type, { compress, filename, folder, pages }) {
+    async export(id, type, { compress, filename, folder, pages }: { compress: boolean, filename: string, folder: string, pages: { page: OCRPage; document: OCRDocument }[] }) {
         try {
-            DEV_LOG && console.log(TAG, 'export', id, type, pages.length, folder, filename, compress, JSON.stringify(pages));
             const exporter = new PDFExportCanvas();
+            pages.forEach((d) => d.page = OCRPage.fromJSON(d.page));
+            // DEV_LOG && console.log(TAG, 'export', id, type, pages.length, folder, filename, compress);
             const filePath = await exporter.export({ pages, folder, filename, compress });
             // const filePath = 'test';
             (global as any).postMessage({ id, type, messageData: filePath });

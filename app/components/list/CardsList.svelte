@@ -1,10 +1,10 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Canvas, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ApplicationSettings, ObservableArray, StackLayout } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, StackLayout, Utils } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
@@ -25,6 +25,9 @@
 <script lang="ts">
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CardListCell from './CardListCell.svelte';
+    import { documentHasPKPassData, pkpassToImage, renderPKPassToCanvas } from '~/utils/pkpass';
+    import { share } from '@akylas/nativescript-app-utils/share';
+    import { getActualLanguage } from '~/helpers/lang';
 
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors);
@@ -33,7 +36,9 @@
     let viewStyle: string;
     let nbColumns: Writable<number>;
     let syncEnabled: boolean;
+
     export let folder: DocFolder;
+    let getSyncColors: (item: Item) => string[];
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
@@ -188,19 +193,20 @@
                 return itemHeight;
         }
     }
-    function itemTemplateSelector(viewStyle, item?) {
+    function itemTemplateSelector(viewStyle, item?: Item) {
         if (item?.type) {
             return item.type;
         }
+        const prefix = item?.doc && documentHasPKPassData(item.doc) ? 'pkpass_' : '';
         switch (viewStyle) {
             case 'list':
             case 'columns':
                 if ($isLandscape) {
-                    return 'columns';
+                    return prefix + 'columns';
                 }
-                return viewStyle;
+                return prefix + viewStyle;
             default:
-                return viewStyle;
+                return prefix + viewStyle;
         }
     }
     function onFullCardItemTouch(item: Item, event) {
@@ -250,6 +256,20 @@
         // DEV_LOG && console.log('CardsList', 'onMount', viewStyle);
         updateColumns($isLandscape);
     });
+
+    // let canvastest: NativeViewElementNode<CanvasView>;
+    // let pkPassTestImage;
+    // $: pkpass = documents?.getItem(0)?.doc?.pages?.[0]?.pkpass;
+    // $: if (pkpass) {
+    //     pkpassToImage(pkpass, {
+    //         lang: getActualLanguage(),
+    //         width: screenWidthDips,
+    //         layout: 'full',
+    //         includeBackFields: true
+    //     })
+    //         .then((img) => (pkPassTestImage = img))
+    //         .catch((err) => console.error(err, err.stack));
+    // }
 </script>
 
 <MainList
@@ -262,7 +282,7 @@
     {itemTemplateSelector}
     {title}
     {updateColumns}
-    viewStyleChanged={(oldValue, newValue) => itemTemplateSelector(oldValue !== itemTemplateSelector(newValue))}
+    viewStyleChanged={(oldValue, newValue) => itemTemplateSelector(oldValue) !== itemTemplateSelector(newValue)}
     viewStyles={{
         cardholder: { name: lc('cardholder'), icon: 'mdi-view-agenda' },
         full: { name: lc('full'), icon: 'mdi-view-split-horizontal' },
@@ -278,6 +298,7 @@
     bind:folder
     bind:importDocument
     bind:refreshCollectionView
+    bind:getSyncColors
     bind:documents
     bind:folderItems
     bind:collectionView>
@@ -292,6 +313,7 @@
                 layout="cardholder"
                 {nbColumns}
                 {onFullCardItemTouch}
+                syncColors={getSyncColors(item)}
                 {syncEnabled}
                 on:tap={() => onItemTap(item)}
                 on:longPress={(e) => onItemLongPress(item, e)} />
@@ -308,6 +330,7 @@
             layout="full"
             {nbColumns}
             {onFullCardItemTouch}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -322,6 +345,7 @@
             layout="list"
             {nbColumns}
             {onFullCardItemTouch}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -336,6 +360,74 @@
             layout="columns"
             {nbColumns}
             {onFullCardItemTouch}
+            syncColors={getSyncColors(item)}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
+    </Template>
+    <Template key="pkpass_cardholder" let:item>
+        <absolutelayout height={itemRowHeight}>
+            <CardListCell
+                {collectionView}
+                height={$itemHeight}
+                {item}
+                itemHeight={itemRowHeight}
+                {itemWidth}
+                layout="cardholder"
+                {nbColumns}
+                {onFullCardItemTouch}
+                pkPassCell={true}
+                syncColors={getSyncColors(item)}
+                {syncEnabled}
+                on:tap={() => onItemTap(item)}
+                on:longPress={(e) => onItemLongPress(item, e)} />
+            <absolutelayout boxShadow="0 0 8 rgba(1, 0, 0, 1)" height={3} top={itemRowHeight} width="100%" />
+        </absolutelayout>
+    </Template>
+    <Template key="pkpass_full" let:item>
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="full"
+            {nbColumns}
+            {onFullCardItemTouch}
+            pkPassCell={true}
+            syncColors={getSyncColors(item)}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
+    </Template>
+    <Template key="pkpass_list" let:item>
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="list"
+            {nbColumns}
+            {onFullCardItemTouch}
+            pkPassCell={true}
+            syncColors={getSyncColors(item)}
+            {syncEnabled}
+            on:tap={() => onItemTap(item)}
+            on:longPress={(e) => onItemLongPress(item, e)} />
+    </Template>
+    <Template key="pkpass_columns" let:item>
+        <CardListCell
+            {collectionView}
+            height={itemRowHeight}
+            {item}
+            itemHeight={itemRowHeight}
+            {itemWidth}
+            layout="columns"
+            {nbColumns}
+            {onFullCardItemTouch}
+            pkPassCell={true}
+            syncColors={getSyncColors(item)}
             {syncEnabled}
             on:tap={() => onItemTap(item)}
             on:longPress={(e) => onItemLongPress(item, e)} />
@@ -344,4 +436,16 @@
     <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
         <mdbutton bind:this={fabHolder} class="fab" text="mdi-plus" on:tap={throttle(() => onAddButton(), 500)} />
     </stacklayout>
+
+    <!-- <canvasview bind:this={canvastest} slot="test" row={2} on:draw={onDrawCanvasTest} on:tap={() => (canvastest.nativeView.visibility = 'hidden')}> </canvasview> -->
+    <!-- <image
+        bind:this={canvastest}
+        slot="test"
+        backgroundColor="red"
+        row={2}
+        src={pkPassTestImage}
+        stretch="aspectFit"
+        verticalAlignment="top"
+        width="100%"
+        on:tap={() => (canvastest.nativeView.visibility = 'hidden')} /> -->
 </MainList>
