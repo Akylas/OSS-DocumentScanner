@@ -257,19 +257,19 @@
         updateColumns($isLandscape);
     });
 
-    let canvastest: NativeViewElementNode<CanvasView>;
-    let pkPassTestImage;
-    $: pkpass = documents?.getItem(0)?.doc?.pages?.[0]?.pkpass;
-    $: if (pkpass) {
-        pkpassToImage(pkpass, {
-            lang: getActualLanguage(),
-            width: screenWidthDips,
-            layout: 'full',
-            includeBackFields: true
-        })
-            .then((img) => (pkPassTestImage = img))
-            .catch((err) => console.error(err, err.stack));
-    }
+    // let canvastest: NativeViewElementNode<CanvasView>;
+    // let pkPassTestImage;
+    // $: pkpass = documents?.getItem(0)?.doc?.pages?.[0]?.pkpass;
+    // $: if (pkpass) {
+    //     pkpassToImage(pkpass, {
+    //         lang: getActualLanguage(),
+    //         width: screenWidthDips,
+    //         layout: 'full',
+    //         includeBackFields: true
+    //     })
+    //         .then((img) => (pkPassTestImage = img))
+    //         .catch((err) => console.error(err, err.stack));
+    // }
 </script>
 
 <MainList
@@ -438,7 +438,7 @@
     </stacklayout>
 
     <!-- <canvasview bind:this={canvastest} slot="test" row={2} on:draw={onDrawCanvasTest} on:tap={() => (canvastest.nativeView.visibility = 'hidden')}> </canvasview> -->
-    <image
+    <!-- <image
         bind:this={canvastest}
         slot="test"
         backgroundColor="red"
@@ -447,5 +447,5 @@
         stretch="aspectFit"
         verticalAlignment="top"
         width="100%"
-        on:tap={() => (canvastest.nativeView.visibility = 'hidden')} />
+        on:tap={() => (canvastest.nativeView.visibility = 'hidden')} /> -->
 </MainList>

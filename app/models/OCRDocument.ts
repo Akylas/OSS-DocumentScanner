@@ -740,6 +740,9 @@ export class OCRPage extends Observable implements Page {
     }
     static fromJSON(jsonObj: Page) {
         const page = new OCRPage(jsonObj.id, jsonObj.document_id);
+        if (jsonObj.pkpass) {
+            jsonObj.pkpass = PKPass.fromJSON(jsonObj.pkpass);
+        }
         // DEV_LOG && console.log('OCRPage', 'fromJSON', Object.keys(jsonObj));
         Object.assign(page, jsonObj);
         return page;

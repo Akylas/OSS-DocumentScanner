@@ -484,6 +484,7 @@ export async function renderPKPassToCanvas(
     pkpass: PKPass,
     options: {
         canvas?: Canvas;
+        createCanvas?: Function;
         lang: string;
         layout?: 'card' | 'full'; // Card for compact credit-card sized, full for complete details
         includeBackFields?: boolean;
@@ -544,7 +545,9 @@ export async function renderPKPassToCanvas(
 
     if (layout === 'card') {
         imagePaint.color = backgroundColor;
-        if (!canvas) {
+        if (options.createCanvas) {
+            canvas = options.createCanvas(width, computedHeight);
+        } else if (!canvas) {
             canvas = new Canvas(width, computedHeight);
         }
         canvas.drawRoundRect(0, 0, width, computedHeight, 12 * scaleFactor, 12 * scaleFactor, imagePaint);
@@ -570,6 +573,7 @@ export async function renderPKPassToCanvas(
         return renderFullLayout({
             pkpass,
             canvas,
+            createCanvas: options.createCanvas,
             canvasWidth,
             backgroundColor,
             scaleFactor,
@@ -784,6 +788,7 @@ async function renderFullLayout({
     backgroundColor,
     canvas,
     canvasWidth,
+    createCanvas,
     fgColor,
     fgPaint,
     iconPaint,
@@ -801,6 +806,7 @@ async function renderFullLayout({
 }: {
     pkpass: PKPass;
     canvas: Canvas;
+    createCanvas?: Function;
     canvasWidth: number;
     scaleFactor: number;
     structure: PKPassStructure;
@@ -846,7 +852,6 @@ async function renderFullLayout({
         const image = await loadImage(logo2x, { height });
         const scale = height / image.height;
         headerRemainingWidth -= scale * image.width;
-        DEV_LOG && console.log('logo2x', logo2x, image.ios, image.ios.size.width);
         imagesToDraw.push({ image, x: logoX, y: headerY, height });
     } else if (icon2x) {
         const height = Math.round(50 * scaleFactor);
@@ -1119,8 +1124,9 @@ async function renderFullLayout({
         }
     }
     y += padding;
-
-    if (!canvas) {
+    if (createCanvas) {
+        canvas = createCanvas(canvasWidth, y);
+    } else if (!canvas) {
         canvas = new Canvas(canvasWidth, y);
     }
     canvas.drawColor(backgroundColor);
@@ -1148,7 +1154,6 @@ async function renderFullLayout({
                 scale = height / imageSource.height;
             }
         }
-        DEV_LOG && console.log('imagesToDraw', imageSource, imageSource?.size?.width, imageSource?.height);
         const dstRect = new Rect(
             imageData.rightAligned ? imageData.x - imageSource.width * scale : imageData.x,
             imageData.y,
@@ -1320,7 +1325,6 @@ function addFieldGroup(
     const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * fieldSpacing * scaleFactor) / fields.length;
     let x = startX;
     let deltaY = 0;
-    DEV_LOG && console.log('addFieldGroup', fields.length, fieldWidth, JSON.stringify(fields));
     (horizontalAlignment === 'right' ? fields.reverse() : fields).forEach((field, index) => {
         const topText = createNativeAttributedString({
             spans: [

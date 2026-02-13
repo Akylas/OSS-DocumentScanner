@@ -28,7 +28,6 @@
     let currentIndex = startPageIndex;
     const firstItem = images[currentIndex];
 
-    DEV_LOG && console.log('images', JSON.stringify(images));
     // let currentImageSrc = firstItem.image;
     // let currentImageRotation = firstItem.rotation;
     // let currentImageColorMatrix = firstItem.colorMatrix || getColorMatrix(firstItem.colorType);
