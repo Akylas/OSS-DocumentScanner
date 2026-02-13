@@ -817,6 +817,15 @@ export class DocumentsService extends Observable {
             }
             if (!rootDataFolder) {
                 rootDataFolder = knownFolders.externalDocuments().path;
+                if (__ANDROID__) {
+                    //we need to check if the sdcard is actually readable. it could be an ext3/ext4 where we can't write
+                    // in this case we wan't to use internal storage
+                    try {
+                        Folder.fromPath(rootDataFolder).getFolder('data');
+                    } catch (error) {
+                        rootDataFolder = knownFolders.documents().path;
+                    }
+                }
                 ApplicationSettings.setString(SETTINGS_ROOT_DATA_FOLDER, rootDataFolder);
             }
         } else {

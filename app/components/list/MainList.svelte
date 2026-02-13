@@ -529,19 +529,32 @@
             }
         }
     }
+
+    function getTotalNbDocuments() {
+        return documents.length - 1; // -1 because the first the first item is actually the folders horizontal collectionview
+    }
+    function getTotalNbDocumentsWithFolders() {
+        return getTotalNbDocuments() + folderItems.length;
+    }
+    function getDocumentsStartIndex() {
+        return 1; // 1 because the first the first item is actually the folders horizontal collectionview
+    }
     function unselectAll() {
         nbSelected = 0;
+        const startIndex = getDocumentsStartIndex();
         if (documents) {
-            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: false })));
+            documents.splice(startIndex, documents.length - startIndex, ...documents.slice(startIndex).map((i) => ({ ...i, selected: false })));
         }
         if (folderItems) {
             folderItems.splice(0, folderItems.length, ...folderItems.map((i) => ({ ...i, selected: false })));
         }
     }
     function selectAll() {
-        let newCount = documents.length;
+        let newCount = getTotalNbDocuments(); // -1 because the first
+        const startIndex = getDocumentsStartIndex();
+        DEV_LOG && console.log('selectAll', documents.length);
         if (documents) {
-            documents.splice(0, documents.length, ...documents.map((i) => ({ ...i, selected: true })));
+            documents.splice(startIndex, documents.length - startIndex, ...documents.slice(startIndex).map((i) => ({ ...i, selected: true })));
         }
         if (folderItems) {
             folderItems.splice(
@@ -549,7 +562,7 @@
                 folderItems.length,
                 ...folderItems.map((i) => {
                     newCount += i.folder.count;
-                    return { ...i, selected: false };
+                    return { ...i, selected: true };
                 })
             );
         }
@@ -640,30 +653,6 @@
             }
         });
     }
-
-    async function getSelectedDocuments() {
-        const selected: OCRDocument[] = [];
-        if (!documentsService.started) {
-            return selected;
-        }
-        for (let index = 0; index < documents.length; index++) {
-            const d = documents.getItem(index);
-            if (d.selected) {
-                if (d.doc) {
-                    selected.push(d.doc);
-                }
-            }
-        }
-        for (let index = 0; index < folderItems.length; index++) {
-            const d = folderItems.getItem(index);
-            if (d.selected) {
-                if (d.folder) {
-                    selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
-                }
-            }
-        }
-        return selected;
-    }
     function getSelectedItems() {
         const selected: Item[] = [];
         for (let index = 0; index < folderItems.length; index++) {
@@ -672,7 +661,7 @@
                 selected.push(d);
             }
         }
-        for (let index = 0; index < documents.length; index++) {
+        for (let index = getDocumentsStartIndex(); index < documents.length; index++) {
             const d = documents.getItem(index);
             if (d.selected) {
                 selected.push(d);
@@ -680,17 +669,55 @@
         }
         return selected;
     }
-    function getSelectedPagesAndPossibleSingleDocument(): [{ page: OCRPage; document: OCRDocument }[], OCRDocument, OCRDocument[]] {
+
+    async function getSelectedDocuments() {
+        const selected: OCRDocument[] = [];
+        if (!documentsService.started) {
+            return selected;
+        }
+        for (let index = getDocumentsStartIndex(); index < documents.length; index++) {
+            const d = documents.getItem(index);
+            if (d.doc && d.selected) {
+                selected.push(d.doc);
+            }
+        }
+        for (let index = 0; index < folderItems.length; index++) {
+            const d = folderItems.getItem(index);
+            if (d.folder && d.selected) {
+                selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
+            }
+        }
+        return selected;
+    }
+
+    async function loopSelectedDocuments(callback: (d: OCRDocument) => void) {
+        if (!documentsService.started) {
+            return;
+        }
+        for (let index = getDocumentsStartIndex(); index < documents.length; index++) {
+            const d = documents.getItem(index);
+            if (d.doc && d.selected) {
+                callback(d.doc);
+            }
+        }
+        for (let index = 0; index < folderItems.length; index++) {
+            const d = folderItems.getItem(index);
+            if (d.folder && d.selected) {
+                const docs = await documentsService.documentRepository.findDocuments({ folder: d.folder });
+                for (let i = 0; i < docs.length; i++) {
+                    callback(docs[i]);
+                }
+            }
+        }
+    }
+    async function getSelectedPagesAndPossibleSingleDocument(): Promise<[{ page: OCRPage; document: OCRDocument }[], OCRDocument, OCRDocument[]]> {
         const selected: { page: OCRPage; document: OCRDocument }[] = [];
         const docs: OCRDocument[] = [];
-        let doc;
-        documents.forEach((d, index) => {
-            if (d.doc && d.selected) {
-                doc = d.doc;
-                docs.push(doc);
-                selected.push(...doc.pages.map((page) => ({ page, document: doc })));
-            }
+        await loopSelectedDocuments((doc) => {
+            docs.push(doc);
+            selected.push(...doc.pages.map((page) => ({ page, document: doc })));
         });
+
         return [selected, docs.length === 1 ? docs[0] : undefined, docs];
     }
     async function deleteSelectedDocuments() {
@@ -854,18 +881,8 @@
         canvas.restore();
     }
 
-    // #region Options
-    async function showPDFPopover(event) {
-        try {
-            const data = getSelectedPagesAndPossibleSingleDocument();
-            await showPDFPopoverMenu({ pages: data[0], document: data[1], documents: data[2], anchor: event.object });
-        } catch (err) {
-            showError(err);
-        }
-    }
-
     async function showImageExportPopover(event) {
-        return showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
+        return showImagePopoverMenu(await getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
     }
 
     function getSelectionToolbarOptions() {
@@ -889,11 +906,15 @@
             let result;
             switch (option.id) {
                 case 'pdf':
-                    const data = getSelectedPagesAndPossibleSingleDocument();
+                    const data = await getSelectedPagesAndPossibleSingleDocument();
                     await showPDFPopoverMenu({ pages: data[0], document: data[1], documents: data[2], anchor: event.object, popoverOptions: { vertPos: VerticalPosition.ABOVE } });
                     break;
                 case 'select_all':
-                    selectAll();
+                    if (nbSelected === getTotalNbDocumentsWithFolders()) {
+                        unselectAll();
+                    } else {
+                        selectAll();
+                    }
                     break;
                 case 'rename':
                     const item = getSelectedItems()[0];
@@ -908,7 +929,7 @@
                     }
                     break;
                 case 'share':
-                    result = await showImagePopoverMenu(getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
+                    result = await showImagePopoverMenu(await getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
                     if (result) {
                         unselectAll();
                     }

@@ -394,7 +394,7 @@
                 toggleSelection(item);
             }
             currentLongPressItem = null;
-        }, 200);
+        }, 400);
     }
     async function onPan(item: Item, event) {
         if (!currentLongPressItem) {

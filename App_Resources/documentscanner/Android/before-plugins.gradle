@@ -1,12 +1,13 @@
 ext {
     compileSdk = 36
     targetSdk = 36
-    kotlinVersion = "2.1.0"
-    androidBuildToolsVersion = "8.12.1"
+    kotlinVersion = "2.2.0"
+    androidBuildToolsVersion = "8.13.2"
     buildToolsVersion = "36.1.0"
     androidxVersion = "1.15.0"
-    androidXAppCompat = "1.7.0"
-    androidXAppCompatVersion = "1.7.0"
+    androidXAppCompat = "1.7.1"
+    androidXAppCompatVersion = "1.7.1"
+    androidXActivityVersion = "1.11.0"
     androidXFragment = "1.8.5"
     androidXTransition = "1.5.0"
     androidXRecyclerViewVersion = "1.4.0"
