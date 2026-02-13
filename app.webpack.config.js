@@ -102,7 +102,7 @@ module.exports = (env, params = {}) => {
     env.appComponents = env.appComponents || [];
     // env.appComponents.push('~/android/cameraactivity');
     env.appComponents.push('~/android/activity.android');
-    env.appComponents.push('~/android/quicktoggle.android');
+    // env.appComponents.push('~/android/quicktoggle.android');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {
@@ -212,6 +212,7 @@ module.exports = (env, params = {}) => {
         buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
     }
 
+    const midFontFamily = platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons';
     const APP_STORE_ID = process.env.IOS_APP_ID;
     const defines = {
         PRODUCTION: !!production,
@@ -239,6 +240,7 @@ module.exports = (env, params = {}) => {
         START_ON_CAM: startOnCam,
         SENTRY_ENABLED: !!sentry,
         NO_CONSOLE: noconsole,
+        MDI_FONT_FAMILY: `"${midFontFamily}"`,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
@@ -254,8 +256,7 @@ module.exports = (env, params = {}) => {
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
     const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
-
-    const scssPrepend = `$mdiFontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
+    const scssPrepend = `$mdiFontFamily: ${midFontFamily};
     `;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
     config.module.rules.splice(
