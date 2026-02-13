@@ -1010,12 +1010,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/gesturehandler@npm:2.0.40":
-  version: 2.0.40
-  resolution: "@nativescript-community/gesturehandler@npm:2.0.40"
+"@nativescript-community/gesturehandler@npm:2.0.41":
+  version: 2.0.41
+  resolution: "@nativescript-community/gesturehandler@npm:2.0.41"
   dependencies:
     "@nativescript-community/observable": "npm:^2.0.10"
-  checksum: 10/43b5c9e81948b3cdbaedb59efe018d80dc95930f51aa65a3165cd56af4ee47d4770a4b63982397728f25542cb691442350596a3ebb949bef945578408bf7ec77
+  checksum: 10/8758cd760816935a0f85fee0b9f8c50fef73d55d251055f733ed1ad3cf1026ee6772ee28dfdb58f265c5022252296c21c2c98f7b8fd1db30e8642cfa48c4fcd4
   languageName: node
   linkType: hard
 
@@ -10257,7 +10257,7 @@ __metadata:
     "@nativescript-community/arraybuffers": "npm:1.1.5"
     "@nativescript-community/css-theme": "npm:1.2.14"
     "@nativescript-community/extendedinfo": "npm:1.3.1"
-    "@nativescript-community/gesturehandler": "npm:2.0.40"
+    "@nativescript-community/gesturehandler": "npm:2.0.41"
     "@nativescript-community/https": "npm:4.1.27"
     "@nativescript-community/l": "npm:4.3.10"
     "@nativescript-community/licenses": "npm:2.0.9"
