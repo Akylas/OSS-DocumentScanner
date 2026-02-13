@@ -721,7 +721,13 @@ LEFT JOIN
                 // Load PKPass data for each page
                 for (const page of pages) {
                     if (page.pkpass_id) {
+                        const docFolder = document.folderPath;
+                        const pageFolder = docFolder.getFolder(page.id);
+                        const pkpassFolder = pageFolder.getFolder('pkpass');
                         page.pkpass = await this.pkpassRepository.getByPageId(page.id);
+                        const images = page.pkpass.images;
+                        Object.keys(images).map((key) => (images[key] = path.join(pkpassFolder.path, images[key])));
+                        DEV_LOG && console.log('pkpass', page.pkpass.images);
                     }
                 }
             }

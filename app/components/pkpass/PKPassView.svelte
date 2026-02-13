@@ -208,7 +208,7 @@
 
             <!-- Secondary fields -->
             {#if secondaryFieldsCount > 0}
-                <gridlayout columns={Array.from('*'.repeat(secondaryFieldsCount)).join(',')} marginTop={16} padding={4}>
+                <gridlayout columns={Array.from('*'.repeat(secondaryFieldsCount)).join(',')} marginTop={16}>
                     {#each structure.secondaryFields as field, index}
                         <label col={index} padding={index !== 0 && index !== auxiliaryFieldsCount - 1 ? '0 10 0 10' : 0} selectable={true} textAlignment={getFieldTextAlignment(field)}>
                             {#if field.label}
@@ -254,7 +254,7 @@
             <!-- Back fields (additional info) -->
             {#if includeBackFields && structure?.backFields && structure.backFields.length > 0}
                 <stacklayout marginTop={24}>
-                    <label color={labelColor} fontSize="16" fontWeight="bold" marginBottom="12" text={lc('additional_information')} />
+                    <label color={labelColor} fontSize={18} fontWeight="bold" marginBottom="12" text={lc('additional_information')} />
                     {#each structure.backFields as field}
                         <label color={foregroundColor} marginBottom={12} selectable={true} on:linkTap={onLinkTap}>
                             {#if field.label}

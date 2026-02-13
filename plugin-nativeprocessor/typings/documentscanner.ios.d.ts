@@ -1,6 +1,8 @@
 declare class OpencvDocumentProcessDelegate extends NSObject {
     static generateQRCodeFormatWidthHeightOptionsDelegate(text: string, format: string, width: number, height: number, arg4: string, arg5: CompletionDelegate);
+    static generateQRCodeSyncFormatWidthHeightOptions(text: string, format: string, width: number, height: number, arg4: string): UIImage;
     static generateQRCodeSVGFormatSizeHintOptionsDelegate(text: string, format: string, hintSize: number, arg3: string, arg4: CompletionDelegate);
+    static generateQRCodeSVGSyncFormatSizeHintOptions(text: string, format: string, hintSize: number, arg3: string): NSString;
     static processFromFileProcessesOptionsDelegate(src: string, arg1: string, arg2: string, arg3: CompletionDelegate);
     static alloc(): OpencvDocumentProcessDelegate; // inherited from NSObject
 

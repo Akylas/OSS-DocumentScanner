@@ -8,7 +8,7 @@ import type { OCRDocument } from '~/models/OCRDocument';
 import { PKBarcodeFormat, PKPass, type PKPassBarcode, type PKPassData, type PKPassField, type PKPassImages, type PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
 import { CARD_RATIO } from './constants';
 import { loadImage, recycleImages } from './images';
-import { generateQRCodeImage, getSVGFromQRCode } from 'plugin-nativeprocessor';
+import { generateQRCodeImage, getSVGFromQRCode, getSVGFromQRCodeSync } from 'plugin-nativeprocessor';
 import { screenWidthDips } from '@shared/variables';
 import { lc } from '@nativescript-community/l';
 
@@ -291,14 +291,21 @@ export async function getBarcodeSVG({ barcode, foregroundColor, width = 300 }: {
     if (!barcode) return undefined;
     const barcodeFormat = getBarcodeFormat(barcode);
     try {
-        // Convert PKPass barcode format to QRCodeData format
-        const qrcodeData = {
-            text: barcode.message,
-            format: barcodeFormat,
-            position: null
-        };
         const color = new Color(foregroundColor);
         return await getSVGFromQRCode(barcode.message, barcodeFormat, width, {
+            color: color instanceof Color ? color.hex : color
+        });
+    } catch (error) {
+        console.error('Error generating barcode image:', error);
+        return undefined;
+    }
+}
+export function getBarcodeSVGSync({ barcode, foregroundColor, width = 300 }: { barcode: PKPassBarcode; foregroundColor; width?: number }) {
+    if (!barcode) return undefined;
+    const barcodeFormat = getBarcodeFormat(barcode);
+    try {
+        const color = new Color(foregroundColor);
+        return getSVGFromQRCodeSync(barcode.message, barcodeFormat, width, {
             color: color instanceof Color ? color.hex : color
         });
     } catch (error) {
@@ -490,7 +497,7 @@ export async function renderPKPassToCanvas(
     const { backgroundColor = passData.backgroundColor || '#ffffff', includeBackFields = false, layout = 'full', width = 400 } = options;
 
     // Calculate dimensions based on layout
-    const baseWidth = 1000;
+    const baseWidth = 1100;
     const scaleFactor = width / baseWidth;
 
     // Credit card aspect ratio: 1.586:1
@@ -833,12 +840,20 @@ async function renderFullLayout({
     const logoX = padding;
 
     // Draw logo if available (Apple spec: max 160x50 points)
+    let headerRemainingWidth = canvasWidth - 2 * padding;
     if (logo2x) {
-        const image = await loadImage(logo2x, { width: canvasWidth });
-        imagesToDraw.push({ image, x: logoX, y: headerY, height: Math.round(50 * scaleFactor) });
+        const height = Math.round(50 * scaleFactor);
+        const image = await loadImage(logo2x, { height });
+        const scale = height / image.height;
+        headerRemainingWidth -= scale * image.width;
+        DEV_LOG && console.log('logo2x', logo2x, image.ios, image.ios.size.width);
+        imagesToDraw.push({ image, x: logoX, y: headerY, height });
     } else if (icon2x) {
-        const image = await loadImage(icon2x, { width: canvasWidth });
-        imagesToDraw.push({ image, x: logoX, y: headerY, height: Math.round(50 * scaleFactor) });
+        const height = Math.round(50 * scaleFactor);
+        const image = await loadImage(icon2x, { height });
+        const scale = height / image.height;
+        headerRemainingWidth -= scale * image.width;
+        imagesToDraw.push({ image, x: logoX, y: headerY, height });
     }
     const orgName = pkpass.passData?.organizationName || pkpass.getLocalizedValue(pkpass.passData?.logoText, lang) || '';
     if (orgName && !logo2x) {
@@ -854,7 +869,7 @@ async function renderFullLayout({
                     ]
                 }),
                 fgPaint,
-                canvasWidth - 2 * padding - (icon2x ? 50 * scaleFactor : 0),
+                headerRemainingWidth,
                 LayoutAlignment.ALIGN_NORMAL,
                 1,
                 0,
@@ -871,7 +886,7 @@ async function renderFullLayout({
         addFieldGroup(
             {
                 pkpass,
-                canvasWidth: canvasWidth / 2,
+                canvasWidth: headerRemainingWidth,
                 fields: structure.headerFields,
                 startX: canvasWidth - padding,
                 startY: y,
@@ -909,8 +924,6 @@ async function renderFullLayout({
     const transitType = structure?.transitType;
     if (transitType && structure?.primaryFields?.length === 2) {
         // Boarding pass layout with transit icon
-        const fieldWidth = (canvasWidth - 2 * padding - 50 * scaleFactor) / 2;
-
         addFieldGroup(
             {
                 pkpass,
@@ -966,7 +979,6 @@ async function renderFullLayout({
             const stripImage = await loadImage(strip2x, { width: canvasWidth, height: Math.round(150 * scaleFactor) });
             imagesToDraw.push({ image: stripImage, x: 0, y });
         }
-
         // Draw thumbnail if available (Apple spec: 90x90 points)
         if (thumbnail2x) {
             const image = await loadImage(thumbnail2x, { height: Math.round(90 * scaleFactor) });
@@ -1136,6 +1148,7 @@ async function renderFullLayout({
                 scale = height / imageSource.height;
             }
         }
+        DEV_LOG && console.log('imagesToDraw', imageSource, imageSource?.size?.width, imageSource?.height);
         const dstRect = new Rect(
             imageData.rightAligned ? imageData.x - imageSource.width * scale : imageData.x,
             imageData.y,
@@ -1307,6 +1320,7 @@ function addFieldGroup(
     const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * fieldSpacing * scaleFactor) / fields.length;
     let x = startX;
     let deltaY = 0;
+    DEV_LOG && console.log('addFieldGroup', fields.length, fieldWidth, JSON.stringify(fields));
     (horizontalAlignment === 'right' ? fields.reverse() : fields).forEach((field, index) => {
         const topText = createNativeAttributedString({
             spans: [
@@ -1336,12 +1350,12 @@ function addFieldGroup(
         } else {
             fieldsPaint.setTextAlign(Align.LEFT);
         }
-        if (horizontalAlignment === 'right') {
-            textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
-        }
+        // if (horizontalAlignment === 'right') {
+        //     textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
+        // }
         const staticLayout = new StaticLayout(topText, fieldsPaint, fieldWidth, textAlignment, 1, 0, true);
         if (horizontalAlignment === 'right') {
-            deltaX -= staticLayout.getWidth();
+            deltaX -= staticLayout.getActualWidth();
         }
         // canvas.translate(x + deltaX, y);
         staticLayoutsToDraw.push({ staticLayout, x: x + deltaX, y });
@@ -1350,9 +1364,9 @@ function addFieldGroup(
         deltaY = Math.max(deltaY, staticLayout.getHeight());
 
         if (horizontalAlignment === 'right') {
-            x -= staticLayout.getWidth() + fieldSpacing * scaleFactor;
+            x -= staticLayout.getActualWidth() + fieldSpacing * scaleFactor;
         } else {
-            x += staticLayout.getWidth() + fieldSpacing * scaleFactor;
+            x += staticLayout.getActualWidth() + fieldSpacing * scaleFactor;
         }
     });
 

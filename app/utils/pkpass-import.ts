@@ -192,7 +192,7 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
                 const updatedImages = {};
                 Object.keys(pass.images).forEach((key) => {
                     const imageName = pass.images[key].split('/').pop();
-                    updatedImages[key] = path.join(pkpassFolder.path, imageName);
+                    updatedImages[key] = imageName;
                 });
                 pass.images = updatedImages;
             }
