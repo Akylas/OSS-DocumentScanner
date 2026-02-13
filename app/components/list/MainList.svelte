@@ -464,6 +464,14 @@
             showError(error);
         }
     }
+    export async function importImages() {
+        DEV_LOG && console.log('importImages');
+        try {
+            await importAndScanImage({ folder, forceGalleryPick: true });
+        } catch (error) {
+            showError(error);
+        }
+    }
     async function onNavigatedTo(e: NavigatedData) {
         if (!e.isBackNavigation) {
             if (documentsService.started) {
@@ -1129,7 +1137,7 @@
         {#if showActionButton}
             <slot name="fab" />
         {/if}
-            <slot name="test" />
+        <slot name="test" />
 
         <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
             <mdbutton

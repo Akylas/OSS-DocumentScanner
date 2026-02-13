@@ -405,7 +405,19 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         hideLoading();
     }
 }
-export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
+export async function importAndScanImage({
+    canGoToView = true,
+    document,
+    folder,
+    forceGalleryPick = false,
+    importPDFs = false
+}: {
+    document?: OCRDocument;
+    importPDFs?: boolean;
+    canGoToView?: boolean;
+    forceGalleryPick?: boolean;
+    folder?: DocFolder;
+}) {
     await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {} });
     try {
         if (__ANDROID__) {
@@ -413,7 +425,7 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
             securityService.ignoreNextValidation();
         }
         let selection: string[];
-        if (__IOS__ && !importPDFs) {
+        if ((__IOS__ && !importPDFs) || forceGalleryPick) {
             try {
                 const data = await createImagePicker({
                     mediaType: 1,

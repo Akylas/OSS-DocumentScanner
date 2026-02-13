@@ -169,7 +169,7 @@
         }
     }
     const component = autoSizeListItem ? ListItemAutoSize : ListItem;
-    export let collectionView: NativeViewElementNode<CollectionView>;
+    let collectionView: NativeViewElementNode<CollectionView>;
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">

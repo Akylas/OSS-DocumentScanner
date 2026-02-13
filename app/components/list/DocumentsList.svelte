@@ -39,6 +39,7 @@
     let getSyncColors: (item: Item) => string[];
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
+    let importImages: () => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
     let refreshCollectionView: () => void;
 
@@ -117,6 +118,7 @@
     bind:folder
     bind:nbSelected
     bind:importDocument
+    bind:importImages
     bind:refreshCollectionView
     bind:getSyncColors
     bind:documents
@@ -157,6 +159,7 @@
             horizontalAlignment="center"
             text="mdi-file-document-plus-outline"
             verticalAlignment="center"
+            on:longPress={throttle(() => importImages(), 500)}
             on:tap={throttle(() => importDocument(), 500)} />
         {#if $hasCamera}
             <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
