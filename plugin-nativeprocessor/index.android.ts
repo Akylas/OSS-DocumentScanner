@@ -164,7 +164,6 @@ export async function detectQRCodeFromFile(src: string, options: Partial<DetectQ
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
     return androidFunctionCallbackPromise<ImageSource>(
         (callback) => {
-            DEV_LOG && console.log('generateQRCodeImage', text, format, width, height, callback, options ? JSON.stringify(options) : '');
             com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCode(text, format, width, height, callback, options ? JSON.stringify(options) : '');
         },
         (r) => (r ? new ImageSource(r) : null)

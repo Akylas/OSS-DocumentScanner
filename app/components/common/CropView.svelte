@@ -58,8 +58,6 @@
     export let undos = [];
     export let redos = [];
 
-    $: DEV_LOG && console.log('cropview imagePath', imagePath);
-
     let actualWidth = imageWidth;
     let actualHeight = imageHeight;
     let needRotation = false;

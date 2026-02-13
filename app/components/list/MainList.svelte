@@ -210,7 +210,7 @@
     }
 
     async function refresh(force = true, filter?: string) {
-        DEV_LOG && console.log('refresh', force, filter);
+        // DEV_LOG && console.log('refresh', force, filter);
         if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
             return;
         }
@@ -218,7 +218,7 @@
         nbSelected = 0;
         loading = true;
         try {
-            DEV_LOG && console.log('MainList', 'refresh', folder, filter, sortOrder);
+            // DEV_LOG && console.log('MainList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
             await refreshFolders(filter);
@@ -286,9 +286,9 @@
         showNoDocument = nbDocuments === 0;
     }
     function onDocumentAdded(event: DocumentAddedEventData) {
-        DEV_LOG && console.log('onDocumentAdded', event.doc.id, event.doc.folders, event.folder);
+        // DEV_LOG && console.log('onDocumentAdded', event.doc.id, event.doc.folders, event.folder);
         if ((!event.folder && !folder) || folder?.name === event.folder?.name) {
-            DEV_LOG && console.log('onDocumentAdded', nbDocuments);
+            // DEV_LOG && console.log('onDocumentAdded', nbDocuments);
             // find the first document index to add the new doc just before
             const index = documents?.findIndex((d) => !!d.doc);
             if (index !== -1) {
@@ -308,7 +308,7 @@
 
     function onDocumentMovedFolder(event: DocumentMovedFolderEventData) {
         // TODO: for now we refresh otherwise the order might be lost
-        DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolderId, !!folder, folder?.id === event.oldFolderId, typeof folder?.id, typeof event.oldFolderId);
+        // DEV_LOG && console.log('onDocumentMovedFolder', folder?.id, event.folder?.id, event.oldFolderId, !!folder, folder?.id === event.oldFolderId, typeof folder?.id, typeof event.oldFolderId);
         if (!folder && (!event.folder || !event.oldFolderId)) {
             refresh();
         } else if (!!folder && (folder.id === event.folder?.id || folder.id === event.oldFolderId)) {
@@ -325,7 +325,7 @@
                 return true;
             }
         });
-        DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
+        // DEV_LOG && console.log('onDocumentUpdated', doc._synced, doc.id, index, doc.folders, doc.pages.length);
         if (index >= 0) {
             if (folder && doc.folders && doc.folders.indexOf(folder.id) === -1) {
                 documents.splice(index, 1);
@@ -340,20 +340,20 @@
         }
     }
     function onFolderAdded(event: DocumentFolderAddedEventData) {
-        DEV_LOG && console.log('onFolderAdded', event.folder);
+        // DEV_LOG && console.log('onFolderAdded', event.folder);
         refreshFolders();
     }
     function onFolderUpdated(event: FolderUpdatedEventData) {
-        DEV_LOG && console.log('onFolderUpdated', event.folder);
+        // DEV_LOG && console.log('onFolderUpdated', event.folder);
         refreshFolders();
     }
     async function onDocumentsDeleted(event: DocumentDeletedEventData) {
-        DEV_LOG &&
-            console.log(
-                'onDocumentsDeleted',
-                event.documents.map((d) => d.id),
-                event.folders
-            );
+        // DEV_LOG &&
+        //     console.log(
+        //         'onDocumentsDeleted',
+        //         event.documents.map((d) => d.id),
+        //         event.folders
+        //     );
         for (let i = 0; i < event.documents.length; i++) {
             const id = event.documents[i].id;
             const index = documents.findIndex((item) => item.doc && item.doc.id === id);
@@ -380,8 +380,8 @@
             if (event.pageIndex === 0) {
                 if (!!event.imageUpdated) {
                     const imageView = getImageView(index);
-                    DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
-                    const page = document.pages[event.pageIndex];
+                    // DEV_LOG && console.log('list onDocumentPageUpdated image clean', index, imageView);
+                    // const page = document.pages[event.pageIndex];
                     if (imageView) {
                         imageView?.updateImageUri();
                     } else if (__IOS__) {
