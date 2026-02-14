@@ -1,4 +1,3 @@
-
 #ifndef DOCUMENT_DETECTOR_H
 #define DOCUMENT_DETECTOR_H
 
@@ -68,10 +67,22 @@ namespace detector {
             int houghLinesMinLineLength = 55;
             int houghLinesMaxLineGap = 0;
         };
+
+        struct PageSplitResult {
+            Rect leftPage;
+            Rect rightPage;
+            bool hasLeft = false;
+            bool hasRight = false;
+            int gutterX = -1;
+            bool foundGutter = false;
+        };
         DetectOptions options;
 //        int adapThresholdBlockSize = 0; // 391
 //        int adapThresholdC = 0;          // 53
 //        int shouldNegate = 0;          // 53
+        PageSplitResult detectGutterAndSplit(const Mat& input,
+                                      float minPageWidthRatio = 0.20f,
+                                      int blurSize = 5);
 
 
     private:
@@ -80,6 +91,7 @@ namespace detector {
 
 
         void preProcess(Mat src, Mat &dst);
+
 
 
         // void findThreshSquares(cv::Mat srcGray, double scaledWidth, double scaledHeight,
