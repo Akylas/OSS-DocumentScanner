@@ -267,7 +267,6 @@ lane :build_flavor do |params|
     #     )
     #   end
       when 'alpha','beta','production'
-        upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
         if (platform == 'ios' && options[:github] != false)
           # we now github create releases on iOS for european users
           changelog = get_changelog(platform:platform, flavor:flavor, format:'github', commit_url:commit_url)
@@ -280,6 +279,7 @@ lane :build_flavor do |params|
             upload_assets: Dir.glob(File.join(dist_path, "*.ipa"))
           )
         end
+        upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
     end
     if (options[:create_tag] != false)
       if !git_tag_exists(tag: tag)
