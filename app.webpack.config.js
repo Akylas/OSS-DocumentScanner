@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
-const { readFileSync, readdirSync } = require('fs');
-const { dirname, join, isAbsolute, relative, resolve } = require('path');
+const { readdirSync, readFileSync } = require('fs');
+const { dirname, isAbsolute, join, relative, resolve } = require('path');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const nsWebpack = require('@akylas/nativescript-webpack');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -106,29 +105,33 @@ module.exports = (env, params = {}) => {
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {
+        // --env.fakeall
+        accessibility = true,
         appId,
         appPath,
-        appResourcesPath,
-        hmr, // --env.hmr
-        production, // --env.production
-        sourceMap, // --env.sourceMap
-        hiddenSourceMap, // --env.hiddenSourceMap
-        inlineSourceMap, // --env.inlineSourceMap
-        sentry = false, // --env.sentry
-        uploadSentry = false,
-        uglify, // --env.uglify
-        noconsole, // --env.noconsole
-        devlog, // --env.devlog
-        profile, // --env.profile
-        report,
-        fork = true, // --env.fakeall
-        accessibility = true, // --env.accessibility
-        playStoreBuild = true, // --env.playStoreBuild
-        timeline, // --env.timeline
-        locale = 'en', // --env.locale
-        theme = 'auto', // --env.theme
+        appResourcesPath, // --env.noconsole
+        devlog,
+        fork = true, // --env.sourceMap
+        hiddenSourceMap,
+        hmr, // --env.hiddenSourceMap
+        inlineSourceMap, // --env.theme
         keep_classnames_functionnames = false,
-        startOnCam = false
+        // --env.timeline
+        locale = 'en', // --env.uglify
+        noconsole, // --env.accessibility
+        playStoreBuild = true, // --env.hmr
+        production, // --env.devlog
+        profile,
+        // --env.profile
+        report, // --env.inlineSourceMap
+        sentry = false, // --env.production
+        sourceMap,
+        startOnCam = false, // --env.locale
+        theme = 'auto', // --env.playStoreBuild
+        timeline,
+        uglify,
+        // --env.sentry
+        uploadSentry = false
     } = env;
     console.log('env', env);
     const mode = production ? 'production' : 'development';
