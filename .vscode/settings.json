@@ -4,7 +4,7 @@
     "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
     "cmake.buildDirectory": "${workspaceFolder}/cpp/cpp_test_app/build",
     "cmake.debugConfig": {
-        "args": ["/home/mguillon/Desktop/test_images", "352192716-f50b9da8-0b4e-4529-a9e4-44895b31a434.jpg"]
+        "args": ["/home/mguillon/Desktop/test_images", "301061184-41031c73-ef8b-4c71-b9ca-c5d17c0ec896.jpg"]
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc-12",
     "svelte.plugin.svelte.compilerWarnings": {
