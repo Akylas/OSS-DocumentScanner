@@ -67,12 +67,18 @@ repositories {
     pluginDependencies.add(localAppResourcesLibraries)
 
     if (pluginDependencies.size() > 0) {
-
-        flatDir {
-            dirs pluginDependencies
+        // flatDir {
+            // dirs pluginDependencies
+        // }
+        // replace flatDir with file-based maven repos
+        pluginDependencies.each { dirPath ->
+            maven {
+                url uri(dirPath)
+            }
         }
     }
 
+    mavenLocal()
     mavenCentral()
 	maven { url 'https://jitpack.io' }
 }
