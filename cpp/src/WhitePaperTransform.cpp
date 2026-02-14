@@ -2,7 +2,7 @@
 #include "./include/WhitePaperTransform.h"
 #include <jsoncons/json.hpp>
 
-cv::Mat dog(const cv::Mat &img, const cv::Mat &dst, int kSize, double sigma1, double sigma2)
+void dog(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sigma2)
 {
     // Use OpenCV's optimized Gaussian blur for much better performance
     // This is significantly faster than custom kernel computation
@@ -28,7 +28,6 @@ cv::Mat dog(const cv::Mat &img, const cv::Mat &dst, int kSize, double sigma1, do
     
     // Compute the Difference of Gaussians (DoG)
     cv::subtract(blurred1, blurred2, dst);
-    return dst;
 }
 
 void negateImage(const cv::Mat &img, const cv::Mat &res)
@@ -214,9 +213,9 @@ void colorBalance(const cv::Mat &img, const cv::Mat &res, double lowPer, double 
 // Uses CLAHE for adaptive contrast and bilateral filtering for shadow removal
 // This is faster and often produces better results than the DoG-based approach
 void documentEnhanceCLAHE(const cv::Mat &img, cv::Mat &res, 
-                          double clipLimit = 2.0, int tileGridSize = 8,
-                          int bilateralD = 9, double bilateralSigmaColor = 75.0, 
-                          double bilateralSigmaSpace = 75.0)
+                          double clipLimit, int tileGridSize,
+                          int bilateralD, double bilateralSigmaColor, 
+                          double bilateralSigmaSpace)
 {
     cv::Mat lab;
     cv::cvtColor(img, lab, cv::COLOR_BGR2Lab);
@@ -246,7 +245,7 @@ void documentEnhanceCLAHE(const cv::Mat &img, cv::Mat &res,
 // Fast document binarization for black and white documents
 // Much faster than DoG-based approach and better for text-heavy documents
 void documentBinarizeAdaptive(const cv::Mat &img, cv::Mat &res, 
-                               int blockSize = 11, double C = 2)
+                               int blockSize, double C)
 {
     cv::Mat gray;
     if (img.channels() == 3)
@@ -325,7 +324,7 @@ void whiteboardEnhance(const cv::Mat &img, cv::Mat &res, const std::string &opti
     }
 //    auto t_start = std::chrono::high_resolution_clock::now();
     // Difference of Gaussian (DoG)
-    res = dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time
+    dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time (now optimized)
 //    LOGD("WhitePaperTransform dog %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Negative of image
     negateImage(res, res); //0.3% time

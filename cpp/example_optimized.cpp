@@ -64,6 +64,8 @@ int main(int argc, char** argv) {
     // Example 4: Color simplification (OPTIMIZED)
     Mat colorResult;
     measureTime([&]() {
+        // Parameters: resizeThreshold=200, colorsFilterDistanceThreshold=20, 
+        //             distanceThreshold=15, paletteNbColors=8, colorSpace=Lab
         colorSimplificationTransform(input, colorResult, false, 200, 20, 15, 8, ColorSpace::Lab);
     }, "Color Simplification (Optimized)");
     imwrite("output_colors.jpg", colorResult);

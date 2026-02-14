@@ -75,6 +75,7 @@ std::vector<std::pair<Vec3b, float>> colorSimplificationTransform(const cv::Mat 
             const Vec3b& color = colors[k].first;
             
             // Calculate squared distance to avoid sqrt
+            // Note: Each component diff is max 255, so 255²×3 = 195,075 fits safely in int
             int d0 = pixel[0] - color[0];
             int d1 = pixel[1] - color[1];
             int d2 = pixel[2] - color[2];
