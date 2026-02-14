@@ -25,7 +25,6 @@ import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicYuvToRGB
 import android.renderscript.Type
-import android.util.Log
 import java.nio.ByteBuffer
 
 /**
@@ -42,6 +41,8 @@ import java.nio.ByteBuffer
  * (https://stackoverflow.com/questions/52726002/camera2-captured-picture-conversion-from-yuv-420-888-to-nv21/52740776#52740776)
  * might have better performance.
  */
+
+@SuppressWarnings("deprecation")
 class YuvToRgbConverter(context: Context) {
     private val rs = RenderScript.create(context)
     private val scriptYuvToRgb =
