@@ -1,27 +1,4 @@
-import { ApplicationSettings, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
-import { SETTINGS_QUICK_TOGGLE_ENABLED } from '~/utils/constants';
-
-export function updateQuickToggle() {
-    const enabled = ApplicationSettings.getBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, false);
-    const context = Utils.android.getApplicationContext();
-    const component = new android.content.ComponentName(context, '__PACKAGE__.QuickToggleService');
-    DEV_LOG && console.log('updateQuickToggle', component, '__PACKAGE__.QuickToggleService', enabled);
-    const pm = context.getPackageManager();
-
-    if (enabled) {
-        pm.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-
-        android.service.quicksettings.TileService.requestListeningState(context, component);
-    } else {
-        pm.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-    }
-}
-
-export function toggleQuickSetting(enable: boolean) {
-    ApplicationSettings.setBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, enable);
-    updateQuickToggle();
-}
 
 @NativeClass()
 @JavaProxy('__PACKAGE__.QuickToggleService')

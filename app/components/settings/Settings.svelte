@@ -75,7 +75,7 @@
     import { copyFolderContent, removeFolderContent } from '~/utils/file';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
-    import { restartApp } from '~/utils/utils';
+    import { restartApp, toggleQuickSetting } from '~/utils/utils';
     import { colors, fonts, hasCamera, onFontScaleChanged, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
@@ -1479,7 +1479,7 @@
 
                 case 'quicktoggle': {
                     if (__ANDROID__) {
-                        (await import('~/android/quicktoggle.android')).toggleQuickSetting(value);
+                        toggleQuickSetting(value);
                     }
                     break;
                 }

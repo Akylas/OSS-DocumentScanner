@@ -1,6 +1,6 @@
-import { AndroidActivityResultEventData, Application, File, Folder, ImageSource, Utils, path } from '@nativescript/core';
+import { AndroidActivityResultEventData, Application, ApplicationSettings, File, Folder, ImageSource, Utils, path } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
-import { ANDROID_CONTENT } from './constants';
+import { ANDROID_CONTENT, SETTINGS_QUICK_TOGGLE_ENABLED } from './constants';
 
 export * from './utils.common';
 
@@ -120,4 +120,25 @@ export function getRealPath(src: string, force = false) {
         return src;
     }
     return com.nativescript.documentpicker.FilePath.getPathFromString(Utils.android.getApplicationContext(), src);
+}
+
+export function updateQuickToggle() {
+    const enabled = ApplicationSettings.getBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, false);
+    const context = Utils.android.getApplicationContext();
+    const component = new android.content.ComponentName(context, '__PACKAGE__.QuickToggleService');
+    DEV_LOG && console.log('updateQuickToggle', component, '__PACKAGE__.QuickToggleService', enabled);
+    const pm = context.getPackageManager();
+
+    if (enabled) {
+        pm.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+
+        android.service.quicksettings.TileService.requestListeningState(context, component);
+    } else {
+        pm.setComponentEnabledSetting(component, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+    }
+}
+
+export function toggleQuickSetting(enable: boolean) {
+    ApplicationSettings.setBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, enable);
+    updateQuickToggle();
 }
