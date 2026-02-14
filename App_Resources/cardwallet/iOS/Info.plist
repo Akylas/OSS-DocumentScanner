@@ -63,6 +63,8 @@
     <string>12.0</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
     <key>CFBundleDocumentTypes</key>
     <array>
       <dict>
