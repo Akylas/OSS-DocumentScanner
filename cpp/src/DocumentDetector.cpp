@@ -399,6 +399,18 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
     for (int i = 0; i < columnEnergy.cols; i++)
         energy[i] = columnEnergy.at<float>(0, i);
 
+    // Calculate mean and std dev to detect if this is likely a book
+    float meanEnergy = 0;
+    for (float e : energy)
+        meanEnergy += e;
+    meanEnergy /= energy.size();
+    
+    float variance = 0;
+    for (float e : energy)
+        variance += (e - meanEnergy) * (e - meanEnergy);
+    variance /= energy.size();
+    float stdDev = sqrt(variance);
+
     // Smooth energy to avoid local noise spikes
     const int smoothRadius = 15;
     vector<float> smoothEnergy(energy.size(), 0);
@@ -418,12 +430,14 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
 
     // Find gutter near center (avoid edges)
     int width = input.cols;
-    int searchMin = width * 0.25;
-    int searchMax = width * 0.75;
+    int searchMin = width * 0.30;  // Increased from 0.25 to be more centered
+    int searchMax = width * 0.70;  // Decreased from 0.75 to be more centered
 
     int gutterX = -1;
     float bestScore = FLT_MAX;
 
+    // Look for MINIMUM gradient (gutter/fold is typically low gradient)
+    // but reject if it's TOO low (no variation suggests no book)
     for (int i = searchMin; i < searchMax; i++) {
         if (smoothEnergy[i] < bestScore) {
             bestScore = smoothEnergy[i];
@@ -431,10 +445,53 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
         }
     }
 
-    DocumentDetector::PageSplitResult result;
-    result.gutterX = gutterX;
+    // Validate the gutter detection
+    // 1. Check if detected gutter is actually a local minimum (valley, not peak)
+    // 2. Reject if energy is too high (strong edge = likely book border, not gutter)
+    // 3. Reject if the image has very uniform energy (not a book)
+    
+    bool isValidGutter = false;
+    
+    if (gutterX >= 0) {
+        // Check if it's a local minimum by looking at neighbors
+        const int neighborWindow = 20;
+        float leftAvg = 0, rightAvg = 0;
+        int leftCount = 0, rightCount = 0;
+        
+        for (int i = max(0, gutterX - neighborWindow); i < gutterX; i++) {
+            leftAvg += smoothEnergy[i];
+            leftCount++;
+        }
+        for (int i = gutterX + 1; i < min((int)smoothEnergy.size(), gutterX + neighborWindow); i++) {
+            rightAvg += smoothEnergy[i];
+            rightCount++;
+        }
+        
+        if (leftCount > 0) leftAvg /= leftCount;
+        if (rightCount > 0) rightAvg /= rightCount;
+        
+        // Gutter should be lower than both sides (it's a valley)
+        bool isLocalMinimum = smoothEnergy[gutterX] < leftAvg && smoothEnergy[gutterX] < rightAvg;
+        
+        // Reject if the energy is too high relative to mean (likely book border)
+        // Gutter should be below mean, not way above it
+        bool notTooHigh = smoothEnergy[gutterX] < (meanEnergy + stdDev * 0.5);
+        
+        // Reject if image has very low variation (uniform = not a book)
+        // Need at least some variation for a book fold to be meaningful
+        bool hasVariation = stdDev > (meanEnergy * 0.15);
+        
+        // Also check that neighbors are significantly higher (clear valley)
+        float avgNeighbor = (leftAvg + rightAvg) / 2.0f;
+        bool significantValley = (avgNeighbor - smoothEnergy[gutterX]) > (stdDev * 0.3);
+        
+        isValidGutter = isLocalMinimum && notTooHigh && hasVariation && significantValley;
+    }
 
-    if (gutterX < 0)
+    DocumentDetector::PageSplitResult result;
+    result.gutterX = isValidGutter ? gutterX : -1;
+
+    if (!isValidGutter)
         return result;
 
     int minWidth = static_cast<int>(width * minPageWidthRatio);
@@ -452,7 +509,7 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
     }
 
     // mark found gutter if any valid page ROI created
-    result.foundGutter = (gutterX >= 0) && (result.hasLeft || result.hasRight);
+    result.foundGutter = (result.hasLeft || result.hasRight);
 
      return result;
 }

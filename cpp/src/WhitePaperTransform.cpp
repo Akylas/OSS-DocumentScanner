@@ -209,69 +209,6 @@ void colorBalance(const cv::Mat &img, const cv::Mat &res, double lowPer, double 
     cv::merge(csImg, res);
 }
 
-// New optimized algorithm for document enhancement
-// Uses CLAHE for adaptive contrast and bilateral filtering for shadow removal
-// This is faster and often produces better results than the DoG-based approach
-void documentEnhanceCLAHE(const cv::Mat &img, cv::Mat &res, 
-                          double clipLimit, int tileGridSize,
-                          int bilateralD, double bilateralSigmaColor, 
-                          double bilateralSigmaSpace)
-{
-    cv::Mat lab;
-    cv::cvtColor(img, lab, cv::COLOR_BGR2Lab);
-    
-    // Split into L, a, b channels
-    std::vector<cv::Mat> lab_planes;
-    cv::split(lab, lab_planes);
-    
-    // Apply CLAHE to L channel for contrast enhancement
-    cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(clipLimit, cv::Size(tileGridSize, tileGridSize));
-    clahe->apply(lab_planes[0], lab_planes[0]);
-    
-    // Merge back
-    cv::merge(lab_planes, lab);
-    cv::cvtColor(lab, res, cv::COLOR_Lab2BGR);
-    
-    // Apply bilateral filter to reduce noise while preserving edges
-    // This helps remove shadows without blurring text
-    if (bilateralD > 0)
-    {
-        cv::Mat filtered;
-        cv::bilateralFilter(res, filtered, bilateralD, bilateralSigmaColor, bilateralSigmaSpace);
-        res = filtered;
-    }
-}
-
-// Fast document binarization for black and white documents
-// Much faster than DoG-based approach and better for text-heavy documents
-void documentBinarizeAdaptive(const cv::Mat &img, cv::Mat &res, 
-                               int blockSize, double C)
-{
-    cv::Mat gray;
-    if (img.channels() == 3)
-    {
-        cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
-    }
-    else
-    {
-        gray = img;
-    }
-    
-    // Ensure blockSize is odd
-    if (blockSize % 2 == 0)
-        blockSize++;
-    
-    // Apply adaptive thresholding with Gaussian weighting
-    cv::adaptiveThreshold(gray, res, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, 
-                         cv::THRESH_BINARY, blockSize, C);
-    
-    // Convert back to BGR if input was color
-    if (img.channels() == 3)
-    {
-        cv::cvtColor(res, res, cv::COLOR_GRAY2BGR);
-    }
-}
-
 void whiteboardEnhance(const cv::Mat &img, cv::Mat &res, const std::string &optionsJson)
 {
 
