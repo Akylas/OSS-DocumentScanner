@@ -524,10 +524,10 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
   });
 }
 
+#ifdef WITH_QRCODE
 
 // PRAGMA: detectQRCode
 +(void)detectQRCodeSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale {
-#ifdef WITH_QRCODE
   @try {
     cv::Mat srcBitmapMat;
     UIImageToMat(image, srcBitmapMat);
@@ -548,9 +548,6 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       
     });
   }
-#else
-  [delegate onComplete:nil error:nil];
-#endif
 }
 
 +(void)detectQRCode:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate {
@@ -582,7 +579,6 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 +(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
 {
-  #ifdef WITH_QRCODE
 
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     @try {
@@ -603,9 +599,6 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
       });
     }
   });
-#else
-  [delegate onComplete:nil error:nil];
-#endif
 }
 
 // PRAGMA: generateQRCode
@@ -616,7 +609,6 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
 
 +(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate
 {
-#ifdef WITH_QRCODE
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     @try {
        NSString* result = [self generateQRCodeSVGSync:text format:fromat  sizeHint:sizeHint  options:options];
@@ -636,10 +628,8 @@ void CGImageToMat(const CGImageRef image, cv::Mat& m, bool alphaExist) {
         });
       }
   });
-#else
-      [delegate onComplete:nil error:nil];
-#endif
 }
+#endif
 
 // PRAGMA: process
 +(void)processSync:(UIImage*)image processes:(NSString*)processes options:(NSString*)optionsStr delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale {

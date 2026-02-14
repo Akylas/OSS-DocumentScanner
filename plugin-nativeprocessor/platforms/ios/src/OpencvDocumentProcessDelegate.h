@@ -49,6 +49,9 @@
 +(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 +(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 
+
+#ifdef WITH_QRCODE
+
 // PRAGMA: detectQRCode
 +(void)detectQRCodeFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 
@@ -60,6 +63,7 @@
 +(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
 +(UIImage*)generateQRCodeSync:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options;
 +(void)generateQRCode:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
+#endif
 
 // PRAGMA: process
 +(void)processSync:(UIImage*)image processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale;
