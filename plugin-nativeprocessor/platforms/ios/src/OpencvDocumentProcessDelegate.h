@@ -13,60 +13,60 @@
 @property (nonatomic, assign) NSInteger  previewResizeThreshold;
 @property (nonatomic, assign) BOOL  detectDocuments;
 @property (nonatomic, assign) BOOL  detectQRCode;
-@property (nonatomic, assign) NSString*  detectQRCodeOptions;
+@property (nonatomic, assign) NSString* _Nullable  detectQRCodeOptions;
 
-- (instancetype)initWithCropView:(NSCropView*) view;
-- (instancetype)initWithCropView:(NSCropView*) view onQRCode:(id<OnQRCode>)onQRCode;
-- (void) setAutoScanHandler:(NSObject *)value;
+- (instancetype _Nonnull )initWithCropView:(NSCropView*_Nonnull) view;
+- (instancetype _Nonnull )initWithCropView:(NSCropView*_Nonnull) view onQRCode:(id<OnQRCode>_Nonnull)onQRCode;
+- (void) setAutoScanHandler:(NSObject *_Nullable)value;
 
 
-+(NSArray*)findDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale options:(NSString*)options;
++(NSArray*_Nullable)findDocumentCorners:(UIImage*_Nonnull)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation scale:(CGFloat)scale options:(NSString*_Nullable)options;
 
-+(void) getJSONDocumentCornersSync:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale options:(NSString*)options;
-+(void) getJSONDocumentCorners:(UIImage*)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate;
-+(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate options:(NSString*)options;
-+(void) getJSONDocumentCornersFromFile:(NSString*)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>)delegate;
-+(void) getJSONDocumentCornersFromFile:(NSString*)src delegate:(id<CompletionDelegate>)delegate options:(NSString*)options;
++(void) getJSONDocumentCornersSync:(UIImage*_Nonnull)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>_Nonnull)delegate scale:(CGFloat)scale options:(NSString*_Nullable)options;
++(void) getJSONDocumentCorners:(UIImage*_Nonnull)image  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>_Nonnull)delegate;
++(void) getJSONDocumentCornersFromFile:(NSString*_Nonnull)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>_Nonnull)delegate options:(NSString*_Nullable)options;
++(void) getJSONDocumentCornersFromFile:(NSString*_Nonnull)src  shrunkImageHeight:(CGFloat)shrunkImageHeight imageRotation:(NSInteger)imageRotation delegate:(id<CompletionDelegate>_Nonnull)delegate;
++(void) getJSONDocumentCornersFromFile:(NSString*_Nonnull)src delegate:(id<CompletionDelegate>_Nonnull)delegate options:(NSString*_Nullable)options;
 
 
 // PRAGMA: cropDocument
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat compressQuality:(CGFloat)compressQuality;
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName compressFormat:(NSString*)compressFormat;
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms saveInFolder:(NSString*)saveInFolder fileName:(NSString*)fileName;
-+(void) cropDocumentSync:(UIImage*)image quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate  transforms:(NSString*)transforms;
++(void) cropDocumentSync:(UIImage*_Nonnull)image quads:(NSString*_Nonnull)quads delegate:(id<CompletionDelegate>_Nonnull)delegate  transforms:(NSString*_Nullable)transforms saveInFolder:(NSString*_Nullable)saveInFolder fileName:(NSString*_Nullable)fileName compressFormat:(NSString*_Nonnull)compressFormat compressQuality:(CGFloat)compressQuality;
++(void) cropDocumentSync:(UIImage*_Nonnull)image quads:(NSString*_Nonnull)quads delegate:(id<CompletionDelegate>_Nonnull)delegate  transforms:(NSString*_Nullable)transforms saveInFolder:(NSString*_Nullable)saveInFolder fileName:(NSString*_Nullable)fileName compressFormat:(NSString*_Nonnull)compressFormat;
++(void) cropDocumentSync:(UIImage*_Nonnull)image quads:(NSString*_Nonnull)quads delegate:(id<CompletionDelegate>_Nonnull)delegate  transforms:(NSString*_Nullable)transforms saveInFolder:(NSString*_Nullable)saveInFolder fileName:(NSString*_Nullable)fileName;
++(void) cropDocumentSync:(UIImage*_Nonnull)image quads:(NSString*_Nonnull)quads delegate:(id<CompletionDelegate>_Nonnull)delegate  transforms:(NSString*_Nullable)transforms;
 
 // PRAGMA: cropDocumentFromFile
-+(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads delegate:(id<CompletionDelegate>)delegate options:(NSString*)optionsStr;
-+(void) cropDocumentFromFile:(NSString*) src quads:(NSString*)quads  delegate:(id<CompletionDelegate>)delegate;
++(void) cropDocumentFromFile:(NSString*_Nonnull) src quads:(NSString*_Nonnull)quads delegate:(id<CompletionDelegate>_Nonnull)delegate options:(NSString*_Nullable)optionsStr;
++(void) cropDocumentFromFile:(NSString*_Nonnull) src quads:(NSString*_Nonnull)quads  delegate:(id<CompletionDelegate>_Nonnull)delegate;
 
 
 // PRAGMA: cropDocument
-+(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<CompletionDelegate>)delegate transforms:(NSString*)transforms;
-+(void) cropDocument:(UIImage*) image quads:(NSString*)quads  delegate:(id<CompletionDelegate>)delegate;
++(void) cropDocument:(UIImage*_Nonnull) image quads:(NSString*_Nonnull)quads  delegate:(id<CompletionDelegate>_Nonnull)delegate transforms:(NSString*_Nullable)transforms;
++(void) cropDocument:(UIImage*_Nonnull) image quads:(NSString*_Nonnull)quads  delegate:(id<CompletionDelegate>_Nonnull)delegate;
 
 // PRAGMA: ocrDocument
-+(void)ocrDocumentSync:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
-+(void)ocrDocument:(UIImage*)image options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
-+(void)ocrDocumentFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(void)ocrDocumentSync:(UIImage*_Nullable)image options:(NSString*_Nonnull)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
++(void)ocrDocument:(UIImage*_Nullable)image options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
++(void)ocrDocumentFromFile:(NSString*_Nullable)src options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
 
 
 #ifdef WITH_QRCODE
 
 // PRAGMA: detectQRCode
-+(void)detectQRCodeFromFile:(NSString*)src options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(void)detectQRCodeFromFile:(NSString*_Nonnull)src options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
 
 // PRAGMA: generateQRCode
-+(void)generateQRCode:(NSString*)text format:(NSString*)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(void)generateQRCode:(NSString*_Nonnull)text format:(NSString*_Nonnull)fromat  width:(NSInteger)width height:(NSInteger)height  options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
 
 // PRAGMA: generateQRCodeSVG
-+(NSString*)generateQRCodeSVGSync:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options;
-+(void)generateQRCodeSVG:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
-+(UIImage*)generateQRCodeSync:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options;
-+(void)generateQRCode:(NSString*)text format:(NSString*)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(NSString*_Nullable)generateQRCodeSVGSync:(NSString*_Nonnull)text format:(NSString*_Nonnull)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*_Nullable)options;
++(void)generateQRCodeSVG:(NSString*_Nonnull)text format:(NSString*_Nonnull)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
++(UIImage*_Nullable)generateQRCodeSync:(NSString*_Nonnull)text format:(NSString*_Nonnull)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*_Nullable)options;
++(void)generateQRCode:(NSString*_Nonnull)text format:(NSString*_Nonnull)fromat  sizeHint:(NSInteger)sizeHint  options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
 #endif
 
 // PRAGMA: process
-+(void)processSync:(UIImage*)image processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate scale:(CGFloat)scale;
-+(void)process:(UIImage*)image processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
-+(void)processFromFile:(NSString*)src processes:(NSString*)processes options:(NSString*)options delegate:(id<CompletionDelegate>)delegate;
++(void)processSync:(UIImage*_Nonnull)image processes:(NSString*_Nonnull)processes options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate scale:(CGFloat)scale;
++(void)process:(UIImage*_Nonnull)image processes:(NSString*_Nonnull)processes options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
++(void)processFromFile:(NSString*_Nonnull)src processes:(NSString*_Nonnull)processes options:(NSString*_Nullable)options delegate:(id<CompletionDelegate>_Nonnull)delegate;
 @end
