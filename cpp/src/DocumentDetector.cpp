@@ -441,13 +441,13 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
 
     // Left page ROI
     if (gutterX > minWidth) {
-        result.leftPage = Rect(0, 0, gutterX, input.rows);
+        result.leftPage = cv::Rect(0, 0, gutterX, input.rows);
         result.hasLeft = true;
     }
 
     // Right page ROI
     if (width - gutterX > minWidth) {
-        result.rightPage = Rect(gutterX, 0, width - gutterX, input.rows);
+        result.rightPage = cv::Rect(gutterX, 0, width - gutterX, input.rows);
         result.hasRight = true;
     }
 

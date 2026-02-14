@@ -69,8 +69,8 @@ namespace detector {
         };
 
         struct PageSplitResult {
-            Rect leftPage;
-            Rect rightPage;
+            cv::Rect leftPage;
+            cv::Rect rightPage;
             bool hasLeft = false;
             bool hasRight = false;
             int gutterX = -1;
