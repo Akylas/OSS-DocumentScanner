@@ -375,6 +375,13 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
 {
     CV_Assert(!input.empty());
 
+    // Gutter detection parameters
+    const float GUTTER_SEARCH_MIN_RATIO = 0.30f;  // Search starts at 30% of width
+    const float GUTTER_SEARCH_MAX_RATIO = 0.70f;  // Search ends at 70% of width
+    const float GUTTER_STDDEV_THRESHOLD = 0.5f;   // Multiplier for max energy threshold
+    const float MIN_VARIATION_RATIO = 0.15f;      // Minimum variation for book detection
+    const float VALLEY_SIGNIFICANCE = 0.3f;       // Minimum valley depth relative to stddev
+
     Mat gray;
     if (input.channels() == 3)
         cvtColor(input, gray, COLOR_BGR2GRAY);
@@ -430,8 +437,8 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
 
     // Find gutter near center (avoid edges)
     int width = input.cols;
-    int searchMin = width * 0.30;  // Increased from 0.25 to be more centered
-    int searchMax = width * 0.70;  // Decreased from 0.75 to be more centered
+    int searchMin = width * GUTTER_SEARCH_MIN_RATIO;
+    int searchMax = width * GUTTER_SEARCH_MAX_RATIO;
 
     int gutterX = -1;
     float bestScore = FLT_MAX;
@@ -475,15 +482,15 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
         
         // Reject if the energy is too high relative to mean (likely book border)
         // Gutter should be below mean, not way above it
-        bool notTooHigh = smoothEnergy[gutterX] < (meanEnergy + stdDev * 0.5);
+        bool notTooHigh = smoothEnergy[gutterX] < (meanEnergy + stdDev * GUTTER_STDDEV_THRESHOLD);
         
         // Reject if image has very low variation (uniform = not a book)
         // Need at least some variation for a book fold to be meaningful
-        bool hasVariation = stdDev > (meanEnergy * 0.15);
+        bool hasVariation = stdDev > (meanEnergy * MIN_VARIATION_RATIO);
         
         // Also check that neighbors are significantly higher (clear valley)
         float avgNeighbor = (leftAvg + rightAvg) / 2.0f;
-        bool significantValley = (avgNeighbor - smoothEnergy[gutterX]) > (stdDev * 0.3);
+        bool significantValley = (avgNeighbor - smoothEnergy[gutterX]) > (stdDev * VALLEY_SIGNIFICANCE);
         
         isValidGutter = isLocalMinimum && notTooHigh && hasVariation && significantValley;
     }
