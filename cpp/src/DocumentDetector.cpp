@@ -407,15 +407,15 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
         energy[i] = columnEnergy.at<float>(0, i);
 
     // Calculate mean and std dev to detect if this is likely a book
-    float meanEnergy = 0;
-    for (float e : energy)
-        meanEnergy += e;
-    meanEnergy /= energy.size();
-    
-    float variance = 0;
-    for (float e : energy)
-        variance += (e - meanEnergy) * (e - meanEnergy);
-    variance /= energy.size();
+    // Using single-pass algorithm for efficiency
+    float sum = 0;
+    float sumOfSquares = 0;
+    for (float e : energy) {
+        sum += e;
+        sumOfSquares += e * e;
+    }
+    float meanEnergy = sum / energy.size();
+    float variance = (sumOfSquares / energy.size()) - (meanEnergy * meanEnergy);
     float stdDev = sqrt(variance);
 
     // Smooth energy to avoid local noise spikes
@@ -444,7 +444,6 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
     float bestScore = FLT_MAX;
 
     // Look for MINIMUM gradient (gutter/fold is typically low gradient)
-    // but reject if it's TOO low (no variation suggests no book)
     for (int i = searchMin; i < searchMax; i++) {
         if (smoothEnergy[i] < bestScore) {
             bestScore = smoothEnergy[i];
@@ -452,10 +451,11 @@ DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const M
         }
     }
 
-    // Validate the gutter detection
+    // Validate the gutter detection with multiple criteria:
     // 1. Check if detected gutter is actually a local minimum (valley, not peak)
     // 2. Reject if energy is too high (strong edge = likely book border, not gutter)
     // 3. Reject if the image has very uniform energy (not a book)
+    // 4. Reject if variation is too low (no clear valley)
     
     bool isValidGutter = false;
     
