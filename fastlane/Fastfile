@@ -244,7 +244,7 @@ lane :build_flavor do |params|
     when 'github'
       set_github_release(
         repository_name: repository_name,
-        api_bearer: ENV["GH_TOKEN"],
+        api_bearer: ENV["GITHUB_TOKEN"],
         name: "#{app_name}(#{platform}): v#{version} Build #{versionCode}",
         tag_name: tag,
         description: changelog,
@@ -272,7 +272,7 @@ lane :build_flavor do |params|
           changelog = get_changelog(platform:platform, flavor:flavor, format:'github', commit_url:commit_url)
           set_github_release(
             repository_name: repository_name,
-            api_bearer: ENV["GH_TOKEN"],
+            api_bearer: ENV["GITHUB_TOKEN"],
             name: "#{app_name}(#{platform}): v#{version} Build #{versionCode}",
             tag_name: tag,
             description: changelog,
