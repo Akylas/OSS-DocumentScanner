@@ -123,9 +123,10 @@ void gamma(const cv::Mat &img, const cv::Mat &res, double gammaValue)
 {
     double iGamma = 1.0 / gammaValue;
     cv::Mat lut(1, 256, CV_8U);
+    uchar* lutData = lut.ptr<uchar>(0);
     for (int i = 0; i < 256; ++i)
     {
-        lut.at<uchar>(i) = static_cast<uchar>(pow(i / 255.0, iGamma) * 255);
+        lutData[i] = static_cast<uchar>(pow(i / 255.0, iGamma) * 255.0 + 0.5);
     }
     cv::LUT(img, lut, res);
 }
