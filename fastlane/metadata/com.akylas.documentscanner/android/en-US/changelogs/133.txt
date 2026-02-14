@@ -1,0 +1,9 @@
+Features:
+- full pkpass support. You can import/view/export pkpass
+
+Bug fixes:
+- revert ui-image as it causes issues with users
+- trying to prevent error after sdcard permission issue
+- sort documents fix
+- camera icon for add button in document view
+- long press on import button will open gallery
