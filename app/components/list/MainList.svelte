@@ -882,7 +882,8 @@
     }
 
     async function showImageExportPopover(event) {
-        return showImagePopoverMenu(await getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
+        const selection = await getSelectedPagesAndPossibleSingleDocument()
+        return showImagePopoverMenu(selection[0], event.object, { vertPos: VerticalPosition.ABOVE });
     }
 
     function getSelectionToolbarOptions() {
@@ -929,7 +930,8 @@
                     }
                     break;
                 case 'share':
-                    result = await showImagePopoverMenu(await getSelectedPagesAndPossibleSingleDocument()[0], event.object, { vertPos: VerticalPosition.ABOVE });
+                    const selection = await getSelectedPagesAndPossibleSingleDocument()
+                    result = await showImagePopoverMenu( selection[0], event.object, { vertPos: VerticalPosition.ABOVE });
                     if (result) {
                         unselectAll();
                     }
