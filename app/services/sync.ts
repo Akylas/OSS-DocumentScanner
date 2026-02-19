@@ -62,6 +62,13 @@ export const SERVICES_SYNC_TITLES: { [key in SYNC_TYPES]: string } = {
 
 export interface SyncStateEventData extends EventData {
     state: 'finished' | 'running';
+    progress?: {
+        type: 'data' | 'image' | 'pdf';
+        current: number;
+        total: number;
+        documentId?: string;
+        documentName?: string;
+    };
 }
 export interface SyncEnabledEventData extends EventData {
     enabled: boolean;

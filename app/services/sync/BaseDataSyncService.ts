@@ -20,4 +20,9 @@ export abstract class BaseDataSyncService extends BaseSyncService {
     abstract putFileContents(relativePath: string, localFilePath: string, options?): Promise<any>;
     abstract putFileContentsFromData(relativePath: string, data: string, options?): Promise<any>;
     abstract deleteFile(relativePath: string): Promise<any>;
+
+    // Methods for .valid marker file
+    abstract createValidMarker(documentId: string): Promise<void>;
+    abstract hasValidMarker(documentId: string): Promise<boolean>;
+    abstract removeValidMarker(documentId: string): Promise<void>;
 }
