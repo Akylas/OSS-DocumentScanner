@@ -17,10 +17,10 @@ class PDFExportWorker extends BaseWorker {
         }
     }
 
-    async export(id, type, { compress, filename, folder, pages }: { compress: boolean, filename: string, folder: string, pages: { page: OCRPage; document: OCRDocument }[] }) {
+    async export(id, type, { compress, filename, folder, pages }: { compress: boolean; filename: string; folder: string; pages: { page: OCRPage; document: OCRDocument }[] }) {
         try {
             const exporter = new PDFExportCanvas();
-            pages.forEach((d) => d.page = OCRPage.fromJSON(d.page));
+            pages.forEach((d) => (d.page = OCRPage.fromJSON(d.page)));
             // DEV_LOG && console.log(TAG, 'export', id, type, pages.length, folder, filename, compress);
             const filePath = await exporter.export({ pages, folder, filename, compress });
             // const filePath = 'test';
