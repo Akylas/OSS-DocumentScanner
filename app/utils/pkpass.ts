@@ -465,7 +465,7 @@ export async function pkpassToImage(
         height: height ? Utils.layout.toDevicePixels(height) : undefined
     });
     const result = new ImageSource(canvas.getImage());
-    DEV_LOG && console.log('pkpassToImage', width, canvas.getWidth(), result.width, result.height);
+    // DEV_LOG && console.log('pkpassToImage', width, canvas.getWidth(), result.width, result.height);
     // const paint = new Paint();
     // paint.color = 'black'
     // canvas.drawText("test", 0, 4, 20,60, paint)
@@ -498,7 +498,7 @@ export async function renderPKPassToCanvas(
     // Calculate dimensions based on layout
     const baseWidth = 1100;
     const scaleFactor = width / baseWidth;
-    DEV_LOG && console.log('renderPKPassToCanvas', width, scaleFactor);
+    // DEV_LOG && console.log('renderPKPassToCanvas', width, scaleFactor);
 
     // Credit card aspect ratio: 1.586:1
     const cardHeight = Math.round(width / CARD_RATIO);
@@ -835,7 +835,7 @@ async function renderFullLayout({
     const staticLayoutsToDraw = [];
     const svgsToDraw = [];
     let y = padding;
-    DEV_LOG && console.log('renderFullLayout', canvasWidth);
+    // DEV_LOG && console.log('renderFullLayout', canvasWidth);
     if (background2x && style === PKPassStyle.EventTicket) {
         const bgImage = await loadImage(background2x, { width: canvasWidth });
         imagesToDraw.push({ image: bgImage, x: 0, y: 0, width: '100%', height: '100%' });
@@ -1133,8 +1133,7 @@ async function renderFullLayout({
     for (let i = 0; i < imagesToDraw.length; i++) {
         const imageData = imagesToDraw[i];
         const imageSource = imageData.image;
-        DEV_LOG && console.log('draw image', imageSource);
-        const srcRect = new Rect(0, 0, imageSource.width, imageSource.height);
+        // const srcRect = new Rect(0, 0, imageSource.width, imageSource.height);
         let scale = 1;
         let width = imageSource.width;
         if (imageData.width) {
@@ -1154,13 +1153,14 @@ async function renderFullLayout({
                 scale = height / imageSource.height;
             }
         }
+        // DEV_LOG && console.log('draw image', imageSource, imageSource.width, imageSource.height,scale , imageData.height );
         const dstRect = new Rect(
             imageData.rightAligned ? imageData.x - imageSource.width * scale : imageData.x,
             imageData.y,
             imageData.rightAligned ? imageData.x : imageData.x + imageSource.width * scale,
             imageData.y + imageSource.height * scale
         );
-        canvas.drawBitmap(imageSource, srcRect, dstRect, imagePaint);
+        canvas.drawBitmap(imageSource, null, dstRect, imagePaint);
     }
     for (let i = 0; i < staticLayoutsToDraw.length; i++) {
         const staticLayoutData = staticLayoutsToDraw[i];
@@ -1321,10 +1321,11 @@ function addFieldGroup(
 ): number {
     const y = startY;
     const fieldWidth = (canvasWidth - 2 * padding - (fields.length - 1) * fieldSpacing * scaleFactor) / fields.length;
-    DEV_LOG && console.log('addFieldGroup', canvasWidth, padding, fieldSpacing, fields.length, fieldWidth);
     let x = startX;
     let deltaY = 0;
     (horizontalAlignment === 'right' ? fields.reverse() : fields).forEach((field, index) => {
+        const paint = new Paint();
+        paint.fontWeight = '500';
         const topText = createNativeAttributedString({
             spans: [
                 {
@@ -1345,21 +1346,22 @@ function addFieldGroup(
         let textAlignment = LayoutAlignment.ALIGN_NORMAL;
         let deltaX = 0;
         if (field.textAlignment === 'PKTextAlignmentRight') {
-            fieldsPaint.setTextAlign(Align.RIGHT);
+            paint.setTextAlign(Align.RIGHT);
             if (horizontalAlignment !== 'right') {
                 deltaX += fieldWidth;
             }
             // textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
         } else if (field.textAlignment === 'PKTextAlignmentCenter') {
-            // fieldsPaint.setTextAlign(Align.CENTER);
+            // paint.setTextAlign(Align.CENTER);
             textAlignment = LayoutAlignment.ALIGN_CENTER;
         } else {
-            fieldsPaint.setTextAlign(Align.LEFT);
+            paint.setTextAlign(Align.LEFT);
         }
-        // if (horizontalAlignment === 'right') {
-        //     textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
-        // }
-        const staticLayout = new StaticLayout(topText, fieldsPaint, fieldWidth, textAlignment, 1, 0, true);
+        // DEV_LOG && console.log('addFieldGroup', field.label, field.textAlignment, horizontalAlignment, canvasWidth, padding, fieldSpacing, fields.length, fieldWidth);
+        if (__IOS__ && horizontalAlignment === 'right') {
+            paint.setTextAlign(Align.RIGHT);
+        }
+        const staticLayout = new StaticLayout(topText, paint, fieldWidth, textAlignment, 1, 0, true);
         const actualWidth = staticLayout.getActualWidth();
         // if (horizontalAlignment === 'right') {
         //     deltaX -= actualWidth;

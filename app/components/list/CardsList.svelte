@@ -261,7 +261,7 @@
     //         lang: getActualLanguage(),
     //         width: screenWidthDips,
     //         layout: 'full',
-    //         includeBackFields: false
+    //         includeBackFields: true
     //     })
     //         .then((img) => (pkPassTestImage = img))
     //         .catch((err) => console.error(err, err.stack));
