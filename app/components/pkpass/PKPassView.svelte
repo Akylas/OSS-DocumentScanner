@@ -21,8 +21,8 @@
     export let barcodeSvg: string = null;
     let mainGrid: NativeViewElementNode<GridLayout>;
 
-    let { colorOnBackground, colorSurface, colorSurfaceContainerHigh } = $colors;
-    $: ({ colorOnBackground, colorSurface, colorSurfaceContainerHigh } = $colors);
+    let { colorOnBackground, colorOnSurface, colorSurface, colorSurfaceContainerHigh } = $colors;
+    $: ({ colorOnBackground, colorOnSurface, colorSurface, colorSurfaceContainerHigh } = $colors);
 
     const passData = pkpass.passData;
     const passStyle = pkpass.getPassStyle();
@@ -268,19 +268,20 @@
 
             <!-- Expiration/Relevant date info -->
             {#if passData.expirationDate}
-                <stacklayout backgroundColor={colorSurfaceContainerHigh} borderRadius={8} marginTop={16} padding={12}>
-                    <label
-                        color={pkpass.isExpired() ? '#ff5252' : foregroundColor}
-                        fontSize="12"
-                        text={pkpass.isExpired() ? lc('pkpass_expired') : lc('pkpass_expires_at', new Date(passData.expirationDate).toLocaleDateString())}
-                        textAlignment="center" />
-                </stacklayout>
+                <label
+                    backgroundColor={colorSurfaceContainerHigh}
+                    borderRadius={8}
+                    color={pkpass.isExpired() ? '#ff5252' : colorOnSurface}
+                    fontSize={15}
+                    fontWeight="bold"
+                    marginTop={16}
+                    padding={12}
+                    text={pkpass.isExpired() ? lc('pkpass_expired') : lc('pkpass_expires_at', new Date(passData.expirationDate).toLocaleDateString())}
+                    textAlignment="center" />
             {/if}
 
             {#if pkpass.isVoided()}
-                <stacklayout backgroundColor="#ff5252" borderRadius={8} marginTop={8} padding={12}>
-                    <label color="#ffffff" fontSize={14} fontWeight="bold" text={lc('pkpass_voided')} textAlignment="center" />
-                </stacklayout>
+                <label backgroundColor="#ff5252" borderRadius={8} color="#ffffff" fontSize={15} fontWeight="bold" marginTop={8} padding={12} text={lc('pkpass_voided')} textAlignment="center" />
             {/if}
         </stacklayout>
     </scrollview>

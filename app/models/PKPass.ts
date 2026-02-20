@@ -140,8 +140,8 @@ export class PKPass extends Observable {
     images: PKPassImages;
 
     // Storage paths
-    passJsonPath?: string;
-    imagesPath?: string;
+    // passJsonPath?: string;
+    // imagesPath?: string;
 
     // Metadata
     createdDate: number;
@@ -327,8 +327,8 @@ export class PKPass extends Observable {
         Object.assign(pass, {
             passData: typeof jsonObj.passData === 'string' ? JSON.parse(jsonObj.passData) : jsonObj.passData,
             images: typeof jsonObj.images === 'string' ? JSON.parse(jsonObj.images) : jsonObj.images,
-            passJsonPath: jsonObj.passJsonPath,
-            imagesPath: jsonObj.imagesPath,
+            // passJsonPath: jsonObj.passJsonPath,
+            // imagesPath: jsonObj.imagesPath,
             createdDate: jsonObj.createdDate,
             modifiedDate: jsonObj.modifiedDate
         });
@@ -341,8 +341,8 @@ export class PKPass extends Observable {
             page_id: this.page_id,
             passData: this.passData,
             images: this.images,
-            passJsonPath: this.passJsonPath,
-            imagesPath: this.imagesPath,
+            // passJsonPath: this.passJsonPath,
+            // imagesPath: this.imagesPath,
             createdDate: this.createdDate,
             modifiedDate: this.modifiedDate
         };

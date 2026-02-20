@@ -1,20 +1,17 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Canvas, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { Paint } from '@nativescript-community/ui-canvas';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ApplicationSettings, ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, StackLayout } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import dayjs from 'dayjs';
-    import { filesize } from 'filesize';
     import { onMount } from 'svelte';
-    import { Template } from '@nativescript-community/svelte-native/components';
     import { Writable, writable } from 'svelte/store';
     import { DocFolder, OCRDocument } from '~/models/OCRDocument';
     import { CARD_RATIO, DEFAULT_NB_COLUMNS, DEFAULT_NB_COLUMNS_LANDSCAPE, SETTINGS_NB_COLUMNS, SETTINGS_NB_COLUMNS_LANDSCAPE } from '~/utils/constants';
-    import { goToDocumentAfterScan, importImageFromCamera, timeout } from '~/utils/ui';
+    import { goToDocumentAfterScan, importImageFromCamera } from '~/utils/ui';
     import { colors, fontScale, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import MainList, { Item } from './MainList.svelte';
 
@@ -24,10 +21,9 @@
 
 <script lang="ts">
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import CardListCell from './CardListCell.svelte';
-    import { documentHasPKPassData, pkpassToImage, renderPKPassToCanvas } from '~/utils/pkpass';
-    import { share } from '@akylas/nativescript-app-utils/share';
-    import { getActualLanguage } from '~/helpers/lang';
+    import { documentHasPKPassData, pkpassToImage } from '~/utils/pkpass';
+    import CardListCell from '~/components/list/CardListCell.svelte';
+    import { getActualLanguage } from '@shared/helpers/lang';
 
     let { colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors;
     $: ({ colorOnBackground, colorOnPrimary, colorOnSurfaceVariant, colorSurface } = $colors);
@@ -265,7 +261,7 @@
     //         lang: getActualLanguage(),
     //         width: screenWidthDips,
     //         layout: 'full',
-    //         includeBackFields: true
+    //         includeBackFields: false
     //     })
     //         .then((img) => (pkPassTestImage = img))
     //         .catch((err) => console.error(err, err.stack));
@@ -442,10 +438,10 @@
         bind:this={canvastest}
         slot="test"
         backgroundColor="red"
+        margin={40}
         row={2}
         src={pkPassTestImage}
         stretch="aspectFit"
         verticalAlignment="top"
-        width="100%"
         on:tap={() => (canvastest.nativeView.visibility = 'hidden')} /> -->
 </MainList>

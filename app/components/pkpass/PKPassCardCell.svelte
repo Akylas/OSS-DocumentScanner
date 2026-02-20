@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { Color, path } from '@nativescript/core';
-    import { PKPass, PKPassData, PKPassField, PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
-    import { colors } from '~/variables';
-    import { Item } from '../list/MainList.svelte';
     import { lang } from '~/helpers/locale';
+    import { PKPass, PKPassData, PKPassField, PKPassStructure, PKPassTransitType } from '~/models/PKPass';
     import { getFieldTextAlignment, getTransitIcon } from '~/utils/pkpass';
+    import { colors } from '~/variables';
+    import { Item } from '~/components/list/MainList.svelte';
 
     const FIELD_LINE_HEIGHT = 15;
 

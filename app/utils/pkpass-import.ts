@@ -1,12 +1,10 @@
-import { File, Folder, Utils, knownFolders, path } from '@nativescript/core';
-import { DocFolder, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
-import { PKPass } from '~/models/PKPass';
-import { DocumentAddedEventData, documentsService } from '~/services/documents';
-import { extractAndParsePKPassFile, getPKPassDisplayName, getPKPassPrimaryImage } from '~/utils/pkpass';
-import { getFormatedDateForFilename } from '~/utils/utils.common';
-import { DOCUMENT_NAME_FORMAT, EVENT_DOCUMENT_ADDED, SETTINGS_DOCUMENT_NAME_FORMAT } from '~/utils/constants';
-import { ApplicationSettings, ImageSource } from '@nativescript/core';
+import { ApplicationSettings, File, Folder, Utils, knownFolders, path } from '@nativescript/core';
 import { doInBatch } from '@shared/utils/batch';
+import type { DocFolder, OCRDocument, OCRPage, PageData } from '~/models/OCRDocument';
+import { DocumentAddedEventData, documentsService } from '~/services/documents';
+import { DOCUMENT_NAME_FORMAT, EVENT_DOCUMENT_ADDED, SETTINGS_DOCUMENT_NAME_FORMAT } from '~/utils/constants';
+import { extractAndParsePKPassFile, getPKPassDisplayName } from '~/utils/pkpass';
+import { getFormatedDateForFilename } from '~/utils/utils.common';
 import { copyFolderContent } from './file';
 
 /**
@@ -16,7 +14,6 @@ import { copyFolderContent } from './file';
  * @returns Created document with PKPass data
  */
 export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): Promise<OCRDocument> {
-
     if (!File.exists(pkpassPath)) {
         throw new Error(`PKPass file not found: ${pkpassPath}`);
     }
@@ -60,8 +57,8 @@ export async function importPKPassFile(pkpassPath: string, folder?: DocFolder): 
         // Update pass paths
         pass.id = pageId + '_pkpass';
         pass.page_id = pageId;
-        pass.passJsonPath = path.join(pkpassFolder.path, 'pass.json');
-        pass.imagesPath = pkpassFolder.path;
+        // pass.passJsonPath = path.join(pkpassFolder.path, 'pass.json');
+        // pass.imagesPath = pkpassFolder.path;
 
         // Update images paths
         if (pass.images) {
@@ -184,8 +181,8 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
             // Update pass paths
             pass.id = pageId + '_pkpass';
             pass.page_id = pageId;
-            pass.passJsonPath = path.join(pkpassFolder.path, 'pass.json');
-            pass.imagesPath = pkpassFolder.path;
+            // pass.passJsonPath = path.join(pkpassFolder.path, 'pass.json');
+            // pass.imagesPath = pkpassFolder.path;
 
             // Update images paths
             if (pass.images) {
@@ -199,6 +196,7 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
 
             // Save PKPass to database
             const pkPassObj = await documentsService.pkpassRepository.createPKPass(pass);
+            Object.keys(pkPassObj.images).map((key) => (pkPassObj.images[key] = path.join(pkpassFolder.path, pkPassObj.images[key])));
             DEV_LOG && console.log('PKPass added to document', document.id, 'page', pageId);
 
             // Add page to document
@@ -209,7 +207,7 @@ export async function importPKPassFiles(pkpassPaths: string[], folder?: DocFolde
                 },
                 document.pages.length,
                 (page: OCRPage) => {
-                    page.pkpass = pass;
+                    page.pkpass = pkPassObj;
                 },
                 false
             );
