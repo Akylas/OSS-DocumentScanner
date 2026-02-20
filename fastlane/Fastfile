@@ -310,7 +310,7 @@ lane :get_changelog  do |params|
   changelogFormat = params[:format] ||  flavor == 'github' ? 'github' : 'plain'
   ignoredScopes = [platform == "ios" ? 'android' : 'ios']
   if (ignore_app_scope)
-    ignoredScopes.push(ignore_app_scope)
+    ignoredScopes.push(*ignore_app_scope.split(/[,]/))
   end
   display_links = changelogFormat != 'plain'
   puts "get_changelog "+  platform + " "+ flavor + " " + commit_url
