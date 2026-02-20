@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=23dfdf&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=4a6cad&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.51.4"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,16 +81,19 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.53.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/27da4f19633bded9d3117dbba117e0babde294c1f7e9ae9a2029f72daa17332f634ac9ead4d09d56521db55dc251cd323021d568c0c50999bfed811201640be1
+  checksum: 10/ba419fce19d1af5f90804d5dc5079fbb23fa8ad97a4f6a0487b75685fd114561f7647b6f67f8fcce0d0a3f86689976f6c54e18822ed8a4db86c5edd0fa160b48
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-app-utils@npm:2.2.7":
-  version: 2.2.7
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.7"
+"@akylas/nativescript-app-utils@npm:2.2.8":
+  version: 2.2.8
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.8"
   dependencies:
+    "@nativescript-community/https": "npm:4.1.27"
+    "@nativescript-community/l": "npm:4.3.10"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
-  checksum: 10/1ee6a61182475333e9cd6b37d0455eec0d1671c5dac8ca6958a5dadce22b9bcd7f1d0158e8a0e0228c6e8d919153275cf7233d9081f7995bb72c6ad24c1d343e
+    make-error: "npm:1.3.6"
+  checksum: 10/c97be690418a0f89f18273951331b859403c8fcdd8d37b6e713262242aa4809b733a7bff6b117ac164ec80f9af485eccba13ea55c8c1265dc1bcea7cab43eee1
   languageName: node
   linkType: hard
 
@@ -10247,7 +10250,7 @@ __metadata:
     "@akylas/nativescript": "npm:8.9.13"
     "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "file:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.7"
+    "@akylas/nativescript-app-utils": "npm:2.2.8"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:8.9.6"

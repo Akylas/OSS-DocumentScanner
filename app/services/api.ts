@@ -2,11 +2,11 @@ import * as https from '@nativescript-community/https';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { HTTPError, NoNetworkError, wrapNativeHttpException } from '@shared/utils/error';
+import { HTTPError, NoNetworkError, wrapNativeHttpException } from '@akylas/nativescript-app-utils/error';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
 export type { Headers } from '@nativescript-community/https';
-export { wrapNativeHttpException } from '@shared/utils/error';
+export { wrapNativeHttpException } from '@akylas/nativescript-app-utils/error';
 
 export const NetworkConnectionStateEvent = 'connected';
 export interface NetworkConnectionStateEventData extends EventData {

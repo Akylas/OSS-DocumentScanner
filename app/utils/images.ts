@@ -5,7 +5,9 @@ export async function loadImage(imagePath, loadOptions: { width?; height?; resiz
     if (__IOS__) {
         return new ImageSource(ImageUtils.readImageFromFileSync(imagePath, JSON.stringify(loadOptions)));
     } else {
-        return new ImageSource(com.akylas.documentscanner.utils.ImageUtil.Companion.readBitmapFromFile(Utils.android.getApplicationContext(), imagePath, JSON.stringify(loadOptions)));
+        const result = new ImageSource(com.akylas.documentscanner.utils.ImageUtil.Companion.readBitmapFromFile(Utils.android.getApplicationContext(), imagePath, JSON.stringify(loadOptions)));
+        DEV_LOG && console.log('loadImage', imagePath, result);
+        return result;
     }
     // const asset = new ImageAsset(imagePath);
     // asset.options = { autoScaleFactor: false, keepAspectRatio: true, width: Math.round(reqWidth), height: Math.round(reqHeight) };

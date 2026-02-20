@@ -1,5 +1,5 @@
 import { share } from '@akylas/nativescript-app-utils/share';
-import { request } from '@nativescript-community/perms';
+import { MultiResult, Permissions, Status, isPermResultAuthorized, openSettings, request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -29,7 +29,7 @@ import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { doInBatch } from '@shared/utils/batch';
-import { SilentError } from '@shared/utils/error';
+import { IgnoreError, PermissionError, SilentError } from '@akylas/nativescript-app-utils/error';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
@@ -102,7 +102,7 @@ import { recycleImages } from '~/utils/images';
 import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { cleanFilename, requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { cleanFilename, saveImage } from '../utils';
 import { importPKPassFiles } from '~/utils/pkpass-import';
 import { zip } from 'plugin-zip';
 
@@ -143,7 +143,8 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
         if (CARD_APP && pkpasses.length) {
-            return importPKPassFromUris({ uris: pkpasses, canGoToView: true });
+            await importPKPassFromUris({ uris: pkpasses, canGoToView: true });
+            return;
         }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
@@ -2149,7 +2150,54 @@ export async function importPKPassFromUris({ canGoToView = true, uris }: { uris:
         } catch (error) {
             showError(error);
         } finally {
+            DEV_LOG && console.log('importPKPassFromUris finally');
             hideLoading();
         }
     }
+}
+
+export function isPermResultNeverAskAgain(r: MultiResult | Status) {
+    const statusCheck = __IOS__ ? Status.Denied : Status.NeverAskAgain;
+    if (typeof r === 'object') {
+        const denied = Object.keys(r).some((s) => r[s] === statusCheck);
+        return denied;
+    }
+    return r === statusCheck;
+}
+
+export async function requestPermission(perm: Permissions, errorMessage: string) {
+    const result = await request(perm);
+    if (isPermResultNeverAskAgain(result)) {
+        const showSetting = await confirm({
+            title: lc('permission_denied'),
+            message: errorMessage,
+            iosForceClosePresentedViewController: true, //ensure error popup is always showing
+            okButtonText: l('open_settings'),
+            cancelButtonText: l('cancel')
+        });
+        if (showSetting) {
+            await openSettings();
+        } else {
+            throw new IgnoreError();
+        }
+    } else if (!isPermResultAuthorized(result)) {
+        throw new PermissionError(errorMessage);
+    }
+}
+
+export async function requestCameraPermission() {
+    return requestPermission('camera', lc('camera_permission_needed'));
+}
+
+export async function requestStoragePermission() {
+    if (__ANDROID__ && SDK_VERSION <= 29) {
+        return requestPermission('storage', lc('storage_permission_needed'));
+    }
+}
+
+export async function requestPhotoPermission() {
+    return requestPermission('photo', lc('media_library_permission_needed'));
+}
+export async function requestGalleryPermission() {
+    return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
 }

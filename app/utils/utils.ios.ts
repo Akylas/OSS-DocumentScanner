@@ -1,7 +1,7 @@
 import { wrapNativeException } from '@nativescript/core/utils';
 import { File, ImageSource, path } from '@nativescript/core';
 import { lc } from '@nativescript-community/l';
-import { PermissionError } from '@shared/utils/error';
+import { PermissionError } from '@akylas/nativescript-app-utils/error';
 
 export * from './utils.common';
 

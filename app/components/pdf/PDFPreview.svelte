@@ -7,7 +7,7 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { ApplicationSettings, ObservableArray, Utils, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
-    import { SilentError } from '@shared/utils/error';
+    import { SilentError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { printPDF } from 'plugin-nativeprocessor';
     import { Template } from '@nativescript-community/svelte-native/components';

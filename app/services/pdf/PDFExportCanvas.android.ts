@@ -1,10 +1,8 @@
-import { Canvas } from '@nativescript-community/ui-canvas/canvas';
-import { Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { IMG_COMPRESS, PDF_EXT } from '~/utils/constants';
-import { recycleImages } from '~/utils/images';
-import PDFExportCanvasBase from './PDFExportCanvas.common';
-import { PDFExportOptions } from './PDFCanvas';
+import { Screen, Utils, knownFolders } from '@nativescript/core';
+import { PDF_EXT } from '~/utils/constants';
 import { getColorMatrix } from '~/utils/matrix';
+import { PDFExportOptions } from './PDFCanvas';
+import PDFExportCanvasBase from './PDFExportCanvas.common';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
     async export({ compress = false, filename = Date.now() + PDF_EXT, folder = knownFolders.temp().path, pages }: PDFExportOptions) {

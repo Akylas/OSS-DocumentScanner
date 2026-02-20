@@ -2,7 +2,7 @@ import BaseWorkerHandler from '@akylas/nativescript-app-utils/worker/BaseWorkerH
 import { lc } from '@nativescript-community/l';
 import { ApplicationSettings, EventData } from '@nativescript/core';
 import { debounce } from '@nativescript/core/utils';
-import { CustomError } from '@shared/utils/error';
+import { CustomError } from '@akylas/nativescript-app-utils/error';
 import { showError } from '@shared/utils/showError';
 import { writable } from 'svelte/store';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';

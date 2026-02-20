@@ -1,8 +1,7 @@
-import '@nativescript/core/globals';
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
-import { getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
-import { DocumentsService } from '~/services/documents';
+import { setDocumentsService } from '~/models/OCRDocument';
 import { BackupService } from '~/services/backup';
+import { DocumentsService } from '~/services/documents';
 
 const context: Worker = self as any;
 
@@ -37,6 +36,7 @@ export default class BackupWorker extends BaseWorker {
         try {
             switch (data.type) {
                 case 'createBackup':
+                    DEV_LOG && console.log(TAG, 'createBackup');
                     await this.handleStart(event);
                     const backupPath = await BackupService.createBackup(documentsService, data.messageData.zipPath);
                     (global as any).postMessage({ id: data.id, messageData: backupPath });

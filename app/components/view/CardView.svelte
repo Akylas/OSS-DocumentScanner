@@ -61,8 +61,19 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { documentHasPKPassData } from '~/utils/pkpass';
-    import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
-    import { requestCameraPermission } from '~/utils/utils.common';
+    import {
+        detectOCR,
+        importAndScanImage,
+        importImageFromCamera,
+        onBackButton,
+        pickColor,
+        requestCameraPermission,
+        showImagePopoverMenu,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        showSnack,
+        transformPages
+    } from '~/utils/ui';
     import { colors, fontScale, hasCamera, isLandscape, onFontScaleChanged, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';

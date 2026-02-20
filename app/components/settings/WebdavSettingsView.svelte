@@ -8,7 +8,7 @@
     import { colors } from '~/variables';
     import { AuthType } from '~/webdav';
     import RemoteFolderTextField from '../common/RemoteFolderTextField.svelte';
-    import { SilentError } from '@shared/utils/error';
+    import { SilentError } from '@akylas/nativescript-app-utils/error';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 

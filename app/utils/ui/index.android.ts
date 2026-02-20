@@ -5,8 +5,7 @@ import { showError } from '@shared/utils/showError';
 import { Dayjs } from 'dayjs';
 import { documentsService } from '~/services/documents';
 import { securityService } from '~/services/security';
-import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, importPKPassFromUris, onStartCam } from './index.common';
-import { requestStoragePermission } from '../utils.common';
+import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, importPKPassFromUris, onStartCam, requestStoragePermission } from './index.common';
 import { ocrService } from '~/services/ocr';
 
 export * from './index.common';

@@ -9,7 +9,7 @@ import { networkService } from '~/services/api';
 import { WebdavSyncOptions } from '~/services/sync/Webdav';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { DOCUMENT_DATA_FILENAME } from '~/utils/constants';
-import { SilentError } from '@shared/utils/error';
+import { SilentError } from '@akylas/nativescript-app-utils/error';
 
 export interface WebdavDataSyncOptions extends BaseDataSyncServiceOptions, WebdavSyncOptions {}
 

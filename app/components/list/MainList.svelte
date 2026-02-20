@@ -537,7 +537,7 @@
         return getTotalNbDocuments() + folderItems.length;
     }
     function getDocumentsStartIndex() {
-        return 1; // 1 because the first the first item is actually the folders horizontal collectionview
+        return folderItems.length > 0 ? 1 : 0; // 1 because the first the first item is actually the folders horizontal collectionview
     }
     function unselectAll() {
         nbSelected = 0;
@@ -882,7 +882,7 @@
     }
 
     async function showImageExportPopover(event) {
-        const selection = await getSelectedPagesAndPossibleSingleDocument()
+        const selection = await getSelectedPagesAndPossibleSingleDocument();
         return showImagePopoverMenu(selection[0], event.object, { vertPos: VerticalPosition.ABOVE });
     }
 
@@ -930,8 +930,8 @@
                     }
                     break;
                 case 'share':
-                    const selection = await getSelectedPagesAndPossibleSingleDocument()
-                    result = await showImagePopoverMenu( selection[0], event.object, { vertPos: VerticalPosition.ABOVE });
+                    const selection = await getSelectedPagesAndPossibleSingleDocument();
+                    result = await showImagePopoverMenu(selection[0], event.object, { vertPos: VerticalPosition.ABOVE });
                     if (result) {
                         unselectAll();
                     }

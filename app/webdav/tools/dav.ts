@@ -4,7 +4,7 @@ import { decodeHTMLEntities } from './encode';
 import { encodePath, normalisePath } from './path';
 import { DAVResult, DAVResultPropstatResponse, DAVResultRaw, DAVResultResponse, DAVResultResponseProps, DiskQuotaAvailable, FileStat, SearchResult } from '../types';
 import { basename } from './path';
-import { HTTPError } from '@shared/utils/error';
+import { HTTPError } from '@akylas/nativescript-app-utils/error';
 import { SEPARATOR } from '~/utils/constants';
 
 enum PropertyType {

@@ -37,8 +37,7 @@
         getImageExportSettings
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
-    import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, showLoading, showSettings } from '~/utils/ui';
-    import { requestCameraPermission } from '~/utils/utils';
+    import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, requestCameraPermission, showLoading, showSettings } from '~/utils/ui';
     import { colors, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
 
     // technique for only specific properties to get updated on store change

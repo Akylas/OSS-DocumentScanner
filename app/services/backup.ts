@@ -5,7 +5,7 @@ import { basename } from '~/utils/path';
 import { unzip, zip } from 'plugin-zip';
 import { DocumentsService } from './documents';
 import { copyFolderContent } from '~/utils/file';
-import { DocFolder } from '~/models/OCRDocument';
+import type { DocFolder } from '~/models/OCRDocument';
 
 const BACKUP_FILENAME_PREFIX = `${__APP_ID__}_backup_`;
 

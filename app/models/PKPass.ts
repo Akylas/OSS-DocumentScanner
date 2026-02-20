@@ -1,6 +1,6 @@
 import { Observable } from '@nativescript/core';
+import { formatCurrency } from '@shared/helpers/format';
 import dayjs from 'dayjs';
-import { formatCurrency } from '~/helpers/locale';
 
 /**
  * PKPass model representing an Apple Wallet Pass

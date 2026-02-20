@@ -1,6 +1,6 @@
 import { HttpsRequestOptions, request } from '@nativescript-community/https';
 import { ApplicationSettings, File, Folder, Observable, Utils, knownFolders, path } from '@nativescript/core';
-import { NoNetworkError } from '@shared/utils/error';
+import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
 import { ocrDocumentFromFile } from 'plugin-nativeprocessor';
 import type { OCRDocument } from '~/models/OCRDocument';
 import { networkService, wrapNativeHttpException } from '~/services/api';
