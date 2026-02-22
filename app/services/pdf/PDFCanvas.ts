@@ -1,13 +1,14 @@
 import { DeviceContext } from '@nativescript-community/sentry/integrations';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
 import { ApplicationSettings, Screen, Utils } from '@nativescript/core';
-import { screenWidthDips } from '@shared/variables';
 import { getActualLanguage } from '@shared/helpers/lang';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
 import { renderPKPassToCanvas } from '~/utils/pkpass';
+
+const screenWidthDips = Screen.mainScreen.widthDIPs;
 
 export interface PDFExportBaseOptions {
     reduce_image_size: boolean;

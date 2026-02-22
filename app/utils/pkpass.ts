@@ -2,14 +2,15 @@ import { lc } from '@nativescript-community/l';
 import { createNativeAttributedString } from '@nativescript-community/text';
 import { Align, Canvas, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
 import { SVG } from '@nativescript-community/ui-svg/canvas';
-import { Color, File, Folder, ImageSource, PercentLength, Utils, path } from '@nativescript/core';
-import { screenWidthDips } from '@shared/variables';
+import { Color, File, Folder, ImageSource, PercentLength, Screen, Utils, path } from '@nativescript/core';
 import { generateQRCodeImage, getSVGFromQRCode, getSVGFromQRCodeSync } from 'plugin-nativeprocessor';
 import { unzip } from 'plugin-zip';
 import type { OCRDocument } from '~/models/OCRDocument';
 import { PKBarcodeFormat, PKPass, type PKPassBarcode, type PKPassData, type PKPassField, type PKPassImages, type PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
 import { CARD_RATIO } from './constants';
 import { loadImage, recycleImages } from './images';
+
+const screenWidthDips = Screen.mainScreen.widthDIPs;
 
 const PASS_JSON_FILE = 'pass.json';
 const IMAGE_FILES = [
