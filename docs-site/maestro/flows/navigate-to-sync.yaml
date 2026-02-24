@@ -1,0 +1,37 @@
+# Navigate to Sync/Backup settings
+# This flow navigates to the sync configuration screen
+
+appId: com.akylas.documentscanner
+
+---
+
+# First navigate to settings if not already there
+- runFlow:
+    file: navigate-to-settings.yaml
+    
+- waitForAnimationToEnd
+
+
+# Scroll down to find sync options if not visible
+- runFlow:
+    when:
+      notVisible:
+        text: ".*[Ss]ync.*"
+    commands:
+      - scroll
+      - waitForAnimationToEnd
+- runFlow:
+    when:
+      notVisible:
+        text: ".*[Ss]ync.*"
+    commands:
+      - scroll
+      - waitForAnimationToEnd
+# Look for sync/backup/cloud options
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]ync.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]ync.*"

@@ -1,0 +1,95 @@
+# Show Edit screen
+# This flow demonstrates the edit/enhance functionality
+# It first ensures a document exists, then navigates to the edit view
+
+appId: com.akylas.documentscanner
+
+---
+
+# First, ensure we have a document to edit
+- runFlow:
+    file: setup-test-document.yaml
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap on the first document to open it
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - tapOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Alternative: tap on any list item  
+- runFlow:
+    when:
+      visible:
+        id: ".*list.*item.*"
+    commands:
+      - tapOn:
+          id: ".*list.*item.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Tap on page thumbnail to open page view
+- runFlow:
+    when:
+      visible:
+        id: ".*page.*"
+    commands:
+      - tapOn:
+          id: ".*page.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Look for edit button
+- runFlow:
+    when:
+      visible:
+        id: ".*edit.*"
+    commands:
+      - tapOn:
+          id: ".*edit.*"
+      - waitForAnimationToEnd
+
+# Look for crop/adjust button
+- runFlow:
+    when:
+      visible:
+        id: ".*crop.*"
+    commands:
+      - tapOn:
+          id: ".*crop.*"
+      - waitForAnimationToEnd
+
+# Look for enhance/filter button
+- runFlow:
+    when:
+      visible:
+        id: ".*enhance.*"
+    commands:
+      - tapOn:
+          id: ".*enhance.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        id: ".*filter.*"
+    commands:
+      - tapOn:
+          id: ".*filter.*"
+      - waitForAnimationToEnd
+
+# Look for edit icon (pencil)
+- runFlow:
+    when:
+      visible: "✏️"
+    commands:
+      - tapOn: "✏️"
+      - waitForAnimationToEnd:
+          timeout: 3000

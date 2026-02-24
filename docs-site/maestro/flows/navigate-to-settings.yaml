@@ -1,0 +1,19 @@
+# Navigate to Settings screen
+# This flow navigates from the main screen to Settings
+
+appId: com.akylas.documentscanner
+
+---
+
+# Try to find and tap on settings/menu button
+# NativeScript apps may use different navigation patterns
+
+# Look for hamburger menu or settings icon
+- runFlow:
+    when:
+      visible:
+        id: ".*settings.*"
+    commands:
+      - tapOn:
+          id: ".*settings.*"
+

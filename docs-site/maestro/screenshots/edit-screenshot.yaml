@@ -1,0 +1,102 @@
+# Edit Screenshot
+# Run: maestro test docs-site/maestro/screenshots/edit-screenshot.yaml
+#
+# Prerequisites:
+# - Push test image to device first:
+#   adb push docs-site/maestro/test-document.png /sdcard/DCIM/test-document.png
+# - Or run ./docs-site/maestro/generate-screenshots.sh which handles this
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# First, ensure we have a document to edit
+# Run the setup-test-document flow to create one if needed
+- runFlow:
+    file: ../flows/setup-test-document.yaml
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Try to open a document if available (tap on first document in list)
+- runFlow:
+    when:
+      visible:
+        id: ".*document.*"
+    commands:
+      - tapOn:
+          id: ".*document.*"
+          index: 0
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Alternative: tap on any list item
+- runFlow:
+    when:
+      visible:
+        id: ".*list.*"
+    commands:
+      - tapOn:
+          id: ".*list.*"
+          index: 0
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Tap on page thumbnail to open edit view
+- runFlow:
+    when:
+      visible:
+        id: ".*page.*"
+    commands:
+      - tapOn:
+          id: ".*page.*"
+          index: 0
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Look for edit/crop button
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ee]dit.*"
+    commands:
+      - tapOn:
+          text: ".*[Ee]dit.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Cc]rop.*"
+    commands:
+      - tapOn:
+          text: ".*[Cc]rop.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ee]nhance.*"
+    commands:
+      - tapOn:
+          text: ".*[Ee]nhance.*"
+      - waitForAnimationToEnd
+
+# Look for filter options
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ff]ilter.*"
+    commands:
+      - tapOn:
+          text: ".*[Ff]ilter.*"
+      - waitForAnimationToEnd
+
+# Take screenshot
+- takeScreenshot: ../../static/img/edit-1
