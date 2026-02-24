@@ -16,5 +16,7 @@ struct WhitePaperTransformOptions {
     int dogSigma1 = 100.0;
     int dogSigma2 = 0.0;
 };
+
 void whiteboardEnhance(const cv::Mat &img, cv::Mat &dst, const std::string &optionsJson);
+
 #endif //DOCUMENT_WHITEBOARD_H

@@ -2,107 +2,32 @@
 #include "./include/WhitePaperTransform.h"
 #include <jsoncons/json.hpp>
 
-cv::Mat normalizeKernel(cv::Mat kernel, int kWidth, int kHeight, double scalingFactor = 1.0)
+void dog(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sigma2)
 {
-    const double K_EPS = 1.0e-12;
-    double posRange = 0, negRange = 0;
-
-    for (int i = 0; i < kWidth * kHeight; ++i)
-    {
-        if (std::abs(kernel.at<double>(i)) < K_EPS)
-        {
-            kernel.at<double>(i) = 0.0;
-        }
-        if (kernel.at<double>(i) < 0)
-        {
-            negRange += kernel.at<double>(i);
-        }
-        else
-        {
-            posRange += kernel.at<double>(i);
-        }
-    }
-
-    double posScale = (std::abs(posRange) >= K_EPS) ? posRange : 1.0;
-    double negScale = (std::abs(negRange) >= K_EPS) ? 1.0 : -negRange;
-
-    posScale = scalingFactor / posScale;
-    negScale = scalingFactor / negScale;
-
-    for (int i = 0; i < kWidth * kHeight; ++i)
-    {
-        if (!std::isnan(kernel.at<double>(i)))
-        {
-            kernel.at<double>(i) *= (kernel.at<double>(i) >= 0) ? posScale : negScale;
-        }
-    }
-
-    return kernel;
-}
-
-cv::Mat dog(const cv::Mat &img, const cv::Mat &dst, int kSize, double sigma1, double sigma2)
-{
-
-    // Apply Gaussian blur with the specified kernel radii
-//    cv::Mat blurred1, blurred2;
-//    GaussianBlur(img, blurred1, cv::Size(kSize, kSize), sigma1);
-//    GaussianBlur(img, blurred2, cv::Size(kSize, kSize), sigma2);
-//
-//    // Compute the Difference of Gaussians (DoG)
-//    cv::Mat dogImage = blurred1 - blurred2;
-//    return dogImage;
-    int kWidth = kSize, kHeight = kSize;
-    int x = (kWidth - 1) / 2;
-    int y = (kHeight - 1) / 2;
-    cv::Mat kernel(kWidth, kHeight, CV_64F, cv::Scalar(0.0));
-
-    // First Gaussian kernel
+    // Use OpenCV's optimized Gaussian blur for much better performance
+    // This is significantly faster than custom kernel computation
+    cv::Mat blurred1, blurred2;
+    
     if (sigma1 > 0)
     {
-        double co1 = 1 / (2 * sigma1 * sigma1);
-        double co2 = 1 / (2 * M_PI * sigma1 * sigma1);
-        int i = 0;
-        for (int v = -y; v <= y; ++v)
-        {
-            for (int u = -x; u <= x; ++u)
-            {
-                kernel.at<double>(i) = exp(-(u * u + v * v) * co1) * co2;
-                i++;
-            }
-        }
+        cv::GaussianBlur(img, blurred1, cv::Size(kSize, kSize), sigma1);
     }
-    // Unity kernel
     else
     {
-        kernel.at<double>(x + y * kWidth) = 1.0;
+        blurred1 = img.clone();
     }
-
-    // Subtract second Gaussian from the kernel
+    
     if (sigma2 > 0)
     {
-        double co1 = 1 / (2 * sigma2 * sigma2);
-        double co2 = 1 / (2 * M_PI * sigma2 * sigma2);
-        int i = 0;
-        for (int v = -y; v <= y; ++v)
-        {
-            for (int u = -x; u <= x; ++u)
-            {
-                kernel.at<double>(i) -= exp(-(u * u + v * v) * co1) * co2;
-                i++;
-            }
-        }
+        cv::GaussianBlur(img, blurred2, cv::Size(kSize, kSize), sigma2);
     }
-    // Unity kernel
     else
     {
-        kernel.at<double>(x + y * kWidth) -= 1.0;
+        blurred2 = img.clone();
     }
-
-    // Zero-normalize scaling kernel with a scaling factor of 1.0
-    cv::Mat normKernel = normalizeKernel(kernel, kWidth, kHeight, 1.0);
-
-    cv::filter2D(img, dst, -1, normKernel);
-    return dst;
+    
+    // Compute the Difference of Gaussians (DoG)
+    cv::subtract(blurred1, blurred2, dst);
 }
 
 void negateImage(const cv::Mat &img, const cv::Mat &res)
@@ -142,66 +67,47 @@ void contrastStretch(const cv::Mat &img, cv::Mat &res, int blackPoint, int white
     int totCount = img.rows * img.cols;
     int blackCount = totCount * blackPoint / 100;
     int whiteCount = totCount * whitePoint / 100;
-    std::vector<cv::Mat> chHists;
     int channels = std::min(img.channels(), 3);
 
-    // Calculate histogram for each channel
+    // Split channels once
+    std::vector<cv::Mat> channelImages;
+    cv::split(img, channelImages);
+    
+    std::vector<cv::Mat> chStretch(channels);
+    
+    // Process each channel
     for (int i = 0; i < channels; ++i)
     {
-        cv::Mat ch;
-        cv::extractChannel(img, ch, i);
         cv::Mat hist;
-        cv::calcHist(std::vector<cv::Mat>{ch}, {0}, cv::Mat(), hist, {256}, {0, 256});
-        chHists.push_back(hist);
-    }
-
-    std::vector<std::vector<int>> blackWhiteIndices;
-    for (const cv::Mat &hist : chHists)
-    {
-        blackWhiteIndices.push_back(getBlackWhiteIndices(hist, totCount, blackCount, whiteCount));
-    }
-
-    cv::Mat stretchMap(3, 256, CV_8U);
-
-    for (int currCh = 0; currCh < blackWhiteIndices.size(); ++currCh)
-    {
-        int blackInd = blackWhiteIndices[currCh][0];
-        int whiteInd = blackWhiteIndices[currCh][1];
-        for (int i = 0; i < stretchMap.cols; ++i)
+        cv::calcHist(std::vector<cv::Mat>{channelImages[i]}, {0}, cv::Mat(), hist, {256}, {0, 256});
+        
+        std::vector<int> indices = getBlackWhiteIndices(hist, totCount, blackCount, whiteCount);
+        int blackInd = indices[0];
+        int whiteInd = indices[1];
+        
+        // Build LUT for this channel
+        cv::Mat lut(1, 256, CV_8U);
+        uchar* lutData = lut.ptr<uchar>(0);
+        
+        if (whiteInd - blackInd > 0)
         {
-            if (i < blackInd)
+            double scale = 255.0 / (whiteInd - blackInd);
+            for (int j = 0; j < 256; ++j)
             {
-                stretchMap.at<uchar>(currCh, i) = 0;
-            }
-            else
-            {
-                if (i > whiteInd)
-                {
-                    stretchMap.at<uchar>(currCh, i) = 255;
-                }
+                if (j < blackInd)
+                    lutData[j] = 0;
+                else if (j > whiteInd)
+                    lutData[j] = 255;
                 else
-                {
-                    if (whiteInd - blackInd > 0)
-                    {
-                        stretchMap.at<uchar>(currCh, i) = static_cast<uchar>(round((i - blackInd) / static_cast<double>(whiteInd - blackInd) * 255));
-                    }
-                    else
-                    {
-                        stretchMap.at<uchar>(currCh, i) = 0;
-                    }
-                }
+                    lutData[j] = static_cast<uchar>((j - blackInd) * scale + 0.5);
             }
         }
-    }
-
-    std::vector<cv::Mat> chStretch;
-    for (int i = 0; i < channels; ++i)
-    {
-        cv::Mat ch;
-        cv::extractChannel(img, ch, i);
-        cv::Mat csCh;
-        cv::LUT(ch, stretchMap.row(i), csCh);
-        chStretch.push_back(csCh);
+        else
+        {
+            std::fill_n(lutData, 256, 0);
+        }
+        
+        cv::LUT(channelImages[i], lut, chStretch[i]);
     }
 
     cv::merge(chStretch, res);
@@ -217,19 +123,20 @@ void gamma(const cv::Mat &img, const cv::Mat &res, double gammaValue)
 {
     double iGamma = 1.0 / gammaValue;
     cv::Mat lut(1, 256, CV_8U);
+    uchar* lutData = lut.ptr<uchar>(0);
     for (int i = 0; i < 256; ++i)
     {
-        lut.at<uchar>(i) = static_cast<uchar>(pow(i / 255.0, iGamma) * 255);
+        lutData[i] = static_cast<uchar>(pow(i / 255.0, iGamma) * 255.0 + 0.5);
     }
     cv::LUT(img, lut, res);
 }
-int findLowerBound(const cv::Mat &cumHistSum, int lowCount)
+int findLowerBound(const cv::Mat &hist, int lowCount)
 {
     int li = 0;
     int sum = 0;
-    for (int i = 0; i < cumHistSum.rows; ++i)
+    for (int i = 0; i < hist.rows; ++i)
     {
-        sum += cumHistSum.at<float>(i);
+        sum += hist.at<float>(i);
         if (sum >= lowCount)
         {
             li = i;
@@ -239,13 +146,13 @@ int findLowerBound(const cv::Mat &cumHistSum, int lowCount)
     return li;
 }
 
-int findUpperBound(const cv::Mat &cumHistSum, int highCount)
+int findUpperBound(const cv::Mat &hist, int highCount)
 {
-    int hi = cumHistSum.rows - 1;
+    int hi = hist.rows - 1;
     int sum = 0;
-    for (int i = cumHistSum.rows - 1; i >= 0; --i)
+    for (int i = hist.rows - 1; i >= 0; --i)
     {
-        sum += cumHistSum.at<float>(i);
+        sum += hist.at<float>(i);
         if (sum >= highCount)
         {
             hi = i;
@@ -261,50 +168,43 @@ void colorBalance(const cv::Mat &img, const cv::Mat &res, double lowPer, double 
     int lowCount = totPix * lowPer / 100;
     int highCount = totPix * (100 - highPer) / 100;
 
-    std::vector<cv::Mat> csImg;
+    std::vector<cv::Mat> channels;
+    cv::split(img, channels);
+    
+    std::vector<cv::Mat> csImg(img.channels());
 
     for (int i = 0; i < img.channels(); ++i)
     {
-        cv::Mat ch;
-        cv::extractChannel(img, ch, i);
-        cv::Mat cumHistSum;
         cv::Mat hist;
-        cv::calcHist(std::vector<cv::Mat>{ch}, {0}, cv::Mat(), hist, {256}, {0, 256});
-        cv::reduce(hist, cumHistSum, 0, cv::REDUCE_SUM);
+        cv::calcHist(std::vector<cv::Mat>{channels[i]}, {0}, cv::Mat(), hist, {256}, {0, 256});
 
-        int li = findLowerBound(cumHistSum, lowCount);
-        int hi = findUpperBound(cumHistSum, highCount);
+        int li = findLowerBound(hist, lowCount);
+        int hi = findUpperBound(hist, highCount);
 
         if (li == hi)
         {
-            csImg.push_back(ch);
+            csImg[i] = channels[i];
             continue;
         }
 
         cv::Mat lut(1, 256, CV_8U);
-        for (int i = 0; i < 256; ++i)
+        uchar* lutData = lut.ptr<uchar>(0);
+        
+        double scale = (hi - li > 0) ? 255.0 / (hi - li) : 0.0;
+        
+        for (int j = 0; j < 256; ++j)
         {
-            if (i < li)
-            {
-                lut.at<uchar>(i) = 0;
-            }
-            else if (i > hi)
-            {
-                lut.at<uchar>(i) = 255;
-            }
-            else if (hi - li > 0)
-            {
-                lut.at<uchar>(i) = static_cast<uchar>(round((i - li) / static_cast<double>(hi - li) * 255));
-            }
+            if (j < li)
+                lutData[j] = 0;
+            else if (j > hi)
+                lutData[j] = 255;
+            else if (scale > 0)
+                lutData[j] = static_cast<uchar>((j - li) * scale + 0.5);
             else
-            {
-                lut.at<uchar>(i) = 0;
-            }
+                lutData[j] = 0;
         }
 
-        cv::Mat csCh;
-        cv::LUT(ch, lut, csCh);
-        csImg.push_back(csCh);
+        cv::LUT(channels[i], lut, csImg[i]);
     }
 
     cv::merge(csImg, res);
@@ -362,7 +262,7 @@ void whiteboardEnhance(const cv::Mat &img, cv::Mat &res, const std::string &opti
     }
 //    auto t_start = std::chrono::high_resolution_clock::now();
     // Difference of Gaussian (DoG)
-    res = dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time
+    dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time (now optimized)
 //    LOGD("WhitePaperTransform dog %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Negative of image
     negateImage(res, res); //0.3% time
