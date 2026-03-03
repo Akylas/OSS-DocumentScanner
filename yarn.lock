@@ -1013,12 +1013,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/gesturehandler@npm:2.0.41":
-  version: 2.0.41
-  resolution: "@nativescript-community/gesturehandler@npm:2.0.41"
+"@nativescript-community/gesturehandler@npm:2.0.43":
+  version: 2.0.43
+  resolution: "@nativescript-community/gesturehandler@npm:2.0.43"
   dependencies:
     "@nativescript-community/observable": "npm:^2.0.10"
-  checksum: 10/8758cd760816935a0f85fee0b9f8c50fef73d55d251055f733ed1ad3cf1026ee6772ee28dfdb58f265c5022252296c21c2c98f7b8fd1db30e8642cfa48c4fcd4
+  checksum: 10/1b11367a8ea5377382fdd9f5636b12ca2ca86103edc53b73c6a9004e257e9adb1b14604b401c9928d38f2ab5d11965b29ce473f97adcb1c881e89db0086d7a57
   languageName: node
   linkType: hard
 
@@ -1162,10 +1162,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/text@npm:1.6.22, @nativescript-community/text@npm:^1.6.22":
-  version: 1.6.22
-  resolution: "@nativescript-community/text@npm:1.6.22"
-  checksum: 10/4a9263894311de1d5951b986c8af2b58eacc4b988c91a4b8b704a0769ebbeb04d3ee5b5b4b5b27957118bc2cc0f76513925fb533944dcb5070cf87e3c1a059db
+"@nativescript-community/text@npm:1.6.23":
+  version: 1.6.23
+  resolution: "@nativescript-community/text@npm:1.6.23"
+  checksum: 10/f8823903d850322e4471e5e485cc99b036373175e38f4d17ace82ea9a107622881751593f764951a587f46f24a3bc57fb09d71394799fd04ef0865ef0a236cc8
   languageName: node
   linkType: hard
 
@@ -1173,6 +1173,13 @@ __metadata:
   version: 1.6.17
   resolution: "@nativescript-community/text@npm:1.6.17"
   checksum: 10/f3f5ecbf756ec9af04be996ab4423a5ebe781f1b069b924083784add2903c0366d8403c46153b1663fa01bbf4bf2828e0c293cbc4dfe6bc5d7c319ad11d439d4
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/text@npm:^1.6.22":
+  version: 1.6.22
+  resolution: "@nativescript-community/text@npm:1.6.22"
+  checksum: 10/4a9263894311de1d5951b986c8af2b58eacc4b988c91a4b8b704a0769ebbeb04d3ee5b5b4b5b27957118bc2cc0f76513925fb533944dcb5070cf87e3c1a059db
   languageName: node
   linkType: hard
 
@@ -10260,7 +10267,7 @@ __metadata:
     "@nativescript-community/arraybuffers": "npm:1.1.5"
     "@nativescript-community/css-theme": "npm:1.2.14"
     "@nativescript-community/extendedinfo": "npm:1.3.1"
-    "@nativescript-community/gesturehandler": "npm:2.0.41"
+    "@nativescript-community/gesturehandler": "npm:2.0.43"
     "@nativescript-community/https": "npm:4.1.27"
     "@nativescript-community/l": "npm:4.3.10"
     "@nativescript-community/licenses": "npm:2.0.9"
@@ -10271,7 +10278,7 @@ __metadata:
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/svelte-native": "npm:1.0.32"
     "@nativescript-community/systemui": "npm:1.1.24"
-    "@nativescript-community/text": "npm:1.6.22"
+    "@nativescript-community/text": "npm:1.6.23"
     "@nativescript-community/ui-cameraview": "npm:0.6.2"
     "@nativescript-community/ui-canvas": "npm:4.6.46"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.49"
