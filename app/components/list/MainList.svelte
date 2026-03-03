@@ -68,6 +68,7 @@
         showPDFPopoverMenu,
         showPopoverMenu,
         showSettings,
+        sortByKey,
         transformPages,
         tryCatch,
         tryCatchFunction
@@ -693,7 +694,7 @@
                 selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
             }
         }
-        return selected;
+        return sortByKey(selected, sortOrder);
     }
 
     async function loopSelectedDocuments(callback: (d: OCRDocument) => void) {
@@ -718,9 +719,8 @@
     }
     async function getSelectedPagesAndPossibleSingleDocument(): Promise<[{ page: OCRPage; document: OCRDocument }[], OCRDocument, OCRDocument[]]> {
         const selected: { page: OCRPage; document: OCRDocument }[] = [];
-        const docs: OCRDocument[] = [];
-        await loopSelectedDocuments((doc) => {
-            docs.push(doc);
+        const docs = await getSelectedDocuments();
+        docs.forEach((doc) => {
             selected.push(...doc.pages.map((page) => ({ page, document: doc })));
         });
 
@@ -1194,7 +1194,7 @@
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
         {/if}
         {#if !onlyForImport && nbSelected > 0}
-            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} row={2} />
         {/if}
         {#if !onlyForImport && editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />

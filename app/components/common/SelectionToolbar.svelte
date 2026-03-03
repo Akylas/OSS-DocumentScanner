@@ -57,7 +57,7 @@
     marginLeft={8}
     marginRight={8}
     marginTop={8}
-    row={1}
+    {...$$restProps}
     on:layoutChanged={onLayoutChanged}
     transition:slide={{ duration: 200 }}>
     <stacklayout col={hasOverflow ? 1 : 0} horizontalAlignment="center" orientation="horizontal">
