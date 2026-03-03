@@ -71,6 +71,7 @@ import {
     DEFAULT_COLORTYPE,
     DEFAULT_CONTRAST,
     DEFAULT_EXPORT_DIRECTORY,
+    DEFAULT_OCR_COPY_USE_SPACE,
     DEFAULT_TRANSFORM,
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
@@ -92,6 +93,7 @@ import {
     SETTINGS_IMAGE_EXPORT_FORMAT,
     SETTINGS_IMAGE_EXPORT_QUALITY,
     SETTINGS_IMPORT_PDF_IMAGES,
+    SETTINGS_OCR_COPY_USE_SPACE,
     SETTINGS_TRANSFORM_BATCH_SIZE,
     TRANSFORMS_SPLIT,
     TRANSFORM_BATCH_SIZE,
@@ -1464,7 +1466,16 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
     }
 }
 
+export function copyOCRToClipboard(text) {
+    const replaceLineBreaks = ApplicationSettings.getBoolean(SETTINGS_OCR_COPY_USE_SPACE, DEFAULT_OCR_COPY_USE_SPACE);
+    if (replaceLineBreaks) {
+        text = text.replace(/\n/g, ' ');
+    }
+    copyTextToClipboard(text);
+}
+
 export function copyTextToClipboard(text) {
+    DEV_LOG && console.log('copyTextToClipboard', text);
     copyToClipboard(text);
     if (__IOS__ || (__ANDROID__ && SDK_VERSION < 13)) {
         showToast(lc('copied'));

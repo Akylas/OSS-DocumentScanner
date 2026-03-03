@@ -42,6 +42,7 @@ export const SETTINGS_SORT_ORDER = 'sort_order';
 export const SETTINGS_VIEW_STYLE = 'documents_list_view_style';
 export const SETTINGS_ROOT_DATA_FOLDER = 'root_data_folder';
 export const SETTINGS_QUICK_TOGGLE_ENABLED = 'quick_toggle_enabled';
+export const SETTINGS_OCR_COPY_USE_SPACE = 'ocr_copy_use_space';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -94,6 +95,7 @@ export const DEFAULT_COLORMATRIX = null;
 export const DEFAULT_SORT_ORDER = CARD_APP ? 'createdDate ASC' : 'createdDate DESC';
 export const DEFAULT_VIEW_STYLE = CARD_APP ? 'columns' : 'default';
 export const DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE = false;
+export const DEFAULT_OCR_COPY_USE_SPACE = false;
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
     color: 'color',

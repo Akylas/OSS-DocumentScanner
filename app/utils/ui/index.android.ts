@@ -1,12 +1,12 @@
 import { lc } from '@nativescript-community/l';
-import { AndroidActivityNewIntentEventData, Application, Color, Frame, Page, Utils, View } from '@nativescript/core';
+import { AndroidActivityNewIntentEventData, Application, Color, Frame, Utils, View } from '@nativescript/core';
 import { throttle } from '@nativescript/core/utils';
 import { showError } from '@shared/utils/showError';
 import { Dayjs } from 'dayjs';
 import { documentsService } from '~/services/documents';
-import { securityService } from '~/services/security';
-import { copyTextToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, importPKPassFromUris, onStartCam, requestStoragePermission } from './index.common';
 import { ocrService } from '~/services/ocr';
+import { securityService } from '~/services/security';
+import { copyOCRToClipboard, getOCRFromCamera, goToDocumentView, importAndScanImageOrPdfFromUris, importPKPassFromUris, onStartCam, requestStoragePermission } from './index.common';
 
 export * from './index.common';
 
@@ -85,7 +85,7 @@ async function innerOnAndroidIntent(event: AndroidActivityNewIntentEventData) {
                         const result = await getOCRFromCamera();
                         DEV_LOG && console.log('result', result);
                         if (result) {
-                            copyTextToClipboard(result.text);
+                            copyOCRToClipboard(result.text);
                             showToast(lc('copied'));
                         } else {
                             showToast(lc('no_document_found'));
