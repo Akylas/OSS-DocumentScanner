@@ -124,14 +124,11 @@ export default class PDFCanvas {
     //         this.drawPages(index, item.pages);
     //     });
     // }
-    updateBitmapPaint(page: OCRPage) {
-        if (this.options.color === 'black_white') {
-            if (!bitmapPaint) {
-                bitmapPaint = new Paint();
-            }
-            bitmapPaint.setColorFilter(new ColorMatrixColorFilter(getColorMatrix('grayscale')));
-        } else if (page.colorType || page.colorMatrix) {
-            const matrix = getPageColorMatrix(page);
+    updateBitmapPaint(page: OCRPage, options: PDFExportBaseOptions) {
+            const black_white = this.options.color === 'black_white';
+
+        if (black_white || page.colorType || page.colorMatrix) {
+            const matrix = getPageColorMatrix(page, black_white ? 'grayscale' : undefined);
             if (matrix) {
                 if (!bitmapPaint) {
                     bitmapPaint = new Paint();
@@ -172,7 +169,7 @@ export default class PDFCanvas {
             reqWidth = reqHeight;
             reqHeight = temp;
         }
-        this.updateBitmapPaint(page);
+        this.updateBitmapPaint(page, options);
         const scale = options.paper_size === 'full' ? options.imageLoadScale : 1;
         const image = await loadImage(src, {
             width: toDrawWidth * scale,

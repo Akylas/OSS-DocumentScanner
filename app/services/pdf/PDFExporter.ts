@@ -41,12 +41,13 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
                 }
             }
         }
-
+        const defaultOptions = getPDFDefaultExportOptions();
+        const black_white = defaultOptions.color === 'black_white';
         const options = JSON.stringify({
-            ...getPDFDefaultExportOptions(),
+            ...defaultOptions,
             // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
             text_scale: Screen.mainScreen.scale * 1.4,
-            pages: pages.map((p) => ({ ...p.page, colorMatrix: getPageColorMatrix(p.page) })),
+            pages: pages.map((p) => ({ ...p.page, colorMatrix: getPageColorMatrix(p.page, black_white ? 'grayscale' : undefined) })),
             ...(baseOptions ? baseOptions : {}),
             debug: false
         });

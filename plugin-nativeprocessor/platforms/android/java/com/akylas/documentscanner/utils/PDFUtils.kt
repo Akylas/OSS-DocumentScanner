@@ -128,9 +128,6 @@ class PDFUtils {
     }
 
     companion object {
-        const val BLACK_WHITE_COLOR_MATRIX =
-            "[0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0,0,0,1,0]"
-
 
         @Throws(IOException::class)
         fun printPDF(context: Context, filePath: String, name: String) {
@@ -577,10 +574,7 @@ class PDFUtils {
                     val imageRotation = page.optInt("rotation", 0)
                     val imageWidth = page.getDouble("width")
                     val imageHeight = page.getDouble("height")
-                    val colorMatrix =
-                        if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString(
-                            "colorMatrix"
-                        )
+                    val colorMatrix = page.optString("colorMatrix")
                     val image = loadImage(
                         imageSrc,
                         imageWidth,
@@ -681,12 +675,8 @@ class PDFUtils {
                             }
                             val imageWidth = page.getDouble("width")
                             val imageHeight = page.getDouble("height")
-                            val colorMatrix =
-                                if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString(
-                                    "colorMatrix"
-                                )
+                            val colorMatrix = page.optString("colorMatrix")
 
-//
 //                            if (imageRotation % 180 !== 0) {
 //                                val temp = imageWidth
 //                                imageWidth = imageHeight

@@ -44,7 +44,7 @@ export function getPageColorMatrix(page: OCRPage, forcedColorType?: MatricesType
         const hasContrast = typeof contrast === 'number' && !isNaN(contrast) && contrast !== DEFAULT_CONTRAST;
         if (hasBrightness || hasContrast) {
             const subMatrix = getColorMatrix('brightnessAndContrast', hasBrightness ? brightness : DEFAULT_BRIGHTNESS, hasContrast ? contrast : DEFAULT_CONTRAST);
-            return result ? concatTwoColorMatrices(result, subMatrix) : subMatrix;
+            return result ? concatTwoColorMatrices(subMatrix, result) : subMatrix;
         }
         return result;
     }
