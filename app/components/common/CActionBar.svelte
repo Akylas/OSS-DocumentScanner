@@ -54,6 +54,8 @@
         class={'actionBarTitle ' + clazz}
         autoFontSize={true}
         col={1}
+        lineBreak="end"
+        maxLines={2}
         paddingLeft={menuIconVisible ? 0 : 16}
         text={title || ''}
         textAlignment="left"

@@ -2217,26 +2217,3 @@ export async function requestGalleryPermission() {
     return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
 }
 
-type SortOrder = 'ASC' | 'DESC';
-export function sortByKey<T = any>(data: T[], sort: string): T[] {
-    const [rawKey, rawOrder] = sort.trim().split(/\s+/);
-
-    const key = rawKey as keyof T;
-    const order: SortOrder = (rawOrder?.toUpperCase() as SortOrder) || 'ASC';
-    const direction = order === 'DESC' ? -1 : 1;
-
-    return [...data].sort((a, b) => {
-        const aValue = a[key];
-        const bValue = b[key];
-
-        if (aValue == null) return -1 * direction;
-        if (bValue == null) return 1 * direction;
-
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-            return (aValue - bValue) * direction;
-        }
-
-        // Fallback to string comparison
-        return String(aValue).localeCompare(String(bValue)) * direction;
-    });
-}

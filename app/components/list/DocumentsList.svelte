@@ -19,6 +19,7 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import MainList, { Item } from './MainList.svelte';
+    import { ellipsize } from '~/utils/utils.common';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -80,7 +81,7 @@
                     fontWeight: 'bold',
                     lineBreak: 'end',
                     lineHeight: 18 * $fontScale,
-                    text: doc.name
+                    text: ellipsize(doc.name, 50)
                 },
                 {
                     color: colorOnSurfaceVariant,

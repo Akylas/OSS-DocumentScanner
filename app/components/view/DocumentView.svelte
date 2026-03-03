@@ -764,7 +764,7 @@
             onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0 }}>
+            titleProps={{ padding: 0 }}>
             {#if !nbSelected}
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
                 <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />

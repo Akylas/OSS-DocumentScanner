@@ -68,7 +68,6 @@
         showPDFPopoverMenu,
         showPopoverMenu,
         showSettings,
-        sortByKey,
         transformPages,
         tryCatch,
         tryCatchFunction
@@ -76,6 +75,7 @@
     import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
     import { OptionType } from '@shared/components/OptionSelect.svelte';
     import { SERVICES_SYNC_COLOR, SERVICES_SYNC_MASK } from '~/services/sync/types';
+    import { sortByKey } from '~/utils/utils.common';
 
     const textPaint = new Paint();
 

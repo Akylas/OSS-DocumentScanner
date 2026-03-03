@@ -1358,7 +1358,7 @@
             onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
+            titleProps={{ padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
             <!-- {#if editing}
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-content-save" variant="text" on:tap={saveEdit} />
