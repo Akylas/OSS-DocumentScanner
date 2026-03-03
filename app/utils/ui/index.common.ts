@@ -499,8 +499,9 @@ export async function showPopoverMenu<T = any>({
     onClose,
     options,
     props,
+    title,
     vertPos
-}: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
+}: { options; anchor; onClose?; props?; title?: string; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
@@ -512,6 +513,7 @@ export async function showPopoverMenu<T = any>({
         horizPos: horizPos ?? HorizontalPosition.ALIGN_LEFT,
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
+            title,
             borderRadius: 10,
             elevation: __ANDROID__ ? 3 : 0,
             margin: 4,
@@ -624,6 +626,7 @@ export async function showPDFPopoverMenu({
             .concat([{ id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }] as any)
     );
     return showPopoverMenu({
+        title: lc('pdf_export'),
         options,
         anchor,
         vertPos: VerticalPosition.BELOW,
@@ -1033,6 +1036,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
     }
     return new Promise<boolean>((resolve, reject) => {
         showPopoverMenu({
+            title: lc('image_export'),
             options,
             anchor,
             vertPos: VerticalPosition.BELOW,

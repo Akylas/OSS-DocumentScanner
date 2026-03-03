@@ -772,7 +772,7 @@
         </CActionBar>
 
         {#if nbSelected > 0}
-            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} row={1} />
         {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />

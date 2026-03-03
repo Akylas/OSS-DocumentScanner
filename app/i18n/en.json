@@ -460,5 +460,6 @@
   "import_from_other_document": "import from other document",
   "import": "import",
   "use_space_when__ocr_copy_text": "use spaces when copying OCR text",
-  "use_space_when__ocr_copy_text_desc": "when copying OCR text to clipboard, line breaks will be replaced with spaces"
+  "use_space_when__ocr_copy_text_desc": "when copying OCR text to clipboard, line breaks will be replaced with spaces",
+  "image_export": "image export"
 }
