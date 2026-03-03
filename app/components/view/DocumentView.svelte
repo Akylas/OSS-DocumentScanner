@@ -500,7 +500,9 @@
         const view = (e.view as ContentView).content;
         view.animate({ duration: 100, opacity: 1, scale: { x: 1, y: 1 } });
         try {
-            await document.movePage(e.index, e.data.targetIndex);
+            if (e.index !== e.data.targetIndex) {
+                await document.movePage(e.index, e.data.targetIndex);
+            }
             collectionView?.nativeView?.refreshVisibleItems();
         } catch (error) {
             showError(error);

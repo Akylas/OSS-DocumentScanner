@@ -376,7 +376,6 @@
             items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
         }
     }
-    let ignoreTap = false;
     function toggleSelection(item: Item) {
         if (item.selected) {
             unselectItem(item);
@@ -433,12 +432,8 @@
     }
     async function onItemTap(item: Item) {
         try {
-            if (ignoreTap) {
-                ignoreTap = false;
-                return;
-            }
             if (nbSelected > 0) {
-                onItemLongPress(item);
+                toggleSelection(item);
             } else if (item.page.imagePath) {
                 const index = items.findIndex((p) => p.page === item.page);
                 navigate({
@@ -660,7 +655,9 @@
         DEV_LOG && console.log('onItemReordered');
         (e.view as ContentView).content.opacity = 1;
         try {
-            await document.movePage(e.index, e.data.targetIndex);
+            if (e.index !== e.data.targetIndex) {
+                await document.movePage(e.index, e.data.targetIndex);
+            }
             topBackgroundColor = computeTopBackgroundColor();
             statusBarStyle = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
             updateQRCodes();
