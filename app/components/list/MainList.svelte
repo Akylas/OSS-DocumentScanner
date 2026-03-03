@@ -9,7 +9,7 @@
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { debounce, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import { fade, goBack, navigate } from '@shared/utils/svelte/ui';
+    import { closeModal, fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
@@ -125,17 +125,19 @@
     export let collectionView: NativeViewElementNode<CollectionView>;
     let foldersCollectionView: NativeViewElementNode<CollectionView>;
     // let lottieView: NativeViewElementNode<LottieView>;
-    export let fabHolder: NativeViewElementNode<StackLayout>;
+    export let fabHolder: NativeViewElementNode<StackLayout> = null;
     let search: ActionBarSearch;
 
     export let folder: DocFolder = null;
     export let title: string;
+    export let modal: boolean = false;
     export let itemTemplateSelector = (viewStyle, item?: Item) => item?.type || 'default';
     export let viewStyles: { [k: string]: { name: string; icon?: string; type?: string; boxType?: string } };
     export let sortKeys: { [k: string]: { name: string; icon?: string; type?: string; key?: string } } = {
         name: { name: lc('name') },
         createdDate: { name: lc('date') }
     };
+    export let onlyForImport = false;
     export let viewStyleChanged = (oldValue, newValue) => newValue !== oldValue;
     export let sortOrder = ApplicationSettings.getString(SETTINGS_SORT_ORDER, DEFAULT_SORT_ORDER);
     export let syncEnabled = syncService.enabled;
@@ -159,7 +161,7 @@
     }
     $: updateTitle(folder);
 
-    function updateTitle(folder) {
+    export let updateTitle = (folder) => {
         if (folder) {
             title = createNativeAttributedString({
                 spans: [
@@ -176,7 +178,7 @@
             });
             DEV_LOG && console.log('updating folder title', folder, $fonts.mdi, title);
         }
-    }
+    };
 
     let syncRunning = false;
     $: DEV_LOG && console.log('syncEnabled', syncEnabled);
@@ -185,7 +187,6 @@
     let showSearch = false;
     let loading = false;
     export let nbSelected = 0;
-    let ignoreTap = false;
     let editingTitle = false;
     export let nbColumns = writable(1);
     export let updateColumns = function (isLandscape, orientationChanged: boolean = false) {
@@ -209,7 +210,7 @@
         });
     }
 
-    async function refresh(force = true, filter?: string) {
+    export async function refresh(force = true, filter?: string) {
         // DEV_LOG && console.log('refresh', force, filter);
         if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
             return;
@@ -218,7 +219,7 @@
         nbSelected = 0;
         loading = true;
         try {
-            // DEV_LOG && console.log('MainList', 'refresh', folder, filter, sortOrder);
+            DEV_LOG && console.log('MainList', 'refresh', folder, filter, sortOrder);
             const r = await documentsService.documentRepository.findDocuments({ filter, folder, omitThoseWithFolders: true, order: sortOrder });
 
             await refreshFolders(filter);
@@ -454,7 +455,7 @@
         syncService.off(EVENT_STATE, refreshSimple);
     });
 
-    const showActionButton = !startOnCam;
+    export let showActionButton = !startOnCam;
 
     export async function importDocument(importPDFs = true) {
         DEV_LOG && console.log('importDocument', importPDFs);
@@ -575,18 +576,21 @@
             selectItem(item);
         }
     }
+
+    export let handleDocumentTap = async (doc: OCRDocument) => {
+        await goToDocumentView(doc);
+    };
+    export let handleFolderTap = async (folder: DocFolder) => {
+        await goToFolderView(folder);
+    };
     export const onItemTapFast = async function (item: Item) {
         try {
-            if (ignoreTap) {
-                ignoreTap = false;
-                return;
-            }
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else if (item.doc) {
-                await goToDocumentView(item.doc);
+                await handleDocumentTap(item.doc);
             } else if (item.folder) {
-                await goToFolderView(item.folder);
+                await handleFolderTap(item.folder);
             }
         } catch (error) {
             showError(error);
@@ -617,6 +621,8 @@
     function actionBarOnGoBack() {
         if (showSearch) {
             search.hideSearch();
+        } else if (modal) {
+            closeModal();
         } else if (Frame.topmost().canGoBack()) {
             goBack();
         }
@@ -670,7 +676,7 @@
         return selected;
     }
 
-    async function getSelectedDocuments() {
+    export async function getSelectedDocuments() {
         const selected: OCRDocument[] = [];
         if (!documentsService.started) {
             return selected;
@@ -1084,7 +1090,8 @@
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
-    <gridlayout class="pageContent" rows="auto,*">
+    <gridlayout class="pageContent" rows="auto,auto,*">
+        <slot name="abovecollectionview" />
         <collectionView
             bind:this={collectionView}
             {colWidth}
@@ -1092,7 +1099,7 @@
             itemTemplateSelector={(item) => itemTemplateSelector(viewStyle, item)}
             items={documents}
             paddingBottom={Math.max($windowInset.bottom, BOTTOM_BUTTON_OFFSET)}
-            row={1}
+            row={2}
             spanSize={itemTemplateSpanSize}
             {...collectionViewOptions}>
             <Template key="folders" let:item>
@@ -1132,7 +1139,7 @@
                 marginBottom="30%"
                 paddingLeft={16}
                 paddingRight={16}
-                row={1}
+                row={2}
                 verticalAlignment="center"
                 width="80%"
                 transition:fade={{ duration: 200 }}>
@@ -1160,33 +1167,36 @@
         {#if showActionButton}
             <slot name="fab" />
         {/if}
-        <slot name="test" />
 
-        <CActionBar modalWindow={showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
-            <mdbutton
-                class="actionBarButton"
-                class:infinite-rotate={syncRunning}
-                isEnabled={!syncRunning}
-                text="mdi-autorenew"
-                variant="text"
-                visibility={!folder && syncEnabled ? 'visible' : 'collapse'}
-                on:tap={syncDocuments} />
+        <CActionBar modalWindow={modal || showSearch} onGoBack={actionBarOnGoBack} onTitleTap={folder ? () => (editingTitle = true) : null} {title}>
+            {#if !onlyForImport}
+                <mdbutton
+                    class="actionBarButton"
+                    class:infinite-rotate={syncRunning}
+                    isEnabled={!syncRunning}
+                    text="mdi-autorenew"
+                    variant="text"
+                    visibility={!folder && syncEnabled ? 'visible' : 'collapse'}
+                    on:tap={syncDocuments} />
+            {/if}
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
-            {#if folder}
-                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
-            {:else}
-                <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={showViewOptions} />
-                <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+            {#if !onlyForImport}
+                {#if folder}
+                    <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
+                {:else}
+                    <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={showViewOptions} />
+                    <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+                {/if}
             {/if}
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
         </CActionBar>
         {#if nbSelected > 0}
             <CActionBar forceCanGoBack={true} onGoBack={unselectAll} title={l('selected', nbSelected)} titleProps={{ autoFontSize: true, maxLines: 1 }} />
         {/if}
-        {#if nbSelected > 0}
+        {#if !onlyForImport && nbSelected > 0}
             <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} />
         {/if}
-        {#if editingTitle}
+        {#if !onlyForImport && editingTitle}
             <EditNameActionBar {folder} bind:editingTitle />
         {/if}
     </gridlayout>

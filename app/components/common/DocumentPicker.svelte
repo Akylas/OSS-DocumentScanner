@@ -1,24 +1,25 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
-    import { showError } from '@shared/utils/showError';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { onMount } from 'svelte';
+    import PageIndicator from '~/components/common/PageIndicator.svelte';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SyncIndicator from '~/components/common/SyncIndicator.svelte';
+    import MainList, { Item } from '~/components/list/MainList.svelte';
+    import Chip from '~/components/widgets/Chip.svelte';
     import { isEInk } from '~/helpers/theme';
-    import { DocFolder } from '~/models/OCRDocument';
-    import { importImageFromCamera } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, windowInset } from '~/variables';
-    import PageIndicator from '../common/PageIndicator.svelte';
-    import RotableImageView from '../common/RotableImageView.svelte';
-    import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    import SyncIndicator from '../common/SyncIndicator.svelte';
-    import MainList, { Item } from './MainList.svelte';
+    import { DocFolder, OCRDocument } from '~/models/OCRDocument';
+    import { colors, fontScale, fonts, windowInset } from '~/variables';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -27,9 +28,8 @@
 <script lang="ts">
     let { colorOnBackground, colorOnSurfaceVariant } = $colors;
     $: ({ colorOnBackground, colorOnSurfaceVariant } = $colors);
-    export let title = lc('documents');
-    export let folder: DocFolder;
-    let fabHolder: NativeViewElementNode<StackLayout>;
+    export let title = lc('select_documents_to_import');
+    let folder: DocFolder = null;
     let collectionView: NativeViewElementNode<CollectionView>;
     let viewStyle: string;
     let syncEnabled: boolean;
@@ -42,16 +42,17 @@
     let importImages: () => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
     let refreshCollectionView: () => void;
+    let refresh: (force?: boolean, filter?: string) => Promise<void>;
+    let getSelectedDocuments: () => Promise<OCRDocument[]>;
 
-    $: condensed = viewStyle === 'condensed';
     function getItemRowHeight(viewStyle) {
-        return condensed ? 80 : 150;
+        return 80;
     }
     function getImageMargin(viewStyle) {
         return 10;
     }
     function getItemImageHeight(viewStyle) {
-        return condensed ? 44 : 94;
+        return 44;
     }
 
     $: textPaint.color = colorOnBackground || 'black';
@@ -62,14 +63,14 @@
         const dx = 10 + getItemImageHeight(viewStyle) * $fontScale + 16;
         textPaint.color = colorOnSurfaceVariant;
         const { doc } = item;
-        textPaint.textSize = condensed ? 11 : 14 * $fontScale;
+        textPaint.textSize = 11 * $fontScale;
         canvas.drawText(
             filesize(
                 doc.pages.reduce((acc, v) => acc + v.size, 0),
                 { output: 'string' }
             ),
             dx,
-            h - (condensed ? 0 : 16) - 10,
+            h - 10,
             textPaint
         );
         textPaint.color = colorOnBackground;
@@ -85,32 +86,49 @@
                 {
                     color: colorOnSurfaceVariant,
                     fontSize: 14 * $fontScale,
-                    lineHeight: condensed ? 14 : 20 * $fontScale,
+                    lineHeight: 14 * $fontScale,
                     text: '\n' + dayjs(doc.createdDate).format('L LT')
                 }
             ]
         });
         const staticLayout = new StaticLayout(topText, textPaint, Math.max(0, w - dx), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-        canvas.translate(dx, (condensed ? 0 : 10) + 10);
+        canvas.translate(dx, 10);
         staticLayout.draw(canvas);
     }
 
-    async function onStartCam(inverseUseSystemCamera = false) {
-        try {
-            await importImageFromCamera({ folder, inverseUseSystemCamera });
-        } catch (error) {
-            showError(error);
-        }
+    onMount(() => {
+        refresh();
+    });
+
+    async function handleDocumentTap(doc: OCRDocument) {
+        DEV_LOG && console.log('handleDocumentTap');
+        closeModal([doc]);
     }
+    async function handleFolderTap(tappedFolder: DocFolder) {
+        DEV_LOG && console.log('handleFolderTap', tappedFolder);
+        folder = tappedFolder;
+        setTimeout(() => {
+            refresh(true);
+        }, 0);
+    }
+    async function importSelectedDocuments() {
+        closeModal(await getSelectedDocuments());
+    }
+
+    function updateTitle(folder) {}
 </script>
 
 <MainList
+    {handleDocumentTap}
+    {handleFolderTap}
+    modal={true}
+    onlyForImport={true}
+    showActionButton={true}
     {title}
+    {updateTitle}
     viewStyles={{
-        default: { name: lc('expanded') },
         condensed: { name: lc('condensed') }
     }}
-    bind:fabHolder
     bind:viewStyle
     bind:onItemTap
     bind:onItemLongPress
@@ -123,6 +141,8 @@
     bind:getSyncColors
     bind:documents
     bind:folderItems
+    bind:getSelectedDocuments
+    bind:refresh
     bind:collectionView>
     <Template let:item>
         <canvasview
@@ -150,19 +170,17 @@
         </canvasview>
     </Template>
 
-    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
-        {#if __IOS__}
-            <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
+    <stacklayout slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
+        {#if nbSelected > 0}
+            <mdbutton id="fab" class="fab" verticalAlignment="center" on:tap={throttle(() => importSelectedDocuments(), 500)}>
+                <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-check  " />
+                <cspan text={lc('import')} />
+            </mdbutton>
         {/if}
-        <mdbutton
-            class={$hasCamera ? 'small-fab' : 'fab'}
-            horizontalAlignment="center"
-            text="mdi-file-document-plus-outline"
-            verticalAlignment="center"
-            on:longPress={throttle(() => importImages(), 500)}
-            on:tap={throttle(() => importDocument(), 500)} />
-        {#if $hasCamera}
-            <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
+    </stacklayout>
+    <stacklayout slot="abovecollectionview" horizontalAlignment="left" row={1}>
+        {#if folder}
+            <Chip slot="abovecollectionview" margin={10} rightIcon="mdi-folder" text={folder.name} on:tap={() => handleFolderTap(null)} />
         {/if}
     </stacklayout>
 </MainList>

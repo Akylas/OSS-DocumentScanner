@@ -1573,7 +1573,7 @@ export async function showMatrixLevelPopover({ anchor, currentValue, item, onCha
     });
 }
 export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
-    DEV_LOG && console.log('goToDocumentView');
+    // DEV_LOG && console.log('goToDocumentView');
     if (CARD_APP) {
         const page = (await import('~/components/view/CardView.svelte')).default;
         return navigate({

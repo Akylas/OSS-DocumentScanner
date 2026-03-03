@@ -815,19 +815,13 @@
                         id: 'import',
                         name: lc('import_from_file'),
                         icon: 'mdi-file-document-plus-outline'
+                    },
+                    {
+                        id: 'import_image',
+                        name: lc('import_from_image'),
+                        icon: 'mdi-image-plus-outline'
                     }
                 ])
-                .concat(
-                    __IOS__
-                        ? [
-                              {
-                                  id: 'import_image',
-                                  name: lc('import_from_image'),
-                                  icon: 'mdi-image-plus-outline'
-                              }
-                          ]
-                        : []
-                )
                 .concat([
                     {
                         id: 'add_qrcode_camera',
@@ -868,7 +862,7 @@
                         await importDocument();
                         break;
                     case 'import_image':
-                        await importDocument(false);
+                        await importAndScanImage({ canGoToView: false, forceGalleryPick: true, document, importPDFs: false });
                         break;
                     case 'add_qrcode_camera':
                         await requestCameraPermission();

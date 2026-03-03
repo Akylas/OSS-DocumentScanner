@@ -310,7 +310,6 @@ export class OCRDocument extends Observable implements Document {
                         .split(SEPARATOR)
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
-                    DEV_LOG && console.log('baseName', baseName);
                     if (!baseName.endsWith(imageExportSettings.imageFormat)) {
                         baseName += '.' + imageExportSettings.imageFormat;
                     }
@@ -343,7 +342,12 @@ export class OCRDocument extends Observable implements Document {
             } else {
                 this.pages = pages;
             }
-            DEV_LOG && console.log('addPages done', this.pages.length);
+            DEV_LOG &&
+                console.log(
+                    'addPages done',
+                    this.pages.length,
+                    this.pages.map((p) => p.imagePath)
+                );
             // this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
@@ -733,14 +737,14 @@ export class OCRPage extends Observable implements Page {
         return JSON.stringify(this.toJSON());
     }
 
-    toJSON() {
+    toJSON(): Page {
         const keys = Object.keys(this);
         return keys.reduce((acc, key) => {
             if (key === '_synced' || !key.startsWith('_')) {
                 acc[key] = this[key];
             }
             return acc;
-        }, {});
+        }, {} as Page);
     }
     static fromJSON(jsonObj: Page) {
         const page = new OCRPage(jsonObj.id, jsonObj.document_id);

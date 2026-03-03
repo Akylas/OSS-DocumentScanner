@@ -40,7 +40,7 @@
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE
     } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate } from '@shared/utils/svelte/ui';
+    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         hideLoading,
@@ -51,12 +51,14 @@
         showLoading,
         showPDFPopoverMenu,
         showPopoverMenu,
-        transformPages
+        transformPages,
+        tryCatchFunction
     } from '~/utils/ui';
     import { colors, fontScale, fonts, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import { prefs } from '@shared/services/preferences';
     import { ROOT_GESTURE_HANDLER_TAG } from '@nativescript-community/gesturehandler/gesturehandler.common';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     const rowMargin = 8;
     interface Item {
         page: OCRPage;
@@ -606,6 +608,73 @@
             }
         });
     }
+
+    const onAddButton = tryCatchFunction(
+        async () => {
+            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+            const rowHeight = 58;
+            const options = [
+                {
+                    id: 'files',
+                    name: lc('import_from_file'),
+                    icon: 'mdi-file-document-plus-outline'
+                },
+                {
+                    id: 'import_image',
+                    name: lc('import_from_image'),
+                    icon: 'mdi-image-plus-outline'
+                },
+                {
+                    id: 'import_document',
+                    name: lc('import_from_other_document'),
+                    icon: 'mdi-file-document-arrow-right'
+                }
+            ];
+            const height = Math.min(rowHeight * options.length, 400);
+            const option = await showBottomSheet({
+                parent: this,
+                view: OptionSelect,
+                peekHeight: height,
+                ignoreTopSafeArea: true,
+                props: {
+                    rowHeight,
+                    height,
+                    options
+                }
+            });
+            DEV_LOG && console.log('on add option', option);
+            if (option) {
+                switch (option.id) {
+                    case 'import':
+                        await importAndScanImage({ document, importPDFs: true, canGoToView: false });
+                        break;
+                    case 'import_image':
+                        await importAndScanImage({ canGoToView: false, forceGalleryPick: true, document, importPDFs: false });
+                        break;
+                    case 'import_document':
+                        const component = (await import('~/components/common/DocumentPicker.svelte')).default;
+                        const result: OCRDocument[] = await showModal({
+                            page: component,
+                            fullscreen: true,
+                            props: {}
+                        });
+                        if (result?.length) {
+                            await showLoading(lc('importing'));
+                            const pages = result
+                                .reduce((acc, v) => acc.concat(v.pages), [])
+                                .map((page: OCRPage) => {
+                                    const { id, ...others } = page.toJSON();
+                                    return { ...others };
+                                });
+                            await document.addPages(pages);
+                        }
+                        break;
+                }
+            }
+        },
+        null,
+        hideLoading
+    );
 </script>
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
@@ -685,7 +754,7 @@
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}
-            <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
+            <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => onAddButton(), 500)} />
             {#if $hasCamera}
                 <mdbutton class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
             {/if}
