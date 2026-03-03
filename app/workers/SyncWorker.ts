@@ -789,7 +789,8 @@ export default class SyncWorker extends BaseWorker {
                             //see if we need to OCR
                             if (service.OCREnabled && service.OCRLanguages.length) {
                                 const OCRDataPath = path.join(baseOCRDataPath, service.OCRDataType);
-                                await Promise.all(doc.pages.map(async (p, index) => doc.ocrPage({ pageIndex: index, language: service.OCRLanguages.join('+'), dataPath: OCRDataPath })));
+                                // we need to make sure the OCR update wont trigger another sync or we will end up in an endless loop
+                                await Promise.all(doc.pages.map(async (p, index) => doc.ocrPage({ pageIndex: index, language: service.OCRLanguages.join('+'), dataPath: OCRDataPath, notify: false })));
                             }
 
                             const name = service.getPDFName(doc);

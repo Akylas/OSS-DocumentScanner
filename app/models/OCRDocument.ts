@@ -388,7 +388,7 @@ export class OCRDocument extends Observable implements Document {
         return this;
     }
 
-    async ocrPage({ dataPath, language, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string }) {
+    async ocrPage({ dataPath, language, notify = true, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string; notify?: boolean }) {
         const page = this.pages[pageIndex];
         if (!page.imagePath) {
             return;
@@ -409,14 +409,20 @@ export class OCRDocument extends Observable implements Document {
         );
         DEV_LOG && console.log('ocrPage done', this.id, pageIndex, JSON.stringify(ocrData));
         if (ocrData?.blocks?.length) {
-            await this.updatePage(pageIndex, {
-                ocrData
-            });
+            await this.updatePage(
+                pageIndex,
+                {
+                    ocrData
+                },
+                false,
+                true,
+                notify
+            );
             return ocrData;
         }
     }
 
-    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true) {
+    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true, notify = true) {
         //compute diff update
         const page = this.pages[pageIndex];
         if (page) {
@@ -428,7 +434,7 @@ export class OCRDocument extends Observable implements Document {
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
             if (saveDoc) {
-                await this.save({}, true, true);
+                await this.save({}, true, notify);
             }
             this.onPageUpdated(pageIndex, page, imageUpdated);
         }
