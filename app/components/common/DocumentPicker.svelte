@@ -5,7 +5,7 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { ObservableArray, Utils } from '@nativescript/core';
     import { throttle } from '@nativescript/core/utils';
     import { closeModal } from '@shared/utils/svelte/ui';
     import dayjs from 'dayjs';
@@ -174,7 +174,7 @@
         {#if nbSelected > 0}
             <mdbutton id="fab" class="fab" verticalAlignment="center" on:tap={throttle(() => importSelectedDocuments(), 500)}>
                 <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-check  " />
-                <cspan text={lc('import')} />
+                <cspan text={lc('import_documents')} />
             </mdbutton>
         {/if}
     </stacklayout>

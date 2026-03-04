@@ -850,7 +850,7 @@ export async function showPDFPopoverMenu({
                     }
                     case 'preview':
                         await closePopover();
-                        const component = (await import('~/components/pdf/PDFPreview.svelte')).default;
+                        const component = (await import('~/components/pdf/PDFPreviewModal.svelte')).default;
                         await showModal({
                             page: component,
                             animated: true,

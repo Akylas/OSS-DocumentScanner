@@ -1,4 +1,5 @@
-<script lang="ts">
+<script context="module" lang="ts">
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -8,16 +9,14 @@
     import { ImageSource } from '@nativescript/core/image-source';
     import { debounce, wrapNativeException } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
+    import { closeModal, navigate } from '@shared/utils/svelte/ui';
     import { createAutoScanHandler, createQRCodeCallback } from 'plugin-nativeprocessor';
     import { CropView } from 'plugin-nativeprocessor/CropView';
     import { onDestroy, onMount } from 'svelte';
-    import { closeModal } from '@nativescript-community/svelte-native';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { get, writable } from 'svelte/store';
+    import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
-    import { l, lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import { DocFolder, OCRDocument, PageData } from '~/models/OCRDocument';
     import { documentsService } from '~/services/documents';
     import {
@@ -38,8 +37,10 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, requestCameraPermission, showLoading, showSettings } from '~/utils/ui';
-    import { colors, orientationDegrees, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
+    import { colors, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
+</script>
 
+<script lang="ts">
     // technique for only specific properties to get updated on store change
     $: ({ colorBackground, colorOnBackground, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -65,6 +66,7 @@
     export let QRCodeOnly = false;
     export let onlyForOCR = false;
     export let folder: DocFolder = null;
+    export let onClose: Function = null;
 
     let nbPages = 0;
     let takingPicture = false;
@@ -314,6 +316,7 @@
             document.removeFromDisk();
             document = null;
         }
+        stopPreview();
     }
     let previewStarted = false;
     async function startPreview() {
@@ -340,10 +343,10 @@
             //     return;
             // }
             pauseAutoScan();
-            // // cameraView?.nativeView.stopPreview();
-            // if (cropView?.nativeView) {
-            //     cropView.nativeView.quads = null;
-            // }
+            cameraView?.nativeView.stopPreview();
+            if (cropView?.nativeView) {
+                cropView.nativeView.quads = null;
+            }
         }
     }
 
@@ -358,7 +361,7 @@
         }
     }
     let saveCalled = false;
-    async function saveCurrentDocument() {
+    export let saveCurrentDocument = async () => {
         if (saveCalled) {
             return;
         }
@@ -397,13 +400,17 @@
         } catch (error) {
             showError(error);
         }
-    }
+    };
 
     function onGoBack() {
         if (PRODUCTION && pagesToAdd.length > 0) {
             confirmGoBack({ message: lc('sure_cancel_import'), onGoBack: closeModal });
         } else {
-            closeModal(undefined);
+            if (onClose) {
+                onClose();
+            } else {
+                closeModal(undefined);
+            }
         }
     }
 
@@ -420,7 +427,7 @@
             }
         });
 
-    let pagesToAdd: PageData[] = [];
+    export let pagesToAdd: PageData[] = [];
 
     async function setCurrentImage(image: string, rotation = 0, needAnimateBack = false) {
         smallImage = image;
@@ -599,6 +606,8 @@
         }
     }
 
+
+    // unused
     function toggleEditing() {
         editing = !editing;
         if (torchEnabled) {
@@ -706,7 +715,7 @@
         </absolutelayout>
 
         <!-- <canvasView bind:this={canvasView} rowSpan="2" on:draw={onCanvasDraw} on:tap={focusCamera} /> -->
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack}></CActionBar>
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="black" modalWindow={!startOnCam} {onGoBack} />
 
         <gridlayout columns="auto,auto,auto,auto,*,auto,auto" row={2}>
             <IconButton color="white" text={getFlashIcon(flashMode)} tooltip={lc('flash_mode')} on:tap={() => (flashMode = (flashMode + 1) % 3)} />

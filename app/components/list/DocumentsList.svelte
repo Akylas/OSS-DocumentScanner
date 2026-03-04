@@ -3,8 +3,8 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
-    import { throttle } from '@nativescript/core/utils';
+    import { AndroidActivityResultEventData, Application, ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { openFile, openUrl, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';

@@ -1,18 +1,20 @@
 <script context="module" lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Img, getImagePipeline } from '@nativescript-community/ui-image';
+    import { Img } from '@nativescript-community/ui-image';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, Frame, NavigatedData, ObservableArray, Page, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { debounce, throttle } from '@nativescript/core/utils';
+    import { OptionType } from '@shared/components/OptionSelect.svelte';
+    import { prefs } from '@shared/services/preferences';
     import { showError } from '@shared/utils/showError';
     import { closeModal, fade, goBack, navigate } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
@@ -32,8 +34,8 @@
         FolderUpdatedEventData,
         documentsService
     } from '~/services/documents';
-    import { prefs } from '@shared/services/preferences';
     import { syncService, syncServicesStore } from '~/services/sync';
+    import { SERVICES_SYNC_COLOR, SERVICES_SYNC_MASK } from '~/services/sync/types';
     import {
         BOTTOM_BUTTON_OFFSET,
         DEFAULT_NB_COLUMNS,
@@ -69,13 +71,10 @@
         showPopoverMenu,
         showSettings,
         transformPages,
-        tryCatch,
         tryCatchFunction
     } from '~/utils/ui';
-    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
-    import { OptionType } from '@shared/components/OptionSelect.svelte';
-    import { SERVICES_SYNC_COLOR, SERVICES_SYNC_MASK } from '~/services/sync/types';
     import { sortByKey } from '~/utils/utils.common';
+    import { colors, folderBackgroundColor, fontScale, fonts, isLandscape, onFolderBackgroundColorChanged, onFontScaleChanged, startOnCam, windowInset } from '~/variables';
 
     const textPaint = new Paint();
 
