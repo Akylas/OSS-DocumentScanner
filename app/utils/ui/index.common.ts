@@ -521,7 +521,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
-            height: Math.min(rowHeight * options.length, props?.maxHeight || maxHeight),
+            height: Math.min(rowHeight * options.length + (title ? 50 : 0), props?.maxHeight || maxHeight),
             width: 200 * get(fontScale),
             options,
             onClose: async (item) => {
@@ -2216,4 +2216,3 @@ export async function requestPhotoPermission() {
 export async function requestGalleryPermission() {
     return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
 }
-

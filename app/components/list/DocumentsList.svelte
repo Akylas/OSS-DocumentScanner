@@ -106,6 +106,10 @@
 </script>
 
 <MainList
+    folderViewStyles={{
+        horizontal: { name: lc('horizontal') },
+        vertical: { name: lc('vertical') }
+    }}
     {title}
     viewStyles={{
         default: { name: lc('expanded') },

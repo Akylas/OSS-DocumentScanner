@@ -10,6 +10,7 @@
     import { AnimationDefinition, Application, ApplicationSettings, Color, EventData, Frame, NavigatedData, ObservableArray, Page, StackLayout } from '@nativescript/core';
     import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { debounce, throttle } from '@nativescript/core/utils';
+    import ListItemAutoSize from '@shared/components/ListItemAutoSize.svelte';
     import { OptionType } from '@shared/components/OptionSelect.svelte';
     import { prefs } from '@shared/services/preferences';
     import { showError } from '@shared/utils/showError';
@@ -38,6 +39,7 @@
     import { SERVICES_SYNC_COLOR, SERVICES_SYNC_MASK } from '~/services/sync/types';
     import {
         BOTTOM_BUTTON_OFFSET,
+        DEFAULT_FOLDER_VIEW_STYLE,
         DEFAULT_NB_COLUMNS,
         DEFAULT_NB_COLUMNS_LANDSCAPE,
         DEFAULT_SORT_ORDER,
@@ -52,6 +54,7 @@
         EVENT_FOLDER_UPDATED,
         EVENT_STATE,
         EVENT_SYNC_STATE,
+        SETTINGS_FOLDER_VIEW_STYLE,
         SETTINGS_NB_COLUMNS,
         SETTINGS_NB_COLUMNS_LANDSCAPE,
         SETTINGS_SORT_ORDER,
@@ -133,15 +136,18 @@
     export let modal: boolean = false;
     export let itemTemplateSelector = (viewStyle, item?: Item) => item?.type || 'default';
     export let viewStyles: { [k: string]: { name: string; icon?: string; type?: string; boxType?: string } };
+    export let folderViewStyles: { [k: string]: { name: string; icon?: string; type?: string; boxType?: string } } = {};
     export let sortKeys: { [k: string]: { name: string; icon?: string; type?: string; key?: string } } = {
         name: { name: lc('name') },
         createdDate: { name: lc('date') }
     };
     export let onlyForImport = false;
     export let viewStyleChanged = (oldValue, newValue) => newValue !== oldValue;
+    export let folderViewStyleChanged = (oldValue, newValue) => newValue !== oldValue;
     export let sortOrder = ApplicationSettings.getString(SETTINGS_SORT_ORDER, DEFAULT_SORT_ORDER);
     export let syncEnabled = syncService.enabled;
     export let viewStyle: string = ApplicationSettings.getString(SETTINGS_VIEW_STYLE, DEFAULT_VIEW_STYLE);
+    export let folderViewStyle: string = ApplicationSettings.getString(SETTINGS_FOLDER_VIEW_STYLE, DEFAULT_FOLDER_VIEW_STYLE);
 
     export const getSyncColors = (item: Item) => {
         const synced = item.doc._synced;
@@ -224,7 +230,17 @@
 
             await refreshFolders(filter);
             documents = new ObservableArray(
-                (folderItems.length ? [{ type: 'folders', selected: false }] : []).concat(
+                (folderItems.length
+                    ? folderViewStyle === 'vertical'
+                        ? [
+                              ...folderItems.map((f) => ({
+                                  ...f,
+                                  type: 'folder'
+                              }))
+                          ]
+                        : [{ type: 'folders', selected: false }]
+                    : []
+                ).concat(
                     r.map(
                         (doc) =>
                             ({
@@ -485,14 +501,25 @@
     function selectItem(item: Item) {
         if (!item.selected) {
             if (item.folder) {
-                folderItems?.some((d, index) => {
-                    if (d === item) {
-                        nbSelected += d.folder.count;
-                        d.selected = true;
-                        folderItems.setItem(index, d);
-                        return true;
-                    }
-                });
+                if (folderViewStyle === 'horizontal') {
+                    folderItems?.some((d, index) => {
+                        if (d.folder === item.folder) {
+                            nbSelected += d.folder.count;
+                            d.selected = true;
+                            folderItems.setItem(index, d);
+                            return true;
+                        }
+                    });
+                } else {
+                    documents?.some((d, index) => {
+                        if (d.folder === item.folder) {
+                            nbSelected += 1;
+                            d.selected = true;
+                            documents.setItem(index, d);
+                            return true;
+                        }
+                    });
+                }
             } else {
                 documents?.some((d, index) => {
                     if (d === item) {
@@ -510,14 +537,25 @@
         // DEV_LOG && console.log('unselectItem', item);
         if (item.selected) {
             if (item.folder) {
-                folderItems?.some((d, index) => {
-                    if (d === item) {
-                        nbSelected -= d.folder.count;
-                        d.selected = false;
-                        folderItems.setItem(index, d);
-                        return true;
-                    }
-                });
+                if (folderViewStyle === 'horizontal') {
+                    folderItems?.some((d, index) => {
+                        if (d.folder === item.folder) {
+                            nbSelected -= d.folder.count;
+                            d.selected = false;
+                            folderItems.setItem(index, d);
+                            return true;
+                        }
+                    });
+                } else {
+                    documents?.some((d, index) => {
+                        if (d.folder === item.folder) {
+                            nbSelected -= 1;
+                            d.selected = false;
+                            documents.setItem(index, d);
+                            return true;
+                        }
+                    });
+                }
             } else {
                 documents?.some((d, index) => {
                     if (d === item) {
@@ -532,13 +570,22 @@
     }
 
     function getTotalNbDocuments() {
-        return documents.length - 1; // -1 because the first the first item is actually the folders horizontal collectionview
+        if (folderViewStyle === 'horizontal') {
+            return documents.length - 1; // -1 because the first the first item is actually the folders horizontal collectionview
+        }
+        return documents.length;
     }
     function getTotalNbDocumentsWithFolders() {
-        return getTotalNbDocuments() + folderItems.length;
+        if (folderViewStyle === 'horizontal') {
+            return getTotalNbDocuments() + folderItems.length;
+        }
+        return getTotalNbDocuments();
     }
     function getDocumentsStartIndex() {
-        return folderItems.length > 0 ? 1 : 0; // 1 because the first the first item is actually the folders horizontal collectionview
+        if (folderViewStyle === 'horizontal') {
+            return folderItems.length > 0 ? 1 : 0; // 1 because the first the first item is actually the folders horizontal collectionview
+        }
+        return 0;
     }
     function unselectAll() {
         nbSelected = 0;
@@ -570,6 +617,7 @@
         nbSelected = newCount;
     }
     export function onItemLongPress(item: Item, event?) {
+        DEV_LOG && console.log('onItemLongPress', !!item.selected, item.folder);
         if (item.selected) {
             unselectItem(item);
         } else {
@@ -584,6 +632,7 @@
         await goToFolderView(folder);
     };
     export const onItemTapFast = async function (item: Item) {
+        DEV_LOG && console.log('onItemTapFast');
         try {
             if (nbSelected > 0) {
                 onItemLongPress(item);
@@ -685,6 +734,8 @@
             const d = documents.getItem(index);
             if (d.doc && d.selected) {
                 selected.push(d.doc);
+            } else if (d.folder && d.selected) {
+                selected.push(...(await documentsService.documentRepository.findDocuments({ folder: d.folder })));
             }
         }
         for (let index = 0; index < folderItems.length; index++) {
@@ -696,26 +747,26 @@
         return sortByKey(selected, sortOrder);
     }
 
-    async function loopSelectedDocuments(callback: (d: OCRDocument) => void) {
-        if (!documentsService.started) {
-            return;
-        }
-        for (let index = getDocumentsStartIndex(); index < documents.length; index++) {
-            const d = documents.getItem(index);
-            if (d.doc && d.selected) {
-                callback(d.doc);
-            }
-        }
-        for (let index = 0; index < folderItems.length; index++) {
-            const d = folderItems.getItem(index);
-            if (d.folder && d.selected) {
-                const docs = await documentsService.documentRepository.findDocuments({ folder: d.folder });
-                for (let i = 0; i < docs.length; i++) {
-                    callback(docs[i]);
-                }
-            }
-        }
-    }
+    // async function loopSelectedDocuments(callback: (d: OCRDocument) => void) {
+    //     if (!documentsService.started) {
+    //         return;
+    //     }
+    //     for (let index = getDocumentsStartIndex(); index < documents.length; index++) {
+    //         const d = documents.getItem(index);
+    //         if (d.doc && d.selected) {
+    //             callback(d.doc);
+    //         }
+    //     }
+    //     for (let index = 0; index < folderItems.length; index++) {
+    //         const d = folderItems.getItem(index);
+    //         if (d.folder && d.selected) {
+    //             const docs = await documentsService.documentRepository.findDocuments({ folder: d.folder });
+    //             for (let i = 0; i < docs.length; i++) {
+    //                 callback(docs[i]);
+    //             }
+    //         }
+    //     }
+    // }
     async function getSelectedPagesAndPossibleSingleDocument(): Promise<[{ page: OCRPage; document: OCRDocument }[], OCRDocument, OCRDocument[]]> {
         const selected: { page: OCRPage; document: OCRDocument }[] = [];
         const docs = await getSelectedDocuments();
@@ -760,6 +811,22 @@
                             color: (item) => (item.value ? colorPrimary : undefined)
                         }))
                     )
+                    .concat(
+                        Object.keys(folderViewStyles).length > 1
+                            ? [
+                                  { type: 'header', title: lc('folder_view_style') },
+                                  ...Object.keys(folderViewStyles).map((k) => ({
+                                      id: k,
+                                      ...folderViewStyles[k],
+                                      boxType: 'circle',
+                                      type: 'checkbox',
+                                      value: folderViewStyle === k,
+                                      group: 'folderViewStyle',
+                                      color: (item) => (item.value ? colorPrimary : undefined)
+                                  }))
+                              ]
+                            : []
+                    )
                     .concat([{ type: 'header', title: lc('sort') }])
                     .concat(
                         Object.keys(sortKeys).map((k) => ({
@@ -780,8 +847,8 @@
                 options,
                 vertPos: VerticalPosition.BELOW,
                 props: {
-                    width: 300 * $fontScale,
-                    autoSizeListItem: false,
+                    width: 200 * $fontScale,
+                    autoSizeListItem: true,
                     onCheckBox: (item, value) => {
                         if (item.group === 'viewStyle') {
                             const changed = viewStyleChanged(item.id, viewStyle);
@@ -791,6 +858,14 @@
                             updateColumns($isLandscape);
                             if (changed) {
                                 collectionView?.nativeView.refresh();
+                            }
+                        } else if (item.group === 'folderViewStyle') {
+                            const changed = folderViewStyleChanged(item.id, folderViewStyle);
+
+                            folderViewStyle = item.id;
+                            ApplicationSettings.setString(SETTINGS_FOLDER_VIEW_STYLE, folderViewStyle);
+                            if (changed) {
+                                refresh();
                             }
                         } else if (item.group === 'sort') {
                             const currentAscending = sortOrder.indexOf('ASC') !== -1;
@@ -1101,6 +1176,27 @@
             row={2}
             spanSize={itemTemplateSpanSize}
             {...collectionViewOptions}>
+            <Template key="folder" let:item>
+                <ListItemAutoSize
+                    class="card"
+                    columns="auto,*"
+                    mainCol={1}
+                    padding="0 10 0 10"
+                    subtitle={lc('documents_count', item.folder.count)}
+                    title={folder ? item.folder.name.replace(folder.name + '/', '') : item.folder.name}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    on:tap={() => onItemTap(item)}>
+                    <label
+                        col={0}
+                        color={!$folderBackgroundColor && item.folder.color ? item.folder.color : colorOutline}
+                        fontFamily={$fonts.mdi}
+                        fontSize={24}
+                        padding="0 10 0 0"
+                        text="mdi-folder "
+                        verticalAlignment="center" />
+                    <SelectedIndicator col={0} horizontalAlignment="left" margin="10 0 10 0" selected={item.selected} verticalAlignment="top" />
+                </ListItemAutoSize>
+            </Template>
             <Template key="folders" let:item>
                 <collectionView
                     bind:this={foldersCollectionView}
