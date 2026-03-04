@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=4a6cad&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=e95c00&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.51.4"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,19 +81,19 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.53.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/ba419fce19d1af5f90804d5dc5079fbb23fa8ad97a4f6a0487b75685fd114561f7647b6f67f8fcce0d0a3f86689976f6c54e18822ed8a4db86c5edd0fa160b48
+  checksum: 10/ec6290d0063e834d5b310ac6984c1981eddf47f9cc041b598c07de3a5eaf72c205cbf24f3563470b401540dfea4efb11cd329264a4e765cdd4627bb6937d8818
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-app-utils@npm:2.2.8":
-  version: 2.2.8
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.8"
+"@akylas/nativescript-app-utils@npm:2.2.9":
+  version: 2.2.9
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.9"
   dependencies:
     "@nativescript-community/https": "npm:4.1.27"
     "@nativescript-community/l": "npm:4.3.10"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
     make-error: "npm:1.3.6"
-  checksum: 10/c97be690418a0f89f18273951331b859403c8fcdd8d37b6e713262242aa4809b733a7bff6b117ac164ec80f9af485eccba13ea55c8c1265dc1bcea7cab43eee1
+  checksum: 10/fdb1fbf76984338a2fce4217bb01f54912e09cfe6bdaaa6289efc08c0d0bf569fca689e8ed74370bae6bd94bbd081dcd01120199e9769c23e584568d375a7fc0
   languageName: node
   linkType: hard
 
@@ -170,9 +170,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript@npm:8.9.13":
-  version: 8.9.13
-  resolution: "@akylas/nativescript@npm:8.9.13"
+"@akylas/nativescript@portal:../NativeScript/dist/packages/core::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@akylas/nativescript@portal:../NativeScript/dist/packages/core::locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@csstools/css-calc": "npm:~2.1.2"
     "@csstools/css-color-parser": "npm:^3.0.8"
@@ -185,9 +185,8 @@ __metadata:
     emoji-regex: "npm:^10.3.0"
     reduce-css-calc: "npm:^2.1.8"
     tslib: "npm:^2.6.3"
-  checksum: 10/d7bb881c8c75e6a4c5ec585b8298cb76627af8b0b2b2581e95f2cde9528c4bf10ff38b1d325f77370cb10649e88e83d92c1d6225e0ef3ef7a47c8488dbdc84b3
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@akylas/panzoom@npm:4.6.0":
   version: 4.6.0
@@ -9154,6 +9153,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"plugin-shared@portal:plugin-shared::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "plugin-shared@portal:plugin-shared::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "plugin-zip@portal:plugin-zip::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "plugin-zip@portal:plugin-zip::locator=root-workspace-0b6124%40workspace%3A."
@@ -10257,7 +10262,7 @@ __metadata:
     "@akylas/nativescript": "npm:8.9.13"
     "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "file:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.8"
+    "@akylas/nativescript-app-utils": "npm:2.2.9"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:8.9.6"
@@ -10323,6 +10328,7 @@ __metadata:
     nativescript-iqkeyboardmanager: "npm:1.5.1"
     nested-property: "npm:^4.0.0"
     plugin-nativeprocessor: "portal:plugin-nativeprocessor"
+    plugin-shared: "portal:plugin-shared"
     plugin-zip: "portal:plugin-zip"
     svelte-loader: "npm:3.2.4"
     topojson-simplify: "npm:3.0.3"

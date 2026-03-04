@@ -99,6 +99,7 @@
         "nativescript-iqkeyboardmanager": "1.5.1",
         "nested-property": "^4.0.0",
         "plugin-nativeprocessor": "portal:plugin-nativeprocessor",
+        "plugin-shared": "portal:plugin-shared",
         "plugin-zip": "portal:plugin-zip",
         "topojson-simplify": "3.0.3",
         "util": "0.12.5"
@@ -122,5 +123,8 @@
         "./plugin-nativeprocessor",
         "./webpdfviewer"
     ],
+    "resolutions": {
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
+    },
     "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b"
 }
