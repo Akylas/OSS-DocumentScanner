@@ -1298,20 +1298,30 @@
                                 : undefined
                         });
                         Utils.dismissSoftInput();
-                        if (result && !!result.result && result.text.length > 0) {
+                        DEV_LOG && console.log('result', result);
+                        if (result && !!result.result) {
                             if (item.id === 'store_setting') {
                                 const store = getStoreSetting(item.storeKey, item.storeDefault);
-                                if (item.valueType === 'string') {
-                                    store[item.key] = result.text;
+                                if (result.text.length > 0) {
+                                    if (item.valueType === 'string') {
+                                        store[item.key] = result.text;
+                                    } else {
+                                        store[item.key] = parseInt(result.text, 10);
+                                    }
                                 } else {
-                                    store[item.key] = parseInt(result.text, 10);
+                                    delete store[item.key];
                                 }
+                                DEV_LOG && console.log('store_setting', store);
                                 ApplicationSettings.setString(item.storeKey, JSON.stringify(store));
                             } else {
-                                if (item.valueType === 'string') {
-                                    ApplicationSettings.setString(item.key, result.text);
+                                if (result.text.length > 0) {
+                                    if (item.valueType === 'string') {
+                                        ApplicationSettings.setString(item.key, result.text);
+                                    } else {
+                                        ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
+                                    }
                                 } else {
-                                    ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
+                                    ApplicationSettings.remove(item.key);
                                 }
                             }
                             updateItem(item);

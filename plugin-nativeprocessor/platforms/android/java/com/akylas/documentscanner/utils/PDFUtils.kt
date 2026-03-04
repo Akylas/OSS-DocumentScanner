@@ -542,8 +542,9 @@ class PDFUtils {
                 .setFullCompressionMode(true).setPdfVersion(
                 PdfVersion.PDF_1_4
             )
-            if (jsonOps.has("password")) {
-                props.setStandardEncryption(jsonOps.getString("password").toByteArray(), null, EncryptionConstants.ALLOW_PRINTING, EncryptionConstants.ENCRYPTION_AES_256 or EncryptionConstants.DO_NOT_ENCRYPT_METADATA);
+            val password = jsonOps.optString("password", null)
+            if (password != null && password != "null") {
+                props.setStandardEncryption(password.toByteArray(), password.toByteArray(), 0, EncryptionConstants.ENCRYPTION_AES_256);
             } 
             val writer = PdfWriter(generateFilePath, props)
             val pdfDoc = PdfDocument(writer)
