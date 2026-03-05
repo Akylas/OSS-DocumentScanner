@@ -1,5 +1,5 @@
 import { share } from '@akylas/nativescript-app-utils/share';
-import { request } from '@nativescript-community/perms';
+import { MultiResult, Permissions, Status, isPermResultAuthorized, openSettings, request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -29,7 +29,7 @@ import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { doInBatch } from '@shared/utils/batch';
-import { SilentError } from '@shared/utils/error';
+import { IgnoreError, PermissionError, SilentError } from '@akylas/nativescript-app-utils/error';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
@@ -71,6 +71,7 @@ import {
     DEFAULT_COLORTYPE,
     DEFAULT_CONTRAST,
     DEFAULT_EXPORT_DIRECTORY,
+    DEFAULT_OCR_COPY_USE_SPACE,
     DEFAULT_TRANSFORM,
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
@@ -92,6 +93,7 @@ import {
     SETTINGS_IMAGE_EXPORT_FORMAT,
     SETTINGS_IMAGE_EXPORT_QUALITY,
     SETTINGS_IMPORT_PDF_IMAGES,
+    SETTINGS_OCR_COPY_USE_SPACE,
     SETTINGS_TRANSFORM_BATCH_SIZE,
     TRANSFORMS_SPLIT,
     TRANSFORM_BATCH_SIZE,
@@ -102,7 +104,7 @@ import { recycleImages } from '~/utils/images';
 import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { cleanFilename, requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { cleanFilename, saveImage } from '../utils';
 import { importPKPassFiles } from '~/utils/pkpass-import';
 import { zip } from 'plugin-zip';
 
@@ -143,7 +145,8 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         );
         DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
         if (CARD_APP && pkpasses.length) {
-            return importPKPassFromUris({ uris: pkpasses, canGoToView: true });
+            await importPKPassFromUris({ uris: pkpasses, canGoToView: true });
+            return;
         }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
@@ -496,8 +499,9 @@ export async function showPopoverMenu<T = any>({
     onClose,
     options,
     props,
+    title,
     vertPos
-}: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
+}: { options; anchor; onClose?; props?; title?: string; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
@@ -509,6 +513,7 @@ export async function showPopoverMenu<T = any>({
         horizPos: horizPos ?? HorizontalPosition.ALIGN_LEFT,
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
+            title,
             borderRadius: 10,
             elevation: __ANDROID__ ? 3 : 0,
             margin: 4,
@@ -516,7 +521,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
-            height: Math.min(rowHeight * options.length, props?.maxHeight || maxHeight),
+            height: Math.min(rowHeight * options.length + (title ? 50 : 0), props?.maxHeight || maxHeight),
             width: 200 * get(fontScale),
             options,
             onClose: async (item) => {
@@ -621,6 +626,7 @@ export async function showPDFPopoverMenu({
             .concat([{ id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }] as any)
     );
     return showPopoverMenu({
+        title: lc('pdf_export'),
         options,
         anchor,
         vertPos: VerticalPosition.BELOW,
@@ -844,7 +850,7 @@ export async function showPDFPopoverMenu({
                     }
                     case 'preview':
                         await closePopover();
-                        const component = (await import('~/components/pdf/PDFPreview.svelte')).default;
+                        const component = (await import('~/components/pdf/PDFPreviewModal.svelte')).default;
                         await showModal({
                             page: component,
                             animated: true,
@@ -1030,6 +1036,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
     }
     return new Promise<boolean>((resolve, reject) => {
         showPopoverMenu({
+            title: lc('image_export'),
             options,
             anchor,
             vertPos: VerticalPosition.BELOW,
@@ -1463,7 +1470,16 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
     }
 }
 
+export function copyOCRToClipboard(text) {
+    const replaceLineBreaks = ApplicationSettings.getBoolean(SETTINGS_OCR_COPY_USE_SPACE, DEFAULT_OCR_COPY_USE_SPACE);
+    if (replaceLineBreaks) {
+        text = text.replace(/\n/g, ' ');
+    }
+    copyTextToClipboard(text);
+}
+
 export function copyTextToClipboard(text) {
+    DEV_LOG && console.log('copyTextToClipboard', text);
     copyToClipboard(text);
     if (__IOS__ || (__ANDROID__ && SDK_VERSION < 13)) {
         showToast(lc('copied'));
@@ -1572,7 +1588,7 @@ export async function showMatrixLevelPopover({ anchor, currentValue, item, onCha
     });
 }
 export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
-    DEV_LOG && console.log('goToDocumentView');
+    // DEV_LOG && console.log('goToDocumentView');
     if (CARD_APP) {
         const page = (await import('~/components/view/CardView.svelte')).default;
         return navigate({
@@ -2149,7 +2165,57 @@ export async function importPKPassFromUris({ canGoToView = true, uris }: { uris:
         } catch (error) {
             showError(error);
         } finally {
+            DEV_LOG && console.log('importPKPassFromUris finally');
             hideLoading();
         }
     }
+}
+
+export function isPermResultNeverAskAgain(r: MultiResult | Status) {
+    const statusCheck = __IOS__ ? Status.Denied : Status.NeverAskAgain;
+    if (typeof r === 'object') {
+        const denied = Object.keys(r).some((s) => r[s] === statusCheck);
+        return denied;
+    }
+    return r === statusCheck;
+}
+
+export async function requestPermission(perm: Permissions, errorMessage: string) {
+    const result = await request(perm);
+    if (isPermResultNeverAskAgain(result)) {
+        const showSetting = await confirm({
+            title: lc('permission_denied'),
+            message: errorMessage,
+            iosForceClosePresentedViewController: true, //ensure error popup is always showing
+            okButtonText: l('open_settings'),
+            cancelButtonText: l('cancel')
+        });
+        if (showSetting) {
+            await openSettings();
+        } else {
+            throw new IgnoreError();
+        }
+    } else if (!isPermResultAuthorized(result)) {
+        throw new PermissionError(errorMessage);
+    }
+}
+
+export async function requestCameraPermission() {
+    return requestPermission('camera', lc('camera_permission_needed'));
+}
+
+export async function requestStoragePermission() {
+    if (__ANDROID__ && SDK_VERSION <= 29) {
+        return requestPermission('storage', lc('storage_permission_needed'));
+    }
+}
+
+export async function requestPhotoPermission() {
+    return requestPermission('photo', lc('media_library_permission_needed'));
+}
+export async function requestGalleryPermission() {
+    return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
+}
+export async function requestNotificationPermission() {
+    return requestPermission('notification', lc('notification_permission_needed'));
 }

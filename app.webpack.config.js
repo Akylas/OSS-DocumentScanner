@@ -101,7 +101,7 @@ module.exports = (env, params = {}) => {
     env.appComponents = env.appComponents || [];
     // env.appComponents.push('~/android/cameraactivity');
     env.appComponents.push('~/android/activity.android');
-    env.appComponents.push('~/android/quicktoggle.android');
+    env.appComponents.push('~/android/camera_scan_activity');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {

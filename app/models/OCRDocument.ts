@@ -310,7 +310,6 @@ export class OCRDocument extends Observable implements Document {
                         .split(SEPARATOR)
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
-                    DEV_LOG && console.log('baseName', baseName);
                     if (!baseName.endsWith(imageExportSettings.imageFormat)) {
                         baseName += '.' + imageExportSettings.imageFormat;
                     }
@@ -343,7 +342,12 @@ export class OCRDocument extends Observable implements Document {
             } else {
                 this.pages = pages;
             }
-            DEV_LOG && console.log('addPages done', this.pages.length);
+            DEV_LOG &&
+                console.log(
+                    'addPages done',
+                    this.pages.length,
+                    this.pages.map((p) => p.imagePath)
+                );
             // this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
@@ -388,7 +392,7 @@ export class OCRDocument extends Observable implements Document {
         return this;
     }
 
-    async ocrPage({ dataPath, language, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string }) {
+    async ocrPage({ dataPath, language, notify = true, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string; notify?: boolean }) {
         const page = this.pages[pageIndex];
         if (!page.imagePath) {
             return;
@@ -409,14 +413,20 @@ export class OCRDocument extends Observable implements Document {
         );
         DEV_LOG && console.log('ocrPage done', this.id, pageIndex, JSON.stringify(ocrData));
         if (ocrData?.blocks?.length) {
-            await this.updatePage(pageIndex, {
-                ocrData
-            });
+            await this.updatePage(
+                pageIndex,
+                {
+                    ocrData
+                },
+                false,
+                true,
+                notify
+            );
             return ocrData;
         }
     }
 
-    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true) {
+    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true, notify = true) {
         //compute diff update
         const page = this.pages[pageIndex];
         if (page) {
@@ -428,9 +438,11 @@ export class OCRDocument extends Observable implements Document {
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
             if (saveDoc) {
-                await this.save({}, true, true);
+                await this.save({}, true, notify);
             }
-            this.onPageUpdated(pageIndex, page, imageUpdated);
+            if (notify) {
+                this.onPageUpdated(pageIndex, page, imageUpdated);
+            }
         }
         DEV_LOG && console.log('updatePage done', pageIndex);
     }
@@ -695,7 +707,6 @@ export class OCRPage extends Observable implements Page {
 
     transforms?: string;
 
-    // pageIndex: number;
     width: number;
     height: number;
     size: number;
@@ -728,22 +739,20 @@ export class OCRPage extends Observable implements Page {
         return JSON.stringify(this.toJSON());
     }
 
-    toJSON() {
+    toJSON(): Page {
         const keys = Object.keys(this);
         return keys.reduce((acc, key) => {
             if (key === '_synced' || !key.startsWith('_')) {
                 acc[key] = this[key];
             }
             return acc;
-        }, {});
-        // return JSON.parse(this.toString());
+        }, {} as Page);
     }
     static fromJSON(jsonObj: Page) {
         const page = new OCRPage(jsonObj.id, jsonObj.document_id);
         if (jsonObj.pkpass) {
             jsonObj.pkpass = PKPass.fromJSON(jsonObj.pkpass);
         }
-        // DEV_LOG && console.log('OCRPage', 'fromJSON', Object.keys(jsonObj));
         Object.assign(page, jsonObj);
         return page;
     }

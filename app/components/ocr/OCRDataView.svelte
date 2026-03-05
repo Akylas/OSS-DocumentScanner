@@ -1,13 +1,13 @@
 <script lang="ts">
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { createNativeAttributedString } from '@nativescript-community/ui-label';
     import { AWebView } from '@nativescript-community/ui-webview';
     import { Color, Page } from '@nativescript/core';
-    import { OCRData } from 'plugin-nativeprocessor';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import CActionBar from '~/components/common/CActionBar.svelte';
     import { showError } from '@shared/utils/showError';
-    import { copyTextToClipboard } from '~/utils/ui';
-    import { colorTheme, isEInk } from '~/helpers/theme';
+    import { OCRData } from 'plugin-nativeprocessor';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import { isEInk } from '~/helpers/theme';
+    import { copyOCRToClipboard } from '~/utils/ui';
     import { colors } from '~/variables';
 
     let { colorBackground, colorOnBackground } = $colors;
@@ -83,7 +83,7 @@
         : ocrData.text;
     function copyText() {
         try {
-            copyTextToClipboard(text);
+            copyOCRToClipboard(text);
         } catch (error) {
             showError(error);
         }

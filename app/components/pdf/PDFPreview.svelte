@@ -7,7 +7,7 @@
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { ApplicationSettings, ObservableArray, Utils, View, knownFolders } from '@nativescript/core';
     import { openFile } from '@nativescript/core/utils';
-    import { SilentError } from '@shared/utils/error';
+    import { SilentError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { printPDF } from 'plugin-nativeprocessor';
     import { Template } from '@nativescript-community/svelte-native/components';
@@ -16,7 +16,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { getFileNameForDocument, l, lc } from '~/helpers/locale';
     import { OCRDocument, OCRPage } from '~/models/OCRDocument';
-    import PDFCanvas, { PDFCanvasItem } from '~/services/pdf/PDFCanvas';
+    import PDFCanvas, { PDFCanvasItem, PDFExportBaseOptions } from '~/services/pdf/PDFCanvas';
     import { exportPDFAsync } from '~/services/pdf/PDFExporter';
     import { ANDROID_CONTENT, IMAGE_CONTEXT_OPTIONS, SEPARATOR } from '~/utils/constants';
     import { PDF_OPTIONS } from '~/utils/localized_constant';
@@ -37,21 +37,27 @@
 <script lang="ts">
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorOnSurfaceVariant2, colorPrimary, colorSurface, colorSurfaceContainer, colorSurfaceContainerHigh } = $colors);
 
-    const pdfCanvas = new PDFCanvas();
-    const optionsStore = writable(pdfCanvas.options);
-    let { color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
-    $: ({ color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
-    optionsStore.subscribe((newValue) => {
-        DEV_LOG && console.log('saving options', newValue);
-        Object.assign(pdfCanvas.options, newValue);
-        ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
-    });
     export let pages: { page: OCRPage; document: OCRDocument }[];
     export let document: OCRDocument = null;
+    export let saveFunction: (options: PDFExportBaseOptions) => void = null;
+
     let pager: NativeViewElementNode<Pager>;
     let drawer: DrawerElement;
     let items: ObservableArray<PDFCanvasItem>;
     let currentPagerIndex = 0;
+    const pdfCanvas = new PDFCanvas();
+    const optionsStore = writable(pdfCanvas.options);
+    let { color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = pdfCanvas.options;
+    $: ({ color, draw_ocr_text, items_per_page, orientation, page_padding, paper_size } = $optionsStore);
+
+    optionsStore.subscribe((newValue) => {
+        DEV_LOG && console.log('saving options', newValue);
+        Object.assign(pdfCanvas.options, newValue);
+        if (!saveFunction) {
+            // in this case this is the scanner activity we dont want to persist options
+            ApplicationSettings.setString('default_export_options', JSON.stringify(pdfCanvas.options));
+        }
+    });
 
     function refresh() {
         pdfCanvas.updatePages(pages.map((p) => p.page));
@@ -298,132 +304,135 @@
 </script>
 
 <!-- we use a frame to be able to navigate to settings from the modal-->
-<frame id="modal-frame">
-    <page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all" statusBarColor={colorSurface}>
-        <gridlayout class="pageContent" rows="auto,*">
-            <drawer bind:this={drawer} row={1}>
-                <gridlayout rows="auto,*,auto" prop:mainContent android:paddingBottom={$windowInset.bottom}>
-                    <gridlayout backgroundColor={colorSurface} columns="*,*" padding={5} rows="auto,auto" on:tap={() => drawer?.open()}>
-                        <label color={colorOnSurface} fontSize={15}>
-                            <span text={lc('orientation') + ': '} />
-                            <span color={colorOnSurfaceVariant2} fontWeight="bold" text={PDF_OPTIONS['orientation'][orientation].name} />
-                        </label>
-                        <label col={1} color={colorOnSurface} fontSize={15}>
-                            <span text={lc('paper_size') + ': '} />
-                            <span color={colorOnSurfaceVariant2} fontWeight="bold" text={PDF_OPTIONS['paper_size'][paper_size].name} />
-                        </label>
-                        <label colSpan={2} color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} row={1} text="mdi-chevron-down" textAlignment="center" />
-                    </gridlayout>
-                    <pager
-                        bind:this={pager}
-                        id="pager"
-                        {itemTemplateSelector}
-                        {items}
-                        orientation="horizontal"
-                        pagesCount={1}
-                        peaking={PAGER_PEAKING}
-                        preserveIndexOnItemsChange={true}
-                        row={1}
-                        selectedIndex={currentPagerIndex}
-                        on:selectedIndexChange={onPageIndexChanged}>
-                        {#each { length: 6 } as _, i (i)}
-                            <Template key={`${i + 1}`} let:index let:item>
-                                <gridlayout padding={PAGER_PAGE_PADDING - 10}>
-                                    <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)} margin={10}>
-                                        {#each { length: i + 1 } as _, j (j)}
-                                            <image
-                                                ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
-                                                {...getPageImageOptions(i + 1, item, j, index)}
-                                                horizontalAlignment="center"
-                                                stretch="aspectFit"
-                                                verticalAlignment="middle" />
-                                        {/each}
-                                    </gridlayout>
+<page id="pdfpreview" actionBarHidden={true} backgroundColor={colorSurfaceContainerHigh} screenOrientation="all" statusBarColor={colorSurface}>
+    <gridlayout class="pageContent" rows="auto,*">
+        <drawer bind:this={drawer} row={1}>
+            <gridlayout rows="auto,*,auto" prop:mainContent android:paddingBottom={$windowInset.bottom}>
+                <gridlayout backgroundColor={colorSurface} columns="*,*" padding={5} rows="auto,auto" on:tap={() => drawer?.open()}>
+                    <label color={colorOnSurface} fontSize={15}>
+                        <span text={lc('orientation') + ': '} />
+                        <span color={colorOnSurfaceVariant2} fontWeight="bold" text={PDF_OPTIONS['orientation'][orientation].name} />
+                    </label>
+                    <label col={1} color={colorOnSurface} fontSize={15}>
+                        <span text={lc('paper_size') + ': '} />
+                        <span color={colorOnSurfaceVariant2} fontWeight="bold" text={PDF_OPTIONS['paper_size'][paper_size].name} />
+                    </label>
+                    <label colSpan={2} color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} row={1} text="mdi-chevron-down" textAlignment="center" />
+                </gridlayout>
+                <pager
+                    bind:this={pager}
+                    id="pager"
+                    {itemTemplateSelector}
+                    {items}
+                    orientation="horizontal"
+                    pagesCount={1}
+                    peaking={PAGER_PEAKING}
+                    preserveIndexOnItemsChange={true}
+                    row={1}
+                    selectedIndex={currentPagerIndex}
+                    on:selectedIndexChange={onPageIndexChanged}>
+                    {#each { length: 6 } as _, i (i)}
+                        <Template key={`${i + 1}`} let:index let:item>
+                            <gridlayout padding={PAGER_PAGE_PADDING - 10}>
+                                <gridlayout backgroundColor="white" boxShadow="0 0 6 rgba(0, 0, 0, 0.8)" {...getPageLayoutProps(item, i + 1)} margin={10}>
+                                    {#each { length: i + 1 } as _, j (j)}
+                                        <image
+                                            ios:contextOptions={IMAGE_CONTEXT_OPTIONS}
+                                            {...getPageImageOptions(i + 1, item, j, index)}
+                                            horizontalAlignment="center"
+                                            stretch="aspectFit"
+                                            verticalAlignment="middle" />
+                                    {/each}
                                 </gridlayout>
-                            </Template>
-                        {/each}
-                    </pager>
-                    <PageIndicator horizontalAlignment="right" margin={10} row={1} scale={$fontScale} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
-                    <gridlayout columns="*,*" row={2}>
+                            </gridlayout>
+                        </Template>
+                    {/each}
+                </pager>
+                <PageIndicator horizontalAlignment="right" margin={10} row={1} scale={$fontScale} text={`${currentPagerIndex + 1}/${items.length}`} verticalAlignment="bottom" />
+
+                <gridlayout columns="*,*" row={2}>
+                    {#if saveFunction}
+                        <mdbutton text={lc('save')} on:tap={() => saveFunction(pdfCanvas.options)} />
+                    {:else}
                         <mdbutton text={lc('export')} on:tap={exportPDF} />
                         <mdbutton col={1} text={lc('open')} on:tap={openPDF} />
-                    </gridlayout>
+                    {/if}
                 </gridlayout>
+            </gridlayout>
 
-                <wraplayout prop:topDrawer backgroundColor={colorSurface}>
-                    <textfield
-                        editable={false}
-                        height={tHeight}
-                        hint={lc('orientation')}
-                        margin={tMargin}
-                        padding={tPadding}
-                        text={PDF_OPTIONS['orientation'][orientation].name}
-                        variant="outline"
-                        width={tWidth}
-                        on:tap={(e) => selectOption('orientation', e)} />
-                    <textfield
-                        editable={false}
-                        height={tHeight}
-                        hint={lc('paper_size')}
-                        margin={tMargin}
-                        padding={tPadding}
-                        text={PDF_OPTIONS['paper_size'][paper_size].name}
-                        variant="outline"
-                        width={tWidth}
-                        on:tap={(e) => selectOption('paper_size', e)} />
+            <wraplayout prop:topDrawer backgroundColor={colorSurface}>
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('orientation')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={PDF_OPTIONS['orientation'][orientation].name}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('orientation', e)} />
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('paper_size')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={PDF_OPTIONS['paper_size'][paper_size].name}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('paper_size', e)} />
 
-                    <textfield
-                        editable={false}
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('color')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={PDF_OPTIONS['color'][color].name}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('color', e)} />
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('items_per_page')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={PDF_OPTIONS['items_per_page'][items_per_page].name}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectOption('items_per_page', e, parseInt)} />
+                <textfield
+                    editable={false}
+                    height={tHeight}
+                    hint={lc('page_padding')}
+                    margin={tMargin}
+                    padding={tPadding}
+                    text={page_padding}
+                    variant="outline"
+                    width={tWidth}
+                    on:tap={(e) => selectSilderOption('page_padding', e)} />
+                <stacklayout orientation="horizontal" width={tWidth}>
+                    <checkbox
+                        id="checkbox"
+                        checked={draw_ocr_text}
                         height={tHeight}
-                        hint={lc('color')}
                         margin={tMargin}
-                        padding={tPadding}
-                        text={PDF_OPTIONS['color'][color].name}
-                        variant="outline"
-                        width={tWidth}
-                        on:tap={(e) => selectOption('color', e)} />
-                    <textfield
-                        editable={false}
-                        height={tHeight}
-                        hint={lc('items_per_page')}
-                        margin={tMargin}
-                        padding={tPadding}
-                        text={PDF_OPTIONS['items_per_page'][items_per_page].name}
-                        variant="outline"
-                        width={tWidth}
-                        on:tap={(e) => selectOption('items_per_page', e, parseInt)} />
-                    <textfield
-                        editable={false}
-                        height={tHeight}
-                        hint={lc('page_padding')}
-                        margin={tMargin}
-                        padding={tPadding}
-                        text={page_padding}
-                        variant="outline"
-                        width={tWidth}
-                        on:tap={(e) => selectSilderOption('page_padding', e)} />
-                    <stacklayout orientation="horizontal" width={tWidth}>
-                        <checkbox
-                            id="checkbox"
-                            checked={draw_ocr_text}
-                            height={tHeight}
-                            margin={tMargin}
-                            verticalAlignment="center"
-                            on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
-                            ios:margin={14} />
-                        <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} verticalAlignment="center" on:tap={tapForCheckBox} />
-                    </stacklayout>
+                        verticalAlignment="center"
+                        on:checkedChange={(e) => updateOption('draw_ocr_text', e.value)}
+                        ios:margin={14} />
+                    <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} verticalAlignment="center" on:tap={tapForCheckBox} />
+                </stacklayout>
 
-                    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} text="mdi-chevron-up" textAlignment="center" width="100%" on:tap={() => drawer?.close()} />
-                </wraplayout>
-            </drawer>
+                <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={32} text="mdi-chevron-up" textAlignment="center" width="100%" on:tap={() => drawer?.close()} />
+            </wraplayout>
+        </drawer>
 
-            <CActionBar modalWindow={true} title={lc('pdf_preview')}>
-                {#if __ANDROID__}
-                    <mdbutton class="actionBarButton" text="mdi-printer" variant="text" on:tap={onPrintPDF} />
-                {/if}
-                <mdbutton class="actionBarButton" text="mdi-cog" variant="text" on:tap={showPDFSettings} />
-            </CActionBar>
-        </gridlayout>
-    </page>
-</frame>
+        <CActionBar modalWindow={true} title={lc('pdf_preview')}>
+            {#if __ANDROID__}
+                <mdbutton class="actionBarButton" text="mdi-printer" variant="text" on:tap={onPrintPDF} />
+            {/if}
+            <mdbutton class="actionBarButton" text="mdi-cog" variant="text" on:tap={showPDFSettings} />
+        </CActionBar>
+    </gridlayout>
+</page>

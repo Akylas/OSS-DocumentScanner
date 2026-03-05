@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Img } from '@nativescript-community/ui-image';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -12,12 +14,10 @@
     import { goBack, showModal } from '@shared/utils/svelte/ui';
     import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
-    import { l, lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { ImportImageData, OCRDocument, OCRPage } from '~/models/OCRDocument';
     import { DocumentDeletedEventData, DocumentPageUpdatedEventData, DocumentUpdatedEventData, documentsService } from '~/services/documents';
@@ -26,6 +26,7 @@
     import { EVENT_DOCUMENT_DELETED, EVENT_DOCUMENT_PAGE_UPDATED, EVENT_DOCUMENT_UPDATED, TRANSFORMS_SPLIT } from '~/utils/constants';
     import {
         ColorMatricesTypes,
+        copyOCRToClipboard,
         copyTextToClipboard,
         detectOCROnPage,
         getColorMatrix,
@@ -682,7 +683,7 @@
     function copyText() {
         try {
             if (currentItemOCRData) {
-                copyTextToClipboard(currentItemOCRData.text);
+                copyOCRToClipboard(currentItemOCRData.text);
             }
         } catch (error) {
             showError(error);

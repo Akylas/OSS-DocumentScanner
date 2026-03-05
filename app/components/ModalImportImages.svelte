@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { Pager } from '@nativescript-community/ui-pager';
-    import { AndroidActivityBackPressedEventData, Application, GridLayout, Page } from '@nativescript/core';
-    import { onDestroy, onMount } from 'svelte';
-    import { closeModal } from '@nativescript-community/svelte-native';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { Pager } from '@nativescript-community/ui-pager';
+    import { AndroidActivityBackPressedEventData, Application, GridLayout, Page } from '@nativescript/core';
+    import { closeModal } from '@shared/utils/svelte/ui';
+    import { onDestroy, onMount } from 'svelte';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import CropView from '~/components/common/CropView.svelte';
     import { lc } from '~/helpers/locale';

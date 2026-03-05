@@ -64,12 +64,14 @@ export class WebdavPDFSyncService extends BasePDFSyncService {
         const temp = knownFolders.temp().path;
 
         if (__ANDROID__) {
+            const exportOptions = this.exportOptions;
+            const black_white = exportOptions.color === 'black_white';
             const options = JSON.stringify({
                 overwrite: true,
                 // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
                 text_scale: Screen.mainScreen.scale * 1.4,
-                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p) })),
-                ...this.exportOptions
+                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p, black_white ? 'grayscale' : undefined) })),
+                ...exportOptions
             });
             await generatePDFASync(temp, fileName, options, wrapNativeException);
         } else {

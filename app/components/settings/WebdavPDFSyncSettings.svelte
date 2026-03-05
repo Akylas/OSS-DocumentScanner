@@ -17,7 +17,7 @@
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
-    import { checkOrDownloadOCRLanguages, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover, showSnack } from '~/utils/ui';
+    import { checkOrDownloadOCRLanguages, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -59,6 +59,9 @@
     async function save() {
         if (await webdavView?.validateSave()) {
             const result = get(store);
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             if (result.OCREnabled && result.OCRLanguages.length) {
                 await checkOrDownloadOCRLanguages({
                     dataType: result.OCRDataType,

@@ -1,4 +1,4 @@
-import { HTTPError } from '@shared/utils/error';
+import { HTTPError } from '@akylas/nativescript-app-utils/error';
 import { parseRawXML } from './tools/dav';
 import { Response, ResponseDataDetailed, WebDAVClientContext } from './types';
 import { lc } from '@nativescript-community/l';

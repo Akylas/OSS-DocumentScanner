@@ -227,8 +227,8 @@ export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
                 page_id: pkpass.page_id,
                 passData: JSON.stringify(pkpass.passData),
                 images: JSON.stringify(pkpass.images),
-                passJsonPath: pkpass.passJsonPath,
-                imagesPath: pkpass.imagesPath,
+                // passJsonPath: pkpass.passJsonPath,
+                // imagesPath: pkpass.imagesPath,
                 createdDate,
                 modifiedDate: createdDate
             })
@@ -721,13 +721,14 @@ LEFT JOIN
                 // Load PKPass data for each page
                 for (const page of pages) {
                     if (page.pkpass_id) {
+                        page.pkpass = await this.pkpassRepository.getByPageId(page.id);
+                        const images = page.pkpass.images;
                         const docFolder = document.folderPath;
                         const pageFolder = docFolder.getFolder(page.id);
                         const pkpassFolder = pageFolder.getFolder('pkpass');
-                        page.pkpass = await this.pkpassRepository.getByPageId(page.id);
-                        const images = page.pkpass.images;
+                        // DEV_LOG && console.log('loading pkpass', images, pkpassFolder.path);
                         Object.keys(images).map((key) => (images[key] = path.join(pkpassFolder.path, images[key])));
-                        DEV_LOG && console.log('pkpass', page.pkpass.images);
+                        // DEV_LOG && console.log('loading pkpass1', images, pkpassFolder.path);
                     }
                 }
             }

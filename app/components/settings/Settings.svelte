@@ -37,6 +37,7 @@
         DEFAULT_NB_COLUMNS_LANDSCAPE,
         DEFAULT_NB_COLUMNS_VIEW,
         DEFAULT_NB_COLUMNS_VIEW_LANDSCAPE,
+        DEFAULT_OCR_COPY_USE_SPACE,
         DEFAULT_PDF_OPTIONS_STRING,
         DOCUMENT_NAME_FORMAT,
         DOCUMENT_NOT_DETECTED_MARGIN,
@@ -64,6 +65,7 @@
         SETTINGS_NB_COLUMNS_LANDSCAPE,
         SETTINGS_NB_COLUMNS_VIEW,
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE,
+        SETTINGS_OCR_COPY_USE_SPACE,
         SETTINGS_QUICK_TOGGLE_ENABLED,
         SETTINGS_ROOT_DATA_FOLDER,
         SETTINGS_START_ON_CAM,
@@ -139,10 +141,19 @@
     function getSubSettings(id: string) {
         switch (id) {
             case 'ocr':
-                return {
-                    type: 'ocr_settings',
-                    id: 'ocr_settings'
-                };
+                return [
+                    {
+                        type: 'switch',
+                        id: SETTINGS_OCR_COPY_USE_SPACE,
+                        title: lc('use_space_when__ocr_copy_text'),
+                        description: lc('use_space_when__ocr_copy_text_desc'),
+                        value: ApplicationSettings.getBoolean(SETTINGS_OCR_COPY_USE_SPACE, DEFAULT_OCR_COPY_USE_SPACE)
+                    },
+                    {
+                        type: 'ocr_settings',
+                        id: 'ocr_settings'
+                    }
+                ];
             case 'camera':
                 return (
                     __ANDROID__
@@ -1287,20 +1298,30 @@
                                 : undefined
                         });
                         Utils.dismissSoftInput();
-                        if (result && !!result.result && result.text.length > 0) {
+                        DEV_LOG && console.log('result', result);
+                        if (result && !!result.result) {
                             if (item.id === 'store_setting') {
                                 const store = getStoreSetting(item.storeKey, item.storeDefault);
-                                if (item.valueType === 'string') {
-                                    store[item.key] = result.text;
+                                if (result.text.length > 0) {
+                                    if (item.valueType === 'string') {
+                                        store[item.key] = result.text;
+                                    } else {
+                                        store[item.key] = parseInt(result.text, 10);
+                                    }
                                 } else {
-                                    store[item.key] = parseInt(result.text, 10);
+                                    delete store[item.key];
                                 }
+                                DEV_LOG && console.log('store_setting', store);
                                 ApplicationSettings.setString(item.storeKey, JSON.stringify(store));
                             } else {
-                                if (item.valueType === 'string') {
-                                    ApplicationSettings.setString(item.key, result.text);
+                                if (result.text.length > 0) {
+                                    if (item.valueType === 'string') {
+                                        ApplicationSettings.setString(item.key, result.text);
+                                    } else {
+                                        ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
+                                    }
                                 } else {
-                                    ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
+                                    ApplicationSettings.remove(item.key);
                                 }
                             }
                             updateItem(item);

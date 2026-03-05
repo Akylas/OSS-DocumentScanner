@@ -128,9 +128,6 @@ class PDFUtils {
     }
 
     companion object {
-        const val BLACK_WHITE_COLOR_MATRIX =
-            "[0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0.2126,0.7152,0.0722,0,0,0,0,0,1,0]"
-
 
         @Throws(IOException::class)
         fun printPDF(context: Context, filePath: String, name: String) {
@@ -545,8 +542,9 @@ class PDFUtils {
                 .setFullCompressionMode(true).setPdfVersion(
                 PdfVersion.PDF_1_4
             )
-            if (jsonOps.has("password")) {
-                props.setStandardEncryption(jsonOps.getString("password").toByteArray(), null, EncryptionConstants.ALLOW_PRINTING, EncryptionConstants.ENCRYPTION_AES_256 or EncryptionConstants.DO_NOT_ENCRYPT_METADATA);
+            val password = jsonOps.optString("password", null)
+            if (password != null && password != "null") {
+                props.setStandardEncryption(password.toByteArray(), password.toByteArray(), 0, EncryptionConstants.ENCRYPTION_AES_256);
             } 
             val writer = PdfWriter(generateFilePath, props)
             val pdfDoc = PdfDocument(writer)
@@ -577,10 +575,7 @@ class PDFUtils {
                     val imageRotation = page.optInt("rotation", 0)
                     val imageWidth = page.getDouble("width")
                     val imageHeight = page.getDouble("height")
-                    val colorMatrix =
-                        if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString(
-                            "colorMatrix"
-                        )
+                    val colorMatrix = page.optString("colorMatrix")
                     val image = loadImage(
                         imageSrc,
                         imageWidth,
@@ -673,7 +668,7 @@ class PDFUtils {
                             }
                             val last = pageIndex == itemsPerPage - 1
                             val page = pageItems[pageIndex]
-                            val imageRotation = page.optInt("rotation", 0)
+                            val imageRotation = (page.optInt("rotation", 0) + 360) % 360
 
                             val imageSrc = page.optString("imagePath")
                             if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
@@ -681,12 +676,8 @@ class PDFUtils {
                             }
                             val imageWidth = page.getDouble("width")
                             val imageHeight = page.getDouble("height")
-                            val colorMatrix =
-                                if (blackAndWhite) BLACK_WHITE_COLOR_MATRIX else page.optString(
-                                    "colorMatrix"
-                                )
+                            val colorMatrix = page.optString("colorMatrix")
 
-//
 //                            if (imageRotation % 180 !== 0) {
 //                                val temp = imageWidth
 //                                imageWidth = imageHeight
@@ -735,8 +726,10 @@ class PDFUtils {
 
                             val posX = ddx + itemAvailableWidth / 2 - toDrawWidth.toFloat() / 2
                             var posY = ddy + itemAvailableHeight / 2 - toDrawHeight.toFloat() / 2
-
-                            if (abs(imageRotation % 360) == 180) {
+                            
+                            if ((imageRotation % 360) == 180) {
+                                posY += toDrawHeight.toFloat()
+                            } else if ((imageRotation % 360) == 90) {
                                 posY += toDrawHeight.toFloat()
                             }
                             image.setFixedPosition(posX, posY)

@@ -8,8 +8,8 @@ import { lc } from '@nativescript-community/l';
 import { networkService } from '~/services/api';
 import { WebdavSyncOptions } from '~/services/sync/Webdav';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
-import { DOCUMENT_DATA_FILENAME } from '~/utils/constants';
-import { SilentError } from '@shared/utils/error';
+import { DOCUMENT_DATA_FILENAME, VALID_MARKER_FILENAME } from '~/utils/constants';
+import { SilentError } from '@akylas/nativescript-app-utils/error';
 
 export interface WebdavDataSyncOptions extends BaseDataSyncServiceOptions, WebdavSyncOptions {}
 
@@ -134,20 +134,36 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     override async addDocumentToRemote(document: OCRDocument) {
         DEV_LOG && console.log('addDocumentToWebdav', this.remoteFolder, document.id, document.pages);
         const docFolder = getDocumentsService().dataFolder.getFolder(document.id);
+
+        // Remove existing .valid marker if it exists (to mark as invalid during sync)
+        try {
+            await this.removeValidMarker(document.id);
+        } catch (error) {
+            // Ignore errors - folder might not exist yet
+        }
+
         await this.sendFolderToRemote(docFolder, document.id);
         await this.client.putFileContents(path.join(this.remoteFolder, document.id, DOCUMENT_DATA_FILENAME), document.toString());
+
+        // Create .valid marker after successful sync
+        await this.createValidMarker(document.id);
+
         // mark the document as synced
         // DEV_LOG && console.log('addDocumentToWebdav done saving synced state', document.id, document.pages);
     }
 
     override async importDocumentFromRemote(data: FileStat) {
+        const hasValid = await this.hasValidMarker(data.basename);
+        // for now we ignore hasValidMarker or otherwise we would not "import" legacy documents
+
         let remoteData: string;
         try {
             remoteData = await this.client.getFileContents(path.join(data.filename, DOCUMENT_DATA_FILENAME), {
                 format: 'text'
             });
         } catch (error) {
-            // it seems there is data.json in that folder. Let's ignore
+            // Has .valid but no data.json - corrupt, skip it
+            DEV_LOG && console.warn('importDocumentFromRemote: corrupt remote document (has .valid but no data.json)', data.basename);
             return;
         }
 
@@ -171,7 +187,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
                 page.imagePath = path.join(pageDataFolder.path, basename(page.imagePath));
             });
             pageIds = pages.map((p) => p.id);
-            await this.importFolderFromRemote(data.basename, docDataFolder, [DOCUMENT_DATA_FILENAME]);
+            await this.importFolderFromRemote(data.basename, docDataFolder, [DOCUMENT_DATA_FILENAME, VALID_MARKER_FILENAME]);
             await doc.addPages(pages, true, true);
 
             let folder: DocFolder;
@@ -183,6 +199,10 @@ export class WebdavDataSyncService extends BaseDataSyncService {
                     doc.setFolder({ folderId: folder.id });
                 }
             }
+            if (!hasValid) {
+                await this.createValidMarker(doc.id);
+            }
+
             return { doc, folder };
         } catch (error) {
             console.error('error while adding remote doc, let s remove it', docId, pageIds, error, error.stack);
@@ -211,5 +231,28 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     }
     override async deleteFile(relativePath: string) {
         return this.client.deleteFile(path.join(this.remoteFolder, relativePath));
+    }
+
+    // .valid marker file methods for safer sync
+    override async createValidMarker(documentId: string): Promise<void> {
+        const validPath = path.join(this.remoteFolder, documentId, VALID_MARKER_FILENAME);
+        await this.client.putFileContents(validPath, `${__APP_ID__}.${__APP_VERSION__}.${__APP_BUILD_NUMBER__}`, { overwrite: true });
+    }
+
+    override async hasValidMarker(documentId: string): Promise<boolean> {
+        const validPath = path.join(this.remoteFolder, documentId, VALID_MARKER_FILENAME);
+        return this.client.exists(validPath);
+    }
+
+    override async removeValidMarker(documentId: string): Promise<void> {
+        const validPath = path.join(this.remoteFolder, documentId, VALID_MARKER_FILENAME);
+        try {
+            await this.client.deleteFile(validPath);
+        } catch (error) {
+            // Ignore if .valid doesn't exist
+            if (error.statusCode !== 404) {
+                throw error;
+            }
+        }
     }
 }

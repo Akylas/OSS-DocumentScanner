@@ -27,6 +27,12 @@ const biasRev = __IOS__ ? 255 : 1;
 // }
 
 export function concatTwoColorMatrices(matB: Matrix, matA: Matrix) {
+    if (!matA) {
+        return matB;
+    }
+    if (!matB) {
+        return matA;
+    }
     // invariant(Array.isArray(matB) && matB.length === 20, 'Color matrix matB should be an array with 20 elements.');
 
     // invariant(Array.isArray(matA) && matA.length === 20, 'Color matrix matA should be an array with 20 elements.');
