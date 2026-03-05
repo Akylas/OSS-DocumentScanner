@@ -269,17 +269,18 @@ lane :build_flavor do |params|
       when 'alpha','beta','production'
         if (platform == 'ios' && options[:github] != false)
           # we now github create releases on iOS for european users
-          changelog = get_changelog(platform:platform, flavor:flavor, format:'github', commit_url:commit_url)
+          githubchangelog = get_changelog(platform:platform, flavor:flavor, format:'github', commit_url:commit_url)
           set_github_release(
             repository_name: repository_name,
             api_bearer: ENV["GITHUB_TOKEN"],
             name: "#{app_name}(#{platform}): v#{version} Build #{versionCode}",
             tag_name: tag,
-            description: changelog,
+            description: githubchangelog,
             upload_assets: Dir.glob(File.join(dist_path, "*.ipa"))
           )
         end
         upload_store(changelog:changelog, version: version, versionCode: versionCode, flavor:flavor, options:options, build_output:build_output)
+        
     end
     if (options[:create_tag] != false)
       if !git_tag_exists(tag: tag)
