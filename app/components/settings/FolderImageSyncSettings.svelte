@@ -14,7 +14,7 @@
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -44,7 +44,11 @@
 
     async function save() {
         const result = get(store);
+
         if (result.localFolderPath) {
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             closeModal(result);
         } else {
             showError(lc('missing_export_folder'), { showAsSnack: true });

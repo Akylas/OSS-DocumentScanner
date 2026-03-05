@@ -461,5 +461,10 @@
   "use_space_when__ocr_copy_text": "use spaces when copying OCR text",
   "use_space_when__ocr_copy_text_desc": "when copying OCR text to clipboard, line breaks will be replaced with spaces",
   "image_export": "image export",
-  "import_documents": "import documents"
+  "import_documents": "import documents",
+  "sync_channel": "Sync Channel",
+  "sync_channel_desc": "Notifications for document synchronization progress",
+  "syncing_documents": "Syncing documents",
+  "syncing": "Syncing: %1$s",
+  "notification_permission_needed": "notification permission is neded for sync services"
 }

@@ -13,7 +13,7 @@
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
-    import { checkOrDownloadOCRLanguages, createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { checkOrDownloadOCRLanguages, createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import FolderTextView from '../common/FolderTextView.svelte';
@@ -51,6 +51,9 @@
         const result = get(store);
         DEV_LOG && console.log('save', JSON.stringify(result));
         if (result.localFolderPath) {
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             if (result.OCREnabled && result.OCRLanguages.length) {
                 await checkOrDownloadOCRLanguages({
                     dataType: result.OCRDataType,

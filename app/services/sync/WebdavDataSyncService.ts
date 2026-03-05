@@ -153,15 +153,8 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     }
 
     override async importDocumentFromRemote(data: FileStat) {
-        // Check for .valid marker to ensure sync safety
         const hasValid = await this.hasValidMarker(data.basename);
-
-        // REQUIREMENT: No legacy migration - if no .valid file, skip the document
-        // First sync to remote will create .valid, then we can pull
-        if (!hasValid) {
-            DEV_LOG && console.warn('importDocumentFromRemote: skipping remote document without .valid marker', data.basename);
-            return;
-        }
+        // for now we ignore hasValidMarker or otherwise we would not "import" legacy documents
 
         let remoteData: string;
         try {
@@ -206,6 +199,9 @@ export class WebdavDataSyncService extends BaseDataSyncService {
                     doc.setFolder({ folderId: folder.id });
                 }
             }
+            if (!hasValid) {
+                await this.createValidMarker(doc.id);
+            }
 
             return { doc, folder };
         } catch (error) {
@@ -240,7 +236,7 @@ export class WebdavDataSyncService extends BaseDataSyncService {
     // .valid marker file methods for safer sync
     override async createValidMarker(documentId: string): Promise<void> {
         const validPath = path.join(this.remoteFolder, documentId, VALID_MARKER_FILENAME);
-        await this.client.putFileContents(validPath, '', { overwrite: true });
+        await this.client.putFileContents(validPath, `${__APP_ID__}.${__APP_VERSION__}.${__APP_BUILD_NUMBER__}`, { overwrite: true });
     }
 
     override async hasValidMarker(documentId: string): Promise<boolean> {

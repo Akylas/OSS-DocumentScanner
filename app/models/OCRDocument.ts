@@ -440,7 +440,9 @@ export class OCRDocument extends Observable implements Document {
             if (saveDoc) {
                 await this.save({}, true, notify);
             }
-            this.onPageUpdated(pageIndex, page, imageUpdated);
+            if (notify) {
+                this.onPageUpdated(pageIndex, page, imageUpdated);
+            }
         }
         DEV_LOG && console.log('updatePage done', pageIndex);
     }
