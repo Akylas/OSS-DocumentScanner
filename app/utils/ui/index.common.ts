@@ -2216,3 +2216,6 @@ export async function requestPhotoPermission() {
 export async function requestGalleryPermission() {
     return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
 }
+export async function requestNotificationPermission() {
+    return requestPermission('notification', lc('notification_permission_needed'));
+}

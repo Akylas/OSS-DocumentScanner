@@ -17,6 +17,7 @@ import { type WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sy
 import { WebdavImageSyncService } from '~/services/sync/WebdavImageSyncService';
 import { WebdavPDFSyncService } from '~/services/sync/WebdavPDFSyncService';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/services/sync/types';
+import { SyncNotificationManager } from '~/workers/SyncNotificationManager.android';
 import {
     DOCUMENT_DATA_FILENAME,
     EVENT_DOCUMENT_ADDED,
@@ -26,11 +27,13 @@ import {
     EVENT_DOCUMENT_UPDATED,
     EVENT_FOLDER_ADDED,
     EVENT_FOLDER_UPDATED,
+    EVENT_SYNC_PROGRESS,
     EVENT_SYNC_STATE,
     FOLDERS_DATA_FILENAME,
     IMG_COMPRESS,
     IMG_FORMAT,
     SETTINGS_SYNC_SERVICES,
+    VALID_MARKER_FILENAME,
     getImageExportSettings
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
@@ -143,12 +146,27 @@ export default class SyncWorker extends BaseWorker {
         return this.services?.length > 0;
     }
     services: BaseSyncService[];
+    notificationManager: SyncNotificationManager;
 
     getStoredSyncServices() {
         return JSON.parse(ApplicationSettings.getString(SETTINGS_SYNC_SERVICES, '[]')) as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[];
     }
 
     queue = new Queue();
+
+    // Helper method to update progress on both notification and event
+    updateSyncProgress(type: 'data' | 'image' | 'pdf', current: number, total: number, documentId?: string, documentName?: string) {
+        // Update Android notification
+        this.notificationManager?.updateProgress(current, total, documentName);
+
+        // Emit progress event
+        this.notify({
+            eventName: EVENT_SYNC_STATE,
+            state: 'running',
+            progress: { type, current, total, documentId, documentName }
+        } as SyncStateEventData);
+    }
+
     async syncDocumentsQueue(
         data: {
             withFolders?;
@@ -177,6 +195,11 @@ export default class SyncWorker extends BaseWorker {
             if (!documentsService.started) {
                 return;
             }
+
+            // Initialize notification manager if not already done
+            this.notificationManager = new SyncNotificationManager();
+            this.notificationManager?.showSyncStarted();
+
             this.notify({ eventName: EVENT_SYNC_STATE, state: 'running' } as SyncStateEventData);
             DEV_LOG && console.warn('syncDocuments', bothWays, event?.eventName, type);
 
@@ -204,8 +227,15 @@ export default class SyncWorker extends BaseWorker {
             if (type === 0 || (type & SyncType.PDF) !== 0) {
                 await this.syncPDFDocuments({ force, event });
             }
+
+            // Show sync complete notification
+            this.notificationManager?.showSyncComplete();
         } catch (error) {
             // console.error('error during worker sync', error, error.stack);
+
+            // Show error notification
+            this.notificationManager?.showSyncError(error?.message || 'Sync failed');
+
             this.sendError(error);
         } finally {
             console.warn('sync done');
@@ -298,12 +328,18 @@ export default class SyncWorker extends BaseWorker {
                                 toBeSyncDocuments.map((d) => d.id)
                             );
 
+                        // Calculate total items to sync for progress tracking
+                        const totalItemsToSync = documentsToDeleteOnRemote.length + missingRemoteDocuments.length + missingLocalDocuments.length + toBeSyncDocuments.length;
+                        let currentItemIndex = 0;
+
                         for (let index = 0; index < documentsToDeleteOnRemote.length; index++) {
                             const id = documentsToDeleteOnRemote[index];
                             const missingLocalIndex = missingLocalDocuments.findIndex((d) => d.basename === id);
                             if (missingLocalIndex !== -1) {
                                 missingLocalDocuments.splice(missingLocalIndex, 1);
                                 await service.removeDocumentFromRemote(id);
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, id);
                             }
                         }
                         ApplicationSettings.remove(deleteKey);
@@ -311,6 +347,8 @@ export default class SyncWorker extends BaseWorker {
                             const doc = missingRemoteDocuments[index];
                             await service.addDocumentToRemote(doc);
                             doc.save({ _synced: doc._synced | service.syncMask }, false);
+                            currentItemIndex++;
+                            this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, doc.id, doc.name);
                         }
                         for (let index = 0; index < missingLocalDocuments.length; index++) {
                             const data = await service.importDocumentFromRemote(missingLocalDocuments[index]);
@@ -319,10 +357,14 @@ export default class SyncWorker extends BaseWorker {
                                 await doc.save({ _synced: doc._synced | service.syncMask }, true, false);
                                 DEV_LOG && console.log('importFolderFromWebdav done');
                                 documentsService.notify({ eventName: EVENT_DOCUMENT_ADDED, doc, folder });
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, doc.id, doc.name);
                             }
                         }
                         for (let index = 0; index < toBeSyncDocuments.length; index++) {
                             await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
+                            currentItemIndex++;
+                            this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, toBeSyncDocuments[index].id, toBeSyncDocuments[index].name);
                         }
                     } else {
                         if (withFolders || (event && (event.eventName === EVENT_FOLDER_ADDED || event.eventName === EVENT_FOLDER_UPDATED))) {
@@ -377,6 +419,11 @@ export default class SyncWorker extends BaseWorker {
                                     'toBeSyncDocuments',
                                     toBeSyncDocuments.map((d) => d.id)
                                 );
+
+                            // Calculate total items to sync for progress tracking
+                            const totalItemsToSync = documentsToDeleteOnRemote.length + missingRemoteDocuments.length + toBeSyncDocuments.length;
+                            let currentItemIndex = 0;
+
                             if (service.allowToRemoveOnRemote) {
                                 for (let index = 0; index < documentsToDeleteOnRemote.length; index++) {
                                     const id = documentsToDeleteOnRemote[index];
@@ -384,17 +431,23 @@ export default class SyncWorker extends BaseWorker {
                                     if (missingLocalIndex !== -1) {
                                         missingLocalDocuments.splice(missingLocalIndex, 1);
                                         await service.removeDocumentFromRemote(id);
+                                        currentItemIndex++;
+                                        this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, id);
                                     }
                                 }
                             }
                             for (let index = 0; index < missingRemoteDocuments.length; index++) {
                                 await service.addDocumentToRemote(missingRemoteDocuments[index]);
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, missingRemoteDocuments[index].id, missingRemoteDocuments[index].name);
                             }
                             // for (let index = 0; index < missingLocalDocuments.length; index++) {
                             //     await this.importDocumentFromWebdav(missingLocalDocuments[index]);
                             // }
                             for (let index = 0; index < toBeSyncDocuments.length; index++) {
                                 await this.syncDocumentOnRemote(toBeSyncDocuments[index], service);
+                                currentItemIndex++;
+                                this.updateSyncProgress('data', currentItemIndex, totalItemsToSync, toBeSyncDocuments[index].id, toBeSyncDocuments[index].name);
                             }
                         }
                     }
@@ -419,6 +472,14 @@ export default class SyncWorker extends BaseWorker {
         const dataJSON = JSON.parse(await service.getFileFromRemote(DOCUMENT_DATA_FILENAME, document)) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
         DEV_LOG && console.info('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
+
+        // Check if this is a legacy document (no .valid marker yet) for migration
+        const hasValidMarker = await service.hasValidMarker(document.id);
+        if (!hasValidMarker) {
+            // we know that doc but it seems not to have a valid marker let s ignore
+            return;
+        }
+
         if (dataJSON.modifiedDate > document.modifiedDate) {
             let needsRemoteDocUpdate = false;
             const { folders: localFolders, pages: docPages, ...docProps } = document.toJSON();
@@ -559,7 +620,11 @@ export default class SyncWorker extends BaseWorker {
             }
 
             if (needsRemoteDocUpdate) {
+                // Remove .valid marker before updating to mark as invalid during sync
+                await service.removeValidMarker(document.id);
                 await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString());
+                // Recreate .valid marker after successful update
+                await service.createValidMarker(document.id);
             }
         } else if (dataJSON.modifiedDate < document.modifiedDate || (document.folders && !dataJSON.folders)) {
             // DEV_LOG && console.log('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
@@ -663,10 +728,13 @@ export default class SyncWorker extends BaseWorker {
                     }
                 }
             }
+            // Remove .valid marker before updating to mark as invalid during sync
+            await service.removeValidMarker(document.id);
             await service.putFileContentsFromData(path.join(document.id, DOCUMENT_DATA_FILENAME), document.toString(), { overwrite: true });
+            // Recreate .valid marker after successful update
+            await service.createValidMarker(document.id);
             return document.save({ _synced: document._synced | service.syncMask });
         } else if ((document._synced & service.syncMask) === 0) {
-            // DEV_LOG && console.log('syncDocumentOnWebdav just changing sync state');
             return document.save({ _synced: document._synced | service.syncMask });
         }
     }
@@ -712,8 +780,13 @@ export default class SyncWorker extends BaseWorker {
                         await service.ensureRemoteFolder();
                         const remoteFiles = await service.getRemoteFolderFiles('');
                         DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
-                        for (let index = 0; index < localDocuments.length; index++) {
-                            const doc = localDocuments[index];
+
+                        // Calculate total pages for progress tracking
+                        const totalPages = documentsToSync.reduce((sum, d) => sum + d.pages.length, 0);
+                        let currentPageIndex = 0;
+
+                        for (let index = 0; index < documentsToSync.length; index++) {
+                            const doc = documentsToSync[index];
                             for (let j = 0; j < doc.pages.length; j++) {
                                 const page = doc.pages[j];
                                 const name = service.getImageName(doc.document, page, j, exportFormat);
@@ -746,6 +819,8 @@ export default class SyncWorker extends BaseWorker {
                                         }
                                     }
                                 }
+                                currentPageIndex++;
+                                this.updateSyncProgress('image', currentPageIndex, totalPages, doc.document.id, doc.document.name);
                             }
                             await doc.document.save({ _synced: doc.document._synced | service.syncMask });
                         }
@@ -784,6 +859,11 @@ export default class SyncWorker extends BaseWorker {
                         const remoteFiles = await service.getRemoteFolderFiles('');
                         DEV_LOG && console.log('remoteFiles', JSON.stringify(remoteFiles));
                         const baseOCRDataPath = ApplicationSettings.getString('tesseract_datapath_base', path.join(knownFolders.documents().path, 'tesseract'));
+
+                        // Calculate total documents for progress tracking
+                        const totalDocuments = documentsToSync.length;
+                        let currentDocIndex = 0;
+
                         for (let index = 0; index < documentsToSync.length; index++) {
                             const doc = documentsToSync[index];
                             //see if we need to OCR
@@ -800,6 +880,8 @@ export default class SyncWorker extends BaseWorker {
                                 await service.writePDF(doc, name, service.useFoldersStructure && doc.folders?.length ? await documentsService.folderRepository.findFolderById(doc.folders[0]) : null);
                             }
                             await doc.save({ _synced: doc._synced | service.syncMask });
+                            currentDocIndex++;
+                            this.updateSyncProgress('pdf', currentDocIndex, totalDocuments, doc.id, doc.name);
                         }
                     }
                     DEV_LOG && console.log('syncPDFDocuments', 'handling service done', service.type, service.id, service.autoSync, force);

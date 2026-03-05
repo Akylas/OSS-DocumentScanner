@@ -18,7 +18,7 @@
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { getDirectoryName, hideLoading, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
+    import { getDirectoryName, hideLoading, requestNotificationPermission, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
 </script>
@@ -188,6 +188,9 @@
                     if (selection?.data) {
                         const { id, ...data } = item;
                         let configToAdd;
+                        if (__ANDROID__) {
+                            await requestNotificationPermission();
+                        }
                         switch (selection?.data) {
                             case 'webdav_data': {
                                 const page = (await import('~/components/settings/WebdavDataSyncSettings.svelte')).default;

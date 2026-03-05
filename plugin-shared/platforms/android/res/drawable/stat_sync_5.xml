@@ -1,0 +1,6 @@
+<rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/stat_sync"
+    android:fromDegrees="150"
+    android:toDegrees="150"
+    android:pivotX="50%"
+    android:pivotY="50%" />
