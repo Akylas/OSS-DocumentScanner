@@ -1216,32 +1216,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.16":
-  version: 6.0.16
-  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.16"
+"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.17":
+  version: 6.0.17
+  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.17"
   dependencies:
     "@nativescript-community/class-mixins": "npm:^1.0.0"
-    "@nativescript-community/ui-collectionview": "npm:^6.0.16"
+    "@nativescript-community/ui-collectionview": "npm:^6.0.17"
     "@nativescript-community/ui-drawer": "npm:^0.1.31"
-  checksum: 10/7c4e3ac5e2b37f4aa9e48e5b49a715bfab530563c777c38e12bfc748eacce3b87f7821e8b915d19405059e076a5e83c5cdb0866c33ba92200a6c70aaf5c05534
+  checksum: 10/904a87d04adae1663bf8855f1eac75853ad5cccfee10175755b29616fd9bf2b5f7946c1ef5ce9fed4797492b3a115521f18c6e495a69b6b40d763a3fabbc1ecb
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview@npm:6.0.17":
+"@nativescript-community/ui-collectionview@npm:6.0.17, @nativescript-community/ui-collectionview@npm:^6.0.17":
   version: 6.0.17
   resolution: "@nativescript-community/ui-collectionview@npm:6.0.17"
   dependencies:
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
   checksum: 10/f046c656d63fbc62e9262403e979f7c1621691a78c2c649ac87061a81c59405d61cb544054a6c1cdf51dc3fdfb8d4f54e0776e2b55b28cf54838fc3fce62cc1f
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/ui-collectionview@npm:^6.0.16":
-  version: 6.0.16
-  resolution: "@nativescript-community/ui-collectionview@npm:6.0.16"
-  dependencies:
-    "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/073e2d73b283c9c0a370779ba5a1b91dcf3544fb8a3aca0fc99e026d41031ad78d5317b2da850e1e539f0e204b8b67a4713d2e8fe2bca90d81e82974105e3004
   languageName: node
   linkType: hard
 
@@ -10299,7 +10290,7 @@ __metadata:
     "@nativescript-community/ui-canvaslabel": "npm:1.2.49"
     "@nativescript-community/ui-checkbox": "npm:2.0.18"
     "@nativescript-community/ui-collectionview": "npm:6.0.17"
-    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.16"
+    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.17"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
     "@nativescript-community/ui-image": "npm:4.6.8"
     "@nativescript-community/ui-image-colorfilter": "npm:4.6.8"
