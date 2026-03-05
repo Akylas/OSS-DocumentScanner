@@ -169,19 +169,28 @@
 
     export let updateTitle = (folder) => {
         if (folder) {
-            title = createNativeAttributedString({
-                spans: [
-                    {
-                        fontFamily: $fonts.mdi,
-                        color: folder.color || colorOutline,
-                        fontSize: 24 * $fontScale,
-                        text: 'mdi-folder'
-                    },
-                    {
-                        text: '  ' + folder.name
-                    }
-                ]
-            });
+            DEV_LOG && console.log('updateTitle', $fontScale, folder);
+            title = createNativeAttributedString(
+                {
+                    spans: [
+                        {
+                            fontFamily: $fonts.mdi,
+                            color: folder.color || colorOutline,
+                            fontSize: 24 * $fontScale,
+                            text: 'mdi-folder'
+                        },
+                        {
+                            text: '  ' + folder.name
+                        }
+                    ]
+                },
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                1,
+                true // needed as will be used in a label
+            );
             DEV_LOG && console.log('updating folder title', folder, $fonts.mdi, title);
         }
     };
@@ -230,17 +239,7 @@
 
             await refreshFolders(filter);
             documents = new ObservableArray(
-                (folderItems.length
-                    ? folderViewStyle === 'vertical'
-                        ? [
-                              ...folderItems.map((f) => ({
-                                  ...f,
-                                  type: 'folder'
-                              }))
-                          ]
-                        : [{ type: 'folders', selected: false }]
-                    : []
-                ).concat(
+                (folderItems.length ? (folderViewStyle === 'vertical' ? [...folderItems] : [{ type: 'folders', selected: false }]) : []).concat(
                     r.map(
                         (doc) =>
                             ({
@@ -274,21 +273,27 @@
                         (folder) =>
                             ({
                                 folder,
+                                type: 'folder',
                                 selected: false
                             }) as any
                     )
             );
             if (documents) {
-                if (folderItems.length) {
-                    if (documents.getItem(0)?.type !== 'folders') {
-                        documents.splice(0, 0, { type: 'folders', selected: false });
+                if (folderViewStyle === 'horizontal') {
+                    if (folderItems.length) {
+                        if (documents.getItem(0)?.type !== 'folders') {
+                            documents.splice(0, 0, { type: 'folders', selected: false });
+                        } else {
+                            documents.splice(0, 1, { type: 'folders', selected: false });
+                        }
                     } else {
-                        documents.splice(0, 1, { type: 'folders', selected: false });
+                        if (documents.getItem(0)?.type === 'folders') {
+                            documents.splice(0, 1);
+                        }
                     }
                 } else {
-                    if (documents.getItem(0)?.type === 'folders') {
-                        documents.splice(0, 1);
-                    }
+                    const firstDocIndex = documents.findIndex((d) => !!d.doc);
+                    documents.splice(0, firstDocIndex, ...folderItems);
                 }
             }
         } catch (error) {
@@ -1180,10 +1185,15 @@
                 <ListItemAutoSize
                     class="card"
                     columns="auto,*"
+                    fontSize={17}
+                    fontWeight="600"
                     mainCol={1}
+                    margin="4 8 4 8"
                     padding="0 10 0 10"
                     subtitle={lc('documents_count', item.folder.count)}
+                    subtitleFontSize={12}
                     title={folder ? item.folder.name.replace(folder.name + '/', '') : item.folder.name}
+                    useExtraPadding={false}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     on:tap={() => onItemTap(item)}>
                     <label
