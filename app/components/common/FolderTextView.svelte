@@ -34,6 +34,7 @@
         autocorrect={false}
         editable={false}
         hint={lc('folder_sync_desc')}
+        isUserInteractionEnabled={false}
         paddingRight={60}
         placeholder={lc('folder')}
         returnKeyType="done"
