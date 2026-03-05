@@ -1,8 +1,8 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
-import { Folder, Screen, knownFolders } from '@nativescript/core';
-import PDFExportCanvasBase from './PDFExportCanvas.common';
-import { PDFExportOptions } from './PDFCanvas';
+import { Folder, knownFolders } from '@nativescript/core';
 import { PDF_EXT } from '~/utils/constants';
+import { PDFExportOptions } from './PDFCanvas';
+import PDFExportCanvasBase from './PDFExportCanvas.common';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
     async export({ filename = Date.now() + PDF_EXT, folder = knownFolders.temp().path, options = this.options, pages }: PDFExportOptions) {

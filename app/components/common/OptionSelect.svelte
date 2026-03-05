@@ -27,6 +27,7 @@
 </script>
 
 <script lang="ts">
+    export let title: string = null;
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
@@ -173,7 +174,10 @@
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
-    <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
+    <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,auto,*" {...$$restProps}>
+        {#if title}
+            <label fontSize={18} fontWeight="bold" padding={16} text={title} />
+        {/if}
         {#if showFilter}
             <gridlayout margin="10 10 0 10">
                 <textfield
@@ -201,7 +205,7 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView bind:this={collectionView} {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight} on:dataPopulated={onDataPopulated} ios:contentInsetAdjustmentBehavior={2}>
+        <collectionView bind:this={collectionView} {itemTemplateSelector} items={filteredOptions} row={2} {rowHeight} on:dataPopulated={onDataPopulated} ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
                 <svelte:component
                     this={component}

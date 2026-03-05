@@ -3,8 +3,8 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
-    import { throttle } from '@nativescript/core/utils';
+    import { AndroidActivityResultEventData, Application, ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { openFile, openUrl, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
@@ -19,6 +19,7 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import MainList, { Item } from './MainList.svelte';
+    import { ellipsize } from '~/utils/utils.common';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -80,7 +81,7 @@
                     fontWeight: 'bold',
                     lineBreak: 'end',
                     lineHeight: 18 * $fontScale,
-                    text: doc.name
+                    text: ellipsize(doc.name, 50)
                 },
                 {
                     color: colorOnSurfaceVariant,
@@ -105,6 +106,10 @@
 </script>
 
 <MainList
+    folderViewStyles={{
+        horizontal: { name: lc('horizontal') },
+        vertical: { name: lc('vertical') }
+    }}
     {title}
     viewStyles={{
         default: { name: lc('expanded') },
@@ -150,7 +155,7 @@
         </canvasview>
     </Template>
 
-    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
+    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
         {#if __IOS__}
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
         {/if}

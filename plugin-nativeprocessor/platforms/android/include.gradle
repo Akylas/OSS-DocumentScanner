@@ -57,4 +57,5 @@ dependencies {
     def itextpdfVersion = { -> project.hasProperty("itextpdfVersion") ? itextpdfVersion : "7.2.3" }
     implementation "com.itextpdf.android:kernel-android:$itextpdfVersion"
     implementation "com.itextpdf.android:layout-android:$itextpdfVersion"
+    implementation "com.itextpdf.android:bouncy-castle-adapter-android:$itextpdfVersion"
 }

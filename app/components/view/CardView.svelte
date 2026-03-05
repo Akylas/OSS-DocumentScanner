@@ -61,8 +61,19 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { documentHasPKPassData } from '~/utils/pkpass';
-    import { detectOCR, importAndScanImage, importImageFromCamera, onBackButton, pickColor, showImagePopoverMenu, showPDFPopoverMenu, showPopoverMenu, showSnack, transformPages } from '~/utils/ui';
-    import { requestCameraPermission } from '~/utils/utils.common';
+    import {
+        detectOCR,
+        importAndScanImage,
+        importImageFromCamera,
+        onBackButton,
+        pickColor,
+        requestCameraPermission,
+        showImagePopoverMenu,
+        showPDFPopoverMenu,
+        showPopoverMenu,
+        showSnack,
+        transformPages
+    } from '~/utils/ui';
     import { colors, fontScale, hasCamera, isLandscape, onFontScaleChanged, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
@@ -365,7 +376,6 @@
             items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
         }
     }
-    let ignoreTap = false;
     function toggleSelection(item: Item) {
         if (item.selected) {
             unselectItem(item);
@@ -422,12 +432,8 @@
     }
     async function onItemTap(item: Item) {
         try {
-            if (ignoreTap) {
-                ignoreTap = false;
-                return;
-            }
             if (nbSelected > 0) {
-                onItemLongPress(item);
+                toggleSelection(item);
             } else if (item.page.imagePath) {
                 const index = items.findIndex((p) => p.page === item.page);
                 navigate({
@@ -649,7 +655,9 @@
         DEV_LOG && console.log('onItemReordered');
         (e.view as ContentView).content.opacity = 1;
         try {
-            await document.movePage(e.index, e.data.targetIndex);
+            if (e.index !== e.data.targetIndex) {
+                await document.movePage(e.index, e.data.targetIndex);
+            }
             topBackgroundColor = computeTopBackgroundColor();
             statusBarStyle = new Color(topBackgroundColor).getBrightness() < 128 ? 'dark' : 'light';
             updateQRCodes();
@@ -807,19 +815,13 @@
                         id: 'import',
                         name: lc('import_from_file'),
                         icon: 'mdi-file-document-plus-outline'
+                    },
+                    {
+                        id: 'import_image',
+                        name: lc('import_from_image'),
+                        icon: 'mdi-image-plus-outline'
                     }
                 ])
-                .concat(
-                    __IOS__
-                        ? [
-                              {
-                                  id: 'import_image',
-                                  name: lc('import_from_image'),
-                                  icon: 'mdi-image-plus-outline'
-                              }
-                          ]
-                        : []
-                )
                 .concat([
                     {
                         id: 'add_qrcode_camera',
@@ -860,7 +862,7 @@
                         await importDocument();
                         break;
                     case 'import_image':
-                        await importDocument(false);
+                        await importAndScanImage({ canGoToView: false, forceGalleryPick: true, document, importPDFs: false });
                         break;
                     case 'add_qrcode_camera':
                         await requestCameraPermission();
@@ -1356,7 +1358,7 @@
             onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
             title={nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
+            titleProps={{ padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
             <!-- {#if editing}
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-content-save" variant="text" on:tap={saveEdit} />

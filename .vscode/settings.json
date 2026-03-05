@@ -1,5 +1,5 @@
 {
-    "i18n-ally.keystyle": "nested",
+    "i18n-ally-next.keystyle": "nested",
     "typescript.tsdk": "node_modules/typescript/lib",
     "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
     "cmake.buildDirectory": "${workspaceFolder}/cpp/cpp_test_app/build",
@@ -180,5 +180,8 @@
     "debug.javascript.defaultRuntimeExecutable": {
         "pwa-node": "/Users/mguillon/.local/share/mise/shims/node"
     },
-    "python.defaultInterpreterPath": "/Users/mguillon/.local/share/mise/installs/python/3.11.13/bin/python"
+    "python.defaultInterpreterPath": "/Users/mguillon/.local/share/mise/installs/python/3.11.13/bin/python",
+    "i18n-ally-next.localesPaths": [
+        "app/i18n"
+    ]
 }

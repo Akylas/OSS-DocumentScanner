@@ -1,13 +1,13 @@
 import { lc } from '@nativescript-community/l';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
 import { Color, File, ImageSource } from '@nativescript/core';
+import { getActualLanguage } from '@shared/helpers/lang';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { CARD_RATIO } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { pkpassToImage } from '~/utils/pkpass';
 import PDFCanvas from './PDFCanvas';
-import { getActualLanguage } from '~/helpers/lang';
 
 const textPaint = new Paint();
 textPaint.setTextSize(40);

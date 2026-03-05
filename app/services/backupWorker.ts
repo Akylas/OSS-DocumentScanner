@@ -1,6 +1,6 @@
 import BaseWorkerHandler from '@akylas/nativescript-app-utils/worker/BaseWorkerHandler';
 import { showError } from '@shared/utils/showError';
-import { CustomError } from '@shared/utils/error';
+import { CustomError } from '@akylas/nativescript-app-utils/error';
 import type BackupWorker from '~/workers/BackupWorker';
 import { pickFolder } from '@nativescript-community/ui-document-picker';
 import { documentsService } from './documents';
@@ -46,6 +46,7 @@ export class BackupWorkerService extends BaseWorkerHandler<BackupWorker> {
     }
 
     handleWorkerError(error: any) {
+        DEV_LOG && console.log('handleWorkerError', error);
         showError(CustomError.fromObject({ ...error, sentryReportTranslatedName: true }));
     }
 

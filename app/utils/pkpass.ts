@@ -1,24 +1,16 @@
+import { lc } from '@nativescript-community/l';
 import { createNativeAttributedString } from '@nativescript-community/text';
 import { Align, Canvas, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
 import { SVG } from '@nativescript-community/ui-svg/canvas';
-import { Color, File, Folder, ImageSource, PercentLength, Utils, path } from '@nativescript/core';
+import { Color, File, Folder, ImageSource, PercentLength, Screen, Utils, path } from '@nativescript/core';
+import { generateQRCodeImage, getSVGFromQRCode, getSVGFromQRCodeSync } from 'plugin-nativeprocessor';
 import { unzip } from 'plugin-zip';
-import { get } from 'svelte/store';
 import type { OCRDocument } from '~/models/OCRDocument';
 import { PKBarcodeFormat, PKPass, type PKPassBarcode, type PKPassData, type PKPassField, type PKPassImages, type PKPassStructure, PKPassStyle, PKPassTransitType } from '~/models/PKPass';
 import { CARD_RATIO } from './constants';
 import { loadImage, recycleImages } from './images';
-import { generateQRCodeImage, getSVGFromQRCode, getSVGFromQRCodeSync } from 'plugin-nativeprocessor';
-import { screenWidthDips } from '@shared/variables';
-import { lc } from '@nativescript-community/l';
 
-let startingInLandscape;
-// export let screenHeightDips = startingInLandscape ? Screen.mainScreen.widthDIPs : Screen.mainScreen.heightDIPs;
-// export let screenWidthDips = startingInLandscape ? Screen.mainScreen.heightDIPs : Screen.mainScreen.widthDIPs;
-/**
- * PKPass parser utility
- * Extracts and parses .pkpass files (Apple Wallet passes)
- */
+const screenWidthDips = Screen.mainScreen.widthDIPs;
 
 const PASS_JSON_FILE = 'pass.json';
 const IMAGE_FILES = [
@@ -46,6 +38,11 @@ export interface PKPassParseResult {
     pass: PKPass;
     extractedPath: string;
 }
+
+const fieldsPaint = new Paint();
+fieldsPaint.fontWeight = '500';
+const testPaint = new Paint();
+testPaint.color = 'red';
 
 /**
  * Load localized strings from .lproj folders in PKPass
@@ -150,8 +147,8 @@ export async function extractAndParsePKPassFile(pkpassFilePath: string, targetFo
         const pass = new PKPass(passId, ''); // document_id will be set by caller
         pass.passData = passData;
         pass.images = images;
-        pass.passJsonPath = passJsonPath;
-        pass.imagesPath = extractPath;
+        // pass.passJsonPath = passJsonPath;
+        // pass.imagesPath = extractPath;
 
         return {
             pass,
@@ -468,10 +465,12 @@ export async function pkpassToImage(
         width: Utils.layout.toDevicePixels(width),
         height: height ? Utils.layout.toDevicePixels(height) : undefined
     });
+    const result = new ImageSource(canvas.getImage());
+    // DEV_LOG && console.log('pkpassToImage', width, canvas.getWidth(), result.width, result.height);
     // const paint = new Paint();
     // paint.color = 'black'
     // canvas.drawText("test", 0, 4, 20,60, paint)
-    return new ImageSource(canvas.getImage());
+    return result;
 }
 
 /**
@@ -500,6 +499,7 @@ export async function renderPKPassToCanvas(
     // Calculate dimensions based on layout
     const baseWidth = 1100;
     const scaleFactor = width / baseWidth;
+    // DEV_LOG && console.log('renderPKPassToCanvas', width, scaleFactor);
 
     // Credit card aspect ratio: 1.586:1
     const cardHeight = Math.round(width / CARD_RATIO);
@@ -836,7 +836,7 @@ async function renderFullLayout({
     const staticLayoutsToDraw = [];
     const svgsToDraw = [];
     let y = padding;
-
+    // DEV_LOG && console.log('renderFullLayout', canvasWidth);
     if (background2x && style === PKPassStyle.EventTicket) {
         const bgImage = await loadImage(background2x, { width: canvasWidth });
         imagesToDraw.push({ image: bgImage, x: 0, y: 0, width: '100%', height: '100%' });
@@ -1134,7 +1134,7 @@ async function renderFullLayout({
     for (let i = 0; i < imagesToDraw.length; i++) {
         const imageData = imagesToDraw[i];
         const imageSource = imageData.image;
-        const srcRect = new Rect(0, 0, imageSource.width, imageSource.height);
+        // const srcRect = new Rect(0, 0, imageSource.width, imageSource.height);
         let scale = 1;
         let width = imageSource.width;
         if (imageData.width) {
@@ -1154,17 +1154,19 @@ async function renderFullLayout({
                 scale = height / imageSource.height;
             }
         }
+        // DEV_LOG && console.log('draw image', imageSource, imageSource.width, imageSource.height,scale , imageData.height );
         const dstRect = new Rect(
             imageData.rightAligned ? imageData.x - imageSource.width * scale : imageData.x,
             imageData.y,
             imageData.rightAligned ? imageData.x : imageData.x + imageSource.width * scale,
             imageData.y + imageSource.height * scale
         );
-        canvas.drawBitmap(imageSource, srcRect, dstRect, imagePaint);
+        canvas.drawBitmap(imageSource, null, dstRect, imagePaint);
     }
     for (let i = 0; i < staticLayoutsToDraw.length; i++) {
         const staticLayoutData = staticLayoutsToDraw[i];
         if (staticLayoutData.staticLayout) {
+            // canvas.drawRect(staticLayoutData.x, staticLayoutData.y, staticLayoutData.x + staticLayoutData.width, staticLayoutData.y + staticLayoutData.height, testPaint);
             canvas.save();
             canvas.translate(staticLayoutData.x, staticLayoutData.y);
             staticLayoutData.staticLayout.draw(canvas);
@@ -1212,9 +1214,6 @@ async function renderFullLayout({
     recycleImages(imagesToDraw.map((d) => d.image));
     return canvas;
 }
-
-const fieldsPaint = new Paint();
-fieldsPaint.fontWeight = '500';
 
 function drawFieldGroup(
     canvas,
@@ -1326,6 +1325,8 @@ function addFieldGroup(
     let x = startX;
     let deltaY = 0;
     (horizontalAlignment === 'right' ? fields.reverse() : fields).forEach((field, index) => {
+        const paint = new Paint();
+        paint.fontWeight = '500';
         const topText = createNativeAttributedString({
             spans: [
                 {
@@ -1346,31 +1347,36 @@ function addFieldGroup(
         let textAlignment = LayoutAlignment.ALIGN_NORMAL;
         let deltaX = 0;
         if (field.textAlignment === 'PKTextAlignmentRight') {
-            // fieldsPaint.setTextAlign(Align.RIGHT);
-            textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
+            paint.setTextAlign(Align.RIGHT);
+            if (horizontalAlignment !== 'right') {
+                deltaX += fieldWidth;
+            }
+            // textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
         } else if (field.textAlignment === 'PKTextAlignmentCenter') {
-            // fieldsPaint.setTextAlign(Align.CENTER);
+            // paint.setTextAlign(Align.CENTER);
             textAlignment = LayoutAlignment.ALIGN_CENTER;
         } else {
-            fieldsPaint.setTextAlign(Align.LEFT);
+            paint.setTextAlign(Align.LEFT);
         }
+        // DEV_LOG && console.log('addFieldGroup', field.label, field.textAlignment, horizontalAlignment, canvasWidth, padding, fieldSpacing, fields.length, fieldWidth);
+        if (__IOS__ && horizontalAlignment === 'right') {
+            paint.setTextAlign(Align.RIGHT);
+        }
+        const staticLayout = new StaticLayout(topText, paint, fieldWidth, textAlignment, 1, 0, true);
+        const actualWidth = staticLayout.getActualWidth();
         // if (horizontalAlignment === 'right') {
-        //     textAlignment = LayoutAlignment.ALIGN_OPPOSITE;
+        //     deltaX -= actualWidth;
         // }
-        const staticLayout = new StaticLayout(topText, fieldsPaint, fieldWidth, textAlignment, 1, 0, true);
-        if (horizontalAlignment === 'right') {
-            deltaX -= staticLayout.getActualWidth();
-        }
         // canvas.translate(x + deltaX, y);
-        staticLayoutsToDraw.push({ staticLayout, x: x + deltaX, y });
+        staticLayoutsToDraw.push({ staticLayout, x: x + deltaX, y, width: fieldWidth, actualWidth, height: staticLayout.getHeight() });
         // staticLayout.draw(canvas);
         // canvas.restore();
         deltaY = Math.max(deltaY, staticLayout.getHeight());
 
         if (horizontalAlignment === 'right') {
-            x -= staticLayout.getActualWidth() + fieldSpacing * scaleFactor;
+            x -= fieldWidth + fieldSpacing * scaleFactor;
         } else {
-            x += staticLayout.getActualWidth() + fieldSpacing * scaleFactor;
+            x += fieldWidth + fieldSpacing * scaleFactor;
         }
     });
 

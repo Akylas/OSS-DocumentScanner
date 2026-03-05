@@ -20,8 +20,8 @@
     }
 </script>
 
-<gesturerootview padding="10 0 10 0">
-    <scrollview>
+<gesturerootview padding="10 0 10 0" rows="auto">
+    <scrollview height={360}>
         <stacklayout>
             <label class="sectionBigHeader" margin={10} text={lc('export_settings')} />
             <FolderTextView text={folder} on:folder={onFolderSelect} />
@@ -49,7 +49,7 @@
                 secure={true}
                 text={password}
                 variant="outline"
-                on:textChange={(e) => (password = e['value'])} />
+                on:textChange={(e) => (password = e['value'].length ? e['value'] : null)} />
         </stacklayout>
     </scrollview>
 </gesturerootview>

@@ -125,8 +125,8 @@ export function getRealPath(src: string, force = false) {
 export function updateQuickToggle() {
     const enabled = ApplicationSettings.getBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, false);
     const context = Utils.android.getApplicationContext();
-    const component = new android.content.ComponentName(context, '__PACKAGE__.QuickToggleService');
-    DEV_LOG && console.log('updateQuickToggle', component, '__PACKAGE__.QuickToggleService', enabled);
+    const component = new android.content.ComponentName(context, 'com.akylas.documentscanner.QuickToggleService');
+    DEV_LOG && console.log('updateQuickToggle', component, 'com.akylas.documentscanner.QuickToggleService', enabled);
     const pm = context.getPackageManager();
 
     if (enabled) {
@@ -141,4 +141,27 @@ export function updateQuickToggle() {
 export function toggleQuickSetting(enable: boolean) {
     ApplicationSettings.setBoolean(SETTINGS_QUICK_TOGGLE_ENABLED, enable);
     updateQuickToggle();
+}
+
+export function testGetContent() {
+    const takePictureIntent = new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT);
+    takePictureIntent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+    takePictureIntent.setType('*/*');
+    const REQUEST_IMAGE_CAPTURE = 3453;
+    function onActivityResult(args: AndroidActivityResultEventData) {
+        const { intent, requestCode, resultCode } = args;
+
+        if (requestCode === REQUEST_IMAGE_CAPTURE) {
+            Application.android.off(Application.android.activityResultEvent, onActivityResult);
+            if (resultCode === android.app.Activity.RESULT_OK) {
+                const result = intent.getData().toString();
+                DEV_LOG && console.log('startActivityForResult got image', result);
+            } else if (resultCode === android.app.Activity.RESULT_CANCELED) {
+                // User cancelled the image capture
+            }
+        }
+    }
+    Application.android.on(Application.android.activityResultEvent, onActivityResult);
+
+    Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
 }
