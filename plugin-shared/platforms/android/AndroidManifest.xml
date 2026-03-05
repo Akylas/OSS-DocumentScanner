@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application>
 
-        <activity android:name="com.akylas.documentscanner.CameraScanActivity" android:exported="true" >
+        <activity android:name="${applicationId}.CameraScanActivity" android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.GET_CONTENT" />
                 <category android:name="android.intent.category.OPENABLE" />
