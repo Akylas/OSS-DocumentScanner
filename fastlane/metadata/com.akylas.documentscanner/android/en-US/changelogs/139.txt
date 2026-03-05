@@ -1,0 +1,11 @@
+Features:
+- allow to import documents into another document
+- option in "OCR" to replace line breaks with spaces when copying text
+- One-time scan via the GET_CONTENT intent
+- folder view style. You can now have then "vertical" scrolling with the documents
+- sync notification and better sync error handling
+
+Bug fixes:
+- effects/filters not being applied correctly when exporting black and white PDFs
+- prevent endless sync when OCR is enabled for sync
+- prevent sync when dragging page without actu
