@@ -18,8 +18,7 @@
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { getDirectoryName, hideLoading, showAlertOptionSelect } from '~/utils/ui';
-    import { requestStoragePermission } from '~/utils/utils.common';
+    import { getDirectoryName, hideLoading, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
 </script>

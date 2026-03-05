@@ -349,22 +349,14 @@ class Zip {
                         throw InvalidParameterException("Input path does not exist: $path")
                     }
                     if (f.isDirectory) {
-                        if (keepParent) {
-                            collectFiles(f, f.name, entries) {
-                                val size = it.length()
-                                if (it.isFile) {
-                                    totalBytes += size
-                                }
-                            }
-                        } else {
-                            // don't keep the top level folder: enumerate its children as top-level entries
-                            f.listFiles()?.forEach { child ->
-                                collectFiles(child, child.name, entries) {
-                                    val size = it.length()
-                                    if (it.isFile) {
-                                        totalBytes += size
-                                    }
-                                }
+                        // Collect recursively. If keepParent is false pass empty basePath so
+                        // collectFiles will emit entries rooted at the directory's children,
+                        // preserving deep structure.
+                        val base = if (keepParent) f.name else ""
+                        collectFiles(f, base, entries) { file ->
+                            val size = file.length()
+                            if (file.isFile) {
+                                totalBytes += size
                             }
                         }
                     } else {
@@ -436,22 +428,22 @@ class Zip {
         }
 
         private fun collectFiles(file: File, basePath: String, entries: MutableList<Pair<File, String>>, onFile: ((File) -> Unit)? = null) {
-            if (file.isDirectory) {
-                // only add directory entry if we have a non-empty basePath (prevents adding root when keepParent=false)
-                if (basePath.isNotEmpty()) {
-                    entries.add(Pair(file, basePath))
-                }
-                val children = file.listFiles() ?: return
-                for (child in children) {
-                    val childRel = if (basePath.isNotEmpty()) "$basePath/${child.name}" else child.name
-                    collectFiles(child, childRel, entries, onFile)
-                }
-            } else {
-                val path = if (basePath.isNotEmpty()) basePath else file.name
-                entries.add(Pair(file, path))
-                onFile?.invoke(file)
-            }
-        }
+             if (file.isDirectory) {
+                 // only add directory entry if we have a non-empty basePath (prevents adding root when keepParent=false)
+                 if (basePath.isNotEmpty()) {
+                     entries.add(Pair(file, basePath))
+                 }
+                 val children = file.listFiles() ?: return
+                 for (child in children) {
+                     val childRel = if (basePath.isNotEmpty()) "$basePath/${child.name}" else child.name
+                     collectFiles(child, childRel, entries, onFile)
+                 }
+             } else {
+                 val path = if (basePath.isNotEmpty()) basePath else file.name
+                 entries.add(Pair(file, path))
+                 onFile?.invoke(file)
+             }
+         }
     }
 
     // ZIP worker supporting SAF input and/or destination
@@ -485,16 +477,9 @@ class Zip {
                         val docSingle = DocumentFile.fromSingleUri(context, Uri.parse(path))
                         if (docSingle != null) {
                             if (docSingle.isDirectory) {
-                                if (keepParent) {
-                                    collectSafFiles(docSingle, docSingle.name ?: "root", sources) { sz ->
-                                        if (sz >= 0) totalBytes += sz else totalBytesKnown = false
-                                    }
-                                } else {
-                                    for (child in docSingle.listFiles()) {
-                                        collectSafFiles(child, child.name ?: "file", sources) { sz ->
-                                            if (sz >= 0) totalBytes += sz else totalBytesKnown = false
-                                        }
-                                    }
+                                val base = if (keepParent) (docSingle.name ?: "root") else ""
+                                collectSafFiles(docSingle, base, sources) { sz ->
+                                    if (sz >= 0) totalBytes += sz else totalBytesKnown = false
                                 }
                             } else {
                                 val size = try {
@@ -508,16 +493,9 @@ class Zip {
                         } else {
                             val docTree = DocumentFile.fromTreeUri(context, Uri.parse(path))
                             if (docTree != null) {
-                                if (keepParent) {
-                                    collectSafFiles(docTree, docTree.name ?: "root", sources) { sz ->
-                                        if (sz >= 0) totalBytes += sz else totalBytesKnown = false
-                                    }
-                                } else {
-                                    for (child in docTree.listFiles()) {
-                                        collectSafFiles(child, child.name ?: "file", sources) { sz ->
-                                            if (sz >= 0) totalBytes += sz else totalBytesKnown = false
-                                        }
-                                    }
+                                val base = if (keepParent) (docTree.name ?: "root") else ""
+                                collectSafFiles(docTree, base, sources) { sz ->
+                                    if (sz >= 0) totalBytes += sz else totalBytesKnown = false
                                 }
                             } else {
                                 throw InvalidParameterException("Invalid SAF input path: $path")

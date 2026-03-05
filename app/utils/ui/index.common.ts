@@ -1,5 +1,5 @@
 import { share } from '@akylas/nativescript-app-utils/share';
-import { request } from '@nativescript-community/perms';
+import { MultiResult, Permissions, Status, isPermResultAuthorized, openSettings, request } from '@nativescript-community/perms';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { Label } from '@nativescript-community/ui-label';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -22,13 +22,14 @@ import {
     SharedTransition,
     Utils,
     View,
-    knownFolders
+    knownFolders,
+    path
 } from '@nativescript/core';
 import { ConfirmOptions } from '@nativescript/core/ui/dialogs/dialogs-common';
 import { SDK_VERSION, copyToClipboard, debounce, openFile } from '@nativescript/core/utils';
 import { create as createImagePicker } from '@nativescript/imagepicker';
 import { doInBatch } from '@shared/utils/batch';
-import { SilentError } from '@shared/utils/error';
+import { IgnoreError, PermissionError, SilentError } from '@akylas/nativescript-app-utils/error';
 import { showError } from '@shared/utils/showError';
 import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
 import { hideLoading, showLoading, showSnack, updateLoadingProgress } from '@shared/utils/ui';
@@ -70,6 +71,7 @@ import {
     DEFAULT_COLORTYPE,
     DEFAULT_CONTRAST,
     DEFAULT_EXPORT_DIRECTORY,
+    DEFAULT_OCR_COPY_USE_SPACE,
     DEFAULT_TRANSFORM,
     DOCUMENT_NOT_DETECTED_MARGIN,
     IMG_COMPRESS,
@@ -77,6 +79,7 @@ import {
     PDFImportImages,
     PDF_EXT,
     PDF_IMPORT_IMAGES,
+    PKPASS_EXT,
     PREVIEW_RESIZE_THRESHOLD,
     QRCODE_RESIZE_THRESHOLD,
     SEPARATOR,
@@ -90,6 +93,7 @@ import {
     SETTINGS_IMAGE_EXPORT_FORMAT,
     SETTINGS_IMAGE_EXPORT_QUALITY,
     SETTINGS_IMPORT_PDF_IMAGES,
+    SETTINGS_OCR_COPY_USE_SPACE,
     SETTINGS_TRANSFORM_BATCH_SIZE,
     TRANSFORMS_SPLIT,
     TRANSFORM_BATCH_SIZE,
@@ -100,7 +104,9 @@ import { recycleImages } from '~/utils/images';
 import { showToast, timeout } from '~/utils/ui';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 import { MatricesTypes, Matrix } from '../color_matrix';
-import { requestCameraPermission, requestPhotoPermission, requestStoragePermission, saveImage } from '../utils';
+import { cleanFilename, saveImage } from '../utils';
+import { importPKPassFiles } from '~/utils/pkpass-import';
+import { zip } from 'plugin-zip';
 
 export { ColorMatricesType, ColorMatricesTypes, getColorMatrix } from '~/utils/matrix';
 
@@ -117,14 +123,16 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         const resizeThreshold = previewResizeThreshold * 1.5;
         const cropEnabled = ApplicationSettings.getBoolean(SETTINGS_CROP_ENABLED, CROP_ENABLED);
 
-        const [pdf, images] = await uris.reduce(
+        const [pdf, images, pkpasses] = await uris.reduce(
             async (acc, e) => {
                 let testStr = e.toLowerCase();
                 if (__ANDROID__ && e.startsWith(ANDROID_CONTENT)) {
                     testStr = await getFileName(e);
                 }
                 acc.then((obj) => {
-                    if (testStr.endsWith(PDF_EXT)) {
+                    if (CARD_APP && testStr.endsWith(PKPASS_EXT)) {
+                        obj[2].push(e);
+                    } else if (testStr.endsWith(PDF_EXT)) {
                         obj[0].push(e);
                     } else {
                         obj[1].push(e);
@@ -133,10 +141,13 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
                 return acc;
                 // return testStr.endsWith(PDF_EXT) ? [[...p, e], f] : [p, [...f, e]];
             },
-            Promise.resolve([[], []] as [string[], string[]])
+            Promise.resolve([[], [], []] as [string[], string[], string[]])
         );
-        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images);
-
+        DEV_LOG && console.log('importAndScanImageOrPdfFromUris', pdf, images, pkpasses);
+        if (CARD_APP && pkpasses.length) {
+            await importPKPassFromUris({ uris: pkpasses, canGoToView: true });
+            return;
+        }
         // First we check/ask the user if he wants to import PDF pages or images
         let pdfImportsImages = ApplicationSettings.getString(SETTINGS_IMPORT_PDF_IMAGES, PDF_IMPORT_IMAGES) as PDFImportImages;
         if (pdf.length > 0 && pdfImportsImages === PDFImportImages.ask) {
@@ -397,7 +408,19 @@ export async function importAndScanImageOrPdfFromUris({ canGoToView = true, docu
         hideLoading();
     }
 }
-export async function importAndScanImage({ canGoToView = true, document, folder, importPDFs = false }: { document?: OCRDocument; importPDFs?: boolean; canGoToView?: boolean; folder?: DocFolder }) {
+export async function importAndScanImage({
+    canGoToView = true,
+    document,
+    folder,
+    forceGalleryPick = false,
+    importPDFs = false
+}: {
+    document?: OCRDocument;
+    importPDFs?: boolean;
+    canGoToView?: boolean;
+    forceGalleryPick?: boolean;
+    folder?: DocFolder;
+}) {
     await request(__IOS__ ? { storage: {}, photo: {} } : { storage: {} });
     try {
         if (__ANDROID__) {
@@ -405,7 +428,7 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
             securityService.ignoreNextValidation();
         }
         let selection: string[];
-        if (__IOS__ && !importPDFs) {
+        if ((__IOS__ && !importPDFs) || forceGalleryPick) {
             try {
                 const data = await createImagePicker({
                     mediaType: 1,
@@ -418,8 +441,8 @@ export async function importAndScanImage({ canGoToView = true, document, folder,
         } else {
             selection = (
                 await openFilePicker({
-                    mimeTypes: ['image/*', 'application/pdf'],
-                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier] : undefined,
+                    mimeTypes: ['image/*', 'application/pdf'].concat(CARD_APP ? ['application/vnd.apple.pkpass'] : []),
+                    documentTypes: __IOS__ ? [UTTypeImage.identifier, UTTypePDF.identifier, UTType.typeWithFilenameExtension('pkpass').identifier] : undefined,
                     multipleSelection: true,
                     pickerMode: 0,
                     forceSAF: true
@@ -476,8 +499,9 @@ export async function showPopoverMenu<T = any>({
     onClose,
     options,
     props,
+    title,
     vertPos
-}: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
+}: { options; anchor; onClose?; props?; title?: string; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
@@ -489,6 +513,7 @@ export async function showPopoverMenu<T = any>({
         horizPos: horizPos ?? HorizontalPosition.ALIGN_LEFT,
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
+            title,
             borderRadius: 10,
             elevation: __ANDROID__ ? 3 : 0,
             margin: 4,
@@ -496,7 +521,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
-            height: Math.min(rowHeight * options.length, props?.maxHeight || maxHeight),
+            height: Math.min(rowHeight * options.length + (title ? 50 : 0), props?.maxHeight || maxHeight),
             width: 200 * get(fontScale),
             options,
             onClose: async (item) => {
@@ -601,6 +626,7 @@ export async function showPDFPopoverMenu({
             .concat([{ id: 'preview', name: lc('preview'), icon: 'mdi-printer-eye' }] as any)
     );
     return showPopoverMenu({
+        title: lc('pdf_export'),
         options,
         anchor,
         vertPos: VerticalPosition.BELOW,
@@ -824,7 +850,7 @@ export async function showPDFPopoverMenu({
                     }
                     case 'preview':
                         await closePopover();
-                        const component = (await import('~/components/pdf/PDFPreview.svelte')).default;
+                        const component = (await import('~/components/pdf/PDFPreviewModal.svelte')).default;
                         await showModal({
                             page: component,
                             animated: true,
@@ -991,13 +1017,26 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
 
     const options = new ObservableArray(
         (__ANDROID__ ? [{ id: 'set_export_directory', name: lc('export_folder'), subtitle: exportDirectoryName, rightIcon: 'mdi-restore' }] : []).concat([
-            { id: 'export', name: lc('export'), icon: 'mdi-export', subtitle: undefined },
-            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple', subtitle: undefined },
+            { id: 'export', name: lc('export'), icon: 'mdi-export' },
+            { id: 'save_gallery', name: lc('save_gallery'), icon: 'mdi-image-multiple' },
             { id: 'share', name: lc('share'), icon: 'mdi-share-variant' }
         ] as any)
     );
+    if (CARD_APP && pages.some((p) => p.page.pkpass)) {
+        options.splice(options.length - 2, 0, {
+            id: 'export_pkpass',
+            name: lc('export_passbooks'),
+            icon: 'mdi-export'
+        } as any);
+        options.push({
+            id: 'share_pkpass',
+            name: lc('share_passbooks'),
+            icon: 'mdi-share-variant'
+        } as any);
+    }
     return new Promise<boolean>((resolve, reject) => {
         showPopoverMenu({
+            title: lc('image_export'),
             options,
             anchor,
             vertPos: VerticalPosition.BELOW,
@@ -1078,9 +1117,84 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
                                 recycleImages(images);
                             }
                             break;
+                        case 'share_pkpass': {
+                            if (CARD_APP) {
+                                await closePopover();
+                                const files = [];
+                                await doInBatch(
+                                    pages.filter((p) => p.page.pkpass),
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const page = p.page;
+                                        const fileName = page.name ?? p.document.name ?? `${p.document.id}_${page.pkpass_id}`;
+                                        const outputZip = knownFolders.temp().getFolder(`${cleanFilename(fileName)}.pkpass`, false);
+
+                                        const docFolder = p.document.folderPath;
+                                        const pageFolder = docFolder.getFolder(page.id);
+                                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                                        await zip({ directory: pkpassFolder.path, archive: outputZip.path, keepParent: false });
+
+                                        files.push(outputZip.path);
+                                    }
+                                );
+                                await share({ files });
+                                didDoSomething = true;
+                            }
+                            break;
+                        }
+                        case 'export_pkpass': {
+                            if (CARD_APP) {
+                                DEV_LOG && console.log('export_pkpass', exportDirectory);
+                                if (!exportDirectory) {
+                                    if (await pickExportFolder()) {
+                                        const item = options.getItem(0);
+                                        item.subtitle = exportDirectoryName;
+                                        options.setItem(0, item);
+                                    } else {
+                                        showSnack({ message: lc('please_choose_export_folder') });
+                                        return;
+                                    }
+                                }
+                                await closePopover();
+                                await doInBatch(
+                                    pages.filter((p) => p.page.pkpass),
+                                    async (
+                                        p: {
+                                            page: OCRPage;
+                                            document: OCRDocument;
+                                        },
+                                        index
+                                    ) => {
+                                        const needsCopy = __ANDROID__ && exportDirectory.startsWith(ANDROID_CONTENT);
+                                        const page = p.page;
+                                        const fileName = page.name ?? p.document.name ?? `${p.document.id}_${page.pkpass_id}`;
+                                        const actualFileName = `${cleanFilename(fileName)}.pkpass`;
+                                        const outputZip = needsCopy ? path.join(knownFolders.temp().path, actualFileName) : path.join(exportDirectory, actualFileName);
+
+                                        const docFolder = p.document.folderPath;
+                                        const pageFolder = docFolder.getFolder(page.id);
+                                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                                        await zip({ directory: pkpassFolder.path, archive: outputZip, keepParent: false });
+
+                                        if (__ANDROID__ && needsCopy) {
+                                            const context = Utils.android.getApplicationContext();
+                                            com.akylas.documentscanner.utils.FileUtils.Companion.copyFileToDocumentFile(context, outputZip, 'application/vnd.apple.pkpass', exportDirectory);
+                                        }
+                                    }
+                                );
+                                didDoSomething = true;
+                            }
+                            showSnack({ message: lc('passbooks_saved') });
+                            break;
+                        }
                         case 'export':
                         case 'save_gallery': {
-                            if (!exportDirectory) {
+                            if (!exportDirectory && item.id !== 'save_gallery') {
                                 if (await pickExportFolder()) {
                                     const item = options.getItem(0);
                                     item.subtitle = exportDirectoryName;
@@ -1356,7 +1470,16 @@ export async function detectOCR({ documents, pages }: { documents?: OCRDocument[
     }
 }
 
+export function copyOCRToClipboard(text) {
+    const replaceLineBreaks = ApplicationSettings.getBoolean(SETTINGS_OCR_COPY_USE_SPACE, DEFAULT_OCR_COPY_USE_SPACE);
+    if (replaceLineBreaks) {
+        text = text.replace(/\n/g, ' ');
+    }
+    copyTextToClipboard(text);
+}
+
 export function copyTextToClipboard(text) {
+    DEV_LOG && console.log('copyTextToClipboard', text);
     copyToClipboard(text);
     if (__IOS__ || (__ANDROID__ && SDK_VERSION < 13)) {
         showToast(lc('copied'));
@@ -1465,7 +1588,7 @@ export async function showMatrixLevelPopover({ anchor, currentValue, item, onCha
     });
 }
 export async function goToDocumentView(doc: OCRDocument, useTransition = true) {
-    DEV_LOG && console.log('goToDocumentView');
+    // DEV_LOG && console.log('goToDocumentView');
     if (CARD_APP) {
         const page = (await import('~/components/view/CardView.svelte')).default;
         return navigate({
@@ -2023,4 +2146,73 @@ export async function showCustomAlert<T>(component, options, props = {}): Promis
         componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
     } catch (error) {}
     return result;
+}
+
+export async function importPKPassFromUris({ canGoToView = true, uris }: { uris: string[]; canGoToView?: boolean }) {
+    if (CARD_APP) {
+        try {
+            await showLoading(lc('importing'));
+
+            // Import the PKPass file
+            const document = await importPKPassFiles(uris, null);
+
+            if (canGoToView && document) {
+                await hideLoading();
+                await goToDocumentView(document);
+            }
+
+            showSnack({ message: lc('imported') });
+        } catch (error) {
+            showError(error);
+        } finally {
+            DEV_LOG && console.log('importPKPassFromUris finally');
+            hideLoading();
+        }
+    }
+}
+
+export function isPermResultNeverAskAgain(r: MultiResult | Status) {
+    const statusCheck = __IOS__ ? Status.Denied : Status.NeverAskAgain;
+    if (typeof r === 'object') {
+        const denied = Object.keys(r).some((s) => r[s] === statusCheck);
+        return denied;
+    }
+    return r === statusCheck;
+}
+
+export async function requestPermission(perm: Permissions, errorMessage: string) {
+    const result = await request(perm);
+    if (isPermResultNeverAskAgain(result)) {
+        const showSetting = await confirm({
+            title: lc('permission_denied'),
+            message: errorMessage,
+            iosForceClosePresentedViewController: true, //ensure error popup is always showing
+            okButtonText: l('open_settings'),
+            cancelButtonText: l('cancel')
+        });
+        if (showSetting) {
+            await openSettings();
+        } else {
+            throw new IgnoreError();
+        }
+    } else if (!isPermResultAuthorized(result)) {
+        throw new PermissionError(errorMessage);
+    }
+}
+
+export async function requestCameraPermission() {
+    return requestPermission('camera', lc('camera_permission_needed'));
+}
+
+export async function requestStoragePermission() {
+    if (__ANDROID__ && SDK_VERSION <= 29) {
+        return requestPermission('storage', lc('storage_permission_needed'));
+    }
+}
+
+export async function requestPhotoPermission() {
+    return requestPermission('photo', lc('media_library_permission_needed'));
+}
+export async function requestGalleryPermission() {
+    return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
 }

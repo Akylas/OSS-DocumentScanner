@@ -3,6 +3,7 @@ import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale } from 
 import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+import UTC from 'dayjs/plugin/utc';
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '@shared/services/preferences';
 import { showError } from '@shared/utils/showError';
@@ -10,8 +11,10 @@ import { createGlobalEventListener, globalObservable } from '@shared/utils/svelt
 import { showAlertOptionSelect } from '~/utils/ui';
 
 import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_LOCALE, SETTINGS_LANGUAGE } from '~/utils/constants';
+import { clearCurrentLocale, deviceLanguage, getActualLanguage, getCurrentLocale, getSavedLanguage } from '@shared/helpers/lang';
 const supportedLanguages = SUPPORTED_LOCALES;
 dayjs.extend(LocalizedFormat);
+dayjs.extend(UTC);
 
 export let lang;
 export const $lang = writable(null);
@@ -61,7 +64,7 @@ function setLang(newLang) {
     DEV_LOG && console.log('setLang', newLang, actualNewLang);
     if (__IOS__) {
         overrideNativeLocale(actualNewLang);
-        currentLocale = null;
+        clearCurrentLocale();
     } else {
         // Application.android.foregroundActivity?.recreate();
         try {
@@ -83,7 +86,7 @@ function setLang(newLang) {
             DEV_LOG && console.log('appLocale', appLocale.toLanguageTags(), actualNewLang);
             // Call this on the main thread as it may require Activity.restart()
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
-            currentLocale = null;
+            clearCurrentLocale();
             // TODO: check why getEmptyLocaleList does not reset the locale to system
             actualNewLang = getActualLanguage(newLang);
         } catch (error) {
@@ -91,38 +94,6 @@ function setLang(newLang) {
         }
     }
     $lang.set(actualNewLang);
-}
-
-const deviceLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
-function getActualLanguage(language: string) {
-    if (language === 'auto') {
-        if (__ANDROID__) {
-            // N Device.language reads app config which thus does return locale app language and not device language
-            language = java.util.Locale.getDefault().toLanguageTag();
-        } else {
-            language = Device.language;
-        }
-    }
-
-    if (supportedLanguages.indexOf(language) === -1) {
-        language = language.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(language) === -1) {
-            language = 'en';
-        }
-    }
-
-    switch (language) {
-        // case 'cs':
-        //     language = 'cz';
-        //     break;
-        case 'jp':
-            language = 'ja';
-            break;
-        case 'lv':
-            language = 'la';
-            break;
-    }
-    return language;
 }
 
 // const rtf = new Intl.RelativeTimeFormat('es');
@@ -159,10 +130,10 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
 }
 
 prefs.on('key:language', () => {
-    const newLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
+    const newLanguage = getSavedLanguage();
     DEV_LOG && console.log('language changed', newLanguage);
     // on pref change we are updating
-    if (newLanguage === lang) {
+    if (getActualLanguage(newLanguage) === lang) {
         return;
     }
     setLang(newLanguage);
@@ -177,19 +148,12 @@ prefs.on('key:clock_24', () => {
     globalObservable.notify({ eventName: SETTINGS_LANGUAGE, data: lang, clock_24: true });
 });
 
-let currentLocale: any = null;
 export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
     if (__IOS__) {
-        if (!currentLocale) {
-            currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
-        }
-        const localeStr = (currentLocale as NSLocale).displayNameForKeyValue(NSLocaleIdentifier, locale || lang);
+        const localeStr = (getCurrentLocale(lang) as NSLocale).displayNameForKeyValue(NSLocaleIdentifier, locale || lang);
         return localeStr ? capitalize(localeStr) : canReturnEmpty ? undefined : locale || lang;
     } else {
-        if (!currentLocale) {
-            currentLocale = java.util.Locale.forLanguageTag(lang);
-        }
-        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayName(currentLocale as java.util.Locale));
+        return capitalize(java.util.Locale.forLanguageTag(locale || lang).getDisplayName(getCurrentLocale(lang) as java.util.Locale));
     }
 }
 export function getCurrentISO3Language() {
@@ -198,7 +162,7 @@ export function getCurrentISO3Language() {
 async function internalSelectLanguage() {
     // try {
     const actions = SUPPORTED_LOCALES;
-    const currentLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
+    const currentLanguage = getSavedLanguage();
     let selectedIndex = -1;
     const options = [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d, index) => {
         const selected = currentLanguage === d.data;

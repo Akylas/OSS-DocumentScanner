@@ -1,8 +1,6 @@
-import '@nativescript/core/globals';
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import Queue from '@akylas/nativescript-app-utils/worker/queue';
 import { ApplicationSettings, File, Utils, knownFolders, path } from '@nativescript/core';
-import '@nativescript/core/globals';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { DocFolder, OCRDocument, OCRPage, getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
@@ -903,7 +901,8 @@ export default class SyncWorker extends BaseWorker {
                             //see if we need to OCR
                             if (service.OCREnabled && service.OCRLanguages.length) {
                                 const OCRDataPath = path.join(baseOCRDataPath, service.OCRDataType);
-                                await Promise.all(doc.pages.map(async (p, index) => doc.ocrPage({ pageIndex: index, language: service.OCRLanguages.join('+'), dataPath: OCRDataPath })));
+                                // we need to make sure the OCR update wont trigger another sync or we will end up in an endless loop
+                                await Promise.all(doc.pages.map(async (p, index) => doc.ocrPage({ pageIndex: index, language: service.OCRLanguages.join('+'), dataPath: OCRDataPath, notify: false })));
                             }
 
                             const name = service.getPDFName(doc);

@@ -30,7 +30,7 @@ export async function zip(options: ZipOptions): Promise<string> {
             }
         );
         if (!result) {
-            reject('Error creating zip file.');
+            reject(`Error creating zip file for options:${JSON.stringify(options)}`);
         } else {
             resolve(archive);
         }

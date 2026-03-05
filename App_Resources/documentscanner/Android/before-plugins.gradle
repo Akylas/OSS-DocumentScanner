@@ -1,10 +1,10 @@
 ext {
     compileSdk = 36
     targetSdk = 36
-    kotlinVersion = "2.1.0"
-    androidBuildToolsVersion = "8.12.1"
+    kotlinVersion = "2.2.0"
+    androidBuildToolsVersion = "8.13.2"
     buildToolsVersion = "36.1.0"
-    androidxVersion = "1.15.0"
+    androidxVersion = "1.17.0"
     androidXAppCompat = "1.7.1"
     androidXAppCompatVersion = "1.7.1"
     androidXActivityVersion = "1.11.0"
@@ -16,13 +16,14 @@ ext {
     androidXMaterial = "1.12.0"
     androidXBrowser = "1.8.0"
     androidXPreferenceVersion = "1.2.1"
+    androidXSplashscreenVersion = "1.2.0"
     okHttpVersion = "4.12.0"
     lottieVersion = "6.2.0"
     ndkVersion = "27.3.13750724"
     licenseReporterVersion = "2.4"
     sentryVersion = "7.22.6"
-    frescoVersion = "3.6.0"
     sentryGradleVersion = "4.12.0"
-    cameraxVersion = "1.5.0-rc01"
-    itextpdfVersion = "9.3.0"
+    frescoVersion = "3.6.0"
+    cameraxVersion = "1.5.2"
+    itextpdfVersion = "9.5.0"
 }

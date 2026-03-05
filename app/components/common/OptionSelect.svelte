@@ -13,6 +13,8 @@
     import { lc } from '~/helpers/locale';
     import { actionBarButtonHeight, colors } from '~/variables';
     import ListItemAutoSize from './ListItemAutoSize.svelte';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     export interface OptionType {
         group?: string;
         name?: string;
@@ -25,6 +27,7 @@
 </script>
 
 <script lang="ts">
+    export let title: string = null;
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
@@ -102,6 +105,11 @@
         }
     }
     let ignoreNextOnCheckBoxChange = false;
+
+    function getCheckbox(index: number) {
+        const view = collectionView?.nativeView?.getViewForItemAtIndex(index);
+        return view?.getViewById<CheckBox>('checkbox');
+    }
     function onCheckedChanged(item: OptionType, event) {
         clearCheckboxTimer();
         if (ignoreNextOnCheckBoxChange) {
@@ -111,27 +119,19 @@
         ignoreNextOnCheckBoxChange = true;
         if (item.group && options instanceof ObservableArray) {
             if (event.value) {
-                // const oldSelected = currentlyCheckedItem;
-                // if (oldSelected === item) {
-                //     ignoreNextOnCheckBoxChange = false;
-                //     return;
-                // }
+                item.value = true;
+                options.setItem(options.indexOf(item), item);
                 options.forEach((opt, index) => {
                     if (item !== opt && opt.group === item.group && opt.value === true) {
                         opt.value = false;
                         options.setItem(index, opt);
+
+                        if (__IOS__) {
+                            // dirty hack for now
+                            getCheckbox(index).checked = false;
+                        }
                     }
                 });
-                item.value = true;
-                // currentlyCheckedItem = item;
-                // if (oldSelected) {
-                //     const index = options.indexOf(oldSelected);
-                //     if (index >= 0) {
-                //         oldSelected.value = false;
-                //         options.setItem(index, oldSelected);
-                //     }
-                // }
-                options.setItem(options.indexOf(item), item);
             } else {
                 // we dont allow to have none selected
                 ignoreNextOnCheckBoxChange = false;
@@ -170,10 +170,14 @@
         }
     }
     const component = autoSizeListItem ? ListItemAutoSize : ListItem;
+    let collectionView: NativeViewElementNode<CollectionView>;
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
-    <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
+    <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,auto,*" {...$$restProps}>
+        {#if title}
+            <label fontSize={18} fontWeight="bold" padding={16} text={title} />
+        {/if}
         {#if showFilter}
             <gridlayout margin="10 10 0 10">
                 <textfield
@@ -201,7 +205,7 @@
                     on:tap={() => (filter = null)} />
             </gridlayout>
         {/if}
-        <collectionView {itemTemplateSelector} items={filteredOptions} row={1} {rowHeight} on:dataPopulated={onDataPopulated} ios:contentInsetAdjustmentBehavior={2}>
+        <collectionView bind:this={collectionView} {itemTemplateSelector} items={filteredOptions} row={2} {rowHeight} on:dataPopulated={onDataPopulated} ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
                 <svelte:component
                     this={component}

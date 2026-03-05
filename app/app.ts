@@ -4,7 +4,7 @@ import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { ImagePipeline, getImagePipeline, initialize } from '@nativescript-community/ui-image';
+import { ImagePipeline, ImageViewTraceCategory, getImagePipeline, initialize } from '@nativescript-community/ui-image';
 import { installMixins as installColorFilters } from '@nativescript-community/ui-image-colorfilter';
 import { Label } from '@nativescript-community/ui-label';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
@@ -29,6 +29,8 @@ import { syncService } from '~/services/sync';
 import ZoomOutTransformer from '~/transformers/ZoomOutTransformer';
 import { SETTINGS_APP_VERSION, SETTINGS_SYNC_ON_START } from '~/utils/constants';
 import { startOnCam } from './variables';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+import { init as sharedInit } from '@shared/index';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
@@ -118,10 +120,12 @@ try {
     // Trace.addCategories(Trace.categories.Navigation);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Layout);
-    // Trace.addCategories(CollectionViewTraceCategory);
-    // Trace.addCategories(ImageViewTraceCategory);
-    // Trace.addCategories(ImageViewTraceCategory);
-    // Trace.enable();
+    if (__DEV__) {
+        // Trace.addCategories(CollectionViewTraceCategory);
+        // Trace.addCategories(ImageViewTraceCategory);
+        // Trace.addCategories(ImageViewTraceCategory);
+        Trace.enable();
+    }
 
     let launched = false;
     async function start() {
@@ -212,29 +216,8 @@ try {
         cornerFamily: 'rounded' as any,
         cornerSize: 0
     });
-    if (!PRODUCTION && DEV_LOG) {
-        Page.on('navigatingTo', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'to', event.object, event.isBackNavigation);
-        });
-        Page.on('showingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
-        });
-        Frame.on('showingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
-        });
-        Frame.on('closingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
-        });
-        Page.on('closingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
-        });
-        GestureRootView.on('shownInBottomSheet', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'BOTTOMSHEET', event.object, event.isBackNavigation);
-        });
-        GestureRootView.on('closedBottomSheet', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'CLOSING BOTTOMSHEET', event.object, event.isBackNavigation);
-        });
-    }
+    sharedInit();
+
     let Comp;
     if (startOnCam) {
         Comp = await import('~/components/camera/Camera.svelte');

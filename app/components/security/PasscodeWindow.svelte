@@ -1,9 +1,9 @@
 <script lang="ts">
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { LottieView } from '@nativescript-community/ui-lottie';
     import { AndroidActivityBackPressedEventData, Application, Color, Page } from '@nativescript/core';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import { onDestroy, onMount } from 'svelte';
-    import { closeModal } from '@nativescript-community/svelte-native';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { getRealTheme } from '~/helpers/theme';
     import { securityService } from '~/services/security';

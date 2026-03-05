@@ -4,7 +4,7 @@ import { handleResponseCode } from '../response';
 import { getStat } from './stat';
 import { CreateDirectoryOptions, FileStat, WebDAVClientContext } from '../types';
 import { path } from '@nativescript/core';
-import { HTTPError } from '@shared/utils/error';
+import { HTTPError } from '@akylas/nativescript-app-utils/error';
 import { SEPARATOR } from '~/utils/constants';
 
 export async function createDirectory(context: WebDAVClientContext, dirPath: string, options: CreateDirectoryOptions = {}) {

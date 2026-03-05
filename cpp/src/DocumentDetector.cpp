@@ -369,6 +369,95 @@ void correctGamma(const Mat &img, const Mat &dest, const double gamma_)
     //! [changing-contrast-brightness-gamma-correction]
 }
 
+DocumentDetector::PageSplitResult DocumentDetector::detectGutterAndSplit(const Mat& input,
+                                      float minPageWidthRatio,
+                                      int blurSize)
+{
+    CV_Assert(!input.empty());
+
+    Mat gray;
+    if (input.channels() == 3)
+        cvtColor(input, gray, COLOR_BGR2GRAY);
+    else
+        gray = input.clone();
+
+    // Slight blur reduces noise
+    GaussianBlur(gray, gray, Size(blurSize, blurSize), 0);
+
+    // Vertical gradient (detect vertical fold)
+    Mat gradX;
+    Sobel(gray, gradX, CV_32F, 1, 0, 3);
+
+    gradX = abs(gradX);
+
+    // Sum gradient magnitude per column
+    Mat columnEnergy;
+    reduce(gradX, columnEnergy, 0, REDUCE_SUM, CV_32F);
+
+    // Convert to vector for easier processing
+    vector<float> energy(columnEnergy.cols);
+    for (int i = 0; i < columnEnergy.cols; i++)
+        energy[i] = columnEnergy.at<float>(0, i);
+
+    // Smooth energy to avoid local noise spikes
+    const int smoothRadius = 15;
+    vector<float> smoothEnergy(energy.size(), 0);
+
+    for (int i = 0; i < energy.size(); i++) {
+        float sum = 0;
+        int count = 0;
+        for (int j = -smoothRadius; j <= smoothRadius; j++) {
+            int idx = i + j;
+            if (idx >= 0 && idx < energy.size()) {
+                sum += energy[idx];
+                count++;
+            }
+        }
+        smoothEnergy[i] = sum / count;
+    }
+
+    // Find gutter near center (avoid edges)
+    int width = input.cols;
+    int searchMin = width * 0.25;
+    int searchMax = width * 0.75;
+
+    int gutterX = -1;
+    float bestScore = FLT_MAX;
+
+    for (int i = searchMin; i < searchMax; i++) {
+        if (smoothEnergy[i] < bestScore) {
+            bestScore = smoothEnergy[i];
+            gutterX = i;
+        }
+    }
+
+    DocumentDetector::PageSplitResult result;
+    result.gutterX = gutterX;
+
+    if (gutterX < 0)
+        return result;
+
+    int minWidth = static_cast<int>(width * minPageWidthRatio);
+
+    // Left page ROI
+    if (gutterX > minWidth) {
+        result.leftPage = cv::Rect(0, 0, gutterX, input.rows);
+        result.hasLeft = true;
+    }
+
+    // Right page ROI
+    if (width - gutterX > minWidth) {
+        result.rightPage = cv::Rect(gutterX, 0, width - gutterX, input.rows);
+        result.hasRight = true;
+    }
+
+    // mark found gutter if any valid page ROI created
+    result.foundGutter = (gutterX >= 0) && (result.hasLeft || result.hasRight);
+
+     return result;
+}
+
+
 vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bool drawContours)
 {
     // auto t_start = std::chrono::high_resolution_clock::now();
@@ -377,6 +466,8 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
         resizedImage = resizeImageMax();
         image = resizedImage;
     }
+
+
 
     if (imageRotation != 0)
     {
@@ -463,127 +554,14 @@ vector<vector<cv::Point>> DocumentDetector::scanPoint(Mat &edged, Mat &image, bo
             auto firstContour = foundSquares[0];
             if (std::get<2>(firstContour) < options.expectedOptimalMaxCosine && std::get<1>(firstContour) > (width * height * options.expectedAreaFactor))
             {
-                // return true;
                 i = minI;
                 break;
             }
         }
             iterration++;
             t -= 10;
-            // break;
         }
     }
-
-    // if (useChannel > 0 && (useChannel <= image.channels()))
-    // {
-    //     extractChannel(image, edged, useChannel - 1);
-    // }
-    // else
-    // {
-    //     cvtColor(image, edged, COLOR_BGR2GRAY);
-    // }
-
-    // if (bilateralFilterValue > 0)
-    // {
-    //     Mat out;
-    //     std::printf("bilateralFilter %f\n", bilateralFilter);
-    //     bilateralFilter(edged, out, 15, bilateralFilterValue, bilateralFilterValue);
-    //     out.copyTo(edged);
-    // }
-
-    // if (medianBlurValue > 0)
-    // {
-    //     std::printf("medianBlur %f\n", medianBlurValue);
-    //     medianBlur(edged, edged, medianBlurValue);
-    // }
-
-    // if (adapThresholdBlockSize > 1 && adapThresholdC > 0)
-    // {
-    //     std::printf("adaptiveThreshold %f %f\n", adapThresholdBlockSize, adapThresholdC);
-    //     cv::adaptiveThreshold(edged, edged, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, adapThresholdBlockSize, adapThresholdC);
-    // }
-
-    // if (gaussianBlur > 0)
-    // {
-    //     std::printf("gaussianBlur %f\n", gaussianBlur);
-    //     GaussianBlur(edged, edged, cv::Size(gaussianBlur, gaussianBlur), cannySigmaX);
-    // }
-
-    // if (thresh > 0 && threshMax > 0)
-    // {
-    //     std::printf("threshold %f %f\n", thresh, threshMax);
-    //     cv::threshold(edged, edged, thresh, threshMax, cv::THRESH_BINARY);
-    // }
-    // if (morphologyAnchorSize > 2)
-    // {
-    //     std::printf("morphologyEx %f\n", morphologyAnchorSize);
-    //     cv::Mat structuringElmt = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(morphologyAnchorSize, morphologyAnchorSize));
-    //     morphologyEx(edged, edged, cv::MORPH_CLOSE, structuringElmt);
-    // }
-
-    // if (dilateAnchorSizeBefore > 0)
-    // {
-    //     std::printf("dilate %f\n", dilateAnchorSizeBefore);
-    //     cv::Mat structuringElmt = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateAnchorSizeBefore, dilateAnchorSizeBefore));
-    //     dilate(edged, edged, structuringElmt);
-    // }
-
-    // if (gammaCorrection > 0)
-    // {
-    //     std::printf("gammaCorrection %f\n", gammaCorrection);
-    //     correctGamma(edged, edged, gammaCorrection);
-    // }
-
-    // if (shouldNegate == 1)
-    // {
-    //     bitwise_not(edged, edged);
-    // }
-    // if (cannyThreshold1 > 0 || cannyThreshold2 > 0)
-    // {
-    //     std::printf("Canny %f %f\n", cannyThreshold1, cannyThreshold2);
-    //     Canny(edged, edged, cannyThreshold1, cannyThreshold2);
-    // }
-
-    // if (dilateAnchorSize > 0)
-    // {
-    //     std::printf("dilate after %f\n", dilateAnchorSize);
-    //     cv::Mat structuringElmt = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateAnchorSize, dilateAnchorSize));
-    //     dilate(edged, edged, structuringElmt);
-    // }
-
-    // // Probabilistic Line Transform
-    // Mat houghLines;
-    // if (houghLinesThreshold > 0)
-    // {
-    //     houghLines = Mat(edged.rows, edged.cols, CV_8U, cv::Scalar(0, 0, 0));
-    //     std::printf("HoughLinesP %f %f %f\n", houghLinesThreshold, houghLinesMinLineLength, houghLinesMaxLineGap);
-    //     vector<Vec4i> lines;
-    //     // will hold the results of the detection
-    //     cv::HoughLinesP(edged, lines, 1, CV_PI / 180, houghLinesThreshold, houghLinesMinLineLength, houghLinesMaxLineGap); // runs the actual detection
-    //     // Draw the lines
-    //     int distance = 1000;
-
-    //     for (size_t i = 0; i < lines.size(); i++)
-    //     {
-    //         Vec4i l = lines[i];
-    //         double diff = atan2(l[1] - l[3], l[0] - l[2]);
-    //         int x3 = l[0] + distance * cos(diff);
-    //         int y3 = l[1] + distance * sin(diff);
-    //         int x4 = l[0] - distance * cos(diff);
-    //         int y4 = l[1] - distance * sin(diff);
-    //         cv::line(houghLines, Point(x3, y3), Point(x4, y4), Scalar(255, 255, 255), 2, cv::LINE_8);
-    //     }
-    //     imshow("HoughLinesP", houghLines);
-    // }
-    // if (houghLines.empty())
-    // {
-    //     findSquares(edged, width, height, foundSquares, image, drawContours);
-    // }
-    // else
-    // {
-    //     findSquares(houghLines, width, height, foundSquares, image, drawContours);
-    // }
-
     if (foundSquares.size() > 0)
     {
       int borderSize = options.borderSize;
@@ -647,12 +625,6 @@ Mat DocumentDetector::resizeImageToSize(int size)
 }
 Mat DocumentDetector::resizeImage()
 {
-    // add borders to image
-//    if (resizeThreshold <= 0)
-//    {
-//        return image;
-//    }
-
     int width = image.cols;
     int height = image.rows;
     int minSize = min(width, height);
@@ -660,30 +632,11 @@ Mat DocumentDetector::resizeImage()
 }
 Mat DocumentDetector::resizeImageMax()
 {
-    // add borders to image
-//    if (resizeThreshold <= 0)
-//    {
-//        return image;
-//    }
     int width = image.cols;
     int height = image.rows;
     int maxSize = max(width, height);
     return resizeImageToSize(maxSize);
 }
-// auto splitString(std::string in, char sep)
-// {
-//     std::vector<std::string> r;
-//     r.reserve(std::count(in.begin(), in.end(), sep) + 1); // optional
-//     for (auto p = in.begin();; ++p)
-//     {
-//         auto q = p;
-//         p = std::find(p, in.end(), sep);
-//         r.emplace_back(q, p);
-//         if (p == in.end())
-//             return r;
-//     }
-// }
-
 
 std::vector<std::string> split(const std::string& str, const std::string& token) {
     vector<std::string>result;

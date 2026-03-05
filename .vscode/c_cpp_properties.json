@@ -2,10 +2,10 @@
     "configurations": [
         {
             "name": "Linux",
-            "includePath": ["${workspaceFolder}/cpp/src/**", "${workspaceFolder}/cpp/cpp_test_app/*", "${workspaceFolder}/opencv/android/include/**"],
+            "includePath": ["${workspaceFolder}/cpp/src/**", "${workspaceFolder}/cpp/cpp_test_app/*", "${workspaceFolder}/opencv/linux/include/**"],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
-                "path": ["${workspaceFolder}/cpp/src/**", "${workspaceFolder}/cpp/cpp_test_app/*", "${workspaceFolder}/opencv/android/include/**"],
+                "path": ["${workspaceFolder}/cpp/src/**", "${workspaceFolder}/cpp/cpp_test_app/*", "${workspaceFolder}/opencv/linux/include/**"],
                 "databaseFilename": ""
             },
             "defines": [],

@@ -1,10 +1,14 @@
 import { DeviceContext } from '@nativescript-community/sentry/integrations';
 import { Canvas, ColorMatrixColorFilter, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-import { ApplicationSettings, Screen } from '@nativescript/core';
+import { ApplicationSettings, Screen, Utils } from '@nativescript/core';
+import { getActualLanguage } from '@shared/helpers/lang';
 import type { OCRDocument, OCRPage } from '~/models/OCRDocument';
 import { DEFAULT_PDF_OPTIONS, DEFAULT_PDF_OPTIONS_STRING } from '~/utils/constants';
 import { loadImage, recycleImages } from '~/utils/images';
 import { getColorMatrix, getPageColorMatrix } from '~/utils/matrix';
+import { renderPKPassToCanvas } from '~/utils/pkpass';
+
+const screenWidthDips = Screen.mainScreen.widthDIPs;
 
 export interface PDFExportBaseOptions {
     reduce_image_size: boolean;
@@ -120,14 +124,11 @@ export default class PDFCanvas {
     //         this.drawPages(index, item.pages);
     //     });
     // }
-    updateBitmapPaint(page: OCRPage) {
-        if (this.options.color === 'black_white') {
-            if (!bitmapPaint) {
-                bitmapPaint = new Paint();
-            }
-            bitmapPaint.setColorFilter(new ColorMatrixColorFilter(getColorMatrix('grayscale')));
-        } else if (page.colorType || page.colorMatrix) {
-            const matrix = getPageColorMatrix(page);
+    updateBitmapPaint(page: OCRPage, options: PDFExportBaseOptions) {
+            const black_white = this.options.color === 'black_white';
+
+        if (black_white || page.colorType || page.colorMatrix) {
+            const matrix = getPageColorMatrix(page, black_white ? 'grayscale' : undefined);
             if (matrix) {
                 if (!bitmapPaint) {
                     bitmapPaint = new Paint();
@@ -140,8 +141,19 @@ export default class PDFCanvas {
             bitmapPaint.setColorFilter(null);
         }
     }
-    async drawImageOnCanvas(canvas: Canvas, page: OCRPage, toDrawWidth, toDrawHeight) {
+    async drawImageOnCanvas(canvas: Canvas, page: OCRPage, toDrawWidth, toDrawHeight, createCanvas?: Function) {
         const options = this.options;
+        if (CARD_APP && page.pkpass) {
+            await renderPKPassToCanvas(page.pkpass, {
+                canvas,
+                createCanvas,
+                lang: getActualLanguage(),
+                width: Utils.layout.toDevicePixels(screenWidthDips),
+                includeBackFields: false,
+                layout: 'full'
+            });
+            return;
+        }
 
         const textScale = Screen.mainScreen.scale * (__IOS__ ? 2.2 : 1.4);
         const src = page.imagePath;
@@ -157,7 +169,7 @@ export default class PDFCanvas {
             reqWidth = reqHeight;
             reqHeight = temp;
         }
-        this.updateBitmapPaint(page);
+        this.updateBitmapPaint(page, options);
         const scale = options.paper_size === 'full' ? options.imageLoadScale : 1;
         const image = await loadImage(src, {
             width: toDrawWidth * scale,
@@ -193,13 +205,12 @@ export default class PDFCanvas {
             });
         }
     }
-    async drawPages(pdfPageIndex: number, pages: OCRPage[]) {
+    async drawPages(pdfPageIndex: number, pages: OCRPage[], createCanvas?: Function) {
         const { dpi, imageSizeThreshold, items_per_page, orientation, page_padding, paper_size } = this.options;
         const pagePadding = ptToPixel(page_padding, dpi);
         const canvas = this.canvas;
         const w = canvas.getWidth() - 2;
         const h = canvas.getHeight() - 2;
-        DEV_LOG && console.log('drawPages', pages.length, JSON.stringify(this.options), canvas.getWidth(), canvas.getHeight(), w, h);
 
         const nbItems = pages.length;
         // console.log('drawPDFPage', w, h, nbItems, srcs);
@@ -207,7 +218,7 @@ export default class PDFCanvas {
         if (paper_size === 'full') {
             // we only support 1 item per page for this
             const page = pages[0];
-            if (!page.imagePath) {
+            if (!page.imagePath && (!CARD_APP || !page.pkpass)) {
                 return false;
             }
             let imageWidth = page.width;
@@ -226,42 +237,7 @@ export default class PDFCanvas {
                     imageHeight = imageHeight / resizeScale;
                 }
             }
-            // const pageRatio = imageWidth / imageHeight;
-
-            // const src = page.imagePath;
-            // let toDrawWidth;
-            // let toDrawHeight;
-            // let scale;
-            // if (pageRatio > canvasRatio) {
-            //     toDrawWidth = w;
-            //     toDrawHeight = w / pageRatio;
-            //     scale = toDrawWidth / imageWidth;
-            // } else {
-            //     toDrawWidth = h * pageRatio;
-            //     toDrawHeight = h;
-            //     scale = toDrawHeight / imageHeight;
-            // }
-
-            // const pageDx = w / 2 - toDrawWidth / 2;
-            // const pageDy = h / 2 - toDrawHeight / 2;
-            // canvas.translate(pageDx, pageDy);
-
-            // if (page.rotation !== 0) {
-            //     const ddx = Math.min(toDrawWidth, toDrawHeight) / 2;
-            //     canvas.rotate(page.rotation, ddx, ddx);
-            // }
-            // const imageScale = toDrawWidth / imageWidth;
-            // canvas.scale(imageScale, imageScale, 0, 0);
-            // if (page.colorType || page.colorMatrix) {
-            //     if (!bitmapPaint) {
-            //         bitmapPaint = new Paint();
-            //     }
-            //     bitmapPaint.setColorFilter(new ColorMatrixColorFilter(page.colorMatrix || getColorMatrix(page.colorType)));
-            // } else if (bitmapPaint) {
-            //     bitmapPaint.setColorFilter(null);
-            // }
-            // canvas.drawBitmap(this.imagesCache[src], 0, 0, bitmapPaint);
-            await this.drawImageOnCanvas(canvas, page, imageWidth, imageHeight);
+            await this.drawImageOnCanvas(canvas, page, imageWidth, imageHeight, createCanvas);
         } else {
             let hasPages = false;
             let dx = 0;

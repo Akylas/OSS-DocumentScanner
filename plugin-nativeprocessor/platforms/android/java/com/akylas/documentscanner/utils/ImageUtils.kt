@@ -404,7 +404,6 @@ class ImageUtil {
                 } else {
                     BitmapFactory.decodeFile(src, finalBitmapOptions)
                 }
-                // Log.d("ImageAnalysis", "readBitmapFromFile in ${System.currentTimeMillis() - start} ms")
                 if (bitmap != null) {
                     val rotationAngle: Int = if (pfd != null) {
                         calculateAngleFromFileDescriptor(pfd.fileDescriptor)

@@ -3,7 +3,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
 
-#include <tesseract/baseapi.h>
+// #include <tesseract/baseapi.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -238,7 +238,7 @@ void processColors(Mat &img)
     cvtColor(dest, img, COLOR_HLS2BGR);
 }
 
-std::vector<string> images = {"/home/mguillon/Desktop/IMG_20230918_111703_632.jpg", "/home/mguillon/Desktop/IMG_20230918_111709_558.jpg", "/home/mguillon/Desktop/IMG_20230918_111717_906.jpg", "/home/mguillon/Desktop/IMG_20230918_111721_005.jpg", "/home/mguillon/Desktop/IMG_20230918_111714_873.jpg", "/home/mguillon/Desktop/IMG_20231004_092528_420.jpg", "/home/mguillon/Desktop/IMG_20231004_092535_158.jpg"};
+std::vector<string> images = {};
 
 void setImagesFromFolder(string dirPath)
 {
@@ -298,16 +298,70 @@ void updateImage()
     }
     docDetector.image = image;
     resizedImage = docDetector.resizeImageMax();
-    vector<vector<cv::Point>> pointsList = docDetector.scanPoint(edged, resizedImage, true);
-    if (pointsList.size() == 0)
+
+    detector::DocumentDetector::PageSplitResult split = docDetector.detectGutterAndSplit(resizedImage, 0.4f);
+
+    vector<vector<cv::Point>> pointsList;
+    // If a gutter was found, scan each page sub-image and merge results into original coordinate system
+    if (split.foundGutter)
     {
-        vector<cv::Point> points;
-        points.push_back(cv::Point(0, 0));
-        points.push_back(cv::Point(image.cols, 0));
-        points.push_back(cv::Point(image.cols, image.rows));
-        points.push_back(cv::Point(0, image.rows));
-        pointsList.push_back(points);
+        Mat combinedEdged = Mat::zeros(resizedImage.size(), CV_8U);
+        // helper lambda to scan a ROI and merge results
+        auto scanAndMerge = [&](const Rect &r) {
+            if (r.width <= 0 || r.height <= 0) return;
+            Mat subImg = resizedImage(r);
+            imshow("subImg", subImg);
+         Mat subEdged;
+            vector<vector<Point>> subList = docDetector.scanPoint(subEdged, subImg, true);
+            // copy subEdged into combinedEdged for display
+            if (!subEdged.empty())
+            {
+                // ensure types match
+                if (subEdged.type() != combinedEdged.type()) cv::cvtColor(subEdged, subEdged, COLOR_BGR2GRAY);
+                subEdged.copyTo(combinedEdged(r));
+            }
+            // offset points from sub-image to full image coordinates (respecting detector scaling)
+            double scaleFactor = docDetector.resizeScale * docDetector.scale;
+            Point offset(static_cast<int>(r.x * scaleFactor), static_cast<int>(r.y * scaleFactor));
+            for (auto &contour : subList)
+            {
+                for (auto &pt : contour)
+                {
+                    pt += offset;
+                }
+                pointsList.push_back(contour);
+            }
+        };
+
+        if (split.hasLeft) scanAndMerge(split.leftPage);
+        if (split.hasRight) scanAndMerge(split.rightPage);
+
+        // if nothing detected on both sides, fallback to whole image scan
+        if (pointsList.empty())
+        {
+            pointsList = docDetector.scanPoint(edged, resizedImage, true);
+        }
+        else
+        {
+            // use combined edged for display
+            edged = combinedEdged;
+        }
     }
+    else
+    {
+        // no gutter: scan whole image as before
+        pointsList = docDetector.scanPoint(edged, resizedImage, true);
+    }
+ 
+     if (pointsList.size() == 0)
+     {
+         vector<cv::Point> points;
+         points.push_back(cv::Point(0, 0));
+         points.push_back(cv::Point(image.cols, 0));
+         points.push_back(cv::Point(image.cols, image.rows));
+         points.push_back(cv::Point(0, image.rows));
+         pointsList.push_back(points);
+     }
 
     // for (size_t i = 0; i < pointsList.size(); i++)
     // {
@@ -542,6 +596,7 @@ int main(int argc, char **argv)
     // createTrackbar("adapThresholdBlockSize:", "Options", &adapThresholdBlockSize, 500, on_trackbar);
     // createTrackbar("adapThresholdC:", "Options", &adapThresholdC, 500, on_trackbar);
     canUpdateImage = true;
+    image = imread(images[imageIndex]);
     updateImage();
 
     // createTrackbar("dogKSize:", "SourceImage", &dogKSize, 30, on_trackbar);
