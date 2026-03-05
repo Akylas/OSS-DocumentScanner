@@ -668,7 +668,7 @@ class PDFUtils {
                             }
                             val last = pageIndex == itemsPerPage - 1
                             val page = pageItems[pageIndex]
-                            val imageRotation = page.optInt("rotation", 0)
+                            val imageRotation = (page.optInt("rotation", 0) + 360) % 360
 
                             val imageSrc = page.optString("imagePath")
                             if (imageSrc.isNullOrEmpty() || imageSrc ==  "null") {
@@ -726,8 +726,10 @@ class PDFUtils {
 
                             val posX = ddx + itemAvailableWidth / 2 - toDrawWidth.toFloat() / 2
                             var posY = ddy + itemAvailableHeight / 2 - toDrawHeight.toFloat() / 2
-
-                            if (abs(imageRotation % 360) == 180) {
+                            
+                            if ((imageRotation % 360) == 180) {
+                                posY += toDrawHeight.toFloat()
+                            } else if ((imageRotation % 360) == 90) {
                                 posY += toDrawHeight.toFloat()
                             }
                             image.setFixedPosition(posX, posY)
