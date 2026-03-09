@@ -16,6 +16,7 @@
 
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;
+    export let enabled: boolean = true;
     // export let iconFontSize: number = 24;
     export let fontSize: number = 20;
     export let fontWeight: any = 'normal';
@@ -95,7 +96,16 @@
         verticalAlignment="middle"
         visibility={!!leftIcon ? 'visible' : 'collapse'}
         width={iconFontSize * 2} /> -->
-    <label col={mainCol} disableCss={true} lineBreak="end" paddingBottom={addedPadding} paddingTop={addedPadding} textWrap={true} verticalAlignment="center" {...titleProps}>
+    <label
+        col={mainCol}
+        disableCss={true}
+        lineBreak="end"
+        opacity={enabled === false ? 0.38 : 1}
+        paddingBottom={addedPadding}
+        paddingTop={addedPadding}
+        textWrap={true}
+        verticalAlignment="center"
+        {...titleProps}>
         <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>
@@ -106,6 +116,7 @@
         disableCss={true}
         fontSize={subtitleFontSize * $fontScale}
         marginLeft={16}
+        opacity={enabled === false ? 0.38 : 1}
         text={typeof rightValue === 'function' ? rightValue() : rightValue}
         textAlignment="right"
         verticalAlignment="middle"
