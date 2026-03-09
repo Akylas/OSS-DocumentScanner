@@ -727,13 +727,7 @@
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
-                    <RotableImageView
-                        id="imageView"
-                        backgroundColor={currentItem?.extra?.color}
-                        {item}
-                        sharedTransitionTag={`document_${document.id}_${item.id}`}
-                        zoomable={true}
-                        on:rotated={(e) => onImageRotated(item, e)} />
+                    <RotableImageView id="imageView" {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
                 </gridlayout>
             </Template>
         </pager>
