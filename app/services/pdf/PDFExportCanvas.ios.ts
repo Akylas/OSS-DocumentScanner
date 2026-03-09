@@ -1,8 +1,8 @@
 import { Canvas } from '@nativescript-community/ui-canvas/canvas';
-import { Folder, Screen, knownFolders } from '@nativescript/core';
-import PDFExportCanvasBase from './PDFExportCanvas.common';
-import { PDFExportOptions } from './PDFCanvas';
+import { Folder, knownFolders } from '@nativescript/core';
 import { PDF_EXT } from '~/utils/constants';
+import { PDFExportOptions } from './PDFCanvas';
+import PDFExportCanvasBase from './PDFExportCanvas.common';
 
 export default class PDFExportCanvas extends PDFExportCanvasBase {
     async export({ filename = Date.now() + PDF_EXT, folder = knownFolders.temp().path, options = this.options, pages }: PDFExportOptions) {
@@ -67,11 +67,12 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
                 pageWidth = pageHeight;
                 pageHeight = temp;
             }
-            const pageRect = CGRectMake(0, 0, pageWidth, pageHeight);
-            UIGraphicsBeginPDFPageWithInfo(pageRect, null);
-            const context = UIGraphicsGetCurrentContext();
-            this.canvas.setContext(context, pageWidth, pageHeight);
-            hasPages = (await this.drawPages(index, items[index].pages)) || hasPages;
+            let hasContext = false;
+            if (pageWidth && pageHeight) {
+                this.createContextCanvas(pageWidth, pageHeight);
+                hasContext = true;
+            }
+            hasPages = (await this.drawPages(index, items[index].pages, hasContext ? null : this.createContextCanvas.bind(this))) || hasPages;
         }
         UIGraphicsEndPDFContext();
         if (!hasPages) {
@@ -95,5 +96,14 @@ export default class PDFExportCanvas extends PDFExportCanvasBase {
         nURL?.stopAccessingSecurityScopedResource();
         DEV_LOG && console.log('export PDF done', filename, nURL, Date.now() - start, 'ms');
         return pdfFile.path;
+    }
+
+    createContextCanvas(pageWidth, pageHeight) {
+        DEV_LOG && console.log('createContextCanvas', pageWidth, pageHeight);
+        const pageRect = CGRectMake(0, 0, pageWidth, pageHeight);
+        UIGraphicsBeginPDFPageWithInfo(pageRect, null);
+        const context = UIGraphicsGetCurrentContext();
+        this.canvas.setContext(context, pageWidth, pageHeight);
+        return this.canvas;
     }
 }

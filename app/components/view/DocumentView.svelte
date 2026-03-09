@@ -14,6 +14,7 @@
     import PageIndicator from '~/components/common/PageIndicator.svelte';
     import RotableImageView from '~/components/common/RotableImageView.svelte';
     import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SelectionToolbar from '~/components/common/SelectionToolbar.svelte';
     import PdfEdit from '~/components/edit/DocumentEdit.svelte';
     import { l, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
@@ -39,7 +40,7 @@
         SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE
     } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate } from '@shared/utils/svelte/ui';
+    import { goBack, navigate, showModal } from '@shared/utils/svelte/ui';
     import {
         detectOCR,
         hideLoading,
@@ -50,19 +51,20 @@
         showLoading,
         showPDFPopoverMenu,
         showPopoverMenu,
-        transformPages
+        transformPages,
+        tryCatchFunction
     } from '~/utils/ui';
     import { colors, fontScale, fonts, hasCamera, isLandscape, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '../common/EditNameActionBar.svelte';
     import { prefs } from '@shared/services/preferences';
+    import { ROOT_GESTURE_HANDLER_TAG } from '@nativescript-community/gesturehandler/gesturehandler.common';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     const rowMargin = 8;
     interface Item {
         page: OCRPage;
         selected: boolean;
         index: number;
     }
-
-    let VIEW_ID = 0;
 </script>
 
 <script lang="ts">
@@ -76,7 +78,6 @@
     let fabHolder: NativeViewElementNode<StackLayout>;
     let nbSelected = 0;
     let editingTitle = false;
-    let ignoreTap = false;
 
     let nbColumns = updateColumns($isLandscape);
 
@@ -91,6 +92,14 @@
 
     prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW}`, () => (nbColumns = updateColumns($isLandscape)));
     prefs.on(`key:${SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE}`, () => (nbColumns = updateColumns($isLandscape)));
+
+    // Animate FAB visibility when selection changes
+    $: if (fabHolder?.nativeView) {
+        fabHolder.nativeView.animate({
+            opacity: nbSelected > 0 ? 0 : 1,
+            duration: 200
+        });
+    }
 
     // $: {
     const pages = document.getObservablePages();
@@ -122,10 +131,11 @@
             showError(err);
         }
     }
+
     async function showPDFPopover(event) {
         try {
             const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
-            await showPDFPopoverMenu(pages, document, event.object);
+            await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document] });
         } catch (err) {
             showError(err);
         }
@@ -138,6 +148,7 @@
             showError(err);
         }
     }
+
     async function addPages(inverseUseSystemCamera = false) {
         try {
             await importImageFromCamera({ document, inverseUseSystemCamera });
@@ -237,46 +248,66 @@
         const index = items.findIndex((p) => p.page === item.page);
         collectionView?.nativeElement.startDragging(index, event.getActivePointers()[0]);
     }
-    function onItemLongPress(item: Item, event?) {
-        if (inEditMode) {
-            startDragging(item, event);
-        } else if (item.selected) {
+
+    function toggleSelection(item: Item) {
+        if (item.selected) {
             unselectItem(item);
         } else {
             selectItem(item);
         }
     }
-    async function onPan(item: Item, event) {
-        const extraData = event.eventData.extraData;
-        if (Math.abs(extraData.velocityX) > 1000 || Math.abs(extraData.velocityY) > 1000 || Math.abs(extraData.translationX) > 100 || Math.abs(extraData.translationY) > 100) {
-            event.handler?.cancel();
+
+    let longPressTimer: NodeJS.Timeout;
+    let currentLongPressItem: Item;
+    let dragStarted = false;
+    function onItemLongPress(item: Item, event?) {
+        if (nbSelected > 0) {
+            toggleSelection(item);
             return;
         }
 
-        if (Math.abs(extraData.translationX) > 30 || Math.abs(extraData.translationY) > 30) {
-            event.handler?.cancel();
-            startDragging(item, event);
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
         }
+
+        currentLongPressItem = item;
+        dragStarted = false;
+
+        longPressTimer = setTimeout(() => {
+            if (!dragStarted && currentLongPressItem) {
+                toggleSelection(item);
+            }
+            currentLongPressItem = null;
+        }, 400);
     }
-    async function onTouch(item: Item, event?) {
-        if (!inEditMode) {
+    async function onPan(item: Item, event) {
+        if (!currentLongPressItem) {
             return;
         }
-        switch (event.action) {
-            case 'down': {
-                startDragging(item, event);
-                break;
+
+        if (event.state === 2 && !dragStarted) {
+            dragStarted = true;
+
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
             }
+            startDragging(item, event);
+
+            currentLongPressItem = null;
+        } else if (event.state === 5 || event.state === 3) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            dragStarted = false;
+            currentLongPressItem = null;
         }
     }
     async function onItemTap(item: Item, event?) {
         try {
-            if (ignoreTap) {
-                ignoreTap = false;
-                return;
-            }
             if (nbSelected > 0) {
-                onItemLongPress(item);
+                toggleSelection(item);
             } else {
                 const index = items.findIndex((p) => p.page === item.page);
                 navigate({
@@ -319,9 +350,7 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (inEditMode) {
-                switchEditMode();
-            } else if (nbSelected > 0) {
+            if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
@@ -357,7 +386,6 @@
             }
         }
     }
-
     function getImageView(index: number) {
         return collectionView?.nativeView?.getViewForItemAtIndex(index)?.getViewById<Img>('imageView');
     }
@@ -366,9 +394,7 @@
         if (event.doc.id !== document.id) {
             return;
         }
-        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         document = event.doc;
-        DEV_LOG && console.log('onPagesAdded', VIEW_ID);
         try {
             if (items) {
                 const length = items.length;
@@ -390,7 +416,6 @@
             const page = document.getObservablePages().getItem(index);
             if (!!event.imageUpdated) {
                 const imageView = getImageView(index);
-                getImagePipeline().evictFromCache(current.page.imagePath);
                 if (imageView) {
                     imageView?.updateImageUri();
                 } else if (__IOS__) {
@@ -459,7 +484,7 @@
         documentsService.on(EVENT_DOCUMENT_PAGES_ADDED, onPagesAdded);
     });
     onDestroy(() => {
-        DEV_LOG && console.log('DocumentView', 'onDestroy', VIEW_ID, !!document);
+        DEV_LOG && console.log('DocumentView', 'onDestroy', !!document);
         items = null;
         Application.off('snackMessageAnimation', onSnackMessageAnimation);
         if (__ANDROID__) {
@@ -477,7 +502,9 @@
         const view = (e.view as ContentView).content;
         view.animate({ duration: 100, opacity: 1, scale: { x: 1, y: 1 } });
         try {
-            await document.movePage(e.index, e.data.targetIndex);
+            if (e.index !== e.data.targetIndex) {
+                await document.movePage(e.index, e.data.targetIndex);
+            }
             collectionView?.nativeView?.refreshVisibleItems();
         } catch (error) {
             showError(error);
@@ -493,108 +520,161 @@
     }
     onThemeChanged(refreshCollectionView);
 
-    async function showOptions(event) {
-        if (nbSelected > 0) {
-            const options = new ObservableArray([
-                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-                // { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
-            return showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
+    function getSelectionToolbarOptions() {
+        return [
+            { icon: 'mdi-file-pdf-box', id: 'pdf', name: lc('export_pdf') },
+            { icon: 'mdi-share-variant', id: 'share', name: lc('share_images') },
+            { icon: 'mdi-auto-fix', id: 'transform', name: lc('transform_images') },
+            { icon: 'mdi-text-recognition', id: 'ocr', name: lc('ocr_document') },
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+        ];
+    }
 
-                onClose: async (item) => {
-                    try {
-                        let result;
-                        switch (item.id) {
-                            case 'select_all':
-                                selectAll();
-                                break;
-                            case 'share':
-                                result = await showImageExportPopover(event);
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            // case 'fullscreen':
-                            // await fullscreenSelectedDocuments();
-                            // break;
-                            case 'ocr':
-                                result = await detectOCR({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'delete':
-                                result = await deleteSelectedPages();
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                            case 'transform':
-                                result = await transformPages({ pages: getSelectedPagesWithData() });
-                                if (result) {
-                                    unselectAll();
-                                }
-                                break;
-                        }
-                    } catch (error) {
-                        showError(error);
+    async function handleSelectionAction(event, item) {
+        try {
+            let result;
+            switch (item.id) {
+                case 'pdf':
+                    const pages = nbSelected > 0 ? getSelectedPages() : document.pages.map((p) => ({ page: p, document }));
+                    await showPDFPopoverMenu({ pages, document, anchor: event.object, documents: [document], popoverOptions: { vertPos: VerticalPosition.ABOVE } });
+                    break;
+                case 'select_all':
+                    selectAll();
+                    break;
+                case 'share':
+                    result = await showImagePopoverMenu(getSelectedPages(), event.object, { vertPos: VerticalPosition.ABOVE });
+                    if (result) {
+                        unselectAll();
                     }
-                }
-            });
-        } else {
-            const options = new ObservableArray([
-                { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
-                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ] as any);
-            return showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-
-                onClose: async (item) => {
-                    switch (item.id) {
-                        case 'rename':
-                            editingTitle = true;
-                            break;
-                        case 'select_all':
-                            selectAll();
-                            break;
-                        case 'ocr':
-                            await detectOCR({ documents: [document] });
-                            unselectAll();
-                            break;
-                        case 'transform':
-                            await transformPages({ documents: [document] });
-                            unselectAll();
-                            break;
-                        case 'delete':
-                            await deleteDoc();
-                            break;
-                        case 'reorder':
-                            unselectAll();
-                            switchEditMode();
-                            break;
+                    break;
+                case 'ocr':
+                    result = await detectOCR({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
                     }
-                }
-            });
+                    break;
+                case 'delete':
+                    result = await deleteSelectedPages();
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+                case 'transform':
+                    result = await transformPages({ pages: getSelectedPagesWithData() });
+                    if (result) {
+                        unselectAll();
+                    }
+                    break;
+            }
+        } catch (error) {
+            showError(error);
         }
     }
-    let inEditMode = false;
-    function switchEditMode() {
-        inEditMode = !inEditMode;
-        collectionView?.nativeElement?.refreshVisibleItems();
+
+    async function showOptions(event) {
+        const options = new ObservableArray([
+            { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
+            { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+            { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
+        ] as any);
+        return showPopoverMenu({
+            options,
+            anchor: event.object,
+            vertPos: VerticalPosition.BELOW,
+
+            onClose: async (item) => {
+                switch (item.id) {
+                    case 'rename':
+                        editingTitle = true;
+                        break;
+                    case 'select_all':
+                        selectAll();
+                        break;
+                    case 'ocr':
+                        await detectOCR({ documents: [document] });
+                        unselectAll();
+                        break;
+                    case 'transform':
+                        await transformPages({ documents: [document] });
+                        unselectAll();
+                        break;
+                    case 'delete':
+                        await deleteDoc();
+                        break;
+                }
+            }
+        });
     }
+
+    const onAddButton = tryCatchFunction(
+        async () => {
+            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+            const rowHeight = 58;
+            const options = [
+                {
+                    id: 'files',
+                    name: lc('import_from_file'),
+                    icon: 'mdi-file-document-plus-outline'
+                },
+                {
+                    id: 'import_image',
+                    name: lc('import_from_image'),
+                    icon: 'mdi-image-plus-outline'
+                },
+                {
+                    id: 'import_document',
+                    name: lc('import_from_other_document'),
+                    icon: 'mdi-file-document-arrow-right'
+                }
+            ];
+            const height = Math.min(rowHeight * options.length, 400);
+            const option = await showBottomSheet({
+                parent: this,
+                view: OptionSelect,
+                peekHeight: height,
+                ignoreTopSafeArea: true,
+                props: {
+                    rowHeight,
+                    height,
+                    options
+                }
+            });
+            DEV_LOG && console.log('on add option', option);
+            if (option) {
+                switch (option.id) {
+                    case 'import':
+                        await importAndScanImage({ document, importPDFs: true, canGoToView: false });
+                        break;
+                    case 'import_image':
+                        await importAndScanImage({ canGoToView: false, forceGalleryPick: true, document, importPDFs: false });
+                        break;
+                    case 'import_document':
+                        const component = (await import('~/components/common/DocumentPicker.svelte')).default;
+                        const result: OCRDocument[] = await showModal({
+                            page: component,
+                            fullscreen: true,
+                            props: {}
+                        });
+                        if (result?.length) {
+                            await showLoading(lc('importing'));
+                            const pages = result
+                                .reduce((acc, v) => acc.concat(v.pages), [])
+                                .map((page: OCRPage) => {
+                                    const { id, ...others } = page.toJSON();
+                                    return { ...others };
+                                });
+                            await document.addPages(pages);
+                        }
+                        break;
+                }
+            }
+        },
+        null,
+        hideLoading
+    );
 </script>
 
 <page bind:this={page} id="documentView" actionBarHidden={true}>
@@ -636,13 +716,18 @@
                     borderColor={colorOutline}
                     borderRadius={12}
                     borderWidth={0}
+                    longPressGestureOptions={(view, tag, rootTag) => ({
+                        simultaneousHandlers: [rootTag, view['PAN_HANDLER_TAG']]
+                    })}
                     margin={8}
                     padding={10}
+                    panGestureOptions={(view, tag, rootTag) => ({
+                        minDist: 20
+                    })}
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
                     on:tap={(e) => onItemTap(item, e)}
-                    on:touch={(e) => onTouch(item, e)}
-                    android:on:pan={(e) => onPan(item, e)}
+                    on:pan={(e) => onPan(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}
                     >/
                     <RotableImageView
@@ -655,12 +740,7 @@
                         stretch="aspectFit"
                         verticalAlignment="center" />
                     <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} padding="10 0 0 0" row={1}>
-                        <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-reorder-horizontal" visibility={inEditMode ? 'visible' : 'hidden'} />
-                        <cspan
-                            paddingLeft={inEditMode ? 30 : 0}
-                            text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`}
-                            textAlignment="left"
-                            verticalAlignment="bottom" />
+                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`} textAlignment="left" verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
@@ -674,20 +754,26 @@
             {#if __IOS__}
                 <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
             {/if}
-            <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(true), 500)} />
+            <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => onAddButton(), 500)} />
             {#if $hasCamera}
-                <mdbutton class="fab" text="mdi-plus" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
+                <mdbutton class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => addPages(), 500)} on:longPress={() => addPages(true)} />
             {/if}
         </stacklayout>
         <CActionBar
-            forceCanGoBack={inEditMode || nbSelected > 0}
-            onGoBack={nbSelected ? unselectAll : inEditMode ? switchEditMode : null}
+            forceCanGoBack={nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : null}
             onTitleTap={() => (editingTitle = true)}
-            title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
-            titleProps={{ autoFontSize: true, padding: 0 }}>
-            <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            titleProps={{ padding: 0 }}>
+            {#if !nbSelected}
+                <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+                <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
+            {/if}
         </CActionBar>
+
+        {#if nbSelected > 0}
+            <SelectionToolbar onAction={handleSelectionAction} options={getSelectionToolbarOptions()} row={1} />
+        {/if}
         {#if editingTitle}
             <EditNameActionBar {document} bind:editingTitle />
         {/if}

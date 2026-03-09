@@ -1,0 +1,11 @@
+{
+    "name": "plugin-zip",
+    "main": "index",
+    "typings": "index.d.ts",
+    "nativescript": {
+        "platforms": {
+            "ios": "6.2.1",
+            "android": "6.2.1"
+        }
+    }
+}

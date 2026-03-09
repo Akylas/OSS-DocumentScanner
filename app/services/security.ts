@@ -37,9 +37,9 @@ export default class SecurityService extends Observable {
         Application.on(Application.backgroundEvent, this.onAppBackground, this);
         // Application.on(Application.exitEvent, this.onAppExit, this);
         const r = await this.biometricAuth.available();
-        this.biometricsAvailable = r.biometrics || r.touch || r.face;
+        this.biometricsAvailable = !!(r.biometrics || r.touch || r.face);
         if (this.biometricsAvailable) {
-            this.validateSecurityOrClose();
+            await this.validateSecurityOrClose();
         }
     }
     stop() {

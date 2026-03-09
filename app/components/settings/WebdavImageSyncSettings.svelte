@@ -16,7 +16,7 @@
     import { ALERT_OPTION_MAX_HEIGHT, ANDROID_CONTENT, FILENAME_DATE_FORMAT, SEPARATOR, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover, showSnack } from '~/utils/ui';
+    import { createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover, showSnack } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -53,6 +53,9 @@
 
     async function save() {
         if (await webdavView?.validateSave()) {
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             const result = get(store);
             closeModal(result);
         } else {
@@ -62,18 +65,6 @@
             });
         }
     }
-    // function updateDirectoryName(folderPath: string) {
-    //     let exportDirectoryName = folderPath;
-    //     if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
-    //         const context = Utils.android.getApplicationContext();
-    //         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
-    //         exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
-    //     }
-    //     return exportDirectoryName
-    //         .split(SEPARATOR)
-    //         .filter((s) => s.length)
-    //         .pop();
-    // }
 
     const items = new ObservableArray([
         {

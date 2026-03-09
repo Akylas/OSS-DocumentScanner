@@ -1,17 +1,18 @@
 <script context="module" lang="ts">
     import { Color, Utils, View } from '@akylas/nativescript';
 
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
-    import { colorTheme, isEInk } from '~/helpers/theme';
+    import RotableImageView from '~/components/common/RotableImageView.svelte';
+    import SelectedIndicator from '~/components/common/SelectedIndicator.svelte';
+    import SyncIndicator from '~/components/common/SyncIndicator.svelte';
+    import { Item } from '~/components/list/MainList.svelte';
+    import PKPassCardCell from '~/components/pkpass/PKPassCardCell.svelte';
+    import { isEInk } from '~/helpers/theme';
     import { CARD_RATIO } from '~/utils/constants';
-    import { colors, isLandscape, screenHeightDips, screenWidthDips } from '~/variables';
-    import RotableImageView from '../common/RotableImageView.svelte';
-    import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    import SyncIndicator from '../common/SyncIndicator.svelte';
-    import { Item } from './MainList.svelte';
+    import { colors } from '~/variables';
     const rowMargin = 8;
 </script>
 
@@ -25,9 +26,11 @@
     export let height: number;
     export let nbColumns: Writable<number>;
     export let item: Item;
+    export let pkPassCell: boolean = false;
     export let syncEnabled: boolean;
     export let onFullCardItemTouch;
     export let layout: string;
+    export let syncColors: string[];
 
     function animateCards(animOptions, startIndex, endIndex = -1) {
         let index = startIndex;
@@ -112,7 +115,8 @@
 
     function getItemHolderParams(layout, item: Item, nbColumns) {
         const page = item.doc.pages[0];
-        const color = isEInk ? null : new Color(page?.extra?.color ?? page.colors?.[1] ?? item.doc.extra?.color ?? colorOnPrimary);
+        const colorArg = page?.extra?.color ?? page.colors?.[1] ?? (typeof item.doc.extra?.color === 'string' ? item.doc.extra?.color : undefined) ?? colorOnPrimary;
+        const color = isEInk ? null : new Color(colorArg);
         const result = {
             backgroundColor: color
         };
@@ -132,7 +136,7 @@
             case 'columns':
             case 'list':
                 Object.assign(result, {
-                    elevation: isEInk ? 0 : 3,
+                    elevation: isEInk ? 0 : 2,
                     margin: 4
                 });
                 break;
@@ -141,17 +145,16 @@
     }
     function getLabelParams(layout, item: Item, height, itemHeight) {
         const page = item.doc.pages[0];
-        if (page.imagePath) {
-            return {};
-        }
-        const color = new Color(page.colors?.[0] || item.doc.extra?.color || colorOnPrimary);
+        const hasImage = page.imagePath;
+        const colorArg = page?.extra?.color ?? page.colors?.[1] ?? (typeof item.doc.extra?.color === 'string' ? item.doc.extra?.color : undefined) ?? colorOnPrimary;
+        const color = new Color(colorArg);
         const result = {
             color: isEInk ? null : color.getBrightness() < 145 ? 'white' : 'black'
         };
         switch (layout) {
             case 'cardholder':
                 Object.assign(result, {
-                    verticalTextAlignment: 'bottom',
+                    verticalTextAlignment: 'top',
                     marginBottom: height - itemHeight - 10,
                     maxFontSize: 40,
                     maxLines: 2
@@ -159,24 +162,33 @@
                 break;
             case 'full':
                 Object.assign(result, {
-                    verticalTextAlignment: 'top',
+                    verticalAlignment: 'top',
+                    padding: 0,
+                    margin: 16,
                     maxFontSize: 40,
                     maxLines: 2
                 });
                 break;
             case 'columns':
                 Object.assign(result, {
-                    verticalTextAlignment: 'center',
-                    textAlignment: 'center',
-                    maxFontSize: 35,
+                    verticalTextAlignment: hasImage ? 'top' : 'center',
+                    textAlignment: hasImage ? 'left' : 'center',
+                    padding: hasImage ? 6 : 16,
+
+                    maxFontSize: hasImage ? 20 : 35,
+                    minFontSize: hasImage ? 10 : 20,
+                    fontSize: hasImage ? 20 : 30,
                     maxLines: 3
                 });
                 break;
             case 'list':
                 Object.assign(result, {
-                    verticalTextAlignment: 'center',
-                    maxFontSize: 40,
-                    textAlignment: 'center',
+                    verticalTextAlignment: hasImage ? 'top' : 'center',
+                    padding: hasImage ? 10 : 16,
+                    maxFontSize: hasImage ? 20 : 40,
+                    minFontSize: hasImage ? 10 : 20,
+                    fontSize: hasImage ? 20 : 30,
+                    textAlignment: hasImage ? 'left' : 'center',
                     maxLines: 3
                 });
                 break;
@@ -237,9 +249,12 @@
     function itemHasImage(item: Item) {
         return !!item.doc.pages[0].imagePath;
     }
+    function itemHasDefaultName(item: Item) {
+        return !item.doc.name || item.doc.name.match(/\d+:\d+:\d+/);
+    }
 </script>
 
-<swipemenu
+<!-- <swipemenu
     id="swipeMenu"
     {height}
     openAnimationDuration={100}
@@ -249,26 +264,31 @@
     width="100%"
     {...$$restProps}
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
-    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
+    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}> -->
+<gridlayout {height} width="100%" {...$$restProps}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
-        <RotableImageView {...getItemRotableImageParams(item)} />
-        <label
-            autoFontSize={true}
-            autoFontSizeStep={10}
-            fontSize={30}
-            fontWeight="bold"
-            lineBreak="end"
-            maxFontSize={35}
-            minFontSize={20}
-            padding={16}
-            text={item.doc.name}
-            textWrap={false}
-            visibility={itemHasImage(item) ? 'hidden' : 'visible'}
-            {...getLabelParams(layout, item, height, itemHeight)} />
+        {#if pkPassCell}
+            <PKPassCardCell {item} {itemWidth} {layout} pkpass={item.doc.pages[0]?.pkpass} />
+        {:else}
+            <RotableImageView {...getItemRotableImageParams(item)} />
+            <label
+                autoFontSize={true}
+                autoFontSizeStep={10}
+                fontSize={30}
+                fontWeight="bold"
+                lineBreak="end"
+                maxFontSize={35}
+                minFontSize={20}
+                padding={16}
+                text={item.doc.name}
+                visibility={itemHasDefaultName(item) ? 'hidden' : 'visible'}
+                {...getLabelParams(layout, item, height, itemHeight)} />
+        {/if}
         <!-- <gridlayout borderRadius={12}> -->
         <SelectedIndicator selected={item.selected} />
-        <SyncIndicator selected={item.doc._synced === 1} verticalAlignment="top" visible={syncEnabled} />
+        <SyncIndicator {syncColors} verticalAlignment="top" visible={syncEnabled} />
         <!-- </gridlayout> -->
     </gridlayout>
-    <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
-</swipemenu>
+    <!-- <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
+</swipemenu> -->
+</gridlayout>

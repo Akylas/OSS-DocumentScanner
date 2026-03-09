@@ -7,7 +7,7 @@
     import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { pickColor } from '~/utils/ui';
+    import { pickColor, requestNotificationPermission } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -22,6 +22,9 @@
 
     async function save() {
         if (await webdavView?.validateSave()) {
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             const result = get(store);
             closeModal(result);
             // WebdavDataSyncService.saveData({ username, password, remoteURL, remoteFolder, authType, token });
@@ -98,6 +101,7 @@
                         checked={$store.autoSync}
                         col={1}
                         marginLeft={10}
+                        verticalAlignment="center"
                         on:checkedChange={(e) =>
                             onCheckBox(e, (e) => {
                                 $store.autoSync = e.value;

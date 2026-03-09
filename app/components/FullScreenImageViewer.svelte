@@ -28,7 +28,6 @@
     let currentIndex = startPageIndex;
     const firstItem = images[currentIndex];
 
-    DEV_LOG && console.log('images', JSON.stringify(images));
     // let currentImageSrc = firstItem.image;
     // let currentImageRotation = firstItem.rotation;
     // let currentImageColorMatrix = firstItem.colorMatrix || getColorMatrix(firstItem.colorType);
@@ -101,7 +100,7 @@
 </script>
 
 <page id="fullscreenImage" actionBarHidden={true} {backgroundColor} {keepScreenAwake} {screenBrightness} screenOrientation="all" {statusBarStyle}>
-    <gridlayout class="pageContent" rows="auto,*" android:paddingBottom={$windowInset.bottom}>
+    <gridlayout class="pageContent" rows="auto,*,auto" android:paddingBottom={$windowInset.bottom}>
         <!-- <image blurRadius={20} colorMatrix={currentImageColorMatrix} fadeDuration={100} imageRotation={currentImageRotation} opacity={0.3} rowSpan={2} src={currentImageSrc} stretch="aspectFill" /> -->
 
         <pager
@@ -152,7 +151,7 @@
                 </gridlayout>
             </Template>
         </pager>
-        <PageIndicator horizontalAlignment="right" margin={10} row={1} scale={$fontScale} text={`${currentIndex + 1}/${images.length}`} verticalAlignment="bottom" />
+        <PageIndicator horizontalAlignment="right" margin={10} row={2} scale={$fontScale} text={`${currentIndex + 1}/${images.length}`} verticalAlignment="bottom" />
 
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState={actionBarStyle} titleProps={{ autoFontSize: true, padding: 0 }} />
     </gridlayout>

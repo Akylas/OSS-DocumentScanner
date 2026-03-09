@@ -31,6 +31,8 @@ import {
     SETTINGS_DOCUMENT_NAME_FORMAT,
     getImageExportSettings
 } from '../utils/constants';
+import { getImagePipeline } from '@nativescript-community/ui-image';
+import { PKPass } from './PKPass';
 
 export const sql = SqlQuery.createFromTemplateString;
 
@@ -135,6 +137,7 @@ export interface DocumentExtra {
     color?: string;
     [k: string]:
         | string
+        | boolean
         | {
               type: string;
               value: any;
@@ -146,6 +149,7 @@ export class OCRDocument extends Observable implements Document {
     createdDate: number;
     modifiedDate: number;
     name?: string;
+    nameSearch?: string;
     tags: string[];
     folders: number[];
     _synced: number;
@@ -191,7 +195,7 @@ export class OCRDocument extends Observable implements Document {
         return documentsService.dataFolder.getFolder(this.id);
     }
 
-    async addPage(pageData: PageData, index: number = this.pages.length) {
+    async addPage(pageData: PageData, index: number = this.pages.length, onAdded?, notify = true) {
         const docId = this.id;
         const dataFolderPath = documentsService.dataFolder.path;
         const docData = documentsService.dataFolder.getFolder(docId);
@@ -200,19 +204,19 @@ export class OCRDocument extends Observable implements Document {
         // const page = new OCRPage(pageId, docId);
         const pageFileData = docData.getFolder(pageId);
         const attributes = { ...otherPageData, id: pageId, document_id: docId } as OCRPage;
-        attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
-        if (imagePath) {
-            if (imagePath !== attributes.imagePath) {
-                const file = File.fromPath(imagePath);
-                await file.copy(attributes.imagePath);
+        if (image || image) {
+            attributes.imagePath = path.join(pageFileData.path, 'image' + '.' + IMG_FORMAT);
+            if (imagePath) {
+                if (imagePath !== attributes.imagePath) {
+                    const file = File.fromPath(imagePath);
+                    await file.copy(attributes.imagePath);
+                }
+            } else if (image) {
+                const imageExportSettings = getImageExportSettings();
+                await new ImageSource(image).saveToFileAsync(attributes.imagePath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
             }
-        } else if (image) {
-            const imageExportSettings = getImageExportSettings();
-            await new ImageSource(image).saveToFileAsync(attributes.imagePath, imageExportSettings.imageFormat, imageExportSettings.imageQuality);
-        } else {
-            return;
+            attributes.size = File.fromPath(attributes.imagePath).size;
         }
-        attributes.size = File.fromPath(attributes.imagePath).size;
         DEV_LOG && console.log('add single page', attributes.imagePath, imagePath, sourceImagePath, image, attributes.size, otherPageData);
         if (sourceImagePath) {
             let baseName = sourceImagePath
@@ -235,7 +239,7 @@ export class OCRDocument extends Observable implements Document {
         // }
         const addedPage = await documentsService.pageRepository.createPage(attributes, dataFolderPath);
         // Object.assign(pageData, { ...pageData, pageIndex: pages.length + 1000 });
-
+        onAdded?.(addedPage);
         //using saved image to disk
         if (this.pages) {
             this.pages.splice(index, 0, addedPage);
@@ -245,10 +249,13 @@ export class OCRDocument extends Observable implements Document {
         if (this.#observables) {
             this.#observables.splice(index, 0, addedPage);
         }
-        documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
+        if (notify) {
+            documentsService.notify({ eventName: EVENT_DOCUMENT_PAGES_ADDED, pages: [addedPage], doc: this } as DocumentPagesAddedEventData);
+        }
+        return addedPage;
     }
 
-    async addPages(pagesData?: PageData[], notify = true) {
+    async addPages(pagesData?: PageData[], notify = true, createIfNotExisting = false) {
         const dataFolderPath = documentsService.dataFolder.path;
         DEV_LOG && console.log('addPages', dataFolderPath, JSON.stringify(pagesData));
         if (pagesData) {
@@ -303,7 +310,6 @@ export class OCRDocument extends Observable implements Document {
                         .split(SEPARATOR)
                         .pop()
                         .replace(/%[a-zA-Z\d]{2}/, '');
-                    DEV_LOG && console.log('baseName', baseName);
                     if (!baseName.endsWith(imageExportSettings.imageFormat)) {
                         baseName += '.' + imageExportSettings.imageFormat;
                     }
@@ -316,10 +322,16 @@ export class OCRDocument extends Observable implements Document {
                     }
                 }
                 if (id) {
-                    const page = await documentsService.pageRepository.get(id);
-                    if (page) {
-                        const { id, ...toUpdate } = attributes;
-                        return documentsService.pageRepository.update(page, toUpdate);
+                    try {
+                        const page = await documentsService.pageRepository.get(id);
+                        if (page) {
+                            const { id, ...toUpdate } = attributes;
+                            return documentsService.pageRepository.update(page, toUpdate);
+                        }
+                    } catch (error) {
+                        if (!createIfNotExisting) {
+                            throw error;
+                        }
                     }
                 }
                 return documentsService.pageRepository.createPage(attributes, dataFolderPath);
@@ -330,7 +342,12 @@ export class OCRDocument extends Observable implements Document {
             } else {
                 this.pages = pages;
             }
-            DEV_LOG && console.log('addPages done', this.pages.length);
+            DEV_LOG &&
+                console.log(
+                    'addPages done',
+                    this.pages.length,
+                    this.pages.map((p) => p.imagePath)
+                );
             // this.save();
             if (this.#observables) {
                 this.#observables.push(...pages);
@@ -375,7 +392,7 @@ export class OCRDocument extends Observable implements Document {
         return this;
     }
 
-    async ocrPage({ dataPath, language, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string }) {
+    async ocrPage({ dataPath, language, notify = true, onProgress, pageIndex }: { language: string; pageIndex: number; onProgress?: (progress: number) => void; dataPath: string; notify?: boolean }) {
         const page = this.pages[pageIndex];
         if (!page.imagePath) {
             return;
@@ -396,14 +413,20 @@ export class OCRDocument extends Observable implements Document {
         );
         DEV_LOG && console.log('ocrPage done', this.id, pageIndex, JSON.stringify(ocrData));
         if (ocrData?.blocks?.length) {
-            await this.updatePage(pageIndex, {
-                ocrData
-            });
+            await this.updatePage(
+                pageIndex,
+                {
+                    ocrData
+                },
+                false,
+                true,
+                notify
+            );
             return ocrData;
         }
     }
 
-    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true) {
+    async updatePage(pageIndex, data: Partial<Page>, imageUpdated = false, saveDoc = true, notify = true) {
         //compute diff update
         const page = this.pages[pageIndex];
         if (page) {
@@ -415,9 +438,11 @@ export class OCRDocument extends Observable implements Document {
             // we save the document so that the modifiedDate gets changed
             // no need to notify though
             if (saveDoc) {
-                await this.save({}, true, true);
+                await this.save({}, true, notify);
             }
-            this.onPageUpdated(pageIndex, page, imageUpdated);
+            if (notify) {
+                this.onPageUpdated(pageIndex, page, imageUpdated);
+            }
         }
         DEV_LOG && console.log('updatePage done', pageIndex);
     }
@@ -510,13 +535,14 @@ export class OCRDocument extends Observable implements Document {
             compressQuality: imageExportSettings.imageQuality
         });
         const image = images[0];
+        const croppedImagePath = page.imagePath;
         // const croppedImagePath = page.imagePath;
         // await new ImageSource(images[0]).saveToFileAsync(croppedImagePath, IMG_FORMAT, IMG_COMPRESS);
         // if (__IOS__) {
         //     // TODO: fix why do we need to clear the whole cache? wrong cache key?
         //     getImagePipeline().clearCaches();
         // } else {
-        //     getImagePipeline().evictFromCache(croppedImagePath);
+        await getImagePipeline().evictFromCache(croppedImagePath);
         // }
         await this.updatePage(
             pageIndex,
@@ -649,6 +675,9 @@ export interface Page {
     qrcode: QRCodeData;
     colors: ColorPaletteData;
     extra?: DocumentExtra;
+
+    pkpass_id?: string;
+    pkpass?: PKPass;
 }
 
 export interface PageData extends ImageConfig, Partial<Page> {
@@ -678,7 +707,6 @@ export class OCRPage extends Observable implements Page {
 
     transforms?: string;
 
-    // pageIndex: number;
     width: number;
     height: number;
     size: number;
@@ -694,6 +722,14 @@ export class OCRPage extends Observable implements Page {
     qrcode: QRCodeData;
     colors: ColorPaletteData;
 
+    name?: string;
+    nameSearch?: string;
+    ocrDataSearch?: string;
+
+    // PKPass data - loaded automatically with the page
+    pkpass_id?: string;
+    pkpass?: PKPass;
+
     constructor(id: string, docId: string) {
         super();
         this.id = id;
@@ -703,19 +739,20 @@ export class OCRPage extends Observable implements Page {
         return JSON.stringify(this.toJSON());
     }
 
-    toJSON() {
+    toJSON(): Page {
         const keys = Object.keys(this);
         return keys.reduce((acc, key) => {
             if (key === '_synced' || !key.startsWith('_')) {
                 acc[key] = this[key];
             }
             return acc;
-        }, {});
-        // return JSON.parse(this.toString());
+        }, {} as Page);
     }
     static fromJSON(jsonObj: Page) {
         const page = new OCRPage(jsonObj.id, jsonObj.document_id);
-        // DEV_LOG && console.log('OCRPage', 'fromJSON', Object.keys(jsonObj));
+        if (jsonObj.pkpass) {
+            jsonObj.pkpass = PKPass.fromJSON(jsonObj.pkpass);
+        }
         Object.assign(page, jsonObj);
         return page;
     }

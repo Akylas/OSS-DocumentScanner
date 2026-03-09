@@ -2,7 +2,7 @@ import BaseWorkerHandler from '@akylas/nativescript-app-utils/worker/BaseWorkerH
 import { lc } from '@nativescript-community/l';
 import { ApplicationSettings, EventData } from '@nativescript/core';
 import { debounce } from '@nativescript/core/utils';
-import { CustomError } from '@shared/utils/error';
+import { CustomError } from '@akylas/nativescript-app-utils/error';
 import { showError } from '@shared/utils/showError';
 import { writable } from 'svelte/store';
 import { OCRDocument, OCRPage } from '~/models/OCRDocument';
@@ -62,6 +62,13 @@ export const SERVICES_SYNC_TITLES: { [key in SYNC_TYPES]: string } = {
 
 export interface SyncStateEventData extends EventData {
     state: 'finished' | 'running';
+    progress?: {
+        type: 'data' | 'image' | 'pdf';
+        current: number;
+        total: number;
+        documentId?: string;
+        documentName?: string;
+    };
 }
 export interface SyncEnabledEventData extends EventData {
     enabled: boolean;

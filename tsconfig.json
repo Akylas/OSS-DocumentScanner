@@ -10,8 +10,10 @@
             "@nativescript/core": ["node_modules/@akylas/nativescript"],
             "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"],
             "plugin-nativeprocessor": ["plugin-nativeprocessor"],
-            "plugin-nativeprocessor/*": ["plugin-nativeprocessor/*"]
+            "plugin-nativeprocessor/*": ["plugin-nativeprocessor/*"],
+            "plugin-zip": ["plugin-zip"],
+            "plugin-zip/*": ["plugin-zip/*"]
         }
     },
-    "include": ["app/**/*", "tools/app/**/*", "typings/*.d.ts", "plugin-nativeprocessor/*.ts", "plugin-nativeprocessor/typings"],
+    "include": ["app/**/*", "tools/app/**/*", "typings/*.d.ts", "plugin-nativeprocessor/*.ts", "plugin-nativeprocessor/typings", "plugin-zip/*.ts", "plugin-zip/typings"],
 }

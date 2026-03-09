@@ -1,8 +1,8 @@
 <script lang="ts">
     import { CoreTypes, Frame } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
-    import { onMount } from 'svelte';
     import { closeModal, conditionalEvent, fade, goBack } from '@shared/utils/svelte/ui';
+    import { onMount } from 'svelte';
     import { windowInset } from '~/variables';
 
     export let title: string = null;
@@ -54,6 +54,8 @@
         class={'actionBarTitle ' + clazz}
         autoFontSize={true}
         col={1}
+        lineBreak="end"
+        maxLines={2}
         paddingLeft={menuIconVisible ? 0 : 16}
         text={title || ''}
         textAlignment="left"

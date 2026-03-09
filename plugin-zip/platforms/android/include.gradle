@@ -1,0 +1,4 @@
+dependencies {
+    def simpleStorage =  project.hasProperty("simpleStorage") ? project.simpleStorage : "2.2.0"
+   implementation "com.anggrayudi:storage:$simpleStorage"
+}

@@ -1,11 +1,6 @@
-import { l, lc } from '@nativescript-community/l';
-import { MultiResult, Permissions, Status, isPermResultAuthorized, openSettings, request } from '@nativescript-community/perms';
-import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { ApplicationSettings } from '@nativescript/core';
-import { SDK_VERSION } from '@nativescript/core/utils';
-import { IgnoreError, PermissionError } from '@shared/utils/error';
 import dayjs from 'dayjs';
-import { OCRDocument } from '~/models/OCRDocument';
+import type { OCRDocument } from '~/models/OCRDocument';
 import { FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
 export { restartApp } from '@akylas/nativescript-app-utils';
 
@@ -57,48 +52,34 @@ export function getRealPath(src: string) {
     return src;
 }
 
-export function isPermResultNeverAskAgain(r: MultiResult | Status) {
-    const statusCheck = __IOS__ ? Status.Denied : Status.NeverAskAgain;
-    if (typeof r === 'object') {
-        const denied = Object.keys(r).some((s) => r[s] === statusCheck);
-        return denied;
-    }
-    return r === statusCheck;
-}
+type SortOrder = 'ASC' | 'DESC';
+export function sortByKey<T = any>(data: T[], sort: string): T[] {
+    const [rawKey, rawOrder] = sort.trim().split(/\s+/);
 
-export async function requestPermission(perm: Permissions, errorMessage: string) {
-    const result = await request(perm);
-    if (isPermResultNeverAskAgain(result)) {
-        const showSetting = await confirm({
-            title: lc('permission_denied'),
-            message: errorMessage,
-            iosForceClosePresentedViewController: true, //ensure error popup is always showing
-            okButtonText: l('open_settings'),
-            cancelButtonText: l('cancel')
-        });
-        if (showSetting) {
-            await openSettings();
-        } else {
-            throw new IgnoreError();
+    const key = rawKey as keyof T;
+    const order: SortOrder = (rawOrder?.toUpperCase() as SortOrder) || 'ASC';
+    const direction = order === 'DESC' ? -1 : 1;
+
+    return [...data].sort((a, b) => {
+        const aValue = a[key];
+        const bValue = b[key];
+
+        if (aValue == null) return -1 * direction;
+        if (bValue == null) return 1 * direction;
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+            return (aValue - bValue) * direction;
         }
-    } else if (!isPermResultAuthorized(result)) {
-        throw new PermissionError(errorMessage);
-    }
+
+        // Fallback to string comparison
+        return String(aValue).localeCompare(String(bValue)) * direction;
+    });
 }
 
-export async function requestCameraPermission() {
-    return requestPermission('camera', lc('camera_permission_needed'));
-}
+export function ellipsize(str: string, maxLength: number): string {
+    if (str.length <= maxLength) return str;
 
-export async function requestStoragePermission() {
-    if (__ANDROID__ && SDK_VERSION <= 29) {
-        return requestPermission('storage', lc('storage_permission_needed'));
-    }
-}
+    if (maxLength <= 1) return '…';
 
-export async function requestPhotoPermission() {
-    return requestPermission('photo', lc('media_library_permission_needed'));
-}
-export async function requestGalleryPermission() {
-    return requestPermission('mediaLibrary', lc('media_library_permission_needed'));
+    return str.slice(0, maxLength - 1) + '…';
 }

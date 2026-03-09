@@ -1,0 +1,10 @@
+Features:
+- quick tile toggle to open app
+- backup/restore
+
+Bug fixes:
+- prevent error while saving images to gallery
+- prevent error if using Auth token without specifying a token in webdav config
+- search now ignores case/accents
+- qrcode not visible in dark mode
+- Translations update

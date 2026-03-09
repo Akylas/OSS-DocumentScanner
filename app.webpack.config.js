@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
-const { readFileSync, readdirSync } = require('fs');
-const { dirname, join, isAbsolute, relative, resolve } = require('path');
+const { readdirSync, readFileSync } = require('fs');
+const { dirname, isAbsolute, join, relative, resolve } = require('path');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const nsWebpack = require('@akylas/nativescript-webpack');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -102,33 +101,37 @@ module.exports = (env, params = {}) => {
     env.appComponents = env.appComponents || [];
     // env.appComponents.push('~/android/cameraactivity');
     env.appComponents.push('~/android/activity.android');
-    env.appComponents.push('~/android/quicktoggle.android');
+    env.appComponents.push('~/android/camera_scan_activity');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {
+        // --env.fakeall
+        accessibility = true,
         appId,
         appPath,
-        appResourcesPath,
-        hmr, // --env.hmr
-        production, // --env.production
-        sourceMap, // --env.sourceMap
-        hiddenSourceMap, // --env.hiddenSourceMap
-        inlineSourceMap, // --env.inlineSourceMap
-        sentry = false, // --env.sentry
-        uploadSentry = false,
-        uglify, // --env.uglify
-        noconsole, // --env.noconsole
-        devlog, // --env.devlog
-        profile, // --env.profile
-        report,
-        fork = true, // --env.fakeall
-        accessibility = true, // --env.accessibility
-        playStoreBuild = true, // --env.playStoreBuild
-        timeline, // --env.timeline
-        locale = 'en', // --env.locale
-        theme = 'auto', // --env.theme
+        appResourcesPath, // --env.noconsole
+        devlog,
+        fork = true, // --env.sourceMap
+        hiddenSourceMap,
+        hmr, // --env.hiddenSourceMap
+        inlineSourceMap, // --env.theme
         keep_classnames_functionnames = false,
-        startOnCam = false
+        // --env.timeline
+        locale = 'en', // --env.uglify
+        noconsole, // --env.accessibility
+        playStoreBuild = true, // --env.hmr
+        production, // --env.devlog
+        profile,
+        // --env.profile
+        report, // --env.inlineSourceMap
+        sentry = false, // --env.production
+        sourceMap,
+        startOnCam = false, // --env.locale
+        theme = 'auto', // --env.playStoreBuild
+        timeline,
+        uglify,
+        // --env.sentry
+        uploadSentry = false
     } = env;
     console.log('env', env);
     const mode = production ? 'production' : 'development';
@@ -212,6 +215,7 @@ module.exports = (env, params = {}) => {
         buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
     }
 
+    const midFontFamily = platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons';
     const APP_STORE_ID = process.env.IOS_APP_ID;
     const defines = {
         PRODUCTION: !!production,
@@ -239,6 +243,7 @@ module.exports = (env, params = {}) => {
         START_ON_CAM: startOnCam,
         SENTRY_ENABLED: !!sentry,
         NO_CONSOLE: noconsole,
+        MDI_FONT_FAMILY: `"${midFontFamily}"`,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
@@ -254,8 +259,7 @@ module.exports = (env, params = {}) => {
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
     const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
-
-    const scssPrepend = `$mdiFontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
+    const scssPrepend = `$mdiFontFamily: ${midFontFamily};
     `;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
     config.module.rules.splice(
@@ -415,7 +419,8 @@ module.exports = (env, params = {}) => {
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
             clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
-            requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
+            // this breaks svelte-native transitions which uses custom override
+            // requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );

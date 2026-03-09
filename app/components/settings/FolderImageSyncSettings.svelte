@@ -14,7 +14,7 @@
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -44,7 +44,11 @@
 
     async function save() {
         const result = get(store);
+
         if (result.localFolderPath) {
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             closeModal(result);
         } else {
             showError(lc('missing_export_folder'), { showAsSnack: true });
@@ -61,7 +65,11 @@
             title: lc('enabled'),
             value: $store.enabled
         },
-        { type: 'selectFolder', text: $store.localFolderPath },
+        {
+            id: 'selectFolder',
+            type: 'selectFolder',
+            text: $store.localFolderPath
+        },
         {
             type: 'switch',
             id: 'autoSync',
@@ -128,7 +136,7 @@
     function getDescription(item) {
         return typeof item.description === 'function' ? item.description(item) : item.description;
     }
-    function updateItem(item, key = 'key') {
+    function updateItem(item, key = 'id') {
         const index = items.findIndex((it) => it[key] === item[key]);
         if (index !== -1) {
             items.setItem(index, item);
@@ -307,7 +315,7 @@
 
 <page actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
-        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
+        <collectionview bind:this={collectionView} ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(event) => changeColor(item, event)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />

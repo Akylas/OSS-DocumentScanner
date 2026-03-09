@@ -6,8 +6,11 @@ import { doInBatch } from '@shared/utils/batch';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import { DocFolder, Document, IDocFolder, OCRDocument, OCRPage, Page, Tag } from '~/models/OCRDocument';
+import { PKPass } from '~/models/PKPass';
 import { EVENT_DOCUMENT_DELETED, SETTINGS_ROOT_DATA_FOLDER } from '~/utils/constants';
 import { groupByArray } from '@shared/utils';
+import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
+import QueryIdentifier from 'kiss-orm/dist/Queries/QueryIdentifier';
 export const sql = SqlQuery.createFromTemplateString;
 
 let dataFolder: Folder;
@@ -24,6 +27,38 @@ function cleanUndefined(obj) {
     return obj;
 }
 
+// helpers for accent-insensitive searches
+function normalizeSearchString(value: any) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    const s = isString(value) ? value : typeof value === 'object' ? JSON.stringify(value) : String(value);
+    // normalize to NFD, remove diacritics and lowercase
+    const lower = s.toLowerCase();
+    let normalized;
+    if (__IOS__) {
+        normalized = NSString.stringWithString(lower).stringByFoldingWithOptionsLocale(NSStringCompareOptions.DiacriticInsensitiveSearch, NSLocale.currentLocale);
+    } else {
+        normalized = java.text.Normalizer.normalize(lower, java.text.Normalizer.Form.NFD);
+    }
+    // some special mappings
+    return normalized
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/ß/g, 'ss')
+        .replace(/[łŁ]/g, 'l')
+        .replace(/[øØ]/g, 'o')
+        .replace(/œ/g, 'oe')
+        .replace(/æ/g, 'ae');
+}
+
+function escapeLike(val: string) {
+    if (!val) {
+        return val;
+    }
+    // escape wildcard chars for LIKE patterns
+    return val.replace(/[\\%_]/g, (m) => '\\' + m);
+}
+
 export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
     constructor(data) {
         super(data);
@@ -37,26 +72,11 @@ export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
         if (!migrations) {
             return;
         }
-
-        // For now disable it as we could have a issue if db is deleted while setting is kept
-        // const settingsKey = `SQLITE_${this.table}_migrations`;
-        // const appliedMigrations = JSON.parse(ApplicationSettings.getString(settingsKey, '[]'));
-
-        // const actualMigrations = { ...migrations };
-        // for (let index = 0; index < appliedMigrations.length; index++) {
-        //     delete actualMigrations[appliedMigrations[index]];
-        // }
-
-        // const migrationKeys = Object.keys(migrations).filter((k) => appliedMigrations.indexOf(k) === -1);
-        // for (let index = 0; index < migrationKeys.length; index++) {
         try {
             await this.database.migrate(migrations);
-            // appliedMigrations.push(...Object.keys(migrations));
         } catch (error) {
             console.error(error, error.stack);
         }
-        // }
-        // ApplicationSettings.setString(settingsKey, JSON.stringify(appliedMigrations));
     }
 }
 
@@ -101,6 +121,12 @@ export class FolderRepository extends BaseRepository<DocFolder, IDocFolder> {
             color TEXT
         );
         `);
+    }
+    async existsById(itemId: string) {
+        const result = await this.exists({
+            where: sql`id = ${new QueryIdentifier(itemId)}`
+        });
+        return result;
     }
 
     async findFolders(rootFolder?: DocFolder) {
@@ -166,6 +192,101 @@ LEFT JOIN DocumentsFolders pf ON f.id = pf.folder_id`
         return model;
     }
 }
+
+export class PKPassRepository extends BaseRepository<PKPass, PKPass> {
+    constructor(database: NSQLDatabase) {
+        super({
+            database,
+            table: 'PKPass',
+            primaryKey: 'id',
+            model: PKPass
+        });
+    }
+
+    async createTables() {
+        return this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "PKPass" (
+            id TEXT PRIMARY KEY NOT NULL,
+            page_id TEXT NOT NULL,
+            passData TEXT NOT NULL,
+            images TEXT,
+            passJsonPath TEXT,
+            imagesPath TEXT,
+            createdDate BIGINT NOT NULL DEFAULT (round((julianday('now') - 2440587.5)*86400000)),
+            modifiedDate BIGINT,
+            FOREIGN KEY(page_id) REFERENCES Page(id) ON DELETE CASCADE
+        );
+        `);
+    }
+
+    async createPKPass(pkpass: PKPass): Promise<PKPass> {
+        const createdDate = Date.now();
+        return this.create(
+            cleanUndefined({
+                id: pkpass.id,
+                page_id: pkpass.page_id,
+                passData: JSON.stringify(pkpass.passData),
+                images: JSON.stringify(pkpass.images),
+                // passJsonPath: pkpass.passJsonPath,
+                // imagesPath: pkpass.imagesPath,
+                createdDate,
+                modifiedDate: createdDate
+            })
+        );
+    }
+
+    async update(pkpass: PKPass, data?: Partial<PKPass>) {
+        const toUpdate: any = {};
+        if (data) {
+            Object.keys(data).forEach((k) => {
+                const value = data[k];
+                if (k === 'passData' || k === 'images') {
+                    toUpdate[k] = JSON.stringify(value);
+                } else {
+                    toUpdate[k] = value;
+                }
+            });
+        }
+
+        if (!toUpdate.modifiedDate) {
+            toUpdate.modifiedDate = Date.now();
+        }
+
+        await super.update(pkpass, toUpdate);
+        if (data) {
+            Object.assign(pkpass, data);
+        }
+        return pkpass;
+    }
+
+    async createModelFromAttributes(attributes: any): Promise<PKPass> {
+        const { images, passData, ...other } = attributes;
+        const model = new PKPass(attributes.id, attributes.page_id || attributes.document_id); // Support both for migration
+        Object.assign(model, {
+            ...other,
+            passData: typeof passData === 'string' ? JSON.parse(passData) : passData,
+            images: typeof images === 'string' ? JSON.parse(images) : images
+        });
+        return model;
+    }
+
+    async getByPageId(pageId: string): Promise<PKPass | null> {
+        const results = await this.search({
+            where: sql`page_id=${pageId}`
+        });
+        return results.length > 0 ? results[0] : null;
+    }
+
+    // Keep for backward compatibility during migration
+    async getByDocumentId(documentId: string): Promise<PKPass | null> {
+        // This will be removed after migration is complete
+        const results = await this.search({
+            where: sql`page_id=${documentId}` // Try page_id first (might be old data)
+        });
+        return results.length > 0 ? results[0] : null;
+    }
+}
+
 export class PageRepository extends BaseRepository<OCRPage, Page> {
     constructor(database: NSQLDatabase) {
         super({
@@ -185,12 +306,46 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             removeDataPath: () => sql`UPDATE Page SET imagePath = replace( imagePath, ${dataFolder.path}, '' ), sourceImagePath = replace( sourceImagePath, ${dataFolder.path}, '' )`,
             addSourceImageWidth: sql`ALTER TABLE Page ADD COLUMN sourceImageWidth INTEGER`,
             addSourceImageHeight: sql`ALTER TABLE Page ADD COLUMN sourceImageHeight INTEGER`,
-            addSourceImageRotation: sql`ALTER TABLE Page ADD COLUMN sourceImageRotation INTEGER`
+            addSourceImageRotation: sql`ALTER TABLE Page ADD COLUMN sourceImageRotation INTEGER`,
+
+            updatePageSearchAccentInsensitive: (sequenceDb: DatabaseInterface) =>
+                new Promise<void>(async (resolve, reject) => {
+                    try {
+                        await sequenceDb.query(sql`ALTER TABLE Page ADD COLUMN nameSearch TEXT`);
+                        await sequenceDb.query(sql`ALTER TABLE Page ADD COLUMN ocrDataSearch TEXT`);
+                        const pages = await this.search();
+                        DEV_LOG && console.log('updateSearchAccentInsensitive for Pages', pages.length);
+                        await doInBatch(
+                            pages,
+                            async (p: OCRPage) => {
+                                const updates: any = {};
+                                if (p.name && !p.nameSearch) {
+                                    updates.nameSearch = normalizeSearchString(p.name);
+                                }
+                                if (p.ocrData && !p.ocrDataSearch) {
+                                    const ocrStr = p.ocrData.text;
+                                    updates.ocrDataSearch = normalizeSearchString(ocrStr);
+                                }
+                                if (Object.keys(updates).length) {
+                                    await super.update(p, updates);
+                                }
+                            },
+                            10
+                        );
+                        await sequenceDb.query(sql`CREATE INDEX IF NOT EXISTS idx_page_nameSearch ON Page(nameSearch)`);
+                        await sequenceDb.query(sql`CREATE INDEX IF NOT EXISTS idx_page_ocrDataSearch ON Page(ocrDataSearch)`);
+                        resolve();
+                    } catch (e) {
+                        console.error('Error filling Page search indexes', e);
+                        reject(e);
+                    }
+                })
         },
         CARD_APP
             ? {
                   addQRCode: sql`ALTER TABLE Page ADD COLUMN qrcode TEXT`,
-                  addColors: sql`ALTER TABLE Page ADD COLUMN colors TEXT`
+                  addColors: sql`ALTER TABLE Page ADD COLUMN colors TEXT`,
+                  addPKPass: sql`ALTER TABLE Page ADD COLUMN pkpass_id TEXT REFERENCES PKPass(id)`
               }
             : {}
     );
@@ -226,18 +381,20 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
         const createdDate = Date.now();
         return this.create(
             cleanUndefined({
+                modifiedDate: createdDate,
+                createdDate,
                 ...others,
                 imagePath: page.imagePath?.replace(dataFolder, ''),
                 sourceImagePath: page.sourceImagePath?.replace(dataFolder, ''),
                 extra: isObject(extra) ? JSON.stringify(extra) : extra,
-                createdDate,
-                pageIndex: -1, // we are stuck with this as we cant migrate to remove pageIndex
-                modifiedDate: createdDate,
+                pageIndex: -1,
                 rotation: page.rotation && !isNaN(page.rotation) ? page.rotation : 0,
                 scale: page.scale ?? 1,
                 crop: page.crop ? JSON.stringify(page.crop) : undefined,
                 colorMatrix: page.colorMatrix ? JSON.stringify(page.colorMatrix) : undefined,
                 ocrData: page.ocrData ? JSON.stringify(page.ocrData) : undefined,
+                nameSearch: normalizeSearchString(page.name),
+                ocrDataSearch: page.ocrData ? normalizeSearchString(page.ocrData.text) : undefined,
                 ...(CARD_APP
                     ? {
                           qrcode: page.qrcode ? JSON.stringify(page.qrcode) : undefined,
@@ -247,6 +404,7 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             })
         );
     }
+
     async update(page: OCRPage, data?: Partial<OCRPage>, updateModifiedDate = true) {
         if (!data) {
             const toUpdate: Partial<OCRPage> = {};
@@ -256,7 +414,6 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             await this.update(page, toUpdate);
             return page;
         }
-
         if (updateModifiedDate && !data.modifiedDate) {
             data.modifiedDate = Date.now();
         }
@@ -267,6 +424,12 @@ export class PageRepository extends BaseRepository<OCRPage, Page> {
             toSave[k] = value;
             if (k === 'extra') {
                 toUpdate[k] = JSON.stringify(Object.assign(page.extra || {}, value));
+            } else if (k === 'ocrData') {
+                toUpdate[k] = JSON.stringify(value);
+                toUpdate.ocrDataSearch = normalizeSearchString(value.text);
+            } else if (k === 'name') {
+                toUpdate[k] = value;
+                toUpdate.nameSearch = normalizeSearchString(value);
             } else if (typeof value === 'object' || Array.isArray(value)) {
                 toUpdate[k] = JSON.stringify(value);
             } else {
@@ -307,7 +470,8 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         database: NSQLDatabase,
         public pagesRepository: PageRepository,
         public tagsRepository: TagRepository,
-        public foldersRepository: FolderRepository
+        public foldersRepository: FolderRepository,
+        public pkpassRepository?: PKPassRepository
     ) {
         super({
             database,
@@ -351,7 +515,34 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
 
     migrations = {
         addExtra: sql`ALTER TABLE Document ADD COLUMN extra TEXT`,
-        addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`
+        addPagesOrder: sql`ALTER TABLE Document ADD COLUMN pagesOrder TEXT`,
+
+        updateDocSearchAccentInsensitive: (sequenceDb: DatabaseInterface) =>
+            new Promise<void>(async (resolve, reject) => {
+                try {
+                    await sequenceDb.query(sql`ALTER TABLE Document ADD COLUMN nameSearch TEXT`);
+                    const docs = await this.search();
+                    DEV_LOG && console.log('updateSearchAccentInsensitive docs', docs.length);
+                    await doInBatch(
+                        docs,
+                        async (d: OCRDocument) => {
+                            const updates: any = {};
+                            if (d.name && !d.nameSearch) {
+                                updates.nameSearch = normalizeSearchString(d.name);
+                            }
+                            if (Object.keys(updates).length) {
+                                await super.update(d, updates);
+                            }
+                        },
+                        10
+                    );
+                    await sequenceDb.query(sql`CREATE INDEX IF NOT EXISTS idx_doc_nameSearch ON Document(nameSearch)`);
+                    resolve();
+                } catch (e) {
+                    console.error('Error filling Page search indexes', e);
+                    reject(e);
+                }
+            })
     };
 
     async createDocument(document: Document) {
@@ -359,12 +550,13 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const createdDate = Date.now();
         const doc = await this.create(
             cleanUndefined({
+                createdDate,
+                modifiedDate: createdDate,
                 ...others,
                 extra: isObject(extra) ? JSON.stringify(extra) : extra,
                 _synced: 0,
-                createdDate,
-                modifiedDate: createdDate,
-                pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined
+                pagesOrder: others.pagesOrder ? JSON.stringify(others.pagesOrder) : undefined,
+                nameSearch: normalizeSearchString(others.name)
             })
         );
         if (folders) {
@@ -373,35 +565,9 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             }
             doc.folders = folders;
         }
+        doc.pages = [];
         return doc;
     }
-
-    // async loadTagsRelationship(document: OCRDocument): Promise<OCRDocument> {
-    //     const tags = await this.tagsRepository.search({
-    //         where: sql`
-    //         "id" IN (
-    //             SELECT "tag_id"
-    //             FROM "DocumentsTags"
-    //             WHERE "document_id" = ${document.id}
-    //         )
-    //     `
-    //     });
-    //     document.tags = tags.map((g) => g.id);
-    //     return document;
-    // }
-    // async loadFoldersRelationship(document: OCRDocument): Promise<OCRDocument> {
-    //     const folders = await this.foldersRepository.search({
-    //         where: sql`
-    //         "id" IN (
-    //             SELECT "folder_id"
-    //             FROM "DocumentsFolders"
-    //             WHERE "document_id" = ${document.id}
-    //         )
-    //     `
-    //     });
-    //     document.folders = folders.map((g) => g.id);
-    //     return document;
-    // }
 
     async update(document: OCRDocument, data?: Partial<OCRDocument>, updateModifiedDate = true) {
         // DEV_LOG && console.log('doc update', data);
@@ -428,6 +594,9 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
             toSave[k] = value;
             if (k === 'extra') {
                 toUpdate[k] = JSON.stringify(Object.assign(document.extra || {}, value));
+            } else if (k === 'name') {
+                toUpdate[k] = value;
+                toUpdate.nameSearch = normalizeSearchString(value);
             } else if (typeof value === 'object' || Array.isArray(value)) {
                 toUpdate[k] = JSON.stringify(value);
             } else {
@@ -465,11 +634,17 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
         const element = await this.get(itemId);
         return element;
     }
-    async search(args: { from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery } = {}) {
+    async search(args: { end?: SqlQuery; from?: SqlQuery; postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery } = {}) {
         const result = await super.search({ ...args });
         // remove all documents with no Page, it is a bug and should never happen
 
         return result.filter((d) => d.pages?.length > 0);
+    }
+    async existsById(itemId: string) {
+        const result = await this.exists({
+            where: sql`id = ${new QueryIdentifier(itemId)}`
+        });
+        return result;
     }
     async findDocuments({ filter, folder, omitThoseWithFolders = false, order = 'id DESC' }: { filter?: string; folder?: DocFolder; omitThoseWithFolders?: boolean; order?: string } = {}) {
         const args = {
@@ -486,10 +661,12 @@ export class DocumentRepository extends BaseRepository<OCRDocument, Document> {
     DocumentsFolders df ON d.id = df.document_id
 LEFT JOIN 
     Folder f ON df.folder_id = f.id`;
+
         if (filter?.length || folder) {
             if (filter?.length) {
-                const realFilter = filter.replace(/[(\[\]%_)]/, '\\$1');
-                const where = `p.name LIKE '%${realFilter}%' OR d.name LIKE '%${realFilter}%' OR p.ocrData LIKE '%${realFilter}%'`;
+                const normalizedFilter = normalizeSearchString(filter);
+                const escaped = escapeLike(normalizedFilter);
+                const where = `p.nameSearch LIKE '%${escaped}%' OR d.nameSearch LIKE '%${escaped}%' OR p.ocrDataSearch LIKE '%${escaped}%'`;
                 if (folder) {
                     args.postfix = sql` LEFT JOIN Page p ON p.document_id = d.id `;
                     args.where = new SqlQuery([`df.folder_id = ${folder.id} AND (${where})`]);
@@ -539,6 +716,21 @@ LEFT JOIN
                 });
                 document.pages = pages;
                 await document.save({}, true);
+            }
+            if (CARD_APP) {
+                // Load PKPass data for each page
+                for (const page of pages) {
+                    if (page.pkpass_id) {
+                        page.pkpass = await this.pkpassRepository.getByPageId(page.id);
+                        const images = page.pkpass.images;
+                        const docFolder = document.folderPath;
+                        const pageFolder = docFolder.getFolder(page.id);
+                        const pkpassFolder = pageFolder.getFolder('pkpass');
+                        // DEV_LOG && console.log('loading pkpass', images, pkpassFolder.path);
+                        Object.keys(images).map((key) => (images[key] = path.join(pkpassFolder.path, images[key])));
+                        // DEV_LOG && console.log('loading pkpass1', images, pkpassFolder.path);
+                    }
+                }
             }
         }
 
@@ -607,6 +799,7 @@ export class DocumentsService extends Observable {
     tagRepository: TagRepository;
     folderRepository: FolderRepository;
     documentRepository: DocumentRepository;
+    pkpassRepository?: PKPassRepository;
 
     constructor() {
         super();
@@ -625,6 +818,15 @@ export class DocumentsService extends Observable {
             }
             if (!rootDataFolder) {
                 rootDataFolder = knownFolders.externalDocuments().path;
+                if (__ANDROID__) {
+                    //we need to check if the sdcard is actually readable. it could be an ext3/ext4 where we can't write
+                    // in this case we wan't to use internal storage
+                    try {
+                        Folder.fromPath(rootDataFolder).getFolder('data');
+                    } catch (error) {
+                        rootDataFolder = knownFolders.documents().path;
+                    }
+                }
                 ApplicationSettings.setString(SETTINGS_ROOT_DATA_FOLDER, rootDataFolder);
             }
         } else {
@@ -634,6 +836,7 @@ export class DocumentsService extends Observable {
         this.rootDataFolder = rootDataFolder;
         dataFolder = this.dataFolder = Folder.fromPath(rootDataFolder).getFolder('data');
         DEV_LOG && console.info('DocumentsService', 'start', this.id, rootDataFolder, !!db, dataFolder.path);
+
         if (db) {
             this.db = new NSQLDatabase(db, {
                 // for now it breaks
@@ -654,20 +857,31 @@ export class DocumentsService extends Observable {
         this.pageRepository = new PageRepository(this.db);
         this.tagRepository = new TagRepository(this.db);
         this.folderRepository = new FolderRepository(this.db);
-        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository);
-        await this.documentRepository.createTables();
-        await this.pageRepository.createTables();
-        await this.tagRepository.createTables();
-        await this.folderRepository.createTables();
+        if (CARD_APP) {
+            this.pkpassRepository = new PKPassRepository(this.db);
+        }
+        this.documentRepository = new DocumentRepository(this.db, this.pageRepository, this.tagRepository, this.folderRepository, this.pkpassRepository);
         if (!db) {
             await this.documentRepository.createTables();
             await this.pageRepository.createTables();
             await this.tagRepository.createTables();
             await this.folderRepository.createTables();
+            if (CARD_APP) {
+                await this.pkpassRepository.createTables();
+            }
             try {
-                await this.db.migrate(Object.assign({}, this.documentRepository.migrations, this.pageRepository.migrations, this.tagRepository.migrations, this.folderRepository.migrations));
+                await this.db.migrate(
+                    Object.assign(
+                        {},
+                        this.documentRepository.migrations,
+                        this.pageRepository.migrations,
+                        this.tagRepository.migrations,
+                        this.folderRepository.migrations,
+                        CARD_APP ? this.pkpassRepository.migrations : {}
+                    )
+                );
             } catch (error) {
-                console.error('error applying migrations', error.stack);
+                console.error('error applying migrations', error, error.stack);
             }
         }
 

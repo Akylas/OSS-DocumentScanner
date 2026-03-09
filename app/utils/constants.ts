@@ -40,8 +40,10 @@ export const SETTINGS_NB_COLUMNS_VIEW = 'nb_columns_view';
 export const SETTINGS_NB_COLUMNS_VIEW_LANDSCAPE = 'nb_columns_view_landscape';
 export const SETTINGS_SORT_ORDER = 'sort_order';
 export const SETTINGS_VIEW_STYLE = 'documents_list_view_style';
+export const SETTINGS_FOLDER_VIEW_STYLE = 'documents_list_folder_view_style';
 export const SETTINGS_ROOT_DATA_FOLDER = 'root_data_folder';
 export const SETTINGS_QUICK_TOGGLE_ENABLED = 'quick_toggle_enabled';
+export const SETTINGS_OCR_COPY_USE_SPACE = 'ocr_copy_use_space';
 
 export const TRANSFORMS_SPLIT = '|';
 
@@ -50,10 +52,11 @@ export const SEPARATOR = '/';
 
 export const IMG_FORMAT = 'jpg';
 export const PDF_EXT = '.pdf';
+export const PKPASS_EXT = '.pkpass';
 export const CARD_RATIO = 0.629;
 export const IMAGE_DECODE_HEIGHT = Math.max(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels);
 
-export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 88;
+export const BOTTOM_BUTTON_OFFSET = __ANDROID__ && SDK_VERSION < 30 ? 130 : 120;
 export const FAB_BUTTON_OFFSET = 72;
 
 export const AUTO_SYNC = true;
@@ -92,7 +95,9 @@ export const DEFAULT_NB_COLUMNS_VIEW = 2;
 export const DEFAULT_COLORMATRIX = null;
 export const DEFAULT_SORT_ORDER = CARD_APP ? 'createdDate ASC' : 'createdDate DESC';
 export const DEFAULT_VIEW_STYLE = CARD_APP ? 'columns' : 'default';
+export const DEFAULT_FOLDER_VIEW_STYLE = 'horizontal';
 export const DEFAULT_FORCE_WHITE_BACKGROUND_QRCODE = false;
+export const DEFAULT_OCR_COPY_USE_SPACE = false;
 export const DEFAULT_PDF_OPTIONS = {
     paper_size: 'full',
     color: 'color',
@@ -117,7 +122,7 @@ export const DEFAULT_EXPORT_DIRECTORY = __ANDROID__
     ? SDK_VERSION < 30
         ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
         : undefined
-    : knownFolders.externalDocuments().path;
+    : undefined;
 
 export function getImageExportSettings() {
     return {
@@ -138,6 +143,8 @@ export const EVENT_FOLDER_ADDED = 'folderAdded';
 
 export const EVENT_STATE = 'state';
 export const EVENT_SYNC_STATE = 'syncState';
+export const EVENT_SYNC_PROGRESS = 'syncProgress';
 
 export const FOLDERS_DATA_FILENAME = 'folders.json';
 export const DOCUMENT_DATA_FILENAME = 'data.json';
+export const VALID_MARKER_FILENAME = '.valid';

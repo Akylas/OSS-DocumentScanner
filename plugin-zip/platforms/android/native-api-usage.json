@@ -1,0 +1,6 @@
+{
+    "uses":[
+        "com.nativescript.zip:Zip",
+        "com.nativescript.zip:Zip.ZipCallback"
+    ]
+}

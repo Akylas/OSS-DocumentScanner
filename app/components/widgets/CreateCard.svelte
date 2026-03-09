@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { SilentError } from '@shared/utils/error';
+    import { SilentError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { FORMATS, getBarcodeFallbackString, qrcodeService } from '~/services/qrcode';
     import { pickColor, showPopoverMenu } from '~/utils/ui';

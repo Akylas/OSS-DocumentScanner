@@ -37,7 +37,7 @@ export default class ShortcutsService {
      */
     async updateShortcuts(document: OCRDocument) {
         try {
-            // DEV_LOG && console.log('updateShortcuts', document.id);
+            // DEV_LOG && console.log('updateShortcuts', document.id, new Error().stack);
             // TODO: try to run this in the thread
             const context = Utils.android.getApplicationContext();
             // if (document.archiveStatus == 1) {
@@ -55,23 +55,19 @@ export default class ShortcutsService {
             // Sort the shortcuts by rank, so working with the relative order will be easier.
             // This sorts so that the lowest rank is first.
             list.sort((a, b) => a.getRank() - b.getRank());
-            // java.util.Collections.sort(nlist, java.util.Comparator.comparingInt(ShortcutInfoCompat.class['getRank']));
-
             const foundIndex = list.findIndex((d) => d.getId() === shortcutId);
-            // DEV_LOG &&
-            //     console.log(
-            //         'updateShortcuts list',
-            //         shortcutId,
-            //         foundIndex,
-            //         list.map((a) => a.getId())
-            //     );
+
             if (foundIndex !== -1) {
                 // If the item is already found, then the list needs to be
                 // reordered, so that the selected item now has the lowest
                 // rank, thus letting it survive longer.
                 list.splice(foundIndex, 1);
             }
-            list.unshift((await this.createShortcutBuilder(context, document)).build());
+            const builder = await this.createShortcutBuilder(context, document);
+            if (!builder) {
+                return;
+            }
+            list.unshift(builder.build());
             // DEV_LOG &&
             //     console.log(
             //         'updateShortcuts list1',
@@ -92,13 +88,16 @@ export default class ShortcutsService {
 
                 // skip outdated that no longer exist
                 if (prevShortcut && prevDocument) {
-                    const updatedShortcut = (await this.createShortcutBuilder(context, prevDocument)).setRank(rank).build();
-                    finalList.addLast(updatedShortcut);
-                    rank++;
+                    const builder = await this.createShortcutBuilder(context, prevDocument);
+                    if (builder) {
+                        const updatedShortcut = builder.setRank(rank).build();
+                        finalList.addLast(updatedShortcut);
+                        rank++;
 
-                    // trim the list
-                    if (rank >= MAX_SHORTCUTS) {
-                        break;
+                        // trim the list
+                        if (rank >= MAX_SHORTCUTS) {
+                            break;
+                        }
                     }
                 }
             }
@@ -153,7 +152,7 @@ export default class ShortcutsService {
         }
         const image = await getTransformedImage({
             page,
-            options: { width: ADAPTIVE_BITMAP_SIZE, height: ADAPTIVE_BITMAP_SIZE },
+            options: { width: ADAPTIVE_BITMAP_SIZE, height: ADAPTIVE_BITMAP_SIZE, pkpassLayout: 'logo' },
             loadOptions: { width, height },
             document,
             defaultBackgroundColor: get(colors).colorPrimary

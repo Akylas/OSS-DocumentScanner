@@ -162,7 +162,7 @@ export async function detectQRCodeFromFile(src: string, options: Partial<DetectQ
 }
 
 export async function generateQRCodeImage(text: string, format: string, width: number, height: number, options?: Partial<GenerateQRCodeOptions>) {
-    return androidFunctionCallbackPromise<any>(
+    return androidFunctionCallbackPromise<ImageSource>(
         (callback) => {
             com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCode(text, format, width, height, callback, options ? JSON.stringify(options) : '');
         },
@@ -171,12 +171,15 @@ export async function generateQRCodeImage(text: string, format: string, width: n
 }
 
 export async function getSVGFromQRCode(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
-    return androidFunctionCallbackPromise<any>(
+    return androidFunctionCallbackPromise<string>(
         (callback) => {
             com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSVG(text, format, hintSize, callback, options ? JSON.stringify(options) : '');
         },
         (r) => (r?.length ? r : undefined)
     );
+}
+export  function getSVGFromQRCodeSync(text: string, format: string, hintSize: number, options?: Partial<GenerateQRCodeOptions>) {
+    return com.akylas.documentscanner.CustomImageAnalysisCallback.Companion.generateQRCodeSVGSync(text, format, hintSize, options ? JSON.stringify(options) : '');
 }
 
 export function createAutoScanHandler(cropView: CropView, block: (result) => void): any {
@@ -218,7 +221,7 @@ export async function getFileName(src: string) {
 export function generatePDFASync(destFolder: string, fileName: string, options: string, errorHandler) {
     return androidFunctionCallbackPromise<string>(
         (callback) => {
-            DEV_LOG && console.log('generatePDFASync', destFolder, fileName, options);
+            // DEV_LOG && console.log('generatePDFASync', destFolder, fileName, options);
             com.akylas.documentscanner.utils.PDFUtils.Companion.generatePDFASync(Utils.android.getApplicationContext(), destFolder, fileName, options, callback);
         },
         (r) => r,

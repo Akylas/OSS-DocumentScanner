@@ -3,8 +3,8 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ObservableArray, StackLayout, Utils } from '@nativescript/core';
-    import { throttle } from '@nativescript/core/utils';
+    import { AndroidActivityResultEventData, Application, ObservableArray, StackLayout, Utils } from '@nativescript/core';
+    import { openFile, openUrl, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { filesize } from 'filesize';
@@ -19,6 +19,7 @@
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     import SyncIndicator from '../common/SyncIndicator.svelte';
     import MainList, { Item } from './MainList.svelte';
+    import { ellipsize } from '~/utils/utils.common';
 
     const textPaint = new Paint();
     const IMAGE_DECODE_WIDTH = Utils.layout.toDevicePixels(200);
@@ -33,12 +34,16 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     let viewStyle: string;
     let syncEnabled: boolean;
+    let nbSelected: number = 0;
     let folderItems: ObservableArray<Item>;
     let documents: ObservableArray<Item>;
+    let getSyncColors: (item: Item) => string[];
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
+    let importImages: () => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
     let refreshCollectionView: () => void;
+
     $: condensed = viewStyle === 'condensed';
     function getItemRowHeight(viewStyle) {
         return condensed ? 80 : 150;
@@ -76,7 +81,7 @@
                     fontWeight: 'bold',
                     lineBreak: 'end',
                     lineHeight: 18 * $fontScale,
-                    text: doc.name
+                    text: ellipsize(doc.name, 50)
                 },
                 {
                     color: colorOnSurfaceVariant,
@@ -101,18 +106,26 @@
 </script>
 
 <MainList
+    folderViewStyles={{
+        horizontal: { name: lc('horizontal') },
+        vertical: { name: lc('vertical') }
+    }}
     {title}
     viewStyles={{
         default: { name: lc('expanded') },
         condensed: { name: lc('condensed') }
     }}
+    bind:fabHolder
     bind:viewStyle
     bind:onItemTap
     bind:onItemLongPress
     bind:syncEnabled
     bind:folder
+    bind:nbSelected
     bind:importDocument
+    bind:importImages
     bind:refreshCollectionView
+    bind:getSyncColors
     bind:documents
     bind:folderItems
     bind:collectionView>
@@ -137,12 +150,12 @@
                 stretch="aspectFill"
                 width={getItemImageHeight(viewStyle) * $fontScale} />
             <SelectedIndicator horizontalAlignment="left" margin={10} selected={item.selected} />
-            <SyncIndicator synced={item.doc._synced} visible={syncEnabled} />
+            <SyncIndicator syncColors={getSyncColors(item)} visible={syncEnabled} />
             <PageIndicator horizontalAlignment="right" margin={10} scale={$fontScale} text={item.doc.pages.length} />
         </canvasview>
     </Template>
 
-    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
+    <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
         {#if __IOS__}
             <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
         {/if}
@@ -151,6 +164,7 @@
             horizontalAlignment="center"
             text="mdi-file-document-plus-outline"
             verticalAlignment="center"
+            on:longPress={throttle(() => importImages(), 500)}
             on:tap={throttle(() => importDocument(), 500)} />
         {#if $hasCamera}
             <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />

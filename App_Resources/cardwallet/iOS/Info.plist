@@ -3,9 +3,9 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleShortVersionString</key>
-    <string>1.7.1</string>
+    <string>1.9.0</string>
     <key>CFBundleVersion</key>
-    <string>44</string>
+    <string>54</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
@@ -63,5 +63,89 @@
     <string>12.0</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeName</key>
+        <string>PKPass</string>
+        <key>LSHandlerRank</key>
+        <string>Owner</string>
+        <key>LSItemContentTypes</key>
+        <array>
+          <string>com.apple.pkpass</string>
+          <string>public.pkpass</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleTypeName</key>
+        <string>PDF</string>
+        <key>LSHandlerRank</key>
+        <string>Alternate</string>
+        <key>LSItemContentTypes</key>
+        <array>
+          <string>com.adobe.pdf</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleTypeName</key>
+        <string>Images</string>
+        <key>LSHandlerRank</key>
+        <string>Alternate</string>
+        <key>LSItemContentTypes</key>
+        <array>
+          <string>public.image</string>
+        </array>
+      </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+          <string>public.archive</string>
+        </array>
+        <key>UTTypeDescription</key>
+        <string>Apple Wallet Pass</string>
+        <key>UTTypeIdentifier</key>
+        <string>com.apple.pkpass</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>pkpass</string>
+          </array>
+          <key>public.mime-type</key>
+          <array>
+            <string>application/vnd.apple.pkpass</string>
+            <string>application/vnd-com.apple.pkpass</string>
+          </array>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+          <string>public.archive</string>
+        </array>
+        <key>UTTypeDescription</key>
+        <string>ESPass</string>
+        <key>UTTypeIdentifier</key>
+        <string>com.espass</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>espass</string>
+          </array>
+          <key>public.mime-type</key>
+          <array>
+            <string>application/vnd.espass-espass</string>
+          </array>
+        </dict>
+      </dict>
+    </array>
   </dict>
 </plist>

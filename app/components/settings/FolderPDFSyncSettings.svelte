@@ -13,7 +13,7 @@
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, FILENAME_USE_DOCUMENT_NAME, SETTINGS_FILE_NAME_FORMAT, SETTINGS_FILE_NAME_USE_DOCUMENT_NAME } from '~/utils/constants';
-    import { checkOrDownloadOCRLanguages, createView, getNameFormatHTMLArgs, openLink, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { checkOrDownloadOCRLanguages, createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import FolderTextView from '../common/FolderTextView.svelte';
@@ -51,6 +51,9 @@
         const result = get(store);
         DEV_LOG && console.log('save', JSON.stringify(result));
         if (result.localFolderPath) {
+            if (__ANDROID__) {
+                await requestNotificationPermission();
+            }
             if (result.OCREnabled && result.OCRLanguages.length) {
                 await checkOrDownloadOCRLanguages({
                     dataType: result.OCRDataType,
@@ -74,7 +77,11 @@
             title: lc('enabled'),
             value: $store.enabled
         },
-        { type: 'selectFolder', text: $store.localFolderPath },
+        {
+            id: 'selectFolder',
+            type: 'selectFolder',
+            text: $store.localFolderPath
+        },
         {
             type: 'switch',
             id: 'autoSync',
@@ -141,7 +148,7 @@
     function getDescription(item) {
         return typeof item.description === 'function' ? item.description(item) : item.description;
     }
-    function updateItem(item, key = 'key') {
+    function updateItem(item, key = 'id') {
         const index = items.findIndex((it) => it[key] === item[key]);
         if (index !== -1) {
             items.setItem(index, item);
@@ -324,7 +331,7 @@
 
 <page actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
-        <collectionview itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
+        <collectionview ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(e) => changeColor(item, e)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />

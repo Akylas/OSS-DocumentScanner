@@ -1,0 +1,4 @@
+Bug fixes:
+- bulk export fix
+- drag/selection pages fix
+- back button handling fix on Android 16+

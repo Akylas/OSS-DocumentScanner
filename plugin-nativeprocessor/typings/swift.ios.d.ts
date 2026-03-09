@@ -1,4 +1,7 @@
 /* eslint-disable no-var */
+declare class RocketSim extends NSObject {
+    static loadRocketSimConnect();
+}
 declare class AutoScanHandler extends NSObject {
     static alloc(): AutoScanHandler; // inherited from NSObject
 
