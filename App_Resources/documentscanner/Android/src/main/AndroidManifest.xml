@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools" android:installLocation="auto">
     <uses-sdk tools:overrideLibrary="androidx.camera.extensions,androidx.camera.video,androidx.camera.lifecycle,androidx.camera.camera2,androidx.camera.core,androidx.camera.view,androidx.camera.featurecombinationquery"/>
 
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
     <application android:requestLegacyExternalStorage="true" android:name=".MainApplication"
         android:allowBackup="true" android:hardwareAccelerated="true"
         android:networkSecurityConfig="@xml/network_security_config"
