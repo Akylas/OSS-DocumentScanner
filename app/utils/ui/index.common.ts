@@ -573,6 +573,8 @@ export async function showPDFPopoverMenu({
     popoverOptions?: Partial<PopoverOptions>;
 }) {
     let exportDirectory: string;
+
+    // on IOS we dont persist the export folder
     // if (__IOS__) {
     //     const bookmark = NSUserDefaults.standardUserDefaults.objectForKey('pdf_export_directory');
     //     const stale = new interop.Reference(false);
@@ -593,7 +595,7 @@ export async function showPDFPopoverMenu({
             permissions: { write: true, persistable: true, read: true },
             forceSAF: true
         });
-        if (result.folders.length) {
+        if (result?.folders?.length) {
             exportDirectory = result.folders[0];
             DEV_LOG && console.log('set_export_directory', exportDirectory);
             // ApplicationSettings.setString('pdf_export_directory', exportDirectory);
