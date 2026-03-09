@@ -51,7 +51,6 @@ export async function exportPDFAsync({ compress, document, filename, folder = kn
             ...(baseOptions ? baseOptions : {}),
             debug: false
         });
-        const context = Utils.android.getApplicationContext();
         // DEV_LOG && console.log('exportPDFAsync', context, folder, filename, pages.length, options);
         return generatePDFASync(folder, filename, options, (e) => {
             if (/could not create file/.test(e.toString())) {
