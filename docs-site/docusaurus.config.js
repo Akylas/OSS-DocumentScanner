@@ -10,8 +10,8 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'OSS Document Scanner & CardWallet',
-  tagline: 'Open Source Apps for Document Scanning and Card Management',
+  title: 'OSS Document Scanner - Best Free PDF Scanner App',
+  tagline: 'Free, open source document scanner and card wallet apps for Android & iOS. No ads, 100% privacy.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -31,6 +31,24 @@ const config = {
   markdown: {
     format: 'mdx',
   },
+
+  // SEO metadata
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'keywords',
+        content: 'document scanner, pdf scanner, free document scanner app, best document scanner android, best document scanner ios, open source scanner, ocr app, scan to pdf, mobile scanner, cardwallet, loyalty card app, barcode scanner',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'author',
+        content: 'Akylas',
+      },
+    },
+  ],
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you

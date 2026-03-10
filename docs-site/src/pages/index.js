@@ -165,21 +165,46 @@ function CommonFeatures() {
   );
 }
 
+function DonationBanner() {
+  return (
+    <section className={styles.donationBanner}>
+      <div className="container">
+        <div className={styles.donationContent}>
+          <div className={styles.donationText}>
+            <Heading as="h2">❤️ Love These Apps? Support Development!</Heading>
+            <p>
+              These apps are 100% free, open source, and ad-free. Your donation directly supports 
+              continued development, new features, and bug fixes.
+            </p>
+          </div>
+          <div className={styles.donationButtons}>
+            <a 
+              href="https://github.com/sponsors/farfromrefug" 
+              className="button button--primary button--lg"
+            >
+              💝 Sponsor on GitHub
+            </a>
+            <a 
+              href="https://www.paypal.com/paypalme/nicoschmidt" 
+              className="button button--secondary button--lg"
+            >
+              💳 Donate via PayPal
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SupportSection() {
   return (
     <section className={styles.supportSection}>
       <div className="container text--center">
-        <Heading as="h2">Support the Project</Heading>
+        <Heading as="h2">Our Sponsors</Heading>
         <p>
-          Enjoying these apps? Please consider making a small donation to help fund development.
-          Building open source apps takes significant time and effort.
+          Thank you to all our generous sponsors who help keep this project alive!
         </p>
-        <a 
-          href="https://github.com/sponsors/farfromrefug" 
-          className="button button--secondary button--lg"
-        >
-          ❤️ Sponsor on GitHub
-        </a>
         <div className={styles.sponsors}>
           <img 
             src="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg" 
@@ -187,6 +212,12 @@ function SupportSection() {
             className={styles.sponsorsImage}
           />
         </div>
+        <a 
+          href="https://github.com/sponsors/farfromrefug" 
+          className="button button--outline button--primary button--lg margin-top--md"
+        >
+          Become a Sponsor →
+        </a>
       </div>
     </section>
   );
@@ -239,10 +270,11 @@ function ContributeSection() {
 export default function Home() {
   return (
     <Layout
-      title="Home"
-      description="Documentation for OSS Document Scanner and OSS CardWallet - Open Source Apps for Android and iOS">
+      title="Best Free Document Scanner App - Open Source PDF Scanner"
+      description="OSS Document Scanner - The best free, open source document scanner app for Android and iOS. Scan documents to PDF, auto edge detection, OCR, cloud sync. No ads, 100% privacy.">
       <HomepageHeader />
       <main>
+        <DonationBanner />
         <AppShowcase />
         <CommonFeatures />
         <ContributeSection />

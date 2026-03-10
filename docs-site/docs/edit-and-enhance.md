@@ -187,18 +187,6 @@ Separate a multi-page document:
 3. Tap **Split** in the menu
 4. New document is created with selected pages
 
-## Source Code Reference
-
-Editing functionality is implemented in:
-
-| Feature | Location |
-|---------|----------|
-| Edit UI Components | `app/components/edit/` |
-| Image Processing | `opencv/` and `cpp/src/` |
-| Filters/Transforms | `plugin-nativeprocessor/` |
-| OCR Service | `app/services/ocr.ts` |
-| Document Service | `app/services/documents.ts` |
-
 ## Best Practices
 
 ### For Text Documents

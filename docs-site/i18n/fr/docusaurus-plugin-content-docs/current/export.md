@@ -198,17 +198,6 @@ Export direct vers les services cloud (lorsque configurés) :
 
 Voir [Synchronisation et Sauvegarde](/sync-and-backup) pour les instructions de configuration.
 
-## Référence du Code Source
-
-La fonctionnalité d'exportation est implémentée dans :
-
-| Fonctionnalité | Emplacement |
-|----------------|-------------|
-| Génération PDF | `app/services/pdf/` |
-| Interface Export | `app/components/` |
-| Service Documents | `app/services/documents.ts` |
-| Intégration Partage | Spécifique à la plateforme dans `app/` |
-
 ## Dépannage
 
 ### PDF trop gros

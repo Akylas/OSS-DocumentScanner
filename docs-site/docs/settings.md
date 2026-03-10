@@ -241,20 +241,6 @@ View list of third party libraries used in the app.
 <!-- Translation key: review_application -->
 Leave a review on the app store (Play Store builds only).
 
-## Source Code Reference
-
-Settings implementation can be found at:
-
-| Feature | Location |
-|---------|----------|
-| Main Settings UI | `app/components/settings/Settings.svelte` (main settings component with all categories) |
-| OCR Settings | `app/components/ocr/OCRSettingsBottomSheet.svelte` |
-| Security Service | `app/services/security.ts` |
-| Documents Service | `app/services/documents.ts` |
-| Translation Files | `app/i18n/*.json` |
-| Constants | `app/utils/constants.ts` |
-| Quick Settings (Android) | `app/android/quicktoggle.android.ts` |
-
 ## Translation Key Reference
 
 All settings use translation keys from `app/i18n/en.json`. When contributing to documentation, reference these keys to ensure accuracy:

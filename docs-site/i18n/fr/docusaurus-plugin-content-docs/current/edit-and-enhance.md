@@ -187,18 +187,6 @@ Séparez un document multi-pages :
 3. Appuyez sur **Diviser** dans le menu
 4. Un nouveau document est créé avec les pages sélectionnées
 
-## Référence du Code Source
-
-La fonctionnalité d'édition est implémentée dans :
-
-| Fonctionnalité | Emplacement |
-|----------------|-------------|
-| Composants UI d'Édition | `app/components/edit/` |
-| Traitement d'Images | `opencv/` et `cpp/src/` |
-| Filtres/Transformations | `plugin-nativeprocessor/` |
-| Service OCR | `app/services/ocr.ts` |
-| Service Documents | `app/services/documents.ts` |
-
 ## Bonnes Pratiques
 
 ### Pour les Documents Textuels

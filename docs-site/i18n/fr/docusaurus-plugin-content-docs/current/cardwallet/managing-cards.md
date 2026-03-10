@@ -165,17 +165,6 @@ Pour les cartes contenant des informations sensibles :
 - Ne stockez pas de codes PIN ou mots de passe dans les notes
 - Soyez prudent lors du partage
 
-## Référence du Code Source
-
-La gestion des cartes est implémentée dans :
-
-| Fonctionnalité | Emplacement |
-|----------------|-------------|
-| Interface Liste de Cartes | `app/components/list/CardsList.svelte` |
-| Cellule de Carte | `app/components/list/CardListCell.svelte` |
-| Service QR Code | `app/services/qrcode.ts` |
-| Stockage | `app/services/documents.ts` |
-
 ## Astuces et Conseils
 
 ### Organiser par Couleur

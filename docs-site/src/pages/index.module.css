@@ -151,6 +151,64 @@
   margin-top: 1.5rem;
 }
 
+/* Donation Banner - Prominent CTA */
+.donationBanner {
+  padding: 3rem 0;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: white;
+}
+
+.donationContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.donationText {
+  flex: 1;
+  min-width: 300px;
+}
+
+.donationText h2 {
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.donationText p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.donationButtons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.donationButtons .button--primary {
+  background: white;
+  color: #ee5a5a;
+  border-color: white;
+}
+
+.donationButtons .button--primary:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: #ee5a5a;
+}
+
+.donationButtons .button--secondary {
+  background: transparent;
+  color: white;
+  border-color: white;
+}
+
+.donationButtons .button--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Screenshot (legacy) */
 .screenshot {
   padding: 2rem 0;

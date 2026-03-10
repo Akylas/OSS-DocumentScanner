@@ -111,21 +111,6 @@ Choisissez la résolution de capture selon vos besoins :
 - **Mise au Point Auto** : Appuyez pour faire la mise au point sur des zones spécifiques
 - **Continue** : L'appareil photo ajuste continuellement la mise au point
 
-## Référence du Code Source
-
-La fonctionnalité de capture est implémentée dans :
-
-| Composant | Emplacement |
-|-----------|-------------|
-| Interface Caméra | `app/components/camera/` |
-| Détection des Bords | `opencv/` et `cpp/src/` |
-| Plugin Caméra Natif | `plugin-nativeprocessor/` |
-| Traitement des Documents | `app/services/documents.ts` |
-
-:::info Traitement Natif
-La détection des bords et le traitement d'images utilisent OpenCV via des liaisons natives. Voir `plugin-nativeprocessor/` pour le plugin NativeScript qui fait le pont entre JavaScript et le code natif.
-:::
-
 ## Dépannage
 
 ### Bords du document non détectés

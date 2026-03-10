@@ -198,17 +198,6 @@ Direct export to cloud services (when configured):
 
 See [Sync and Backup](/sync-and-backup) for setup instructions.
 
-## Source Code Reference
-
-Export functionality is implemented in:
-
-| Feature | Location |
-|---------|----------|
-| PDF Generation | `app/services/pdf/` |
-| Export UI | `app/components/` |
-| Document Service | `app/services/documents.ts` |
-| Share Integration | Platform-specific in `app/` |
-
 ## Troubleshooting
 
 ### PDF too large

@@ -183,17 +183,6 @@ Les sauvegardes contiennent :
 - Synchronisation uniquement vers les serveurs que vous configurez
 - Tout le traitement se fait sur l'appareil
 
-## Référence du Code Source
-
-La fonctionnalité de synchronisation est implémentée dans :
-
-| Fonctionnalité | Emplacement |
-|----------------|-------------|
-| Service de Synchronisation | `app/services/sync/` |
-| Client WebDAV | `app/webdav/` |
-| Logique de Sauvegarde | `app/services/` |
-| Interface Synchronisation | `app/components/settings/` |
-
 ## Dépannage
 
 ### Échec de Connexion

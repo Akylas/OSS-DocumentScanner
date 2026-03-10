@@ -241,20 +241,6 @@ Voir la liste des bibliothèques tierces utilisées dans l'application.
 <!-- Clé de traduction : review_application -->
 Laisser un avis sur l'app store (versions Play Store uniquement).
 
-## Référence du Code Source
-
-L'implémentation des paramètres se trouve à :
-
-| Fonctionnalité | Emplacement |
-|----------------|-------------|
-| Interface Principale des Paramètres | `app/components/settings/Settings.svelte` (composant principal avec toutes les catégories) |
-| Paramètres OCR | `app/components/ocr/OCRSettingsBottomSheet.svelte` |
-| Service de Sécurité | `app/services/security.ts` |
-| Service Documents | `app/services/documents.ts` |
-| Fichiers de Traduction | `app/i18n/*.json` |
-| Constantes | `app/utils/constants.ts` |
-| Paramètres Rapides (Android) | `app/android/quicktoggle.android.ts` |
-
 ## Référence des Clés de Traduction
 
 Tous les paramètres utilisent des clés de traduction de `app/i18n/en.json`. Lors de la contribution à la documentation, référencez ces clés pour assurer la précision :

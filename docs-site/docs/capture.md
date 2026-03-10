@@ -111,21 +111,6 @@ Choose capture resolution based on your needs:
 - **Auto Focus**: Tap to focus on specific areas
 - **Continuous**: Camera continuously adjusts focus
 
-## Source Code Reference
-
-The capture functionality is implemented in:
-
-| Component | Location |
-|-----------|----------|
-| Camera UI | `app/components/camera/` |
-| Edge Detection | `opencv/` and `cpp/src/` |
-| Native Camera Plugin | `plugin-nativeprocessor/` |
-| Document Processing | `app/services/documents.ts` |
-
-:::info Native Processing
-The edge detection and image processing use OpenCV through native bindings. See `plugin-nativeprocessor/` for the NativeScript plugin that bridges JavaScript to native code.
-:::
-
 ## Troubleshooting
 
 ### Document edges not detected

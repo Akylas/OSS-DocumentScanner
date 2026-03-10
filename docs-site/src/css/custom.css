@@ -34,11 +34,42 @@
   background: linear-gradient(135deg, var(--ifm-color-primary-darker) 0%, var(--ifm-color-primary) 100%);
 }
 
-/* Screenshot styling */
-img[alt*="Screen"] {
+/* Screenshot styling - constrain size for mobile screenshots */
+img[alt*="Screen"],
+img[alt*="screenshot"],
+img[alt*="Screenshot"],
+.markdown img {
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   margin: 1rem 0;
+  max-width: 300px;
+  height: auto;
+}
+
+/* Feature graphics can be larger */
+img[alt*="feature"],
+img[alt*="Feature"] {
+  max-width: 100%;
+}
+
+/* Screenshot gallery - side by side on desktop */
+.screenshot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.screenshot-row img {
+  max-width: 280px;
+}
+
+@media (max-width: 768px) {
+  .markdown img,
+  img[alt*="Screen"],
+  img[alt*="screenshot"] {
+    max-width: 100%;
+  }
 }
 
 /* Table improvements */

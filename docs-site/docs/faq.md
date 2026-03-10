@@ -38,7 +38,6 @@ Both apps share common features like cloud sync, backup, and privacy-first desig
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/Akylas/OSS-DocumentScanner/issues)
 - **This Documentation**: Browse guides and tutorials
-- **Source Code**: Review the [open source code](https://github.com/Akylas/OSS-DocumentScanner)
 
 ### How can I contribute?
 

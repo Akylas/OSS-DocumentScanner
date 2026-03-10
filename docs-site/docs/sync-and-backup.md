@@ -183,17 +183,6 @@ Backups contain:
 - Sync only to servers you configure
 - All processing happens on-device
 
-## Source Code Reference
-
-Sync functionality is implemented in:
-
-| Feature | Location |
-|---------|----------|
-| Sync Service | `app/services/sync/` |
-| WebDAV Client | `app/webdav/` |
-| Backup Logic | `app/services/` |
-| Sync UI | `app/components/settings/` |
-
 ## Troubleshooting
 
 ### Connection Failed

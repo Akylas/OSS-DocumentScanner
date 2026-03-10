@@ -165,17 +165,6 @@ For cards containing sensitive information:
 - Don't store PINs or passwords in notes
 - Be cautious when sharing
 
-## Source Code Reference
-
-Card management is implemented in:
-
-| Feature | Location |
-|---------|----------|
-| Card List UI | `app/components/list/CardsList.svelte` |
-| Card Cell | `app/components/list/CardListCell.svelte` |
-| QR Code Service | `app/services/qrcode.ts` |
-| Storage | `app/services/documents.ts` |
-
 ## Tips and Tricks
 
 ### Organize by Color

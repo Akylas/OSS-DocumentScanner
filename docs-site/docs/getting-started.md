@@ -54,24 +54,6 @@ On first launch, the app will request the following permissions:
 - **Storage**: Required for saving scanned documents
 - **Location** (optional): For geotagging documents
 
-## Source Code Reference
-
-OSS Document Scanner is fully open source. Here's where to find key functionality:
-
-| Feature | Location |
-|---------|----------|
-| UI Components | `app/components/` |
-| Camera/Capture | `app/components/camera/` |
-| Document Services | `app/services/documents.ts` |
-| Image Processing | `opencv/` and `cpp/src/` |
-| Native Processing Plugin | `plugin-nativeprocessor/` |
-| OCR Service | `app/services/ocr.ts` |
-| Sync Services | `app/services/sync/` |
-
-:::tip
-Use GitHub's search functionality to find specific features: press <kbd>T</kbd> on the repository page to quickly search for files.
-:::
-
 ## Next Steps
 
 - Learn about [Capture modes and options](/capture)
