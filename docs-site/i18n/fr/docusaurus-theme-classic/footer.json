@@ -1,0 +1,74 @@
+{
+  "link.title.Document Scanner": {
+    "message": "Scanner de Documents",
+    "description": "The title of the footer links column with title=Document Scanner in the footer"
+  },
+  "link.title.CardWallet": {
+    "message": "Portefeuille de Cartes",
+    "description": "The title of the footer links column with title=CardWallet in the footer"
+  },
+  "link.title.Community": {
+    "message": "Communauté",
+    "description": "The title of the footer links column with title=Community in the footer"
+  },
+  "link.title.Download": {
+    "message": "Télécharger",
+    "description": "The title of the footer links column with title=Download in the footer"
+  },
+  "link.item.label.Getting Started": {
+    "message": "Premiers Pas",
+    "description": "The label of footer link with label=Getting Started linking to /cardwallet/getting-started"
+  },
+  "link.item.label.Capture": {
+    "message": "Capture",
+    "description": "The label of footer link with label=Capture linking to /capture"
+  },
+  "link.item.label.Export": {
+    "message": "Exporter",
+    "description": "The label of footer link with label=Export linking to /export"
+  },
+  "link.item.label.Scanning Cards": {
+    "message": "Scanner des Cartes",
+    "description": "The label of footer link with label=Scanning Cards linking to /cardwallet/scanning-cards"
+  },
+  "link.item.label.Managing Cards": {
+    "message": "Gérer les Cartes",
+    "description": "The label of footer link with label=Managing Cards linking to /cardwallet/managing-cards"
+  },
+  "link.item.label.GitHub Issues": {
+    "message": "Signaler un Problème (GitHub)",
+    "description": "The label of footer link with label=GitHub Issues linking to https://github.com/Akylas/OSS-DocumentScanner/issues"
+  },
+  "link.item.label.Weblate Translations": {
+    "message": "Traductions Weblate",
+    "description": "The label of footer link with label=Weblate Translations linking to https://hosted.weblate.org/engage/oss-document-scanner/"
+  },
+  "link.item.label.Sponsor": {
+    "message": "Sponsor",
+    "description": "The label of footer link with label=Sponsor linking to https://github.com/sponsors/farfromrefug"
+  },
+  "link.item.label.GitHub Releases": {
+    "message": "Versions GitHub",
+    "description": "The label of footer link with label=GitHub Releases linking to https://github.com/Akylas/OSS-DocumentScanner/releases"
+  },
+  "link.item.label.Google Play (Scanner)": {
+    "message": "Google Play (Scanner)",
+    "description": "The label of footer link with label=Google Play (Scanner) linking to https://play.google.com/store/apps/details?id=com.akylas.documentscanner"
+  },
+  "link.item.label.Google Play (CardWallet)": {
+    "message": "Google Play (Portefeuille)",
+    "description": "The label of footer link with label=Google Play (CardWallet) linking to https://play.google.com/store/apps/details?id=com.akylas.cardwallet"
+  },
+  "link.item.label.App Store (Scanner)": {
+    "message": "App Store (Scanner)",
+    "description": "The label of footer link with label=App Store (Scanner) linking to https://apps.apple.com/us/app/oss-document-scanner/id6472918564"
+  },
+  "link.item.label.App Store (CardWallet)": {
+    "message": "App Store (Portefeuille)",
+    "description": "The label of footer link with label=App Store (CardWallet) linking to https://apps.apple.com/app/oss-cardwallet/id6504414362"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 OSS Document Scanner & CardWallet. Créé avec Docusaurus.",
+    "description": "The footer copyright"
+  }
+}

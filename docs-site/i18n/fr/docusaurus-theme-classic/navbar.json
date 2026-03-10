@@ -1,0 +1,54 @@
+{
+  "title": {
+    "message": "Applications OSS",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Logo Applications OSS",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Document Scanner": {
+    "message": "Scanner de Documents",
+    "description": "Navbar item with label Document Scanner"
+  },
+  "item.label.CardWallet": {
+    "message": "Portefeuille de Cartes",
+    "description": "Navbar item with label CardWallet"
+  },
+  "item.label.Sync & Backup": {
+    "message": "Synchronisation et Sauvegarde",
+    "description": "Navbar item with label Sync & Backup"
+  },
+  "item.label.Settings": {
+    "message": "Paramètres",
+    "description": "Navbar item with label Settings"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  },
+  "item.label.Getting Started": {
+    "message": "Premiers Pas",
+    "description": "Navbar item with label Getting Started"
+  },
+  "item.label.Capture": {
+    "message": "Capture",
+    "description": "Navbar item with label Capture"
+  },
+  "item.label.Edit & Enhance": {
+    "message": "Édition et Amélioration",
+    "description": "Navbar item with label Edit & Enhance"
+  },
+  "item.label.Export": {
+    "message": "Exporter",
+    "description": "Navbar item with label Export"
+  },
+  "item.label.Scanning Cards": {
+    "message": "Scanner des Cartes",
+    "description": "Navbar item with label Scanning Cards"
+  },
+  "item.label.Managing Cards": {
+    "message": "Gérer les Cartes",
+    "description": "Navbar item with label Managing Cards"
+  }
+}
