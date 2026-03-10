@@ -1,0 +1,17 @@
+appId: com.akylas.cardwallet
+---
+# Card Wallet - Main Screen Screenshot
+# This flow captures the main card list screen
+
+- launchApp
+- waitForAnimationToEnd
+
+# Wait for the app to fully load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Take screenshot of main screen
+- takeScreenshot: screenshot_card_wallet_main
+
+# Optional: Ensure we're on the main screen
+- assertVisible: "Cards"
