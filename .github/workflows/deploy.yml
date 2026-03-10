@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - 'docs-site/**'
+      - 'fastlane/metadata/*/android/en-US/images/**'
+      - '*.png'
+      - '*.svg'
   workflow_dispatch:
 
 permissions:

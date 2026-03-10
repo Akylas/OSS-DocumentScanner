@@ -63,6 +63,8 @@ docs-site/
 │   ├── README.md
 │   ├── flows/               # Reusable navigation flows
 │   └── screenshots/         # Individual screenshot flows
+├── scripts/
+│   └── copy-assets.sh       # Copies images from root/fastlane at build time
 ├── src/
 │   ├── css/
 │   │   └── custom.css      # Custom styles
@@ -71,15 +73,52 @@ docs-site/
 │       └── index.module.css
 ├── static/
 │   └── img/                # Images and screenshots
+│       ├── apps/           # Feature graphics (copied from fastlane)
+│       ├── badges/         # Store badges (copied from root)
+│       ├── icons/          # App icons (copied from root)
+│       ├── screenshots/    # Phone screenshots (copied from fastlane)
 │       ├── capture-1.png   # Placeholder - replace with Maestro screenshots
 │       ├── edit-1.png
 │       ├── export-1.png
 │       ├── sync-1.png
 │       ├── settings-1.png
 │       └── logo.svg
+├── i18n/                    # Internationalization files
+│   └── fr/                  # French translations
 ├── docusaurus.config.js    # Docusaurus configuration
 ├── sidebars.js             # Sidebar configuration
 └── package.json
+```
+
+## Asset Management
+
+Images are **NOT** duplicated in this directory. Instead, the `scripts/copy-assets.sh` script copies images from the main repository during build:
+
+- **Feature graphics** from `fastlane/metadata/*/android/en-US/images/featureGraphic.png`
+- **App icons** from root level (`icon.png`, `icon_cardwallet.png`, etc.)
+- **Store badges** from root level (`badge_github.png`, `appstore.png`)
+- **Phone screenshots** from `fastlane/metadata/*/android/en-US/images/phoneScreenshots/`
+
+### How it works
+
+The `npm run build` and `npm run start` commands automatically run `copy-assets.sh` first:
+
+```json
+{
+  "scripts": {
+    "copy-assets": "bash scripts/copy-assets.sh",
+    "start": "npm run copy-assets && docusaurus start",
+    "build": "npm run copy-assets && docusaurus build"
+  }
+}
+```
+
+### Manual asset copy
+
+If needed, you can run the script manually:
+
+```bash
+npm run copy-assets
 ```
 
 ## Generating Screenshots with Maestro
