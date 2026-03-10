@@ -1287,10 +1287,10 @@
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
             {#if !onlyForImport}
                 {#if folder}
-                    <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
+                    <mdbutton class="actionBarButton" testID="settingsBtn" text="mdi-palette" variant="text" on:tap={setFolderColor} />
                 {:else}
                     <mdbutton class="actionBarButton" text="mdi-view-dashboard" variant="text" on:tap={showViewOptions} />
-                    <mdbutton class="actionBarButton" accessibilityValue="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
+                    <mdbutton class="actionBarButton" testID="settingsBtn" text="mdi-cogs" variant="text" on:tap={() => showSettings()} />
                 {/if}
             {/if}
             <ActionBarSearch bind:this={search} slot="center" {refresh} bind:visible={showSearch} />
