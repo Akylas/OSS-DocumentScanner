@@ -22,6 +22,7 @@ const sidebars = {
         'cardwallet/getting-started',
         'cardwallet/scanning-cards',
         'cardwallet/managing-cards',
+        'cardwallet/passbook',
       ],
     },
     {
