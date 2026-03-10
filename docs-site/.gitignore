@@ -13,6 +13,7 @@
 /static/img/badges/
 /static/img/icons/
 /static/img/screenshots/
+/static/img/apps/
 
 # Misc
 .DS_Store
