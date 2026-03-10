@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "copy-assets": "bash scripts/copy-assets.sh",
+    "copy-assets": "sh scripts/copy-assets.sh",
     "start": "npm run copy-assets && docusaurus start",
     "build": "npm run copy-assets && docusaurus build",
     "swizzle": "docusaurus swizzle",

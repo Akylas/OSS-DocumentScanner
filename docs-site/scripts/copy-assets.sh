@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copy assets from root level and fastlane to static/img for Docusaurus build
 # This avoids duplicating images in the docs-site folder
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get script directory (POSIX compatible)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DOCS_DIR="$(dirname "$SCRIPT_DIR")"
 ROOT_DIR="$(dirname "$DOCS_DIR")"
 STATIC_IMG="$DOCS_DIR/static/img"
@@ -19,14 +20,14 @@ mkdir -p "$STATIC_IMG/screenshots/cardwallet"
 
 # Copy badges from root level
 echo "Copying badges..."
-cp "$ROOT_DIR/badge_github.png" "$STATIC_IMG/badges/" 2>/dev/null || true
+cp "$ROOT_DIR/badge_github.png" "$STATIC_IMG/badges/badge_github.png" 2>/dev/null || true
 
 # Copy app icons from root level
 echo "Copying icons..."
 cp "$ROOT_DIR/icon.png" "$STATIC_IMG/icons/documentscanner-icon.png" 2>/dev/null || true
 cp "$ROOT_DIR/icon_cardwallet.png" "$STATIC_IMG/icons/cardwallet-icon.png" 2>/dev/null || true
-cp "$ROOT_DIR/documentscanner-icon.svg" "$STATIC_IMG/icons/" 2>/dev/null || true
-cp "$ROOT_DIR/cardwallet-icon.svg" "$STATIC_IMG/icons/" 2>/dev/null || true
+cp "$ROOT_DIR/documentscanner-icon.svg" "$STATIC_IMG/icons/documentscanner-icon.svg" 2>/dev/null || true
+cp "$ROOT_DIR/cardwallet-icon.svg" "$STATIC_IMG/icons/cardwallet-icon.svg" 2>/dev/null || true
 
 # Copy feature graphics from fastlane
 echo "Copying feature graphics..."
@@ -44,7 +45,7 @@ fi
 
 # Copy App Store badges
 echo "Copying store badges..."
-cp "$ROOT_DIR/appstore.png" "$STATIC_IMG/badges/" 2>/dev/null || true
-cp "$ROOT_DIR/appstore_cardwallet.png" "$STATIC_IMG/badges/" 2>/dev/null || true
+cp "$ROOT_DIR/appstore.png" "$STATIC_IMG/badges/appstore.png" 2>/dev/null || true
+cp "$ROOT_DIR/appstore_cardwallet.png" "$STATIC_IMG/badges/appstore_cardwallet.png" 2>/dev/null || true
 
 echo "Asset copy complete!"
