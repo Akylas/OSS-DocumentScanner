@@ -257,7 +257,6 @@
         }
     }
 
-
     let inEditMode = false;
     function switchEditMode() {
         inEditMode = !inEditMode;
@@ -679,7 +678,7 @@
             DEV_LOG && console.log('on add option', option);
             if (option) {
                 switch (option.id) {
-                    case 'import':
+                    case 'files':
                         await importAndScanImage({ document, importPDFs: true, canGoToView: false });
                         break;
                     case 'import_image':
@@ -793,7 +792,11 @@
 
         <stacklayout bind:this={fabHolder} class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={1}>
             {#if __IOS__}
-                <mdbutton class="small-fab" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importPages(false), 500)} />
+                <mdbutton
+                    class="small-fab"
+                    text="mdi-image-plus-outline"
+                    verticalAlignment="center"
+                    on:tap={throttle(() => importAndScanImage({ document, importPDFs: false, canGoToView: false, forceGalleryPick: true }), 500)} />
             {/if}
             <mdbutton class={$hasCamera ? 'small-fab' : 'fab'} text="mdi-file-document-plus-outline" verticalAlignment="center" on:tap={throttle(() => onAddButton(), 500)} />
             {#if $hasCamera}
