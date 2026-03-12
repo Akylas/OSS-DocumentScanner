@@ -467,5 +467,6 @@
   "sync_channel_desc": "Notifications for document synchronization progress",
   "syncing_documents": "Syncing documents",
   "syncing": "Syncing: %1$s",
-  "notification_permission_needed": "notification permission is neded for sync services"
+  "notification_permission_needed": "notification permission is neded for sync services",
+  "select_documents_to_import": "select documents to import pages from"
 }
