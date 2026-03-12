@@ -165,7 +165,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     sendImageEvent(event: DocumentPagesAddedEventData) {
         DEV_LOG && console.log('Sync', 'sendImageEvent');
         // only used for image sync
-        this.syncDocumentsInternal({ event, type: SyncType.IMAGE, fromEvent: event.eventName });
+        this.syncDocumentsInternal({ event, type: SyncType.IMAGE | SyncType.PDF, fromEvent: event.eventName });
     }
     sendDataEvent(event: FolderUpdatedEventData) {
         if (event.fromWorker !== true) {
