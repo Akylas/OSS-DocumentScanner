@@ -257,10 +257,20 @@
         }
     }
 
+
+    let inEditMode = false;
+    function switchEditMode() {
+        inEditMode = !inEditMode;
+        collectionView?.nativeElement?.refreshVisibleItems();
+    }
     let longPressTimer: NodeJS.Timeout;
     let currentLongPressItem: Item;
     let dragStarted = false;
     function onItemLongPress(item: Item, event?) {
+        if (inEditMode) {
+            startDragging(item, event);
+            return;
+        }
         // DEV_LOG && console.log('onItemLongPress', event.state);
         if (dragStarted) {
             return;
@@ -309,6 +319,17 @@
             currentLongPressItem = null;
         }
     }
+    async function onTouch(item: Item, event?) {
+        if (!inEditMode) {
+            return;
+        }
+        switch (event.action) {
+            case 'down': {
+                startDragging(item, event);
+                break;
+            }
+        }
+    }
     async function onItemTap(item: Item, event?) {
         try {
             if (nbSelected > 0) {
@@ -355,7 +376,9 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (nbSelected > 0) {
+            if (inEditMode) {
+                switchEditMode();
+            } else if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
@@ -582,6 +605,7 @@
         const options = new ObservableArray([
             { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
             { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+            { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
             { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
             { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
             { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -609,6 +633,10 @@
                         break;
                     case 'delete':
                         await deleteDoc();
+                        break;
+                    case 'reorder':
+                        unselectAll();
+                        switchEditMode();
                         break;
                 }
             }
@@ -735,9 +763,9 @@
                     rippleColor={colorSurface}
                     rows={`*,${40 * $fontScale}`}
                     on:tap={(e) => onItemTap(item, e)}
+                    on:touch={(e) => onTouch(item, e)}
                     on:pan={(e) => onPan(item, e)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
-                    >/
+                    on:longPress={(e) => onItemLongPress(item, e)}>
                     <RotableImageView
                         id="imageView"
                         borderRadius={12}
@@ -748,7 +776,12 @@
                         stretch="aspectFit"
                         verticalAlignment="center" />
                     <canvaslabel color={colorOnSurfaceVariant} fontSize={14 * $fontScale} padding="10 0 0 0" row={1}>
-                        <cspan text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`} textAlignment="left" verticalAlignment="bottom" />
+                        <cspan fontFamily={$fonts.mdi} fontSize={24} text="mdi-reorder-horizontal" visibility={inEditMode ? 'visible' : 'hidden'} />
+                        <cspan
+                            paddingLeft={inEditMode ? 30 : 0}
+                            text={`${item.page.width} x ${item.page.height}\n${filesize(item.page.size, { output: 'string' })}`}
+                            textAlignment="left"
+                            verticalAlignment="bottom" />
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={36} text={dayjs(item.doc.createdDate).format('L LT')} /> -->
                         <!-- <cspan color={colorOnSurfaceVariant} fontSize={12} paddingTop={50} text={lc('nb_pages', item.doc.pages.length)} /> -->
                     </canvaslabel>
@@ -768,10 +801,10 @@
             {/if}
         </stacklayout>
         <CActionBar
-            forceCanGoBack={nbSelected > 0}
-            onGoBack={nbSelected ? unselectAll : null}
+            forceCanGoBack={inEditMode || nbSelected > 0}
+            onGoBack={nbSelected ? unselectAll : inEditMode ? switchEditMode : null}
             onTitleTap={() => (editingTitle = true)}
-            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ padding: 0 }}>
             {#if !nbSelected}
                 <mdbutton class="actionBarButton" text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />

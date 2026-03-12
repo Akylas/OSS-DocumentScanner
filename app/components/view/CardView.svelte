@@ -74,7 +74,7 @@
         showSnack,
         transformPages
     } from '~/utils/ui';
-    import { colors, fontScale, hasCamera, isLandscape, onFontScaleChanged, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, hasCamera, isLandscape, onFontScaleChanged, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import EditNameActionBar from '~/components/common/EditNameActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
@@ -373,7 +373,13 @@
     function unselectAll() {
         if (items) {
             nbSelected = 0;
-            items.splice(0, items.length, ...items.map((i) => ({ page: i.page, selected: false, index: i.index })));
+            items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: false })));
+        }
+    }
+    function selectAll() {
+        if (items) {
+            items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: true })));
+            nbSelected = items.length;
         }
     }
     function toggleSelection(item: Item) {
@@ -383,10 +389,22 @@
             selectItem(item);
         }
     }
+    let inEditMode = false;
+    function switchEditMode() {
+        inEditMode = !inEditMode;
+        collectionView?.nativeElement?.refreshVisibleItems();
+    }
     let longPressTimer: NodeJS.Timeout;
     let currentLongPressItem: Item;
     let dragStarted = false;
     function onItemLongPress(item: Item, event?) {
+        if (inEditMode) {
+            startDragging(item, event);
+            return;
+        }
+        if (dragStarted) {
+            return;
+        }
         if (nbSelected > 0) {
             toggleSelection(item);
             return;
@@ -428,6 +446,17 @@
             }
             dragStarted = false;
             currentLongPressItem = null;
+        }
+    }
+    async function onTouch(item: Item, event?) {
+        if (!inEditMode) {
+            return;
+        }
+        switch (event.action) {
+            case 'down': {
+                startDragging(item, event);
+                break;
+            }
         }
     }
     async function onItemTap(item: Item) {
@@ -474,7 +503,9 @@
     const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
         onBackButton(page?.nativeView, () => {
             data.cancel = true;
-            if (nbSelected > 0) {
+            if (inEditMode) {
+                switchEditMode();
+            } else if (nbSelected > 0) {
                 unselectAll();
             } else {
                 onGoBack();
@@ -762,6 +793,8 @@
             // Filter options based on PKPass document
             const allOptions = [
                 { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
+                { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
+                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
                 { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
                 { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
                 { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
@@ -779,6 +812,9 @@
                         case 'rename':
                             editingTitle = true;
                             break;
+                        case 'select_all':
+                            selectAll();
+                            break;
                         case 'ocr':
                             await detectOCR({ documents: [document] });
                             unselectAll();
@@ -789,6 +825,10 @@
                             break;
                         case 'delete':
                             await deleteDoc();
+                            break;
+                        case 'reorder':
+                            unselectAll();
+                            switchEditMode();
                             break;
                     }
                 }
@@ -1213,6 +1253,7 @@
                         })}
                         rippleColor={colorSurface}
                         on:tap={() => onItemTap(item)}
+                        on:touch={(e) => onTouch(item, e)}
                         on:longPress={(e) => onItemLongPress(item, e)}
                         on:pan={(e) => onPan(item, e)}>
                         <RotableImageView
@@ -1237,6 +1278,7 @@
                             verticalTextAlignment="center"
                             visibility={item.page.imagePath ? 'hidden' : 'visible'} />
                         <SelectedIndicator rowSpan={2} selected={item.selected} />
+                        <label fontFamily={$fonts.mdi} fontSize={24} padding={10} text="mdi-reorder-horizontal" verticalAlignment="bottom" visibility={inEditMode ? 'visible' : 'hidden'} />
                         <PageIndicator horizontalAlignment="right" margin={2} rowSpan={2} scale={$fontScale} text={index + 1} />
                     </gridlayout>
                 </Template>
@@ -1355,11 +1397,11 @@
             backgroundColor={topBackgroundColor}
             buttonsDefaultVisualState={statusBarStyle}
             colSpan={2}
-            forceCanGoBack={nbSelected > 0}
+            forceCanGoBack={inEditMode || nbSelected > 0}
             labelsDefaultVisualState={statusBarStyle}
-            onGoBack={nbSelected ? unselectAll : null}
+            onGoBack={nbSelected ? unselectAll : inEditMode ? switchEditMode : null}
             onTitleTap={() => (editingTitle = true)}
-            title={nbSelected ? lc('selected', nbSelected) : document.name}
+            title={inEditMode ? lc('reorder_pages') : nbSelected ? lc('selected', nbSelected) : document.name}
             titleProps={{ padding: 0, color: statusBarStyle === 'dark' ? 'white' : 'black' }}>
             <!-- {#if editing}
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
