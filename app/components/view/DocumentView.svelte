@@ -261,6 +261,10 @@
     let currentLongPressItem: Item;
     let dragStarted = false;
     function onItemLongPress(item: Item, event?) {
+        // DEV_LOG && console.log('onItemLongPress', event.state);
+        if (dragStarted) {
+            return;
+        }
         if (nbSelected > 0) {
             toggleSelection(item);
             return;
@@ -278,9 +282,10 @@
                 toggleSelection(item);
             }
             currentLongPressItem = null;
-        }, 400);
+        }, 200);
     }
     async function onPan(item: Item, event) {
+        // DEV_LOG && console.log('onPan', dragStarted, event.state);
         if (!currentLongPressItem) {
             return;
         }
@@ -499,6 +504,7 @@
     // onThemeChanged(refreshCollectionView);
 
     async function onItemReordered(e) {
+        dragStarted = false;
         const view = (e.view as ContentView).content;
         view.animate({ duration: 100, opacity: 1, scale: { x: 1, y: 1 } });
         try {
@@ -717,11 +723,13 @@
                     borderRadius={12}
                     borderWidth={0}
                     longPressGestureOptions={(view, tag, rootTag) => ({
-                        simultaneousHandlers: [rootTag, view['PAN_HANDLER_TAG']]
+                        simultaneousHandlers: [rootTag, view['PAN_HANDLER_TAG']],
+                        minDurationMs: 300
                     })}
                     margin={8}
                     padding={10}
                     panGestureOptions={(view, tag, rootTag) => ({
+                        simultaneousHandlers: [rootTag, view['LONGPRESS_HANDLER_TAG']],
                         minDist: 20
                     })}
                     rippleColor={colorSurface}

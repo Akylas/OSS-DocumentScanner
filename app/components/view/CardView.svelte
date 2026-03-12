@@ -404,7 +404,7 @@
                 toggleSelection(item);
             }
             currentLongPressItem = null;
-        }, 400);
+        }, 200);
     }
     async function onPan(item: Item, event) {
         if (!currentLongPressItem) {
@@ -1203,10 +1203,12 @@
                         backgroundColor={getItemBackgroundColor(item)}
                         elevation={isEInk ? 0 : 6}
                         longPressGestureOptions={(view, tag, rootTag) => ({
-                            simultaneousHandlers: [rootTag, view['PAN_HANDLER_TAG']]
+                            simultaneousHandlers: [rootTag, view['PAN_HANDLER_TAG']],
+                            minDurationMs: 300
                         })}
                         margin={12}
                         panGestureOptions={(view, tag, rootTag) => ({
+                            simultaneousHandlers: [rootTag, view['LONGPRESS_HANDLER_TAG']],
                             minDist: 20
                         })}
                         rippleColor={colorSurface}
