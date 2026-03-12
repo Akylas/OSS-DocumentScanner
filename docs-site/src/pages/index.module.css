@@ -85,7 +85,6 @@
 }
 
 .storeButton img {
-  height: 40px;
   width: auto;
 }
 
@@ -105,13 +104,18 @@
 /* Support Section */
 .supportSection {
   padding: 4rem 0;
-  background: linear-gradient(135deg, var(--ifm-color-primary-darker), var(--ifm-color-primary));
+  background: var(--ifm-color-primary-lightest);
   color: white;
 }
 
 .supportSection h2,
 .supportSection p {
   color: white;
+}
+
+.supportSection a {
+  color: white;
+  border-color: white;
 }
 
 .sponsors {
