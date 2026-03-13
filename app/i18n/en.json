@@ -361,6 +361,7 @@
   "remote_folder": "remote folder",
   "remote_folder_desc": "remote folder to sync the data from and to",
   "rename": "rename",
+  "reorder_pages": "reorder pages",
   "reset": "reset",
   "restart": "restart",
   "restart_app": "restart the app",
@@ -466,5 +467,6 @@
   "sync_channel_desc": "Notifications for document synchronization progress",
   "syncing_documents": "Syncing documents",
   "syncing": "Syncing: %1$s",
-  "notification_permission_needed": "notification permission is neded for sync services"
+  "notification_permission_needed": "notification permission is neded for sync services",
+  "select_documents_to_import": "select documents to import pages from"
 }
