@@ -1,0 +1,190 @@
+# Setup Test Document
+# This flow creates a test document by importing an image if no documents exist
+# Must be run after pushing test-document.png to the device
+#
+# Prerequisites:
+# - Push test image to device first:
+#   adb push docs-site/maestro/test-document.png /sdcard/DCIM/test-document.png
+#
+# Usage: 
+#   maestro test docs-site/maestro/flows/setup-test-document.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Check if we need to create a document
+# If the "no document" empty state is visible, we need to import
+- runFlow:
+    when:
+      visible:
+        text: ".*[Nn]o document.*"
+    commands:
+      # Tap the FAB or add button to start import
+      - runFlow:
+          when:
+            visible:
+              id: ".*fab.*"
+          commands:
+            - tapOn:
+                id: ".*fab.*"
+            - waitForAnimationToEnd
+
+      - runFlow:
+          when:
+            visible:
+              id: ".*add.*"
+          commands:
+            - tapOn:
+                id: ".*add.*"
+            - waitForAnimationToEnd
+
+      # Look for import from gallery/image option
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ii]mport.*"
+          commands:
+            - tapOn:
+                text: ".*[Ii]mport.*"
+            - waitForAnimationToEnd:
+                timeout: 3000
+
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Gg]allery.*"
+          commands:
+            - tapOn:
+                text: ".*[Gg]allery.*"
+            - waitForAnimationToEnd:
+                timeout: 3000
+
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ii]mage.*"
+          commands:
+            - tapOn:
+                text: ".*[Ii]mage.*"
+            - waitForAnimationToEnd:
+                timeout: 3000
+
+      # Handle Android photo picker - look for test image
+      - runFlow:
+          when:
+            visible:
+              text: ".*test-document.*"
+          commands:
+            - tapOn:
+                text: ".*test-document.*"
+            - waitForAnimationToEnd:
+                timeout: 3000
+
+      # If we see a file browser, tap on DCIM folder
+      - runFlow:
+          when:
+            visible:
+              text: ".*DCIM.*"
+          commands:
+            - tapOn:
+                text: ".*DCIM.*"
+            - waitForAnimationToEnd:
+                timeout: 2000
+
+      # Select any visible image
+      - runFlow:
+          when:
+            visible:
+              id: ".*image.*"
+          commands:
+            - tapOn:
+                id: ".*image.*"
+                index: 0
+            - waitForAnimationToEnd:
+                timeout: 3000
+
+      # Alternative: tap on thumbnail
+      - runFlow:
+          when:
+            visible:
+              id: ".*thumb.*"
+          commands:
+            - tapOn:
+                id: ".*thumb.*"
+                index: 0
+            - waitForAnimationToEnd:
+                timeout: 3000
+
+      # Handle crop confirmation dialog
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Oo][Kk].*"
+          commands:
+            - tapOn:
+                text: ".*[Oo][Kk].*"
+            - waitForAnimationToEnd
+
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Cc]onfirm.*"
+          commands:
+            - tapOn:
+                text: ".*[Cc]onfirm.*"
+            - waitForAnimationToEnd
+
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Dd]one.*"
+          commands:
+            - tapOn:
+                text: ".*[Dd]one.*"
+            - waitForAnimationToEnd
+
+      - runFlow:
+          when:
+            visible:
+              text: ".*[Ss]ave.*"
+          commands:
+            - tapOn:
+                text: ".*[Ss]ave.*"
+            - waitForAnimationToEnd
+
+      # Handle checkmark button (common save/confirm icon)
+      - runFlow:
+          when:
+            visible: "✓"
+          commands:
+            - tapOn: "✓"
+            - waitForAnimationToEnd
+
+      - runFlow:
+          when:
+            visible:
+              id: ".*check.*"
+          commands:
+            - tapOn:
+                id: ".*check.*"
+            - waitForAnimationToEnd
+
+      # Wait for document to be created
+      - waitForAnimationToEnd:
+          timeout: 5000
+
+# Alternative: if we already have documents, the flow will just continue
+- runFlow:
+    when:
+      notVisible:
+        text: ".*[Nn]o document.*"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000

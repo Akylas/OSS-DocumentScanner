@@ -1,0 +1,62 @@
+# Sync Screenshot  
+# Run: maestro test docs-site/maestro/screenshots/sync-screenshot.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Navigate to settings first
+- swipe:
+    direction: RIGHT
+    duration: 300
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]ettings.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]ettings.*"
+      - waitForAnimationToEnd
+
+# Scroll to find sync options
+- scroll
+
+# Look for sync/backup option
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]ync.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]ync.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*[Bb]ackup.*"
+    commands:
+      - tapOn:
+          text: ".*[Bb]ackup.*"
+      - waitForAnimationToEnd
+
+- runFlow:
+    when:
+      visible:
+        text: ".*WebDAV.*"
+    commands:
+      - tapOn:
+          text: ".*WebDAV.*"
+      - waitForAnimationToEnd
+
+# Take screenshot
+- takeScreenshot: ../../static/img/sync-1

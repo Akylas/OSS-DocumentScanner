@@ -38,6 +38,7 @@
     let onItemLongPress: (item: Item, event?) => Promise<void>;
     let onItemTap: (item: Item) => Promise<void>;
     let importDocument: (importPDFs?: boolean) => Promise<void>;
+    let importImages: () => Promise<void>;
     let refreshCollectionView: () => void;
 
     $: condensed = viewStyle === 'condensed';
@@ -79,19 +80,13 @@
                         id: 'import',
                         name: lc('import_from_file'),
                         icon: 'mdi-file-document-plus-outline'
+                    },
+                    {
+                        id: 'import_image',
+                        name: lc('import_from_image'),
+                        icon: 'mdi-image-plus-outline'
                     }
                 ])
-                .concat(
-                    __IOS__
-                        ? [
-                              {
-                                  id: 'import_image',
-                                  name: lc('import_from_image'),
-                                  icon: 'mdi-image-plus-outline'
-                              }
-                          ]
-                        : []
-                )
                 .concat([
                     {
                         id: 'create',
@@ -121,7 +116,7 @@
                         await importDocument();
                         break;
                     case 'import_image':
-                        await importDocument(false);
+                        await importImages();
                         break;
                     case 'create':
                         const CreateCard = (await import('~/components/widgets/CreateCard.svelte')).default;
@@ -293,6 +288,7 @@
     bind:syncEnabled
     bind:folder
     bind:importDocument
+    bind:importImages
     bind:refreshCollectionView
     bind:getSyncColors
     bind:documents

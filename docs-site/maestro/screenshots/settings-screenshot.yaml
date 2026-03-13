@@ -1,0 +1,42 @@
+# Settings Screenshot
+# Run: maestro test docs-site/maestro/screenshots/settings-screenshot.yaml
+
+appId: com.akylas.documentscanner
+
+---
+
+- launchApp:
+    clearState: false
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Navigate to settings - try multiple approaches
+
+# Approach 1: Look for menu icon (hamburger or three dots)
+- runFlow:
+    when:
+      visible: "⋮"
+    commands:
+      - tapOn: "⋮"
+      - waitForAnimationToEnd
+
+# Approach 2: Try swipe to open drawer
+- swipe:
+    direction: RIGHT
+    duration: 300
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Look for Settings option
+- runFlow:
+    when:
+      visible:
+        text: ".*[Ss]ettings.*"
+    commands:
+      - tapOn:
+          text: ".*[Ss]ettings.*"
+      - waitForAnimationToEnd
+
+# Take screenshot
+- takeScreenshot: ../../static/img/settings-1
