@@ -17,6 +17,12 @@ This repository is now the home of 2 apps
 [![Small translation badge](https://hosted.weblate.org/widgets/oss-document-scanner/-/svg-badge.svg)](https://hosted.weblate.org/engage/oss-document-scanner/?utm_source=widget)
 </div>
 
+## 📚 Documentation
+
+For detailed information about the apps, features, and usage guides, visit our documentation website:
+
+🌐 **[https://akylas.github.io/OSS-DocumentScanner/](https://akylas.github.io/OSS-DocumentScanner/)**
+
  ## Installation
 
 <!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.machiav3lli.backup/) -->

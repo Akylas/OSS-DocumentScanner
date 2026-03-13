@@ -1,0 +1,26 @@
+appId: com.akylas.cardwallet
+---
+# Card Wallet - Camera View Screenshot
+# This flow captures the camera scanning screen for cards
+
+- launchApp
+- waitForAnimationToEnd
+
+# Wait for the app to load
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap the camera button to open camera
+- tapOn: 
+    id: ".*camera.*"
+    timeout: 5000
+
+# Wait for camera to initialize
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Take screenshot of camera view
+- takeScreenshot: screenshot_card_wallet_camera
+
+# Go back to main screen
+- back
