@@ -9,30 +9,132 @@ slug: /cardwallet/scanning-cards
 
 OSS CardWallet makes it easy to digitize your physical cards by scanning their barcodes.
 
-## Scanning a Barcode
+![Capture Screen](/img/screenshots/cardwallet/1_en-US.png)
 
-### Using the Camera
+
+## Using the Camera
 
 1. Tap the **+** button to add a new card
-2. Select **Scan Barcode**
-3. Point your camera at the barcode
-4. The app will automatically detect and scan the barcode
-5. Review the detected information and add card details
+2. Select **Add From Camera**
 
-### Tips for Better Scanning
+### Barcode
 
-- **Good lighting**: Ensure adequate lighting on the barcode
-- **Steady hands**: Hold your device steady while scanning
-- **Clean barcode**: Make sure the barcode isn't damaged or obscured
-- **Correct distance**: Hold your device 4-6 inches from the barcode
-- **Avoid glare**: Tilt the card to avoid reflections on laminated cards
+Barcodes will be directly detected with the card itself
+
+### Auto Capture
+
+The default capture mode uses intelligent edge detection to automatically capture documents when:
+
+- The document is properly positioned within the viewfinder
+- All four edges are detected
+- The image is stable (no motion blur)
+
+**How to enable Auto Capture:**
+
+The first time you open the capture screen you'll be prompted to enable or disable Auto Capture.
+After that you can enable or disable it by long pressing the capture button
+
+**How to use Auto Capture:**
+
+1. Hold your device steady above the document
+2. Wait for the green frame to appear around the document edges
+3. The app will automatically capture when conditions are optimal
+
+### Manual Capture
+
+For situations where auto-capture doesn't work well (glossy surfaces, low contrast) you can simply use the capture button
+
+## Batch Scanning
+
+Batch scanning allows you to scan multiple pages into a single document:
+
+1. Enable batch scanning with the button left of the capture button
+2. Start capturing pages as normal
+3. Each captured page is added to the current batch
+4. Review all pages in the batch preview
+5. Tap **Done** when finished to create the document
+
+## Auto Edge Detection
+
+The app uses advanced computer vision (OpenCV) to detect document edges:
+
+### How It Works
+
+1. The camera feed is analyzed in real-time
+2. Contours are detected in the image
+3. Quadrilateral shapes are identified as potential documents
+4. The largest valid quadrilateral is selected as the document boundary
+
+### Tips for Better Detection
+
+- **Good lighting**: Ensure even lighting without harsh shadows
+- **Contrast**: Place documents on contrasting backgrounds
+- **Flat surface**: Keep documents flat to avoid warped edges
+- **Clean lens**: Wipe your camera lens for clear captures
+
+### Manual Adjustment
+
+If auto-detection doesn't perfectly identify edges:
+
+1. After capture, the edge adjustment screen appears
+2. Drag the corner handles to adjust the document boundaries
+3. Drag edge midpoints for fine adjustments
+4. Tap **Done** to apply the selection
+
+![Edge Adjustment](/img/edit-1.png)
+
+## Camera Settings
+
+Access camera settings by tapping the **gear icon** in the capture view:
+
+### Resolution (android)
+
+On android you can select the camera resolution based on your needs.
+
+### Flash Control
+
+- **Auto**: Flash fires when needed in low light
+- **On**: Flash always fires
+- **Off**: Flash disabled
+
+### Torch mode
+
+You can use this to enable torch mode instead of Flash Control
+
+### Focus Mode
+
+- **Auto Focus**: Tap to focus on specific areas
+- **Continuous**: Camera continuously adjusts focus
+
+## Transformations
+
+There you can select default brightness, contrast, fitlers... to apply to scanned documents
+
+### Document edges not detected
+
+- Ensure good lighting conditions
+- Use a contrasting background
+- Try manual capture mode
+- Clean your camera lens
+
+### Blurry captures
+
+- Hold the device steady
+- Wait for auto-focus to complete
+- Ensure adequate lighting
+- Try manual focus by tapping the screen
+
+### Auto-capture too sensitive/slow
+
+- Adjust auto-capture sensitivity in settings
+- Switch to manual capture for difficult documents
 
 ## Manual Entry
 
 If scanning doesn't work, you can enter barcode data manually:
 
 1. Tap the **+** button
-2. Select **Manual Entry**
+2. Select **Create**
 3. Choose the barcode format
 4. Enter the barcode number
 5. Add card details and save
@@ -66,35 +168,6 @@ If scanning doesn't work, you can enter barcode data manually:
 You can also scan barcodes from existing images:
 
 1. Tap the **+** button
-2. Select **Import from Gallery**
-3. Choose an image containing a barcode
-4. The app will detect and extract the barcode
-
-## Batch Scanning
-
-To add multiple cards quickly:
-
-1. Enable **Batch Mode** in scan settings
-2. Scan each card in succession
-3. The app will queue cards for you to add details later
-4. Review and save each card when done
-
-## Troubleshooting
-
-### Barcode Not Detected
-
-- Ensure the barcode is fully visible in the frame
-- Try moving closer or further from the barcode
-- Improve lighting conditions
-- Check if the barcode format is supported
-
-### Wrong Barcode Format Detected
-
-- Manually select the correct format in settings
-- Use manual entry to specify the exact format
-
-### Blurry Camera
-
-- Clean your camera lens
-- Ensure adequate lighting
-- Hold the device steady
+2. Select **Import from Image** or **Import from File**
+3. Choose an image/file
+4. The app will detect and extract the card and any barcode

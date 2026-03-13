@@ -9,7 +9,7 @@ slug: /capture
 
 OSS Document Scanner offre des capacités de capture puissantes avec détection automatique des bords, plusieurs modes de capture et support de numérisation par lots.
 
-![Écran de Capture](/img/capture-1.png)
+![Capture Screen](/img/screenshots/documentscanner/1_en-US.png)
 
 ## Modes de Capture
 

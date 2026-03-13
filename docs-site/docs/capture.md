@@ -9,7 +9,7 @@ slug: /capture
 
 OSS Document Scanner provides powerful capture capabilities with automatic edge detection, multiple capture modes, and batch scanning support.
 
-![Capture Screen](/img/capture-1.png)
+![Capture Screen](/img/screenshots/documentscanner/1_en-US.png)
 
 ## Capture Modes
 
@@ -21,6 +21,11 @@ The default capture mode uses intelligent edge detection to automatically captur
 - All four edges are detected
 - The image is stable (no motion blur)
 
+**How to enable Auto Capture:**
+
+The first time you open the capture screen you'll be prompted to enable or disable Auto Capture.
+After that you can enable or disable it by long pressing the capture button
+
 **How to use Auto Capture:**
 
 1. Hold your device steady above the document
@@ -29,35 +34,17 @@ The default capture mode uses intelligent edge detection to automatically captur
 
 ### Manual Capture
 
-For situations where auto-capture doesn't work well (glossy surfaces, low contrast):
-
-1. Tap the **Manual** button in the capture toolbar
-2. Frame your document in the viewfinder
-3. Tap the **shutter button** to capture
-
-### Continuous Capture
-
-Perfect for scanning multiple pages in quick succession:
-
-1. Enable **Continuous Mode** from the capture settings
-2. The app will capture pages one after another
-3. A brief pause between captures allows you to flip pages
+For situations where auto-capture doesn't work well (glossy surfaces, low contrast) you can simply use the capture button
 
 ## Batch Scanning
 
 Batch scanning allows you to scan multiple pages into a single document:
 
-1. Start capturing pages as normal
-2. Each captured page is added to the current batch
-3. Review all pages in the batch preview
-4. Tap **Done** when finished to create the document
-
-### Managing Batch Pages
-
-- **Reorder**: Drag and drop pages to rearrange
-- **Delete**: Swipe to remove unwanted pages
-- **Re-scan**: Tap a page to recapture it
-- **Add**: Continue scanning to add more pages
+1. Enable batch scanning with the button left of the capture button
+2. Start capturing pages as normal
+3. Each captured page is added to the current batch
+4. Review all pages in the batch preview
+5. Tap **Done** when finished to create the document
 
 ## Auto Edge Detection
 
@@ -84,7 +71,7 @@ If auto-detection doesn't perfectly identify edges:
 1. After capture, the edge adjustment screen appears
 2. Drag the corner handles to adjust the document boundaries
 3. Drag edge midpoints for fine adjustments
-4. Tap **Crop** to apply the selection
+4. Tap **Done** to apply the selection
 
 ![Edge Adjustment](/img/edit-1.png)
 
@@ -92,13 +79,9 @@ If auto-detection doesn't perfectly identify edges:
 
 Access camera settings by tapping the **gear icon** in the capture view:
 
-### Resolution
+### Resolution (android)
 
-Choose capture resolution based on your needs:
-
-- **Standard**: Faster processing, smaller file sizes
-- **High**: Good balance of quality and performance
-- **Maximum**: Best quality, larger files, slower processing
+On android you can select the camera resolution based on your needs.
 
 ### Flash Control
 
@@ -106,12 +89,18 @@ Choose capture resolution based on your needs:
 - **On**: Flash always fires
 - **Off**: Flash disabled
 
+### Torch mode
+
+You can use this to enable torch mode instead of Flash Control
+
 ### Focus Mode
 
 - **Auto Focus**: Tap to focus on specific areas
 - **Continuous**: Camera continuously adjusts focus
 
-## Troubleshooting
+## Transformations
+
+There you can select default brightness, contrast, fitlers... to apply to scanned documents
 
 ### Document edges not detected
 

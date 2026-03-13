@@ -77,11 +77,6 @@ docs-site/
 │       ├── badges/         # Store badges (copied from root)
 │       ├── icons/          # App icons (copied from root)
 │       ├── screenshots/    # Phone screenshots (copied from fastlane)
-│       ├── capture-1.png   # Placeholder - replace with Maestro screenshots
-│       ├── edit-1.png
-│       ├── export-1.png
-│       ├── sync-1.png
-│       ├── settings-1.png
 │       └── logo.svg
 ├── i18n/                    # Internationalization files
 │   └── fr/                  # French translations
