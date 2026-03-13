@@ -664,18 +664,7 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
     {
         std::string transform = transformArray[i];
         std::vector<std::string> options = split(transform, "_");
-        if (transform.starts_with("whitepaper"))
-        {
-            if (options.size() > 1)
-            {
-                whiteboardEnhance(srcMat, srcMat, options[1]);
-            }
-            else
-            {
-                whiteboardEnhance(srcMat, srcMat, "");
-            }
-        }
-        else if (transform.starts_with("whitepaper2"))
+        if (transform.starts_with("whitepaper2"))
         {
             if (options.size() > 1)
             {
@@ -684,6 +673,17 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
             else
             {
                 whiteboardEnhance2(srcMat, srcMat, "");
+            }
+        }
+        else if (transform.starts_with("whitepaper"))
+        {
+            if (options.size() > 1)
+            {
+                whiteboardEnhance(srcMat, srcMat, options[1]);
+            }
+            else
+            {
+                whiteboardEnhance(srcMat, srcMat, "");
             }
         }
         else if (transform.starts_with("enhance"))

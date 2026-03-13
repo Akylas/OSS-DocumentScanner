@@ -2,7 +2,7 @@
 #include "./include/WhitePaperTransform2.h"
 #include <jsoncons/json.hpp>
 
-void dog(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sigma2)
+void dog2(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sigma2)
 {
     // Use OpenCV's optimized Gaussian blur for much better performance
     // This is significantly faster than custom kernel computation
@@ -262,7 +262,7 @@ void whiteboardEnhance2(const cv::Mat &img, cv::Mat &res, const std::string &opt
     }
 //    auto t_start = std::chrono::high_resolution_clock::now();
     // Difference of Gaussian (DoG)
-    dog(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time (now optimized)
+    dog2(img, res, options.dogKSize, options.dogSigma1, options.dogSigma2); // 81% time (now optimized)
 //    LOGD("WhitePaperTransform dog %d ms", (duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count()));
     // Negative of image
     negateImage2(res, res); //0.3% time
