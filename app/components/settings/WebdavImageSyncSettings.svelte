@@ -65,18 +65,6 @@
             });
         }
     }
-    // function updateDirectoryName(folderPath: string) {
-    //     let exportDirectoryName = folderPath;
-    //     if (__ANDROID__ && folderPath.startsWith(ANDROID_CONTENT)) {
-    //         const context = Utils.android.getApplicationContext();
-    //         const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(folderPath));
-    //         exportDirectoryName = com.nativescript.documentpicker.FilePath.getPath(Utils.android.getApplicationContext(), outdocument.getUri());
-    //     }
-    //     return exportDirectoryName
-    //         .split(SEPARATOR)
-    //         .filter((s) => s.length)
-    //         .pop();
-    // }
 
     const items = new ObservableArray([
         {

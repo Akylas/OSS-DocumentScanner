@@ -53,7 +53,7 @@ export class BackupWorkerService extends BaseWorkerHandler<BackupWorker> {
     async createBackup(): Promise<string> {
         const folders = await pickFolder({
             multipleSelection: false,
-            permissions: { write: true, persistable: true, read: true },
+            permissions: { write: true, persistable: false, read: true },
             forceSAF: true
         });
         if (folders.folders?.[0]) {

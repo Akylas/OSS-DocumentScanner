@@ -145,9 +145,7 @@
     }
     function getLabelParams(layout, item: Item, height, itemHeight) {
         const page = item.doc.pages[0];
-        if (page.imagePath) {
-            return {};
-        }
+        const hasImage = page.imagePath;
         const colorArg = page?.extra?.color ?? page.colors?.[1] ?? (typeof item.doc.extra?.color === 'string' ? item.doc.extra?.color : undefined) ?? colorOnPrimary;
         const color = new Color(colorArg);
         const result = {
@@ -156,7 +154,7 @@
         switch (layout) {
             case 'cardholder':
                 Object.assign(result, {
-                    verticalTextAlignment: 'bottom',
+                    verticalTextAlignment: 'top',
                     marginBottom: height - itemHeight - 10,
                     maxFontSize: 40,
                     maxLines: 2
@@ -173,17 +171,24 @@
                 break;
             case 'columns':
                 Object.assign(result, {
-                    verticalTextAlignment: 'center',
-                    textAlignment: 'center',
-                    maxFontSize: 35,
+                    verticalTextAlignment: hasImage ? 'top' : 'center',
+                    textAlignment: hasImage ? 'left' : 'center',
+                    padding: hasImage ? 6 : 16,
+
+                    maxFontSize: hasImage ? 20 : 35,
+                    minFontSize: hasImage ? 10 : 20,
+                    fontSize: hasImage ? 20 : 30,
                     maxLines: 3
                 });
                 break;
             case 'list':
                 Object.assign(result, {
-                    verticalTextAlignment: 'center',
-                    maxFontSize: 40,
-                    textAlignment: 'center',
+                    verticalTextAlignment: hasImage ? 'top' : 'center',
+                    padding: hasImage ? 10 : 16,
+                    maxFontSize: hasImage ? 20 : 40,
+                    minFontSize: hasImage ? 10 : 20,
+                    fontSize: hasImage ? 20 : 30,
+                    textAlignment: hasImage ? 'left' : 'center',
                     maxLines: 3
                 });
                 break;
@@ -244,9 +249,12 @@
     function itemHasImage(item: Item) {
         return !!item.doc.pages[0].imagePath;
     }
+    function itemHasDefaultName(item: Item) {
+        return !item.doc.name || item.doc.name.match(/\d+:\d+:\d+/);
+    }
 </script>
 
-<swipemenu
+<!-- <swipemenu
     id="swipeMenu"
     {height}
     openAnimationDuration={100}
@@ -256,7 +264,8 @@
     width="100%"
     {...$$restProps}
     on:start={(e) => onFullCardItemTouch(item, { action: 'down' })}
-    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}>
+    on:close={(e) => onFullCardItemTouch(item, { action: 'up' })}> -->
+<gridlayout {height} width="100%" {...$$restProps}>
     <gridlayout id="cardItemTemplate" class="cardItemTemplate" prop:mainContent {...getItemHolderParams(layout, item, $nbColumns)} on:tap on:longPress>
         {#if pkPassCell}
             <PKPassCardCell {item} {itemWidth} {layout} pkpass={item.doc.pages[0]?.pkpass} />
@@ -272,8 +281,7 @@
                 minFontSize={20}
                 padding={16}
                 text={item.doc.name}
-                textWrap={false}
-                visibility={itemHasImage(item) ? 'hidden' : 'visible'}
+                visibility={itemHasDefaultName(item) ? 'hidden' : 'visible'}
                 {...getLabelParams(layout, item, height, itemHeight)} />
         {/if}
         <!-- <gridlayout borderRadius={12}> -->
@@ -281,5 +289,6 @@
         <SyncIndicator {syncColors} verticalAlignment="top" visible={syncEnabled} />
         <!-- </gridlayout> -->
     </gridlayout>
-    <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
-</swipemenu>
+    <!-- <mdbutton prop:rightDrawer class="mdi" fontSize={40} height={60} text="mdi-fullscreen" variant="text" verticalAlignment="center" width={60} on:tap={() => showImages(item)} />
+</swipemenu> -->
+</gridlayout>

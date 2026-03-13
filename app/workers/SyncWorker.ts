@@ -17,7 +17,7 @@ import { type WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sy
 import { WebdavImageSyncService } from '~/services/sync/WebdavImageSyncService';
 import { WebdavPDFSyncService } from '~/services/sync/WebdavPDFSyncService';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/services/sync/types';
-import { SyncNotificationManager } from '~/workers/SyncNotificationManager.android';
+import { SyncNotificationManager } from '~/workers/SyncNotificationManager';
 import {
     DOCUMENT_DATA_FILENAME,
     EVENT_DOCUMENT_ADDED,

@@ -1,5 +1,6 @@
 #include <DocumentDetector.h>
 #include <WhitePaperTransform.h>
+#include <WhitePaperTransform2.h>
 #include <ColorSimplificationTransform.h>
 #include <Utils.h>
 #include <jsoncons/json.hpp>
@@ -736,6 +737,17 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
             else
             {
                 whiteboardEnhance(srcMat, srcMat, "");
+            }
+        }
+        else if (transform.starts_with("whitepaper2"))
+        {
+            if (options.size() > 1)
+            {
+                whiteboardEnhance2(srcMat, srcMat, options[1]);
+            }
+            else
+            {
+                whiteboardEnhance2(srcMat, srcMat, "");
             }
         }
         else if (transform.starts_with("enhance"))

@@ -4,6 +4,7 @@
         "java.util:LinkedList",
         "androidx.core.content.pm:ShortcutManagerCompat",
         "androidx.core.content.pm:ShortcutInfoCompat",
-        "androidx.core.content.pm:ShortcutInfoCompat.Builder"
+        "androidx.core.content.pm:ShortcutInfoCompat.Builder",
+        "androidx.core.graphics.drawable:IconCompat"
     ]
 }

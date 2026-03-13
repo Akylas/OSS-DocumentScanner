@@ -14,6 +14,7 @@
 #include <DocumentDetector.h>
 #include <ColorSimplificationTransform.h>
 #include <WhitePaperTransform.h>
+#include <WhitePaperTransform2.h>
 
 #include <Utils.h>
 #include <stack>
@@ -173,6 +174,7 @@ int useChannel = 0;                                                             
 int contoursApproxEpsilonFactor = docDetector.options.contoursApproxEpsilonFactor * 1000; // 53
 
 int whitepaper = 0;
+int whitepaper2 = 0;
 int enhance = 0;
 int enhanceAfter = 0;
 int process1 = 0;
@@ -381,6 +383,12 @@ void updateImage()
             encode_json(whitepaperOptions, s, jsoncons::indenting::no_indent);
             detector::DocumentDetector::applyTransforms(warped, "whitepaper_" + s);
         }
+        if (whitepaper2 == 1)
+        {
+            string s;
+            encode_json(whitepaperOptions, s, jsoncons::indenting::no_indent);
+            detector::DocumentDetector::applyTransforms(warped, "whitepaper2_" + s);
+        }
         if (enhance == 1)
         {
             detector::DocumentDetector::applyTransforms(warped, "enhance");
@@ -574,6 +582,7 @@ int main(int argc, char **argv)
 
     // Whitepaper
     createTrackbar("whitepaper:", "WarpedOptions", &whitepaper, 1, on_trackbar);
+    createTrackbar("whitepaper2:", "WarpedOptions", &whitepaper2, 1, on_trackbar);
     createTrackbar("dogSigma1:", "WarpedOptions", &whitepaperOptions.dogSigma1, 200, on_trackbar);
     createTrackbar("dogSigma2:", "WarpedOptions", &whitepaperOptions.dogSigma2, 100, on_trackbar);
     createTrackbar("dogKSize:", "WarpedOptions", &whitepaperOptions.dogKSize, 100, on_trackbar);

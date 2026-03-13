@@ -35,7 +35,7 @@ export abstract class BasePDFSyncService extends BaseSyncService {
     abstract writePDF(document: OCRDocument, name: string, docFolder?: DocFolder): Promise<any>;
 
     getPDFName(document: OCRDocument) {
-        DEV_LOG && console.log('getPDFName', this.useDocumentName, this.fileNameFormat);
+        // DEV_LOG && console.log('getPDFName', this.useDocumentName, this.fileNameFormat);
         return getFileNameForDocument(document, this.useDocumentName, document.createdDate, this.fileNameFormat);
     }
 }

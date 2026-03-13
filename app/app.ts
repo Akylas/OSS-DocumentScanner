@@ -123,8 +123,11 @@ try {
     if (__DEV__) {
         // Trace.addCategories(CollectionViewTraceCategory);
         // Trace.addCategories(ImageViewTraceCategory);
-        // Trace.addCategories(ImageViewTraceCategory);
         Trace.enable();
+    }
+    if (__DEV__ && __IOS__) {
+        RocketSim.loadRocketSimConnect();
+        DEV_LOG && console.log('loadRocketSimConnect');
     }
 
     let launched = false;

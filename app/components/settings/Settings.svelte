@@ -198,25 +198,26 @@
                             : ([] as any)
                     )
                     .concat(
-                        securityService.biometricsAvailable
-                            ? [
-                                  {
-                                      type: 'switch',
-                                      id: 'biometric_lock',
-                                      title: lc('biometric_lock'),
-                                      description: lc('biometric_lock_desc'),
-                                      value: securityService.biometricEnabled
-                                  },
-                                  {
-                                      type: 'switch',
-                                      id: 'biometric_auto_lock',
-                                      title: lc('biometric_auto_lock'),
-                                      description: lc('biometric_auto_lock_desc'),
-                                      enabled: securityService.biometricEnabled,
-                                      value: securityService.biometricEnabled && securityService.autoLockEnabled
-                                  }
-                              ]
-                            : []
+                        // securityService.biometricsAvailable
+                        [
+                            {
+                                type: 'switch',
+                                id: 'biometric_lock',
+                                title: lc('biometric_lock'),
+                                description: lc('biometric_lock_desc'),
+                                enabled: securityService.biometricsAvailable,
+                                value: securityService.biometricEnabled
+                            },
+                            {
+                                type: 'switch',
+                                id: 'biometric_auto_lock',
+                                title: lc('biometric_auto_lock'),
+                                description: lc('biometric_auto_lock_desc'),
+                                enabled: securityService.biometricsAvailable,
+                                value: securityService.biometricEnabled && securityService.autoLockEnabled
+                            }
+                        ]
+                        // : []
                     );
             case 'document_detection':
                 return [
@@ -995,10 +996,12 @@
             if (item.type === 'checkbox' || item.type === 'switch') {
                 // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
                 const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
-                clearCheckboxTimer();
-                checkboxTapTimer = setTimeout(() => {
-                    checkboxView.checked = !checkboxView.checked;
-                }, 10);
+                if (checkboxView.isEnabled) {
+                    clearCheckboxTimer();
+                    checkboxTapTimer = setTimeout(() => {
+                        checkboxView.checked = !checkboxView.checked;
+                    }, 10);
+                }
                 return;
             }
             switch (item.id) {
@@ -1576,27 +1579,42 @@
                 <label class="sectionHeader" text={item.title} />
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} marginTop={16} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
+                <ListItemAutoSize enabled={item.enabled} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <switch
+                        id="checkbox"
+                        checked={item.value}
+                        col={1}
+                        isEnabled={item.enabled !== false}
+                        marginLeft={10}
+                        marginTop={16}
+                        verticalAlignment="center"
+                        on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
+                <ListItemAutoSize enabled={item.enabled} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                    <checkbox id="checkbox" checked={item.value} col={1} isEnabled={item.enabled !== false} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="rightIcon" let:item>
-                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize enabled={item.enabled} rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
                     <IconButton col={1} text={item.rightBtnIcon} on:tap={(event) => onRightIconTap(item, event)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="leftIcon" let:item>
-                <ListItemAutoSize columns="auto,*,auto" mainCol={1} rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <ListItemAutoSize
+                    columns="auto,*,auto"
+                    enabled={item.enabled}
+                    mainCol={1}
+                    rightValue={item.rightValue}
+                    subtitle={getDescription(item)}
+                    title={getTitle(item)}
+                    on:tap={(event) => onTap(item, event)}>
                     <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
-                <ListItemAutoSize rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
+                <ListItemAutoSize enabled={item.enabled} rightValue={item.rightValue} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
             </Template>
 
             <Template key="ocr_settings" let:item>

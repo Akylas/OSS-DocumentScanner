@@ -9,7 +9,7 @@
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AndroidActivityBackPressedEventData, Application, Frame, ObservableArray, Page, PageTransition, SharedTransition, View } from '@nativescript/core';
-    import { debounce } from '@nativescript/core/utils';
+    import { debounce, throttle } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import { goBack, showModal } from '@shared/utils/svelte/ui';
     import { OCRData, QRCodeData, Quad, getImageSize } from 'plugin-nativeprocessor';
@@ -438,16 +438,25 @@
             showError(error);
         }
     }
+
+    const saveBrightnessContrast = debounce(
+        (brightness: number, contrast: number) => {
+            document.updatePage(currentIndex, {
+                brightness,
+                contrast
+            });
+        },
+        500,
+        { leading: false }
+    );
     async function applyBrightnessContrast(brightness: number, contrast: number) {
         try {
             const current = items.getItem(currentIndex);
             current.colorMatrix = null;
             current.brightness = brightness;
             current.contrast = contrast;
-            document.updatePage(currentIndex, {
-                brightness,
-                contrast
-            });
+            items.setItem(currentIndex, current);
+            saveBrightnessContrast(brightness, contrast);
         } catch (error) {
             showError(error);
         }
@@ -727,13 +736,7 @@
         <pager bind:this={pager} {items} row={1} selectedIndex={startPageIndex} transformers="zoomOut" on:selectedIndexChange={onSelectedIndex}>
             <Template let:item>
                 <gridlayout width="100%">
-                    <RotableImageView
-                        id="imageView"
-                        backgroundColor={currentItem?.extra?.color}
-                        {item}
-                        sharedTransitionTag={`document_${document.id}_${item.id}`}
-                        zoomable={true}
-                        on:rotated={(e) => onImageRotated(item, e)} />
+                    <RotableImageView id="imageView" {item} sharedTransitionTag={`document_${document.id}_${item.id}`} zoomable={true} on:rotated={(e) => onImageRotated(item, e)} />
                 </gridlayout>
             </Template>
         </pager>

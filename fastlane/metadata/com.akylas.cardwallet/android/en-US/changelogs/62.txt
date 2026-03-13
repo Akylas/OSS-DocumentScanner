@@ -1,0 +1,6 @@
+Bug fixes:
+- biometric check not showing on start
+- READ_PHONE_STATE added again...
+- android icon fix
+- error while creating card
+- show document name when not 'default'

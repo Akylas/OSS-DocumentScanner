@@ -30,7 +30,7 @@ export class SyncNotificationManager {
 
     public showSyncStarted(): void {
         this.notificationBuilder = new androidx.core.app.NotificationCompat.Builder(this.context, SyncNotificationManager.CHANNEL_ID)
-            .setSmallIcon(Utils.android.resources.getDrawableId('stat_sync_animated'))
+            .setSmallIcon(17301628 /* Utils.android.resources.getDrawableId('stat_sync_animated') */)
             .setContentTitle(lc('syncing_documents'))
             .setContentText(lc('syncing_documents') + '...')
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)

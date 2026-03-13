@@ -1,0 +1,22 @@
+{
+  "version.label": {
+    "message": "Actuelle",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Document Scanner": {
+    "message": "Scanner de Documents",
+    "description": "The label for category 'Document Scanner' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.CardWallet": {
+    "message": "Portefeuille de Cartes",
+    "description": "The label for category 'CardWallet' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Common Features": {
+    "message": "Fonctionnalités Communes",
+    "description": "The label for category 'Common Features' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Contributing": {
+    "message": "Contribuer",
+    "description": "The label for category 'Contributing' in sidebar 'docsSidebar'"
+  }
+}
