@@ -81,7 +81,7 @@ If auto-detection doesn't perfectly identify edges:
 3. Drag edge midpoints for fine adjustments
 4. Tap **Done** to apply the selection
 
-![Edge Adjustment](/img/edit-1.png)
+![Edge Adjustment](/img/screenshots/cardwallet/2_en-US.png)
 
 ## Camera Settings
 

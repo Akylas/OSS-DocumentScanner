@@ -43,6 +43,8 @@ function AppShowcase() {
             playStore: 'https://play.google.com/store/apps/details?id=com.akylas.documentscanner',
             appStore: 'https://apps.apple.com/us/app/oss-document-scanner/id6472918564',
             izzyOnDroid: 'https://apt.izzysoft.de/packages/com.akylas.documentscanner',
+            obtainium:
+                'https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.akylas.documentscanner%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FAkylas%2FOSS-DocumentScanner%22%2C%22author%22%3A%22Akylas%22%2C%22name%22%3A%22OSS%20Document%20Scanner%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22Document%20Scanner%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22github%2F(.%2B)%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%221%5C%22%2C%5C%22versionDetection%5C%22%3Afalse%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D',
             docsLink: '/getting-started',
             features: ['Document scanning', 'Auto edge detection', 'PDF export', 'OCR support', 'Cloud sync']
         },
@@ -53,6 +55,8 @@ function AppShowcase() {
             playStore: 'https://play.google.com/store/apps/details?id=com.akylas.cardwallet',
             appStore: 'https://apps.apple.com/app/oss-cardwallet/id6504414362',
             izzyOnDroid: 'https://apt.izzysoft.de/packages/com.akylas.cardwallet',
+            obtainium:
+                'https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.akylas.cardwallet%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FAkylas%2FOSS-DocumentScanner%22%2C%22author%22%3A%22Akylas%22%2C%22name%22%3A%22OSS%20Card%20Wallet%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22Card%20Wallet%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22github%2F(.%2B)%5C%22%2C%5C%22versionDetection%5C%22%3Afalse%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D',
             docsLink: '/cardwallet/getting-started',
             features: ['Barcode scanning', 'Card management', 'Pass Book support(pkpass)', 'Multiple formats', 'Backup & sync', 'Privacy focused']
         }
@@ -75,13 +79,23 @@ function AppShowcase() {
                                 </ul>
                                 <div className={styles.downloadButtons}>
                                     <a href={app.playStore} className={styles.storeButton}>
-                                        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80" />
+                                        <img
+                                            src="https://storage.googleapis.com/pe-portal-consumer-prod-wagtail-static/downloads_folder/Google%20Play%20Badge%20guidelines/11nVShEBmHWOUyCHfC_aTrzDZSs06-zEB?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=wagtail%40pe-portal-consumer-prod.iam.gserviceaccount.com%2F20260312%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260312T143439Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3DGetItOnGooglePlay_Badge_Web_color_English.png&X-Goog-Signature=43a57572831b58546b220f6f535f057b25cfad8564927dec2d08e02b2d27d37e1478027bafb8e80fb6d6a5c40f5b843812fadfe4e4be0ce7424a2ffbb1b203ca00ca2ff2efa889718252b77b7e63d323f8a5fa2848af83f812cb088136da05bf8a258b9f5c9f343be3645682d7f3d78fe61b82d5b5a2b21240c8fa8c9e1ac1cf54d387ec9842a3b8b2c8680bdf435abc0dd69762793c7c47d9b50be4f8887803612e1749e2fa5489b25016b157e3f8793559f41d76017436684803ee37afddb87c780aad4cfdf3c0d18902b430410f4c1ca62dae9a5947b0f560790d36eb8452f3a5ac5b6928534abc5307353943092f78b58140a2edd5df54940e9106eaa92f"
+                                            alt="Get it on Google Play"
+                                            height="50"
+                                        />
                                     </a>
                                     <a href={app.appStore} className={styles.storeButton}>
                                         <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" height="50" />
                                     </a>
                                     <a href={app.izzyOnDroid} className={styles.storeButton}>
-                                        <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80" />
+                                        <img src="https://izzyondroid.org/assets/static/IzzyOnDroidButtonGreyBorder_nofont.png" alt="Get it on IzzyOnDroid" height="50" />
+                                    </a>
+                                    <a href={app.github} className={styles.storeButton}>
+                                        <img src="https://raw.githubusercontent.com/Akylas/OSS-DocumentScanner/main/badge_github.png" alt="Get it on Github" height="50" />
+                                    </a>
+                                    <a href={app.obtainium} className={styles.storeButton}>
+                                        <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="50" />
                                     </a>
                                 </div>
                                 <Link className="button button--primary button--md" to={app.docsLink}>

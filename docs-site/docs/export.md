@@ -36,10 +36,11 @@ Configure PDF export options:
 | Setting | Description |
 |---------|-------------|
 | Page Size | A4, Letter, Original size, or custom |
-| Orientation | Portrait, Landscape, or Auto |
-| Margins | None, Small, Medium, Large |
-| Quality | Low, Medium, High, Maximum |
-| Compression | JPEG, PNG, or mixed |
+| Orientation | Portrait, Landscape |
+| Pages per sheet | 1, 2, 3... |
+| Color | color or Black & White |
+| Margins | 10... |
+| JPEG quality | 100, 90... |
 
 ### Image Export
 
@@ -58,23 +59,6 @@ Export as individual image files:
 - Larger file sizes
 - Best for text documents
 - Supports transparency
-
-#### Image Settings
-
-| Setting | Description |
-|---------|-------------|
-| Quality | 1-100% (JPEG only) |
-| Resolution | Original, 150 DPI, 300 DPI, 600 DPI |
-| Color Space | Color, Grayscale, Black & White |
-
-### Other Formats
-
-#### TIFF
-
-- Professional archival format
-- Lossless compression options
-- Multi-page support
-- Larger file sizes
 
 ## Export Methods
 
@@ -126,73 +110,24 @@ Export multiple documents at once:
 1. Go to the document list
 2. Long-press to enter selection mode
 3. Select multiple documents
-4. Tap **Export**
-
-### Batch Options
-
-- **Single PDF**: Combine all documents into one PDF
-- **Separate PDFs**: Export each document as individual PDF
-- **Image Archive**: Export all as images in a ZIP file
-- **Individual Images**: Export each page as separate image
-
-## Export Quality Guide
-
-### For Printing
-
-- Format: PDF
-- Resolution: 300 DPI minimum
-- Quality: High or Maximum
-- Color: Based on document type
-
-### For Email
-
-- Format: PDF (compressed) or JPEG
-- Resolution: 150 DPI
-- Quality: Medium
-- Consider file size limits
-
-### For Archival
-
-- Format: PDF with OCR or TIFF
-- Resolution: 300-600 DPI
-- Quality: Maximum
-- Color: Original
-
-### For Web Upload
-
-- Format: JPEG or PDF
-- Resolution: 150 DPI or lower
-- Quality: Medium
-- Optimize for file size
+4. Tap **Export** to export all documents/pages into a single PDF
+4. Tap **Bulk Export** to export all documents into separated PDFs
 
 ## File Naming
 
 ### Automatic Naming
 
-Default naming pattern: `Document_YYYY-MM-DD_HHMMSS`
+By default documents will be exporting using the document name. When created a document will be named with a generated "date" format.
+You can rename documents, see [Editing and enhancement features](/edit-and-enhance#rename)
 
 ### Custom Naming
 
-Customize the naming pattern in settings:
-
-- `{date}` - Capture date
-- `{time}` - Capture time
-- `{index}` - Sequential number
-- `{title}` - Document title
-
-### Batch Naming
-
-For batch exports:
-- Sequential numbering is added automatically
-- Custom prefix can be specified
+From the app settings in **Document naming template**  you can change the way document are named on creation but also how they are named when exported
 
 ## Cloud Integration
 
 Direct export to cloud services (when configured):
 
-- Google Drive
-- Dropbox
-- OneDrive
 - WebDAV servers
 - Custom cloud storage
 

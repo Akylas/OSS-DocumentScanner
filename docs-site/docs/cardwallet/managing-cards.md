@@ -14,7 +14,7 @@ Learn how to organize, edit, and use your digital cards effectively.
 Each card can include:
 
 - **Name**: The card or store name
-- **Barcode**: The scanned or entered barcode
+- **Barcodes**: The scanned or entered barcode
 - **Notes**: Additional information, member numbers, etc.
 - **Color**: Custom color for easy identification
 - **Category**: Group cards by type
@@ -49,7 +49,7 @@ Store useful information with your cards:
 
 ### Categories
 
-Organize cards into categories:
+Organize cards into categories by creating folders:
 
 - **Loyalty Cards**: Store reward programs
 - **Membership**: Gym, club memberships
@@ -61,10 +61,8 @@ Organize cards into categories:
 
 Sort your cards by:
 
-- **Name**: Alphabetically
-- **Recently Used**: Most used first
-- **Recently Added**: Newest first
-- **Custom Order**: Drag and drop
+- **Name**
+- **Creation Date**
 
 ### Search
 
@@ -87,9 +85,7 @@ Quickly find cards using the search feature:
 
 For frequently used cards:
 
-- **Widgets**: Add cards to your home screen (Android)
-- **Favorites**: Star cards for quick access
-- **Recent**: Recently used cards appear first
+- **Shortcuts**: Latest seen cards will appear as shortcut (Android)
 
 ### Brightness Boost
 
@@ -166,18 +162,6 @@ For cards containing sensitive information:
 - Be cautious when sharing
 
 ## Tips and Tricks
-
-### Organize by Color
-
-Use consistent colors for card types:
-- 🔵 Blue for groceries
-- 🟢 Green for coffee shops
-- 🔴 Red for restaurants
-- 🟡 Yellow for entertainment
-
-### Quick Add
-
-Double-tap the + button to quickly scan without confirmation dialogs.
 
 ### Backup Regularly
 

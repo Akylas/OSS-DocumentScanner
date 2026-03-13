@@ -9,7 +9,14 @@ slug: /edit-and-enhance
 
 After capturing a document, OSS Document Scanner provides comprehensive editing tools to perfect your scans.
 
-![Edit Screen](/img/edit-1.png)
+![Edit Screen](/img/screenshots/documentscanner/2_en-US.png)
+
+## Rename
+
+1. Open the document
+2. click on the document name in the actionbar
+3. rename the document
+4. click the **Save** button
 
 ## Cropping and Rotation
 
@@ -26,11 +33,7 @@ Fine-tune the document boundaries after capture:
 
 ### Rotation
 
-Correct document orientation:
-
-- **90° Rotate**: Tap the rotate button to rotate in 90° increments
-- **Auto-rotate**: The app attempts to detect correct orientation
-- **Free rotation**: For slightly skewed documents, use the rotation slider
+Correct document orientation, tap the rotate button to rotate in 90° increments
 
 ### Perspective Correction
 
@@ -99,14 +102,6 @@ Fine-tune image appearance:
 3. Preview changes in real-time
 4. Tap **Apply** to save
 
-### Threshold (Black & White mode)
-
-Control the black/white cutoff point:
-
-- Lower threshold: More white, lighter text
-- Higher threshold: More black, bolder text
-- Adjustable for different document types
-
 ## OCR (Optical Character Recognition)
 
 Extract text from scanned documents:
@@ -119,13 +114,9 @@ Extract text from scanned documents:
 4. Wait for processing to complete
 5. View and copy extracted text
 
-### Detect and Copy
+### Detect and Copy (Android)
 
-For quick text extraction:
-
-1. Open a document page
-2. Use **Detect and Copy** (`ocr_copy_text`) to quickly detect text and copy it to clipboard
-3. The text is automatically copied without opening the full OCR view
+For quick text extraction, use the app shortcut action.
 
 ### OCR Features
 
@@ -154,11 +145,11 @@ OCR uses Tesseract for text recognition. Processing happens on-device for privac
 In multi-page documents:
 
 1. Open the document view
-2. Tap the **Reorder Pages** button (`reorder_pages`) in the toolbar
-3. Long-press on a page thumbnail
-4. Drag to the new position
-5. Release to drop
-6. Tap **Done** to save the new order
+    - Tap the **Reorder Pages** menu entry in the three dot action menu
+    - or long-press and start dragging a page
+2. Drag to the new position
+3. Release to drop
+4. The document is automatically saved
 
 ### Deleting Pages
 
@@ -174,18 +165,10 @@ Remove unwanted pages:
 Add more pages to existing documents:
 
 1. Open the document
-2. Tap **Add Page**
+2. Tap **Add Page** or **Camera** buttons
 3. Capture new pages
 4. Pages are appended to the document
 
-### Splitting Documents
-
-Separate a multi-page document:
-
-1. Open the document view
-2. Select pages to split out
-3. Tap **Split** in the menu
-4. New document is created with selected pages
 
 ## Best Practices
 
@@ -204,7 +187,7 @@ Separate a multi-page document:
 
 ### For Receipts
 
-1. Use **Document Enhancement**
+1. Use **Whitepaper**
 2. Apply shadow removal
 3. Increase contrast slightly
 4. Consider Black & White for faded receipts

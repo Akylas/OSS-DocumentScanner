@@ -24,8 +24,8 @@ PKPass is the file format used by Apple Wallet (formerly Passbook). These digita
 ### From Files
 
 1. Tap the **+** button in CardWallet
-2. Select **Import PKPass**
-3. Browse to your `.pkpass` file
+2. Select **Import from a file**
+3. Browse to your `.pkpass` file(s)
 4. The pass will be imported and displayed
 
 ### From Email or Web
@@ -66,31 +66,6 @@ Each pass type has a unique visual style:
 | Coupon | Coupon-style design |
 | Generic | Standard card layout |
 
-## Managing Passes
-
-### Organizing Passes
-
-- **Categories**: Group passes by type (travel, entertainment, shopping)
-- **Favorites**: Star important passes for quick access
-- **Archive**: Move expired passes to archive
-
-### Updating Passes
-
-Some passes support automatic updates:
-
-- Push notifications for gate changes
-- Updated boarding times
-- New coupon offers
-
-*Note: Automatic updates require the pass issuer to support this feature.*
-
-### Deleting Passes
-
-1. Open the pass you want to delete
-2. Tap the **⋮** menu
-3. Select **Delete**
-4. Confirm deletion
-
 ## Exporting Passes
 
 ### Share as PKPass
@@ -127,26 +102,6 @@ For easy scanning at venues:
 2. Tap on the barcode to enlarge
 3. Adjust screen brightness if needed
 4. Present to scanner
-
-## Tips for Using Passes
-
-### Before Travel
-
-- ✅ Import boarding passes before arriving at the airport
-- ✅ Ensure your phone is charged
-- ✅ Test that the barcode displays correctly
-
-### At Events
-
-- ✅ Open the ticket before reaching the entrance
-- ✅ Increase screen brightness for better scanning
-- ✅ Have a backup (screenshot or printed copy)
-
-### For Loyalty Cards
-
-- ✅ Keep store cards easily accessible
-- ✅ Update passes when offers change
-- ✅ Check expiration dates on coupons
 
 ## Troubleshooting
 

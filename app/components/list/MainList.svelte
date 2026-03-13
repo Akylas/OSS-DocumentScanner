@@ -489,7 +489,7 @@
     export async function importImages() {
         DEV_LOG && console.log('importImages');
         try {
-            await importAndScanImage({ folder, forceGalleryPick: true });
+            await importAndScanImage({ folder, importPDFs: false, forceGalleryPick: true });
         } catch (error) {
             showError(error);
         }

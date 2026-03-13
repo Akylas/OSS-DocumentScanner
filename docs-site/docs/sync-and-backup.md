@@ -77,18 +77,7 @@ When enabled, documents sync automatically:
 
 Trigger sync manually:
 
-1. Pull down on document list to refresh
-2. Or go to **Settings** > **Sync** > **Sync Now**
-
-### Sync Direction
-
-Configure sync behavior:
-
-| Mode | Description |
-|------|-------------|
-| Two-way | Changes sync both directions |
-| Upload only | Only send changes to server |
-| Download only | Only receive changes from server |
+1. On the main view use the  **Sync** button
 
 ## Conflict Handling
 
@@ -101,17 +90,6 @@ The app attempts to resolve conflicts automatically:
 1. Compare modification timestamps
 2. Most recent change wins
 3. Older version may be archived
-
-### Manual Resolution
-
-For complex conflicts:
-
-1. Notification appears about conflict
-2. View both versions
-3. Choose which to keep:
-   - **Keep Local**: Use your device's version
-   - **Keep Remote**: Use the server's version
-   - **Keep Both**: Create a copy of each
 
 ### Preventing Conflicts
 
@@ -160,11 +138,11 @@ Backups contain:
 - All scanned documents (images)
 - Document metadata
 - Folder structure
-- App settings (optional)
 - OCR data (optional)
 
 ### What's NOT Included
 
+- App settings (use the export settings action)
 - Cache files
 - Temporary files
 - Sync credentials (for security)

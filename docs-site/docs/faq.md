@@ -14,6 +14,7 @@ Find answers to common questions about OSS Document Scanner and OSS CardWallet.
 ### Are these apps really free?
 
 Yes! Both OSS Document Scanner and OSS CardWallet are completely free and open source. There are no ads, no in-app purchases, and no premium features locked behind a paywall.
+They will nalways remain free and open source.
 
 ### Is my data private?
 
@@ -64,19 +65,11 @@ Common causes and solutions:
 Yes! Use batch scanning mode:
 
 1. Tap the camera button
+1. Tap the batch scan button left of the capture button
 2. Scan first page
 3. Continue scanning without saving
 4. All pages are combined into one document
 5. Tap Done when finished
-
-### What resolution should I use?
-
-| Use Case | Recommended Resolution |
-|----------|----------------------|
-| Quick reference | Standard |
-| General documents | High |
-| Important documents | Maximum |
-| OCR processing | High or Maximum |
 
 ### Can I scan in low light?
 
@@ -110,10 +103,9 @@ Yes:
 ### What filters are available?
 
 - **Original**: No processing
-- **Black & White**: Pure binary, best for text
-- **Grayscale**: Removes color, keeps tones
+- **Whitepaper**: best for whitepaper type documents
 - **Enhanced**: Auto color/contrast improvement
-- **Document**: Optimized for document readability
+- **Color**: Improve colors and removed unwanted color shades. Best for cards
 
 ### How does OCR work?
 
@@ -132,7 +124,6 @@ OCR (Optical Character Recognition) extracts text from images:
 - **PDF**: Standard and with OCR text layer
 - **JPEG**: Compressed images
 - **PNG**: Lossless images
-- **TIFF**: Professional archival format
 
 ### How do I reduce PDF file size?
 
@@ -180,7 +171,6 @@ The most recent change typically wins. The app will:
 1. Detect the conflict
 2. Compare timestamps
 3. Keep the newer version
-4. Optionally archive the older version
 
 ### Are backups encrypted?
 
@@ -245,6 +235,7 @@ OSS Document Scanner is built with:
 - **Svelte**: UI components
 - **OpenCV**: Image processing
 - **Tesseract**: OCR engine
+- **Zxing**: Barcode engine
 
 ### Where is source code located?
 
@@ -262,47 +253,6 @@ Key directories in the [GitHub repository](https://github.com/Akylas/OSS-Documen
 ### How can I build from source?
 
 See the [Building Setup section](https://github.com/Akylas/OSS-DocumentScanner#building-setup) in the main README.
-
-## Maestro Screenshot Integration
-
-For automated testing and documentation, OSS Document Scanner supports Maestro for generating screenshots.
-
-### How to Generate Screenshots with Maestro
-
-1. Install Maestro: https://maestro.mobile.dev/
-2. Write Maestro flows that navigate through app features
-3. Use `- takeScreenshot` command to capture screens
-4. Place generated screenshots in `docs-site/static/img/`
-
-### Screenshot Placement Script
-
-```bash
-#!/bin/bash
-# copy-screenshots.sh
-# Run after Maestro tests to copy screenshots to docs site
-
-MAESTRO_OUTPUT="./maestro-screenshots"
-DOCS_IMG="./docs-site/static/img"
-
-# Copy and rename screenshots
-cp "$MAESTRO_OUTPUT/capture.png" "$DOCS_IMG/capture-1.png"
-cp "$MAESTRO_OUTPUT/edit.png" "$DOCS_IMG/edit-1.png"
-cp "$MAESTRO_OUTPUT/export.png" "$DOCS_IMG/export-1.png"
-cp "$MAESTRO_OUTPUT/sync.png" "$DOCS_IMG/sync-1.png"
-cp "$MAESTRO_OUTPUT/settings.png" "$DOCS_IMG/settings-1.png"
-
-echo "Screenshots copied to docs site"
-```
-
-### Screenshot Naming Convention
-
-Keep these exact filenames so Maestro-generated screenshots can replace placeholders:
-
-- `capture-1.png` - Main capture screen
-- `edit-1.png` - Edit/crop screen
-- `export-1.png` - Export options
-- `sync-1.png` - Sync settings
-- `settings-1.png` - Settings screen
 
 ## Still Have Questions?
 
