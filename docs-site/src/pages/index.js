@@ -40,6 +40,7 @@ function AppShowcase() {
             name: 'OSS Document Scanner',
             description: 'Scan, edit, and export documents with automatic edge detection and perspective correction.',
             featureImage: useBaseUrl('/img/apps/documentscanner-feature.png'),
+            github: 'https://github.com/Akylas/OSS-DocumentScanner/releases?q=documentscanner&expanded=true',
             playStore: 'https://play.google.com/store/apps/details?id=com.akylas.documentscanner',
             appStore: 'https://apps.apple.com/us/app/oss-document-scanner/id6472918564',
             izzyOnDroid: 'https://apt.izzysoft.de/packages/com.akylas.documentscanner',
@@ -52,6 +53,7 @@ function AppShowcase() {
             name: 'OSS CardWallet',
             description: 'Store and manage loyalty cards, tickets, and barcodes securely on your device.',
             featureImage: useBaseUrl('/img/apps/cardwallet-feature.png'),
+            github: 'https://github.com/Akylas/OSS-DocumentScanner/releases?q=cardwallet&expanded=true',
             playStore: 'https://play.google.com/store/apps/details?id=com.akylas.cardwallet',
             appStore: 'https://apps.apple.com/app/oss-cardwallet/id6504414362',
             izzyOnDroid: 'https://apt.izzysoft.de/packages/com.akylas.cardwallet',
@@ -78,19 +80,19 @@ function AppShowcase() {
                                     ))}
                                 </ul>
                                 <div className={styles.downloadButtons}>
-                                    <a href={app.playStore} className={styles.storeButton}>
+                                    <a href={app.playStore} className={styles.storeButton} target="_blank">
                                         <img src="https://raw.githubusercontent.com/pioug/google-play-badges/refs/heads/main/svg/en.svg" alt="Get it on Google Play" height="50" />
                                     </a>
-                                    <a href={app.appStore} className={styles.storeButton}>
+                                    <a href={app.appStore} className={styles.storeButton} target="_blank">
                                         <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" height="50" />
                                     </a>
-                                    <a href={app.izzyOnDroid} className={styles.storeButton}>
+                                    <a href={app.izzyOnDroid} className={styles.storeButton} target="_blank">
                                         <img src="https://izzyondroid.org/assets/static/IzzyOnDroidButtonGreyBorder_nofont.png" alt="Get it on IzzyOnDroid" height="50" />
                                     </a>
-                                    <a href={app.github} className={styles.storeButton}>
+                                    <a href={app.github} className={styles.storeButton} target="_blank">
                                         <img src="https://raw.githubusercontent.com/Akylas/OSS-DocumentScanner/main/graphics/badge_github.png" alt="Get it on Github" height="50" />
                                     </a>
-                                    <a href={app.obtainium} className={styles.storeButton}>
+                                    <a href={app.obtainium} className={styles.storeButton} target="_blank">
                                         <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="50" />
                                     </a>
                                 </div>
