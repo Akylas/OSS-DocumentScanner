@@ -79,11 +79,7 @@ function AppShowcase() {
                                 </ul>
                                 <div className={styles.downloadButtons}>
                                     <a href={app.playStore} className={styles.storeButton}>
-                                        <img
-                                            src="https://storage.googleapis.com/pe-portal-consumer-prod-wagtail-static/downloads_folder/Google%20Play%20Badge%20guidelines/11nVShEBmHWOUyCHfC_aTrzDZSs06-zEB?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=wagtail%40pe-portal-consumer-prod.iam.gserviceaccount.com%2F20260312%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260312T143439Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3DGetItOnGooglePlay_Badge_Web_color_English.png&X-Goog-Signature=43a57572831b58546b220f6f535f057b25cfad8564927dec2d08e02b2d27d37e1478027bafb8e80fb6d6a5c40f5b843812fadfe4e4be0ce7424a2ffbb1b203ca00ca2ff2efa889718252b77b7e63d323f8a5fa2848af83f812cb088136da05bf8a258b9f5c9f343be3645682d7f3d78fe61b82d5b5a2b21240c8fa8c9e1ac1cf54d387ec9842a3b8b2c8680bdf435abc0dd69762793c7c47d9b50be4f8887803612e1749e2fa5489b25016b157e3f8793559f41d76017436684803ee37afddb87c780aad4cfdf3c0d18902b430410f4c1ca62dae9a5947b0f560790d36eb8452f3a5ac5b6928534abc5307353943092f78b58140a2edd5df54940e9106eaa92f"
-                                            alt="Get it on Google Play"
-                                            height="50"
-                                        />
+                                        <img src="https://raw.githubusercontent.com/pioug/google-play-badges/refs/heads/main/svg/en.svg" alt="Get it on Google Play" height="50" />
                                     </a>
                                     <a href={app.appStore} className={styles.storeButton}>
                                         <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" height="50" />
