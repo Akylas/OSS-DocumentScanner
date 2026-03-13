@@ -92,7 +92,7 @@ function AppShowcase() {
                                         <img src="https://izzyondroid.org/assets/static/IzzyOnDroidButtonGreyBorder_nofont.png" alt="Get it on IzzyOnDroid" height="50" />
                                     </a>
                                     <a href={app.github} className={styles.storeButton}>
-                                        <img src="https://raw.githubusercontent.com/Akylas/OSS-DocumentScanner/main/badge_github.png" alt="Get it on Github" height="50" />
+                                        <img src="https://raw.githubusercontent.com/Akylas/OSS-DocumentScanner/main/graphics/badge_github.png" alt="Get it on Github" height="50" />
                                     </a>
                                     <a href={app.obtainium} className={styles.storeButton}>
                                         <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="50" />

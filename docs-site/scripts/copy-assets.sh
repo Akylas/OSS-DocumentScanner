@@ -20,14 +20,14 @@ mkdir -p "$STATIC_IMG/screenshots/cardwallet"
 
 # Copy badges from root level
 echo "Copying badges..."
-cp "$ROOT_DIR/badge_github.png" "$STATIC_IMG/badges/badge_github.png" 2>/dev/null || true
+cp "$ROOT_DIR/graphics/badge_github.png" "$STATIC_IMG/badges/badge_github.png" 2>/dev/null || true
 
 # Copy app icons from root level
 echo "Copying icons..."
-cp "$ROOT_DIR/icon.png" "$STATIC_IMG/icons/documentscanner-icon.png" 2>/dev/null || true
-cp "$ROOT_DIR/icon_cardwallet.png" "$STATIC_IMG/icons/cardwallet-icon.png" 2>/dev/null || true
-cp "$ROOT_DIR/documentscanner-icon.svg" "$STATIC_IMG/icons/documentscanner-icon.svg" 2>/dev/null || true
-cp "$ROOT_DIR/cardwallet-icon.svg" "$STATIC_IMG/icons/cardwallet-icon.svg" 2>/dev/null || true
+cp "$ROOT_DIR/graphics/icon.png" "$STATIC_IMG/icons/documentscanner-icon.png" 2>/dev/null || true
+cp "$ROOT_DIR/graphics/icon_cardwallet.png" "$STATIC_IMG/icons/cardwallet-icon.png" 2>/dev/null || true
+cp "$ROOT_DIR/graphics/documentscanner-icon.svg" "$STATIC_IMG/icons/documentscanner-icon.svg" 2>/dev/null || true
+cp "$ROOT_DIR/graphics/cardwallet-icon.svg" "$STATIC_IMG/icons/cardwallet-icon.svg" 2>/dev/null || true
 
 # Copy feature graphics from fastlane
 echo "Copying feature graphics..."

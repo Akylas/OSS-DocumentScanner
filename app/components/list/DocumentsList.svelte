@@ -156,15 +156,12 @@
     </Template>
 
     <stacklayout bind:this={fabHolder} slot="fab" class="fabHolder" marginBottom={Math.min(60, $windowInset.bottom)} orientation="horizontal" row={2}>
-        {#if __IOS__}
-            <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importDocument(false), 500)} />
-        {/if}
+        <mdbutton class="small-fab" horizontalAlignment="center" text="mdi-image-plus-outline" verticalAlignment="center" on:tap={throttle(() => importImages(), 500)} />
         <mdbutton
             class={$hasCamera ? 'small-fab' : 'fab'}
             horizontalAlignment="center"
             text="mdi-file-document-plus-outline"
             verticalAlignment="center"
-            on:longPress={throttle(() => importImages(), 500)}
             on:tap={throttle(() => importDocument(), 500)} />
         {#if $hasCamera}
             <mdbutton id="fab" class="fab" text="mdi-camera" verticalAlignment="center" on:tap={throttle(() => onStartCam(), 500)} on:longPress={() => onStartCam(true)} />
