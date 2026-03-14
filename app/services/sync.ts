@@ -27,7 +27,7 @@ import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
 // Platform-specific imports
 let scheduleAndroidSyncAlarm: (serviceId: number, delayMs: number) => void;
 let cancelAndroidSyncAlarm: (serviceId: number) => void;
-let initAndroidSyncAlarms: () => void;
+let initAndroidSyncAlarm: () => void;
 let requestIOSBackgroundRefresh: (serviceId: number, delayMs: number) => void;
 let cancelIOSBackgroundRefresh: (serviceId: number) => void;
 let initIOSSyncBackgroundRefresh: () => void;
@@ -36,7 +36,7 @@ if (__ANDROID__) {
     const androidModule = require('./sync.android');
     scheduleAndroidSyncAlarm = androidModule.scheduleAndroidSyncAlarm;
     cancelAndroidSyncAlarm = androidModule.cancelAndroidSyncAlarm;
-    initAndroidSyncAlarms = androidModule.initAndroidSyncAlarms;
+    initAndroidSyncAlarm = androidModule.initAndroidSyncAlarm;
 } else if (__IOS__) {
     const iosModule = require('./sync.ios');
     requestIOSBackgroundRefresh = iosModule.requestIOSBackgroundRefresh;
@@ -243,8 +243,8 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         }
         
         // Initialize platform-specific background sync
-        if (__ANDROID__ && initAndroidSyncAlarms) {
-            initAndroidSyncAlarms();
+        if (__ANDROID__ && initAndroidSyncAlarm) {
+            initAndroidSyncAlarm();
         } else if (__IOS__ && initIOSSyncBackgroundRefresh) {
             initIOSSyncBackgroundRefresh();
         }
@@ -479,9 +479,11 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         
         if (throttled.length > 0 && !data.force) {
             // For each service with throttle, handle throttling separately
+            // Each throttled service will be scheduled or executed based on its last sync time
             await Promise.all(throttled.map(service => this.handleThrottledSync(data, service)));
             
             // Also execute for services without throttle immediately
+            // The worker will determine which services actually sync based on the event type
             if (nonThrottled.length > 0) {
                 await this.syncDocumentsInternalCore(data);
             }

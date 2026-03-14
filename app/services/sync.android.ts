@@ -10,7 +10,7 @@ let alarmReceiverRegistered = false;
 /**
  * Initialize Android-specific sync alarm functionality
  */
-export function initAndroidSyncAlarms() {
+export function initAndroidSyncAlarm() {
     if (alarmReceiverRegistered) {
         return;
     }
@@ -26,7 +26,7 @@ export function initAndroidSyncAlarms() {
             DEV_LOG && console.log('SyncAlarmReceiver', 'received alarm for service', serviceId);
             
             // Import dynamically to avoid circular dependency
-            import('../sync').then(({ syncService }) => {
+            import('./sync').then(({ syncService }) => {
                 // Trigger sync for this service
                 syncService.triggerThrottledSync(serviceId);
             }).catch((error) => {
@@ -48,7 +48,7 @@ export function initAndroidSyncAlarms() {
  */
 export function scheduleAndroidSyncAlarm(serviceId: number, delayMs: number) {
     if (!alarmManager) {
-        initAndroidSyncAlarms();
+        initAndroidSyncAlarm();
     }
 
     const context = Utils.android.getApplicationContext();
