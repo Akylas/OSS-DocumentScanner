@@ -114,7 +114,7 @@
                             hint="0"
                             keyboardType="number"
                             marginLeft={10}
-                            text={$store.syncThrottleSeconds || 0}
+                            text={String($store.syncThrottleSeconds || 0)}
                             width={100}
                             on:textChange={(e) => {
                                 const value = parseInt(e.value) || 0;

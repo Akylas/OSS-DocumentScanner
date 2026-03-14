@@ -327,8 +327,15 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     }
 
     // Per-service throttle timers and pending sync flags
-    private throttleTimers: Map<number, any> = new Map();
-    private pendingSyncs: Map<number, any> = new Map();
+    private throttleTimers: Map<number, NodeJS.Timeout> = new Map();
+    private pendingSyncs: Map<number, {
+        withFolders?;
+        force?;
+        bothWays?;
+        type?: number;
+        fromEvent?: string;
+        event?: DocumentEvents;
+    }> = new Map();
     private lastSyncTimes: Map<number, number> = new Map();
 
     syncDocuments = debounce(
@@ -457,16 +464,25 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         // Check which services should sync based on the type
         const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
         
-        // If we have services with throttle configured, handle throttling per service
-        const servicesWithThrottle = services.filter(s => s.syncThrottleSeconds && s.syncThrottleSeconds > 0);
-        const servicesWithoutThrottle = services.filter(s => !s.syncThrottleSeconds || s.syncThrottleSeconds === 0);
+        // Split services into throttled and non-throttled in one pass
+        const { throttled, nonThrottled } = services.reduce(
+            (acc, service) => {
+                if (service.syncThrottleSeconds && service.syncThrottleSeconds > 0) {
+                    acc.throttled.push(service);
+                } else {
+                    acc.nonThrottled.push(service);
+                }
+                return acc;
+            },
+            { throttled: [] as any[], nonThrottled: [] as any[] }
+        );
         
-        if (servicesWithThrottle.length > 0 && !data.force) {
+        if (throttled.length > 0 && !data.force) {
             // For each service with throttle, handle throttling separately
-            await Promise.all(servicesWithThrottle.map(service => this.handleThrottledSync(data, service)));
+            await Promise.all(throttled.map(service => this.handleThrottledSync(data, service)));
             
             // Also execute for services without throttle immediately
-            if (servicesWithoutThrottle.length > 0) {
+            if (nonThrottled.length > 0) {
                 await this.syncDocumentsInternalCore(data);
             }
         } else {

@@ -1,5 +1,9 @@
 import { Application, Utils } from '@nativescript/core';
 
+// Constants for intent actions
+export const SYNC_ALARM_ACTION = `${__APP_ID__}.SYNC_ALARM_ACTION`;
+export const SYNC_THROTTLE_ALARM = `${__APP_ID__}.SYNC_THROTTLE_ALARM`;
+
 let alarmManager: android.app.AlarmManager = null;
 let alarmReceiverRegistered = false;
 
@@ -15,7 +19,7 @@ export function initAndroidSyncAlarms() {
     alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
 
     // Register broadcast receiver for sync alarms
-    const filter = new android.content.IntentFilter(`${__APP_ID__}.SYNC_THROTTLE_ALARM`);
+    const filter = new android.content.IntentFilter(SYNC_THROTTLE_ALARM);
     const receiver = new android.content.BroadcastReceiver({
         onReceive(context: android.content.Context, intent: android.content.Intent) {
             const serviceId = intent.getIntExtra('serviceId', -1);
@@ -51,7 +55,7 @@ export function scheduleAndroidSyncAlarm(serviceId: number, delayMs: number) {
     
     // Create intent for the SyncAlarmReceiver
     // Note: The receiver class must be in the same package as the main application
-    const intent = new android.content.Intent(`${__APP_ID__}.SYNC_ALARM_ACTION`);
+    const intent = new android.content.Intent(SYNC_ALARM_ACTION);
     intent.setPackage(context.getPackageName());
     intent.putExtra('serviceId', serviceId);
     
@@ -92,7 +96,7 @@ export function cancelAndroidSyncAlarm(serviceId: number) {
     }
 
     const context = Utils.android.getApplicationContext();
-    const intent = new android.content.Intent(`${__APP_ID__}.SYNC_ALARM_ACTION`);
+    const intent = new android.content.Intent(SYNC_ALARM_ACTION);
     intent.setPackage(context.getPackageName());
     
     const pendingIntent = android.app.PendingIntent.getBroadcast(

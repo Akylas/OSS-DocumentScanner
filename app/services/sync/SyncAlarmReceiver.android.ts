@@ -1,4 +1,5 @@
 import { Utils } from '@nativescript/core';
+import { SYNC_ALARM_ACTION, SYNC_THROTTLE_ALARM } from '../sync.android';
 
 /**
  * BroadcastReceiver for handling sync alarms on Android
@@ -11,7 +12,7 @@ export class SyncAlarmReceiver extends android.content.BroadcastReceiver {
         DEV_LOG && console.log('SyncAlarmReceiver', 'onReceive', action);
         
         // Check if this is our sync alarm action
-        if (action !== `${__APP_ID__}.SYNC_ALARM_ACTION`) {
+        if (action !== SYNC_ALARM_ACTION) {
             return;
         }
         
@@ -21,7 +22,7 @@ export class SyncAlarmReceiver extends android.content.BroadcastReceiver {
         }
 
         // Send broadcast to trigger sync in the app
-        const syncIntent = new android.content.Intent(`${__APP_ID__}.SYNC_THROTTLE_ALARM`);
+        const syncIntent = new android.content.Intent(SYNC_THROTTLE_ALARM);
         syncIntent.putExtra('serviceId', serviceId);
         context.sendBroadcast(syncIntent);
     }
