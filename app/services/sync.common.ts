@@ -24,26 +24,13 @@ import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, Docum
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
 
-// Platform-specific imports
-let scheduleAndroidSyncAlarm: (serviceId: number, delayMs: number) => void;
-let cancelAndroidSyncAlarm: (serviceId: number) => void;
-let initAndroidSyncAlarm: () => void;
-let requestIOSBackgroundRefresh: (serviceId: number, delayMs: number) => void;
-let cancelIOSBackgroundRefresh: (serviceId: number) => void;
-let initIOSSyncBackgroundRefresh: () => void;
-
-if (__ANDROID__) {
-    const androidModule = require('./sync.android');
-    scheduleAndroidSyncAlarm = androidModule.scheduleAndroidSyncAlarm;
-    cancelAndroidSyncAlarm = androidModule.cancelAndroidSyncAlarm;
-    initAndroidSyncAlarm = androidModule.initAndroidSyncAlarm;
-} else if (__IOS__) {
-    const iosModule = require('./sync.ios');
-    requestIOSBackgroundRefresh = iosModule.requestIOSBackgroundRefresh;
-    cancelIOSBackgroundRefresh = iosModule.cancelIOSBackgroundRefresh;
-    initIOSSyncBackgroundRefresh = iosModule.initIOSSyncBackgroundRefresh;
-}
-
+// Platform-specific functions - implemented in sync.android.ts and sync.ios.ts
+export let scheduleAndroidSyncAlarm: (serviceId: number, delayMs: number) => void;
+export let cancelAndroidSyncAlarm: (serviceId: number) => void;
+export let initAndroidSyncAlarm: () => void;
+export let requestIOSBackgroundRefresh: (serviceId: number, delayMs: number) => void;
+export let cancelIOSBackgroundRefresh: (serviceId: number) => void;
+export let initIOSSyncBackgroundRefresh: () => void;
 
 export const syncServicesStore = writable([]);
 

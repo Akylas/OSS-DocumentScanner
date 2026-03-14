@@ -1,14 +1,77 @@
-/**
- * iOS-specific sync background refresh functionality
- */
+import { Utils } from '@nativescript/core';
+
+// Export everything from common
+export * from './sync.common';
+
+// Import common to set platform-specific implementations
+import * as syncCommon from './sync.common';
+
+// Background task identifier for sync
+const SYNC_TASK_IDENTIFIER = `${__APP_ID__}.sync`;
+
+// Store for pending sync service IDs
+const pendingSyncTasks: Map<number, Date> = new Map();
 
 /**
  * Initialize iOS-specific sync background refresh
  */
-export function initIOSSyncBackgroundRefresh() {
-    // iOS background refresh initialization
-    // This would typically use BGTaskScheduler for iOS 13+
+function initIOSSyncBackgroundRefreshImpl() {
+    if (typeof BGTaskScheduler === 'undefined') {
+        DEV_LOG && console.log('SyncService', 'BGTaskScheduler not available (iOS < 13)');
+        return;
+    }
+
+    // Register the background task handler
+    BGTaskScheduler.sharedScheduler.registerForTaskWithIdentifierUsingQueueLaunchHandler(
+        SYNC_TASK_IDENTIFIER,
+        null, // Use main queue
+        (task: BGTask) => {
+            DEV_LOG && console.log('SyncService', 'iOS background task started', task.identifier);
+            
+            // Set expiration handler
+            task.expirationHandler = () => {
+                DEV_LOG && console.log('SyncService', 'iOS background task expired');
+                task.setTaskCompletedWithSuccess(false);
+            };
+
+            // Process all pending syncs
+            processPendingSyncs()
+                .then(() => {
+                    DEV_LOG && console.log('SyncService', 'iOS background task completed successfully');
+                    task.setTaskCompletedWithSuccess(true);
+                })
+                .catch((error) => {
+                    console.error('SyncService', 'iOS background task failed', error);
+                    task.setTaskCompletedWithSuccess(false);
+                });
+        }
+    );
+
     DEV_LOG && console.log('SyncService', 'iOS background refresh initialized');
+}
+
+/**
+ * Process all pending sync tasks
+ */
+async function processPendingSyncs(): Promise<void> {
+    const { syncService } = require('./sync.common');
+    
+    // Get all pending syncs
+    const syncPromises: Promise<void>[] = [];
+    pendingSyncTasks.forEach((scheduledTime, serviceId) => {
+        DEV_LOG && console.log('SyncService', 'processing pending sync for service', serviceId);
+        syncPromises.push(
+            syncService.triggerThrottledSync(serviceId).catch((error) => {
+                console.error('SyncService', 'failed to sync service', serviceId, error);
+            })
+        );
+    });
+
+    // Clear pending tasks
+    pendingSyncTasks.clear();
+
+    // Wait for all syncs to complete
+    await Promise.all(syncPromises);
 }
 
 /**
@@ -16,26 +79,104 @@ export function initIOSSyncBackgroundRefresh() {
  * @param serviceId The sync service ID
  * @param delayMs Delay in milliseconds
  */
-export function requestIOSBackgroundRefresh(serviceId: number, delayMs: number) {
-    // On iOS, we can't schedule exact times for background refresh
-    // Instead, we request a background refresh and the system decides when to run it
-    // For now, this is a placeholder that would need proper BGTaskScheduler implementation
-    
-    DEV_LOG && console.log('SyncService', 'requested iOS background refresh for service', serviceId, 'in approximately', delayMs, 'ms');
-    
-    // TODO: Implement proper BGTaskScheduler integration
-    // This would involve:
-    // 1. Registering a background task identifier in Info.plist
-    // 2. Registering a handler for the task
-    // 3. Submitting a BGTaskRequest with earliestBeginDate
+function requestIOSBackgroundRefreshImpl(serviceId: number, delayMs: number) {
+    if (typeof BGTaskScheduler === 'undefined') {
+        DEV_LOG && console.log('SyncService', 'BGTaskScheduler not available, using timer fallback');
+        // Fallback to regular timer for older iOS versions
+        setTimeout(() => {
+            const { syncService } = require('./sync.common');
+            syncService.triggerThrottledSync(serviceId).catch((error) => {
+                console.error('SyncService', 'failed to sync service', serviceId, error);
+            });
+        }, delayMs);
+        return;
+    }
+
+    // Store this service as pending
+    const scheduledTime = new Date(Date.now() + delayMs);
+    pendingSyncTasks.set(serviceId, scheduledTime);
+
+    // Cancel any existing requests first
+    BGTaskScheduler.sharedScheduler.cancelTaskRequestWithIdentifier(SYNC_TASK_IDENTIFIER);
+
+    // Find the earliest scheduled time among all pending syncs
+    let earliestTime = scheduledTime;
+    pendingSyncTasks.forEach((time) => {
+        if (time < earliestTime) {
+            earliestTime = time;
+        }
+    });
+
+    // Create a new background task request
+    const request = BGAppRefreshTaskRequest.alloc().initWithIdentifier(SYNC_TASK_IDENTIFIER);
+    request.earliestBeginDate = earliestTime;
+
+    // Submit the request
+    const errorRef = new interop.Reference<NSError>();
+    const success = BGTaskScheduler.sharedScheduler.submitTaskRequestError(request, errorRef);
+
+    if (!success) {
+        const error = errorRef.value;
+        console.error('SyncService', 'Failed to schedule iOS background task:', error?.localizedDescription);
+        
+        // Fallback to timer if background task scheduling fails
+        setTimeout(() => {
+            const { syncService } = require('./sync.common');
+            syncService.triggerThrottledSync(serviceId).catch((error) => {
+                console.error('SyncService', 'failed to sync service', serviceId, error);
+            });
+        }, delayMs);
+    } else {
+        DEV_LOG && console.log('SyncService', 'scheduled iOS background refresh for service', serviceId, 'at', earliestTime);
+    }
 }
 
 /**
  * Cancel a scheduled background refresh for a sync service
  * @param serviceId The sync service ID
  */
-export function cancelIOSBackgroundRefresh(serviceId: number) {
-    DEV_LOG && console.log('SyncService', 'cancelled iOS background refresh for service', serviceId);
-    
-    // TODO: Implement proper BGTaskScheduler cancellation
+function cancelIOSBackgroundRefreshImpl(serviceId: number) {
+    // Remove from pending tasks
+    pendingSyncTasks.delete(serviceId);
+
+    if (typeof BGTaskScheduler === 'undefined') {
+        return;
+    }
+
+    // If no more pending tasks, cancel the background task
+    if (pendingSyncTasks.size === 0) {
+        BGTaskScheduler.sharedScheduler.cancelTaskRequestWithIdentifier(SYNC_TASK_IDENTIFIER);
+        DEV_LOG && console.log('SyncService', 'cancelled iOS background refresh (no pending tasks)');
+    } else {
+        // Reschedule with the next earliest time
+        let earliestTime: Date | null = null;
+        pendingSyncTasks.forEach((time) => {
+            if (!earliestTime || time < earliestTime) {
+                earliestTime = time;
+            }
+        });
+
+        if (earliestTime) {
+            // Cancel existing and reschedule
+            BGTaskScheduler.sharedScheduler.cancelTaskRequestWithIdentifier(SYNC_TASK_IDENTIFIER);
+            
+            const request = BGAppRefreshTaskRequest.alloc().initWithIdentifier(SYNC_TASK_IDENTIFIER);
+            request.earliestBeginDate = earliestTime;
+            
+            const errorRef = new interop.Reference<NSError>();
+            BGTaskScheduler.sharedScheduler.submitTaskRequestError(request, errorRef);
+        }
+
+        DEV_LOG && console.log('SyncService', 'rescheduled iOS background refresh for remaining tasks');
+    }
 }
+
+// Set the platform-specific implementations in the common module
+syncCommon.initIOSSyncBackgroundRefresh = initIOSSyncBackgroundRefreshImpl;
+syncCommon.requestIOSBackgroundRefresh = requestIOSBackgroundRefreshImpl;
+syncCommon.cancelIOSBackgroundRefresh = cancelIOSBackgroundRefreshImpl;
+
+// Stub implementations for Android functions (not used on iOS)
+syncCommon.initAndroidSyncAlarm = () => {};
+syncCommon.scheduleAndroidSyncAlarm = () => {};
+syncCommon.cancelAndroidSyncAlarm = () => {};

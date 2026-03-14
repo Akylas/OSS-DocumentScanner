@@ -1,5 +1,11 @@
 import { Application, Utils } from '@nativescript/core';
 
+// Export everything from common
+export * from './sync.common';
+
+// Import common to set platform-specific implementations
+import * as syncCommon from './sync.common';
+
 // Constants for intent actions
 // __APP_ID__ is a build-time constant representing the application package ID
 export const SYNC_ALARM_ACTION = `${__APP_ID__}.SYNC_ALARM_ACTION`;
@@ -11,7 +17,7 @@ let alarmReceiverRegistered = false;
 /**
  * Initialize Android-specific sync alarm functionality
  */
-export function initAndroidSyncAlarm() {
+function initAndroidSyncAlarmImpl() {
     if (alarmReceiverRegistered) {
         return;
     }
@@ -26,11 +32,9 @@ export function initAndroidSyncAlarm() {
             const serviceId = intent.getIntExtra('serviceId', -1);
             DEV_LOG && console.log('SyncAlarmReceiver', 'received alarm for service', serviceId);
             
-            // Import dynamically to avoid circular dependency
-            import('./sync').then(({ syncService }) => {
-                // Trigger sync for this service
-                syncService.triggerThrottledSync(serviceId);
-            }).catch((error) => {
+            // Import syncService from common to trigger the sync
+            const { syncService } = require('./sync.common');
+            syncService.triggerThrottledSync(serviceId).catch((error) => {
                 console.error('SyncAlarmReceiver', 'failed to trigger sync', error);
             });
         }
@@ -47,9 +51,9 @@ export function initAndroidSyncAlarm() {
  * @param serviceId The sync service ID
  * @param delayMs Delay in milliseconds
  */
-export function scheduleAndroidSyncAlarm(serviceId: number, delayMs: number) {
+function scheduleAndroidSyncAlarmImpl(serviceId: number, delayMs: number) {
     if (!alarmManager) {
-        initAndroidSyncAlarm();
+        initAndroidSyncAlarmImpl();
     }
 
     const context = Utils.android.getApplicationContext();
@@ -91,7 +95,7 @@ export function scheduleAndroidSyncAlarm(serviceId: number, delayMs: number) {
  * Cancel a scheduled alarm for a sync service
  * @param serviceId The sync service ID
  */
-export function cancelAndroidSyncAlarm(serviceId: number) {
+function cancelAndroidSyncAlarmImpl(serviceId: number) {
     if (!alarmManager) {
         return;
     }
@@ -112,3 +116,13 @@ export function cancelAndroidSyncAlarm(serviceId: number) {
 
     DEV_LOG && console.log('SyncService', 'cancelled Android alarm for service', serviceId);
 }
+
+// Set the platform-specific implementations in the common module
+syncCommon.initAndroidSyncAlarm = initAndroidSyncAlarmImpl;
+syncCommon.scheduleAndroidSyncAlarm = scheduleAndroidSyncAlarmImpl;
+syncCommon.cancelAndroidSyncAlarm = cancelAndroidSyncAlarmImpl;
+
+// Stub implementations for iOS functions (not used on Android)
+syncCommon.initIOSSyncBackgroundRefresh = () => {};
+syncCommon.requestIOSBackgroundRefresh = () => {};
+syncCommon.cancelIOSBackgroundRefresh = () => {};
