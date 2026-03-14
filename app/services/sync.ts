@@ -24,6 +24,27 @@ import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, Docum
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
 
+// Platform-specific imports
+let scheduleAndroidSyncAlarm: (serviceId: number, delayMs: number) => void;
+let cancelAndroidSyncAlarm: (serviceId: number) => void;
+let initAndroidSyncAlarms: () => void;
+let requestIOSBackgroundRefresh: (serviceId: number, delayMs: number) => void;
+let cancelIOSBackgroundRefresh: (serviceId: number) => void;
+let initIOSSyncBackgroundRefresh: () => void;
+
+if (__ANDROID__) {
+    const androidModule = require('./sync.android');
+    scheduleAndroidSyncAlarm = androidModule.scheduleAndroidSyncAlarm;
+    cancelAndroidSyncAlarm = androidModule.cancelAndroidSyncAlarm;
+    initAndroidSyncAlarms = androidModule.initAndroidSyncAlarms;
+} else if (__IOS__) {
+    const iosModule = require('./sync.ios');
+    requestIOSBackgroundRefresh = iosModule.requestIOSBackgroundRefresh;
+    cancelIOSBackgroundRefresh = iosModule.cancelIOSBackgroundRefresh;
+    initIOSSyncBackgroundRefresh = iosModule.initIOSSyncBackgroundRefresh;
+}
+
+
 export const syncServicesStore = writable([]);
 
 const SETTINGS_KEY = 'webdav_config';
@@ -220,6 +241,14 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         if (this.enabled) {
             return;
         }
+        
+        // Initialize platform-specific background sync
+        if (__ANDROID__ && initAndroidSyncAlarms) {
+            initAndroidSyncAlarms();
+        } else if (__IOS__ && initIOSSyncBackgroundRefresh) {
+            initIOSSyncBackgroundRefresh();
+        }
+        
         const syncServices = (this.services = this.getStoredSyncServices().filter((s) => s.enabled !== false));
         // DEV_LOG && console.log('Sync', 'start', syncServices);
         // bring back old data config
@@ -250,9 +279,21 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     async stop() {
         DEV_LOG && console.log('Sync', 'stop');
         
-        // Clear all throttle timers
+        // Clear all throttle timers and alarms
         this.throttleTimers.forEach(timer => clearTimeout(timer));
         this.throttleTimers.clear();
+        
+        // Cancel all platform-specific alarms/background tasks
+        if (__ANDROID__ && cancelAndroidSyncAlarm) {
+            this.pendingSyncs.forEach((_, serviceId) => {
+                cancelAndroidSyncAlarm(serviceId);
+            });
+        } else if (__IOS__ && cancelIOSBackgroundRefresh) {
+            this.pendingSyncs.forEach((_, serviceId) => {
+                cancelIOSBackgroundRefresh(serviceId);
+            });
+        }
+        
         this.pendingSyncs.clear();
         this.lastSyncTimes.clear();
         
@@ -374,19 +415,33 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     }
 
     private scheduleAndroidAlarm(serviceId: number, delayMs: number) {
-        // Placeholder for Android alarm scheduling
-        // Will be implemented in platform-specific file
-        DEV_LOG && console.log('SyncService', 'scheduleAndroidAlarm', serviceId, delayMs);
+        if (__ANDROID__ && scheduleAndroidSyncAlarm) {
+            scheduleAndroidSyncAlarm(serviceId, delayMs);
+        }
     }
 
     private requestIOSBackgroundRefresh(serviceId: number, delayMs: number) {
-        // Placeholder for iOS background refresh
-        // Will be implemented in platform-specific file
-        DEV_LOG && console.log('SyncService', 'requestIOSBackgroundRefresh', serviceId, delayMs);
+        if (__IOS__ && requestIOSBackgroundRefresh) {
+            requestIOSBackgroundRefresh(serviceId, delayMs);
+        }
     }
 
     private async executeSyncInternal(data: any) {
         return this.syncDocumentsInternalCore(data);
+    }
+
+    /**
+     * Trigger a throttled sync for a specific service
+     * Called by platform-specific alarm/background refresh handlers
+     */
+    public triggerThrottledSync(serviceId: number) {
+        const pendingData = this.pendingSyncs.get(serviceId);
+        if (pendingData) {
+            this.lastSyncTimes.set(serviceId, Date.now());
+            this.pendingSyncs.delete(serviceId);
+            this.throttleTimers.delete(serviceId);
+            this.executeSyncInternal(pendingData);
+        }
     }
 
     async syncDocumentsInternal(
