@@ -25,6 +25,8 @@ export function initAndroidSyncAlarms() {
             import('../sync').then(({ syncService }) => {
                 // Trigger sync for this service
                 syncService.triggerThrottledSync(serviceId);
+            }).catch((error) => {
+                console.error('SyncAlarmReceiver', 'failed to trigger sync', error);
             });
         }
     });
@@ -46,7 +48,11 @@ export function scheduleAndroidSyncAlarm(serviceId: number, delayMs: number) {
     }
 
     const context = Utils.android.getApplicationContext();
-    const intent = new android.content.Intent(context, (com as any).tns.SyncAlarmReceiver.class);
+    
+    // Create intent for the SyncAlarmReceiver
+    // Note: The receiver class must be in the same package as the main application
+    const intent = new android.content.Intent(`${__APP_ID__}.SYNC_ALARM_ACTION`);
+    intent.setPackage(context.getPackageName());
     intent.putExtra('serviceId', serviceId);
     
     const pendingIntent = android.app.PendingIntent.getBroadcast(
@@ -86,7 +92,9 @@ export function cancelAndroidSyncAlarm(serviceId: number) {
     }
 
     const context = Utils.android.getApplicationContext();
-    const intent = new android.content.Intent(context, (com as any).tns.SyncAlarmReceiver.class);
+    const intent = new android.content.Intent(`${__APP_ID__}.SYNC_ALARM_ACTION`);
+    intent.setPackage(context.getPackageName());
+    
     const pendingIntent = android.app.PendingIntent.getBroadcast(
         context,
         serviceId,

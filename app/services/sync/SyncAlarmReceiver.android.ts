@@ -7,7 +7,13 @@ import { Utils } from '@nativescript/core';
 @JavaProxy('__PACKAGE__.SyncAlarmReceiver')
 export class SyncAlarmReceiver extends android.content.BroadcastReceiver {
     onReceive(context: android.content.Context, intent: android.content.Intent): void {
-        DEV_LOG && console.log('SyncAlarmReceiver', 'onReceive', intent.getAction());
+        const action = intent.getAction();
+        DEV_LOG && console.log('SyncAlarmReceiver', 'onReceive', action);
+        
+        // Check if this is our sync alarm action
+        if (action !== `${__APP_ID__}.SYNC_ALARM_ACTION`) {
+            return;
+        }
         
         const serviceId = intent.getIntExtra('serviceId', -1);
         if (serviceId === -1) {

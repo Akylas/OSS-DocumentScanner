@@ -40,6 +40,10 @@
         </activity>
         
         <!-- Sync Alarm Receiver for throttled background sync -->
-        <receiver android:name=".SyncAlarmReceiver" android:exported="false" />
+        <receiver android:name=".SyncAlarmReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="__PACKAGE__.SYNC_ALARM_ACTION" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

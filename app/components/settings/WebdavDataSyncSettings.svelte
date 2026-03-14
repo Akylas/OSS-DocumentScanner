@@ -118,7 +118,7 @@
                             width={100}
                             on:textChange={(e) => {
                                 const value = parseInt(e.value) || 0;
-                                $store.syncThrottleSeconds = value >= 0 ? value : 0;
+                                $store.syncThrottleSeconds = Math.max(0, value);
                             }} />
                     </ListItemAutoSize>
                 {/if}

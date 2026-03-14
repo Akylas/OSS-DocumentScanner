@@ -404,12 +404,12 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         this.throttleTimers.set(serviceId, timer);
 
         // For Android, schedule alarm if available
-        if (__ANDROID__ && global.isAndroid) {
+        if (__ANDROID__) {
             this.scheduleAndroidAlarm(serviceId, delay);
         }
 
         // For iOS, request background refresh
-        if (__IOS__ && global.isIOS) {
+        if (__IOS__) {
             this.requestIOSBackgroundRefresh(serviceId, delay);
         }
     }
@@ -434,13 +434,13 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
      * Trigger a throttled sync for a specific service
      * Called by platform-specific alarm/background refresh handlers
      */
-    public triggerThrottledSync(serviceId: number) {
+    public async triggerThrottledSync(serviceId: number) {
         const pendingData = this.pendingSyncs.get(serviceId);
         if (pendingData) {
             this.lastSyncTimes.set(serviceId, Date.now());
             this.pendingSyncs.delete(serviceId);
             this.throttleTimers.delete(serviceId);
-            this.executeSyncInternal(pendingData);
+            await this.executeSyncInternal(pendingData);
         }
     }
 
@@ -459,15 +459,13 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         
         // If we have services with throttle configured, handle throttling per service
         const servicesWithThrottle = services.filter(s => s.syncThrottleSeconds && s.syncThrottleSeconds > 0);
+        const servicesWithoutThrottle = services.filter(s => !s.syncThrottleSeconds || s.syncThrottleSeconds === 0);
         
         if (servicesWithThrottle.length > 0 && !data.force) {
-            // For each service, handle throttling separately
-            for (const service of servicesWithThrottle) {
-                await this.handleThrottledSync(data, service);
-            }
+            // For each service with throttle, handle throttling separately
+            await Promise.all(servicesWithThrottle.map(service => this.handleThrottledSync(data, service)));
             
             // Also execute for services without throttle immediately
-            const servicesWithoutThrottle = services.filter(s => !s.syncThrottleSeconds || s.syncThrottleSeconds === 0);
             if (servicesWithoutThrottle.length > 0) {
                 await this.syncDocumentsInternalCore(data);
             }
