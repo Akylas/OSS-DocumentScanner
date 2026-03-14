@@ -49,6 +49,16 @@ export const syncServicesStore = writable([]);
 
 const SETTINGS_KEY = 'webdav_config';
 
+export interface SyncData {
+    withFolders?: boolean;
+    force?: boolean;
+    bothWays?: boolean;
+    type?: number;
+    fromEvent?: string;
+    event?: DocumentEvents;
+}
+
+
 export function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
     const union: S[] = [];
     array1 = Array.from(array1);
@@ -328,14 +338,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
 
     // Per-service throttle timers and pending sync flags
     private throttleTimers: Map<number, number> = new Map();
-    private pendingSyncs: Map<number, {
-        withFolders?;
-        force?;
-        bothWays?;
-        type?: number;
-        fromEvent?: string;
-        event?: DocumentEvents;
-    }> = new Map();
+    private pendingSyncs: Map<number, SyncData> = new Map();
     private lastSyncTimes: Map<number, number> = new Map();
 
     syncDocuments = debounce(
@@ -359,14 +362,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
      * Handles sync throttling per service configuration
      */
     private async handleThrottledSync(
-        data: {
-            withFolders?;
-            force?;
-            bothWays?;
-            type?: number;
-            fromEvent?: string;
-            event?: DocumentEvents;
-        },
+        data: SyncData,
         service: WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }
     ) {
         const serviceId = service.id;
@@ -433,14 +429,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         }
     }
 
-    private async executeSyncInternal(data: {
-        withFolders?;
-        force?;
-        bothWays?;
-        type?: number;
-        fromEvent?: string;
-        event?: DocumentEvents;
-    }) {
+    private async executeSyncInternal(data: SyncData) {
         return this.syncDocumentsInternalCore(data);
     }
 
@@ -458,16 +447,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         }
     }
 
-    async syncDocumentsInternal(
-        data: {
-            withFolders?;
-            force?;
-            bothWays?;
-            type?: number;
-            fromEvent?: string;
-            event?: DocumentEvents;
-        } = {}
-    ) {
+    async syncDocumentsInternal(data: SyncData = {}) {
         // Check which services should sync based on the type
         const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
         
@@ -503,16 +483,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         }
     }
 
-    async syncDocumentsInternalCore(
-        data: {
-            withFolders?;
-            force?;
-            bothWays?;
-            type?: number;
-            fromEvent?: string;
-            event?: DocumentEvents;
-        } = {}
-    ) {
+    async syncDocumentsInternalCore(data: SyncData = {}) {
         try {
             const db = documentsService.db?.db?.db;
             if (!this.enabled || !db) {
