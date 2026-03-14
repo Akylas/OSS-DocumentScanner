@@ -1,6 +1,7 @@
 import { Application, Utils } from '@nativescript/core';
 
 // Constants for intent actions
+// __APP_ID__ is a build-time constant representing the application package ID
 export const SYNC_ALARM_ACTION = `${__APP_ID__}.SYNC_ALARM_ACTION`;
 export const SYNC_THROTTLE_ALARM = `${__APP_ID__}.SYNC_THROTTLE_ALARM`;
 

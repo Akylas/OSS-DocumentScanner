@@ -3,6 +3,8 @@ import { SYNC_ALARM_ACTION, SYNC_THROTTLE_ALARM } from '../sync.android';
 
 /**
  * BroadcastReceiver for handling sync alarms on Android
+ * Note: __PACKAGE__ is a build-time constant that gets replaced with the app package name
+ * This must match the package name in AndroidManifest.xml
  */
 @NativeClass()
 @JavaProxy('__PACKAGE__.SyncAlarmReceiver')

@@ -327,7 +327,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     }
 
     // Per-service throttle timers and pending sync flags
-    private throttleTimers: Map<number, NodeJS.Timeout> = new Map();
+    private throttleTimers: Map<number, number> = new Map();
     private pendingSyncs: Map<number, {
         withFolders?;
         force?;
@@ -367,7 +367,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             fromEvent?: string;
             event?: DocumentEvents;
         },
-        service: any
+        service: WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }
     ) {
         const serviceId = service.id;
         const throttleSeconds = service.syncThrottleSeconds || 0;
@@ -433,7 +433,14 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         }
     }
 
-    private async executeSyncInternal(data: any) {
+    private async executeSyncInternal(data: {
+        withFolders?;
+        force?;
+        bothWays?;
+        type?: number;
+        fromEvent?: string;
+        event?: DocumentEvents;
+    }) {
         return this.syncDocumentsInternalCore(data);
     }
 
@@ -474,7 +481,10 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
                 }
                 return acc;
             },
-            { throttled: [] as any[], nonThrottled: [] as any[] }
+            { 
+                throttled: [] as Array<WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }>, 
+                nonThrottled: [] as Array<WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }> 
+            }
         );
         
         if (throttled.length > 0 && !data.force) {
