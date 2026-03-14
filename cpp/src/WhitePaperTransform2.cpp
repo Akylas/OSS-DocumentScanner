@@ -6,34 +6,37 @@ cv::Mat normalizeKernel2(cv::Mat kernel, int kWidth, int kHeight, double scaling
 {
     const double K_EPS = 1.0e-12;
     double posRange = 0, negRange = 0;
+    
+    // Use direct pointer access for better performance
+    double* kernelData = kernel.ptr<double>(0);
+    const int totalSize = kWidth * kHeight;
 
-    for (int i = 0; i < kWidth * kHeight; ++i)
+    // First pass: zero small values and accumulate ranges
+    for (int i = 0; i < totalSize; ++i)
     {
-        if (std::abs(kernel.at<double>(i)) < K_EPS)
+        double val = kernelData[i];
+        if (std::abs(val) < K_EPS)
         {
-            kernel.at<double>(i) = 0.0;
+            kernelData[i] = 0.0;
+            continue;
         }
-        if (kernel.at<double>(i) < 0)
-        {
-            negRange += kernel.at<double>(i);
-        }
+        if (val < 0)
+            negRange += val;
         else
-        {
-            posRange += kernel.at<double>(i);
-        }
+            posRange += val;
     }
 
-    double posScale = (std::abs(posRange) >= K_EPS) ? posRange : 1.0;
-    double negScale = (std::abs(negRange) >= K_EPS) ? 1.0 : -negRange;
+    // Compute scales
+    double posScale = (std::abs(posRange) >= K_EPS) ? scalingFactor / posRange : scalingFactor;
+    double negScale = (std::abs(negRange) >= K_EPS) ? scalingFactor / (-negRange) : scalingFactor;
 
-    posScale = scalingFactor / posScale;
-    negScale = scalingFactor / negScale;
-
-    for (int i = 0; i < kWidth * kHeight; ++i)
+    // Second pass: apply scaling
+    for (int i = 0; i < totalSize; ++i)
     {
-        if (!std::isnan(kernel.at<double>(i)))
+        double val = kernelData[i];
+        if (!std::isnan(val))
         {
-            kernel.at<double>(i) *= (kernel.at<double>(i) >= 0) ? posScale : negScale;
+            kernelData[i] = val * ((val >= 0) ? posScale : negScale);
         }
     }
 
@@ -49,47 +52,50 @@ void dog2(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sig
     int x = (kWidth - 1) / 2;
     int y = (kHeight - 1) / 2;
     cv::Mat kernel(kWidth, kHeight, CV_64F, cv::Scalar(0.0));
+    
+    // Use direct pointer access for better performance
+    double* kernelData = kernel.ptr<double>(0);
 
     // First Gaussian kernel
     if (sigma1 > 0)
     {
-        double co1 = 1 / (2 * sigma1 * sigma1);
-        double co2 = 1 / (2 * M_PI * sigma1 * sigma1);
+        const double co1 = 1.0 / (2.0 * sigma1 * sigma1);
+        const double co2 = 1.0 / (2.0 * M_PI * sigma1 * sigma1);
         int i = 0;
         for (int v = -y; v <= y; ++v)
         {
+            const int vv = v * v;
             for (int u = -x; u <= x; ++u)
             {
-                kernel.at<double>(i) = exp(-(u * u + v * v) * co1) * co2;
-                i++;
+                kernelData[i++] = exp(-(u * u + vv) * co1) * co2;
             }
         }
     }
     // Unity kernel
     else
     {
-        kernel.at<double>(x + y * kWidth) = 1.0;
+        kernelData[x + y * kWidth] = 1.0;
     }
 
     // Subtract second Gaussian from the kernel
     if (sigma2 > 0)
     {
-        double co1 = 1 / (2 * sigma2 * sigma2);
-        double co2 = 1 / (2 * M_PI * sigma2 * sigma2);
+        const double co1 = 1.0 / (2.0 * sigma2 * sigma2);
+        const double co2 = 1.0 / (2.0 * M_PI * sigma2 * sigma2);
         int i = 0;
         for (int v = -y; v <= y; ++v)
         {
+            const int vv = v * v;
             for (int u = -x; u <= x; ++u)
             {
-                kernel.at<double>(i) -= exp(-(u * u + v * v) * co1) * co2;
-                i++;
+                kernelData[i++] -= exp(-(u * u + vv) * co1) * co2;
             }
         }
     }
     // Unity kernel
     else
     {
-        kernel.at<double>(x + y * kWidth) -= 1.0;
+        kernelData[x + y * kWidth] -= 1.0;
     }
 
     // Zero-normalize scaling kernel with a scaling factor of 1.0

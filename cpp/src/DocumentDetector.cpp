@@ -750,6 +750,21 @@ void DocumentDetector::applyTransforms(Mat &srcMat, std::string transforms, bool
                 whiteboardEnhance2(srcMat, srcMat, "");
             }
         }
+        else if (transform.starts_with("whitepaperfast"))
+        {
+            // Fast algorithm using CLAHE - much faster than DoG-based approach
+            double clipLimit = 3.0;
+            int tileGridSize = 8;
+            if (options.size() > 1)
+            {
+                clipLimit = std::stod(options[1]);
+                if (options.size() > 2)
+                {
+                    tileGridSize = std::stoi(options[2]);
+                }
+            }
+            whiteboardEnhanceFast(srcMat, srcMat, clipLimit, tileGridSize);
+        }
         else if (transform.starts_with("enhance"))
         {
             cv::detailEnhance(srcMat, srcMat, 10, 0.15);
