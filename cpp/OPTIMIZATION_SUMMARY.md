@@ -3,26 +3,49 @@
 ## Overview
 This document summarizes the optimizations made to improve performance while maintaining or improving output quality.
 
-## Changes Made
+## Important Note: DoG Implementation Reverted
 
-### 1. WhitePaperTransform.cpp Optimizations
+**The Difference of Gaussians (DoG) optimization was REVERTED** because it degraded output quality.
 
-#### DoG (Difference of Gaussians) - Major Performance Improvement
-**Problem**: Custom kernel computation with manual loops was very slow (81% of processing time)
+### Why the DoG "Optimization" Failed
 
-**Solution**: Replaced with OpenCV's highly optimized `GaussianBlur` function
-- Uses separable filters (horizontal then vertical passes)
-- Leverages SIMD instructions
-- Better CPU cache utilization
-- **Expected speedup: 5-8x faster**
+The initial optimization replaced the custom kernel approach with OpenCV's `GaussianBlur`:
 
 ```cpp
-// Before: Manual kernel computation
-// After: Direct OpenCV functions
+// Attempted optimization (REVERTED):
 cv::GaussianBlur(img, blurred1, cv::Size(kSize, kSize), sigma1);
 cv::GaussianBlur(img, blurred2, cv::Size(kSize, kSize), sigma2);
 cv::subtract(blurred1, blurred2, dst);
 ```
+
+**Problem**: This approach lost critical kernel normalization that ensures proper contrast and text readability.
+
+The original implementation uses **separate positive and negative scaling** which is essential for document quality:
+
+```cpp
+// Original implementation (RESTORED):
+// 1. Compute combined DoG kernel (Gaussian1 - Gaussian2)
+// 2. Apply normalizeKernel with separate pos/neg scaling
+// 3. Use filter2D with normalized kernel
+```
+
+The `normalizeKernel` function scales positive and negative values differently, which is critical for:
+- Proper contrast enhancement
+- Text readability
+- Edge detection quality
+- Shadow removal
+
+**Result**: While the GaussianBlur approach was faster, it made text unreadable. The original custom kernel implementation was restored to maintain quality.
+
+## Changes Made
+
+### 1. WhitePaperTransform.cpp Optimizations
+
+#### DoG (Difference of Gaussians) - ~~Optimization Reverted~~
+**Status**: REVERTED to original implementation for quality reasons
+- Custom kernel computation with `normalizeKernel` is REQUIRED for document quality
+- Separate positive/negative scaling is not equivalent to simple subtraction
+- Performance impact accepted to maintain readability
 
 #### Contrast Stretch - Optimized (10% of time)
 **Improvements**:
@@ -101,16 +124,18 @@ for (int idx = 0; idx < totalPixels; ++idx)
 
 ## Performance Summary
 
-| Component | Original | Optimized | Speedup |
-|-----------|----------|-----------|---------|
-| DoG (dog) | 81% | ~10-15% | 5-8x |
-| Contrast Stretch | 10% | ~8% | 1.25x |
-| Color Balance | 5% | ~4% | 1.25x |
-| Color Simplification | 100% | ~40% | 2.5x |
+| Component | Original | Optimized | Speedup | Status |
+|-----------|----------|-----------|---------|--------|
+| DoG (dog) | 81% | 81% | 1x | REVERTED - Quality critical |
+| Contrast Stretch | 10% | ~8% | 1.25x | ✅ Optimized |
+| Color Balance | 5% | ~4% | 1.25x | ✅ Optimized |
+| Color Simplification | 100% | ~40% | 2.5x | ✅ Optimized |
 
 **Overall Expected Performance**:
-- WhitePaperTransform: **4-5x faster**
+- WhitePaperTransform: **~1.2x faster** (only non-DoG optimizations applied)
 - ColorSimplificationTransform: **2-3x faster**
+
+**Note**: The DoG optimization was reverted because quality is more important than speed for this component. The custom kernel normalization is essential for readable document output.
 
 ## Technical Details
 

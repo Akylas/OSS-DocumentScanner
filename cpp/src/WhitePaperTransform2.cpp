@@ -2,32 +2,100 @@
 #include "./include/WhitePaperTransform2.h"
 #include <jsoncons/json.hpp>
 
-void dog(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sigma2)
+cv::Mat normalizeKernel2(cv::Mat kernel, int kWidth, int kHeight, double scalingFactor = 1.0)
 {
-    // Use OpenCV's optimized Gaussian blur for much better performance
-    // This is significantly faster than custom kernel computation
-    cv::Mat blurred1, blurred2;
-    
+    const double K_EPS = 1.0e-12;
+    double posRange = 0, negRange = 0;
+
+    for (int i = 0; i < kWidth * kHeight; ++i)
+    {
+        if (std::abs(kernel.at<double>(i)) < K_EPS)
+        {
+            kernel.at<double>(i) = 0.0;
+        }
+        if (kernel.at<double>(i) < 0)
+        {
+            negRange += kernel.at<double>(i);
+        }
+        else
+        {
+            posRange += kernel.at<double>(i);
+        }
+    }
+
+    double posScale = (std::abs(posRange) >= K_EPS) ? posRange : 1.0;
+    double negScale = (std::abs(negRange) >= K_EPS) ? 1.0 : -negRange;
+
+    posScale = scalingFactor / posScale;
+    negScale = scalingFactor / negScale;
+
+    for (int i = 0; i < kWidth * kHeight; ++i)
+    {
+        if (!std::isnan(kernel.at<double>(i)))
+        {
+            kernel.at<double>(i) *= (kernel.at<double>(i) >= 0) ? posScale : negScale;
+        }
+    }
+
+    return kernel;
+}
+
+void dog2(const cv::Mat &img, cv::Mat &dst, int kSize, double sigma1, double sigma2)
+{
+    // Custom DoG implementation with kernel normalization
+    // This normalization is CRITICAL for document quality - do not replace with simple GaussianBlur
+    // The separate positive/negative scaling ensures proper contrast enhancement
+    int kWidth = kSize, kHeight = kSize;
+    int x = (kWidth - 1) / 2;
+    int y = (kHeight - 1) / 2;
+    cv::Mat kernel(kWidth, kHeight, CV_64F, cv::Scalar(0.0));
+
+    // First Gaussian kernel
     if (sigma1 > 0)
     {
-        cv::GaussianBlur(img, blurred1, cv::Size(kSize, kSize), sigma1);
+        double co1 = 1 / (2 * sigma1 * sigma1);
+        double co2 = 1 / (2 * M_PI * sigma1 * sigma1);
+        int i = 0;
+        for (int v = -y; v <= y; ++v)
+        {
+            for (int u = -x; u <= x; ++u)
+            {
+                kernel.at<double>(i) = exp(-(u * u + v * v) * co1) * co2;
+                i++;
+            }
+        }
     }
+    // Unity kernel
     else
     {
-        blurred1 = img.clone();
+        kernel.at<double>(x + y * kWidth) = 1.0;
     }
-    
+
+    // Subtract second Gaussian from the kernel
     if (sigma2 > 0)
     {
-        cv::GaussianBlur(img, blurred2, cv::Size(kSize, kSize), sigma2);
+        double co1 = 1 / (2 * sigma2 * sigma2);
+        double co2 = 1 / (2 * M_PI * sigma2 * sigma2);
+        int i = 0;
+        for (int v = -y; v <= y; ++v)
+        {
+            for (int u = -x; u <= x; ++u)
+            {
+                kernel.at<double>(i) -= exp(-(u * u + v * v) * co1) * co2;
+                i++;
+            }
+        }
     }
+    // Unity kernel
     else
     {
-        blurred2 = img.clone();
+        kernel.at<double>(x + y * kWidth) -= 1.0;
     }
-    
-    // Compute the Difference of Gaussians (DoG)
-    cv::subtract(blurred1, blurred2, dst);
+
+    // Zero-normalize scaling kernel with a scaling factor of 1.0
+    cv::Mat normKernel = normalizeKernel2(kernel, kWidth, kHeight, 1.0);
+
+    cv::filter2D(img, dst, -1, normKernel);
 }
 
 void negateImage2(const cv::Mat &img, const cv::Mat &res)
