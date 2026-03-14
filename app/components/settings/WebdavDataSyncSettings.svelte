@@ -107,6 +107,21 @@
                                 $store.autoSync = e.value;
                             })} />
                 </ListItemAutoSize>
+                {#if $store.autoSync}
+                    <ListItemAutoSize fontSize={20} subtitle={lc('sync_throttle_desc')} title={lc('sync_throttle_seconds')}>
+                        <textfield
+                            col={1}
+                            hint="0"
+                            keyboardType="number"
+                            marginLeft={10}
+                            text={$store.syncThrottleSeconds || 0}
+                            width={100}
+                            on:textChange={(e) => {
+                                const value = parseInt(e.value) || 0;
+                                $store.syncThrottleSeconds = value >= 0 ? value : 0;
+                            }} />
+                    </ListItemAutoSize>
+                {/if}
                 <WebdavSettingsView bind:this={webdavView} {store} />
             </stacklayout>
         </scrollview>
