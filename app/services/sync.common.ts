@@ -24,9 +24,27 @@ import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, Docum
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
 
+// Platform-specific functions - implemented in sync.android.ts and sync.ios.ts
+export let scheduleAndroidSyncAlarm: (serviceId: number, delayMs: number) => void;
+export let cancelAndroidSyncAlarm: (serviceId: number) => void;
+export let initAndroidSyncAlarm: () => void;
+export let requestIOSBackgroundRefresh: (serviceId: number, delayMs: number) => void;
+export let cancelIOSBackgroundRefresh: (serviceId: number) => void;
+export let initIOSSyncBackgroundRefresh: () => void;
+
 export const syncServicesStore = writable([]);
 
 const SETTINGS_KEY = 'webdav_config';
+
+export interface SyncData {
+    withFolders?: boolean;
+    force?: boolean;
+    bothWays?: boolean;
+    type?: number;
+    fromEvent?: string;
+    event?: DocumentEvents;
+}
+
 
 export function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
     const union: S[] = [];
@@ -220,6 +238,14 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         if (this.enabled) {
             return;
         }
+        
+        // Initialize platform-specific background sync
+        if (__ANDROID__ && initAndroidSyncAlarm) {
+            initAndroidSyncAlarm();
+        } else if (__IOS__ && initIOSSyncBackgroundRefresh) {
+            initIOSSyncBackgroundRefresh();
+        }
+        
         const syncServices = (this.services = this.getStoredSyncServices().filter((s) => s.enabled !== false));
         // DEV_LOG && console.log('Sync', 'start', syncServices);
         // bring back old data config
@@ -249,6 +275,25 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     }
     async stop() {
         DEV_LOG && console.log('Sync', 'stop');
+        
+        // Clear all throttle timers and alarms
+        this.throttleTimers.forEach(timer => clearTimeout(timer));
+        this.throttleTimers.clear();
+        
+        // Cancel all platform-specific alarms/background tasks
+        if (__ANDROID__ && cancelAndroidSyncAlarm) {
+            this.pendingSyncs.forEach((_, serviceId) => {
+                cancelAndroidSyncAlarm(serviceId);
+            });
+        } else if (__IOS__ && cancelIOSBackgroundRefresh) {
+            this.pendingSyncs.forEach((_, serviceId) => {
+                cancelIOSBackgroundRefresh(serviceId);
+            });
+        }
+        
+        this.pendingSyncs.clear();
+        this.lastSyncTimes.clear();
+        
         this.off(EVENT_SYNC_STATE, this.onSyncState, this);
         documentsService.off(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);
         documentsService.off(EVENT_DOCUMENT_UPDATED, this.onDocumentUpdated, this);
@@ -278,6 +323,11 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         this.syncRunning = event.state === 'running';
     }
 
+    // Per-service throttle timers and pending sync flags
+    private throttleTimers: Map<number, number> = new Map();
+    private pendingSyncs: Map<number, SyncData> = new Map();
+    private lastSyncTimes: Map<number, number> = new Map();
+
     syncDocuments = debounce(
         async ({
             bothWays = false,
@@ -295,16 +345,132 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         SYNC_DELAY
     );
 
-    async syncDocumentsInternal(
-        data: {
-            withFolders?;
-            force?;
-            bothWays?;
-            type?: number;
-            fromEvent?: string;
-            event?: DocumentEvents;
-        } = {}
+    /**
+     * Handles sync throttling per service configuration
+     */
+    private async handleThrottledSync(
+        data: SyncData,
+        service: WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }
     ) {
+        const serviceId = service.id;
+        const throttleSeconds = service.syncThrottleSeconds || 0;
+
+        // If no throttle configured or force sync, execute immediately
+        if (throttleSeconds === 0 || data.force) {
+            return this.executeSyncInternal(data);
+        }
+
+        const now = Date.now();
+        const lastSyncTime = this.lastSyncTimes.get(serviceId) || 0;
+        const timeSinceLastSync = now - lastSyncTime;
+        const throttleMs = throttleSeconds * 1000;
+
+        // If enough time has passed since last sync, execute immediately
+        if (timeSinceLastSync >= throttleMs) {
+            this.lastSyncTimes.set(serviceId, now);
+            return this.executeSyncInternal(data);
+        }
+
+        // Otherwise, schedule a throttled sync
+        this.pendingSyncs.set(serviceId, data);
+        
+        // Clear existing timer if any
+        if (this.throttleTimers.has(serviceId)) {
+            clearTimeout(this.throttleTimers.get(serviceId));
+        }
+
+        // Schedule sync for when throttle period expires
+        const delay = throttleMs - timeSinceLastSync;
+        const timer = setTimeout(() => {
+            const pendingData = this.pendingSyncs.get(serviceId);
+            if (pendingData) {
+                this.lastSyncTimes.set(serviceId, Date.now());
+                this.pendingSyncs.delete(serviceId);
+                this.throttleTimers.delete(serviceId);
+                this.executeSyncInternal(pendingData);
+            }
+        }, delay);
+
+        this.throttleTimers.set(serviceId, timer);
+
+        // For Android, schedule alarm if available
+        if (__ANDROID__) {
+            this.scheduleAndroidAlarm(serviceId, delay);
+        }
+
+        // For iOS, request background refresh
+        if (__IOS__) {
+            this.requestIOSBackgroundRefresh(serviceId, delay);
+        }
+    }
+
+    private scheduleAndroidAlarm(serviceId: number, delayMs: number) {
+        if (__ANDROID__ && scheduleAndroidSyncAlarm) {
+            scheduleAndroidSyncAlarm(serviceId, delayMs);
+        }
+    }
+
+    private requestIOSBackgroundRefresh(serviceId: number, delayMs: number) {
+        if (__IOS__ && requestIOSBackgroundRefresh) {
+            requestIOSBackgroundRefresh(serviceId, delayMs);
+        }
+    }
+
+    private async executeSyncInternal(data: SyncData) {
+        return this.syncDocumentsInternalCore(data);
+    }
+
+    /**
+     * Trigger a throttled sync for a specific service
+     * Called by platform-specific alarm/background refresh handlers
+     */
+    public async triggerThrottledSync(serviceId: number) {
+        const pendingData = this.pendingSyncs.get(serviceId);
+        if (pendingData) {
+            this.lastSyncTimes.set(serviceId, Date.now());
+            this.pendingSyncs.delete(serviceId);
+            this.throttleTimers.delete(serviceId);
+            await this.executeSyncInternal(pendingData);
+        }
+    }
+
+    async syncDocumentsInternal(data: SyncData = {}) {
+        // Check which services should sync based on the type
+        const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
+        
+        // Split services into throttled and non-throttled in one pass
+        const { throttled, nonThrottled } = services.reduce(
+            (acc, service) => {
+                if (service.syncThrottleSeconds && service.syncThrottleSeconds > 0) {
+                    acc.throttled.push(service);
+                } else {
+                    acc.nonThrottled.push(service);
+                }
+                return acc;
+            },
+            { 
+                throttled: [] as Array<WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }>, 
+                nonThrottled: [] as Array<WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }> 
+            }
+        );
+        
+        if (throttled.length > 0 && !data.force) {
+            // For each service with throttle, handle throttling separately
+            // Each throttled service will be scheduled or executed based on its last sync time
+            await Promise.all(throttled.map(service => this.handleThrottledSync(data, service)));
+            
+            // Also execute for services without throttle immediately
+            // The worker will determine which services actually sync based on the event type
+            if (nonThrottled.length > 0) {
+                await this.syncDocumentsInternalCore(data);
+            }
+        } else {
+            // No throttling, execute immediately
+            await this.syncDocumentsInternalCore(data);
+        }
+    }
+
+    async syncDocumentsInternalCore(data: SyncData = {}) {
         try {
             const db = documentsService.db?.db?.db;
             if (!this.enabled || !db) {
