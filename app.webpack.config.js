@@ -558,12 +558,12 @@ module.exports = (env, params = {}) => {
         if (!!sentry) {
             config.devtool = false;
             config.devtool = 'source-map';
-            // config.plugins.push(
-            //     new webpack.SourceMapDevToolPlugin({
-            //         append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
-            //         filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
-            //     })
-            // );
+            config.plugins.push(
+                new webpack.SourceMapDevToolPlugin({
+                    append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
+                    filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
+                })
+            );
             if (!!uploadSentry) {
                 config.plugins.push(
                     sentryWebpackPlugin({
@@ -586,7 +586,7 @@ module.exports = (env, params = {}) => {
                         sourcemaps: {
                             // rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
                             ignore: ['tns-java-classes', 'hot-update'],
-                            // assets: [join(dist, '**/*.js'), join(dist, process.env.SOURCEMAP_REL_DIR, '*.map')]
+                            assets: [join(dist, '**/*.js'), join(dist, process.env.SOURCEMAP_REL_DIR, '*.map')]
                         }
                     })
                 );
