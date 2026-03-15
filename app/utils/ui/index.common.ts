@@ -682,8 +682,10 @@ export async function showPDFPopoverMenu({
                         await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
-                        DEV_LOG && console.log('print pdf', filePath);
-                        printPDF(filePath, document?.name || 'PDF');
+                        if (filePath) {
+                            DEV_LOG && console.log('print pdf', filePath);
+                            printPDF(filePath, document?.name || 'PDF');
+                        }
                         break;
                     }
                     case 'open': {
