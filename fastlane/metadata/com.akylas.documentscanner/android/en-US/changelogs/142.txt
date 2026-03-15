@@ -1,0 +1,5 @@
+Bug fixes:
+- bring back "reorder mode" in and reduce longpress duration. This should bring enough possibilities for all users
+- editing brightness/contrast was causing too many sync calls
+- import file from document view was not working
+- pdf not syncing on page add
