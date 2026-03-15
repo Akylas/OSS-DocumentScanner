@@ -3,7 +3,30 @@
     "typescript.tsdk": "node_modules/typescript/lib",
     "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
     "cmake.buildDirectory": "${workspaceFolder}/cpp/cpp_test_app/build",
+    "cmake.buildEnvironment": {
+        "OPENCV_VIDEOIO_PRIORITY_LIST": "QT6",
+        "Qt6_DIR": "/usr/lib/x86_64-linux-gnu/cmake/Qt6",
+        "LD_LIBRARY_PATH": "/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH",
+        "QT_AUTO_SCREEN_SCALE_FACTOR": "1",
+        "QT_ENABLE_HIGHDPI_SCALING": "1"
+    },
     "cmake.debugConfig": {
+        "environment": [{
+            "name": "QT_AUTO_SCREEN_SCALE_FACTOR",
+            "value": "1"
+        }, {
+            "name": "QT_ENABLE_HIGHDPI_SCALING",
+            "value": "1"
+        }, {
+            "name": "OPENCV_VIDEOIO_PRIORITY_LIST",
+            "value": "QT6"
+        }, {
+            "name": "Qt6_DIR",
+            "value": "/usr/lib/x86_64-linux-gnu/cmake/Qt6"
+        }, {
+            "name": "LD_LIBRARY_PATH",
+            "value": "/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+        }],
         "args": ["/home/mguillon/Desktop/test_images", "FJMOl.jpg"]
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc-12",
@@ -181,7 +204,5 @@
         "pwa-node": "/Users/mguillon/.local/share/mise/shims/node"
     },
     "python.defaultInterpreterPath": "/Users/mguillon/.local/share/mise/installs/python/3.11.13/bin/python",
-    "i18n-ally-next.localesPaths": [
-        "app/i18n"
-    ]
+    "i18n-ally-next.localesPaths": ["app/i18n"]
 }

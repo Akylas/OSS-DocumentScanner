@@ -16,6 +16,14 @@
                     // it gets resolved by CMake Tools:
                     "name": "PATH",
                     "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+                },
+                {
+                    "name": "QT_AUTO_SCREEN_SCALE_FACTOR",
+                    "value": "1"
+                },
+                {
+                    "name": "QT_ENABLE_HIGHDPI_SCALING",
+                    "value": "1"
                 }
             ],
             "MIMode": "gdb",
