@@ -90,6 +90,20 @@
             value: $store.autoSync
         },
         {
+            id: 'syncThrottleSeconds',
+            key: 'syncThrottleSeconds',
+            title: lc('sync_throttle_seconds'),
+            description: lc('sync_throttle_desc'),
+            valueType: 'number',
+            type: 'prompt',
+            textFieldProperties: {
+                keyboardType: 'number',
+                autocapitalizationType: 'none'
+            } as TextFieldProperties,
+            rightValue: () => ($store.syncThrottleSeconds || 0) + ' s',
+            default: 0
+        },
+        {
             type: 'switch',
             id: 'useDocumentName',
             title: lc('filename_use_document_name'),

@@ -5,6 +5,7 @@ export interface BaseSyncServiceOptions {
     autoSync?: boolean;
     enabled?: boolean;
     color?: string | Color;
+    syncThrottleSeconds?: number;
 }
 
 const singletons: { [k: string]: BaseSyncService } = {};
@@ -15,6 +16,7 @@ export abstract class BaseSyncService extends Observable {
     autoSync = false;
     enabled = true;
     color?: string | Color;
+    syncThrottleSeconds?: number;
     static getEnabledServices() {
         return Object.values(singletons);
     }
