@@ -270,6 +270,10 @@
         itemOverlap: getItemOverlap(viewStyle, $itemHeight),
         'on:swipeMenuClose': (e) => handleTouchAction(e.index, { action: 'up' })
     }}
+    folderViewStyles={{
+        horizontal: { name: lc('horizontal') },
+        vertical: { name: lc('vertical') }
+    }}
     {itemTemplateSelector}
     {title}
     {updateColumns}
