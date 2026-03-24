@@ -34,7 +34,13 @@ export class LocalFolderImageSyncService extends BaseImageSyncService {
         }
     }
     override async getRemoteFolderFiles(folderStr: string) {
+        let nURL: NSURL;
+        if (__IOS__) {
+            nURL = NSURL.fileURLWithPathIsDirectory(this.localFolderPath, true);
+            nURL.startAccessingSecurityScopedResource();
+        }
         const files = await Folder.fromPath(this.localFolderPath).getEntities();
+        nURL?.stopAccessingSecurityScopedResource();
         return files
             .filter((e) => e instanceof File)
             .map(
@@ -58,6 +64,11 @@ export class LocalFolderImageSyncService extends BaseImageSyncService {
             }
             destinationPath = folder.path;
         }
+        let nURL: NSURL;
+        if (__IOS__) {
+            nURL = NSURL.fileURLWithPathIsDirectory(destinationPath, true);
+            nURL.startAccessingSecurityScopedResource();
+        }
         await saveImage(imageSource, {
             exportDirectory: destinationPath,
             fileName,
@@ -65,5 +76,6 @@ export class LocalFolderImageSyncService extends BaseImageSyncService {
             imageQuality,
             overwrite
         });
+        nURL?.stopAccessingSecurityScopedResource();
     }
 }
