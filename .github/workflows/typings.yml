@@ -18,28 +18,28 @@ on:
         required: true
         default: true
         type: boolean
-      android:
-        description: 'Android'
-        required: true
-        default: true
-        type: boolean
+      # android:
+      #   description: 'Android'
+      #   required: true
+      #   default: true
+      #   type: boolean
 
 jobs:
-  typings-documentscanner-android:
-    uses: Akylas/app-tools/.github/workflows/generate_typings_android.yml@main
-    if: github.event.inputs.android == 'true' && github.event.inputs.documentscanner == 'true'
-    with:
-      flavor: documentscanner
+  # typings-documentscanner-android:
+  #   uses: Akylas/app-tools/.github/workflows/generate_typings_android.yml@main
+  #   if: github.event.inputs.android == 'true' && github.event.inputs.documentscanner == 'true'
+  #   with:
+  #     flavor: documentscanner
 
-    secrets: inherit
+  #   secrets: inherit
 
-  typings-cardwallet-android:
-    uses: Akylas/app-tools/.github/workflows/generate_typings_android.yml@main
-    if: github.event.inputs.android == 'true' && github.event.inputs.cardwallet == 'true'
-    with:
-      flavor: cardwallet
-      logging: false
-    secrets: inherit
+  # typings-cardwallet-android:
+  #   uses: Akylas/app-tools/.github/workflows/generate_typings_android.yml@main
+  #   if: github.event.inputs.android == 'true' && github.event.inputs.cardwallet == 'true'
+  #   with:
+  #     flavor: cardwallet
+  #     logging: false
+  #   secrets: inherit
 
   typings-documentscanner-ios:
     uses: Akylas/app-tools/.github/workflows/generate_typings_ios.yml@main
