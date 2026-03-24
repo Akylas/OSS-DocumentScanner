@@ -31,12 +31,14 @@ import { SETTINGS_APP_VERSION, SETTINGS_SYNC_ON_START } from '~/utils/constants'
 import { startOnCam } from './variables';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 import { init as sharedInit } from '@shared/index';
+import { start, stopAppServices } from '~/startHandler';
 
 declare module '@nativescript/core/application/application-common' {
     interface ApplicationCommon {
         servicesStarted: boolean;
     }
 }
+
 try {
     // we cant really use firstAppOpen anymore as all apps
     // already installed with older version without this code would
@@ -131,33 +133,19 @@ try {
     }
 
     let launched = false;
-    async function start() {
-        try {
-            Application.servicesStarted = false;
-            // DEV_LOG && console.log('start');
-            setDocumentsService(documentsService);
-            await Promise.all([networkService.start(), securityService.start(), syncService.start(), ocrService.start(getCurrentISO3Language()), documentsService.start()]);
-            Application.servicesStarted = true;
-            // DEV_LOG && console.log('servicesStarted');
-            Application.notify({ eventName: 'servicesStarted' });
-            if (ApplicationSettings.getBoolean(SETTINGS_SYNC_ON_START, false)) {
-                syncService.syncDocuments({ withFolders: true });
-            }
-        } catch (error) {
-            showError(error, PLAY_STORE_BUILD ? { forcedMessage: lc('startup_error') } : {});
-        }
-    }
+
     Application.on(Application.launchEvent, async () => {
         // DEV_LOG && console.log('launch');
         startThemeHelper();
         launched = true;
-        start();
+
+        start().catch(showError);
     });
     Application.on(Application.resumeEvent, () => {
         if (!launched) {
             // DEV_LOG && console.log('resume');
             launched = true;
-            start();
+            start().catch(showError);
         }
     });
     let pageInstance;
@@ -165,14 +153,7 @@ try {
         DEV_LOG && console.log('exit');
         launched = false;
         //  ocrService.stop();
-        try {
-            securityService.stop();
-            // wait for sync to stop to stop documentService as their could be writes to the db
-            await syncService.stop();
-            documentsService.stop();
-        } catch (error) {
-            console.error(error, error.stack);
-        }
+        stopAppServices();
         pageInstance?.$destroy();
         pageInstance = null;
     });

@@ -1,5 +1,15 @@
+import { hasExactAlarmPermission, requestExactAlarmPermission } from '@nativescript-community/perms';
 import { Color, Observable } from '@nativescript/core';
 import { DocumentEvents } from '~/services/documents';
+
+export async function checkAlarmPermission(throttleDuration) {
+    if (throttleDuration > 0) {
+        if (!hasExactAlarmPermission()) {
+            return requestExactAlarmPermission();
+        }
+    }
+    return true;
+}
 
 export interface BaseSyncServiceOptions {
     autoSync?: boolean;

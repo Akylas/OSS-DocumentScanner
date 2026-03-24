@@ -1,24 +1,25 @@
 <script lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import { showError } from '@shared/utils/showError';
+    import { closeModal } from '@shared/utils/svelte/ui';
     import { get, writable } from 'svelte/store';
     import { l, lc } from '~/helpers/locale';
     import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
     import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { closeModal } from '@shared/utils/svelte/ui';
     import { createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import FolderTextView from '../common/FolderTextView.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import { checkAlarmPermission } from '~/services/sync/BaseSyncService';
     // technique for only specific properties to get updated on store change
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSecondary } = $colors);
 
@@ -78,7 +79,7 @@
             value: $store.autoSync
         },
         {
-            id: 'syncThrottleSeconds',
+            id: 'setting',
             key: 'syncThrottleSeconds',
             title: lc('sync_throttle_seconds'),
             description: lc('sync_throttle_desc'),
@@ -88,8 +89,9 @@
                 keyboardType: 'number',
                 autocapitalizationType: 'none'
             } as TextFieldProperties,
-            rightValue: () => ($store.syncThrottleSeconds || 0) + ' s',
-            default: 0
+            rightValue: () => $store.syncThrottleSeconds || 0,
+            default: 0,
+            validate: checkAlarmPermission
         },
         {
             id: 'setting',
@@ -223,11 +225,14 @@
                         });
                         DEV_LOG && console.log('prompt result', item.key, item.valueType, result);
                         if (result && !!result.result && result.text.length > 0) {
-                            if (item.valueType === 'string') {
-                                $store[item.key] = result.text;
-                            } else {
-                                $store[item.key] = parseInt(result.text, 10);
+                            const newValue = item.valueType === 'string' ? result.text : parseInt(result.text, 10);
+                            if (item.validate) {
+                                const validated = await item.validate(newValue);
+                                if (!validated) {
+                                    return;
+                                }
                             }
+                            $store[item.key] = newValue;
                             updateItem(item);
                         }
                     } else if (item.type === 'slider') {

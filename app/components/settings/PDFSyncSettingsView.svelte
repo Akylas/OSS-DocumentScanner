@@ -92,7 +92,7 @@
     <textfield
         editable={false}
         hint={lc('orientation')}
-        margin={'0 4 5 0'}
+        margin="0 4 5 0"
         text={PDF_OPTIONS['orientation'][$store.exportOptions.orientation].name}
         {variant}
         width={tWidth}
@@ -100,37 +100,23 @@
     <textfield
         editable={false}
         hint={lc('paper_size')}
-        margin={'0 0 5 4'}
+        margin="0 0 5 4"
         text={PDF_OPTIONS['paper_size'][$store.exportOptions.paper_size].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('paper_size', e)} />
 
-    <textfield
-        editable={false}
-        hint={lc('color')}
-        margin={'5 4 5 0'}
-        text={PDF_OPTIONS['color'][$store.exportOptions.color].name}
-        {variant}
-        width={tWidth}
-        on:tap={(e) => selectPDFOption('color', e)} />
+    <textfield editable={false} hint={lc('color')} margin="5 4 5 0" text={PDF_OPTIONS['color'][$store.exportOptions.color].name} {variant} width={tWidth} on:tap={(e) => selectPDFOption('color', e)} />
     <textfield
         editable={false}
         hint={lc('items_per_page')}
-        margin={'5 0 5 4'}
+        margin="5 0 5 4"
         text={PDF_OPTIONS['items_per_page'][$store.exportOptions.items_per_page].name}
         {variant}
         width={tWidth}
         on:tap={(e) => selectPDFOption('items_per_page', e, parseInt)} />
-    <textfield
-        editable={false}
-        hint={lc('page_padding')}
-        margin={'5 4 5 0'}
-        text={$store.exportOptions.page_padding}
-        {variant}
-        width={tWidth}
-        on:tap={(e) => selectSilderPDFOption('page_padding', e)} />
-    <stacklayout margin={'5 0 5 4'} orientation="horizontal" width={tWidth}>
+    <textfield editable={false} hint={lc('page_padding')} margin="5 4 5 0" text={$store.exportOptions.page_padding} {variant} width={tWidth} on:tap={(e) => selectSilderPDFOption('page_padding', e)} />
+    <stacklayout margin="5 0 5 4" orientation="horizontal" width={tWidth}>
         <checkbox id="checkbox" checked={$store.exportOptions.draw_ocr_text} verticalAlignment="center" on:checkedChange={(e) => updatePDFOption('draw_ocr_text', e.value)} ios:margin={14} />
         <label fontSize={14} text={lc('draw_ocr_text')} textWrap={true} verticalAlignment="center" on:tap={(e) => onCheckBox(e, 'draw_ocr_text')} />
     </stacklayout>
@@ -138,7 +124,7 @@
         autocapitalizationType="none"
         autocorrect={false}
         hint={lc('optional_pdf_password')}
-        margin={'5 0 5 0'}
+        margin="5 0 5 0"
         placeholder={lc('password')}
         placeholderColor="gray"
         returnKeyType="done"

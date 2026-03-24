@@ -1051,6 +1051,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nativescript-community/l@npm:4.3.11":
+  version: 4.3.11
+  resolution: "@nativescript-community/l@npm:4.3.11"
+  dependencies:
+    "@nativescript/hook": "npm:~2.0.0"
+    mkdirp: "npm:^1.0.4"
+    shorthash: "npm:0.0.2"
+    simple-plist: "npm:^1.1.1"
+    sprintf-js: "npm:^1.1.2"
+  checksum: 10/8e41b69daffe236c22d6f86d40950e3245990ec16263803db4cd2d219da021c75a581e5241117f4a5770db3dc922cb71f0a7facc33b9556bc02d86b8ef7f13fe
+  languageName: node
+  linkType: hard
+
 "@nativescript-community/licenses@npm:2.0.9":
   version: 2.0.9
   resolution: "@nativescript-community/licenses@npm:2.0.9"
@@ -1075,10 +1088,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/perms@npm:3.0.4":
-  version: 3.0.4
-  resolution: "@nativescript-community/perms@npm:3.0.4"
-  checksum: 10/11e64f6fa79a115e920e9a00567effeef6cae84c4e48dd597b24bd0517f8c9bb9269e30bada3f569520670d75a07733e8c452d4955012b3b1701d7c0a2f48ca5
+"@nativescript-community/perms@npm:3.0.10":
+  version: 3.0.10
+  resolution: "@nativescript-community/perms@npm:3.0.10"
+  checksum: 10/b05739da8a3cd4475246b0695cd9876a5f4f5c991cb080a88b038e5f9c855c4d8ea654b7a5f06e59b6bf69d192be8955d90e8ee8574d68d65bdfb3d28a5d5453
   languageName: node
   linkType: hard
 
@@ -10349,10 +10362,10 @@ __metadata:
     "@nativescript-community/extendedinfo": "npm:1.3.1"
     "@nativescript-community/gesturehandler": "npm:2.0.43"
     "@nativescript-community/https": "npm:4.1.27"
-    "@nativescript-community/l": "npm:4.3.10"
+    "@nativescript-community/l": "npm:4.3.11"
     "@nativescript-community/licenses": "npm:2.0.9"
     "@nativescript-community/md5": "npm:1.0.5"
-    "@nativescript-community/perms": "npm:3.0.4"
+    "@nativescript-community/perms": "npm:3.0.10"
     "@nativescript-community/preferences": "npm:1.3.2"
     "@nativescript-community/sentry": "npm:4.6.45"
     "@nativescript-community/sqlite": "npm:3.5.1"

@@ -24,6 +24,7 @@
     import OcrSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
     import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
     import WebdavSettingsView from './WebdavSettingsView.svelte';
+    import { checkAlarmPermission } from '~/services/sync/BaseSyncService';
     // technique for only specific properties to get updated on store change
     let { colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors;
     $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
@@ -103,7 +104,7 @@
             value: $store.autoSync
         },
         {
-            id: 'syncThrottleSeconds',
+            id: 'setting',
             key: 'syncThrottleSeconds',
             title: lc('sync_throttle_seconds'),
             description: lc('sync_throttle_desc'),
@@ -113,8 +114,9 @@
                 keyboardType: 'number',
                 autocapitalizationType: 'none'
             } as TextFieldProperties,
-            rightValue: () => ($store.syncThrottleSeconds || 0) + ' s',
-            default: 0
+            rightValue: () => $store.syncThrottleSeconds || 0,
+            default: 0,
+            validate: checkAlarmPermission
         },
         {
             id: 'setting',
@@ -243,11 +245,14 @@
                         });
                         DEV_LOG && console.log('prompt result', item.key, item.valueType, result);
                         if (result && !!result.result && result.text.length > 0) {
-                            if (item.valueType === 'string') {
-                                $store[item.key] = result.text;
-                            } else {
-                                $store[item.key] = parseInt(result.text, 10);
+                            const newValue = item.valueType === 'string' ? result.text : parseInt(result.text, 10);
+                            if (item.validate) {
+                                const validated = await item.validate(newValue);
+                                if (!validated) {
+                                    return;
+                                }
                             }
+                            $store[item.key] = newValue;
                             updateItem(item);
                         }
                     } else if (item.type === 'slider') {

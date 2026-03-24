@@ -20,6 +20,7 @@
         "android.app:NotificationManager",
         "android.app:NotificationChannel",
         "android.app:Notification",
+        "android.app:AlarmManager",
         "androidx.core.app:NotificationCompat.Builder",
         "androidx.core.app:NotificationCompat",
         "com.skydoves.colorpickerview.listeners:ColorListener",

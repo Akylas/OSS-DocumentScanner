@@ -12,6 +12,7 @@
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import WebdavSettingsView from './WebdavSettingsView.svelte';
+    import { checkAlarmPermission } from '~/services/sync/BaseSyncService';
     // technique for only specific properties to get updated on store change
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSecondary } = $colors);
 
@@ -117,8 +118,10 @@
                             text={String($store.syncThrottleSeconds || 0)}
                             width={100}
                             on:textChange={(e) => {
-                                const value = parseInt(e.value) || 0;
-                                $store.syncThrottleSeconds = Math.max(0, value);
+                                const value = parseInt(e.value, 10) || 0;
+                                if (checkAlarmPermission(value)) {
+                                    $store.syncThrottleSeconds = Math.max(0, value);
+                                }
                             }} />
                     </ListItemAutoSize>
                 {/if}
