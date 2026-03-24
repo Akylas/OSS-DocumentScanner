@@ -1,4 +1,4 @@
-name: 'release'
+name: 'typings'
 
 on:
   workflow_dispatch:
