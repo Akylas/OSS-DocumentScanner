@@ -471,5 +471,6 @@
   "syncing_documents": "Syncing documents",
   "syncing": "Syncing: %1$s",
   "notification_permission_needed": "notification permission is neded for sync services",
-  "select_documents_to_import": "select documents to import pages from"
+  "select_documents_to_import": "select documents to import pages from",
+  "not_enough_space": "It seems there is not enough space left to take a picture and save it"
 }

@@ -584,7 +584,7 @@ module.exports = (env, params = {}) => {
                             cleanArtifacts: true
                         },
                         sourcemaps: {
-                            rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
+                            // rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
                             ignore: ['tns-java-classes', 'hot-update'],
                             assets: [join(dist, '**/*.js'), join(dist, process.env.SOURCEMAP_REL_DIR, '*.map')]
                         }

@@ -113,8 +113,10 @@
     let statusBarStyle;
     // set hasQRCodes as soon as possible to ensure the layout is correct and does not "jump"
     let hasQRCodes = document.pages.some((p) => p.qrcode?.length > 0);
+    $: canBeExportedToPDF = document.pages.some((p) => p.pkpass || p.imagePath);
+    $: hasImages = document.pages.some((p) => p.imagePath);
     // Check if any page in the document has PKPass data
-    const isPKPassDocument = documentHasPKPassData(document);
+    $: isPKPassDocument = documentHasPKPassData(document);
     const PKPASS_TYPE = 'pkpass';
 
     function computeTopBackgroundColor() {
@@ -303,14 +305,6 @@
     }
     async function showImageExportPopover(event) {
         return showImagePopoverMenu(getSelectedPages(), event.object);
-    }
-    async function addPages(inverseUseSystemCamera = false) {
-        try {
-            await importImageFromCamera({ document, inverseUseSystemCamera });
-            updateQRCodes();
-        } catch (error) {
-            showError(error);
-        }
     }
 
     async function importDocument(importPDFs = true) {
@@ -719,18 +713,28 @@
     }
     async function showOptions(event) {
         if (nbSelected > 0) {
+            const pages = getSelectedPagesWithData();
             // Filter options based on PKPass document
             const allOptions = [
                 { id: 'share', name: lc('share_images'), icon: 'mdi-share-variant' },
-                { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'qrcode', name: lc('detect_qrcode'), icon: 'mdi-qrcode-scan' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ];
+                { id: 'fullscreen', name: lc('show_fullscreen_images'), icon: 'mdi-fullscreen' }
+            ] as any[];
+
+            if (!isPKPassDocument) {
+                if (pages.some((p) => p.page.imagePath)) {
+                    allOptions.push(
+                        ...[
+                            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
+                            { id: 'qrcode', name: lc('detect_qrcode'), icon: 'mdi-qrcode-scan' }
+                        ]
+                    );
+                }
+            }
+            allOptions.push(...[{ id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }]);
 
             // For PKPass documents, only allow share and fullscreen
-            const options = new ObservableArray(isPKPassDocument ? allOptions.filter((opt) => ['share', 'fullscreen'].includes(opt.id)) : allOptions);
+            const options = new ObservableArray(allOptions);
             return showPopoverMenu({
                 options,
                 anchor: event.object,
@@ -791,14 +795,24 @@
             });
         } else {
             // Filter options based on PKPass document
+
             const allOptions = [
                 { id: 'rename', name: lc('rename'), icon: 'mdi-rename' },
                 { id: 'select_all', name: lc('select_all'), icon: 'mdi-select-all' },
-                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' },
-                { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
-                { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' },
-                { id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }
-            ];
+                { id: 'reorder', name: lc('reorder_pages'), icon: 'mdi-reorder-horizontal' }
+            ] as any[];
+
+            if (!isPKPassDocument) {
+                if (hasImages) {
+                    allOptions.push(
+                        ...[
+                            { id: 'transform', name: lc('transform_images'), icon: 'mdi-auto-fix' },
+                            { id: 'ocr', name: lc('ocr_document'), icon: 'mdi-text-recognition' }
+                        ]
+                    );
+                }
+            }
+            allOptions.push(...[{ id: 'delete', name: lc('delete'), icon: 'mdi-delete', color: colorError }]);
 
             // For PKPass documents, only allow delete (of the whole document)
             const options = new ObservableArray(isPKPassDocument ? allOptions.filter((opt) => opt.id === 'delete') : allOptions);
@@ -1383,7 +1397,12 @@
             row={2}
             visibility={editing ? 'collapsed' : 'visible'}>
             <mdbutton class="small-fab" text="mdi-pencil" verticalAlignment="center" visibility={isPKPassDocument ? 'collapsed' : 'visible'} on:tap={startEdit} />
-            <mdbutton class="small-fab" text="mdi-fullscreen" verticalAlignment="center" visibility={isPKPassDocument ? 'collapsed' : 'visible'} on:tap={throttle(() => showFullscreen(), 500)} />
+            <mdbutton
+                class="small-fab"
+                text="mdi-fullscreen"
+                verticalAlignment="center"
+                visibility={isPKPassDocument || !hasImages ? 'collapsed' : 'visible'}
+                on:tap={throttle(() => showFullscreen(), 500)} />
 
             <mdbutton
                 bind:this={fabHolder}
@@ -1407,7 +1426,13 @@
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-close" variant="text" on:tap={cancelEdit} />
                 <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-content-save" variant="text" on:tap={saveEdit} />
             {:else} -->
-            <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-file-pdf-box" variant="text" on:tap={showPDFPopover} />
+            <mdbutton
+                class="actionBarButton"
+                defaultVisualState={statusBarStyle}
+                text="mdi-file-pdf-box"
+                variant="text"
+                visibility={canBeExportedToPDF ? 'visible' : 'collapse'}
+                on:tap={showPDFPopover} />
             <mdbutton class="actionBarButton" defaultVisualState={statusBarStyle} text="mdi-dots-vertical" variant="text" on:tap={showOptions} />
             <!-- {/if} -->
         </CActionBar>

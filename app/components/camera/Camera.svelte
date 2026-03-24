@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+    import { SilentError } from '@akylas/nativescript-app-utils/error';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CameraView } from '@nativescript-community/ui-cameraview';
     import { Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
@@ -37,6 +38,7 @@
     } from '~/utils/constants';
     import { recycleImages } from '~/utils/images';
     import { confirmGoBack, goToDocumentAfterScan, hideLoading, onBackButton, processCameraImage, requestCameraPermission, showLoading, showSettings } from '~/utils/ui';
+    import { checkAvailableStorage } from '~/utils/utils';
     import { colors, shouldListenForSensorOrientation, startOnCam, windowInset } from '~/variables';
 </script>
 
@@ -181,6 +183,9 @@
     async function takePicture(autoScan = false) {
         if (takingPicture || !cameraOpened) {
             return;
+        }
+        if (!checkAvailableStorage(49999872 /* ~47 MB */)) {
+            throw new SilentError(lc('not_enough_space'));
         }
         takingPicture = true;
         if (autoScanHandler) {
@@ -605,7 +610,6 @@
             showError(error);
         }
     }
-
 
     // unused
     function toggleEditing() {

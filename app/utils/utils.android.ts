@@ -165,3 +165,7 @@ export function testGetContent() {
 
     Application.android.startActivity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
 }
+
+export function checkAvailableStorage(sizeBytes: number) {
+    return AndroidSharedUtils.checkAvailableStorage(sizeBytes)
+}

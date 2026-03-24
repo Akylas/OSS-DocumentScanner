@@ -135,6 +135,17 @@ lane :setup do |params|
   ns_install
 end
 
+desc 'Run command in fastlane "env"'
+lane :run_sh do |options|
+  command = options[:command]  # fetch the CLI argument
+  unless command
+    UI.user_error!("You must provide a command! Example: fastlane run_ns command:'ns typings ios'")
+  end
+  puts "run:"  + command
+
+  sh(command)  # execute the passed command
+end
+
 desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]

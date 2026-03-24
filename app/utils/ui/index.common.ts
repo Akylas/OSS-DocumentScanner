@@ -682,8 +682,10 @@ export async function showPDFPopoverMenu({
                         await showLoading(lc('exporting'));
                         const filePath = await exportPDFAsync({ pages, document });
                         hideLoading();
-                        DEV_LOG && console.log('print pdf', filePath);
-                        printPDF(filePath, document?.name || 'PDF');
+                        if (filePath) {
+                            DEV_LOG && console.log('print pdf', filePath);
+                            printPDF(filePath, document?.name || 'PDF');
+                        }
                         break;
                     }
                     case 'open': {
@@ -1001,6 +1003,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
         });
         if (result.folders?.[0]) {
             exportDirectory = result.folders[0];
+            DEV_LOG && console.log('set_export_directory', exportDirectory);
             if (__IOS__) {
                 const bookmark = NSURL.fileURLWithPathIsDirectory(exportDirectory, true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
                     NSURLBookmarkCreationOptions.WithSecurityScope,

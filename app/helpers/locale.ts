@@ -131,9 +131,10 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
 
 prefs.on('key:language', () => {
     const newLanguage = getSavedLanguage();
-    DEV_LOG && console.log('language changed', newLanguage);
+    DEV_LOG && console.log('language changed', lang, getActualLanguage(newLanguage), newLanguage);
     // on pref change we are updating
-    if (getActualLanguage(newLanguage) === lang) {
+    // if "auto" then getActualLanguage will return lang value and we still need to update
+    if (newLanguage !== 'auto' && getActualLanguage(newLanguage) === lang) {
         return;
     }
     setLang(newLanguage);
@@ -192,6 +193,7 @@ export async function selectLanguage() {
     try {
         const result = await internalSelectLanguage();
         if (result?.data) {
+            DEV_LOG && console.log('selectLanguage', result.data);
             ApplicationSettings.setString(SETTINGS_LANGUAGE, result.data);
         }
     } catch (err) {

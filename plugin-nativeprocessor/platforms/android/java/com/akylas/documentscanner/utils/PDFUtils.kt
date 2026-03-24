@@ -755,7 +755,7 @@ class PDFUtils {
                 }
             }
             if (document == null) {
-                return null
+                throw Exception("no document created while exporting PDF $fileName in $destFolder")
             }
             document!!.close()
             if (needsCopy) {
