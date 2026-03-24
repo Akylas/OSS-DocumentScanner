@@ -1,4 +1,4 @@
-import { InAppBrowser } from '@akylas/nativescript-inappbrowser';
+import { showModal } from '@shared/utils/svelte/ui';
 import { ApplicationSettings } from '@nativescript/core';
 import { lc } from '~/helpers/locale';
 import { SilentError } from '@akylas/nativescript-app-utils/error';
@@ -25,7 +25,7 @@ export interface OAuthProvider {
 }
 
 /**
- * Performs OAuth 2.0 authentication flow using an in-app browser
+ * Performs OAuth 2.0 authentication flow using a modal webview
  * @param provider OAuth provider configuration
  * @returns OAuth tokens
  */
@@ -38,7 +38,7 @@ export async function performOAuthFlow(provider: OAuthProvider): Promise<OAuthTo
         const codeChallenge = await generateCodeChallenge(codeVerifier);
         const state = generateRandomString(32);
         
-        const authUrlWithParams = `${authUrl}?${new URLSearchParams({
+        const params = new URLSearchParams({
             client_id: provider.config.clientId,
             redirect_uri: redirectUri,
             response_type: responseType,
@@ -46,40 +46,42 @@ export async function performOAuthFlow(provider: OAuthProvider): Promise<OAuthTo
             state,
             code_challenge: codeChallenge,
             code_challenge_method: 'S256'
-        }).toString()}`;
+        });
+        
+        const authUrlWithParams = `${authUrl}?${params.toString()}`;
 
         DEV_LOG && console.log('OAuth: Opening auth URL:', authUrlWithParams);
 
-        // Open in-app browser for authentication
-        const result = await InAppBrowser.openAuth(authUrlWithParams, redirectUri, {
-            // Customize appearance
-            showTitle: true,
-            enableUrlBarHiding: false,
-            enableDefaultShare: false
+        // Open modal webview for authentication
+        // TODO: Implement OAuthWebViewModal component
+        const OAuthWebViewModal = (await import('~/components/OAuthWebViewModal.svelte')).default;
+        const result: { url?: string; cancelled?: boolean } = await showModal({
+            page: OAuthWebViewModal,
+            fullscreen: true,
+            props: {
+                url: authUrlWithParams,
+                redirectUri: redirectUri
+            }
         });
 
-        if (result.type === 'cancel') {
+        if (result?.cancelled || !result?.url) {
             throw new SilentError(lc('authentication_cancelled'));
-        }
-
-        if (result.type !== 'success') {
-            throw new Error(`Authentication failed: ${result.type}`);
         }
 
         // Parse the callback URL
         const url = new URL(result.url);
-        const params = new URLSearchParams(url.search);
+        const urlParams = new URLSearchParams(url.search);
         
-        const returnedState = params.get('state');
+        const returnedState = urlParams.get('state');
         if (returnedState !== state) {
             throw new Error('State parameter mismatch - potential CSRF attack');
         }
 
-        const code = params.get('code');
-        const error = params.get('error');
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
         
         if (error) {
-            throw new Error(`OAuth error: ${error} - ${params.get('error_description')}`);
+            throw new Error(`OAuth error: ${error} - ${urlParams.get('error_description')}`);
         }
 
         if (!code) {
