@@ -1003,6 +1003,7 @@ export async function showImagePopoverMenu(pages: { page: OCRPage; document: OCR
         });
         if (result.folders?.[0]) {
             exportDirectory = result.folders[0];
+            DEV_LOG && console.log('set_export_directory', exportDirectory);
             if (__IOS__) {
                 const bookmark = NSURL.fileURLWithPathIsDirectory(exportDirectory, true).bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(
                     NSURLBookmarkCreationOptions.WithSecurityScope,
