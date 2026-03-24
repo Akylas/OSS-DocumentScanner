@@ -265,6 +265,28 @@
                                 configToAdd = result;
                                 break;
                             }
+
+                            case 'gdrive_data': {
+                                const page = (await import('~/components/settings/GoogleDriveDataSyncSettings.svelte')).default;
+                                const result = await showModal({
+                                    page,
+                                    fullscreen: true,
+                                    props: {
+                                        data
+                                    }
+                                });
+                                configToAdd = result;
+                                break;
+                            }
+
+                            case 'gdrive_image':
+                            case 'gdrive_pdf':
+                            case 'onedrive_data':
+                            case 'onedrive_image':
+                            case 'onedrive_pdf': {
+                                // TODO: Implement settings UI for these services
+                                throw new Error(`Settings UI not yet implemented for ${selection?.data}`);
+                            }
                         }
                         if (configToAdd) {
                             const data = syncService.addService(selection?.data, configToAdd);
