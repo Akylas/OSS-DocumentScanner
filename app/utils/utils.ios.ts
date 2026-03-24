@@ -92,3 +92,6 @@ export async function askForManagePermission() {
 export function hasManagePermission() {
     return true;
 }
+export function checkAvailableStorage(sizeBytes: number) {
+    return IOSSharedUtils.checkAvailableStorage(sizeBytes)
+}
