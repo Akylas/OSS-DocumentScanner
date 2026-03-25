@@ -128,7 +128,8 @@ try {
         Trace.enable();
     }
     if (__DEV__ && __IOS__) {
-        RocketSim.loadRocketSimConnect();
+        // TODO: it breaks NSUSerDefaults
+        // RocketSim.loadRocketSimConnect();
         DEV_LOG && console.log('loadRocketSimConnect');
     }
 

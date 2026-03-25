@@ -351,7 +351,7 @@
 
 <page actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
-        <collectionview ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
+        <collectionview id="folderPDFSettings" ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(e) => changeColor(item, e)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />

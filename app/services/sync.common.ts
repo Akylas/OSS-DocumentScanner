@@ -150,7 +150,7 @@ export abstract class BaseSyncService extends BaseWorkerHandler<SyncWorker> {
             type |= SyncType.DATA;
         }
         const { object, ...eventWithoutObject } = event;
-            this.syncDocumentsInternal({ event: eventWithoutObject, type, fromEvent: event.eventName });
+        this.syncDocumentsInternal({ event: eventWithoutObject, type, fromEvent: event.eventName });
     }
     onDocumentDeleted(event: DocumentDeletedEventData) {
         DEV_LOG && console.log('SYNC', 'onDocumentDeleted');
@@ -238,11 +238,8 @@ export abstract class BaseSyncService extends BaseWorkerHandler<SyncWorker> {
             return;
         }
 
-        // Initialize platform-specific background sync
-        this.initThrottledSync();
-
         const syncServices = (this.services = this.getStoredSyncServices().filter((s) => s.enabled !== false));
-        // DEV_LOG && console.log('Sync', 'start', syncServices);
+        DEV_LOG && console.log('Sync', 'start', syncServices);
         // bring back old data config
         const configStr = ApplicationSettings.getString(SETTINGS_KEY);
         if (configStr) {
@@ -252,8 +249,9 @@ export abstract class BaseSyncService extends BaseWorkerHandler<SyncWorker> {
             ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
         }
         syncServicesStore.set(syncServices);
-        // DEV_LOG && console.log('Sync', 'start', /* this.services.length,  */ this.enabled);
         if (this.enabled) {
+            // Initialize platform-specific background sync
+            this.initThrottledSync();
             this.notify({ eventName: EVENT_STATE, enabled: this.enabled } as SyncEnabledEventData);
             documentsService.on(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);
             documentsService.on(EVENT_DOCUMENT_UPDATED, this.onDocumentUpdated, this);
@@ -352,7 +350,7 @@ export abstract class BaseSyncService extends BaseWorkerHandler<SyncWorker> {
         const throttleMs = throttleSeconds * 1000;
 
         // If enough time has passed since last sync, execute immediately
-        DEV_LOG && console.log('handleThrottledSync', serviceId, throttleSeconds, data.force, throttleMs, timeSinceLastSync, new Error().stack);
+        DEV_LOG && console.log('handleThrottledSync', serviceId, throttleSeconds, data.force, throttleMs, timeSinceLastSync);
         if (timeSinceLastSync >= throttleMs) {
             this.lastSyncTimes[serviceId] = now;
             this.lastSyncTimes = this.lastSyncTimes;

@@ -30,7 +30,7 @@ extension FileManager {
 @objcMembers
 @objc(IOSSharedUtils)
 class IOSSharedUtils : NSObject {
-    static func checkAvailableStorage(_ sizeBytes: UInt64) {
+    static func checkAvailableStorage(_ sizeBytes: UInt64) -> Bool {
         return FileManager.availableStorageSpaceInBytes() > sizeBytes
     }
 }

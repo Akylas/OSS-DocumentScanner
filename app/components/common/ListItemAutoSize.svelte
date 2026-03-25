@@ -117,7 +117,7 @@
         fontSize={subtitleFontSize * $fontScale}
         marginLeft={16}
         opacity={enabled === false ? 0.38 : 1}
-        text={typeof rightValue === 'function' ? rightValue() : rightValue}
+        text={(typeof rightValue === 'function' ? rightValue() : rightValue) + ''}
         textAlignment="right"
         verticalAlignment="middle"
         visibility={!!rightValue ? 'visible' : 'collapse'}

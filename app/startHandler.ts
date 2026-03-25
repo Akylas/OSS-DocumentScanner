@@ -6,7 +6,7 @@ import { networkService } from '~/services/api';
 import { documentsService } from '~/services/documents';
 import { ocrService } from '~/services/ocr';
 import { securityService } from '~/services/security';
-import { syncService } from '~/services/sync.android';
+import { syncService } from '~/services/sync';
 import { SETTINGS_SYNC_ON_START } from '~/utils/constants';
 
 export class StartError extends CustomError {
@@ -31,6 +31,7 @@ export async function start() {
             syncService.syncDocuments({ withFolders: true });
         }
     } catch (error) {
+        DEV_LOG && console.log(error, error.stack);
         throw new StartError(PLAY_STORE_BUILD ? lc('startup_error') : error.message);
     }
 }

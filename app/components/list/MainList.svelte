@@ -226,6 +226,7 @@
     }
 
     export async function refresh(force = true, filter?: string) {
+
         // DEV_LOG && console.log('refresh', force, filter);
         if (loading || (!force && lastRefreshFilter === filter) || !documentsService.started) {
             return;
@@ -255,6 +256,7 @@
                     documents.map((d) => d.doc?.id)
                 );
             updateNoDocument();
+
         } catch (error) {
             showError(error);
         } finally {

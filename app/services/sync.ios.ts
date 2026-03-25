@@ -8,7 +8,7 @@ export * from './sync.common';
 // Import common to set platform-specific implementations
 
 // Background task identifier for sync
-const SYNC_TASK_IDENTIFIER = `${__APP_ID__}.sync`;
+const SYNC_TASK_IDENTIFIER = `com.akylas.documentscanner.syncTask`;
 
 // Store for pending sync service IDs
 const pendingSyncTasks: Map<number, Date> = new Map();
@@ -77,15 +77,14 @@ export class SyncService extends BaseSyncService {
     scheduleThrottledSync(serviceId: number, delayMs: number) {
         DEV_LOG && console.log('SyncService', 'BGTaskScheduler not available, using timer fallback');
         // Fallback to regular timer for older iOS versions
-        setTimeout(() => {
-            syncService.triggerThrottledSync(serviceId).catch((error) => {
-                console.error('SyncService', 'failed to sync service', serviceId, error);
-            });
-        }, delayMs);
+        // setTimeout(() => {
+        //     syncService.triggerThrottledSync(serviceId).catch((error) => {
+        //         console.error('SyncService', 'failed to sync service', serviceId, error);
+        //     });
+        // }, delayMs);
 
         // Store this service as pending
         const scheduledTime = new Date(Date.now() + delayMs);
-        pendingSyncTasks.set(serviceId, scheduledTime);
 
         // Cancel any existing requests first
         BGTaskScheduler.sharedScheduler.cancelTaskRequestWithIdentifier(SYNC_TASK_IDENTIFIER);
@@ -99,9 +98,9 @@ export class SyncService extends BaseSyncService {
         });
 
         // Create a new background task request
-        const request = BGAppRefreshTaskRequest.alloc().initWithIdentifier(SYNC_TASK_IDENTIFIER);
+        const request = BGProcessingTaskRequest.alloc().initWithIdentifier(SYNC_TASK_IDENTIFIER);
         request.earliestBeginDate = earliestTime;
-
+        request.requiresNetworkConnectivity = true;
         // Submit the request
         const errorRef = new interop.Reference<NSError>();
         //@ts-expect-error missing errorRef arg
@@ -113,6 +112,7 @@ export class SyncService extends BaseSyncService {
 
             syncService.triggerThrottledSync(serviceId);
         } else {
+            pendingSyncTasks.set(serviceId, scheduledTime);
             DEV_LOG && console.log('SyncService', 'scheduled iOS background refresh for service', serviceId, 'at', earliestTime);
         }
     }
@@ -124,6 +124,7 @@ export class SyncService extends BaseSyncService {
     cancelThrottledSync(serviceId: number) {
         // Remove from pending tasks
         pendingSyncTasks.delete(serviceId);
+        DEV_LOG && console.log('SyncService', 'cancelThrottledSync', serviceId);
 
         if (typeof BGTaskScheduler === 'undefined') {
             return;
