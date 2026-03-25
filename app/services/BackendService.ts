@@ -27,35 +27,6 @@ export const stringProperty = (target: object, key: string | symbol) => {
         set: setter
     });
 };
-export const objectProperty = (target: object, key: string | symbol) => {
-    // property value
-    const actualkey = key.toString();
-    const innerKey = '_' + actualkey;
-
-    const savedValue = ApplicationSettings.getString(actualkey);
-    target[innerKey] = savedValue !== undefined ? JSON.parse(savedValue) : undefined;
-
-    // property getter
-    const getter = function () {
-        return this[innerKey];
-    };
-
-    // property setter
-    const setter = function (newVal) {
-        this[innerKey] = newVal;
-        if (newVal === undefined || newVal === null) {
-            return ApplicationSettings.remove(actualkey);
-        }
-        return ApplicationSettings.setString(actualkey, JSON.stringify(newVal));
-    };
-    // Create new property with getter and setter
-    Object.defineProperty(target, key, {
-        configurable: true,
-        enumerable: true,
-        get: getter,
-        set: setter
-    });
-};
 
 interface PropertyDecoratorOptions<T> {
     default?: T;
@@ -104,6 +75,31 @@ export function booleanProperty(...args) {
         return nativePropertyGenerator<boolean>(args[startIndex], args[startIndex + 1], options || {}, ApplicationSettings.getBoolean, ApplicationSettings.setBoolean);
     }
 }
+
+function objectGetter<T>(key, options: PropertyDecoratorOptions<T>) {
+    if (ApplicationSettings.hasKey(key)) {
+        return JSON.parse(ApplicationSettings.getString(key));
+    }
+    return options?.default;
+}
+function objectSetter<T>(key, value: T, options: PropertyDecoratorOptions<T>) {
+    ApplicationSettings.setString(key, JSON.stringify(value));
+}
+export function objectProperty<T>(target: any, k?, desc?: PropertyDescriptor): any;
+export function objectProperty<T>(options: PropertyDecoratorOptions<boolean>): (target: any, k?, desc?: PropertyDescriptor) => any;
+export function objectProperty<T>(...args) {
+    if (args.length === 1) {
+        /// this must be a factory
+        return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
+            return nativePropertyGenerator<T>(target, key, args[0] || {}, objectGetter, objectSetter);
+        };
+    } else {
+        const options = typeof args[1] === 'string' ? undefined : args[0];
+        const startIndex = !!options ? 1 : 0;
+        return nativePropertyGenerator<T>(args[startIndex], args[startIndex + 1], options || {}, objectGetter, objectSetter);
+    }
+}
+
 export const numberProperty = (target: object, key: string | symbol) => {
     // property value
     const actualkey = key.toString();

@@ -102,6 +102,7 @@ module.exports = (env, params = {}) => {
     // env.appComponents.push('~/android/cameraactivity');
     env.appComponents.push('~/android/activity.android');
     env.appComponents.push('~/android/camera_scan_activity');
+    env.appComponents.push('~/android/sync_alarm_receiver');
     const config = webpackConfig(env, params);
     config.entry.application = '~/android/application.android';
     const {

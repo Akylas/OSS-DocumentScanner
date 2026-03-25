@@ -23,10 +23,20 @@ import type SyncWorker from '~/workers/SyncWorker';
 import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, DocumentPagesAddedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from './documents';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
+import { objectProperty } from '~/services/BackendService';
 
 export const syncServicesStore = writable([]);
 
 const SETTINGS_KEY = 'webdav_config';
+
+export interface SyncData {
+    withFolders?: boolean;
+    force?: boolean;
+    bothWays?: boolean;
+    type?: number;
+    fromEvent?: string;
+    event?: DocumentEvents;
+}
 
 export function findArrayDiffs<S, T>(array1: S[], array2: T[], compare: (a: S, b: T) => boolean) {
     const union: S[] = [];
@@ -94,7 +104,10 @@ const SYNC_DELAY = 1000;
 //     };
 // }
 
-export class SyncService extends BaseWorkerHandler<SyncWorker> {
+export abstract class BaseSyncService extends BaseWorkerHandler<SyncWorker> {
+    abstract initThrottledSync();
+    abstract scheduleThrottledSync(serviceId: number, delayMs: number);
+    abstract cancelThrottledSync(serviceId: number);
     constructor() {
         super(() => new Worker('~/workers/SyncWorker'));
     }
@@ -136,7 +149,8 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         if (event.fromWorker !== true) {
             type |= SyncType.DATA;
         }
-        this.syncDocumentsInternal({ event, type, fromEvent: event.eventName });
+        const { object, ...eventWithoutObject } = event;
+        this.syncDocumentsInternal({ event: eventWithoutObject, type, fromEvent: event.eventName });
     }
     onDocumentDeleted(event: DocumentDeletedEventData) {
         DEV_LOG && console.log('SYNC', 'onDocumentDeleted');
@@ -159,17 +173,20 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             if (event.fromWorker !== true) {
                 type |= SyncType.DATA;
             }
-            this.syncDocumentsInternal({ event, type, fromEvent: event.eventName });
+            const { object, ...eventWithoutObject } = event;
+            this.syncDocumentsInternal({ event: eventWithoutObject, type, fromEvent: event.eventName });
         }
     }
     sendImageEvent(event: DocumentPagesAddedEventData) {
         DEV_LOG && console.log('Sync', 'sendImageEvent');
+        const { object, ...eventWithoutObject } = event;
         // only used for image sync
-        this.syncDocumentsInternal({ event, type: SyncType.IMAGE | SyncType.PDF, fromEvent: event.eventName });
+        this.syncDocumentsInternal({ event: eventWithoutObject, type: SyncType.IMAGE | SyncType.PDF, fromEvent: event.eventName });
     }
     sendDataEvent(event: FolderUpdatedEventData) {
         if (event.fromWorker !== true) {
-            this.syncDocumentsInternal({ event, type: SyncType.DATA, fromEvent: event.eventName });
+            const { object, ...eventWithoutObject } = event;
+            this.syncDocumentsInternal({ event: eventWithoutObject, type: SyncType.DATA, fromEvent: event.eventName });
         }
     }
     get enabled() {
@@ -220,8 +237,9 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         if (this.enabled) {
             return;
         }
+
         const syncServices = (this.services = this.getStoredSyncServices().filter((s) => s.enabled !== false));
-        // DEV_LOG && console.log('Sync', 'start', syncServices);
+        DEV_LOG && console.log('Sync', 'start', syncServices);
         // bring back old data config
         const configStr = ApplicationSettings.getString(SETTINGS_KEY);
         if (configStr) {
@@ -231,8 +249,9 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
         }
         syncServicesStore.set(syncServices);
-        // DEV_LOG && console.log('Sync', 'start', /* this.services.length,  */ this.enabled);
         if (this.enabled) {
+            // Initialize platform-specific background sync
+            this.initThrottledSync();
             this.notify({ eventName: EVENT_STATE, enabled: this.enabled } as SyncEnabledEventData);
             documentsService.on(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);
             documentsService.on(EVENT_DOCUMENT_UPDATED, this.onDocumentUpdated, this);
@@ -249,6 +268,19 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     }
     async stop() {
         DEV_LOG && console.log('Sync', 'stop');
+
+        // Clear all throttle timers and alarms
+        // this.throttleTimers.forEach((timer) => clearTimeout(timer));
+        // this.throttleTimers.clear();
+
+        // Cancel all platform-specific alarms/background tasks
+        // this.pendingSyncs.forEach((_, serviceId) => {
+        //     this.cancelThrottledSync(serviceId);
+        // });
+
+        // this.pendingSyncs.clear();
+        // this.lastSyncTimes.clear();
+
         this.off(EVENT_SYNC_STATE, this.onSyncState, this);
         documentsService.off(EVENT_DOCUMENT_ADDED, this.onDocumentAdded, this);
         documentsService.off(EVENT_DOCUMENT_UPDATED, this.onDocumentUpdated, this);
@@ -278,6 +310,12 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         this.syncRunning = event.state === 'running';
     }
 
+    // Per-service throttle timers and pending sync flags
+    // private throttleTimers: Map<number, NodeJS.Timeout> = new Map();
+
+    @objectProperty({ default: {} }) private pendingSyncs: Record<number, SyncData>;
+    @objectProperty({ default: {} }) private lastSyncTimes: Record<number, number>;
+
     syncDocuments = debounce(
         async ({
             bothWays = false,
@@ -295,16 +333,118 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         SYNC_DELAY
     );
 
-    async syncDocumentsInternal(
-        data: {
-            withFolders?;
-            force?;
-            bothWays?;
-            type?: number;
-            fromEvent?: string;
-            event?: DocumentEvents;
-        } = {}
-    ) {
+    /**
+     * Handles sync throttling per service configuration
+     */
+    private async handleThrottledSync(data: SyncData, service: WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES }) {
+        const serviceId = service.id;
+        const throttleSeconds = service.syncThrottleSeconds || 0;
+        // If no throttle configured or force sync, execute immediately
+        if (throttleSeconds === 0 || data.force) {
+            return this.executeSyncInternal(data);
+        }
+
+        const now = Date.now();
+        const lastSyncTime = this.lastSyncTimes[serviceId] || 0;
+        const timeSinceLastSync = now - lastSyncTime;
+        const throttleMs = throttleSeconds * 1000;
+
+        // If enough time has passed since last sync, execute immediately
+        DEV_LOG && console.log('handleThrottledSync', serviceId, throttleSeconds, data.force, throttleMs, timeSinceLastSync);
+        if (timeSinceLastSync >= throttleMs) {
+            this.lastSyncTimes[serviceId] = now;
+            this.lastSyncTimes = this.lastSyncTimes;
+            return this.executeSyncInternal(data);
+        }
+
+        // Otherwise, schedule a throttled sync
+        this.pendingSyncs[serviceId] = data;
+        this.pendingSyncs = this.pendingSyncs;
+
+        // // Clear existing timer if any
+        // if (this.throttleTimers.has(serviceId)) {
+        //     clearTimeout(this.throttleTimers.get(serviceId));
+        // }
+
+        // // Schedule sync for when throttle period expires
+        const delay = throttleMs - timeSinceLastSync;
+        // const timer = setTimeout(() => {
+        //     const pendingData = this.pendingSyncs.get(serviceId);
+        //     if (pendingData) {
+        //         this.lastSyncTimes.set(serviceId, Date.now());
+        //         this.pendingSyncs.delete(serviceId);
+        //         this.throttleTimers.delete(serviceId);
+        //         this.executeSyncInternal(pendingData);
+        //     }
+        // }, delay);
+
+        // this.throttleTimers.set(serviceId, timer);
+
+        this.scheduleThrottledSync(serviceId, delay);
+    }
+
+    private async executeSyncInternal(data: SyncData) {
+        return this.syncDocumentsInternalCore(data);
+    }
+
+    /**
+     * Trigger a throttled sync for a specific service
+     * Called by platform-specific alarm/background refresh handlers
+     */
+    public async triggerThrottledSync(serviceId: number) {
+        DEV_LOG && console.log('triggerThrottledSync', serviceId);
+        const pendingData = this.pendingSyncs[serviceId];
+        if (pendingData) {
+            this.lastSyncTimes[serviceId] = Date.now();
+            this.lastSyncTimes = this.lastSyncTimes;
+            delete this.pendingSyncs[serviceId];
+            this.pendingSyncs = this.pendingSyncs;
+            // this.throttleTimers.delete(serviceId);
+            await this.executeSyncInternal(pendingData);
+        }
+    }
+
+    async syncDocumentsInternal(data: SyncData = {}) {
+        try {
+            // Check which services should sync based on the type
+            const services = this.getStoredSyncServices().filter((s) => s.enabled !== false);
+
+            // Split services into throttled and non-throttled in one pass
+            const { nonThrottled, throttled } = services.reduce(
+                (acc, service) => {
+                    if (service.syncThrottleSeconds && service.syncThrottleSeconds > 0) {
+                        acc.throttled.push(service);
+                    } else {
+                        acc.nonThrottled.push(service);
+                    }
+                    return acc;
+                },
+                {
+                    throttled: [] as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[],
+                    nonThrottled: [] as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[]
+                }
+            );
+
+            if (throttled.length > 0 && !data.force) {
+                // For each service with throttle, handle throttling separately
+                // Each throttled service will be scheduled or executed based on its last sync time
+                await Promise.all(throttled.map((service) => this.handleThrottledSync(data, service)));
+
+                // Also execute for services without throttle immediately
+                // The worker will determine which services actually sync based on the event type
+                if (nonThrottled.length > 0) {
+                    await this.syncDocumentsInternalCore(data);
+                }
+            } else {
+                // No throttling, execute immediately
+                await this.syncDocumentsInternalCore(data);
+            }
+        } catch (error) {
+            console.error('sync error', error, error.stack);
+        }
+    }
+
+    async syncDocumentsInternalCore(data: SyncData = {}) {
         try {
             const db = documentsService.db?.db?.db;
             if (!this.enabled || !db) {
@@ -315,12 +455,8 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             let eventData;
             if (data.event) {
                 const { object, ...otherProps } = data.event;
-                // if (object?.['toJSONObject']) {
-                //     eventData = { ...otherProps, object: event.object['toJSONObject']?.() };
-                // } else {
                 eventData = otherProps;
-                // }
-                DEV_LOG && console.warn('syncDocumentsInternal', data.type, data.fromEvent, Object.keys(otherProps));
+                // DEV_LOG && console.warn('syncDocumentsInternal', data.type, data.fromEvent, Object.keys(otherProps));
             }
             await this.sendMessageToWorker(
                 'sync',
@@ -340,4 +476,3 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         }
     }
 }
-export const syncService = new SyncService();

@@ -1,10 +1,21 @@
+import { hasExactAlarmPermission, requestExactAlarmPermission } from '@nativescript-community/perms';
 import { Color, Observable } from '@nativescript/core';
 import { DocumentEvents } from '~/services/documents';
+
+export async function checkAlarmPermission(throttleDuration) {
+    if (throttleDuration > 0) {
+        if (!hasExactAlarmPermission()) {
+            return requestExactAlarmPermission();
+        }
+    }
+    return true;
+}
 
 export interface BaseSyncServiceOptions {
     autoSync?: boolean;
     enabled?: boolean;
     color?: string | Color;
+    syncThrottleSeconds?: number;
 }
 
 const singletons: { [k: string]: BaseSyncService } = {};
@@ -15,6 +26,7 @@ export abstract class BaseSyncService extends Observable {
     autoSync = false;
     enabled = true;
     color?: string | Color;
+    syncThrottleSeconds?: number;
     static getEnabledServices() {
         return Object.values(singletons);
     }

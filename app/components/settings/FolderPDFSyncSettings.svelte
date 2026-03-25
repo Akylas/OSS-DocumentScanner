@@ -20,6 +20,8 @@
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import OcrSettingsBottomSheet from '../ocr/OCRSettingsBottomSheet.svelte';
     import PdfSyncSettingsView from './PDFSyncSettingsView.svelte';
+    import { requestExactAlarmPermission } from '@nativescript-community/perms';
+    import { checkAlarmPermission } from '~/services/sync/BaseSyncService';
     // technique for only specific properties to get updated on store change
     $: ({ colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
@@ -88,6 +90,21 @@
             title: lc('auto_sync'),
             description: lc('local_auto_sync_desc'),
             value: $store.autoSync
+        },
+        {
+            id: 'setting',
+            key: 'syncThrottleSeconds',
+            title: lc('sync_throttle_seconds'),
+            description: lc('sync_throttle_desc'),
+            valueType: 'number',
+            type: 'prompt',
+            textFieldProperties: {
+                keyboardType: 'number',
+                autocapitalizationType: 'none'
+            } as TextFieldProperties,
+            rightValue: () => $store.syncThrottleSeconds || 0,
+            default: 0,
+            validate: checkAlarmPermission
         },
         {
             type: 'switch',
@@ -225,11 +242,14 @@
                         });
                         DEV_LOG && console.log('prompt result', item.key, item.valueType, result);
                         if (result && !!result.result && result.text.length > 0) {
-                            if (item.valueType === 'string') {
-                                $store[item.key] = result.text;
-                            } else {
-                                $store[item.key] = parseInt(result.text, 10);
+                            const newValue = item.valueType === 'string' ? result.text : parseInt(result.text, 10);
+                            if (item.validate) {
+                                const validated = await item.validate(newValue);
+                                if (!validated) {
+                                    return;
+                                }
                             }
+                            $store[item.key] = newValue;
                             updateItem(item);
                         }
                     } else if (item.type === 'slider') {
@@ -331,7 +351,7 @@
 
 <page actionBarHidden={true}>
     <gridlayout class="pageContent" rows="auto,*">
-        <collectionview ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
+        <collectionview id="folderPDFSettings" ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
             <Template key="color" let:item>
                 <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(e) => changeColor(item, e)}>
                     <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />
