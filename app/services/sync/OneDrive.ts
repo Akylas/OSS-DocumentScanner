@@ -1,6 +1,9 @@
-import { request } from '@nativescript-community/https';
+import { HttpsRequestOptions, HttpsResponse, HttpsResponseLegacy, request } from '@nativescript-community/https';
+import { File } from '@nativescript/core';
 import { wrapNativeHttpException } from '~/services/api';
 import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from './OAuthHelper';
+import { ResponseData } from '~/services/sync/interfaces';
+import { GetFileContentsOptions } from '~/webdav';
 
 /**
  * OneDrive API configuration
@@ -11,7 +14,7 @@ export const ONEDRIVE_PROVIDER: OAuthProvider = {
         authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
         tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
         // This is a placeholder client ID - users should configure their own
-        clientId: 'YOUR_ONEDRIVE_CLIENT_ID',
+        clientId: ONEDRIVE_CLIENT_ID,
         redirectUri: 'com.akylas.documentscanner.oauth:/oauth2redirect',
         scope: 'files.readwrite offline_access',
         responseType: 'code'
@@ -56,9 +59,9 @@ export async function makeOneDriveRequest<T = any>(
         body?: any;
         headers?: Record<string, string>;
     } = {}
-): Promise<T> {
-    const { method = 'GET', body, headers = {} } = options;
-    
+): Promise<HttpsResponse<HttpsResponseLegacy<T>>> {
+    const { body, headers = {}, method = 'GET' } = options;
+
     // Check if token needs refresh
     if (isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
         const newTokens = await refreshAccessToken(ONEDRIVE_PROVIDER, tokens.refreshToken);
@@ -66,65 +69,91 @@ export async function makeOneDriveRequest<T = any>(
     }
 
     const url = endpoint.startsWith('http') ? endpoint : `https://graph.microsoft.com/v1.0/me/drive${endpoint}`;
-    
+
+    const requestOptions = {
+        url,
+        method,
+        headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+            ...headers
+        },
+        content: body
+    } as HttpsRequestOptions;
     try {
-        const response = await request<T>({
-            url,
-            method,
-            headers: {
-                Authorization: `Bearer ${tokens.accessToken}`,
-                ...headers
-            },
-            content: body
-        });
+        const response = await request<T>(requestOptions);
 
         if (response.statusCode >= 400) {
             throw new Error(`OneDrive API error: ${response.statusCode}`);
         }
 
-        return response.content as T;
+        return response;
     } catch (error) {
         DEV_LOG && console.error('OneDrive request error:', error);
-        throw wrapNativeHttpException(error, { url, method });
+        throw wrapNativeHttpException(error, requestOptions);
     }
+}
+
+export async function getOneDriveRequestContents<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
+    tokens: OAuthTokens,
+    fileId: string,
+    httpOptions?: {
+        method?: string;
+        body?: any;
+        headers?: Record<string, string>;
+    },
+    options: GetFileContentsOptions & { format?: V } = {}
+): Promise<ResponseData<V, U>> {
+    const { format = 'json' } = options;
+    const response = await makeOneDriveRequest(tokens, fileId, httpOptions);
+    let body;
+    switch (format) {
+        case 'binary':
+            body = await response.content.toArrayBufferAsync();
+            break;
+        case 'text':
+            body = await response.content.toStringAsync();
+            break;
+        case 'json':
+            body = await response.content.toJSONAsync();
+            break;
+        case 'file':
+            body = await response.content.toFile(options.destinationFilePath);
+            break;
+        default:
+            throw new Error(`Invalid output format: ${format}`);
+    }
+    return body;
 }
 
 /**
  * Get or create a folder by path
  */
 export async function getOrCreateFolder(tokens: OAuthTokens, folderPath: string): Promise<string> {
-    const parts = folderPath.split('/').filter(p => p);
+    const parts = folderPath.split('/').filter((p) => p);
     let currentId = 'root';
-    
+
     for (const part of parts) {
         try {
             // Try to get the folder
-            const response = await makeOneDriveRequest<OneDriveItem>(
-                tokens,
-                `/items/${currentId}:/${part}`
-            );
+            const response = await getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${currentId}:/${part}`);
             currentId = response.id;
         } catch (error) {
             // Folder doesn't exist, create it
-            const response = await makeOneDriveRequest<OneDriveItem>(
-                tokens,
-                `/items/${currentId}/children`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: part,
-                        folder: {},
-                        '@microsoft.graph.conflictBehavior': 'fail'
-                    })
-                }
-            );
+            const response = await getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${currentId}/children`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: part,
+                    folder: {},
+                    '@microsoft.graph.conflictBehavior': 'fail'
+                })
+            });
             currentId = response.id;
         }
     }
-    
+
     return currentId;
 }
 
@@ -132,10 +161,7 @@ export async function getOrCreateFolder(tokens: OAuthTokens, folderPath: string)
  * List items in a folder
  */
 export async function listItems(tokens: OAuthTokens, folderId: string): Promise<OneDriveItem[]> {
-    const response = await makeOneDriveRequest<{ value: OneDriveItem[] }>(
-        tokens,
-        `/items/${folderId}/children`
-    );
+    const response = await getOneDriveRequestContents<{ value: OneDriveItem[] }>(tokens, `/items/${folderId}/children`);
 
     return response.value || [];
 }
@@ -143,24 +169,15 @@ export async function listItems(tokens: OAuthTokens, folderId: string): Promise<
 /**
  * Upload a file to OneDrive
  */
-export async function uploadFile(
-    tokens: OAuthTokens,
-    fileName: string,
-    content: string | ArrayBuffer,
-    parentId: string
-): Promise<string> {
+export async function uploadFile(tokens: OAuthTokens, fileName: string, content: string | ArrayBuffer | File, parentId: string): Promise<string> {
     // For small files (< 4MB), use simple upload
-    const response = await makeOneDriveRequest<OneDriveItem>(
-        tokens,
-        `/items/${parentId}:/${fileName}:/content`,
-        {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/octet-stream'
-            },
-            body: content
-        }
-    );
+    const response = await getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${parentId}:/${fileName}:/content`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/octet-stream'
+        },
+        body: content
+    });
 
     return response.id;
 }
@@ -169,10 +186,7 @@ export async function uploadFile(
  * Download file content
  */
 export async function downloadFile(tokens: OAuthTokens, fileId: string): Promise<string> {
-    const response = await makeOneDriveRequest<{ '@microsoft.graph.downloadUrl': string }>(
-        tokens,
-        `/items/${fileId}`
-    );
+    const response = await getOneDriveRequestContents<{ '@microsoft.graph.downloadUrl': string }>(tokens, `/items/${fileId}`);
 
     // Download from the temporary download URL
     const downloadResponse = await request<string>({
@@ -180,7 +194,7 @@ export async function downloadFile(tokens: OAuthTokens, fileId: string): Promise
         method: 'GET'
     });
 
-    return downloadResponse.content as string;
+    return downloadResponse.content.toStringAsync();
 }
 
 /**
@@ -207,7 +221,7 @@ export async function itemExists(tokens: OAuthTokens, itemName: string, parentId
  */
 export async function getItemByPath(tokens: OAuthTokens, path: string, parentId: string = 'root'): Promise<OneDriveItem | null> {
     try {
-        return await makeOneDriveRequest<OneDriveItem>(tokens, `/items/${parentId}:/${path}`);
+        return getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${parentId}:/${path}`);
     } catch (error) {
         return null;
     }

@@ -52,12 +52,12 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
 
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
         let folderId = this.remoteFolderId;
-        
+
         if (relativePath) {
-            const parts = relativePath.split('/').filter(p => p);
+            const parts = relativePath.split('/').filter((p) => p);
             for (const part of parts) {
                 const files = await listFiles(this.tokens, folderId);
-                const folder = files.find(f => f.name === part && f.mimeType === 'application/vnd.google-apps.folder');
+                const folder = files.find((f) => f.name === part && f.mimeType === 'application/vnd.google-apps.folder');
                 if (!folder) {
                     return [];
                 }
@@ -66,14 +66,14 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
         }
 
         const items = await listFiles(this.tokens, folderId);
-        
+
         return items
-            .filter(item => item.mimeType === 'application/pdf' || item.name.endsWith('.pdf'))
-            .map(item => ({
+            .filter((item) => item.mimeType === 'application/pdf' || item.name.endsWith('.pdf'))
+            .map((item) => ({
                 filename: path.join(relativePath || '', item.name),
                 basename: item.name,
                 lastmod: item.modifiedTime || new Date().toISOString(),
-                size: parseInt(item.size || '0', 10),
+                size: parseInt((item.size || 0) + '', 10),
                 type: 'file' as const,
                 mime: 'application/pdf'
             }));
@@ -82,12 +82,12 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
     override async writePDF(document: OCRDocument, fileName: string, docFolder?: DocFolder) {
         const temp = knownFolders.temp().path;
         const localFilePath = path.join(temp, fileName);
-        
+
         // PDF generation happens before this call - file should exist
-        const file = File.fromPath(localFilePath);
-        if (!file.exists) {
+        if (File.exists(localFilePath)) {
             throw new Error(`PDF file not found: ${localFilePath}`);
         }
+        const file = File.fromPath(localFilePath);
 
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
@@ -96,7 +96,7 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
 
         const content = await file.readText('base64');
         await uploadFile(this.tokens, fileName, content, 'application/pdf', targetFolderId);
-        
+
         // Clean up temp file
         try {
             file.remove();

@@ -24,6 +24,7 @@ import {
     LockOptions,
     PutFileContentsOptions,
     RequestOptions,
+    ResponseData,
     ResponseDataDetailed,
     SearchOptions,
     StatOptions,
@@ -127,12 +128,9 @@ export class WebDAVClient {
         // }
         return processResponsePayload(response, files, options.details);
     }
-    async getFileContents<U extends boolean = false, V extends 'binary' | 'text' | 'file' = 'binary'>(
-        filePath: string,
-        options: GetFileContentsOptions & { details?: U; format?: V } = {}
-    ): Promise<U extends true ? ResponseDataDetailed<Response<V>> : Response<V>> {
+    async getFileContents<V extends 'binary' | 'text' | 'file' | 'json' = 'json'>(filePath: string, options: GetFileContentsOptions & { format?: V } = {}): Promise<ResponseData<V>> {
         const context = this.context;
-        const { format = 'binary' } = options;
+        const { format = 'json' } = options;
         const response = await _getFileContentsBuffer(context, filePath, options);
         let body;
         switch (format) {
@@ -142,6 +140,9 @@ export class WebDAVClient {
             case 'text':
                 body = await response.content.toStringAsync();
                 break;
+            case 'json':
+                body = await response.content.toJSONAsync();
+                break;
             case 'file':
                 body = await response.content.toFile(options.destinationFilePath);
                 break;
@@ -149,7 +150,7 @@ export class WebDAVClient {
                 throw new Error(`Invalid output format: ${format}`);
         }
         // DEV_LOG && console.log('getFileContents', format, body);
-        return processResponsePayload(response, body, options.details);
+        return processResponsePayload(response, body, false);
     }
     async getFileDownloadLink(filePath: string) {
         const context = this.context;

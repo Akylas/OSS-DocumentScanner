@@ -5,7 +5,7 @@ import { DocumentEvents } from '../documents';
 import { BasePDFSyncService, BasePDFSyncServiceOptions } from './BasePDFSyncService';
 import { SERVICES_SYNC_MASK } from './types';
 import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
-import { OneDriveSyncOptions, getOrCreateFolder, listItems, uploadFile, getItemByPath } from './OneDrive';
+import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
 import { OAuthTokens } from './OAuthHelper';
 
 export interface OneDrivePDFSyncServiceOptions extends BasePDFSyncServiceOptions, OneDriveSyncOptions {}
@@ -49,19 +49,17 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
     }
 
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
-        const item = relativePath 
-            ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId)
-            : { id: this.remoteFolderId };
-        
+        const item = relativePath ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId) : { id: this.remoteFolderId };
+
         if (!item) {
             return [];
         }
 
         const items = await listItems(this.tokens, item.id);
-        
+
         return items
-            .filter(item => !item.folder && item.name.endsWith('.pdf'))
-            .map(item => ({
+            .filter((item) => !item.folder && item.name.endsWith('.pdf'))
+            .map((item) => ({
                 filename: path.join(relativePath || '', item.name),
                 basename: item.name,
                 lastmod: item.lastModifiedDateTime || new Date().toISOString(),
@@ -74,22 +72,23 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
     override async writePDF(document: OCRDocument, fileName: string, docFolder?: DocFolder) {
         const temp = knownFolders.temp().path;
         const localFilePath = path.join(temp, fileName);
-        
-        const file = File.fromPath(localFilePath);
-        if (!file.exists) {
+
+        if (File.exists(localFilePath)) {
             throw new Error(`PDF file not found: ${localFilePath}`);
         }
+
+        const file = File.fromPath(localFilePath);
 
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
             const folderPath = docFolder.name;
             const folderItem = await getItemByPath(this.tokens, folderPath, this.remoteFolderId);
-            targetFolderId = folderItem?.id || await getOrCreateFolder(this.tokens, folderPath);
+            targetFolderId = folderItem?.id || (await getOrCreateFolder(this.tokens, folderPath));
         }
 
         const content = await file.readText('base64');
         await uploadFile(this.tokens, fileName, content, targetFolderId);
-        
+
         try {
             file.remove();
         } catch (e) {

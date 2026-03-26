@@ -54,12 +54,12 @@ export class GoogleDriveImageSyncService extends BaseImageSyncService {
 
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
         let folderId = this.remoteFolderId;
-        
+
         if (relativePath) {
-            const parts = relativePath.split('/').filter(p => p);
+            const parts = relativePath.split('/').filter((p) => p);
             for (const part of parts) {
                 const files = await listFiles(this.tokens, folderId);
-                const folder = files.find(f => f.name === part && f.mimeType === 'application/vnd.google-apps.folder');
+                const folder = files.find((f) => f.name === part && f.mimeType === 'application/vnd.google-apps.folder');
                 if (!folder) {
                     return [];
                 }
@@ -68,14 +68,14 @@ export class GoogleDriveImageSyncService extends BaseImageSyncService {
         }
 
         const items = await listFiles(this.tokens, folderId);
-        
+
         return items
-            .filter(item => item.mimeType !== 'application/vnd.google-apps.folder')
-            .map(item => ({
+            .filter((item) => item.mimeType !== 'application/vnd.google-apps.folder')
+            .map((item) => ({
                 filename: path.join(relativePath || '', item.name),
                 basename: item.name,
                 lastmod: item.modifiedTime || new Date().toISOString(),
-                size: parseInt(item.size || '0', 10),
+                size: parseInt((item.size || 0) + '', 10),
                 type: 'file' as const,
                 mime: item.mimeType
             }));
@@ -91,7 +91,7 @@ export class GoogleDriveImageSyncService extends BaseImageSyncService {
             overwrite
         });
         const localFilePath = path.join(temp, fileName);
-        
+
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
             targetFolderId = await getOrCreateFolder(this.tokens, docFolder.name, this.remoteFolderId);
@@ -100,9 +100,9 @@ export class GoogleDriveImageSyncService extends BaseImageSyncService {
         const file = File.fromPath(localFilePath);
         const content = await file.readText('base64');
         const mimeType = imageFormat === 'png' ? 'image/png' : 'image/jpeg';
-        
+
         await uploadFile(this.tokens, fileName, content, mimeType, targetFolderId);
-        
+
         // Clean up temp file
         try {
             file.remove();

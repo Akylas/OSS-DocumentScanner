@@ -6,7 +6,7 @@ import { DocumentEvents } from '../documents';
 import { BaseImageSyncService, BaseImageSyncServiceOptions } from './BaseImageSyncService';
 import { SERVICES_SYNC_MASK } from './types';
 import type { DocFolder } from '~/models/OCRDocument';
-import { OneDriveSyncOptions, getOrCreateFolder, listItems, uploadFile, getItemByPath } from './OneDrive';
+import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
 import { OAuthTokens } from './OAuthHelper';
 
 export interface OneDriveImageSyncServiceOptions extends BaseImageSyncServiceOptions, OneDriveSyncOptions {}
@@ -50,19 +50,17 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
     }
 
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
-        const item = relativePath 
-            ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId)
-            : { id: this.remoteFolderId };
-        
+        const item = relativePath ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId) : { id: this.remoteFolderId };
+
         if (!item) {
             return [];
         }
 
         const items = await listItems(this.tokens, item.id);
-        
+
         return items
-            .filter(item => !item.folder)
-            .map(item => ({
+            .filter((item) => !item.folder)
+            .map((item) => ({
                 filename: path.join(relativePath || '', item.name),
                 basename: item.name,
                 lastmod: item.lastModifiedDateTime || new Date().toISOString(),
@@ -82,19 +80,19 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
             overwrite
         });
         const localFilePath = path.join(temp, fileName);
-        
+
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
             const folderPath = docFolder.name;
             const folderItem = await getItemByPath(this.tokens, folderPath, this.remoteFolderId);
-            targetFolderId = folderItem?.id || await getOrCreateFolder(this.tokens, folderPath);
+            targetFolderId = folderItem?.id || (await getOrCreateFolder(this.tokens, folderPath));
         }
 
         const file = File.fromPath(localFilePath);
         const content = await file.readText('base64');
-        
+
         await uploadFile(this.tokens, fileName, content, targetFolderId);
-        
+
         try {
             file.remove();
         } catch (e) {

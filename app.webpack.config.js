@@ -244,6 +244,7 @@ module.exports = (env, params = {}) => {
         SENTRY_ENABLED: !!sentry,
         NO_CONSOLE: noconsole,
         MDI_FONT_FAMILY: `"${midFontFamily}"`,
+        GOOGLE_OAUTH_CLIENT_ID: `"${isAndroid ? process.env.GOOGLE_OAUTH_CLIENT_ID_ANDROID :  process.env.GOOGLE_OAUTH_CLIENT_ID_IOS}"`,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
