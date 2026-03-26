@@ -20,6 +20,7 @@
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getDirectoryName, hideLoading, requestNotificationPermission, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
+    import { GoogleDriveDataSyncOptions } from '~/services/sync/GoogleDriveDataSyncService';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
 </script>
 
@@ -42,6 +43,7 @@
 
     function refresh() {
         const newItems: Item[] = options || [];
+        DEV_LOG && console.log('refresh', options);
 
         items = new ObservableArray(newItems);
     }
@@ -79,6 +81,20 @@
                     });
                     if (result) {
                         configToUpdate = createWebdavConfig(result);
+                    }
+                    break;
+                }
+                case 'gdrive_data': {
+                    const page = (await import('~/components/settings/GoogleDriveDataSyncSettings.svelte')).default;
+                    const result: GoogleDriveDataSyncOptions = await showModal({
+                        page,
+                        fullscreen: true,
+                        props: {
+                            data: item as GoogleDriveDataSyncOptions
+                        }
+                    });
+                    if (result) {
+                        configToUpdate = result;
                     }
                     break;
                 }
@@ -268,13 +284,14 @@
 
                             case 'gdrive_data': {
                                 const page = (await import('~/components/settings/GoogleDriveDataSyncSettings.svelte')).default;
-                                const result = await showModal({
+                                const result: GoogleDriveDataSyncOptions = await showModal({
                                     page,
                                     fullscreen: true,
                                     props: {
                                         data
                                     }
                                 });
+                                DEV_LOG && console.log('result', result);
                                 configToAdd = result;
                                 break;
                             }
@@ -290,6 +307,7 @@
                         }
                         if (configToAdd) {
                             const data = syncService.addService(selection?.data, configToAdd);
+                            DEV_LOG && console.log('adding item', data);
                             items.push(data);
                         }
                     }
@@ -310,6 +328,10 @@
     function getTitle(item: Item) {
         const result = SERVICES_SYNC_TITLES[item.type] + ': ';
         switch (item.type) {
+            case 'gdrive_data':
+            case 'gdrive_pdf':
+            case 'gdrive_image':
+                return 'Google Drive';
             case 'webdav_data':
             case 'webdav_pdf':
             case 'webdav_image':
@@ -328,6 +350,8 @@
     function getDescription(item: Item) {
         switch (item.type) {
             case 'webdav_data':
+            case 'gdrive_data':
+            case 'onedrive_data':
                 return (item as WebdavDataSyncOptions).remoteFolder;
             // case 'folder_image':
             //     return (item as LocalFolderImageSyncServiceOptions).localFolderPath;

@@ -4,17 +4,18 @@
     import { showError } from '@shared/utils/showError';
     import { colors } from '~/variables';
     import RemoteFolderTextField from '../common/RemoteFolderTextField.svelte';
-    import { performOAuthFlow, OAuthProvider, OAuthTokens } from '~/services/sync/OAuthHelper';
+    import { OAuthProvider, OAuthTokens } from '~/services/sync/OAuthHelper';
     import { SilentError } from '@akylas/nativescript-app-utils/error';
+    import { performOAuthFlow } from '~/services/sync/OAuthHelperUI';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 
     const variant = 'outline';
-    
+
     export let store: Writable<any>;
     export let provider: OAuthProvider;
     export let testConnection: (tokens: OAuthTokens) => Promise<boolean>;
-    
+
     let authenticating = false;
     let testing = false;
     let testConnectionSuccess = 0;
@@ -22,30 +23,25 @@
 
     $: {
         // Check if we have tokens
-        isAuthenticated = !!($store.accessToken);
+        isAuthenticated = !!$store.accessToken;
     }
 
     async function authenticate() {
         try {
             authenticating = true;
             const tokens = await performOAuthFlow(provider);
-            
+            DEV_LOG && console.log('authenticate', tokens);
+
             $store.accessToken = tokens.accessToken;
             $store.refreshToken = tokens.refreshToken;
             $store.expiresAt = tokens.expiresAt;
-            
+
             isAuthenticated = true;
+            DEV_LOG && console.log('isAuthenticated', isAuthenticated);
             testConnectionSuccess = 1;
-            
-            setTimeout(() => {
-                testConnectionSuccess = 0;
-            }, 3000);
         } catch (error) {
             showError(error);
             testConnectionSuccess = -1;
-            setTimeout(() => {
-                testConnectionSuccess = 0;
-            }, 3000);
         } finally {
             authenticating = false;
         }
@@ -64,15 +60,9 @@
             };
             const result = await testConnection(tokens);
             testConnectionSuccess = result ? 1 : -1;
-            setTimeout(() => {
-                testConnectionSuccess = 0;
-            }, 3000);
         } catch (error) {
             showError(error);
             testConnectionSuccess = -1;
-            setTimeout(() => {
-                testConnectionSuccess = 0;
-            }, 3000);
         } finally {
             testing = false;
         }
@@ -90,15 +80,18 @@
 </script>
 
 <stacklayout>
+    <RemoteFolderTextField
+        hint={lc('remote_folder')}
+        margin="5 4"
+        placeholder={lc('remote_folder_placeholder')}
+        returnKeyType="done"
+        text={$store.remoteFolder}
+        {variant}
+        on:textChange={(e) => ($store.remoteFolder = e['value'])} />
     <gridlayout columns="*,auto" rows="auto">
-        <stacklayout col={0}>
+        <stacklayout>
             <label class="sectionHeader" text={lc('authentication')} />
-            <label
-                color={colorOnSurfaceVariant}
-                fontSize={13}
-                padding="0 16 0 16"
-                text={isAuthenticated ? lc('authenticated') : lc('not_authenticated')}
-                textWrap={true} />
+            <label color={colorOnSurfaceVariant} fontSize={13} padding="0 16 0 16" text={isAuthenticated ? lc('authenticated') : lc('not_authenticated')} textWrap={true} />
         </stacklayout>
         <mdbutton
             col={1}
@@ -110,14 +103,8 @@
             on:tap={authenticate} />
     </gridlayout>
 
-    <gridlayout columns="*,auto" margin="10 16" visibility={isAuthenticated ? 'visible' : 'collapse'}>
-        <label col={0} text={lc('connection_status')} verticalAlignment="center" />
-        <mdbutton
-            col={1}
-            isLoading={testing}
-            text={lc('test_connection')}
-            variant="text"
-            on:tap={testConnectionAction} />
+    <gridlayout columns="auto,auto,*" margin="10 16" visibility={isAuthenticated ? 'visible' : 'collapse'}>
+        <label text={lc('connection_status')} verticalAlignment="center" />
         <label
             class="mdi"
             col={1}
@@ -126,14 +113,6 @@
             text={testConnectionSuccess > 0 ? 'mdi-check-circle' : 'mdi-alert-circle'}
             verticalAlignment="center"
             visibility={testConnectionSuccess !== 0 ? 'visible' : 'collapse'} />
+        <mdbutton col={2} horizontalAlignment="right" isLoading={testing} text={lc('test_connection')} variant="text" on:tap={testConnectionAction} />
     </gridlayout>
-
-    <RemoteFolderTextField
-        hint={lc('remote_folder')}
-        margin="5 4"
-        placeholder={lc('remote_folder_placeholder')}
-        returnKeyType="done"
-        text={$store.remoteFolder}
-        {variant}
-        on:textChange={(e) => ($store.remoteFolder = e['value'])} />
 </stacklayout>

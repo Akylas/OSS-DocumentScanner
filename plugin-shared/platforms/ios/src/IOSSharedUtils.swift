@@ -1,6 +1,7 @@
 
 import Foundation
 import AVFoundation
+import CryptoKit
 
 // MARK: - FileManager
 
@@ -23,7 +24,6 @@ extension FileManager {
         }
         return 0
     }
-
 }
 
 
@@ -32,5 +32,27 @@ extension FileManager {
 class IOSSharedUtils : NSObject {
     static func checkAvailableStorage(_ sizeBytes: UInt64) {
         return FileManager.availableStorageSpaceInBytes() > sizeBytes
+    }
+
+    static func generateCodeChallenge(_ codeVerifier: String) -> String {
+        // Convert string to Data
+        let data = Data(codeVerifier.utf8)
+
+        // SHA-256 hash
+        let hash = SHA256.hash(data: data)
+
+        // Convert to Data
+        let hashData = Data(hash)
+
+        // Base64 encode
+        let base64 = hashData.base64EncodedString()
+
+        // Convert to Base64 URL-safe (no padding)
+        let base64url = base64
+            .replacingOccurrences(of: "=", with: "")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+
+        return base64url
     }
 }

@@ -14,7 +14,7 @@ export const ONEDRIVE_PROVIDER: OAuthProvider = {
         authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
         tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
         // This is a placeholder client ID - users should configure their own
-        clientId: ONEDRIVE_CLIENT_ID,
+        clientId: '',
         redirectUri: 'com.akylas.documentscanner.oauth:/oauth2redirect',
         scope: 'files.readwrite offline_access',
         responseType: 'code'
@@ -77,6 +77,7 @@ export async function makeOneDriveRequest<T = any>(
             Authorization: `Bearer ${tokens.accessToken}`,
             ...headers
         },
+        responseOnMainThread: false,
         content: body
     } as HttpsRequestOptions;
     try {
@@ -182,10 +183,11 @@ export async function uploadFile(tokens: OAuthTokens, fileName: string, content:
     return response.id;
 }
 
-/**
- * Download file content
- */
-export async function downloadFile(tokens: OAuthTokens, fileId: string): Promise<string> {
+export async function downloadFile<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
+    tokens: OAuthTokens,
+    fileId: string,
+    options: GetFileContentsOptions & { format?: V } = {}
+): Promise<ResponseData<V, U>> {
     const response = await getOneDriveRequestContents<{ '@microsoft.graph.downloadUrl': string }>(tokens, `/items/${fileId}`);
 
     // Download from the temporary download URL
@@ -194,7 +196,25 @@ export async function downloadFile(tokens: OAuthTokens, fileId: string): Promise
         method: 'GET'
     });
 
-    return downloadResponse.content.toStringAsync();
+    const { format = 'json' } = options;
+    let body;
+    switch (format) {
+        case 'binary':
+            body = await downloadResponse.content.toArrayBufferAsync();
+            break;
+        case 'text':
+            body = await downloadResponse.content.toStringAsync();
+            break;
+        case 'json':
+            body = await downloadResponse.content.toJSONAsync();
+            break;
+        case 'file':
+            body = await downloadResponse.content.toFile(options.destinationFilePath);
+            break;
+        default:
+            throw new Error(`Invalid output format: ${format}`);
+    }
+    return body;
 }
 
 /**

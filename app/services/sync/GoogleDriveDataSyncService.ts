@@ -69,6 +69,9 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
 
     async createDirectory(remotePath: string, recursive = true) {
         const pathParts = remotePath.split('/').filter((p) => p);
+        if (pathParts[0] === this.remoteFolder) {
+            pathParts.shift();
+        }
         let targetFolderId = this.remoteFolderId;
 
         for (const part of pathParts) {
@@ -98,6 +101,7 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         const entities = await folder.getEntities();
         for (let index = 0; index < entities.length; index++) {
             const entity = entities[index];
+            DEV_LOG && console.log('sendFolderToGDrive entity', entity.name, entity.path);
             if (entity instanceof File) {
                 // await this.putFileContents(path.join(remotePath, entity.name), entity.path);
 
@@ -124,19 +128,19 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         //     }
         //     folderId = folder.id;
         // }
-
-        return this.getFileId(filename) !== undefined;
+        return (await this.getFileId(filename)) !== undefined;
     }
 
     override async getFileFromRemote(filename: string, document?: OCRDocument) {
-        const fullPath = document ? path.join(document.id, filename) : filename;
+        const remoteDocPath = document ? path.join(this.remoteFolder, document.id) : this.remoteFolder;
+        const fullPath = path.join(remoteDocPath, filename);
 
         const fileId = await this.getFileId(fullPath);
         if (!fileId) {
             throw new Error(`File not found: ${fullPath}`);
         }
 
-        const result = await downloadFile(this.tokens, fileId);
+        const result = await downloadFile(this.tokens, fileId, { format: 'text' });
         DEV_LOG && console.log('getFileFromRemote', result);
         return result;
     }
@@ -153,8 +157,9 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         const parts = relativePath.split('/').filter((p) => p);
         const fileName = parts.pop();
 
-        const folderId = await this.createDirectory(relativePath, true);
-
+        const parentPath = parts.join('/');
+        const folderId = await this.createDirectory(parentPath, true);
+        DEV_LOG && console.log('putFileContentsFromData', relativePath, folderId, data);
         await uploadFile(this.tokens, fileName, data, 'application/octet-stream', folderId);
     }
 
@@ -163,6 +168,9 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         if (relativePath) {
             // Navigate to subdirectory
             const parts = relativePath.split('/').filter((p) => p);
+            if (parts[0] === this.remoteFolder) {
+                parts.shift();
+            }
             for (const part of parts) {
                 const files = await listFiles(this.tokens, folderId);
                 const folder = files.find((f) => f.name === part && f.mimeType === 'application/vnd.google-apps.folder');
@@ -178,13 +186,15 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         return listFiles(this.tokens, folderId);
     }
     async getFileId(relativePath: string) {
-        const fileName = basename(relativePath);
+        const parts = relativePath.split('/').filter((p) => p);
+        const fileName = parts.pop();
 
-        const files = await this.getFiles(relativePath);
+        const parentPath = parts.join('/');
+
+        const files = await this.getFiles(parentPath);
         const file = files.find((f) => f.name === fileName);
-        if (file) {
-            return file.id;
-        }
+        DEV_LOG && console.log('getFileId', relativePath, files, file);
+        return file?.id;
     }
 
     override async deleteFile(relativePath: string) {

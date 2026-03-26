@@ -1,12 +1,11 @@
-import { showModal } from '@shared/utils/svelte/ui';
+import { request } from '@nativescript-community/https';
 import { ApplicationSettings } from '@nativescript/core';
-import { lc } from '~/helpers/locale';
-import { SilentError } from '@akylas/nativescript-app-utils/error';
 
 export interface OAuthConfig {
     authUrl: string;
     tokenUrl: string;
     clientId: string;
+    clientSecret?: string;
     redirectUri: string;
     scope: string;
     responseType?: string;
@@ -25,108 +24,46 @@ export interface OAuthProvider {
 }
 
 /**
- * Performs OAuth 2.0 authentication flow using a modal webview
- * @param provider OAuth provider configuration
- * @returns OAuth tokens
- */
-export async function performOAuthFlow(provider: OAuthProvider): Promise<OAuthTokens> {
-    const { authUrl, redirectUri, responseType = 'code' } = provider.config;
-    
-    try {
-        // Build authorization URL with PKCE for security
-        const codeVerifier = generateCodeVerifier();
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
-        const state = generateRandomString(32);
-        
-        const params = new URLSearchParams({
-            client_id: provider.config.clientId,
-            redirect_uri: redirectUri,
-            response_type: responseType,
-            scope: provider.config.scope,
-            state,
-            code_challenge: codeChallenge,
-            code_challenge_method: 'S256'
-        });
-        
-        const authUrlWithParams = `${authUrl}?${params.toString()}`;
-
-        DEV_LOG && console.log('OAuth: Opening auth URL:', authUrlWithParams);
-
-        // Open modal webview for authentication
-        // TODO: Implement OAuthWebViewModal component
-        const OAuthWebViewModal = (await import('~/components/OAuthWebViewModal.svelte')).default;
-        const result: { url?: string; cancelled?: boolean } = await showModal({
-            page: OAuthWebViewModal,
-            fullscreen: true,
-            props: {
-                url: authUrlWithParams,
-                redirectUri: redirectUri
-            }
-        });
-
-        if (result?.cancelled || !result?.url) {
-            throw new SilentError(lc('authentication_cancelled'));
-        }
-
-        // Parse the callback URL
-        const url = new URL(result.url);
-        const urlParams = new URLSearchParams(url.search);
-        
-        const returnedState = urlParams.get('state');
-        if (returnedState !== state) {
-            throw new Error('State parameter mismatch - potential CSRF attack');
-        }
-
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
-        
-        if (error) {
-            throw new Error(`OAuth error: ${error} - ${urlParams.get('error_description')}`);
-        }
-
-        if (!code) {
-            throw new Error('No authorization code received');
-        }
-
-        // Exchange authorization code for tokens
-        const tokens = await exchangeCodeForTokens(provider, code, codeVerifier);
-        
-        return tokens;
-    } catch (error) {
-        DEV_LOG && console.error('OAuth flow error:', error);
-        throw error;
-    }
-}
-
-/**
  * Exchanges authorization code for access and refresh tokens
  */
-async function exchangeCodeForTokens(provider: OAuthProvider, code: string, codeVerifier: string): Promise<OAuthTokens> {
-    const { tokenUrl, clientId, redirectUri } = provider.config;
-    
-    const body = new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        code_verifier: codeVerifier
-    }).toString();
+export async function exchangeCodeForTokens(provider: OAuthProvider, code: string, codeVerifier: string): Promise<OAuthTokens> {
+    const { clientId, clientSecret, redirectUri, tokenUrl } = provider.config;
 
-    const response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+    const data = await (
+        await request({
+            url: tokenUrl,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: {
+                grant_type: 'authorization_code',
+                code,
+                client_id: clientId,
+                client_secret: clientSecret,
+                redirect_uri: redirectUri,
+                code_verifier: codeVerifier
+            }
+        })
+    ).content.toJSONAsync();
+    if (data.error) {
+        throw new Error(data.error_description);
     }
 
-    const data = await response.json();
-    
+    DEV_LOG &&
+        console.log(
+            'tokenUrl',
+            tokenUrl,
+            JSON.stringify({
+                grant_type: 'authorization_code',
+                code,
+                client_id: clientId,
+                redirect_uri: redirectUri,
+                code_verifier: codeVerifier
+            }),
+            data
+        );
+
     return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
@@ -139,8 +76,8 @@ async function exchangeCodeForTokens(provider: OAuthProvider, code: string, code
  * Refreshes an expired access token
  */
 export async function refreshAccessToken(provider: OAuthProvider, refreshToken: string): Promise<OAuthTokens> {
-    const { tokenUrl, clientId } = provider.config;
-    
+    const { clientId, tokenUrl } = provider.config;
+
     const body = new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
@@ -161,7 +98,7 @@ export async function refreshAccessToken(provider: OAuthProvider, refreshToken: 
     }
 
     const data = await response.json();
-    
+
     return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token || refreshToken, // Keep old refresh token if not provided
@@ -183,50 +120,28 @@ export function isTokenExpired(expiresAt?: number, bufferSeconds: number = 300):
 /**
  * Generate a random code verifier for PKCE
  */
-function generateCodeVerifier(): string {
+export function generateCodeVerifier(): string {
     return generateRandomString(128);
-}
-
-/**
- * Generate a code challenge from a verifier for PKCE
- */
-async function generateCodeChallenge(verifier: string): Promise<string> {
-    // For simplicity, we'll use the plain method
-    // In production, you should use S256 (SHA-256 hash)
-    // This would require importing a crypto library
-    return base64URLEncode(verifier);
 }
 
 /**
  * Generate a random string for state/verifier
  */
-function generateRandomString(length: number): string {
+export function generateRandomString(length: number): string {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     let result = '';
     const randomValues = new Uint8Array(length);
-    
+
     // Generate random values
     for (let i = 0; i < length; i++) {
         randomValues[i] = Math.floor(Math.random() * 256);
     }
-    
+
     for (let i = 0; i < length; i++) {
         result += charset[randomValues[i] % charset.length];
     }
-    
-    return result;
-}
 
-/**
- * Base64 URL encode a string
- */
-function base64URLEncode(str: string): string {
-    // Simple base64 encoding for the plain method
-    // In a real implementation, you'd want proper base64url encoding
-    return str
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+    return result;
 }
 
 /**

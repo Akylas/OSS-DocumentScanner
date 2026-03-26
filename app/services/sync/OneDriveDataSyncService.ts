@@ -99,14 +99,15 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
     }
 
     override async getFileFromRemote(filename: string, document?: OCRDocument) {
-        const fullPath = document ? path.join(document.id, filename) : filename;
+        const remoteDocPath = document ? path.join(this.remoteFolder, document.id) : this.remoteFolder;
+        const fullPath = path.join(remoteDocPath, filename);
         const item = await getItemByPath(this.tokens, fullPath, this.remoteFolderId);
 
         if (!item) {
             throw new Error(`File not found: ${fullPath}`);
         }
 
-        const result = await downloadFile(this.tokens, item.id);
+        const result = await downloadFile(this.tokens, item.id, { format: 'text' });
         DEV_LOG && console.log('getFileFromRemote', result);
         return result;
     }

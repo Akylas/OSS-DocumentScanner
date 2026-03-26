@@ -95,3 +95,7 @@ export function hasManagePermission() {
 export function checkAvailableStorage(sizeBytes: number) {
     return IOSSharedUtils.checkAvailableStorage(sizeBytes)
 }
+
+export function generateCodeChallenge(str: string): string {
+    return IOSSharedUtils.generateCodeChallenge(str);
+}

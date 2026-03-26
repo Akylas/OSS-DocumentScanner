@@ -2,7 +2,7 @@ import { HttpsResponse, HttpsResponseLegacy } from '@nativescript-community/http
 import { File } from '@nativescript/core';
 import type { HTTPSOptions, Headers } from '~/services/api';
 
-export * from '~/services/sync/interfaces';
+export type * from '~/services/sync/interfaces';
 
 export type AuthHeader = string;
 export type { Headers };

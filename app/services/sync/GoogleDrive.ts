@@ -15,7 +15,8 @@ export const GOOGLE_DRIVE_PROVIDER: OAuthProvider = {
         tokenUrl: 'https://oauth2.googleapis.com/token',
         // This is a placeholder client ID - users should configure their own
         clientId: GOOGLE_OAUTH_CLIENT_ID,
-        redirectUri: 'com.akylas.documentscanner.oauth:/oauth2redirect',
+        clientSecret: GOOGLE_OAUTH_CLIENT_SECRET,
+        redirectUri: 'http://localhost/oauth2redirect',
         scope: 'https://www.googleapis.com/auth/drive.file',
         responseType: 'code'
     }
@@ -68,11 +69,11 @@ export async function makeGoogleDriveRequest<T = any>(
             Authorization: `Bearer ${tokens.accessToken}`,
             ...headers
         },
-        content: body
+        responseOnMainThread: false,
+        body
     } as HttpsRequestOptions;
     try {
         const response = await request<T>(requestOptions);
-
         if (response.statusCode >= 400) {
             throw new Error(`Google Drive API error: ${response.statusCode}`);
         }
@@ -132,16 +133,6 @@ export async function uploadFile(tokens: OAuthTokens, fileName: string, content:
         parents: [parentId]
     };
 
-    // Use multipart upload
-    // const boundary = '-------314159265358979323846';
-    // const delimiter = `\r\n--${boundary}\r\n`;
-    // const closeDelimiter = `\r\n--${boundary}--`;
-
-    // const metadataPart = delimiter + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata);
-    // const contentPart = delimiter + `Content-Type: ${mimeType}\r\n\r\n` + content;
-
-    // const multipartBody = metadataPart + contentPart + closeDelimiter;
-
     const response = await getGoogleDriveRequestContents<GoogleDriveFile>(tokens, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
@@ -149,11 +140,13 @@ export async function uploadFile(tokens: OAuthTokens, fileName: string, content:
         },
         body: [
             {
+                parameterName: 'metadata',
                 contentType: 'application/json; charset=UTF-8',
                 fileName,
                 data: JSON.stringify(metadata)
             },
             {
+                parameterName: 'file',
                 contentType: mimeType,
                 fileName,
                 data: content
@@ -198,8 +191,12 @@ export async function getGoogleDriveRequestContents<U = any, V extends 'binary' 
 /**
  * Download file content
  */
-export async function downloadFile(tokens: OAuthTokens, fileId: string): Promise<string> {
-    return getGoogleDriveRequestContents<string>(tokens, `/files/${fileId}?alt=media`);
+export async function downloadFile<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
+    tokens: OAuthTokens,
+    fileId: string,
+    options: GetFileContentsOptions & { format?: V } = {}
+): Promise<ResponseData<V, U>> {
+    return getGoogleDriveRequestContents<U, V>(tokens, `/files/${fileId}?alt=media`, undefined, options);
 }
 
 /**

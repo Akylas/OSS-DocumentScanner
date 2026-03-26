@@ -1,5 +1,7 @@
 {
     "uses": [
+        "com.akylas.documentscanner:AndroidSharedUtils",
+        "com.akylas.documentscanner:AndroidSharedUtils.Companion",
         "android.graphics:Bitmap.CompressFormat",
         "android.view:OrientationEventListener",
         "com.google.android.material.color:DynamicColors",
