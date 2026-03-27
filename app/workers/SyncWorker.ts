@@ -16,6 +16,12 @@ import { LocalFolderPDFSyncService } from '~/services/sync/LocalFolderPDFSyncSer
 import { type WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sync/WebdavDataSyncService';
 import { WebdavImageSyncService } from '~/services/sync/WebdavImageSyncService';
 import { WebdavPDFSyncService } from '~/services/sync/WebdavPDFSyncService';
+import { GoogleDriveDataSyncService } from '~/services/sync/GoogleDriveDataSyncService';
+import { GoogleDriveImageSyncService } from '~/services/sync/GoogleDriveImageSyncService';
+import { GoogleDrivePDFSyncService } from '~/services/sync/GoogleDrivePDFSyncService';
+import { OneDriveDataSyncService } from '~/services/sync/OneDriveDataSyncService';
+import { OneDriveImageSyncService } from '~/services/sync/OneDriveImageSyncService';
+import { OneDrivePDFSyncService } from '~/services/sync/OneDrivePDFSyncService';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/services/sync/types';
 import { SyncNotificationManager } from '~/workers/SyncNotificationManager';
 import {
@@ -48,7 +54,13 @@ export const SERVICES_TYPE_MAP: { [key in SYNC_TYPES]: typeof BaseSyncService } 
     webdav_pdf: WebdavPDFSyncService,
     webdav_image: WebdavImageSyncService,
     folder_image: LocalFolderImageSyncService,
-    folder_pdf: LocalFolderPDFSyncService
+    folder_pdf: LocalFolderPDFSyncService,
+    gdrive_data: GoogleDriveDataSyncService,
+    gdrive_image: GoogleDriveImageSyncService,
+    gdrive_pdf: GoogleDrivePDFSyncService,
+    onedrive_data: OneDriveDataSyncService,
+    onedrive_image: OneDriveImageSyncService,
+    onedrive_pdf: OneDrivePDFSyncService
 };
 
 const TAG = '[SyncWorker]';

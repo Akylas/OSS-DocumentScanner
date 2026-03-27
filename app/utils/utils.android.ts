@@ -167,5 +167,8 @@ export function testGetContent() {
 }
 
 export function checkAvailableStorage(sizeBytes: number) {
-    return AndroidSharedUtils.checkAvailableStorage(sizeBytes)
+    return com.akylas.documentscanner.AndroidSharedUtils.Companion.checkAvailableStorage(sizeBytes);
+}
+export function generateCodeChallenge(str: string): string {
+    return com.akylas.documentscanner.AndroidSharedUtils.Companion.generateCodeChallenge(str);
 }

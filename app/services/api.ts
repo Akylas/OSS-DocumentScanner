@@ -3,6 +3,7 @@ import { Application, ApplicationEventData } from '@nativescript/core';
 import { connectionType, getConnectionType, startMonitoring, stopMonitoring } from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { HTTPError, NoNetworkError, wrapNativeHttpException } from '@akylas/nativescript-app-utils/error';
+import { logRequestAsCurl } from '@shared/utils/curlify';
 
 export type HTTPSOptions = https.HttpsRequestOptions;
 export type { Headers } from '@nativescript-community/https';
@@ -18,6 +19,7 @@ export interface NetworkConnectionStateEventData extends EventData {
 
 export interface HttpRequestOptions extends HTTPSOptions {
     queryParams?: object;
+    destinationFilePath?: string;
 }
 
 export function queryString(params, location) {
@@ -156,19 +158,81 @@ async function handleRequestRetry(requestParams: HttpRequestOptions, retry = 0) 
         requestParams
     });
 }
-async function handleRequestResponse<T>(response: https.HttpsResponse<https.HttpsResponseLegacy<T>>, requestParams: HttpRequestOptions, requestStartTime, retry): Promise<T> {
-    const statusCode = response.statusCode;
-    let content: T;
+function getRequestHeaders(requestParams?: HttpRequestOptions) {
+    const headers = requestParams?.headers ?? {};
+    if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    return headers;
+}
+
+export interface RequestResponse<T = any> {
+    response: https.HttpsResponse<https.HttpsResponseLegacy<T>>;
+    requestParams: HttpRequestOptions;
+    requestStartTime: number;
+    retry: number;
+    statusCode: number;
+    json: () => Promise<T>;
+    text: () => Promise<string>;
+    binary: () => Promise<BufferLike>;
+    file: (destinationFilePath: string) => Promise<File>;
+}
+
+export async function request<T = any>(requestParams: HttpRequestOptions, retry = 0): Promise<RequestResponse<T>> {
+    if (!networkService.connected) {
+        throw new NoNetworkError();
+    }
+    if (requestParams.queryParams) {
+        requestParams.url = queryString(requestParams.queryParams, requestParams.url);
+        delete requestParams.queryParams;
+    }
+    requestParams.headers = getRequestHeaders(requestParams);
+
+    const requestStartTime = Date.now();
+    if (__DEV__) {
+        DEV_LOG && console.log(requestParams.url, JSON.stringify(requestParams));
+        // logRequestAsCurl(requestParams.url, requestParams as any);
+    }
     try {
-        content = await response.content.toJSONAsync();
-    } catch (err) {
-        console.error(err, err.stack);
+        const response = await https.request<T>(requestParams);
+        return {
+            statusCode: response.statusCode,
+            response,
+            requestParams,
+            requestStartTime,
+            retry,
+            json: async () => handleRequestResponse<T>(response, requestParams, 'json'),
+            text: async () => handleRequestResponse(response, requestParams, 'text'),
+            binary: async () => handleRequestResponse(response, requestParams, 'binary'),
+            file: async (destinationFilePath: string) => handleRequestResponse(response, { ...requestParams, destinationFilePath }, 'file')
+        };
+    } catch (error) {
+        throw wrapNativeHttpException(error, requestParams);
     }
-    if (!content) {
-        content = (await response.content.toStringAsync()) as any;
-    }
-    const isJSON = typeof content === 'object' || Array.isArray(content);
+}
+export type BufferLike = Buffer | ArrayBuffer;
+export type ResponseData<V extends 'binary' | 'text' | 'json' | 'file' = 'json', W = any> = V extends 'file' ? File : V extends 'text' ? string : V extends 'json' ? W : BufferLike;
+
+export async function handleRequestResponse<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
+    response: https.HttpsResponse<https.HttpsResponseLegacy<U>>,
+    httpOptions?: HttpRequestOptions,
+    format?: V
+): Promise<ResponseData<V, U>> {
+    format = format || ('json' as any);
+    const statusCode = response.statusCode;
+
     if (Math.round(statusCode / 100) !== 2) {
+        let content: U;
+        try {
+            content = await response.content.toJSONAsync();
+        } catch (err) {
+            console.error(err, err.stack);
+        }
+        if (!content) {
+            content = (await response.content.toStringAsync()) as any;
+        }
+        const isJSON = typeof content === 'object' || Array.isArray(content);
         let jsonReturn;
         if (isJSON) {
             jsonReturn = content;
@@ -177,7 +241,7 @@ async function handleRequestResponse<T>(response: https.HttpsResponse<https.Http
             throw new HTTPError({
                 statusCode,
                 message: match ? match[1] : content.toString(),
-                requestParams
+                requestParams: httpOptions
             });
         }
         if (jsonReturn) {
@@ -191,36 +255,25 @@ async function handleRequestResponse<T>(response: https.HttpsResponse<https.Http
             throw new HTTPError({
                 statusCode: error.code || statusCode,
                 message: error.error_description || error.form || error.message || error.error || error,
-                requestParams
+                requestParams: httpOptions
             });
         }
     }
-    return content as any as T;
-}
-function getRequestHeaders(requestParams?: HttpRequestOptions) {
-    const headers = requestParams?.headers ?? {};
-    if (!headers['Content-Type']) {
-        headers['Content-Type'] = 'application/json';
+    let body;
+    switch (format) {
+        case 'binary':
+            body = await response.content.toArrayBufferAsync();
+            break;
+        case 'text':
+            body = await response.content.toStringAsync();
+            break;
+        case 'file':
+            body = await response.content.toFile(httpOptions.destinationFilePath);
+            break;
+        case 'json':
+        default:
+            body = await response.content.toJSONAsync();
+            break;
     }
-
-    return headers;
-}
-export async function request<T = any>(requestParams: HttpRequestOptions, retry = 0) {
-    if (!networkService.connected) {
-        throw new NoNetworkError();
-    }
-    if (requestParams.queryParams) {
-        requestParams.url = queryString(requestParams.queryParams, requestParams.url);
-        delete requestParams.queryParams;
-    }
-    requestParams.headers = getRequestHeaders(requestParams);
-
-    const requestStartTime = Date.now();
-    DEV_LOG && console.log('request', requestParams);
-    try {
-        const response = await https.request<T>(requestParams);
-        return handleRequestResponse<T>(response, requestParams, requestStartTime, retry);
-    } catch (error) {
-        throw wrapNativeHttpException(error, requestParams);
-    }
+    return body;
 }

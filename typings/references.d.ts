@@ -16,3 +16,7 @@
 declare const START_ON_CAM: boolean;
 declare const CARD_APP: boolean;
 declare const MDI_FONT_FAMILY: string;
+declare const GOOGLE_OAUTH_CLIENT_ID: string;
+declare const GOOGLE_OAUTH_CLIENT_SECRET: string;
+declare const ONEDRIVE_OAUTH_CLIENT_ID: string;
+declare const ONEDRIVE_OAUTH_CLIENT_SECRET: string;

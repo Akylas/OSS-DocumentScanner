@@ -1,9 +1,8 @@
-import { parseStat, parseXML } from '../tools/dav';
-import { encodePath, join } from '../tools/path';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode, processResponsePayload } from '../response';
+import { parseStat, parseXML } from '../tools/dav';
+import { encodePath, join } from '../tools/path';
 import { FileStat, ResponseDataDetailed, StatOptions, WebDAVClientContext } from '../types';
-import { path } from '@nativescript/core';
 
 export async function getStat(context: WebDAVClientContext, filename: string, options: StatOptions = {}): Promise<FileStat | ResponseDataDetailed<FileStat>> {
     const { details: isDetailed = false } = options;
@@ -21,7 +20,7 @@ export async function getStat(context: WebDAVClientContext, filename: string, op
     );
     const response = await request(requestOptions);
     await handleResponseCode(context, response, requestOptions);
-    const responseData = await response.content.toStringAsync();
+    const responseData = await response.text();
     const result = await parseXML(responseData);
     const stat = parseStat(result, filename, isDetailed);
     return processResponsePayload(response, stat, isDetailed);

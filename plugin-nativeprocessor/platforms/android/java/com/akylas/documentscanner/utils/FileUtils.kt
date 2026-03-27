@@ -68,5 +68,5 @@ class FileUtils {
 
             return outDoc.uri.toString()
         }
-}
+    }
 }

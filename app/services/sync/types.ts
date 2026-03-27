@@ -1,19 +1,45 @@
 import { type BaseSyncService } from '~/services/sync/BaseSyncService';
 
-export type SYNC_TYPES = 'webdav_data' | 'folder_image' | 'folder_pdf' | 'webdav_image' | 'webdav_pdf';
+export enum SyncTypes {
+    webdav_data = 'webdav_data',
+    folder_image = 'folder_image',
+    folder_pdf = 'folder_pdf',
+    webdav_image = 'webdav_image',
+    webdav_pdf = 'webdav_pdf',
+    gdrive_data = 'gdrive_data',
+    gdrive_image = 'gdrive_image',
+    gdrive_pdf = 'gdrive_pdf',
+    onedrive_data = 'onedrive_data',
+    onedrive_image = 'onedrive_image',
+    onedrive_pdf = 'onedrive_pdf'
+}
+
+export type SYNC_TYPES = keyof typeof SyncTypes;
 export const SERVICES_SYNC_MASK: { [key in SYNC_TYPES]: number } = {
     webdav_data: 1 << 2,
     folder_image: 1 << 3,
     folder_pdf: 1 << 4,
     webdav_image: 1 << 5,
-    webdav_pdf: 1 << 6
+    webdav_pdf: 1 << 6,
+    gdrive_data: 1 << 7,
+    gdrive_image: 1 << 8,
+    gdrive_pdf: 1 << 9,
+    onedrive_data: 1 << 10,
+    onedrive_image: 1 << 11,
+    onedrive_pdf: 1 << 12
 };
 export const SERVICES_SYNC_COLOR: { [key in SYNC_TYPES]: string } = {
     webdav_pdf: '#8293CE',
     webdav_image: '#C2EF1F',
     webdav_data: '#BC768B',
     folder_image: '#C18F4E',
-    folder_pdf: '#4CA49D'
+    folder_pdf: '#4CA49D',
+    gdrive_data: '#4285F4',
+    gdrive_image: '#34A853',
+    gdrive_pdf: '#FBBC05',
+    onedrive_data: '#0078D4',
+    onedrive_image: '#50E6FF',
+    onedrive_pdf: '#00BCF2'
 };
 
 export enum SyncType {

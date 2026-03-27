@@ -1416,7 +1416,7 @@
                 case 'data_sync':
                 case 'image_sync':
                 case 'pdf_sync':
-                    const component = (await import('~/components/settings/SyncListSettings.svelte')).default;
+                    const component = (await import('~/components/settings/sync/SyncListSettings.svelte')).default;
                     navigate({
                         page: component,
                         props: {

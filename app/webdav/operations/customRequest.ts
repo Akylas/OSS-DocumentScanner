@@ -1,8 +1,7 @@
-import { encodePath, join } from '../tools/path';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode } from '../response';
+import { encodePath, join } from '../tools/path';
 import { RequestOptions, Response, WebDAVClientContext } from '../types';
-import { path } from '@nativescript/core';
 
 export async function customRequest(context: WebDAVClientContext, remotePath: string, requestOptions: RequestOptions): Promise<Response> {
     if (!requestOptions.url) {

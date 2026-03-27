@@ -5,9 +5,9 @@
 
     <!-- override buttons style to use material3 -->
     <style name="UnelevatedButton.Custom" parent="@style/Widget.Material3.Button.UnelevatedButton">
-        <item name="android:padding">0dp</item>
-        <item name="android:minWidth">88dp</item>
+       <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
@@ -15,36 +15,36 @@
     </style>
     <style name="UnelevatedButton.Custom.Icon"
         parent="@style/Widget.Material3.Button.TonalButton.Icon">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>
     <style name="TextButton.Custom.Icon" parent="@style/Widget.Material3.Button.TextButton.Icon">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>
     <style name="TextButton.Custom" parent="@style/Widget.Material3.Button.TextButton">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>
     <style name="OutlinedButton.Custom" parent="@style/Widget.Material3.Button.OutlinedButton">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
@@ -52,27 +52,27 @@
     </style>
     <style name="OutlinedButton.Custom.Icon"
         parent="@style/Widget.Material3.Button.OutlinedButton.Icon">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>
     <style name="Button.Custom" parent="@style/Widget.Material3.Button">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>
     <style name="Button.Custom.Icon" parent="@style/Widget.Material3.Button.Icon">
-        <item name="android:padding">0dp</item>
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
+        <!-- <item name="android:padding">0dp</item> -->
         <item name="android:insetLeft">0dp</item>
         <item name="android:insetRight">0dp</item>
         <item name="android:insetTop">0dp</item>

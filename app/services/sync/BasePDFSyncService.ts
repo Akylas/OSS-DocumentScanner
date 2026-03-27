@@ -11,6 +11,7 @@ export interface BasePDFSyncServiceOptions extends BaseSyncServiceOptions {
     OCREnabled?: boolean;
     OCRDataType?: string;
     OCRLanguages?: string[];
+    useDocumentName?: boolean;
 
     useFoldersStructure?: boolean;
 }

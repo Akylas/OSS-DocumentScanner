@@ -44,7 +44,7 @@
   "aspect_fit": "aspect fit",
   "aspect_ratio": "aspect ratio",
   "authenticate_security": "authenticate to access the application",
-  "authentication": "auth",
+  "authentication": "authentication",
   "auto": "auto",
   "auto_black": "Use true black for auto-dark theme",
   "auto_scan": "discover and add documents automatically",
@@ -469,5 +469,11 @@
   "syncing": "Syncing: %1$s",
   "notification_permission_needed": "notification permission is neded for sync services",
   "select_documents_to_import": "select documents to import pages from",
-  "not_enough_space": "It seems there is not enough space left to take a picture and save it"
+  "not_enough_space": "It seems there is not enough space left to take a picture and save it",
+  "connection_status": "connection status",
+  "data_sync_settings": "data sync settings",
+  "test_connection": "test connection",
+  "authenticated": "authenticated",
+  "not_authenticated": "not authenticated",
+  "missing_remote_folder": "missing remote folder"
 }

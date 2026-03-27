@@ -1,134 +1,31 @@
-<script lang="ts">
+<script context="module" lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Label } from '@nativescript-community/ui-label';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { ApplicationSettings, Color, ObservableArray, View } from '@nativescript/core';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { get, writable } from 'svelte/store';
-    import { l, lc } from '~/helpers/locale';
-    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
-    import { SERVICES_SYNC_COLOR } from '~/services/sync/types';
-    import { ALERT_OPTION_MAX_HEIGHT, FILENAME_DATE_FORMAT, SETTINGS_FILE_NAME_FORMAT, getImageExportSettings } from '~/utils/constants';
+    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { ObservableArray, View } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
-    import { closeModal } from '@shared/utils/svelte/ui';
-    import { createView, getNameFormatHTMLArgs, openLink, pickColor, requestNotificationPermission, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { Writable } from 'svelte/store';
+    import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
+    import { l, lc } from '~/helpers/locale';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import { createView, pickColor, showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
-    import CActionBar from '../common/CActionBar.svelte';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import FolderTextView from '../common/FolderTextView.svelte';
-    // technique for only specific properties to get updated on store change
-    $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSecondary } = $colors);
+</script>
 
-    const imageExportSettings = getImageExportSettings();
-    export let data: LocalFolderImageSyncServiceOptions = {} as any;
+<script lang="ts">
+    // technique for only specific properties to get updated on store change
+    $: ({ colorOnSurfaceVariant, colorOutline } = $colors);
+
     let collectionView: NativeViewElementNode<CollectionView>;
-    const store = writable(
-        Object.assign(
-            {
-                ...imageExportSettings,
-                autoSync: false,
-                useFoldersStructure: false,
-                enabled: true,
-                fileNameFormat: ApplicationSettings.getString(SETTINGS_FILE_NAME_FORMAT, FILENAME_DATE_FORMAT),
-                color: SERVICES_SYNC_COLOR['folder_image'] as string | Color
-            },
-            data
-        )
-    );
-    DEV_LOG && console.log('FolderImageSyncSettings', JSON.stringify(data), JSON.stringify(get(store)));
+    export let store: Writable<any>;
     // let folderPathName = data.folderPathName;
     const variant = 'outline';
 
-    async function save() {
-        const result = get(store);
-
-        if (result.localFolderPath) {
-            if (__ANDROID__) {
-                await requestNotificationPermission();
-            }
-            closeModal(result);
-        } else {
-            showError(lc('missing_export_folder'), { showAsSnack: true });
-        }
-    }
-
-    const items = new ObservableArray([
-        {
-            type: 'color'
-        },
-        {
-            type: 'switch',
-            id: 'enabled',
-            title: lc('enabled'),
-            value: $store.enabled
-        },
-        {
-            id: 'selectFolder',
-            type: 'selectFolder',
-            text: $store.localFolderPath
-        },
-        {
-            type: 'switch',
-            id: 'autoSync',
-            title: lc('auto_sync'),
-            description: lc('local_auto_sync_desc'),
-            value: $store.autoSync
-        },
-        {
-            id: 'setting',
-            key: 'fileNameFormat',
-            useHTML: true,
-            title: lc('filename_date_format'),
-            description: lc('filename_date_format_desc'),
-            full_description: lc('filename_date_format_fulldesc', ...getNameFormatHTMLArgs()),
-            onLinkTap: ({ link }) => {
-                openLink(link);
-            },
-            valueType: 'string',
-            textFieldProperties: {
-                autocapitalizationType: 'none',
-                autocorrect: false
-            } as TextFieldProperties,
-            rightValue: () => $store.fileNameFormat,
-            type: 'prompt'
-        },
-        {
-            type: 'switch',
-            id: 'useFoldersStructure',
-            title: lc('use_folder_structure'),
-            description: lc('use_folder_structure_desc'),
-            value: $store.useFoldersStructure
-        },
-        {
-            id: 'setting',
-            key: 'imageFormat',
-            title: lc('image_format'),
-            currentValue: () => $store.imageFormat,
-            description: lc('image_format_desc'),
-            rightValue: () => ($store.imageFormat || imageExportSettings.imageFormat).toUpperCase(),
-            valueType: 'string',
-            values: [
-                { value: null, title: lc('default_value') },
-                { value: 'jpg', title: 'JPEG' },
-                { value: 'png', title: 'PNG' }
-            ]
-        },
-        {
-            id: 'setting',
-            key: 'imageQuality',
-            min: 10,
-            max: 100,
-            step: 1,
-            title: lc('image_quality'),
-            description: lc('image_quality_desc'),
-            type: 'slider',
-            rightValue: () => $store.imageQuality,
-            currentValue: () => $store.imageQuality
-        }
-    ]);
+    export let items: ObservableArray<any>;
 
     function getTitle(item) {
         return item.title;
@@ -136,7 +33,7 @@
     function getDescription(item) {
         return typeof item.description === 'function' ? item.description(item) : item.description;
     }
-    function updateItem(item, key = 'id') {
+    export function updateItem(item, key = 'id') {
         const index = items.findIndex((it) => it[key] === item[key]);
         if (index !== -1) {
             items.setItem(index, item);
@@ -307,50 +204,43 @@
         }
     }
 
-    async function onFolderSelect(item, event) {
-        item.text = $store.localFolderPath = event.text;
-        updateItem(item);
-    }
+    // async function onFolderSelect(item, event) {
+    //     item.text = $store.localFolderPath = event.text;
+    //     updateItem(item);
+    // }
 </script>
 
-<page actionBarHidden={true}>
-    <gridlayout class="pageContent" rows="auto,*">
-        <collectionview bind:this={collectionView} ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$windowInset.bottom}>
-            <Template key="color" let:item>
-                <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(event) => changeColor(item, event)}>
-                    <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />
-                </ListItemAutoSize>
-            </Template>
-            <Template key="textfield" let:item>
-                <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
-                    <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} on:loaded={onTextChange} />
-                    <mdbutton
-                        class="icon-btn"
-                        color={colorOnSurfaceVariant}
-                        horizontalAlignment="right"
-                        isUserInteractionEnabled={false}
-                        text={item.icon}
-                        variant="text"
-                        verticalAlignment="middle"
-                        visibility={item.icon ? 'visible' : 'hidden'} />
-                </gridlayout>
-            </Template>
-            <Template key="switch" let:item>
-                <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
-                </ListItemAutoSize>
-            </Template>
-            <Template let:item>
-                <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                </ListItemAutoSize>
-            </Template>
-            <Template key="selectFolder" let:item>
-                <FolderTextView text={item.text} on:folder={(e) => onFolderSelect(item, e)} />
-            </Template>
-        </collectionview>
-        <CActionBar canGoBack modalWindow={true} title={lc('image_sync_settings')}>
-            <mdbutton text={lc('save')} variant="text" verticalAlignment="middle" on:tap={save} />
-            <!-- <mdbutton class="actionBarButton" text={lc('save')} variant="text" on:tap={save} /> -->
-        </CActionBar>
-    </gridlayout>
-</page>
+<collectionview bind:this={collectionView} ios:autoReloadItemOnLayout={true} itemTemplateSelector={selectTemplate} {items} android:paddingBottom={$windowInset.bottom} {...$$restProps}>
+    <Template key="header" let:item>
+        <label class="sectionHeader" text={item.title} />
+    </Template>
+    <Template key="color" let:item>
+        <ListItemAutoSize fontSize={20} subtitle={lc('sync_service_color_desc')} title={lc('color')} on:tap={(event) => changeColor(item, event)}>
+            <absolutelayout backgroundColor={$store.color} borderColor={colorOutline} borderRadius="50%" borderWidth={2} col={1} height={40} marginLeft={10} width={40} />
+        </ListItemAutoSize>
+    </Template>
+    <Template key="textfield" let:item>
+        <gridlayout columns="*" margin={5} row={3} rows="auto" on:tap={(e) => item.onTap(item, e)}>
+            <textfield isUserInteractionEnabled={false} text={item.text} {variant} {...item.textFieldProperties} on:loaded={onTextChange} />
+            <mdbutton
+                class="icon-btn"
+                color={colorOnSurfaceVariant}
+                horizontalAlignment="right"
+                isUserInteractionEnabled={false}
+                text={item.icon}
+                variant="text"
+                verticalAlignment="middle"
+                visibility={item.icon ? 'visible' : 'hidden'} />
+        </gridlayout>
+    </Template>
+    <Template key="switch" let:item>
+        <ListItemAutoSize fontSize={20} leftIcon={item.icon} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+            <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
+        </ListItemAutoSize>
+    </Template>
+    <Template let:item>
+        <ListItemAutoSize fontSize={20} rightValue={item.rightValue} showBottomLine={false} subtitle={getDescription(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+        </ListItemAutoSize>
+    </Template>
+    <slot />
+</collectionview>

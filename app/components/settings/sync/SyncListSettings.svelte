@@ -12,15 +12,70 @@
     import { SERVICES_SYNC_TITLES, syncService } from '~/services/sync';
     import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
-    import { createWebdavConfig } from '~/services/sync/Webdav';
+    import { WebdavSyncOptions, createWebdavConfig } from '~/services/sync/Webdav';
     import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
     import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
     import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
-    import { SERVICES_SYNC_COLOR, SYNC_TYPES } from '~/services/sync/types';
+    import { SERVICES_SYNC_COLOR, SYNC_TYPES, SyncTypes } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getDirectoryName, hideLoading, requestNotificationPermission, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
+    import { GoogleDriveDataSyncOptions } from '~/services/sync/GoogleDriveDataSyncService';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
+
+    import type FolderImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderImageSyncSettings.svelte';
+    import type FolderPDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderPDFSyncSettings.svelte';
+    import type WebdavImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavImageSyncSettings.svelte';
+    import type WebdavPDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavPDFSyncSettings.svelte';
+    import type WebdavDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavDataSyncSettings.svelte';
+    import type OneDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDriveDataSyncSettings.svelte';
+    import type OneDrivePDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDrivePDFSyncSettings.svelte';
+    import type OneDriveImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDriveImageSyncSettings.svelte';
+    import type GoogleDriveImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDriveImageSyncSettings.svelte';
+    import type GoogleDrivePDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDrivePDFSyncSettings.svelte';
+    import type GoogleDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDriveDataSyncSettings.svelte';
+    import { BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
+    import { GoogleDriveSyncOptions } from '~/services/sync/GoogleDrive';
+    import { OneDriveSyncOptions } from '~/services/sync/OneDrive';
+    interface SettingsComponentReturnType {
+        [SyncTypes.folder_image]: typeof FolderImageSyncSettings__SvelteComponent_;
+        [SyncTypes.folder_pdf]: typeof FolderPDFSyncSettings__SvelteComponent_;
+        [SyncTypes.webdav_data]: typeof WebdavDataSyncSettings__SvelteComponent_;
+        [SyncTypes.webdav_image]: typeof WebdavImageSyncSettings__SvelteComponent_;
+        [SyncTypes.webdav_pdf]: typeof WebdavPDFSyncSettings__SvelteComponent_;
+        [SyncTypes.onedrive_data]: typeof OneDriveDataSyncSettings__SvelteComponent_;
+        [SyncTypes.onedrive_image]: typeof OneDriveImageSyncSettings__SvelteComponent_;
+        [SyncTypes.onedrive_pdf]: typeof OneDrivePDFSyncSettings__SvelteComponent_;
+        [SyncTypes.gdrive_data]: typeof GoogleDriveDataSyncSettings__SvelteComponent_;
+        [SyncTypes.gdrive_image]: typeof GoogleDriveImageSyncSettings__SvelteComponent_;
+        [SyncTypes.gdrive_pdf]: typeof GoogleDrivePDFSyncSettings__SvelteComponent_;
+    }
+    async function getSettingsComponent<T extends SyncTypes>(syncType: T): Promise<SettingsComponentReturnType[T]> {
+        switch (syncType) {
+            case SyncTypes.folder_image:
+                return (await import('~/components/settings/sync/local/FolderImageSyncSettings.svelte')).default as any;
+            case 'folder_pdf':
+                return (await import('~/components/settings/sync/local/FolderPDFSyncSettings.svelte')).default as any;
+            case 'webdav_data':
+                return (await import('~/components/settings/sync/webdav/WebdavDataSyncSettings.svelte')).default as any;
+            case 'webdav_image':
+                return (await import('~/components/settings/sync/webdav/WebdavImageSyncSettings.svelte')).default as any;
+            case 'webdav_pdf':
+                return (await import('~/components/settings/sync/webdav/WebdavPDFSyncSettings.svelte')).default as any;
+            case 'onedrive_data':
+                return (await import('~/components/settings/sync/onedrive/OneDriveDataSyncSettings.svelte')).default as any;
+            case 'onedrive_image':
+                return (await import('~/components/settings/sync/onedrive/OneDriveImageSyncSettings.svelte')).default as any;
+            case 'onedrive_pdf':
+                return (await import('~/components/settings/sync/onedrive/OneDrivePDFSyncSettings.svelte')).default as any;
+            case 'gdrive_data':
+                return (await import('~/components/settings/sync/gdrive/GoogleDriveDataSyncSettings.svelte')).default as any;
+            case 'gdrive_image':
+                return (await import('~/components/settings/sync/gdrive/GoogleDriveImageSyncSettings.svelte')).default as any;
+            case 'gdrive_pdf':
+                return (await import('~/components/settings/sync/gdrive/GoogleDrivePDFSyncSettings.svelte')).default as any;
+        }
+    }
 </script>
 
 <script lang="ts">
@@ -68,8 +123,11 @@
             DEV_LOG && console.log('SyncListSettings', 'onItemTap', item);
             let configToUpdate;
             switch (item.type) {
-                case 'webdav_data': {
-                    const page = (await import('~/components/settings/WebdavDataSyncSettings.svelte')).default;
+                case SyncTypes.webdav_data:
+                case SyncTypes.webdav_image:
+                case SyncTypes.webdav_pdf: {
+                    const type = item.type as SyncTypes.webdav_data | SyncTypes.webdav_image | SyncTypes.webdav_pdf;
+                    const page = await getSettingsComponent(type);
                     const result: WebdavDataSyncOptions = await showModal({
                         page,
                         fullscreen: true,
@@ -82,41 +140,15 @@
                     }
                     break;
                 }
-                case 'webdav_pdf': {
-                    const page = (await import('~/components/settings/WebdavPDFSyncSettings.svelte')).default;
-                    const result: WebdavPDFSyncServiceOptions = await showModal({
+                case SyncTypes.folder_image:
+                case SyncTypes.folder_pdf: {
+                    const type = item.type as SyncTypes.folder_image | SyncTypes.folder_pdf;
+                    const page = await getSettingsComponent(type);
+                    const result: LocalFolderPDFSyncServiceOptions = await showModal({
                         page,
                         fullscreen: true,
                         props: {
-                            data: item as WebdavPDFSyncServiceOptions
-                        }
-                    });
-                    if (result) {
-                        configToUpdate = createWebdavConfig(result);
-                    }
-                    break;
-                }
-                case 'webdav_image': {
-                    const page = (await import('~/components/settings/WebdavImageSyncSettings.svelte')).default;
-                    const result: WebdavImageSyncServiceOptions = await showModal({
-                        page,
-                        fullscreen: true,
-                        props: {
-                            data: item as WebdavImageSyncServiceOptions
-                        }
-                    });
-                    if (result) {
-                        configToUpdate = createWebdavConfig(result);
-                    }
-                    break;
-                }
-                case 'folder_image': {
-                    const page = (await import('~/components/settings/FolderImageSyncSettings.svelte')).default;
-                    const result: LocalFolderImageSyncServiceOptions = await showModal({
-                        page,
-                        fullscreen: true,
-                        props: {
-                            data: item as LocalFolderImageSyncServiceOptions
+                            data: item as LocalFolderPDFSyncServiceOptions
                         }
                     });
                     if (result) {
@@ -124,13 +156,33 @@
                     }
                     break;
                 }
-                case 'folder_pdf': {
-                    const page = (await import('~/components/settings/FolderPDFSyncSettings.svelte')).default;
-                    const result: LocalFolderPDFSyncServiceOptions = await showModal({
+                case SyncTypes.gdrive_data:
+                case SyncTypes.gdrive_pdf:
+                case SyncTypes.gdrive_image: {
+                    const type = item.type as SyncTypes.gdrive_data | SyncTypes.gdrive_pdf | SyncTypes.gdrive_image;
+                    const page = await getSettingsComponent(type);
+                    const result: BaseDataSyncServiceOptions & GoogleDriveSyncOptions = await showModal({
                         page,
                         fullscreen: true,
                         props: {
-                            data: item as LocalFolderPDFSyncServiceOptions
+                            data: item as BaseDataSyncServiceOptions & GoogleDriveSyncOptions
+                        }
+                    });
+                    if (result) {
+                        configToUpdate = result;
+                    }
+                    break;
+                }
+                case SyncTypes.onedrive_data:
+                case SyncTypes.onedrive_image:
+                case SyncTypes.onedrive_pdf: {
+                    const type = item.type as SyncTypes.onedrive_data | SyncTypes.onedrive_image | SyncTypes.onedrive_pdf;
+                    const page = await getSettingsComponent(type);
+                    const result: BaseDataSyncServiceOptions & OneDriveSyncOptions = await showModal({
+                        page,
+                        fullscreen: true,
+                        props: {
+                            data: item as BaseDataSyncServiceOptions & OneDriveSyncOptions
                         }
                     });
                     if (result) {
@@ -163,6 +215,7 @@
             showError(err);
         }
     }
+
     async function onTap(item, event) {
         try {
             // DEV_LOG && console.log('SyncListSettings', 'onItemTap', item);
@@ -191,10 +244,13 @@
                         if (__ANDROID__) {
                             await requestNotificationPermission();
                         }
-                        switch (selection?.data) {
-                            case 'webdav_data': {
-                                const page = (await import('~/components/settings/WebdavDataSyncSettings.svelte')).default;
-                                const result: WebdavDataSyncOptions = await showModal({
+                        switch (selection?.data as SyncTypes) {
+                            case SyncTypes.webdav_data:
+                            case SyncTypes.webdav_image:
+                            case SyncTypes.webdav_pdf: {
+                                const type = selection?.data as SyncTypes.webdav_data | SyncTypes.webdav_image | SyncTypes.webdav_pdf;
+                                const page = await getSettingsComponent(type);
+                                const result: BaseDataSyncServiceOptions & WebdavSyncOptions = await showModal({
                                     page,
                                     fullscreen: true,
                                     props: {
@@ -204,70 +260,63 @@
                                 if (result) {
                                     configToAdd = createWebdavConfig(result);
                                 }
-                                break;
-                            }
-                            case 'webdav_pdf': {
-                                const page = (await import('~/components/settings/WebdavPDFSyncSettings.svelte')).default;
-                                const result: WebdavPDFSyncServiceOptions = await showModal({
-                                    page,
-                                    fullscreen: true,
-                                    props: {
-                                        data
-                                    }
-                                });
-                                if (result) {
-                                    configToAdd = createWebdavConfig(result);
-                                }
-                                break;
-                            }
-                            case 'webdav_image': {
-                                const page = (await import('~/components/settings/WebdavImageSyncSettings.svelte')).default;
-                                const result: WebdavImageSyncServiceOptions = await showModal({
-                                    page,
-                                    fullscreen: true,
-                                    props: {
-                                        data
-                                    }
-                                });
-                                if (result) {
-                                    configToAdd = createWebdavConfig(result);
-                                }
-                                break;
-                            }
-                            case 'folder_image': {
-                                if (__ANDROID__) {
-                                    await requestStoragePermission();
-                                }
-                                const page = (await import('~/components/settings/FolderImageSyncSettings.svelte')).default;
-                                const result = await showModal({
-                                    page,
-                                    fullscreen: true,
-                                    props: {
-                                        data
-                                    }
-                                });
-                                configToAdd = result;
                                 break;
                             }
 
-                            case 'folder_pdf': {
-                                if (__ANDROID__) {
-                                    await requestStoragePermission();
-                                }
-                                const page = (await import('~/components/settings/FolderPDFSyncSettings.svelte')).default;
-                                const result = await showModal({
+                            case SyncTypes.folder_image:
+                            case SyncTypes.folder_pdf: {
+                                const type = selection?.data as SyncTypes.folder_image | SyncTypes.folder_pdf;
+                                const page = await getSettingsComponent(type);
+                                const result: LocalFolderPDFSyncServiceOptions = await showModal({
                                     page,
                                     fullscreen: true,
                                     props: {
                                         data
                                     }
                                 });
-                                configToAdd = result;
+                                if (result) {
+                                    configToAdd = result;
+                                }
+                                break;
+                            }
+                            case SyncTypes.gdrive_data:
+                            case SyncTypes.gdrive_pdf:
+                            case SyncTypes.gdrive_image: {
+                                const type = selection?.data as SyncTypes.gdrive_data | SyncTypes.gdrive_pdf | SyncTypes.gdrive_image;
+                                const page = await getSettingsComponent(type);
+                                const result: BaseDataSyncServiceOptions & GoogleDriveSyncOptions = await showModal({
+                                    page,
+                                    fullscreen: true,
+                                    props: {
+                                        data
+                                    }
+                                });
+                                if (result) {
+                                    configToAdd = result;
+                                }
+                                break;
+                            }
+                            case SyncTypes.onedrive_data:
+                            case SyncTypes.onedrive_image:
+                            case SyncTypes.onedrive_pdf: {
+                                const type = selection?.data as SyncTypes.onedrive_data | SyncTypes.onedrive_image | SyncTypes.onedrive_pdf;
+                                const page = await getSettingsComponent(type);
+                                const result: BaseDataSyncServiceOptions & OneDriveSyncOptions = await showModal({
+                                    page,
+                                    fullscreen: true,
+                                    props: {
+                                        data
+                                    }
+                                });
+                                if (result) {
+                                    configToAdd = result;
+                                }
                                 break;
                             }
                         }
                         if (configToAdd) {
                             const data = syncService.addService(selection?.data, configToAdd);
+                            DEV_LOG && console.log('adding item', data);
                             items.push(data);
                         }
                     }
@@ -288,6 +337,14 @@
     function getTitle(item: Item) {
         const result = SERVICES_SYNC_TITLES[item.type] + ': ';
         switch (item.type) {
+            case 'gdrive_data':
+            case 'gdrive_pdf':
+            case 'gdrive_image':
+                return 'Google Drive';
+            case 'onedrive_data':
+            case 'onedrive_pdf':
+            case 'onedrive_image':
+                return 'OneDrive';
             case 'webdav_data':
             case 'webdav_pdf':
             case 'webdav_image':
@@ -306,6 +363,8 @@
     function getDescription(item: Item) {
         switch (item.type) {
             case 'webdav_data':
+            case 'gdrive_data':
+            case 'onedrive_data':
                 return (item as WebdavDataSyncOptions).remoteFolder;
             // case 'folder_image':
             //     return (item as LocalFolderImageSyncServiceOptions).localFolderPath;

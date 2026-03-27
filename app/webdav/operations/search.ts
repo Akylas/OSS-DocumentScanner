@@ -1,9 +1,8 @@
-import { parseSearch, parseXML } from '../tools/dav';
-import { encodePath, join } from '../tools/path';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode, processResponsePayload } from '../response';
+import { parseSearch, parseXML } from '../tools/dav';
+import { encodePath, join } from '../tools/path';
 import { ResponseDataDetailed, SearchOptions, SearchResult, WebDAVClientContext } from '../types';
-import { path } from '@nativescript/core';
 
 export async function getSearch(context: WebDAVClientContext, searchArbiter: string, options: SearchOptions = {}): Promise<SearchResult | ResponseDataDetailed<SearchResult>> {
     const { details: isDetailed = false } = options;
@@ -22,7 +21,7 @@ export async function getSearch(context: WebDAVClientContext, searchArbiter: str
     );
     const response = await request(requestOptions);
     await handleResponseCode(context, response, requestOptions);
-    const responseText = await response.content.toStringAsync();
+    const responseText = await response.text();
     const responseData = await parseXML(responseText);
     const results = parseSearch(responseData, searchArbiter, isDetailed);
     return processResponsePayload(response, results, isDetailed);

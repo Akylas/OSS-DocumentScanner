@@ -2,6 +2,8 @@ import { HttpsResponse, HttpsResponseLegacy } from '@nativescript-community/http
 import { File } from '@nativescript/core';
 import type { HTTPSOptions, Headers } from '~/services/api';
 
+export type * from '~/services/sync/interfaces';
+
 export type AuthHeader = string;
 export type { Headers };
 
@@ -140,7 +142,7 @@ export interface GetDirectoryContentsOptions extends WebDAVMethodOptions {
 
 export interface GetFileContentsOptions extends WebDAVMethodOptions {
     details?: boolean;
-    format?: 'binary' | 'text' | 'file';
+    format?: 'binary' | 'text' | 'file' | 'json';
     destinationFilePath?: string;
     onDownloadProgress?: ProgressEventCallback;
 }
@@ -191,19 +193,8 @@ export interface RequestOptions extends HTTPSOptions {
     // withCredentials?: boolean;
 }
 
-export type Response<T = any> = HttpsResponse<HttpsResponseLegacy<T>>;
-
 export interface RequestOptionsWithState extends RequestOptions {
     _digest?: DigestContext;
-}
-
-export type ResponseData = string | Buffer | ArrayBuffer | object | any[];
-
-export interface ResponseDataDetailed<T> {
-    data: T;
-    headers: Headers;
-    status: number;
-    statusText: string;
 }
 
 export type ResponseStatusValidator = (status: number) => boolean;

@@ -1,5 +1,5 @@
-import { File } from '@nativescript/core';
 import { HTTPError } from '@akylas/nativescript-app-utils/error';
+import { File } from '@nativescript/core';
 import { prepareRequestOptions, request } from '../request';
 import { handleResponseCode } from '../response';
 import { fromBase64 } from '../tools/encode';
