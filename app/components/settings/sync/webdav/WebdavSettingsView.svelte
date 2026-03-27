@@ -1,14 +1,14 @@
 <script lang="ts">
+    import { showError } from '@shared/utils/showError';
     import { Writable, get } from 'svelte/store';
     import { lc } from '~/helpers/locale';
     import { WebdavSyncOptions, testWebdavConnection } from '~/services/sync/Webdav';
-    import { showError } from '@shared/utils/showError';
 
+    import { SilentError } from '@akylas/nativescript-app-utils/error';
+    import RemoteFolderTextField from '~/components/common/RemoteFolderTextField.svelte';
     import { showPopoverMenu } from '~/utils/ui';
     import { colors } from '~/variables';
     import { AuthType } from '~/webdav';
-    import RemoteFolderTextField from '../common/RemoteFolderTextField.svelte';
-    import { SilentError } from '@akylas/nativescript-app-utils/error';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 

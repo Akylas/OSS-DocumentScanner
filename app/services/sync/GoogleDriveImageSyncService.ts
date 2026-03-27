@@ -36,7 +36,7 @@ export class GoogleDriveImageSyncService extends BaseImageSyncService {
         if (config) {
             const service = GoogleDriveImageSyncService.getOrCreateInstance();
             Object.assign(service, config);
-            DEV_LOG && console.log('GoogleDriveImageSyncService', 'start', JSON.stringify(config), service.autoSync);
+            // DEV_LOG && console.log('GoogleDriveImageSyncService', 'start', JSON.stringify(config), service.autoSync);
             return service;
         }
     }
@@ -98,10 +98,10 @@ export class GoogleDriveImageSyncService extends BaseImageSyncService {
         }
 
         const file = File.fromPath(localFilePath);
-        const content = await file.readText('base64');
         const mimeType = imageFormat === 'png' ? 'image/png' : 'image/jpeg';
+        // DEV_LOG && console.warn('writeImage', fileName, localFilePath, File.exists(localFilePath));
 
-        await uploadFile(this.tokens, fileName, content, mimeType, targetFolderId);
+        await uploadFile(this.tokens, fileName, file, mimeType, targetFolderId);
 
         // Clean up temp file
         try {

@@ -27,6 +27,8 @@ export async function performOAuthFlow(provider: OAuthProvider): Promise<OAuthTo
             redirect_uri: redirectUri,
             response_type: responseType,
             scope: provider.config.scope,
+            access_type: 'offline',
+            prompt: provider.config.prompt ?? 'consent',
             state,
             code_challenge: codeChallenge,
             code_challenge_method: 'S256'
@@ -46,6 +48,10 @@ export async function performOAuthFlow(provider: OAuthProvider): Promise<OAuthTo
                 redirectUri
             }
         });
+
+        if (!result) {
+            return;
+        }
 
         if (result?.cancelled) {
             throw new SilentError(lc('authentication_cancelled'));

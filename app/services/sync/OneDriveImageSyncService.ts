@@ -36,7 +36,7 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
         if (config) {
             const service = OneDriveImageSyncService.getOrCreateInstance();
             Object.assign(service, config);
-            DEV_LOG && console.log('OneDriveImageSyncService', 'start', JSON.stringify(config), service.autoSync);
+            // DEV_LOG && console.log('OneDriveImageSyncService', 'start', JSON.stringify(config), service.autoSync);
             return service;
         }
     }
@@ -45,12 +45,15 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
 
     override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder || 'DocumentScanner');
+            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder);
         }
     }
 
+    getItemByPath(path: string) {
+        return getItemByPath(this.tokens, path, this.remoteFolderId, this.remoteFolder);
+    }
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
-        const item = relativePath ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId) : { id: this.remoteFolderId };
+        const item = relativePath ? await this.getItemByPath(relativePath) : { id: this.remoteFolderId };
 
         if (!item) {
             return [];
@@ -84,14 +87,14 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
             const folderPath = docFolder.name;
-            const folderItem = await getItemByPath(this.tokens, folderPath, this.remoteFolderId);
+            const folderItem = await this.getItemByPath(folderPath);
             targetFolderId = folderItem?.id || (await getOrCreateFolder(this.tokens, folderPath));
         }
 
         const file = File.fromPath(localFilePath);
-        const content = await file.readText('base64');
-
-        await uploadFile(this.tokens, fileName, content, targetFolderId);
+        // const content = await file.readText('base64');
+        // DEV_LOG && console.warn('writeImage', fileName, localFilePath, File.exists(localFilePath));
+        await uploadFile(this.tokens, fileName, file, targetFolderId);
 
         try {
             file.remove();

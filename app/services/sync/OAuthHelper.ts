@@ -1,5 +1,5 @@
-import { request } from '@nativescript-community/https';
 import { ApplicationSettings } from '@nativescript/core';
+import { request } from '~/services/api';
 
 export interface OAuthConfig {
     authUrl: string;
@@ -8,6 +8,7 @@ export interface OAuthConfig {
     clientSecret?: string;
     redirectUri: string;
     scope: string;
+    prompt?: string;
     responseType?: string;
 }
 
@@ -34,7 +35,7 @@ export async function exchangeCodeForTokens(provider: OAuthProvider, code: strin
             url: tokenUrl,
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: {
                 grant_type: 'authorization_code',
@@ -45,7 +46,7 @@ export async function exchangeCodeForTokens(provider: OAuthProvider, code: strin
                 code_verifier: codeVerifier
             }
         })
-    ).content.toJSONAsync();
+    ).json();
     if (data.error) {
         throw new Error(data.error_description);
     }
@@ -76,28 +77,26 @@ export async function exchangeCodeForTokens(provider: OAuthProvider, code: strin
  * Refreshes an expired access token
  */
 export async function refreshAccessToken(provider: OAuthProvider, refreshToken: string): Promise<OAuthTokens> {
-    const { clientId, tokenUrl } = provider.config;
+    const { clientId, clientSecret, tokenUrl } = provider.config;
 
-    const body = new URLSearchParams({
+    const body = {
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
+        client_secret: clientSecret,
         client_id: clientId
-    }).toString();
+    };
 
-    const response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
+    const data = await (
+        await request({
+            url: tokenUrl,
+            method: 'POST',
+            responseOnMainThread: false,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body
+        })
+    ).json();
 
     return {
         accessToken: data.access_token,

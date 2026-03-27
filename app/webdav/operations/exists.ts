@@ -1,5 +1,5 @@
-import { getStat } from './stat';
 import { WebDAVClientContext, WebDAVMethodOptions } from '../types';
+import { getStat } from './stat';
 
 export async function exists(context: WebDAVClientContext, remotePath: string, options: WebDAVMethodOptions = {}): Promise<boolean> {
     try {

@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { Writable, get } from 'svelte/store';
-    import { lc } from '~/helpers/locale';
-    import { showError } from '@shared/utils/showError';
-    import { colors } from '~/variables';
-    import RemoteFolderTextField from '../common/RemoteFolderTextField.svelte';
-    import { OAuthProvider, OAuthTokens } from '~/services/sync/OAuthHelper';
     import { SilentError } from '@akylas/nativescript-app-utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { Writable } from 'svelte/store';
+    import RemoteFolderTextField from '~/components/common/RemoteFolderTextField.svelte';
+    import { lc } from '~/helpers/locale';
+    import { OAuthProvider, OAuthTokens } from '~/services/sync/OAuthHelper';
     import { performOAuthFlow } from '~/services/sync/OAuthHelperUI';
+    import { colors } from '~/variables';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
 
@@ -30,14 +30,12 @@
         try {
             authenticating = true;
             const tokens = await performOAuthFlow(provider);
-            DEV_LOG && console.log('authenticate', tokens);
 
             $store.accessToken = tokens.accessToken;
             $store.refreshToken = tokens.refreshToken;
             $store.expiresAt = tokens.expiresAt;
 
             isAuthenticated = true;
-            DEV_LOG && console.log('isAuthenticated', isAuthenticated);
             testConnectionSuccess = 1;
         } catch (error) {
             showError(error);
@@ -80,30 +78,18 @@
 </script>
 
 <stacklayout>
-    <RemoteFolderTextField
-        hint={lc('remote_folder')}
-        margin="5 4"
-        placeholder={lc('remote_folder_placeholder')}
-        returnKeyType="done"
-        text={$store.remoteFolder}
-        {variant}
-        on:textChange={(e) => ($store.remoteFolder = e['value'])} />
     <gridlayout columns="*,auto" rows="auto">
-        <stacklayout>
-            <label class="sectionHeader" text={lc('authentication')} />
-            <label color={colorOnSurfaceVariant} fontSize={13} padding="0 16 0 16" text={isAuthenticated ? lc('authenticated') : lc('not_authenticated')} textWrap={true} />
-        </stacklayout>
+        <label color={colorOnSurfaceVariant} fontSize={13} padding="0 16 0 16" text={isAuthenticated ? lc('authenticated') : lc('not_authenticated')} textWrap={true} verticalAlignment="center" />
         <mdbutton
             col={1}
-            isLoading={authenticating}
             margin="0 16 0 0"
             text={lc(isAuthenticated ? 're_authenticate' : 'authenticate')}
-            variant="outline"
+            variant={isAuthenticated ? 'outline' : 'contained'}
             verticalAlignment="center"
             on:tap={authenticate} />
     </gridlayout>
 
-    <gridlayout columns="auto,auto,*" margin="10 16" visibility={isAuthenticated ? 'visible' : 'collapse'}>
+    <gridlayout columns="auto,auto,*" margin="10 16" visibility={isAuthenticated ? 'visible' : 'collapsed'}>
         <label text={lc('connection_status')} verticalAlignment="center" />
         <label
             class="mdi"
@@ -113,6 +99,7 @@
             text={testConnectionSuccess > 0 ? 'mdi-check-circle' : 'mdi-alert-circle'}
             verticalAlignment="center"
             visibility={testConnectionSuccess !== 0 ? 'visible' : 'collapse'} />
-        <mdbutton col={2} horizontalAlignment="right" isLoading={testing} text={lc('test_connection')} variant="text" on:tap={testConnectionAction} />
+        <mdbutton col={2} horizontalAlignment="right" text={lc('test_connection')} variant="outline" on:tap={testConnectionAction} />
     </gridlayout>
+    <RemoteFolderTextField hint={lc('remote_folder')} margin="5 4" text={$store.remoteFolder} {variant} on:textChange={(e) => ($store.remoteFolder = e['value'])} />
 </stacklayout>

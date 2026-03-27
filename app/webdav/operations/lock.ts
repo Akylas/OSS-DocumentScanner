@@ -1,10 +1,9 @@
 import nestedProp from 'nested-property';
-import { encodePath, join } from '../tools/path';
-import { generateLockXML, parseGenericResponse } from '../tools/xml';
 import { prepareRequestOptions, request } from '../request';
 import { createErrorFromResponse, handleResponseCode } from '../response';
+import { encodePath, join } from '../tools/path';
+import { generateLockXML, parseGenericResponse } from '../tools/xml';
 import { Headers, LockOptions, LockResponse, WebDAVClientContext, WebDAVMethodOptions } from '../types';
-import { path } from '@nativescript/core';
 
 const DEFAULT_TIMEOUT = 'Infinite, Second-4100000000';
 
@@ -29,7 +28,7 @@ export async function lock(context: WebDAVClientContext, pathStr: string, option
     );
     const response = await request(requestOptions);
     await handleResponseCode(context, response, requestOptions);
-    const responseData = await response.content.toStringAsync();
+    const responseData = await response.text();
     const lockPayload = parseGenericResponse(responseData);
     const token = nestedProp.get(lockPayload, 'prop.lockdiscovery.activelock.locktoken.href');
     const serverTimeout = nestedProp.get(lockPayload, 'prop.lockdiscovery.activelock.timeout');

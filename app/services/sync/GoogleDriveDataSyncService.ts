@@ -38,13 +38,13 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         if (config) {
             const service = GoogleDriveDataSyncService.getOrCreateInstance();
             Object.assign(service, config);
-            DEV_LOG && console.log('GoogleDriveDataSyncService', 'start', JSON.stringify(config), service.autoSync);
+            // DEV_LOG && console.log('GoogleDriveDataSyncService', 'start', JSON.stringify(config), service.autoSync);
             return service;
         }
     }
 
     override async ensureRemoteFolder() {
-        DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
+        // DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
         if (!this.remoteFolderId) {
             this.remoteFolderId = await getOrCreateFolder(this.tokens, this.remoteFolder || 'DocumentScanner');
         }
@@ -90,7 +90,7 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
     }
 
     override async sendFolderToRemote(folder: Folder, remoteRelativePath: string) {
-        DEV_LOG && console.log('sendFolderToGDrive', folder.path, remoteRelativePath);
+        // DEV_LOG && console.log('sendFolderToGDrive', folder.path, remoteRelativePath);
 
         // Get or create the target folder
         let targetFolderId = this.remoteFolderId;
@@ -101,11 +101,8 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         const entities = await folder.getEntities();
         for (let index = 0; index < entities.length; index++) {
             const entity = entities[index];
-            DEV_LOG && console.log('sendFolderToGDrive entity', entity.name, entity.path);
+            // DEV_LOG && console.log('sendFolderToGDrive entity', entity.name, entity.path);
             if (entity instanceof File) {
-                // await this.putFileContents(path.join(remotePath, entity.name), entity.path);
-
-                // const content = await entity.readText();
                 await uploadFile(this.tokens, entity.name, entity, 'application/octet-stream', targetFolderId);
             } else {
                 // Recursively upload subdirectory
@@ -141,7 +138,7 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
         }
 
         const result = await downloadFile(this.tokens, fileId, { format: 'text' });
-        DEV_LOG && console.log('getFileFromRemote', result);
+        // DEV_LOG && console.log('getFileFromRemote', result);
         return result;
     }
 
@@ -159,7 +156,7 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
 
         const parentPath = parts.join('/');
         const folderId = await this.createDirectory(parentPath, true);
-        DEV_LOG && console.log('putFileContentsFromData', relativePath, folderId, data);
+        // DEV_LOG && console.log('putFileContentsFromData', relativePath, folderId, data);
         await uploadFile(this.tokens, fileName, data, 'application/octet-stream', folderId);
     }
 
@@ -193,7 +190,7 @@ export class GoogleDriveDataSyncService extends BaseDataSyncService {
 
         const files = await this.getFiles(parentPath);
         const file = files.find((f) => f.name === fileName);
-        DEV_LOG && console.log('getFileId', relativePath, files, file);
+        // DEV_LOG && console.log('getFileId', relativePath, files, file);
         return file?.id;
     }
 

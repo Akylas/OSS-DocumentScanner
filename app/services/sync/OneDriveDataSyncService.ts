@@ -41,20 +41,22 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
         if (config) {
             const service = OneDriveDataSyncService.getOrCreateInstance();
             Object.assign(service, config);
-            DEV_LOG && console.log('OneDriveDataSyncService', 'start', JSON.stringify(config), service.autoSync);
+            // DEV_LOG && console.log('OneDriveDataSyncService', 'start', JSON.stringify(config), service.autoSync);
             return service;
         }
     }
 
     override async ensureRemoteFolder() {
-        DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
+        // DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, this.remoteFolder || 'DocumentScanner');
+            this.remoteFolderId = await getOrCreateFolder(this.tokens, this.remoteFolder);
         }
     }
-
+    getItemByPath(path: string) {
+        return getItemByPath(this.tokens, path, this.remoteFolderId, this.remoteFolder);
+    }
     override async getRemoteFolderDirectories(relativePath: string): Promise<FileStat[]> {
-        const item = relativePath ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId) : { id: this.remoteFolderId };
+        const item = relativePath ? await this.getItemByPath(relativePath) : { id: this.remoteFolderId };
 
         if (!item) {
             return [];
@@ -76,11 +78,11 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
     }
 
     override async sendFolderToRemote(folder: Folder, remoteRelativePath: string) {
-        DEV_LOG && console.log('sendFolderToOneDrive', folder.path, remoteRelativePath);
-
+        const remotePath = path.join(this.remoteFolder, remoteRelativePath);
         // Get or create target folder
-        const targetItem = await getItemByPath(this.tokens, remoteRelativePath, this.remoteFolderId);
-        const targetFolderId = targetItem?.id || (await getOrCreateFolder(this.tokens, remoteRelativePath));
+        const targetItem = await this.getItemByPath(remotePath);
+        // DEV_LOG && console.warn('sendFolderToOneDrive', folder.path, remotePath, this.remoteFolderId, targetItem?.id);
+        const targetFolderId = targetItem?.id || (await getOrCreateFolder(this.tokens, remotePath));
 
         const entities = await folder.getEntities();
         for (let index = 0; index < entities.length; index++) {
@@ -94,33 +96,34 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
     }
 
     override async fileExists(filename: string) {
-        const item = await getItemByPath(this.tokens, filename, this.remoteFolderId);
+        const item = await this.getItemByPath(filename);
         return !!item;
     }
 
     override async getFileFromRemote(filename: string, document?: OCRDocument) {
         const remoteDocPath = document ? path.join(this.remoteFolder, document.id) : this.remoteFolder;
         const fullPath = path.join(remoteDocPath, filename);
-        const item = await getItemByPath(this.tokens, fullPath, this.remoteFolderId);
+        // DEV_LOG && console.log('getFileFromRemote', fullPath, remoteDocPath, this.remoteFolderId);
+        const item = await this.getItemByPath(fullPath);
 
         if (!item) {
             throw new Error(`File not found: ${fullPath}`);
         }
 
         const result = await downloadFile(this.tokens, item.id, { format: 'text' });
-        DEV_LOG && console.log('getFileFromRemote', result);
         return result;
     }
 
     override async putFileContents(relativePath: string, localFilePath: string, options?) {
         // const content = await File.fromPath(localFilePath).readText();
         // return this.putFileContentsFromData(relativePath, content, options);
+        // DEV_LOG && console.log('putFileContents', relativePath, localFilePath);
 
         const parts = relativePath.split('/').filter((p) => p);
         const fileName = parts.pop();
 
         const parentPath = parts.join('/');
-        const parentItem = parentPath ? await getItemByPath(this.tokens, parentPath, this.remoteFolderId) : { id: this.remoteFolderId };
+        const parentItem = parentPath ? await this.getItemByPath(parentPath) : { id: this.remoteFolderId };
 
         const parentId = parentItem?.id || (await getOrCreateFolder(this.tokens, parentPath));
         const file = File.fromPath(localFilePath);
@@ -129,24 +132,25 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
     }
 
     override async putFileContentsFromData(relativePath: string, data: string, options?) {
+        // DEV_LOG && console.log('putFileContentsFromData', relativePath);
         const parts = relativePath.split('/').filter((p) => p);
         const fileName = parts.pop();
 
         const parentPath = parts.join('/');
-        const parentItem = parentPath ? await getItemByPath(this.tokens, parentPath, this.remoteFolderId) : { id: this.remoteFolderId };
+        const parentItem = parentPath ? await this.getItemByPath(parentPath) : { id: this.remoteFolderId };
 
         const parentId = parentItem?.id || (await getOrCreateFolder(this.tokens, parentPath));
         await uploadFile(this.tokens, fileName, data, parentId);
     }
 
     override async deleteFile(relativePath: string) {
-        const item = await getItemByPath(this.tokens, relativePath, this.remoteFolderId);
+        const item = await this.getItemByPath(relativePath);
         if (item) {
             await deleteItem(this.tokens, item.id);
         }
     }
     override async getFileContents<V extends 'binary' | 'text' | 'file' | 'json' = 'json'>(filePath: string, options?: GetFileContentsOptions & { format?: V }): Promise<ResponseData<V>> {
-        const item = await getItemByPath(this.tokens, filePath, this.remoteFolderId);
+        const item = await this.getItemByPath(filePath);
 
         if (!item) {
             throw new Error(`File not found: ${filePath}`);

@@ -1,9 +1,8 @@
-import { HttpsRequestOptions, HttpsResponse, HttpsResponseLegacy, request } from '@nativescript-community/https';
 import { File } from '@nativescript/core';
-import { wrapNativeHttpException } from '~/services/api';
-import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from './OAuthHelper';
+import { HttpRequestOptions, request } from '~/services/api';
 import { ResponseData } from '~/services/sync/interfaces';
 import { GetFileContentsOptions } from '~/webdav';
+import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from './OAuthHelper';
 
 /**
  * OneDrive API configuration
@@ -14,10 +13,12 @@ export const ONEDRIVE_PROVIDER: OAuthProvider = {
         authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
         tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
         // This is a placeholder client ID - users should configure their own
-        clientId: '',
-        redirectUri: 'com.akylas.documentscanner.oauth:/oauth2redirect',
+        clientId: ONEDRIVE_OAUTH_CLIENT_ID,
+        clientSecret: ONEDRIVE_OAUTH_CLIENT_SECRET,
+        redirectUri: 'http://localhost/oauth2redirect',
         scope: 'files.readwrite offline_access',
-        responseType: 'code'
+        responseType: 'code',
+        prompt: 'select_account'
     }
 };
 
@@ -59,7 +60,7 @@ export async function makeOneDriveRequest<T = any>(
         body?: any;
         headers?: Record<string, string>;
     } = {}
-): Promise<HttpsResponse<HttpsResponseLegacy<T>>> {
+) {
     const { body, headers = {}, method = 'GET' } = options;
 
     // Check if token needs refresh
@@ -78,20 +79,9 @@ export async function makeOneDriveRequest<T = any>(
             ...headers
         },
         responseOnMainThread: false,
-        content: body
-    } as HttpsRequestOptions;
-    try {
-        const response = await request<T>(requestOptions);
-
-        if (response.statusCode >= 400) {
-            throw new Error(`OneDrive API error: ${response.statusCode}`);
-        }
-
-        return response;
-    } catch (error) {
-        DEV_LOG && console.error('OneDrive request error:', error);
-        throw wrapNativeHttpException(error, requestOptions);
-    }
+        body
+    } as HttpRequestOptions;
+    return request<T>(requestOptions);
 }
 
 export async function getOneDriveRequestContents<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
@@ -103,27 +93,20 @@ export async function getOneDriveRequestContents<U = any, V extends 'binary' | '
         headers?: Record<string, string>;
     },
     options: GetFileContentsOptions & { format?: V } = {}
-): Promise<ResponseData<V, U>> {
+) {
     const { format = 'json' } = options;
     const response = await makeOneDriveRequest(tokens, fileId, httpOptions);
-    let body;
     switch (format) {
         case 'binary':
-            body = await response.content.toArrayBufferAsync();
-            break;
+            return response.binary();
         case 'text':
-            body = await response.content.toStringAsync();
-            break;
-        case 'json':
-            body = await response.content.toJSONAsync();
-            break;
+            return response.text();
         case 'file':
-            body = await response.content.toFile(options.destinationFilePath);
-            break;
+            return response.file(options.destinationFilePath);
+        case 'json':
         default:
-            throw new Error(`Invalid output format: ${format}`);
+            return response.json();
     }
-    return body;
 }
 
 /**
@@ -171,7 +154,7 @@ export async function listItems(tokens: OAuthTokens, folderId: string): Promise<
  * Upload a file to OneDrive
  */
 export async function uploadFile(tokens: OAuthTokens, fileName: string, content: string | ArrayBuffer | File, parentId: string): Promise<string> {
-    // For small files (< 4MB), use simple upload
+    // DEV_LOG && console.log('uploadFile', fileName, parentId);
     const response = await getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${parentId}:/${fileName}:/content`, {
         method: 'PUT',
         headers: {
@@ -183,38 +166,28 @@ export async function uploadFile(tokens: OAuthTokens, fileName: string, content:
     return response.id;
 }
 
-export async function downloadFile<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
-    tokens: OAuthTokens,
-    fileId: string,
-    options: GetFileContentsOptions & { format?: V } = {}
-): Promise<ResponseData<V, U>> {
+export async function downloadFile<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(tokens: OAuthTokens, fileId: string, options: GetFileContentsOptions & { format?: V } = {}) {
     const response = await getOneDriveRequestContents<{ '@microsoft.graph.downloadUrl': string }>(tokens, `/items/${fileId}`);
 
     // Download from the temporary download URL
     const downloadResponse = await request<string>({
         url: response['@microsoft.graph.downloadUrl'],
+        responseOnMainThread: false,
         method: 'GET'
     });
 
     const { format = 'json' } = options;
-    let body;
     switch (format) {
         case 'binary':
-            body = await downloadResponse.content.toArrayBufferAsync();
-            break;
+            return downloadResponse.binary();
         case 'text':
-            body = await downloadResponse.content.toStringAsync();
-            break;
-        case 'json':
-            body = await downloadResponse.content.toJSONAsync();
-            break;
+            return downloadResponse.text();
         case 'file':
-            body = await downloadResponse.content.toFile(options.destinationFilePath);
-            break;
+            return downloadResponse.file(options.destinationFilePath);
+        case 'json':
         default:
-            throw new Error(`Invalid output format: ${format}`);
+            return downloadResponse.json();
     }
-    return body;
 }
 
 /**
@@ -239,9 +212,14 @@ export async function itemExists(tokens: OAuthTokens, itemName: string, parentId
 /**
  * Get item by path
  */
-export async function getItemByPath(tokens: OAuthTokens, path: string, parentId: string = 'root'): Promise<OneDriveItem | null> {
+export async function getItemByPath(tokens: OAuthTokens, path: string, parentId: string = 'root', remoteFolder?: string): Promise<OneDriveItem | null> {
     try {
-        return getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${parentId}:/${path}`);
+        const startPath = `${remoteFolder}/`;
+        if (remoteFolder && path.startsWith(startPath)) {
+            path = path.slice(startPath.length);
+        }
+        const result = await getOneDriveRequestContents<OneDriveItem>(tokens, `/items/${parentId}:/${path}`);
+        return result;
     } catch (error) {
         return null;
     }

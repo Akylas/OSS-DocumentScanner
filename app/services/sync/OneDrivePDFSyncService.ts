@@ -1,12 +1,17 @@
-import { File, knownFolders, path } from '@nativescript/core';
+import { File, Screen, knownFolders, path } from '@nativescript/core';
+import { wrapNativeException } from '@nativescript/core/utils';
+import { generatePDFASync } from 'plugin-nativeprocessor';
+import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
+import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { PDF_EXT } from '~/utils/constants';
+import { getPageColorMatrix } from '~/utils/matrix';
 import { FileStat } from '~/webdav';
 import { networkService } from '../api';
 import { DocumentEvents } from '../documents';
 import { BasePDFSyncService, BasePDFSyncServiceOptions } from './BasePDFSyncService';
-import { SERVICES_SYNC_MASK } from './types';
-import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
-import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
 import { OAuthTokens } from './OAuthHelper';
+import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
+import { SERVICES_SYNC_MASK } from './types';
 
 export interface OneDrivePDFSyncServiceOptions extends BasePDFSyncServiceOptions, OneDriveSyncOptions {}
 
@@ -35,7 +40,7 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
         if (config) {
             const service = OneDrivePDFSyncService.getOrCreateInstance();
             Object.assign(service, config);
-            DEV_LOG && console.log('OneDrivePDFSyncService', 'start', JSON.stringify(config), service.autoSync);
+            // DEV_LOG && console.log('OneDrivePDFSyncService', 'start', JSON.stringify(config), service.autoSync);
             return service;
         }
     }
@@ -44,12 +49,12 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
 
     override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder || 'DocumentScanner');
+            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder);
         }
     }
 
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
-        const item = relativePath ? await getItemByPath(this.tokens, relativePath, this.remoteFolderId) : { id: this.remoteFolderId };
+        const item = relativePath ? await this.getItemByPath(relativePath) : { id: this.remoteFolderId };
 
         if (!item) {
             return [];
@@ -69,30 +74,46 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
             }));
     }
 
+    getItemByPath(path: string) {
+        return getItemByPath(this.tokens, path, this.remoteFolderId, this.remoteFolder);
+    }
     override async writePDF(document: OCRDocument, fileName: string, docFolder?: DocFolder) {
-        const temp = knownFolders.temp().path;
-        const localFilePath = path.join(temp, fileName);
-
-        if (File.exists(localFilePath)) {
-            throw new Error(`PDF file not found: ${localFilePath}`);
+        const pages = document.pages;
+        if (!pages || pages.length === 0) {
+            return;
         }
+        if (!fileName.endsWith(PDF_EXT)) {
+            fileName += PDF_EXT;
+        }
+        const temp = knownFolders.temp().path;
 
-        const file = File.fromPath(localFilePath);
-
+        if (__ANDROID__) {
+            const exportOptions = this.exportOptions;
+            const black_white = exportOptions.color === 'black_white';
+            const options = JSON.stringify({
+                overwrite: true,
+                // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
+                text_scale: Screen.mainScreen.scale * 1.4,
+                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p, black_white ? 'grayscale' : undefined) })),
+                ...exportOptions
+            });
+            await generatePDFASync(temp, fileName, options, wrapNativeException);
+        } else {
+            const exporter = new PDFExportCanvas();
+            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: temp, filename: fileName, compress: true, options: this.exportOptions });
+        }
+        const localFilePath = path.join(temp, fileName);
+        // let destinationPath = this.remoteFolder;
+        // if (docFolder) {
+        //     destinationPath = path.join(destinationPath, docFolder.name);
+        //     await this.ensureRemoteFolder(destinationPath);
+        // }
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
             const folderPath = docFolder.name;
-            const folderItem = await getItemByPath(this.tokens, folderPath, this.remoteFolderId);
+            const folderItem = await this.getItemByPath(folderPath);
             targetFolderId = folderItem?.id || (await getOrCreateFolder(this.tokens, folderPath));
         }
-
-        const content = await file.readText('base64');
-        await uploadFile(this.tokens, fileName, content, targetFolderId);
-
-        try {
-            file.remove();
-        } catch (e) {
-            // Ignore cleanup errors
-        }
+        await uploadFile(this.tokens, fileName, File.fromPath(localFilePath), targetFolderId);
     }
 }

@@ -1,6 +1,20 @@
 import { type BaseSyncService } from '~/services/sync/BaseSyncService';
 
-export type SYNC_TYPES = 'webdav_data' | 'folder_image' | 'folder_pdf' | 'webdav_image' | 'webdav_pdf' | 'gdrive_data' | 'gdrive_image' | 'gdrive_pdf' | 'onedrive_data' | 'onedrive_image' | 'onedrive_pdf';
+export enum SyncTypes {
+    webdav_data = 'webdav_data',
+    folder_image = 'folder_image',
+    folder_pdf = 'folder_pdf',
+    webdav_image = 'webdav_image',
+    webdav_pdf = 'webdav_pdf',
+    gdrive_data = 'gdrive_data',
+    gdrive_image = 'gdrive_image',
+    gdrive_pdf = 'gdrive_pdf',
+    onedrive_data = 'onedrive_data',
+    onedrive_image = 'onedrive_image',
+    onedrive_pdf = 'onedrive_pdf'
+}
+
+export type SYNC_TYPES = keyof typeof SyncTypes;
 export const SERVICES_SYNC_MASK: { [key in SYNC_TYPES]: number } = {
     webdav_data: 1 << 2,
     folder_image: 1 << 3,

@@ -1,12 +1,17 @@
-import { File, knownFolders, path } from '@nativescript/core';
+import { File, Screen, knownFolders, path } from '@nativescript/core';
+import { wrapNativeException } from '@nativescript/core/utils';
+import { generatePDFASync } from 'plugin-nativeprocessor';
+import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
+import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { PDF_EXT } from '~/utils/constants';
+import { getPageColorMatrix } from '~/utils/matrix';
 import { FileStat } from '~/webdav';
 import { networkService } from '../api';
 import { DocumentEvents } from '../documents';
 import { BasePDFSyncService, BasePDFSyncServiceOptions } from './BasePDFSyncService';
-import { SERVICES_SYNC_MASK } from './types';
-import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
 import { GoogleDriveSyncOptions, getOrCreateFolder, listFiles, uploadFile } from './GoogleDrive';
 import { OAuthTokens } from './OAuthHelper';
+import { SERVICES_SYNC_MASK } from './types';
 
 export interface GoogleDrivePDFSyncServiceOptions extends BasePDFSyncServiceOptions, GoogleDriveSyncOptions {}
 
@@ -35,7 +40,7 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
         if (config) {
             const service = GoogleDrivePDFSyncService.getOrCreateInstance();
             Object.assign(service, config);
-            DEV_LOG && console.log('GoogleDrivePDFSyncService', 'start', JSON.stringify(config), service.autoSync);
+            // DEV_LOG && console.log('GoogleDrivePDFSyncService', 'start', JSON.stringify(config), service.autoSync);
             return service;
         }
     }
@@ -80,28 +85,40 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
     }
 
     override async writePDF(document: OCRDocument, fileName: string, docFolder?: DocFolder) {
-        const temp = knownFolders.temp().path;
-        const localFilePath = path.join(temp, fileName);
-
-        // PDF generation happens before this call - file should exist
-        if (File.exists(localFilePath)) {
-            throw new Error(`PDF file not found: ${localFilePath}`);
+        const pages = document.pages;
+        if (!pages || pages.length === 0) {
+            return;
         }
-        const file = File.fromPath(localFilePath);
+        if (!fileName.endsWith(PDF_EXT)) {
+            fileName += PDF_EXT;
+        }
+        const temp = knownFolders.temp().path;
 
+        if (__ANDROID__) {
+            const exportOptions = this.exportOptions;
+            const black_white = exportOptions.color === 'black_white';
+            const options = JSON.stringify({
+                overwrite: true,
+                // page_padding: Utils.layout.toDevicePixels(pdfCanvas.options.page_padding),
+                text_scale: Screen.mainScreen.scale * 1.4,
+                pages: pages.map((p) => ({ ...p, colorMatrix: getPageColorMatrix(p, black_white ? 'grayscale' : undefined) })),
+                ...exportOptions
+            });
+            await generatePDFASync(temp, fileName, options, wrapNativeException);
+        } else {
+            const exporter = new PDFExportCanvas();
+            await exporter.export({ pages: pages.map((page) => ({ page, document })), folder: temp, filename: fileName, compress: true, options: this.exportOptions });
+        }
+        const localFilePath = path.join(temp, fileName);
+        // let destinationPath = this.remoteFolder;
+        // if (docFolder) {
+        //     destinationPath = path.join(destinationPath, docFolder.name);
+        //     await this.ensureRemoteFolder(destinationPath);
+        // }
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
             targetFolderId = await getOrCreateFolder(this.tokens, docFolder.name, this.remoteFolderId);
         }
-
-        const content = await file.readText('base64');
-        await uploadFile(this.tokens, fileName, content, 'application/pdf', targetFolderId);
-
-        // Clean up temp file
-        try {
-            file.remove();
-        } catch (e) {
-            // Ignore cleanup errors
-        }
+        await uploadFile(this.tokens, fileName, File.fromPath(localFilePath), 'application/pdf', targetFolderId);
     }
 }

@@ -1,6 +1,5 @@
-import { HttpsRequestOptions, HttpsResponse, HttpsResponseLegacy, request } from '@nativescript-community/https';
 import { File } from '@nativescript/core';
-import { wrapNativeHttpException } from '~/services/api';
+import { HttpRequestOptions, request } from '~/services/api';
 import { BufferLike } from '~/services/sync/interfaces';
 import { GetFileContentsOptions, ResponseData } from '~/webdav';
 import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from './OAuthHelper';
@@ -52,10 +51,11 @@ export async function makeGoogleDriveRequest<T = any>(
         body?: any;
         headers?: Record<string, string>;
     } = {}
-): Promise<HttpsResponse<HttpsResponseLegacy<T>>> {
+) {
     const { body, headers = {}, method = 'GET' } = options;
 
     // Check if token needs refresh
+    // DEV_LOG && console.log('expiresAt', tokens.expiresAt, isTokenExpired(tokens.expiresAt), tokens.refreshToken);
     if (isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
         const newTokens = await refreshAccessToken(GOOGLE_DRIVE_PROVIDER, tokens.refreshToken);
         Object.assign(tokens, newTokens);
@@ -71,18 +71,8 @@ export async function makeGoogleDriveRequest<T = any>(
         },
         responseOnMainThread: false,
         body
-    } as HttpsRequestOptions;
-    try {
-        const response = await request<T>(requestOptions);
-        if (response.statusCode >= 400) {
-            throw new Error(`Google Drive API error: ${response.statusCode}`);
-        }
-
-        return response;
-    } catch (error) {
-        DEV_LOG && console.error('Google Drive request error:', error);
-        throw wrapNativeHttpException(error, requestOptions);
-    }
+    } as HttpRequestOptions;
+    return request<T>(requestOptions);
 }
 
 /**
@@ -166,27 +156,20 @@ export async function getGoogleDriveRequestContents<U = any, V extends 'binary' 
         headers?: Record<string, string>;
     },
     options: GetFileContentsOptions & { format?: V } = {}
-): Promise<ResponseData<V, U>> {
+) {
     const { format = 'json' } = options;
     const response = await makeGoogleDriveRequest(tokens, fileId, httpOptions);
-    let body;
     switch (format) {
         case 'binary':
-            body = await response.content.toArrayBufferAsync();
-            break;
+            return response.binary();
         case 'text':
-            body = await response.content.toStringAsync();
-            break;
-        case 'json':
-            body = await response.content.toJSONAsync();
-            break;
+            return response.text();
         case 'file':
-            body = await response.content.toFile(options.destinationFilePath);
-            break;
+            return response.file(options.destinationFilePath);
+        case 'json':
         default:
-            throw new Error(`Invalid output format: ${format}`);
+            return response.json();
     }
-    return body;
 }
 /**
  * Download file content

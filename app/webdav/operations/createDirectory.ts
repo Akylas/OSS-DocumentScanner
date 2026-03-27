@@ -1,11 +1,10 @@
-import { encodePath, getAllDirectories, join, makePathAbsolute, normalisePath } from '../tools/path';
-import { prepareRequestOptions, request } from '../request';
-import { handleResponseCode } from '../response';
-import { getStat } from './stat';
-import { CreateDirectoryOptions, FileStat, WebDAVClientContext } from '../types';
-import { path } from '@nativescript/core';
 import { HTTPError } from '@akylas/nativescript-app-utils/error';
 import { SEPARATOR } from '~/utils/constants';
+import { prepareRequestOptions, request } from '../request';
+import { handleResponseCode } from '../response';
+import { encodePath, getAllDirectories, join, makePathAbsolute, normalisePath } from '../tools/path';
+import { CreateDirectoryOptions, FileStat, WebDAVClientContext } from '../types';
+import { getStat } from './stat';
 
 export async function createDirectory(context: WebDAVClientContext, dirPath: string, options: CreateDirectoryOptions = {}) {
     if (options.recursive === true) return createDirectoryRecursively(context, dirPath, options);

@@ -1,16 +1,23 @@
+import { File } from '@nativescript/core';
+import { SEPARATOR } from '~/utils/constants';
 import { setupAuth } from './auth/index';
 import { copyFile } from './operations/copyFile';
 import { createDirectory } from './operations/createDirectory';
 import { customRequest } from './operations/customRequest';
 import { deleteFile } from './operations/deleteFile';
 import { exists } from './operations/exists';
-import { lock, unlock } from './operations/lock';
 import { getQuota } from './operations/getQuota';
-import { getStat } from './operations/stat';
-import { getSearch } from './operations/search';
+import { lock, unlock } from './operations/lock';
 import { moveFile } from './operations/moveFile';
-import { getFileUploadLink, putFileContents } from './operations/putFileContents';
-import { File, path } from '@nativescript/core';
+import { putFileContents } from './operations/putFileContents';
+import { getSearch } from './operations/search';
+import { getStat } from './operations/stat';
+import { prepareRequestOptions, request } from './request';
+import { handleResponseCode, processResponsePayload } from './response';
+import { parseXML, prepareFileFromProps } from './tools/dav';
+import { fromBase64 } from './tools/encode';
+import { encodePath, join, normalisePath } from './tools/path';
+import { normaliseHREF } from './tools/url';
 import {
     AuthType,
     BufferLike,
@@ -25,7 +32,6 @@ import {
     PutFileContentsOptions,
     RequestOptions,
     ResponseData,
-    ResponseDataDetailed,
     SearchOptions,
     StatOptions,
     // WebDAVClient,
@@ -33,18 +39,10 @@ import {
     WebDAVClientOptions,
     WebDAVMethodOptions
 } from './types';
-import { prepareRequestOptions, request } from './request';
-import { encodePath, join, makePathAbsolute, normalisePath } from './tools/path';
-import { normaliseHREF } from './tools/url';
-import { handleResponseCode, processResponsePayload } from './response';
-import { parseXML, prepareFileFromProps } from './tools/dav';
-import { HttpsResponse, HttpsResponseLegacy } from '@nativescript-community/https';
-import { fromBase64 } from './tools/encode';
-import { SEPARATOR } from '~/utils/constants';
 
 const DEFAULT_CONTACT_HREF = 'mail:contact@akylas.fr';
 
-async function _getFileContentsBuffer(context: WebDAVClientContext, filePath: string, options: GetFileContentsOptions = {}): Promise<HttpsResponse<HttpsResponseLegacy<any>>> {
+async function _getFileContentsBuffer<T = any>(context: WebDAVClientContext, filePath: string, options: GetFileContentsOptions = {}) {
     const requestOptions = prepareRequestOptions(
         {
             url: filePath.startsWith('http') ? filePath : join(context.remoteURL, encodePath(filePath)),
@@ -53,7 +51,7 @@ async function _getFileContentsBuffer(context: WebDAVClientContext, filePath: st
         context,
         options
     );
-    const response = await request(requestOptions);
+    const response = await request<T>(requestOptions);
     await handleResponseCode(context, response, requestOptions);
     return response;
 }
@@ -115,7 +113,7 @@ export class WebDAVClient {
         );
         const response = await request(requestOptions);
         await handleResponseCode(context, response, requestOptions);
-        const responseData = await response.content.toStringAsync();
+        const responseData = await response.text();
         if (!responseData) {
             throw new Error('Failed parsing directory contents: Empty response');
         }
@@ -135,19 +133,18 @@ export class WebDAVClient {
         let body;
         switch (format) {
             case 'binary':
-                body = await response.content.toArrayBufferAsync();
+                body = await response.binary();
                 break;
             case 'text':
-                body = await response.content.toStringAsync();
-                break;
-            case 'json':
-                body = await response.content.toJSONAsync();
+                body = await response.text();
                 break;
             case 'file':
-                body = await response.content.toFile(options.destinationFilePath);
+                body = await response.file(options.destinationFilePath);
                 break;
+            case 'json':
             default:
-                throw new Error(`Invalid output format: ${format}`);
+                body = await response.json();
+                break;
         }
         // DEV_LOG && console.log('getFileContents', format, body);
         return processResponsePayload(response, body, false);
