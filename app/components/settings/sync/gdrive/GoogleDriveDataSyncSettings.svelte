@@ -4,8 +4,8 @@
     import { Writable } from 'svelte/store';
     import DataSyncSettings from '~/components/settings/sync/DataSyncSettings.svelte';
     import OAuthSettingsView from '~/components/settings/sync/OAuthSettingsView.svelte';
-    import { GOOGLE_DRIVE_PROVIDER, testGoogleDriveConnection } from '~/services/sync/GoogleDrive';
-    import { GoogleDriveDataSyncOptions } from '~/services/sync/GoogleDriveDataSyncService';
+    import { GOOGLE_DRIVE_PROVIDER, testGoogleDriveConnection } from '~/services/sync/gdrive/GoogleDrive';
+    import { GoogleDriveDataSyncOptions } from '~/services/sync/gdrive/GoogleDriveDataSyncService';
 
     export let data: GoogleDriveDataSyncOptions = {} as any;
 

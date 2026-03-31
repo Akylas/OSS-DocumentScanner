@@ -4,8 +4,8 @@
     import { Writable } from 'svelte/store';
     import OAuthSettingsView from '~/components/settings/sync/OAuthSettingsView.svelte';
     import PDFSyncSettings from '~/components/settings/sync/PDFSyncSettings.svelte';
-    import { ONEDRIVE_PROVIDER, testOneDriveConnection } from '~/services/sync/OneDrive';
-    import { OneDrivePDFSyncServiceOptions } from '~/services/sync/OneDrivePDFSyncService';
+    import { ONEDRIVE_PROVIDER, testOneDriveConnection } from '~/services/sync/onedrive/OneDrive';
+    import { OneDrivePDFSyncServiceOptions } from '~/services/sync/onedrive/OneDrivePDFSyncService';
 
     export let data: OneDrivePDFSyncServiceOptions = {} as any;
 

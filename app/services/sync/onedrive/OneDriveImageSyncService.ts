@@ -1,13 +1,13 @@
 import { File, ImageSource, knownFolders, path } from '@nativescript/core';
 import { saveImage } from '~/utils/utils';
 import { FileStat } from '~/webdav';
-import { networkService } from '../api';
-import { DocumentEvents } from '../documents';
-import { BaseImageSyncService, BaseImageSyncServiceOptions } from './BaseImageSyncService';
-import { SERVICES_SYNC_MASK } from './types';
+import { networkService } from '../../api';
+import { DocumentEvents } from '../../documents';
+import { BaseImageSyncService, BaseImageSyncServiceOptions } from '../BaseImageSyncService';
+import { SERVICES_SYNC_MASK } from '../types';
 import type { DocFolder } from '~/models/OCRDocument';
 import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
-import { OAuthTokens } from './OAuthHelper';
+import { OAuthTokens } from '../OAuthHelper';
 
 export interface OneDriveImageSyncServiceOptions extends BaseImageSyncServiceOptions, OneDriveSyncOptions {}
 

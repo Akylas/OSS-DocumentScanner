@@ -4,8 +4,8 @@
     import { Writable } from 'svelte/store';
     import OAuthSettingsView from '~/components/settings/sync/OAuthSettingsView.svelte';
     import PDFSyncSettings from '~/components/settings/sync/PDFSyncSettings.svelte';
-    import { GOOGLE_DRIVE_PROVIDER, testGoogleDriveConnection } from '~/services/sync/GoogleDrive';
-    import { GoogleDrivePDFSyncServiceOptions } from '~/services/sync/GoogleDrivePDFSyncService';
+    import { GOOGLE_DRIVE_PROVIDER, testGoogleDriveConnection } from '~/services/sync/gdrive/GoogleDrive';
+    import { GoogleDrivePDFSyncServiceOptions } from '~/services/sync/gdrive/GoogleDrivePDFSyncService';
 
     export let data: GoogleDrivePDFSyncServiceOptions = {} as any;
 

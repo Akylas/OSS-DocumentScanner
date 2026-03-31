@@ -5,12 +5,12 @@ import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
-import { networkService } from '../api';
-import { DocumentEvents } from '../documents';
-import PDFExportCanvas from '../pdf/PDFExportCanvas';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from './BasePDFSyncService';
+import { networkService } from '../../api';
+import { DocumentEvents } from '../../documents';
+import PDFExportCanvas from '../../pdf/PDFExportCanvas';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
 import { WebdavSyncOptions } from './Webdav';
-import { SERVICES_SYNC_MASK } from './types';
+import { SERVICES_SYNC_MASK } from '../types';
 
 export interface WebdavPDFSyncServiceOptions extends BasePDFSyncServiceOptions, WebdavSyncOptions {}
 

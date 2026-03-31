@@ -5,7 +5,7 @@
     import FolderTextView from '~/components/common/FolderTextView.svelte';
     import PDFSyncSettings from '~/components/settings/sync/PDFSyncSettings.svelte';
     import { lc } from '~/helpers/locale';
-    import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
+    import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/local/LocalFolderPDFSyncService';
 </script>
 
 <script lang="ts">

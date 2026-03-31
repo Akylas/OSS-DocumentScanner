@@ -5,10 +5,10 @@ import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { FileStat } from '~/webdav';
-import { DocumentEvents } from '../documents';
-import PDFExportCanvas from '../pdf/PDFExportCanvas';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from './BasePDFSyncService';
-import { SERVICES_SYNC_MASK } from './types';
+import { DocumentEvents } from '../../documents';
+import PDFExportCanvas from '../../pdf/PDFExportCanvas';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
+import { SERVICES_SYNC_MASK } from '../types';
 
 export interface LocalFolderPDFSyncServiceOptions extends BasePDFSyncServiceOptions {
     localFolderPath: string;

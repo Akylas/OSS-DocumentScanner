@@ -4,8 +4,8 @@
     import { Writable } from 'svelte/store';
     import ImageSyncSettings from '~/components/settings/sync/ImageSyncSettings.svelte';
     import OAuthSettingsView from '~/components/settings/sync/OAuthSettingsView.svelte';
-    import { GOOGLE_DRIVE_PROVIDER, testGoogleDriveConnection } from '~/services/sync/GoogleDrive';
-    import { GoogleDriveImageSyncServiceOptions } from '~/services/sync/GoogleDriveImageSyncService';
+    import { GOOGLE_DRIVE_PROVIDER, testGoogleDriveConnection } from '~/services/sync/gdrive/GoogleDrive';
+    import { GoogleDriveImageSyncServiceOptions } from '~/services/sync/gdrive/GoogleDriveImageSyncService';
 
     export let data: GoogleDriveImageSyncServiceOptions = {} as any;
 

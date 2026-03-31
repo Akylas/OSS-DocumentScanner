@@ -2,7 +2,7 @@
     import { showError } from '@shared/utils/showError';
     import { Writable, get } from 'svelte/store';
     import { lc } from '~/helpers/locale';
-    import { WebdavSyncOptions, testWebdavConnection } from '~/services/sync/Webdav';
+    import { WebdavSyncOptions, testWebdavConnection } from '~/services/sync/webdav/Webdav';
 
     import { SilentError } from '@akylas/nativescript-app-utils/error';
     import RemoteFolderTextField from '~/components/common/RemoteFolderTextField.svelte';

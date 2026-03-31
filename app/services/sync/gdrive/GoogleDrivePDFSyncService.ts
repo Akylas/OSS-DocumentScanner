@@ -6,12 +6,12 @@ import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { FileStat } from '~/webdav';
-import { networkService } from '../api';
-import { DocumentEvents } from '../documents';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from './BasePDFSyncService';
+import { networkService } from '../../api';
+import { DocumentEvents } from '../../documents';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
 import { GoogleDriveSyncOptions, getOrCreateFolder, listFiles, uploadFile } from './GoogleDrive';
-import { OAuthTokens } from './OAuthHelper';
-import { SERVICES_SYNC_MASK } from './types';
+import { OAuthTokens } from '../OAuthHelper';
+import { SERVICES_SYNC_MASK } from '../types';
 
 export interface GoogleDrivePDFSyncServiceOptions extends BasePDFSyncServiceOptions, GoogleDriveSyncOptions {}
 

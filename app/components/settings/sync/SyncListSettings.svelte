@@ -10,17 +10,17 @@
     import { lc, onLanguageChanged } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { SERVICES_SYNC_TITLES, syncService } from '~/services/sync';
-    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
-    import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/LocalFolderPDFSyncService';
-    import { WebdavSyncOptions, createWebdavConfig } from '~/services/sync/Webdav';
-    import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
-    import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
-    import { WebdavPDFSyncServiceOptions } from '~/services/sync/WebdavPDFSyncService';
+    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/local/LocalFolderImageSyncService';
+    import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/local/LocalFolderPDFSyncService';
+    import { WebdavSyncOptions, createWebdavConfig } from '~/services/sync/webdav/Webdav';
+    import { WebdavDataSyncOptions } from '~/services/sync/webdav/WebdavDataSyncService';
+    import { WebdavImageSyncServiceOptions } from '~/services/sync/webdav/WebdavImageSyncService';
+    import { WebdavPDFSyncServiceOptions } from '~/services/sync/webdav/WebdavPDFSyncService';
     import { SERVICES_SYNC_COLOR, SYNC_TYPES, SyncTypes } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getDirectoryName, hideLoading, requestNotificationPermission, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
-    import { GoogleDriveDataSyncOptions } from '~/services/sync/GoogleDriveDataSyncService';
+    import { GoogleDriveDataSyncOptions } from '~/services/sync/gdrive/GoogleDriveDataSyncService';
     type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
 
     import type FolderImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderImageSyncSettings.svelte';
@@ -35,8 +35,8 @@
     import type GoogleDrivePDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDrivePDFSyncSettings.svelte';
     import type GoogleDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDriveDataSyncSettings.svelte';
     import { BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
-    import { GoogleDriveSyncOptions } from '~/services/sync/GoogleDrive';
-    import { OneDriveSyncOptions } from '~/services/sync/OneDrive';
+    import { GoogleDriveSyncOptions } from '~/services/sync/gdrive/GoogleDrive';
+    import { OneDriveSyncOptions } from '~/services/sync/onedrive/OneDrive';
     interface SettingsComponentReturnType {
         [SyncTypes.folder_image]: typeof FolderImageSyncSettings__SvelteComponent_;
         [SyncTypes.folder_pdf]: typeof FolderPDFSyncSettings__SvelteComponent_;

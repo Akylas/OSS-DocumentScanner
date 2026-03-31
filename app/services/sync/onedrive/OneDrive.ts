@@ -2,7 +2,7 @@ import { File } from '@nativescript/core';
 import { HttpRequestOptions, request } from '~/services/api';
 import { ResponseData } from '~/services/sync/interfaces';
 import { GetFileContentsOptions } from '~/webdav';
-import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from './OAuthHelper';
+import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from '../OAuthHelper';
 
 /**
  * OneDrive API configuration

@@ -4,7 +4,7 @@
     import ImageSyncSettings from '~/components/settings/sync/ImageSyncSettings.svelte';
     import WebdavSettingsView from '~/components/settings/sync/webdav/WebdavSettingsView.svelte';
     import { lc } from '~/helpers/locale';
-    import { WebdavImageSyncServiceOptions } from '~/services/sync/WebdavImageSyncService';
+    import { WebdavImageSyncServiceOptions } from '~/services/sync/webdav/WebdavImageSyncService';
 
     export let data: WebdavImageSyncServiceOptions = {} as any;
 

@@ -3,7 +3,7 @@ import { type OCRDocument } from '~/models/OCRDocument';
 import { networkService } from '~/services/api';
 import { DocumentEvents } from '~/services/documents';
 import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
-import { WebdavSyncOptions } from '~/services/sync/Webdav';
+import { WebdavSyncOptions } from '~/services/sync/webdav/Webdav';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { AuthType, FileStat, GetFileContentsOptions, ResponseData, ResponseDataDetailed, WebDAVClient, createClient } from '~/webdav';
 

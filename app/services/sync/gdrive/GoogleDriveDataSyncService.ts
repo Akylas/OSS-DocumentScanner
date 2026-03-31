@@ -7,7 +7,7 @@ import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { basename } from '~/utils/path';
 import { FileStat, GetFileContentsOptions, ResponseData } from '~/webdav';
 import { GoogleDriveSyncOptions, deleteFile, downloadFile, getGoogleDriveRequestContents, getOrCreateFolder, listFiles, uploadFile } from './GoogleDrive';
-import { OAuthTokens } from './OAuthHelper';
+import { OAuthTokens } from '../OAuthHelper';
 
 export interface GoogleDriveDataSyncOptions extends BaseDataSyncServiceOptions, GoogleDriveSyncOptions {}
 

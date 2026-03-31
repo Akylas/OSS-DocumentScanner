@@ -101,5 +101,5 @@
             visibility={testConnectionSuccess !== 0 ? 'visible' : 'collapse'} />
         <mdbutton col={2} horizontalAlignment="right" text={lc('test_connection')} variant="outline" on:tap={testConnectionAction} />
     </gridlayout>
-    <RemoteFolderTextField hint={lc('remote_folder')} margin="5 4" text={$store.remoteFolder} {variant} on:textChange={(e) => ($store.remoteFolder = e['value'])} />
+    <RemoteFolderTextField hint={lc('remote_folder')} margin="20 4 10 4" text={$store.remoteFolder} {variant} on:textChange={(e) => ($store.remoteFolder = e['value'])} />
 </stacklayout>

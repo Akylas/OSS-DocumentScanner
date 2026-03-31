@@ -22,7 +22,7 @@ import {
 import type SyncWorker from '~/workers/SyncWorker';
 import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, DocumentPagesAddedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from './documents';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
-import { WebdavDataSyncOptions } from './sync/WebdavDataSyncService';
+import { WebdavDataSyncOptions } from './sync/webdav/WebdavDataSyncService';
 
 export const syncServicesStore = writable([]);
 

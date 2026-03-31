@@ -4,7 +4,7 @@
     import DataSyncSettings from '~/components/settings/sync/DataSyncSettings.svelte';
     import WebdavSettingsView from '~/components/settings/sync/webdav/WebdavSettingsView.svelte';
     import { lc } from '~/helpers/locale';
-    import { WebdavDataSyncOptions } from '~/services/sync/WebdavDataSyncService';
+    import { WebdavDataSyncOptions } from '~/services/sync/webdav/WebdavDataSyncService';
 
     export let data: WebdavDataSyncOptions = {} as any;
 

@@ -4,7 +4,7 @@
     import { Writable, get } from 'svelte/store';
     import ImageSyncSettings from '~/components/settings/sync/ImageSyncSettings.svelte';
     import { lc } from '~/helpers/locale';
-    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/LocalFolderImageSyncService';
+    import { LocalFolderImageSyncServiceOptions } from '~/services/sync/local/LocalFolderImageSyncService';
     import FolderTextView from '~/components/common/FolderTextView.svelte';
 </script>
 

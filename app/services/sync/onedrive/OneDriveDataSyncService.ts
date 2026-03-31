@@ -5,7 +5,7 @@ import { DocumentEvents } from '~/services/documents';
 import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { FileStat, GetFileContentsOptions, ResponseData } from '~/webdav';
-import { OAuthTokens } from './OAuthHelper';
+import { OAuthTokens } from '../OAuthHelper';
 import { OneDriveSyncOptions, deleteItem, downloadFile, getItemByPath, getOneDriveRequestContents, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
 
 export interface OneDriveDataSyncOptions extends BaseDataSyncServiceOptions, OneDriveSyncOptions {}

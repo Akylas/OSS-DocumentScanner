@@ -2,7 +2,7 @@ import { File } from '@nativescript/core';
 import { HttpRequestOptions, request } from '~/services/api';
 import { BufferLike } from '~/services/sync/interfaces';
 import { GetFileContentsOptions, ResponseData } from '~/webdav';
-import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from './OAuthHelper';
+import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from '../OAuthHelper';
 
 /**
  * Google Drive API configuration
