@@ -11,6 +11,7 @@
     import { AuthType } from '~/webdav';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
+    $: ({ authType } = $store);
 
     const variant = 'outline';
     export let store: Writable<WebdavSyncOptions>;
@@ -94,7 +95,7 @@
             editable={false}
             hint={lc('authentication')}
             margin="5 4 5 0"
-            text={$store.authType || AuthType.Password}
+            text={authType || AuthType.Password}
             textTransform="uppercase"
             {variant}
             width={130}
@@ -103,7 +104,7 @@
             autocapitalizationType="none"
             autocorrect={false}
             col={1}
-            editable={$store.authType === AuthType.Token}
+            editable={authType === AuthType.Token}
             hint={lc('token')}
             margin="5 0 5 4"
             placeholder={lc('token')}

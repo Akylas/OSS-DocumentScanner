@@ -170,9 +170,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript@npm:8.9.14":
-  version: 8.9.14
-  resolution: "@akylas/nativescript@npm:8.9.14"
+"@akylas/nativescript@npm:8.9.15":
+  version: 8.9.15
+  resolution: "@akylas/nativescript@npm:8.9.15"
   dependencies:
     "@csstools/css-calc": "npm:~2.1.2"
     "@csstools/css-color-parser": "npm:^3.0.8"
@@ -185,7 +185,7 @@ __metadata:
     emoji-regex: "npm:^10.3.0"
     reduce-css-calc: "npm:^2.1.8"
     tslib: "npm:^2.6.3"
-  checksum: 10/891689c6f402f341eda340c4818fc7f95f36d4449fcb3bbe0925ad186035fdbb3042df761a89ab8f7952f2cf47a71aefcb0b0c34852daa82f9b4f1ed1cf1fdd4
+  checksum: 10/9c0d29807984240a587fc177c12aa0ac13ebf551b84843a18bd90f2037c0931f10b2c51b1109cdada4ed112d4bb8d9a2b608cbcc4e416bb292bfce48fb50a29b
   languageName: node
   linkType: hard
 
@@ -10372,7 +10372,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@akylas/kiss-orm": "npm:2.1.14"
-    "@akylas/nativescript": "npm:8.9.14"
+    "@akylas/nativescript": "npm:8.9.15"
     "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "file:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.11"
