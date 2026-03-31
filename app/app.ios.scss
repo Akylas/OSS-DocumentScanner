@@ -4,7 +4,10 @@ mdbutton {
     // material3 basic design
     shape: round;
 }
-
+mdbutton[variant=outline] {
+    ripple-color: var(--colorPrimary);
+    color: var(--colorPrimary);
+}
 
 canvasview,
 canvaslabel,
