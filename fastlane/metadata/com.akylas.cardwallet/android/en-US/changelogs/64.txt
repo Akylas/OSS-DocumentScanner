@@ -1,0 +1,12 @@
+Features:
+- GoogleDrive Sync support
+- OneDrive sync sync support
+
+Bug fixes:
+- language change fix
+- allow vertical folder view
+- check for available disk space before taking a picture
+- prevent PDF export when card has not image/pkpass
+- many sync fixes
+- allow set scale on a per barcode basis
+- webdav token field not selectable
