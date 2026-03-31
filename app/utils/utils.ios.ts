@@ -93,11 +93,9 @@ export function hasManagePermission() {
     return true;
 }
 export function checkAvailableStorage(sizeBytes: number) {
-    //@ts-expect-error needs typings
     return IOSSharedUtils.checkAvailableStorage(sizeBytes);
 }
 
 export function generateCodeChallenge(str: string): string {
-    //@ts-expect-error needs typings
     return IOSSharedUtils.generateCodeChallenge(str);
 }

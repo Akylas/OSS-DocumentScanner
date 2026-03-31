@@ -167,10 +167,8 @@ export function testGetContent() {
 }
 
 export function checkAvailableStorage(sizeBytes: number) {
-    //@ts-expect-error needs typings
     return com.akylas.documentscanner.AndroidSharedUtils.Companion.checkAvailableStorage(sizeBytes);
 }
 export function generateCodeChallenge(str: string): string {
-    //@ts-expect-error needs typings
     return com.akylas.documentscanner.AndroidSharedUtils.Companion.generateCodeChallenge(str);
 }
