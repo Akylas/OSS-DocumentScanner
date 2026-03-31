@@ -1,12 +1,12 @@
 import { File, ImageSource, knownFolders, path } from '@nativescript/core';
+import type { DocFolder } from '~/models/OCRDocument';
+import { networkService } from '~/services/api';
+import { DocumentEvents } from '~/services/documents';
+import { BaseImageSyncService, BaseImageSyncServiceOptions } from '~/services/sync/BaseImageSyncService';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
+import { WebdavSyncOptions } from '~/services/sync/webdav/Webdav';
 import { saveImage } from '~/utils/utils';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
-import { networkService } from '../../api';
-import { DocumentEvents } from '../../documents';
-import { BaseImageSyncService, BaseImageSyncServiceOptions } from '../BaseImageSyncService';
-import { WebdavSyncOptions } from './Webdav';
-import { SERVICES_SYNC_MASK } from '../types';
-import type { DocFolder } from '~/models/OCRDocument';
 
 export interface WebdavImageSyncServiceOptions extends BaseImageSyncServiceOptions, WebdavSyncOptions {}
 

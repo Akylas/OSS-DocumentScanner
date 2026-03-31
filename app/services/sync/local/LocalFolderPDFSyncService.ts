@@ -1,14 +1,14 @@
-import { File, Folder, Screen, path } from '@nativescript/core';
+import { File, Folder, Screen } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
+import { DocumentEvents } from '~/services/documents';
+import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '~/services/sync/BasePDFSyncService';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
-import { FileStat } from '~/webdav';
-import { DocumentEvents } from '../../documents';
-import PDFExportCanvas from '../../pdf/PDFExportCanvas';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
-import { SERVICES_SYNC_MASK } from '../types';
+import type { FileStat } from '~/webdav';
 
 export interface LocalFolderPDFSyncServiceOptions extends BasePDFSyncServiceOptions {
     localFolderPath: string;

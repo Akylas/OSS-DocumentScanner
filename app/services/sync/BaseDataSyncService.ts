@@ -59,7 +59,7 @@ export abstract class BaseDataSyncService extends BaseSyncService {
             });
         } catch (error) {
             // Has .valid but no data.json - corrupt, skip it
-            DEV_LOG && console.warn('importDocumentFromRemote: corrupt remote document (has .valid but no data.json)', data.basename);
+            DEV_LOG && console.warn('importDocumentFromRemote: corrupt remote document (has .valid but no data.json)', data.basename, error.message, error.stack);
             return;
         }
 

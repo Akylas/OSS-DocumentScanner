@@ -26,10 +26,13 @@
     async function validateSave() {
         return oauthView?.validateSave();
     }
+    async function testConnection() {
+        return testGoogleDriveConnection({ tokens: data } as any);
+    }
 </script>
 
 <ImageSyncSettings {data} serviceType="gdrive_image" {topItems} {validateSave} bind:updateItem bind:store>
     <Template key="oauth" let:item>
-        <OAuthSettingsView bind:this={oauthView} provider={GOOGLE_DRIVE_PROVIDER} {store} testConnection={testGoogleDriveConnection} />
+        <OAuthSettingsView bind:this={oauthView} provider={GOOGLE_DRIVE_PROVIDER} {store} {testConnection} />
     </Template>
 </ImageSyncSettings>

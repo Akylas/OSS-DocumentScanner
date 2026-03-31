@@ -1,17 +1,17 @@
 import { File, ImageSource, knownFolders, path } from '@nativescript/core';
-import { saveImage } from '~/utils/utils';
-import { FileStat } from '~/webdav';
-import { networkService } from '../../api';
-import { DocumentEvents } from '../../documents';
-import { BaseImageSyncService, BaseImageSyncServiceOptions } from '../BaseImageSyncService';
-import { SERVICES_SYNC_MASK } from '../types';
 import type { DocFolder } from '~/models/OCRDocument';
-import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
-import { OAuthTokens } from '../OAuthHelper';
+import { networkService } from '~/services/api';
+import { DocumentEvents } from '~/services/documents';
+import { BaseImageSyncService, BaseImageSyncServiceOptions } from '~/services/sync/BaseImageSyncService';
+import { OAuthTokens } from '~/services/sync/OAuthHelper';
+import { type OneDriveSyncOptions, OneDriveSyncService, getItemByPath, getOrCreateFolder, listItems, uploadFile } from '~/services/sync/onedrive/OneDrive';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
+import { saveImage } from '~/utils/utils';
+import type { FileStat } from '~/webdav';
 
 export interface OneDriveImageSyncServiceOptions extends BaseImageSyncServiceOptions, OneDriveSyncOptions {}
 
-export class OneDriveImageSyncService extends BaseImageSyncService {
+export class OneDriveImageSyncService extends BaseImageSyncService implements OneDriveSyncService {
     shouldSync(force?: boolean, event?: DocumentEvents) {
         return (force || (event && this.autoSync)) && networkService.connected;
     }
@@ -24,7 +24,7 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
     refreshToken: string;
     expiresAt: number;
 
-    private get tokens(): OAuthTokens {
+    get tokens(): OAuthTokens {
         return {
             accessToken: this.accessToken,
             refreshToken: this.refreshToken,
@@ -45,12 +45,12 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
 
     override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder);
+            this.remoteFolderId = await getOrCreateFolder(this, remoteFolder);
         }
     }
 
     getItemByPath(path: string) {
-        return getItemByPath(this.tokens, path, this.remoteFolderId, this.remoteFolder);
+        return getItemByPath(this, path, this.remoteFolderId, this.remoteFolder);
     }
     override async getRemoteFolderFiles(relativePath: string): Promise<FileStat[]> {
         const item = relativePath ? await this.getItemByPath(relativePath) : { id: this.remoteFolderId };
@@ -59,7 +59,7 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
             return [];
         }
 
-        const items = await listItems(this.tokens, item.id);
+        const items = await listItems(this, item.id);
 
         return items
             .filter((item) => !item.folder)
@@ -88,13 +88,13 @@ export class OneDriveImageSyncService extends BaseImageSyncService {
         if (docFolder) {
             const folderPath = docFolder.name;
             const folderItem = await this.getItemByPath(folderPath);
-            targetFolderId = folderItem?.id || (await getOrCreateFolder(this.tokens, folderPath));
+            targetFolderId = folderItem?.id || (await getOrCreateFolder(this, folderPath));
         }
 
         const file = File.fromPath(localFilePath);
         // const content = await file.readText('base64');
         // DEV_LOG && console.warn('writeImage', fileName, localFilePath, File.exists(localFilePath));
-        await uploadFile(this.tokens, fileName, file, targetFolderId);
+        await uploadFile(this, fileName, file, targetFolderId);
 
         try {
             file.remove();

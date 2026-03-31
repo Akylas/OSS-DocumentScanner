@@ -1,10 +1,10 @@
 <script context="module" lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ObservableArray } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { showModal } from '@shared/utils/svelte/ui';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import { lc, onLanguageChanged } from '~/helpers/locale';
@@ -12,29 +12,27 @@
     import { SERVICES_SYNC_TITLES, syncService } from '~/services/sync';
     import { LocalFolderImageSyncServiceOptions } from '~/services/sync/local/LocalFolderImageSyncService';
     import { LocalFolderPDFSyncServiceOptions } from '~/services/sync/local/LocalFolderPDFSyncService';
+    import { SERVICES_SYNC_COLOR, SyncTypes } from '~/services/sync/types';
     import { WebdavSyncOptions, createWebdavConfig } from '~/services/sync/webdav/Webdav';
     import { WebdavDataSyncOptions } from '~/services/sync/webdav/WebdavDataSyncService';
-    import { WebdavImageSyncServiceOptions } from '~/services/sync/webdav/WebdavImageSyncService';
-    import { WebdavPDFSyncServiceOptions } from '~/services/sync/webdav/WebdavPDFSyncService';
-    import { SERVICES_SYNC_COLOR, SYNC_TYPES, SyncTypes } from '~/services/sync/types';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { getDirectoryName, hideLoading, requestNotificationPermission, requestStoragePermission, showAlertOptionSelect } from '~/utils/ui';
+    import { getDirectoryName, hideLoading, requestNotificationPermission, showAlertOptionSelect } from '~/utils/ui';
     import { colors, windowInset } from '~/variables';
-    import { GoogleDriveDataSyncOptions } from '~/services/sync/gdrive/GoogleDriveDataSyncService';
-    type Item = (WebdavDataSyncOptions | LocalFolderImageSyncServiceOptions | LocalFolderPDFSyncServiceOptions) & { id?: number; type: SYNC_TYPES; title?: string; description?: string };
+    type Item = BaseSyncServiceOptions & { title?: string; description?: string };
 
-    import type FolderImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderImageSyncSettings.svelte';
-    import type FolderPDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderPDFSyncSettings.svelte';
-    import type WebdavImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavImageSyncSettings.svelte';
-    import type WebdavPDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavPDFSyncSettings.svelte';
-    import type WebdavDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavDataSyncSettings.svelte';
-    import type OneDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDriveDataSyncSettings.svelte';
-    import type OneDrivePDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDrivePDFSyncSettings.svelte';
-    import type OneDriveImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDriveImageSyncSettings.svelte';
+    import type GoogleDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDriveDataSyncSettings.svelte';
     import type GoogleDriveImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDriveImageSyncSettings.svelte';
     import type GoogleDrivePDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDrivePDFSyncSettings.svelte';
-    import type GoogleDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/gdrive/GoogleDriveDataSyncSettings.svelte';
+    import type FolderImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderImageSyncSettings.svelte';
+    import type FolderPDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/local/FolderPDFSyncSettings.svelte';
+    import type OneDriveDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDriveDataSyncSettings.svelte';
+    import type OneDriveImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDriveImageSyncSettings.svelte';
+    import type OneDrivePDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/onedrive/OneDrivePDFSyncSettings.svelte';
+    import type WebdavDataSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavDataSyncSettings.svelte';
+    import type WebdavImageSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavImageSyncSettings.svelte';
+    import type WebdavPDFSyncSettings__SvelteComponent_ from '~/components/settings/sync/webdav/WebdavPDFSyncSettings.svelte';
     import { BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
+    import { BaseSyncServiceOptions } from '~/services/sync/BaseSyncService';
     import { GoogleDriveSyncOptions } from '~/services/sync/gdrive/GoogleDrive';
     import { OneDriveSyncOptions } from '~/services/sync/onedrive/OneDrive';
     interface SettingsComponentReturnType {
@@ -126,7 +124,7 @@
                 case SyncTypes.webdav_data:
                 case SyncTypes.webdav_image:
                 case SyncTypes.webdav_pdf: {
-                    const type = item.type as SyncTypes.webdav_data | SyncTypes.webdav_image | SyncTypes.webdav_pdf;
+                    const type = item.type;
                     const page = await getSettingsComponent(type);
                     const result: WebdavDataSyncOptions = await showModal({
                         page,
@@ -142,7 +140,7 @@
                 }
                 case SyncTypes.folder_image:
                 case SyncTypes.folder_pdf: {
-                    const type = item.type as SyncTypes.folder_image | SyncTypes.folder_pdf;
+                    const type = item.type;
                     const page = await getSettingsComponent(type);
                     const result: LocalFolderPDFSyncServiceOptions = await showModal({
                         page,
@@ -159,7 +157,7 @@
                 case SyncTypes.gdrive_data:
                 case SyncTypes.gdrive_pdf:
                 case SyncTypes.gdrive_image: {
-                    const type = item.type as SyncTypes.gdrive_data | SyncTypes.gdrive_pdf | SyncTypes.gdrive_image;
+                    const type = item.type;
                     const page = await getSettingsComponent(type);
                     const result: BaseDataSyncServiceOptions & GoogleDriveSyncOptions = await showModal({
                         page,
@@ -176,7 +174,7 @@
                 case SyncTypes.onedrive_data:
                 case SyncTypes.onedrive_image:
                 case SyncTypes.onedrive_pdf: {
-                    const type = item.type as SyncTypes.onedrive_data | SyncTypes.onedrive_image | SyncTypes.onedrive_pdf;
+                    const type = item.type;
                     const page = await getSettingsComponent(type);
                     const result: BaseDataSyncServiceOptions & OneDriveSyncOptions = await showModal({
                         page,

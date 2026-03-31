@@ -1,10 +1,18 @@
-import { Color, Observable } from '@nativescript/core';
-import { DocumentEvents } from '~/services/documents';
+import { ApplicationSettings, Color, Observable } from '@nativescript/core';
+import type { DocumentEvents } from '~/services/documents';
+import { SYNC_TYPES, SyncTypes } from '~/services/sync/types';
+import { SETTINGS_SYNC_SERVICES } from '~/utils/constants';
 
 export interface BaseSyncServiceOptions {
+    id?: number;
+    type: SyncTypes;
     autoSync?: boolean;
     enabled?: boolean;
     color?: string | Color;
+}
+
+export function getStoredSyncServices() {
+    return JSON.parse(ApplicationSettings.getString(SETTINGS_SYNC_SERVICES, '[]')) as (BaseSyncServiceOptions & { id?: number; type: SyncTypes })[];
 }
 
 const singletons: { [k: string]: BaseSyncService } = {};
@@ -39,4 +47,16 @@ export abstract class BaseSyncService extends Observable {
     }
     abstract stop();
     abstract shouldSync(force?: boolean, event?: DocumentEvents);
+
+    updateSettings(data) {
+        const syncServices = getStoredSyncServices();
+        const index = syncServices.findIndex((s) => s.id === this.id);
+        DEV_LOG && console.log('Sync', 'updateService', index, JSON.stringify(data));
+        if (index !== -1) {
+            const currentSettins = syncServices[index];
+            Object.assign(currentSettins, data);
+            // syncServices.splice(index, 1, currentSettins);
+            ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
+        }
+    }
 }

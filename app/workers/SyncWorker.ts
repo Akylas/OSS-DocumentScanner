@@ -10,7 +10,7 @@ import type { SyncStateEventData } from '~/services/sync';
 import { BaseDataSyncService } from '~/services/sync/BaseDataSyncService';
 import { BaseImageSyncService } from '~/services/sync/BaseImageSyncService';
 import { BasePDFSyncService } from '~/services/sync/BasePDFSyncService';
-import { BaseSyncService } from '~/services/sync/BaseSyncService';
+import { BaseSyncService, getStoredSyncServices } from '~/services/sync/BaseSyncService';
 import { LocalFolderImageSyncService } from '~/services/sync/local/LocalFolderImageSyncService';
 import { LocalFolderPDFSyncService } from '~/services/sync/local/LocalFolderPDFSyncService';
 import { type WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sync/webdav/WebdavDataSyncService';
@@ -122,14 +122,6 @@ export default class SyncWorker extends BaseWorker {
         if (!this.services) {
             const syncServices = this.getStoredSyncServices().filter((s) => s.enabled !== false);
             DEV_LOG && console.log('Sync', 'start services', JSON.stringify(syncServices));
-            // bring back old data config
-            const configStr = ApplicationSettings.getString(OLD_SETTINGS_KEY);
-            if (configStr) {
-                // TODO: remove this after a few releases
-                ApplicationSettings.remove(OLD_SETTINGS_KEY);
-                syncServices.push({ type: 'webdav_data', id: Date.now(), ...JSON.parse(configStr) });
-                ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
-            }
             syncServices.forEach((data) => {
                 DEV_LOG && console.log('starting sync service', data.type);
                 SERVICES_TYPE_MAP[data.type].start(data);
@@ -161,7 +153,7 @@ export default class SyncWorker extends BaseWorker {
     notificationManager: SyncNotificationManager;
 
     getStoredSyncServices() {
-        return JSON.parse(ApplicationSettings.getString(SETTINGS_SYNC_SERVICES, '[]')) as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[];
+        return getStoredSyncServices();
     }
 
     queue = new Queue();

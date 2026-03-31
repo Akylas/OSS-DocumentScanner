@@ -2,15 +2,15 @@ import { File, Screen, knownFolders, path } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
+import { networkService } from '~/services/api';
+import { DocumentEvents } from '~/services/documents';
+import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '~/services/sync/BasePDFSyncService';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
+import { WebdavSyncOptions } from '~/services/sync/webdav/Webdav';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
 import { AuthType, FileStat, WebDAVClient, createClient } from '~/webdav';
-import { networkService } from '../../api';
-import { DocumentEvents } from '../../documents';
-import PDFExportCanvas from '../../pdf/PDFExportCanvas';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
-import { WebdavSyncOptions } from './Webdav';
-import { SERVICES_SYNC_MASK } from '../types';
 
 export interface WebdavPDFSyncServiceOptions extends BasePDFSyncServiceOptions, WebdavSyncOptions {}
 

@@ -1,9 +1,19 @@
 import { File } from '@nativescript/core';
 import { HttpRequestOptions, request } from '~/services/api';
+import { BaseSyncService } from '~/services/sync/BaseSyncService';
 import { BufferLike } from '~/services/sync/interfaces';
+import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from '~/services/sync/OAuthHelper';
 import { GetFileContentsOptions, ResponseData } from '~/webdav';
-import { OAuthProvider, OAuthTokens, isTokenExpired, refreshAccessToken } from '../OAuthHelper';
 
+export interface GoogleDriveSyncService extends BaseSyncService {
+    remoteFolder: string;
+    remoteFolderId: string;
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+
+    tokens: OAuthTokens;
+}
 /**
  * Google Drive API configuration
  */
@@ -44,7 +54,7 @@ export interface GoogleDriveFile {
  * Make an authenticated request to Google Drive API
  */
 export async function makeGoogleDriveRequest<T = any>(
-    tokens: OAuthTokens,
+    service: GoogleDriveSyncService,
     endpoint: string,
     options: {
         method?: string;
@@ -53,12 +63,13 @@ export async function makeGoogleDriveRequest<T = any>(
     } = {}
 ) {
     const { body, headers = {}, method = 'GET' } = options;
-
+    const tokens = service.tokens;
     // Check if token needs refresh
     // DEV_LOG && console.log('expiresAt', tokens.expiresAt, isTokenExpired(tokens.expiresAt), tokens.refreshToken);
-    if (isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
+    if (service.updateSettings && isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
         const newTokens = await refreshAccessToken(GOOGLE_DRIVE_PROVIDER, tokens.refreshToken);
-        Object.assign(tokens, newTokens);
+        Object.assign(service, newTokens);
+        service.updateSettings(tokens);
     }
 
     const url = endpoint.startsWith('http') ? endpoint : `https://www.googleapis.com/drive/v3${endpoint}`;
@@ -78,17 +89,17 @@ export async function makeGoogleDriveRequest<T = any>(
 /**
  * Get or create a folder by name
  */
-export async function getOrCreateFolder(tokens: OAuthTokens, folderName: string, parentId: string = 'root'): Promise<string> {
+export async function getOrCreateFolder(service: GoogleDriveSyncService, folderName: string, parentId: string = 'root'): Promise<string> {
     // Search for existing folder
     const searchQuery = `name='${folderName}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
-    const searchResponse = await getGoogleDriveRequestContents<{ files: GoogleDriveFile[] }>(tokens, `/files?q=${encodeURIComponent(searchQuery)}&fields=files(id,name)`);
+    const searchResponse = await getGoogleDriveRequestContents<{ files: GoogleDriveFile[] }>(service, `/files?q=${encodeURIComponent(searchQuery)}&fields=files(id,name)`);
 
     if (searchResponse.files && searchResponse.files.length > 0) {
         return searchResponse.files[0].id;
     }
 
     // Create folder if not found
-    const createResponse = await getGoogleDriveRequestContents<GoogleDriveFile>(tokens, '/files', {
+    const createResponse = await getGoogleDriveRequestContents<GoogleDriveFile>(service, '/files', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -106,9 +117,9 @@ export async function getOrCreateFolder(tokens: OAuthTokens, folderName: string,
 /**
  * List files in a folder
  */
-export async function listFiles(tokens: OAuthTokens, folderId: string): Promise<GoogleDriveFile[]> {
+export async function listFiles(service: GoogleDriveSyncService, folderId: string): Promise<GoogleDriveFile[]> {
     const query = `'${folderId}' in parents and trashed=false`;
-    const response = await getGoogleDriveRequestContents<{ files: GoogleDriveFile[] }>(tokens, `/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,size,modifiedTime,parents)`);
+    const response = await getGoogleDriveRequestContents<{ files: GoogleDriveFile[] }>(service, `/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,size,modifiedTime,parents)`);
 
     return response.files || [];
 }
@@ -116,14 +127,14 @@ export async function listFiles(tokens: OAuthTokens, folderId: string): Promise<
 /**
  * Upload a file to Google Drive
  */
-export async function uploadFile(tokens: OAuthTokens, fileName: string, content: string | BufferLike | File, mimeType: string, parentId: string): Promise<string> {
+export async function uploadFile(service: GoogleDriveSyncService, fileName: string, content: string | BufferLike | File, mimeType: string, parentId: string): Promise<string> {
     // Create file metadata
     const metadata = {
         name: fileName,
         parents: [parentId]
     };
 
-    const response = await getGoogleDriveRequestContents<GoogleDriveFile>(tokens, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    const response = await getGoogleDriveRequestContents<GoogleDriveFile>(service, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
             'Content-Type': `multipart/form-data`
@@ -148,7 +159,7 @@ export async function uploadFile(tokens: OAuthTokens, fileName: string, content:
 }
 
 export async function getGoogleDriveRequestContents<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
-    tokens: OAuthTokens,
+    service: GoogleDriveSyncService,
     fileId: string,
     httpOptions?: {
         method?: string;
@@ -158,7 +169,8 @@ export async function getGoogleDriveRequestContents<U = any, V extends 'binary' 
     options: GetFileContentsOptions & { format?: V } = {}
 ) {
     const { format = 'json' } = options;
-    const response = await makeGoogleDriveRequest(tokens, fileId, httpOptions);
+    const response = await makeGoogleDriveRequest(service, fileId, httpOptions);
+
     switch (format) {
         case 'binary':
             return response.binary();
@@ -175,26 +187,26 @@ export async function getGoogleDriveRequestContents<U = any, V extends 'binary' 
  * Download file content
  */
 export async function downloadFile<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
-    tokens: OAuthTokens,
+    service: GoogleDriveSyncService,
     fileId: string,
     options: GetFileContentsOptions & { format?: V } = {}
 ): Promise<ResponseData<V, U>> {
-    return getGoogleDriveRequestContents<U, V>(tokens, `/files/${fileId}?alt=media`, undefined, options);
+    return getGoogleDriveRequestContents<U, V>(service, `/files/${fileId}?alt=media`, undefined, options);
 }
 
 /**
  * Delete a file
  */
-export async function deleteFile(tokens: OAuthTokens, fileId: string): Promise<void> {
-    await makeGoogleDriveRequest(tokens, `/files/${fileId}`, { method: 'DELETE' });
+export async function deleteFile(service: GoogleDriveSyncService, fileId: string): Promise<void> {
+    await makeGoogleDriveRequest(service, `/files/${fileId}`, { method: 'DELETE' });
 }
 
 /**
  * Check if a file exists
  */
-export async function fileExists(tokens: OAuthTokens, fileName: string, parentId: string): Promise<boolean> {
+export async function fileExists(service: GoogleDriveSyncService, fileName: string, parentId: string): Promise<boolean> {
     const query = `name='${fileName}' and '${parentId}' in parents and trashed=false`;
-    const response = await getGoogleDriveRequestContents<{ files: GoogleDriveFile[] }>(tokens, `/files?q=${encodeURIComponent(query)}&fields=files(id)`);
+    const response = await getGoogleDriveRequestContents<{ files: GoogleDriveFile[] }>(service, `/files?q=${encodeURIComponent(query)}&fields=files(id)`);
 
     return response.files && response.files.length > 0;
 }
@@ -202,9 +214,9 @@ export async function fileExists(tokens: OAuthTokens, fileName: string, parentId
 /**
  * Test Google Drive connection
  */
-export async function testGoogleDriveConnection(tokens: OAuthTokens): Promise<boolean> {
+export async function testGoogleDriveConnection(service: GoogleDriveSyncService): Promise<boolean> {
     try {
-        await makeGoogleDriveRequest(tokens, '/about?fields=user');
+        await makeGoogleDriveRequest(service, '/about?fields=user');
         return true;
     } catch (error) {
         DEV_LOG && console.error('Google Drive connection test failed:', error);

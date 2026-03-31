@@ -1038,10 +1038,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/https@npm:4.1.29":
-  version: 4.1.29
-  resolution: "@nativescript-community/https@npm:4.1.29"
-  checksum: 10/5ddcd2f94534309bffdf27526af8170606db33509745298abdd822858580f646aa4830576a47e7009680b9034d358f9a7dba1c739bb44bb0c462334ffd36af4d
+"@nativescript-community/https@npm:4.1.32":
+  version: 4.1.32
+  resolution: "@nativescript-community/https@npm:4.1.32"
+  checksum: 10/8eed4f362e656a9ad7a4da82e43087eed54ee218b2b130c2e11b8963d60eeec631155ea4f985a020b8f66a185846060d894d5c27799faad0f39ab6d10f38e50c
   languageName: node
   linkType: hard
 
@@ -6250,14 +6250,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:4.5.5":
-  version: 4.5.5
-  resolution: "fast-xml-parser@npm:4.5.5"
+"fast-xml-builder@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "fast-xml-builder@npm:1.1.4"
   dependencies:
-    strnum: "npm:^1.0.5"
+    path-expression-matcher: "npm:^1.1.3"
+  checksum: 10/32937866aaf5a90e69d1f4ee6e15e875248d5b5d2afd70277e9e8323074de4980cef24575a591b8e43c29f405d5f12377b3bad3842dc412b0c5c17a3eaee4b6b
+  languageName: node
+  linkType: hard
+
+"fast-xml-parser@npm:5.5.9":
+  version: 5.5.9
+  resolution: "fast-xml-parser@npm:5.5.9"
+  dependencies:
+    fast-xml-builder: "npm:^1.1.4"
+    path-expression-matcher: "npm:^1.2.0"
+    strnum: "npm:^2.2.2"
   bin:
     fxparser: src/cli/cli.js
-  checksum: 10/4820da92160724be9c8cc8df6f0c7bd6c9c3bcd0396ed88cedd28eebd0bf0553bc0899cbad4ba615c6fd9f21e410a7723123c416974f52390721720cadf3c455
+  checksum: 10/5f1a1a8b524406af21e9adb24f846b0da6b629c86b1eeedb54757cc293c24ed4f79ff9570b82206265b6951d68acd2dc93e74687ea5d7da0beafa09536cee73f
   languageName: node
   linkType: hard
 
@@ -9080,6 +9091,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"path-expression-matcher@npm:^1.1.3, path-expression-matcher@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "path-expression-matcher@npm:1.2.0"
+  checksum: 10/eab23babd9a97d6cf4841a99825c3e990b70b2b29ea6529df9fb6a1f3953befbc68e9e282a373d7a75aff5dc6542d05a09ee2df036ff9bfddf5e1627b769875b
+  languageName: node
+  linkType: hard
+
 "path-is-absolute@npm:^1.0.0, path-is-absolute@npm:^1.0.1":
   version: 1.0.1
   resolution: "path-is-absolute@npm:1.0.1"
@@ -10368,7 +10386,7 @@ __metadata:
     "@nativescript-community/css-theme": "npm:1.2.14"
     "@nativescript-community/extendedinfo": "npm:1.3.1"
     "@nativescript-community/gesturehandler": "npm:2.0.43"
-    "@nativescript-community/https": "npm:4.1.29"
+    "@nativescript-community/https": "npm:4.1.32"
     "@nativescript-community/l": "npm:4.3.11"
     "@nativescript-community/licenses": "npm:2.0.9"
     "@nativescript-community/md5": "npm:1.0.5"
@@ -10414,7 +10432,7 @@ __metadata:
     "@nativescript/imagepicker": "npm:5.0.0"
     buffer: "npm:^6.0.3"
     dayjs: "npm:1.11.19"
-    fast-xml-parser: "npm:4.5.5"
+    fast-xml-parser: "npm:5.5.9"
     filesize: "npm:10.1.6"
     helpful-decorators: "npm:2.1.0"
     make-error: "npm:1.3.6"
@@ -11247,10 +11265,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"strnum@npm:^1.0.5":
-  version: 1.1.2
-  resolution: "strnum@npm:1.1.2"
-  checksum: 10/ccd6297a1fdaf0fc8ea0ea904acdae76878d49a4b0d98a70155df4bc081fd88eac5ec99fb150f3d1d1af065c1898d38420705259ba6c39aa850c671bcd54e35d
+"strnum@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "strnum@npm:2.2.2"
+  checksum: 10/c55813cfded750dc84556b4881ffc7cee91382ff15a48f1fba0ff7a678e1640ed96ca40806fbd55724940fd7d51cf752469b2d862e196e4adefb6c7d5d9cd73b
   languageName: node
   linkType: hard
 

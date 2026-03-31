@@ -1,10 +1,10 @@
-import { File, Folder, ImageSource, path } from '@nativescript/core';
-import { saveImage } from '~/utils/utils';
-import { FileStat } from '~/webdav';
-import { DocumentEvents } from '../../documents';
-import { BaseImageSyncService, BaseImageSyncServiceOptions } from '../BaseImageSyncService';
-import { SERVICES_SYNC_MASK } from '../types';
+import { File, Folder, ImageSource } from '@nativescript/core';
 import type { DocFolder } from '~/models/OCRDocument';
+import { DocumentEvents } from '~/services/documents';
+import { BaseImageSyncService, BaseImageSyncServiceOptions } from '~/services/sync/BaseImageSyncService';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
+import { saveImage } from '~/utils/utils';
+import type { FileStat } from '~/webdav';
 
 export interface LocalFolderImageSyncServiceOptions extends BaseImageSyncServiceOptions {
     localFolderPath: string;

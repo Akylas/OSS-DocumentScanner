@@ -1166,6 +1166,11 @@
         }
         return 1;
     }
+    const openSyncSettings = tryCatchFunction(async () =>
+        showSettings({
+            subSettingsOptions: 'sync'
+        })
+    );
 </script>
 
 <page bind:this={page} id="documentList" actionBarHidden={true} on:navigatedTo={onNavigatedTo} on:navigatingFrom={() => search.unfocusSearch()}>
@@ -1250,7 +1255,7 @@
                 transition:fade={{ duration: 200 }}>
                 <lottie
                     async={true}
-                    autoPlay={true}
+                    autoPlay={PRODUCTION}
                     flexShrink={2}
                     keyPathColors={{
                         'background|**': lottieDarkFColor,
@@ -1282,7 +1287,8 @@
                     text="mdi-autorenew"
                     variant="text"
                     visibility={!folder && syncEnabled ? 'visible' : 'collapse'}
-                    on:tap={syncDocuments} />
+                    on:tap={syncDocuments}
+                    on:longPress={openSyncSettings} />
             {/if}
             <mdbutton class="actionBarButton" text="mdi-magnify" variant="text" on:tap={() => search.showSearch()} />
             {#if !onlyForImport}

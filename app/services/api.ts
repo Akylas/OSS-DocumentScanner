@@ -196,6 +196,8 @@ export async function request<T = any>(requestParams: HttpRequestOptions, retry 
     }
     try {
         const response = await https.request<T>(requestParams);
+        // will throw if there is an error
+        await handleRequestResponseError(response, requestParams);
         return {
             statusCode: response.statusCode,
             response,
@@ -214,12 +216,7 @@ export async function request<T = any>(requestParams: HttpRequestOptions, retry 
 export type BufferLike = Buffer | ArrayBuffer;
 export type ResponseData<V extends 'binary' | 'text' | 'json' | 'file' = 'json', W = any> = V extends 'file' ? File : V extends 'text' ? string : V extends 'json' ? W : BufferLike;
 
-export async function handleRequestResponse<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
-    response: https.HttpsResponse<https.HttpsResponseLegacy<U>>,
-    httpOptions?: HttpRequestOptions,
-    format?: V
-): Promise<ResponseData<V, U>> {
-    format = format || ('json' as any);
+export async function handleRequestResponseError<U = any>(response: https.HttpsResponse<https.HttpsResponseLegacy<U>>, httpOptions?: HttpRequestOptions) {
     const statusCode = response.statusCode;
 
     if (Math.round(statusCode / 100) !== 2) {
@@ -227,7 +224,7 @@ export async function handleRequestResponse<U = any, V extends 'binary' | 'text'
         try {
             content = await response.content.toJSONAsync();
         } catch (err) {
-            console.error(err, err.stack);
+            // console.error(err, err.stack);
         }
         if (!content) {
             content = (await response.content.toStringAsync()) as any;
@@ -236,15 +233,6 @@ export async function handleRequestResponse<U = any, V extends 'binary' | 'text'
         let jsonReturn;
         if (isJSON) {
             jsonReturn = content;
-        } else {
-            const match = /<title>(.*)\n*<\/title>/.exec(content as any as string);
-            throw new HTTPError({
-                statusCode,
-                message: match ? match[1] : content.toString(),
-                requestParams: httpOptions
-            });
-        }
-        if (jsonReturn) {
             if (Array.isArray(jsonReturn)) {
                 jsonReturn = jsonReturn[0];
             }
@@ -257,8 +245,24 @@ export async function handleRequestResponse<U = any, V extends 'binary' | 'text'
                 message: error.error_description || error.form || error.message || error.error || error,
                 requestParams: httpOptions
             });
+        } else {
+            const match = /<title>(.*)\n*<\/title>/.exec(content as string);
+            throw new HTTPError({
+                statusCode,
+                message: match ? match[1] : content.toString(),
+                requestParams: httpOptions
+            });
         }
     }
+}
+
+export async function handleRequestResponse<U = any, V extends 'binary' | 'text' | 'json' | 'file' = 'json'>(
+    response: https.HttpsResponse<https.HttpsResponseLegacy<U>>,
+    httpOptions?: HttpRequestOptions,
+    format?: V
+): Promise<ResponseData<V, U>> {
+    format = format || ('json' as any);
+
     let body;
     switch (format) {
         case 'binary':

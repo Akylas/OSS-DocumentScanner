@@ -26,10 +26,13 @@
     async function validateSave() {
         return oauthView?.validateSave();
     }
+    async function testConnection() {
+        return testOneDriveConnection({ tokens: data } as any);
+    }
 </script>
 
 <PDFSyncSettings {data} serviceType="onedrive_pdf" {topItems} {validateSave} bind:updateItem bind:store>
     <Template key="oauth" let:item>
-        <OAuthSettingsView bind:this={oauthView} provider={ONEDRIVE_PROVIDER} {store} testConnection={testOneDriveConnection} />
+        <OAuthSettingsView bind:this={oauthView} provider={ONEDRIVE_PROVIDER} {store} {testConnection} />
     </Template>
 </PDFSyncSettings>

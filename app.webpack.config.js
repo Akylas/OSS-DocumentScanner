@@ -143,9 +143,8 @@ module.exports = (env, params = {}) => {
     const isAndroid = platform === 'android';
     const package = require('./package.json');
 
-    config.resolve.conditionNames = config.resolve.conditionNames || [];
+    config.resolve.conditionNames = config.resolve.conditionNames || ['import', 'require', 'node', 'default'];
     config.resolve.conditionNames.push('svelte');
-
     if (profile) {
         const StatsPlugin = require('stats-webpack-plugin');
 

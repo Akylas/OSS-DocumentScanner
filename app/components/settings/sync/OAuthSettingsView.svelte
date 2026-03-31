@@ -30,13 +30,14 @@
         try {
             authenticating = true;
             const tokens = await performOAuthFlow(provider);
+            if (tokens) {
+                $store.accessToken = tokens.accessToken;
+                $store.refreshToken = tokens.refreshToken;
+                $store.expiresAt = tokens.expiresAt;
 
-            $store.accessToken = tokens.accessToken;
-            $store.refreshToken = tokens.refreshToken;
-            $store.expiresAt = tokens.expiresAt;
-
-            isAuthenticated = true;
-            testConnectionSuccess = 1;
+                isAuthenticated = true;
+                testConnectionSuccess = 1;
+            }
         } catch (error) {
             showError(error);
             testConnectionSuccess = -1;

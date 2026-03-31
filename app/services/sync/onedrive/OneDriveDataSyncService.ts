@@ -3,10 +3,10 @@ import { type OCRDocument } from '~/models/OCRDocument';
 import { networkService } from '~/services/api';
 import { DocumentEvents } from '~/services/documents';
 import { BaseDataSyncService, BaseDataSyncServiceOptions } from '~/services/sync/BaseDataSyncService';
+import { OAuthTokens } from '~/services/sync/OAuthHelper';
+import { type OneDriveSyncOptions, OneDriveSyncService, deleteItem, downloadFile, getItemByPath, getOrCreateFolder, listItems, uploadFile } from '~/services/sync/onedrive/OneDrive';
 import { SERVICES_SYNC_MASK } from '~/services/sync/types';
-import { FileStat, GetFileContentsOptions, ResponseData } from '~/webdav';
-import { OAuthTokens } from '../OAuthHelper';
-import { OneDriveSyncOptions, deleteItem, downloadFile, getItemByPath, getOneDriveRequestContents, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
+import type { FileStat, GetFileContentsOptions, ResponseData } from '~/webdav';
 
 export interface OneDriveDataSyncOptions extends BaseDataSyncServiceOptions, OneDriveSyncOptions {}
 
@@ -14,7 +14,7 @@ export interface OneDriveDataSyncOptions extends BaseDataSyncServiceOptions, One
  * OneDrive Data Sync Service
  * Syncs document data and folder structures to OneDrive
  */
-export class OneDriveDataSyncService extends BaseDataSyncService {
+export class OneDriveDataSyncService extends BaseDataSyncService implements OneDriveSyncService {
     shouldSync(force?: boolean, event?: DocumentEvents) {
         return (force || (event && this.autoSync)) && networkService.connected;
     }
@@ -27,7 +27,7 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
     refreshToken: string;
     expiresAt: number;
 
-    private get tokens(): OAuthTokens {
+    get tokens(): OAuthTokens {
         return {
             accessToken: this.accessToken,
             refreshToken: this.refreshToken,
@@ -49,11 +49,11 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
     override async ensureRemoteFolder() {
         // DEV_LOG && console.log('ensureRemoteFolder', this.remoteFolder);
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, this.remoteFolder);
+            this.remoteFolderId = await getOrCreateFolder(this, this.remoteFolder);
         }
     }
     getItemByPath(path: string) {
-        return getItemByPath(this.tokens, path, this.remoteFolderId, this.remoteFolder);
+        return getItemByPath(this, path, this.remoteFolderId, this.remoteFolder);
     }
     override async getRemoteFolderDirectories(relativePath: string): Promise<FileStat[]> {
         const item = relativePath ? await this.getItemByPath(relativePath) : { id: this.remoteFolderId };
@@ -62,7 +62,7 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
             return [];
         }
 
-        const items = await listItems(this.tokens, item.id);
+        const items = await listItems(this, item.id);
 
         return items.map(
             (item) =>
@@ -82,13 +82,13 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
         // Get or create target folder
         const targetItem = await this.getItemByPath(remotePath);
         // DEV_LOG && console.warn('sendFolderToOneDrive', folder.path, remotePath, this.remoteFolderId, targetItem?.id);
-        const targetFolderId = targetItem?.id || (await getOrCreateFolder(this.tokens, remotePath));
+        const targetFolderId = targetItem?.id || (await getOrCreateFolder(this, remotePath));
 
         const entities = await folder.getEntities();
         for (let index = 0; index < entities.length; index++) {
             const entity = entities[index];
             if (entity instanceof File) {
-                await uploadFile(this.tokens, entity.name, entity, targetFolderId);
+                await uploadFile(this, entity.name, entity, targetFolderId);
             } else {
                 await this.sendFolderToRemote(Folder.fromPath(entity.path), path.join(remoteRelativePath, entity.name));
             }
@@ -110,7 +110,7 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
             throw new Error(`File not found: ${fullPath}`);
         }
 
-        const result = await downloadFile(this.tokens, item.id, { format: 'text' });
+        const result = await downloadFile(this, item.id, { format: 'text' });
         return result;
     }
 
@@ -125,10 +125,10 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
         const parentPath = parts.join('/');
         const parentItem = parentPath ? await this.getItemByPath(parentPath) : { id: this.remoteFolderId };
 
-        const parentId = parentItem?.id || (await getOrCreateFolder(this.tokens, parentPath));
+        const parentId = parentItem?.id || (await getOrCreateFolder(this, parentPath));
         const file = File.fromPath(localFilePath);
 
-        await uploadFile(this.tokens, file.name, file, parentId);
+        await uploadFile(this, file.name, file, parentId);
     }
 
     override async putFileContentsFromData(relativePath: string, data: string, options?) {
@@ -139,14 +139,14 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
         const parentPath = parts.join('/');
         const parentItem = parentPath ? await this.getItemByPath(parentPath) : { id: this.remoteFolderId };
 
-        const parentId = parentItem?.id || (await getOrCreateFolder(this.tokens, parentPath));
-        await uploadFile(this.tokens, fileName, data, parentId);
+        const parentId = parentItem?.id || (await getOrCreateFolder(this, parentPath));
+        await uploadFile(this, fileName, data, parentId);
     }
 
     override async deleteFile(relativePath: string) {
         const item = await this.getItemByPath(relativePath);
         if (item) {
-            await deleteItem(this.tokens, item.id);
+            await deleteItem(this, item.id);
         }
     }
     override async getFileContents<V extends 'binary' | 'text' | 'file' | 'json' = 'json'>(filePath: string, options?: GetFileContentsOptions & { format?: V }): Promise<ResponseData<V>> {
@@ -155,6 +155,6 @@ export class OneDriveDataSyncService extends BaseDataSyncService {
         if (!item) {
             throw new Error(`File not found: ${filePath}`);
         }
-        return getOneDriveRequestContents(this.tokens, item.id, undefined, options);
+        return downloadFile(this, item.id, options);
     }
 }

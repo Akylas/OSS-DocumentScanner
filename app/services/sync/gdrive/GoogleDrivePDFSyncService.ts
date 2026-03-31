@@ -2,20 +2,20 @@ import { File, Screen, knownFolders, path } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
+import { networkService } from '~/services/api';
+import { DocumentEvents } from '~/services/documents';
 import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '~/services/sync/BasePDFSyncService';
+import { type GoogleDriveSyncOptions, GoogleDriveSyncService, getOrCreateFolder, listFiles, uploadFile } from '~/services/sync/gdrive/GoogleDrive';
+import { OAuthTokens } from '~/services/sync/OAuthHelper';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
-import { FileStat } from '~/webdav';
-import { networkService } from '../../api';
-import { DocumentEvents } from '../../documents';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
-import { GoogleDriveSyncOptions, getOrCreateFolder, listFiles, uploadFile } from './GoogleDrive';
-import { OAuthTokens } from '../OAuthHelper';
-import { SERVICES_SYNC_MASK } from '../types';
+import type { FileStat } from '~/webdav';
 
 export interface GoogleDrivePDFSyncServiceOptions extends BasePDFSyncServiceOptions, GoogleDriveSyncOptions {}
 
-export class GoogleDrivePDFSyncService extends BasePDFSyncService {
+export class GoogleDrivePDFSyncService extends BasePDFSyncService implements GoogleDriveSyncService {
     shouldSync(force?: boolean, event?: DocumentEvents) {
         return (force || (event && this.autoSync)) && networkService.connected;
     }
@@ -28,7 +28,7 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
     refreshToken: string;
     expiresAt: number;
 
-    private get tokens(): OAuthTokens {
+    get tokens(): OAuthTokens {
         return {
             accessToken: this.accessToken,
             refreshToken: this.refreshToken,
@@ -49,9 +49,9 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
 
     override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder || 'DocumentScanner');
+            this.remoteFolderId = await getOrCreateFolder(this, remoteFolder || 'DocumentScanner');
         } else if (remoteFolder !== this.remoteFolder) {
-            await getOrCreateFolder(this.tokens, remoteFolder, this.remoteFolderId);
+            await getOrCreateFolder(this, remoteFolder, this.remoteFolderId);
         }
     }
 
@@ -61,7 +61,7 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
         if (relativePath) {
             const parts = relativePath.split('/').filter((p) => p);
             for (const part of parts) {
-                const files = await listFiles(this.tokens, folderId);
+                const files = await listFiles(this, folderId);
                 const folder = files.find((f) => f.name === part && f.mimeType === 'application/vnd.google-apps.folder');
                 if (!folder) {
                     return [];
@@ -70,7 +70,7 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
             }
         }
 
-        const items = await listFiles(this.tokens, folderId);
+        const items = await listFiles(this, folderId);
 
         return items
             .filter((item) => item.mimeType === 'application/pdf' || item.name.endsWith('.pdf'))
@@ -117,8 +117,8 @@ export class GoogleDrivePDFSyncService extends BasePDFSyncService {
         // }
         let targetFolderId = this.remoteFolderId;
         if (docFolder) {
-            targetFolderId = await getOrCreateFolder(this.tokens, docFolder.name, this.remoteFolderId);
+            targetFolderId = await getOrCreateFolder(this, docFolder.name, this.remoteFolderId);
         }
-        await uploadFile(this.tokens, fileName, File.fromPath(localFilePath), 'application/pdf', targetFolderId);
+        await uploadFile(this, fileName, File.fromPath(localFilePath), 'application/pdf', targetFolderId);
     }
 }

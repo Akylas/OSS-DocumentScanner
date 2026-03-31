@@ -23,6 +23,7 @@ import type SyncWorker from '~/workers/SyncWorker';
 import { DocumentAddedEventData, DocumentDeletedEventData, DocumentEvents, DocumentPagesAddedEventData, DocumentUpdatedEventData, FolderUpdatedEventData, documentsService } from './documents';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from './sync/types';
 import { WebdavDataSyncOptions } from './sync/webdav/WebdavDataSyncService';
+import { getStoredSyncServices } from '~/services/sync/BaseSyncService';
 
 export const syncServicesStore = writable([]);
 
@@ -148,6 +149,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
         DEV_LOG && console.log('SYNC', 'onDocumentDeleted');
 
         this.getStoredSyncServices()
+            .filter((s) => s.enabled !== false)
             // .filter((s) => s instanceof BaseDataSyncService)
             .forEach(async (service) => {
                 const key = getRemoteDeleteDocumentSettingsKey(service as any);
@@ -183,7 +185,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
     }
 
     getStoredSyncServices() {
-        return JSON.parse(ApplicationSettings.getString(SETTINGS_SYNC_SERVICES, '[]')) as (WebdavDataSyncOptions & { id?: number; type: SYNC_TYPES })[];
+        return getStoredSyncServices();
     }
 
     addService(type: SYNC_TYPES, data) {
@@ -227,15 +229,7 @@ export class SyncService extends BaseWorkerHandler<SyncWorker> {
             return;
         }
         const syncServices = (this.services = this.getStoredSyncServices().filter((s) => s.enabled !== false));
-        // DEV_LOG && console.log('Sync', 'start', syncServices);
-        // bring back old data config
-        const configStr = ApplicationSettings.getString(SETTINGS_KEY);
-        if (configStr) {
-            // TODO: remove this after a few releases
-            ApplicationSettings.remove(SETTINGS_KEY);
-            syncServices.push({ type: 'webdav_data', id: Date.now(), ...JSON.parse(configStr) });
-            ApplicationSettings.setString(SETTINGS_SYNC_SERVICES, JSON.stringify(syncServices));
-        }
+        DEV_LOG && console.log('Sync', 'start', syncServices);
         syncServicesStore.set(syncServices);
         // DEV_LOG && console.log('Sync', 'start', /* this.services.length,  */ this.enabled);
         if (this.enabled) {

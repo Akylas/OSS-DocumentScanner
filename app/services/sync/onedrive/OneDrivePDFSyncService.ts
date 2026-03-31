@@ -2,20 +2,20 @@ import { File, Screen, knownFolders, path } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import { generatePDFASync } from 'plugin-nativeprocessor';
 import type { DocFolder, OCRDocument } from '~/models/OCRDocument';
+import { networkService } from '~/services/api';
+import { DocumentEvents } from '~/services/documents';
 import PDFExportCanvas from '~/services/pdf/PDFExportCanvas';
+import { BasePDFSyncService, BasePDFSyncServiceOptions } from '~/services/sync/BasePDFSyncService';
+import { OAuthTokens } from '~/services/sync/OAuthHelper';
+import { type OneDriveSyncOptions, OneDriveSyncService, getItemByPath, getOrCreateFolder, listItems, uploadFile } from '~/services/sync/onedrive/OneDrive';
+import { SERVICES_SYNC_MASK } from '~/services/sync/types';
 import { PDF_EXT } from '~/utils/constants';
 import { getPageColorMatrix } from '~/utils/matrix';
-import { FileStat } from '~/webdav';
-import { networkService } from '../../api';
-import { DocumentEvents } from '../../documents';
-import { BasePDFSyncService, BasePDFSyncServiceOptions } from '../BasePDFSyncService';
-import { OAuthTokens } from '../OAuthHelper';
-import { OneDriveSyncOptions, getItemByPath, getOrCreateFolder, listItems, uploadFile } from './OneDrive';
-import { SERVICES_SYNC_MASK } from '../types';
+import type { FileStat } from '~/webdav';
 
 export interface OneDrivePDFSyncServiceOptions extends BasePDFSyncServiceOptions, OneDriveSyncOptions {}
 
-export class OneDrivePDFSyncService extends BasePDFSyncService {
+export class OneDrivePDFSyncService extends BasePDFSyncService implements OneDriveSyncService {
     shouldSync(force?: boolean, event?: DocumentEvents) {
         return (force || (event && this.autoSync)) && networkService.connected;
     }
@@ -28,7 +28,7 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
     refreshToken: string;
     expiresAt: number;
 
-    private get tokens(): OAuthTokens {
+    get tokens(): OAuthTokens {
         return {
             accessToken: this.accessToken,
             refreshToken: this.refreshToken,
@@ -49,7 +49,7 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
 
     override async ensureRemoteFolder(remoteFolder = this.remoteFolder) {
         if (!this.remoteFolderId) {
-            this.remoteFolderId = await getOrCreateFolder(this.tokens, remoteFolder);
+            this.remoteFolderId = await getOrCreateFolder(this, remoteFolder);
         }
     }
 
@@ -60,7 +60,7 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
             return [];
         }
 
-        const items = await listItems(this.tokens, item.id);
+        const items = await listItems(this, item.id);
 
         return items
             .filter((item) => !item.folder && item.name.endsWith('.pdf'))
@@ -75,7 +75,7 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
     }
 
     getItemByPath(path: string) {
-        return getItemByPath(this.tokens, path, this.remoteFolderId, this.remoteFolder);
+        return getItemByPath(this, path, this.remoteFolderId, this.remoteFolder);
     }
     override async writePDF(document: OCRDocument, fileName: string, docFolder?: DocFolder) {
         const pages = document.pages;
@@ -112,8 +112,8 @@ export class OneDrivePDFSyncService extends BasePDFSyncService {
         if (docFolder) {
             const folderPath = docFolder.name;
             const folderItem = await this.getItemByPath(folderPath);
-            targetFolderId = folderItem?.id || (await getOrCreateFolder(this.tokens, folderPath));
+            targetFolderId = folderItem?.id || (await getOrCreateFolder(this, folderPath));
         }
-        await uploadFile(this.tokens, fileName, File.fromPath(localFilePath), targetFolderId);
+        await uploadFile(this, fileName, File.fromPath(localFilePath), targetFolderId);
     }
 }

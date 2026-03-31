@@ -51,20 +51,6 @@ export async function exchangeCodeForTokens(provider: OAuthProvider, code: strin
         throw new Error(data.error_description);
     }
 
-    DEV_LOG &&
-        console.log(
-            'tokenUrl',
-            tokenUrl,
-            JSON.stringify({
-                grant_type: 'authorization_code',
-                code,
-                client_id: clientId,
-                redirect_uri: redirectUri,
-                code_verifier: codeVerifier
-            }),
-            data
-        );
-
     return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
@@ -78,7 +64,6 @@ export async function exchangeCodeForTokens(provider: OAuthProvider, code: strin
  */
 export async function refreshAccessToken(provider: OAuthProvider, refreshToken: string): Promise<OAuthTokens> {
     const { clientId, clientSecret, tokenUrl } = provider.config;
-
     const body = {
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
