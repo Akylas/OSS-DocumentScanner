@@ -1,0 +1,9 @@
+Features:
+- GoogleDrive Sync support
+- OneDrive sync sync support
+
+Bug fixes:
+- language change fix
+- check for available disk space before taking a picture
+- many sync fixes
+- webdav token field not selectable
