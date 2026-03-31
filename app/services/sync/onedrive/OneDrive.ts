@@ -75,9 +75,10 @@ export async function makeOneDriveRequest<T = any>(
     const { body, headers = {}, method = 'GET' } = options;
     const tokens = service.tokens;
     // Check if token needs refresh
-    if (isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
+    if (service.updateSettings && isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
+        // DEV_LOG && console.info('refreshAccessToken', tokens.expiresAt);
         const newTokens = await refreshAccessToken(ONEDRIVE_PROVIDER, tokens.refreshToken);
-        Object.assign(newTokens, newTokens);
+        Object.assign(tokens, newTokens);
         service.updateSettings(tokens);
     }
 
@@ -247,7 +248,7 @@ export async function testOneDriveConnection(service: OneDriveSyncService): Prom
         await makeOneDriveRequest(service, '/');
         return true;
     } catch (error) {
-        DEV_LOG && console.error('OneDrive connection test failed:', error);
+        DEV_LOG && console.error('OneDrive connection test failed:', error, error.stack);
         return false;
     }
 }

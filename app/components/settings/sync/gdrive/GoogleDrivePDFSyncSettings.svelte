@@ -26,8 +26,8 @@
     async function validateSave() {
         return oauthView?.validateSave();
     }
-    async function testConnection() {
-        return testGoogleDriveConnection({ tokens: data } as any);
+    async function testConnection(tokens) {
+        return testGoogleDriveConnection({ tokens } as any);
     }
 </script>
 

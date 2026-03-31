@@ -475,5 +475,7 @@
   "test_connection": "test connection",
   "authenticated": "authenticated",
   "not_authenticated": "not authenticated",
-  "missing_remote_folder": "missing remote folder"
+  "missing_remote_folder": "missing remote folder",
+  "authenticate": "authenticate",
+  "re_authenticate": "reauthenticate"
 }

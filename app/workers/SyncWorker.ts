@@ -1,29 +1,28 @@
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 import Queue from '@akylas/nativescript-app-utils/worker/queue';
 import { ApplicationSettings, File, Utils, knownFolders, path } from '@nativescript/core';
+import { prefs } from '@shared/services/preferences';
 import { cropDocumentFromFile } from 'plugin-nativeprocessor';
 import { DocFolder, OCRDocument, OCRPage, getDocumentsService, setDocumentsService } from '~/models/OCRDocument';
 import { DocumentEvents, DocumentsService } from '~/services/documents';
 import { getTransformedImage } from '~/services/pdf/PDFExportCanvas.common';
-import { prefs } from '@shared/services/preferences';
 import type { SyncStateEventData } from '~/services/sync';
 import { BaseDataSyncService } from '~/services/sync/BaseDataSyncService';
 import { BaseImageSyncService } from '~/services/sync/BaseImageSyncService';
 import { BasePDFSyncService } from '~/services/sync/BasePDFSyncService';
 import { BaseSyncService, getStoredSyncServices } from '~/services/sync/BaseSyncService';
-import { LocalFolderImageSyncService } from '~/services/sync/local/LocalFolderImageSyncService';
-import { LocalFolderPDFSyncService } from '~/services/sync/local/LocalFolderPDFSyncService';
-import { type WebdavDataSyncOptions, WebdavDataSyncService } from '~/services/sync/webdav/WebdavDataSyncService';
-import { WebdavImageSyncService } from '~/services/sync/webdav/WebdavImageSyncService';
-import { WebdavPDFSyncService } from '~/services/sync/webdav/WebdavPDFSyncService';
 import { GoogleDriveDataSyncService } from '~/services/sync/gdrive/GoogleDriveDataSyncService';
 import { GoogleDriveImageSyncService } from '~/services/sync/gdrive/GoogleDriveImageSyncService';
 import { GoogleDrivePDFSyncService } from '~/services/sync/gdrive/GoogleDrivePDFSyncService';
+import { LocalFolderImageSyncService } from '~/services/sync/local/LocalFolderImageSyncService';
+import { LocalFolderPDFSyncService } from '~/services/sync/local/LocalFolderPDFSyncService';
 import { OneDriveDataSyncService } from '~/services/sync/onedrive/OneDriveDataSyncService';
 import { OneDriveImageSyncService } from '~/services/sync/onedrive/OneDriveImageSyncService';
 import { OneDrivePDFSyncService } from '~/services/sync/onedrive/OneDrivePDFSyncService';
 import { SYNC_TYPES, SyncType, getRemoteDeleteDocumentSettingsKey } from '~/services/sync/types';
-import { SyncNotificationManager } from '~/workers/SyncNotificationManager';
+import { WebdavDataSyncService } from '~/services/sync/webdav/WebdavDataSyncService';
+import { WebdavImageSyncService } from '~/services/sync/webdav/WebdavImageSyncService';
+import { WebdavPDFSyncService } from '~/services/sync/webdav/WebdavPDFSyncService';
 import {
     DOCUMENT_DATA_FILENAME,
     EVENT_DOCUMENT_ADDED,
@@ -33,17 +32,15 @@ import {
     EVENT_DOCUMENT_UPDATED,
     EVENT_FOLDER_ADDED,
     EVENT_FOLDER_UPDATED,
-    EVENT_SYNC_PROGRESS,
     EVENT_SYNC_STATE,
     FOLDERS_DATA_FILENAME,
     IMG_COMPRESS,
     IMG_FORMAT,
-    SETTINGS_SYNC_SERVICES,
-    VALID_MARKER_FILENAME,
     getImageExportSettings
 } from '~/utils/constants';
 import { recycleImages } from '~/utils/images';
 import { basename } from '~/utils/path';
+import { SyncNotificationManager } from '~/workers/SyncNotificationManager';
 
 const context: Worker = self as any;
 
@@ -121,9 +118,8 @@ export default class SyncWorker extends BaseWorker {
         }
         if (!this.services) {
             const syncServices = this.getStoredSyncServices().filter((s) => s.enabled !== false);
-            DEV_LOG && console.log('Sync', 'start services', JSON.stringify(syncServices));
+            DEV_LOG && console.log('Sync', 'start services', syncServices.length);
             syncServices.forEach((data) => {
-                DEV_LOG && console.log('starting sync service', data.type);
                 SERVICES_TYPE_MAP[data.type].start(data);
                 DEV_LOG && console.log('started sync service', data.type);
             });
@@ -475,7 +471,7 @@ export default class SyncWorker extends BaseWorker {
     async syncDocumentOnRemote(document: OCRDocument, service: BaseDataSyncService) {
         const dataJSON = JSON.parse(await service.getFileFromRemote(DOCUMENT_DATA_FILENAME, document)) as OCRDocument;
         const docDataFolder = documentsService.dataFolder.getFolder(document.id);
-        DEV_LOG && console.info('syncDocumentOnWebdav', document.id, document.modifiedDate, dataJSON.modifiedDate);
+        // DEV_LOG && console.info('syncDocumentOnRemote', document.id, document.modifiedDate, dataJSON.modifiedDate);
 
         // Check if this is a legacy document (no .valid marker yet) for migration
         const hasValidMarker = await service.hasValidMarker(document.id);

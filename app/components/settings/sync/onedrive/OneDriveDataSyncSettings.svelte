@@ -27,8 +27,8 @@
         return oauthView?.validateSave();
     }
 
-    async function testConnection() {
-        return testOneDriveConnection({ tokens: data } as any);
+    async function testConnection(tokens) {
+        return testOneDriveConnection({ tokens } as any);
     }
 </script>
 

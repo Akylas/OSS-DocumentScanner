@@ -4,8 +4,9 @@
     import { Writable } from 'svelte/store';
     import RemoteFolderTextField from '~/components/common/RemoteFolderTextField.svelte';
     import { lc } from '~/helpers/locale';
-    import { OAuthProvider, OAuthTokens } from '~/services/sync/OAuthHelper';
+    import { OAuthProvider, OAuthTokens, refreshAccessToken } from '~/services/sync/OAuthHelper';
     import { performOAuthFlow } from '~/services/sync/OAuthHelperUI';
+    import { ONEDRIVE_PROVIDER } from '~/services/sync/onedrive/OneDrive';
     import { colors } from '~/variables';
 
     $: ({ colorError, colorOnError, colorOnSurfaceVariant, colorSecondary } = $colors);
@@ -30,6 +31,7 @@
         try {
             authenticating = true;
             const tokens = await performOAuthFlow(provider);
+            DEV_LOG && console.log('authenticate', tokens);
             if (tokens) {
                 $store.accessToken = tokens.accessToken;
                 $store.refreshToken = tokens.refreshToken;
@@ -51,6 +53,8 @@
             if (!$store.accessToken) {
                 throw new SilentError(lc('not_authenticated'));
             }
+            // const tokens = await refreshAccessToken(ONEDRIVE_PROVIDER, $store.refreshToken);
+
             testing = true;
             const tokens: OAuthTokens = {
                 accessToken: $store.accessToken,
@@ -84,7 +88,7 @@
         <mdbutton
             col={1}
             margin="0 16 0 0"
-            text={lc(isAuthenticated ? 're_authenticate' : 'authenticate')}
+            text={isAuthenticated ? lc('re_authenticate') : lc('authenticate')}
             variant={isAuthenticated ? 'outline' : 'contained'}
             verticalAlignment="center"
             on:tap={authenticate} />

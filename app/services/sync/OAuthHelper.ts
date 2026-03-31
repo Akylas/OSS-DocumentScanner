@@ -50,6 +50,7 @@ export async function exchangeCodeForTokens(provider: OAuthProvider, code: strin
     if (data.error) {
         throw new Error(data.error_description);
     }
+    DEV_LOG && console.warn('exchangeCodeForTokens got tokens', JSON.stringify(data));
 
     return {
         accessToken: data.access_token,
@@ -82,7 +83,7 @@ export async function refreshAccessToken(provider: OAuthProvider, refreshToken: 
             body
         })
     ).json();
-
+    // DEV_LOG && console.warn('refreshAccessToken got tokens', JSON.stringify(data));
     return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token || refreshToken, // Keep old refresh token if not provided

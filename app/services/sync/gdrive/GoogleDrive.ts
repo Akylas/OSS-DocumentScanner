@@ -68,7 +68,7 @@ export async function makeGoogleDriveRequest<T = any>(
     // DEV_LOG && console.log('expiresAt', tokens.expiresAt, isTokenExpired(tokens.expiresAt), tokens.refreshToken);
     if (service.updateSettings && isTokenExpired(tokens.expiresAt) && tokens.refreshToken) {
         const newTokens = await refreshAccessToken(GOOGLE_DRIVE_PROVIDER, tokens.refreshToken);
-        Object.assign(service, newTokens);
+        Object.assign(tokens, newTokens);
         service.updateSettings(tokens);
     }
 

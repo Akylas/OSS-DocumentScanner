@@ -191,7 +191,7 @@ export async function request<T = any>(requestParams: HttpRequestOptions, retry 
 
     const requestStartTime = Date.now();
     if (__DEV__) {
-        DEV_LOG && console.log(requestParams.url, JSON.stringify(requestParams));
+        // DEV_LOG && console.log(requestParams.url, JSON.stringify(requestParams));
         // logRequestAsCurl(requestParams.url, requestParams as any);
     }
     try {

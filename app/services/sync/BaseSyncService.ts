@@ -30,7 +30,6 @@ export abstract class BaseSyncService extends Observable {
     public static getOrCreateInstance<T extends BaseSyncService>(this: new () => T) {
         // we use static id because prototype.constructor.name might not be uniq when uglified
         const key = this['type'];
-        DEV_LOG && console.log('BaseSyncService', 'getOrCreateInstance', key, !!singletons[key]);
         if (!singletons[key]) {
             singletons[key] = new this();
         }
@@ -41,7 +40,6 @@ export abstract class BaseSyncService extends Observable {
         return singletons[this['type']] as T;
     }
     public static destroyInstance<T extends BaseSyncService>(this: new () => T) {
-        DEV_LOG && console.log('BaseSyncService', 'destroyInstance', this['type'], !!singletons[this['type']]);
         // we use static id because prototype.constructor.name might not be uniq when uglified
         delete singletons[this['type']];
     }
@@ -49,9 +47,10 @@ export abstract class BaseSyncService extends Observable {
     abstract shouldSync(force?: boolean, event?: DocumentEvents);
 
     updateSettings(data) {
+        Object.assign(this, data);
         const syncServices = getStoredSyncServices();
         const index = syncServices.findIndex((s) => s.id === this.id);
-        DEV_LOG && console.log('Sync', 'updateService', index, JSON.stringify(data));
+        // DEV_LOG && console.log('BaseSyncService', 'updateSettings', index, JSON.stringify(data));
         if (index !== -1) {
             const currentSettins = syncServices[index];
             Object.assign(currentSettins, data);
