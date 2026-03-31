@@ -150,6 +150,7 @@ export class QRCodeService extends Observable {
                     labelSharedTransitionTag: 'qrcodelabel' + index,
                     // colorMatrix: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 1, 1],
                     margin: '0 10 0 10',
+                    scale: qrcode.scale,
                     svg: async () => this.getQRCodeSVG(qrcode, screenWidthDips)
                 })),
                 startPageIndex

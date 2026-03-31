@@ -477,5 +477,7 @@
   "not_authenticated": "not authenticated",
   "missing_remote_folder": "missing remote folder",
   "authenticate": "authenticate",
-  "re_authenticate": "reauthenticate"
+  "re_authenticate": "reauthenticate",
+  "scale": "scale",
+  "unsupported_barcode_value": "unsupported value for barcode"
 }

@@ -21,7 +21,7 @@
     export let labelColor = isEInk ? 'black' : 'white';
     export let statusBarStyle: any = isEInk ? 'light' : 'dark';
     export let actionBarStyle: any = backgroundColor;
-    export let images: { image?; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation?; svg? }[];
+    export let images: { image?; subtitle?; sharedTransitionTag?; colorMatrix?; colorType?; margin?; rotation?; svg?; scale?; stretch? }[];
     let pager: NativeViewElementNode<Pager>;
     let imageFunctionArg = Application.orientation();
 
@@ -134,7 +134,13 @@
             </Template>
             <Template key="svg" let:item>
                 <gridlayout rows="*,auto" width="100%">
-                    <svgview margin={item.margin} sharedTransitionTag={item.sharedTransitionTag} src={item.svg} stretch="aspectFit" />
+                    <svgview
+                        margin={item.margin}
+                        scaleX={item.scale ?? 1}
+                        scaleY={item.scale ?? 1}
+                        sharedTransitionTag={item.sharedTransitionTag}
+                        src={item.svg}
+                        stretch={item.stretch ?? 'aspectFit'} />
                     <label
                         color={labelColor}
                         fontSize={30}

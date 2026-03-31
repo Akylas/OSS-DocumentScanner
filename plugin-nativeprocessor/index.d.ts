@@ -35,6 +35,7 @@ export interface QRCodeSingleData {
     text: string;
     position?: Quad;
     format: string;
+    scale?: number;
 }
 export type QRCodeData = QRCodeSingleData[];
 export type ColorPaletteData = string[];
