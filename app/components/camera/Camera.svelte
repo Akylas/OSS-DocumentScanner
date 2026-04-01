@@ -181,17 +181,18 @@
         }
     }
     async function takePicture(autoScan = false) {
-        if (takingPicture || !cameraOpened) {
-            return;
-        }
-        if (!checkAvailableStorage(49999872 /* ~47 MB */)) {
-            throw new SilentError(lc('not_enough_space'));
-        }
-        takingPicture = true;
-        if (autoScanHandler) {
-            pauseAutoScan();
-        }
         try {
+            DEV_LOG && console.log('takePicture', takingPicture, cameraOpened);
+            if (takingPicture || !cameraOpened) {
+                return;
+            }
+            if (!checkAvailableStorage(49999872 /* ~47 MB */)) {
+                throw new SilentError(lc('not_enough_space'));
+            }
+            takingPicture = true;
+            if (autoScanHandler) {
+                pauseAutoScan();
+            }
             DEV_LOG && console.log('takePicture', autoScan, _actualFlashMode);
             const start = Date.now();
             await showLoading(lc('capturing'));

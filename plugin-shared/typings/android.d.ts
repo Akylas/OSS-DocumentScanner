@@ -4,7 +4,7 @@ declare namespace com {
             export namespace AndroidSharedUtils {
                 export namespace Companion {
                     function generateCodeChallenge(str: string): string;
-                    function checkAvailableStorage(sizeBytes: number): boolean;
+                    function checkAvailableStorage(sizeBytes: number, useExternal: boolean): boolean;
                 }
             }
         }
