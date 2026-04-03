@@ -14,11 +14,11 @@
     let updateItem;
     let store: Writable<LocalFolderImageSyncServiceOptions>;
 
-    const topItems = [
+    const topItems = (st: Writable<LocalFolderImageSyncServiceOptions>) => [
         {
             id: 'selectFolder',
             type: 'selectFolder',
-            text: $store.localFolderPath
+            text: get(st).localFolderPath
         }
     ];
 

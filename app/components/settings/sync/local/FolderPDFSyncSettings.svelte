@@ -14,11 +14,11 @@
     let updateItem;
     let store: Writable<LocalFolderPDFSyncServiceOptions>;
 
-    const topItems = [
+    const topItems = (st: Writable<LocalFolderPDFSyncServiceOptions>) => [
         {
             id: 'selectFolder',
             type: 'selectFolder',
-            text: $store.localFolderPath
+            text: get(st).localFolderPath
         }
     ];
 

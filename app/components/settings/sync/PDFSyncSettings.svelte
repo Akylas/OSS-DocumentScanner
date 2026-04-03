@@ -3,7 +3,7 @@
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { ApplicationSettings, Color, ObservableArray, Page } from '@nativescript/core';
     import { closeModal } from '@shared/utils/svelte/ui';
-    import { get, writable } from 'svelte/store';
+    import { Writable, get, writable } from 'svelte/store';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import SyncSettingsCollectionView from '~/components/settings/sync/SyncSettingsCollectionView.svelte';
     import { lc } from '~/helpers/locale';
@@ -68,7 +68,7 @@
             onSaveError();
         }
     }
-    export let topItems = [];
+    export let topItems: any[] | ((store: Writable<BasePDFSyncServiceOptions>) => any[]) = [];
     export let updateItem;
 
     const items = new ObservableArray([
@@ -88,7 +88,7 @@
             description: lc('local_auto_sync_desc'),
             value: $store.autoSync
         },
-        ...topItems,
+        ...(typeof topItems === 'function' ? topItems(store) : topItems),
         {
             type: 'switch',
             id: 'useDocumentName',
