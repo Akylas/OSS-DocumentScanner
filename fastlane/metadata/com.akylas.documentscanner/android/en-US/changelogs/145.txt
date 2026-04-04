@@ -1,0 +1,2 @@
+Bug fixes:
+- local folder sync settings error
