@@ -234,6 +234,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
     }
 
+    @UiThread
     fun updateProgress(hash: Long, i: Int) {
         if (i == 0 || i == 100) {
             autoScanProgress.remove(hash)
