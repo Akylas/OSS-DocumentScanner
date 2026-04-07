@@ -180,7 +180,7 @@
                         transition: null
                     });
                 } catch (err) {
-                    console.error(err.err.stack);
+                    console.error(err, err.stack);
                 }
             }
         } catch (err) {
