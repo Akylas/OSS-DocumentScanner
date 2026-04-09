@@ -1,5 +1,5 @@
 ext {
-    minSdk = 21
+    minSdk = 24
     compileSdk = 36
     targetSdk = 36
     kotlinVersion = "2.2.0"
@@ -8,23 +8,26 @@ ext {
     androidxVersion = "1.17.0"
     androidXAppCompat = "1.7.1"
     androidXAppCompatVersion = "1.7.1"
-    androidXActivityVersion = "1.11.0"
-    androidXFragment = "1.8.5"
-    androidXTransition = "1.5.0"
+    androidXActivityVersion = "1.13.0"
+    androidXFragment = "1.8.9"
+    androidXTransition = "1.6.0"
     androidXRecyclerViewVersion = "1.4.0"
     androidxViewPager2Version = "1.1.0"
-    androidXSwipeRefreshLayoutViewVersion = "1.2.0-alpha01"
-    androidXMaterial = "1.12.0"
-    androidXBrowser = "1.8.0"
+    androidXSwipeRefreshLayoutViewVersion = "1.2.0"
+    androidXMaterial = "1.13.0"
+    androidXBrowser = "1.10.0"
     androidXPreferenceVersion = "1.2.1"
     androidXSplashscreenVersion = "1.2.0"
+    androidXExifInterfaceVersion = "1.4.2"
+    androidXDocumentFileVersion = "1.1.0"
+    kotlinCoroutine = "1.6.4"
     okHttpVersion = "4.12.0"
     lottieVersion = "6.2.0"
     ndkVersion = "27.3.13750724"
     licenseReporterVersion = "2.4"
     sentryVersion = "7.22.6"
+    sentryGradleVersion = "4.14.1"
     frescoVersion = "3.6.0"
-    sentryGradleVersion = "4.12.0"
-    cameraxVersion = "1.5.2"
+    cameraxVersion = "1.6.0"
     itextpdfVersion = "9.5.0"
 }

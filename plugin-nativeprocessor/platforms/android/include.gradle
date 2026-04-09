@@ -1,7 +1,7 @@
 apply plugin: "org.jetbrains.kotlin.android"
 android {
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
 
         if (project.hasProperty("tempBuild")) {
             externalNativeBuild {
