@@ -1,4 +1,50 @@
 {
+    "files.exclude": {
+        "**/.bzr": true,
+        "**/.bzrmeta": true,
+        "**/.gradle": true,
+        "**/.DS_Store": true,
+        "**/.factorypath": true,
+        "**/.git": true,
+        "**/.metadata*": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.tags*": true,
+        "**/.tmp": true,
+        "**/.zip": true,
+        "**/tags": true,
+        "*compiled": true
+    },
+    "search.exclude": {
+        "**/pnpm-lock.yaml": true,
+        "**/yarn.lock": true,
+        "**/.metadata*": true,
+        "**/.tmp": true,
+        "**/.gradle": true,
+        "**/docs": true,
+        "**/*.log": true,
+        "**/*.svg": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/node_modules": true,
+        "downloaded": true,
+        "platforms": true
+    },
+    "files.watcherExclude": {
+        "**/pnpm-lock.yaml": true,
+        "**/vendor.js": true,
+        "**/bundle.js": true,
+        "**/.history": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/*.min.js": true,
+        "**/*.js.map": true,
+        "**/.gradle": true,
+        "**/.git": true,
+        "**/node_modules/**": true,
+        "**/.hg/store/**": true,
+        "platforms": true
+    },
     "i18n-ally-next.keystyle": "nested",
     "typescript.tsdk": "node_modules/typescript/lib",
     "cmake.sourceDirectory": "${workspaceFolder}/cpp/cpp_test_app",
@@ -6,7 +52,30 @@
     "cmake.debugConfig": {
         "args": ["/home/mguillon/Desktop/test_images", "301061184-41031c73-ef8b-4c71-b9ca-c5d17c0ec896.jpg"]
     },
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc-12",
+    "editor.snippetSuggestions": "top",
+    "less.validate": false,
+    "scss.lint.validProperties": [
+        "max-font-size",
+        "min-font-size",
+        "ios-a11y-adjusts-font-size",
+        "status-bar-style",
+        "navigation-bar-color",
+        "status-bar-color",
+        "ripple-color",
+        "stroke-color",
+        "fill-color",
+        "on-check-color",
+        "on-tint-color",
+        "shape",
+        "elevation",
+        "horizontal-align",
+        "horizontal-alignment",
+        "vertical-text-alignment",
+        "floating",
+        "vertical-alignment",
+        "placeholder-color",
+        "variant"
+    ],
     "svelte.plugin.svelte.compilerWarnings": {
         "missing-declaration": "ignore",
         "a11y-aria-attributes": "ignore",
@@ -33,28 +102,6 @@
         "a11y-missing-content": "ignore",
         "illegal-attribute-character": "ignore"
     },
-    "scss.lint.validProperties": [
-        "max-font-size",
-        "min-font-size",
-        "ios-a11y-adjusts-font-size",
-        "status-bar-style",
-        "navigation-bar-color",
-        "status-bar-color",
-        "ripple-color",
-        "stroke-color",
-        "fill-color",
-        "on-check-color",
-        "on-tint-color",
-        "shape",
-        "elevation",
-        "horizontal-align",
-        "horizontal-alignment",
-        "vertical-text-alignment",
-        "floating",
-        "vertical-alignment",
-        "placeholder-color",
-        "variant"
-    ],
     "C_Cpp.errorSquiggles": "disabled",
     "terminal.integrated.defaultProfile.linux": "documentscanner",
     "terminal.integrated.defaultProfile.osx": "documentscanner",
@@ -181,7 +228,5 @@
         "pwa-node": "/Users/mguillon/.local/share/mise/shims/node"
     },
     "python.defaultInterpreterPath": "/Users/mguillon/.local/share/mise/installs/python/3.11.13/bin/python",
-    "i18n-ally-next.localesPaths": [
-        "app/i18n"
-    ]
+    "i18n-ally-next.localesPaths": ["app/i18n"]
 }

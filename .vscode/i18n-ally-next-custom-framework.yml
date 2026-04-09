@@ -3,13 +3,14 @@
 languageIds:
   - svelte
   - typescript
+  - javascript
 
 # An Array of regex to find the keys usage. **The key should captured in the first match group**.
 # You should unescape regex string in order to fit in YAML file
 # for that, you can use https://www.freeformatter.com/json-escape.html
 keyMatchReg:
   # The following examples show how to detect `t("your.i18n.keys")`
-  - "[^\\w\\d](?:localize|l|lt|lu|lc|sl|slt|slu|slc)\\([\\s\\t\\n]*['\"`]([[\\w\\d\\. \\-\\[\\]]*?)['\"`]"
+  - "[^\\w\\d](?:localize|l|lt|lu|lc|sl|slt|slu|slc)\\(['\"`]([[\\w\\d\\. \\-\\[\\]]*?)['\"`]"
 
 
 # An Array of string contains refactor templates.
@@ -21,4 +22,4 @@ keyMatchReg:
 
 
 # If set to true, only enables custom framework (will disable all built-in frameworks)
-monopoly: true
+monopoly: false
