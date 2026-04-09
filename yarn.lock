@@ -27,7 +27,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=4e6274&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=7c8624&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.51.4"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -81,7 +81,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.53.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/00bfa60a656506d22cb0087cafe5906bbc0bde591e9201363f52ba4dd7e81514c7831bfd494f1afe92ea6f14bd69a3a2ba916cfe95eabdc188af3b5c21c024c3
+  checksum: 10/0d1a06e2f2299c54a9b826d6b290519735d1f931bf29ec33d506e4621647c72d64edffa94b32e3e4e5ccb0806c4c75b86171aa943a6075aa8d39b2c0cecab723
   languageName: node
   linkType: hard
 
@@ -1182,10 +1182,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/text@npm:1.6.23":
-  version: 1.6.23
-  resolution: "@nativescript-community/text@npm:1.6.23"
-  checksum: 10/f8823903d850322e4471e5e485cc99b036373175e38f4d17ace82ea9a107622881751593f764951a587f46f24a3bc57fb09d71394799fd04ef0865ef0a236cc8
+"@nativescript-community/text@npm:1.6.24":
+  version: 1.6.24
+  resolution: "@nativescript-community/text@npm:1.6.24"
+  checksum: 10/6dd14378a99e02300688e58905d24fb1fb1d2067152f0163442994762789f536a6762d72ccc2397c79968751a62023551044b2cb89de8618842639ad88dad4a3
   languageName: node
   linkType: hard
 
@@ -10396,7 +10396,7 @@ __metadata:
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/svelte-native": "npm:1.0.32"
     "@nativescript-community/systemui": "npm:1.1.24"
-    "@nativescript-community/text": "npm:1.6.23"
+    "@nativescript-community/text": "npm:1.6.24"
     "@nativescript-community/ui-cameraview": "npm:0.6.2"
     "@nativescript-community/ui-canvas": "npm:4.6.46"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.49"

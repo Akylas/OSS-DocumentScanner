@@ -78,7 +78,7 @@
     import { PDF_OPTIONS } from '~/utils/localized_constant';
     import { createView, getNameFormatHTMLArgs, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover, showSnack } from '~/utils/ui';
     import { restartApp, toggleQuickSetting } from '~/utils/utils';
-    import { colors, fonts, hasCamera, onFontScaleChanged, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, hasCamera, onFontScaleChanged, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
@@ -1546,7 +1546,7 @@
                             verticalAlignment="center"
                             on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
                             <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
-                            <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
+                            <label color="white" fontSize={12 * $fontScale} text={item.title} textWrap={true} verticalAlignment="center" />
                         </stacklayout>
                         {#if __ANDROID__}
                             <image
@@ -1570,8 +1570,8 @@
                     </gridlayout>
 
                     <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
-                        <image borderRadius="25" height={50} horizontalAlignment="center" src="res://icon" width={50} />
-                        <label fontSize={13} marginTop={4} text={version} on:longPress={(event) => onLongPress('version', event)} />
+                        <image borderRadius={25} height={50} horizontalAlignment="center" src="res://icon" width={50} />
+                        <label fontSize={13 * $fontScale} marginTop={4} text={version} on:longPress={(event) => onLongPress('version', event)} />
                     </stacklayout>
                 </gridlayout>
             </Template>

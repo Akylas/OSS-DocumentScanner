@@ -18,9 +18,9 @@
     export let showBottomLine: boolean = false;
     export let enabled: boolean = true;
     // export let iconFontSize: number = 24;
-    export let fontSize: number = 20;
+    export let fontSize: number = 21;
     export let fontWeight: any = 'normal';
-    export let subtitleFontSize: number = 14;
+    export let subtitleFontSize: number = 15;
     export let title: string = null;
     export let titleColor: string = null;
     export let color: string = null;
@@ -106,7 +106,7 @@
         textWrap={true}
         verticalAlignment="center"
         {...titleProps}>
-        <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
+        <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} lineHeight={fontSize * $fontScale * 1.3} text={title} />
         <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
