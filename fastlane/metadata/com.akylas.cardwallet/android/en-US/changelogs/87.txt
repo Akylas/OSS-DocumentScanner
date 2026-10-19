@@ -1,0 +1,4 @@
+Bug fixes:
+- do not reupload tombstones when nothing new was deleted
+- call Kotlin setters explicitly so auto scan works on napi runtime
+- Translations update
