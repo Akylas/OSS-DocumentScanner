@@ -171,16 +171,24 @@
         }
     }
 
+    // the napi runtime does not call the Kotlin setter on property assignment (reads work)
+    function setNativeProperty(target, name: string, value) {
+        if (__ANDROID__) {
+            target[`set${name.charAt(0).toUpperCase()}${name.slice(1)}`](value);
+        } else {
+            target[name] = value;
+        }
+    }
     function pauseAutoScan() {
         DEV_LOG && console.log('pauseAutoScan', autoScanHandler, autoScanHandler?.enabled);
         if (autoScanHandler) {
-            autoScanHandler.enabled = false;
+            setNativeProperty(autoScanHandler, 'enabled', false);
         }
     }
     function resumeAutoScan() {
         DEV_LOG && console.log('resumeAutoScan', autoScanHandler, autoScanHandler?.enabled);
         if (autoScanHandler) {
-            autoScanHandler.enabled = true;
+            setNativeProperty(autoScanHandler, 'enabled', true);
         }
     }
     async function takePicture(autoScan = false) {
@@ -283,11 +291,11 @@
         document = null;
         nbPages = 0;
         if (autoScanHandler) {
-            autoScanHandler.enabled = false;
+            setNativeProperty(autoScanHandler, 'enabled', false);
             autoScanHandler = null;
         }
         if (processor) {
-            processor.autoScanHandler = null;
+            setNativeProperty(processor, 'autoScanHandler', null);
             processor = null;
         }
         if (__ANDROID__) {
@@ -531,16 +539,16 @@
                     takePicture(true);
                 }
             });
-            newAutoScanHandler.distanceThreshod = ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD);
-            newAutoScanHandler.autoScanDuration = ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION);
-            newAutoScanHandler.preAutoScanDelay = ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY);
+            setNativeProperty(newAutoScanHandler, 'distanceThreshod', ApplicationSettings.getNumber('autoScan_distanceThreshold', AUTO_SCAN_DISTANCETHRESHOLD));
+            setNativeProperty(newAutoScanHandler, 'autoScanDuration', ApplicationSettings.getNumber('autoScan_autoScanDuration', AUTO_SCAN_DURATION));
+            setNativeProperty(newAutoScanHandler, 'preAutoScanDelay', ApplicationSettings.getNumber('autoScan_preAutoScanDelay', AUTO_SCAN_DELAY));
             autoScanHandler = newAutoScanHandler;
             if (processor) {
-                processor.autoScanHandler = autoScanHandler;
+                setNativeProperty(processor, 'autoScanHandler', autoScanHandler);
             }
         } else {
             if (processor) {
-                processor.autoScanHandler = null;
+                setNativeProperty(processor, 'autoScanHandler', null);
             }
             autoScanHandler = null;
         }
@@ -613,7 +621,7 @@
             }
             DEV_LOG && console.log('applyProcessor', processor, previewResizeThreshold);
             applyAutoScan(autoScan);
-            processor.previewResizeThreshold = previewResizeThreshold;
+            setNativeProperty(processor, 'previewResizeThreshold', previewResizeThreshold);
 
             if (documentsService.started) {
                 await startPreview();
