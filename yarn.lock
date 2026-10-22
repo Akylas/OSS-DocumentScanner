@@ -1409,7 +1409,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/https@npm:4.1.35, @nativescript-community/https@npm:^4.1.32":
+"@nativescript-community/https@npm:4.1.36":
+  version: 4.1.36
+  resolution: "@nativescript-community/https@npm:4.1.36"
+  checksum: 10/16152e2eea53708828c3c5edb7bc9ac2759349caf986ed71e30ef42c9081887987a33658192513dbb2249c32edea3aeab6c9665f74642eb6088a5ddf99384576
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/https@npm:^4.1.32":
   version: 4.1.35
   resolution: "@nativescript-community/https@npm:4.1.35"
   checksum: 10/99938cb0f09815cf5d2e4b334dee194058bce71aae1b3cf47156d5b46ec134dcdd5d8935ae76e12cb6e107b1f6e8f3e52bb8b61069f695688b62fdd4178269a2
@@ -11123,7 +11130,7 @@ __metadata:
     "@nativescript-community/css-theme": "npm:1.2.14"
     "@nativescript-community/extendedinfo": "npm:1.3.1"
     "@nativescript-community/gesturehandler": "npm:2.0.45"
-    "@nativescript-community/https": "npm:4.1.35"
+    "@nativescript-community/https": "npm:4.1.36"
     "@nativescript-community/l": "npm:4.3.12"
     "@nativescript-community/licenses": "npm:2.0.9"
     "@nativescript-community/md5": "npm:1.0.5"
