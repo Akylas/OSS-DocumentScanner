@@ -130,7 +130,7 @@
     "contrast": "Kontrast",
     "copied": "skopiowane",
     "crash_report": "włącz raporty o awariach",
-    "crash_report_desc": "po włączeniu raporty o awariach będą wysyłane do prywatnej instancji danych Sentry. Dane nie są udostępniane i są regularnie usuwane. Używane są tylko do debugowania",
+    "crash_report_desc": "po włączeniu raporty o awariach będą wysyłane do prywatnej instancji danych Sentry. Dane nie są udostępniane i są regularnie usuwane. Używane są tylko do debugowania.",
     "create": "utwórz",
     "create_backup": "utwórz kopię zapasową",
     "create_backup_desc": "utwórz kompletną kopię zapasową wszystkich dokumentów i folderów",
