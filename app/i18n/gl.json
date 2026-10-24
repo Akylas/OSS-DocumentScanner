@@ -130,7 +130,7 @@
     "contrast": "contraste",
     "copied": "copiado",
     "crash_report": "activar informe de fallos",
-    "crash_report_desc": "cando se activan os informes dos fallos envíase un conxunto de datos privados de Sentry. Non se comparten os datos, elimínanse con regularidade. Só se usan para depuración",
+    "crash_report_desc": "cando se activan os informes dos fallos envíase un conxunto de datos privados de Sentry. Non se comparten os datos, elimínanse con regularidade. Só se usan para depuración.",
     "create": "crear",
     "create_backup": "crear copia de apoio",
     "create_backup_desc": "crear unha copia de apoio con todos os documentos e cartafoles",
